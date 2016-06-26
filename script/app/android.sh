@@ -138,6 +138,31 @@ function cavan-apk-encode()
 	cavan-apktool b -f $@
 }
 
+function cavan-apk-pack()
+{
+	local ROOT_DIR APK_UNSIGNED APK_SIGNED
+
+	if [ "$1" ]
+	then
+		ROOT_DIR=$(realpath "$1")
+	else
+		ROOT_DIR="${PWD}"
+	fi
+
+	echo "ROOT_DIR = ${ROOT_DIR}"
+
+	APK_UNSIGNED="${ROOT_DIR}/cavan-unsigned.apk"
+	APK_SIGNED="${ROOT_DIR}/cavan-signed.apk"
+
+	echo "encode: ${ROOT_DIR} => ${APK_UNSIGNED}"
+	rm -f "${APK_UNSIGNED}"
+	cavan-apk-encode -o "${APK_UNSIGNED}" "${ROOT_DIR}" || return 1
+
+	echo "signature: ${APK_UNSIGNED} => ${APK_SIGNED}"
+	rm -f "${APK_SIGNED}"
+	cavan-apk-sign "${APK_UNSIGNED}" "${APK_SIGNED}" || return 1
+}
+
 function cavan-apk-rename()
 {
 	local ROOT_DIR MANIFEST SUFFIX MIME_TYPE IMAGE_PATH SMALI_DIR

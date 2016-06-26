@@ -48,6 +48,7 @@ public class ApkRename {
 	private String mSourceDataPath;
 	private String mDestDataPath;
 	private String mAppNameProp;
+	private boolean mSimpleMode;
 	private AndroidManifest mAndroidManifest;
 	private HashMap<String, String> mHashMapAppName = new HashMap<String, String>();
 
@@ -197,7 +198,7 @@ public class ApkRename {
 				return true;
 			}
 
-			boolean changed = doRenameXml(nodeList, 3);
+			boolean changed = (mSimpleMode == false && doRenameXml(nodeList, 3));
 
 			if (mAppNameProp != null && file.getName().equals("strings.xml")) {
 				nodeList = document.getElementsByTagName("string");
@@ -487,6 +488,34 @@ public class ApkRename {
 		return true;
 	}
 
+	public boolean doRenameApktool(CavanFile file) {
+		CavanJava.logD("rename: " + file.getPath());
+
+		return file.replaceLines(new CavanReplaceHandler() {
+
+			@Override
+			public String replace(String text) {
+				String[] values = text.split(":\\s*");
+				if (values.length == 2) {
+					String key = values[0].trim();
+					if (key.equals("renameManifestPackage")) {
+						String value = values[1].trim();
+						if (!value.equals("null")) {
+							mSourcePackage = value;
+							mDestPackage = "com.cavan." + mSourcePackage;
+						}
+
+						CavanJava.logD(mSourcePackage + " => " + mDestPackage);
+
+						text = values[0] + ": " + mDestPackage;
+					}
+				}
+
+				return text;
+			}
+		});
+	}
+
 	public String renameAppName(String name) {
 		return name + "-CFA";
 	}
@@ -533,7 +562,9 @@ public class ApkRename {
 		return null;
 	}
 
-	public boolean doRename() {
+	public boolean doRename(boolean simpleMode) {
+
+		mSimpleMode = simpleMode;
 
 		CavanJava.logD("rename: " + mInFile.getPath() + " => " + mOutFile.getPath());
 
@@ -567,6 +598,8 @@ public class ApkRename {
 		mSourceDataPath = "/data/data/" + mSourcePackage;
 		mDestDataPath = "/data/data/" + mDestPackage;
 
+		boolean manifestChanged = false;
+
 		mAppNameProp = mAndroidManifest.getAppName();
 		if (mAppNameProp != null) {
 			if (mAppNameProp.startsWith("@string/")) {
@@ -575,6 +608,7 @@ public class ApkRename {
 				if (mAppNameProp.charAt(0) != '@') {
 					addAppName("default",	mAppNameProp);
 					mAndroidManifest.setAppName(renameAppName(mAppNameProp));
+					manifestChanged = true;
 				}
 
 				mAppNameProp = null;
@@ -583,21 +617,43 @@ public class ApkRename {
 			mAppNameProp = "app_name";
 		}
 
-		mAndroidManifest.doRename(mDestPackage);
+		if (mSimpleMode) {
+			if (manifestChanged) {
+				if (!mAndroidManifest.save()) {
+					CavanJava.logE("Failed to mAndroidManifest.save");
+					return false;
+				}
+			}
 
-		if (!doRenameResource(new File(mWorkFile, "res"))) {
-			CavanJava.logE("Failed to doRenameResource");
-			return false;
-		}
+			if (!doRenameApktool(new CavanFile(mWorkFile, "apktool.yml"))) {
+				CavanJava.logE("Failed to doRenameApktool");
+				return false;
+			}
 
-		if (!doRenameSmali(new File(mWorkFile, "smali"))) {
-			CavanJava.logE("Failed to doRenameSmali");
-			return false;
-		}
+			if (!doRenameResource(new File(mWorkFile, "res"))) {
+				CavanJava.logE("Failed to doRenameResource");
+				return false;
+			}
+		} else {
+			if (!mAndroidManifest.doRename(mDestPackage)) {
+				CavanJava.logE("Failed to mAndroidManifest.doRename");
+				return false;
+			}
 
-		if (!doRenameAssets(new File(mWorkFile, "assets"))) {
-			CavanJava.logE("Failed to doRenameAssets");
-			return false;
+			if (!doRenameResource(new File(mWorkFile, "res"))) {
+				CavanJava.logE("Failed to doRenameResource");
+				return false;
+			}
+
+			if (!doRenameSmali(new File(mWorkFile, "smali"))) {
+				CavanJava.logE("Failed to doRenameSmali");
+				return false;
+			}
+
+			if (!doRenameAssets(new File(mWorkFile, "assets"))) {
+				CavanJava.logE("Failed to doRenameAssets");
+				return false;
+			}
 		}
 
 		mApkUnsigned.delete();
@@ -624,5 +680,9 @@ public class ApkRename {
 		CavanJava.logD("File stored in: " + mOutFile.getPath());
 
 		return true;
+	}
+
+	public boolean doRename() {
+		return doRename(true);
 	}
 }

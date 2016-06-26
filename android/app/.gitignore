@@ -2,3 +2,4 @@ Makefile
 out
 libs
 android-support-v4.jar
+*/res/values-v*
