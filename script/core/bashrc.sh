@@ -1,5 +1,16 @@
 #!/bin/bash
 
+export CAVAN_OS_NAME=$(uname -s)
+
+case "${CAVAN_OS_NAME}" in
+	Darwin)
+		export CAVAN_OS_MAC=true
+		;;
+	Linux)
+		export CAVAN_OS_LINUX=true
+		;;
+esac
+
 [ "${PATH_BAK}" ] || PATH_BAK="${PATH}"
 
 KERNEL_HOME="${PROJECT_HOME}/kernel"

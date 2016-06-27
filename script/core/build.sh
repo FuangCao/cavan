@@ -70,7 +70,12 @@ function cavan-install()
 
 function cavan-get-cpu-core-num()
 {
-	cat /proc/cpuinfo | grep "^processor\s*:" | wc -l
+	if [ "${CAVAN_OS_MAC}" = "true" ]
+	then
+		sysctl -n machdep.cpu.core_count
+	else
+		cat /proc/cpuinfo | grep "^processor\s*:" | wc -l
+	fi
 }
 
 CPU_CORE_NUM="$(cavan-get-cpu-core-num)"

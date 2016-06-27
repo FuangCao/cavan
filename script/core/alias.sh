@@ -7,12 +7,22 @@ alias vc='vi *.c'
 alias vs='vi *.[sS]'
 alias vm='vi [Mm]akefile'
 alias mkconfig='make menuconfig'
+
+if [ "${CAVAN_OS_MAC}" = "true" ]
+then
+alias ls='ls -G@'
+alias dir='ls'
+alias vdir='ls -lh'
+else
 alias ls='ls --color=auto'
 alias dir='dir --color=auto'
 alias vdir='vdir --color=auto'
+fi
+
 alias grep='grep --color=auto --exclude-dir .git --exclude-dir .svn --exclude-dir .cavan-git'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
+
 alias ll='ls -alhF'
 alias la='ls -A'
 alias l='ls -CF'
