@@ -81,12 +81,17 @@ export CAVAN_TOOLCHIAN_NAME CAVAN_TOOLCHIAN_GNUEABI CAVAN_TOOLCHIAN_ANDROIDEABI 
 for fn in alias.sh file.sh bash_completion application.sh device.sh build.sh stdio.sh path.sh
 do
 	fn="${CAVAN_HOME}/script/core/${fn}"
-	[ -f "${fn}" ] && source ${fn}
+	[ -f "${fn}" ] && source "${fn}"
 done
 
 for fn in ${CAVAN_HOME}/script/app/*.sh
 do
-	[ -f "${fn}" ] && source ${fn}
+	[ -f "${fn}" ] && source "${fn}"
+done
+
+[ "${CAVAN_OS_MAC}" = "true" ] && for fn in ${CAVAN_HOME}/script/mac/*.sh
+do
+	[ -f "${fn}" ] && source "${fn}"
 done
 
 unset JAVA_TOOL_OPTIONS
