@@ -30,18 +30,39 @@ MKDIR = mkdir -p
 INSTALL = install -c
 CP = cp
 
+CAVAN_OS_NAME = $(shell uname -s)
+
+CFLAGS += -DCAVAN_OS=\"$(CAVAN_OS_NAME)\"
+
+ifeq "${CAVAN_OS_NAME}" "Darwin"
+CAVAN_OS_MAC = true
+CFLAGS += -DCAVAN_OS_MAC -I${INCLUDE_PATH}/mac
+endif
+
+ifeq "${CAVAN_OS_NAME}" "Linux"
+CAVAN_OS_LINUX = true
+CFLAGS += -DCAVAN_OS_LINUX
+endif
+
 CAVAN_PLAT = $(shell $(CC) -dumpmachine)
 
-CFLAGS +=	-Wall -Wundef -Wextra -Werror -Wsign-compare -Winit-self -Wpointer-arith -Wa,--noexecstack -Wstrict-aliasing=2 -Wno-unused-parameter\
-			-fno-strict-aliasing -fno-exceptions -fno-inline-functions-called-once \
-			-ffunction-sections -funwind-tables -fstack-protector -finline-functions \
-			-fgcse-after-reload -frerun-cse-after-loop -frename-registers -fomit-frame-pointer -finline-limit=64 \
+ifneq ($(CAVAN_OS_MAC),true)
+CFLAGS += -frename-registers -fgcse-after-reload -frerun-cse-after-loop -fno-inline-functions-called-once -finline-limit=64 -finline-functions
+endif
+
+CFLAGS +=	-Wall -Wundef -Wextra -Werror -Wsign-compare -Winit-self -Wpointer-arith -Wa,--noexecstack -Wstrict-aliasing=2 -Wno-unused-parameter \
+			-fno-strict-aliasing -fno-exceptions -ffunction-sections -funwind-tables -fstack-protector -fomit-frame-pointer \
 			-g -Os -I$(INCLUDE_PATH) -DCAVAN -DCAVAN_ARCH=\"$(ARCH)\" -DCAVAN_PLAT=\"$(CAVAN_PLAT)\" -include cavan/config.h
 
 CFLAGS += -DCAVAN_ARCH_$(shell echo $(ARCH) | tr '[a-z]' '[A-Z]')
 
 ifeq ($(BUILD_TYPE),debug)
-CFLAGS += -DCAVAN_DEBUG -rdynamic
+CFLAGS += -DCAVAN_DEBUG
+
+ifneq ($(CAVAN_OS_MAC),true)
+CFLAGS += -rdynamic
+endif
+
 SUB_DIRS += test
 endif
 

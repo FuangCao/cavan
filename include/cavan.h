@@ -52,20 +52,24 @@ extern int pipe2(int *, int);
 #define	__GNUC_PREREQ__(x, y)	0
 #endif
 
+#ifndef __unused
 #if __GNUC_PREREQ__(2, 7)
 #define	__unused				__attribute__((__unused__))
 #else
 #define	__unused	/* delete */
+#endif
 #endif
 
 #ifndef __maybe_unused
 #define __maybe_unused			__unused
 #endif
 
+#ifndef __used
 #if __GNUC_PREREQ__(3, 1)
 #define	__used					__attribute__((__used__))
 #else
 #define	__used		/* delete */
+#endif
 #endif
 
 #if __GNUC_PREREQ__(2, 7)
