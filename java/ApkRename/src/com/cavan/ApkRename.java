@@ -8,7 +8,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -29,6 +31,7 @@ import com.cavan.java.CavanXml;
 
 public class ApkRename {
 
+	public static final boolean RENAME_USE_DATE = false;
 	public static final String KEYSTORE = "/cavan/build/core/cavan.keystore";
 	public static final Path DEFAULT_WORK_PATH = Paths.get("/tmp", "cavan-apk-rename");
 
@@ -112,10 +115,6 @@ public class ApkRename {
 
 	public ApkRename(String pathname) {
 		this(new File(pathname));
-	}
-
-	public void setDestPackage(String name) {
-		mDestPackage = name;
 	}
 
 	public static boolean doApktool(String command, String inPath, String outPath) {
@@ -524,7 +523,7 @@ public class ApkRename {
 						String value = values[1].trim();
 						if (!value.equals("null")) {
 							mFullRename = false;
-							mDestPackage = "com.cavan." + value;
+							updateDestPackageName(value);
 						}
 
 						if (!mFullRename) {
@@ -537,6 +536,33 @@ public class ApkRename {
 				return text;
 			}
 		});
+	}
+
+	public void setDestPackageName(String pkgName) {
+		mDestPackage = pkgName;
+		mDestDataPath = "/data/data/" + mDestPackage;
+		mDestPackagePath = mDestPackage.replace('.', File.separatorChar);
+	}
+
+	public void updateDestPackageName(String pkgName) {
+		if (RENAME_USE_DATE) {
+			SimpleDateFormat format = new SimpleDateFormat("YMMddHHmmss");
+			pkgName = "com.cavan_" + format.format(new Date()) + "." + pkgName;
+		} else {
+			pkgName = "com.cavan." + pkgName;
+		}
+
+		setDestPackageName(pkgName);
+	}
+
+	public void setSourcePackageName(String pkgName) {
+		mSourcePackage = pkgName;
+		mSourceDataPath = "/data/data/" + mSourcePackage;
+		mSourcePackagePath = mSourcePackage.replace('.', File.separatorChar);
+
+		if (mDestPackage == null) {
+			updateDestPackageName(pkgName);
+		}
 	}
 
 	public String renameAppName(String name) {
@@ -608,7 +634,7 @@ public class ApkRename {
 			return false;
 		}
 
-		mSourcePackage = mAndroidManifest.getPackageName();
+		setSourcePackageName(mAndroidManifest.getPackageName());
 
 		if (mFullRename) {
 			for (String pkgName : sSimpleRenamePackages) {
@@ -627,17 +653,7 @@ public class ApkRename {
 		}
 
 		CavanJava.logD("mFullRename = " + mFullRename);
-
-		if (mDestPackage == null) {
-			mDestPackage = "com.cavan." + mSourcePackage;
-		}
-
 		CavanJava.logD("package: " + mSourcePackage + " => " + mDestPackage);
-
-		mSourcePackagePath = mSourcePackage.replace('.', File.separatorChar);
-		mDestPackagePath = mDestPackage.replace('.', File.separatorChar);
-		mSourceDataPath = "/data/data/" + mSourcePackage;
-		mDestDataPath = "/data/data/" + mDestPackage;
 
 		boolean manifestChanged = false;
 
