@@ -36,8 +36,9 @@ CMD_TFTP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tftp_dd_server"
 CMD_TCP_PROXY="${CAVAN_OUT_DEBUG}/cavan-tcp_proxy"
 CMD_CAVAN_SERVICE="${CAVAN_OUT_DEBUG}/cavan-service --start -s 0 --exec"
 
-NFS_RW_CONFIG="*(rw,sync,no_subtree_check)"
-NFS_RO_CONFIG="*(ro,sync,no_subtree_check)"
+NFS_COMMON_CONFIG="sync,no_subtree_check,insecure,nohide"
+NFS_RW_CONFIG="*(rw,${NFS_COMMON_CONFIG})"
+NFS_RO_CONFIG="*(ro,${NFS_COMMON_CONFIG})"
 
 function file_abs_directory()
 {
@@ -240,12 +241,12 @@ function config_nfs()
 
 	for exp in /
 	do
-		echo "${exp} ${NFS_RO_CONFIG}"
+		echo -e "${exp}\t\t\t${NFS_RO_CONFIG}"
 	done >> ${FILE_EXPORTS}
 
 	for exp in /tmp /temp /cavan /git /ubuntu /book /cpan /dpan /epan /fpan /gpan
 	do
-		echo "${exp} ${NFS_RW_CONFIG}"
+		echo -e "${exp}\t\t${NFS_RW_CONFIG}"
 	done >> ${FILE_EXPORTS}
 
 	service nfs-kernel-server restart
