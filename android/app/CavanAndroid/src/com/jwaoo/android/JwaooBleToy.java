@@ -1,25 +1,28 @@
-package com.cavan.android;
+package com.jwaoo.android;
 
 import java.util.UUID;
 
 import android.bluetooth.BluetoothDevice;
 
-public class CavanBleUart extends CavanBleGatt {
+import com.cavan.android.CavanBleChar;
+import com.cavan.android.CavanBleGatt;
 
-	public static final UUID UUID_SERVICE = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb7");
-	public static final UUID UUID_RX = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cba");
-	public static final UUID UUID_TX = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb8");
-	public static final UUID UUID_OTA = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cbb");
+public class JwaooBleToy extends CavanBleGatt {
+
+	public static final UUID UUID_SERVICE = UUID.fromString("00001888-0000-1000-8000-00805f9b34fb");
+	public static final UUID UUID_TX = UUID.fromString("00001889-0000-1000-8000-00805f9b34fb");
+	public static final UUID UUID_RX = UUID.fromString("0000188a-0000-1000-8000-00805f9b34fb");
+	public static final UUID UUID_OTA = UUID.fromString("0000188b-0000-1000-8000-00805f9b34fb");
 
 	private CavanBleChar mCharacteristicTx;
 	private CavanBleChar mCharacteristicRx;
 	private CavanBleChar mCharacteristicOta;
 
-	public CavanBleUart(BluetoothDevice device, UUID uuid) {
+	public JwaooBleToy(BluetoothDevice device, UUID uuid) {
 		super(device, uuid);
 	}
 
-	public CavanBleUart(BluetoothDevice device) {
+	public JwaooBleToy(BluetoothDevice device) {
 		this(device, UUID_SERVICE);
 	}
 
@@ -38,12 +41,19 @@ public class CavanBleUart extends CavanBleGatt {
 	@Override
 	protected boolean doInit() {
 		mCharacteristicRx = openWriteChar(UUID_RX);
+		if (mCharacteristicRx == null) {
+			return false;
+		}
+
 		mCharacteristicTx = openReadChar(UUID_TX);
-		if (mCharacteristicRx == null || mCharacteristicTx == null) {
+		if (mCharacteristicTx == null) {
 			return false;
 		}
 
 		mCharacteristicOta = openWriteChar(UUID_OTA);
+		if (mCharacteristicOta == null) {
+			return false;
+		}
 
 		return true;
 	}
