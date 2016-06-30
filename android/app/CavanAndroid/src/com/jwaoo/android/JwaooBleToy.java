@@ -35,7 +35,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	}
 
 	public boolean writeOta(byte[] data) {
-		return mCharacteristicOta != null && mCharacteristicOta.writeData(data, 128);
+		return mCharacteristicOta != null && mCharacteristicOta.writeData(data, true);
 	}
 
 	@Override

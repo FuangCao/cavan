@@ -2,6 +2,7 @@ package com.cavan.java;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.List;
 
 public class CavanJava {
 
@@ -282,5 +283,24 @@ public class CavanJava {
 
 	public static String strStrip(String text) {
 		return strFixupSpace(text).trim();
+	}
+
+	public static String listToString(List<?> list) {
+		if (list.size() <= 0) {
+			return null;
+		}
+
+		StringBuilder builder = new StringBuilder("[ ");
+
+		builder.append(list.get(0));
+
+		for (int i = 1; i < list.size(); i++) {
+			builder.append(" | ");
+			builder.append(list.get(i));
+		}
+
+		builder.append(" ]");
+
+		return builder.toString();
 	}
 }

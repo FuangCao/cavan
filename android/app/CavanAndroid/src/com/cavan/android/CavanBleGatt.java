@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.cavan.java.CavanJava;
+
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -94,6 +96,76 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 		mGatt = null;
 	}
 
+	public static String getPropertyName(int property) {
+		switch (property) {
+		case BluetoothGattCharacteristic.PROPERTY_BROADCAST:
+			return "BROADCAST";
+		case BluetoothGattCharacteristic.PROPERTY_READ:
+			return "READ";
+		case BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE:
+			return "WRITE_NO_RESPONSE";
+		case BluetoothGattCharacteristic.PROPERTY_WRITE:
+			return "WRITE";
+		case BluetoothGattCharacteristic.PROPERTY_NOTIFY:
+			return "NOTIFY";
+		case BluetoothGattCharacteristic.PROPERTY_INDICATE:
+			return "INDICATE";
+		case BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE:
+			return "SIGNED_WRITE";
+		case BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS:
+			return "EXTENDED_PROPS";
+		default:
+			return null;
+		}
+	}
+
+	public static String buildPropertiesString(int properties) {
+		List<String> lines = new ArrayList<String>();
+		for (int i = 0; i < 32; i++) {
+			String property = getPropertyName(properties & (1 << i));
+			if (property != null) {
+				lines.add(property);
+			}
+		}
+
+		return CavanJava.listToString(lines);
+	}
+
+	public static String getPermissionName(int permission) {
+		switch (permission) {
+		case BluetoothGattCharacteristic.PERMISSION_READ:
+			return "READ";
+		case BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED:
+			return "READ_ENCRYPTED";
+		case BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED_MITM:
+			return "READ_ENCRYPTED_MITM";
+		case BluetoothGattCharacteristic.PERMISSION_WRITE:
+			return "WRITE";
+		case BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED:
+			return "WRITE_ENCRYPTED";
+		case BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED_MITM:
+			return "WRITE_ENCRYPTED_MITM";
+		case BluetoothGattCharacteristic.PERMISSION_WRITE_SIGNED:
+			return "WRITE_SIGNED";
+		case BluetoothGattCharacteristic.PERMISSION_WRITE_SIGNED_MITM:
+			return "WRITE_SIGNED_MITM";
+		default:
+			return null;
+		}
+	}
+
+	public static String buildPermissionsString(int permissions) {
+		List<String> lines = new ArrayList<String>();
+		for (int i = 0; i < 32; i++) {
+			String permission = getPermissionName(permissions & (1 << i));
+			if (permission != null) {
+				lines.add(permission);
+			}
+		}
+
+		return CavanJava.listToString(lines);
+	}
+
 	@Override
 	public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
 		CavanAndroid.logE("onConnectionStateChange: " + status + " => " + newState);
@@ -125,6 +197,16 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 				CavanAndroid.logE("\t" + (++characteristicIndex) + ". characteristic = " + characteristic.getUuid());
 
 				int descriptorIndex = 0;
+
+				String properties = buildPropertiesString(characteristic.getProperties());
+				if (properties != null) {
+					CavanAndroid.logE("\t\tproperties = " + properties);
+				}
+
+				String permissions = buildPermissionsString(characteristic.getPermissions());
+				if (permissions != null) {
+					CavanAndroid.logE("\t\tpermissions = " + permissions);
+				}
 
 				for (BluetoothGattDescriptor descriptor : characteristic.getDescriptors()) {
 					CavanAndroid.logE("\t\t" + (++descriptorIndex) + " .descriptor = " + descriptor.getUuid());

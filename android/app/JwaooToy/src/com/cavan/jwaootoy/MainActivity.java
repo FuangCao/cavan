@@ -1,4 +1,4 @@
-package com.cavan.bleuart;
+package com.cavan.jwaootoy;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -14,7 +14,6 @@ import android.widget.EditText;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleChar;
 import com.cavan.android.CavanBleScanner;
-import com.cavan.android.CavanBleUart;
 import com.cavan.java.CavanHexFile;
 import com.jwaoo.android.JwaooBleToy;
 

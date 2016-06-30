@@ -11,6 +11,7 @@ import android.bluetooth.BluetoothGattService;
 @SuppressLint("NewApi")
 public class CavanBleChar {
 
+	public static final int FRAME_SIZE = 20;
 	public static final UUID CFG_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 	public static final UUID DESC_UUID = UUID.fromString("00002901-0000-1000-8000-00805f9b34fb");
 
@@ -36,7 +37,7 @@ public class CavanBleChar {
 		return true;
 	}
 
-	synchronized public boolean writeData(byte[] data, boolean sync) {
+	synchronized private boolean writeFrame(byte[] data, boolean sync) {
 		if (mChar == null) {
 			CavanAndroid.logE("mCharacteristic is null");
 			return false;
@@ -57,7 +58,7 @@ public class CavanBleChar {
 				}
 
 				try {
-					wait(2000);
+					wait(1000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -75,14 +76,14 @@ public class CavanBleChar {
 		}
 	}
 
-	public boolean writeData(byte[] data, int blkSize) {
-		if (data.length > blkSize) {
+	public boolean writeData(byte[] data, boolean sync) {
+		if (data.length > FRAME_SIZE) {
 			int last, offset;
-			byte[] block = new byte[blkSize];
+			byte[] block = new byte[FRAME_SIZE];
 
-			for (offset = 0, last = data.length - blkSize; offset <= last; offset += blkSize) {
-				CavanAndroid.ArrayCopy(data, offset, block, 0, blkSize);
-				if (!writeData(block, true)) {
+			for (offset = 0, last = data.length - FRAME_SIZE; offset <= last; offset += FRAME_SIZE) {
+				CavanAndroid.ArrayCopy(data, offset, block, 0, FRAME_SIZE);
+				if (!writeFrame(block, true)) {
 					return false;
 				}
 			}
@@ -94,7 +95,7 @@ public class CavanBleChar {
 			data = CavanAndroid.ArrayCopy(data, offset, data.length - offset);
 		}
 
-		return writeData(data, true);
+		return writeFrame(data, sync);
 	}
 
 	synchronized public void setWriteStatus(int status) {
