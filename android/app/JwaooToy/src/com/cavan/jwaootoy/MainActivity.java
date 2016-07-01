@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
@@ -12,7 +14,7 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.cavan.android.CavanAndroid;
-import com.cavan.android.CavanBleChar;
+import com.cavan.android.CavanBleGatt.CavanBleDataListener;
 import com.cavan.android.CavanBleScanner;
 import com.cavan.java.CavanHexFile;
 import com.jwaoo.android.JwaooBleToy;
@@ -20,14 +22,27 @@ import com.jwaoo.android.JwaooBleToy;
 @SuppressLint("HandlerLeak")
 public class MainActivity extends Activity implements OnClickListener, OnLongClickListener {
 
-	public static int BLE_SCAN_RESULT = 1;
+	public static final int BLE_SCAN_RESULT = 1;
+	private static final int EVENT_DATA_RECEIVED = 1;
 
-	private JwaooBleToy mBleToy ;
+	private JwaooBleToy mBleToy;
 
 	private Button mButtonSend;
 	private Button mButtonUpgrade;
 	private EditText mEditTextSend;
 	private EditText mEditTextRecv;
+	private Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case EVENT_DATA_RECEIVED:
+				String text = (String) msg.obj;
+				mEditTextRecv.append(text);
+				break;
+			}
+		}
+	};
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -112,18 +127,21 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 				protected void onDisconnected() {
 					CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
 				}
-
-				@Override
-				protected void onDataReceived(CavanBleChar bleChar, byte[] data) {
-					String text = new String(data);
-					CavanAndroid.logE("onDataReceived: " + text);
-					mEditTextRecv.append(text);
-				}
 			};
 
 			if (!mBleToy.connect(this)) {
 				finish();
 			}
+
+			mBleToy.setDataListener(new CavanBleDataListener() {
+
+				@Override
+				public void onDataReceived(byte[] data) {
+					String text = new String(data);
+					CavanAndroid.logE("onDataReceived: " + text);
+					mHandler.obtainMessage(EVENT_DATA_RECEIVED, text).sendToTarget();
+				}
+			});
 		} else {
 			finish();
 		}

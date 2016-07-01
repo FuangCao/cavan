@@ -4,7 +4,6 @@ import java.util.UUID;
 
 import android.bluetooth.BluetoothDevice;
 
-import com.cavan.android.CavanBleChar;
 import com.cavan.android.CavanBleGatt;
 
 public class JwaooBleToy extends CavanBleGatt {
@@ -17,6 +16,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	private CavanBleChar mCharacteristicTx;
 	private CavanBleChar mCharacteristicRx;
 	private CavanBleChar mCharacteristicOta;
+	private CavanBleDataListener mTxDataListener;
 
 	public JwaooBleToy(BluetoothDevice device, UUID uuid) {
 		super(device, uuid);
@@ -38,19 +38,29 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mCharacteristicOta != null && mCharacteristicOta.writeData(data, true);
 	}
 
+	public void setDataListener(CavanBleDataListener listener) {
+		mTxDataListener = listener;
+
+		if (mCharacteristicTx != null) {
+			mCharacteristicTx.setDataListener(listener);
+		}
+	}
+
 	@Override
 	protected boolean doInit() {
-		mCharacteristicRx = openWriteChar(UUID_RX);
+		mCharacteristicRx = openChar(UUID_RX);
 		if (mCharacteristicRx == null) {
 			return false;
 		}
 
-		mCharacteristicTx = openReadChar(UUID_TX);
+		mCharacteristicTx = openChar(UUID_TX);
 		if (mCharacteristicTx == null) {
 			return false;
 		}
 
-		mCharacteristicOta = openWriteChar(UUID_OTA);
+		mCharacteristicTx.setDataListener(mTxDataListener);
+
+		mCharacteristicOta = openChar(UUID_OTA);
 		if (mCharacteristicOta == null) {
 			return false;
 		}

@@ -37,13 +37,13 @@ public class CavanBleUart extends CavanBleGatt {
 
 	@Override
 	protected boolean doInit() {
-		mCharacteristicRx = openWriteChar(UUID_RX);
-		mCharacteristicTx = openReadChar(UUID_TX);
+		mCharacteristicRx = openChar(UUID_RX);
+		mCharacteristicTx = openChar(UUID_TX);
 		if (mCharacteristicRx == null || mCharacteristicTx == null) {
 			return false;
 		}
 
-		mCharacteristicOta = openWriteChar(UUID_OTA);
+		mCharacteristicOta = openChar(UUID_OTA);
 
 		return true;
 	}
