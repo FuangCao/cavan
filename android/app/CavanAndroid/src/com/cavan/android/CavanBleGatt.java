@@ -29,7 +29,6 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 
 	private UUID mUuid;
 	private BluetoothGatt mGatt;
-	private BluetoothDevice mDevice;
 	private BluetoothGattService mService;
 	private HashMap<BluetoothGattCharacteristic, CavanBleChar> mHashMapWrite = new HashMap<BluetoothGattCharacteristic, CavanBleGatt.CavanBleChar>();
 	private HashMap<BluetoothGattCharacteristic, CavanBleChar> mHashMapNotify = new HashMap<BluetoothGattCharacteristic, CavanBleGatt.CavanBleChar>();
@@ -53,19 +52,13 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 			}
 		};
 
-		public CavanBleChar() {
+		public CavanBleChar(UUID uuid) throws Exception {
 			super();
 			mListener = mListenerDefault;
-		}
-
-		synchronized public boolean init(UUID uuid) {
-			if (mGatt == null || mService == null) {
-				return false;
-			}
 
 			mChar = mService.getCharacteristic(uuid);
 			if (mChar == null) {
-				return false;
+				throw new Exception("uuid not found: " + uuid);
 			}
 
 			mGatt.setCharacteristicNotification(mChar, true);
@@ -85,8 +78,6 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 			if ((properties & PROPERTY_WRITE_ALL) != 0) {
 				mHashMapWrite.put(mChar, this);
 			}
-
-			return true;
 		}
 
 		synchronized private boolean writeFrame(byte[] data, boolean sync) {
@@ -168,10 +159,20 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 		}
 	}
 
-	public CavanBleGatt(BluetoothDevice device, UUID uuid) {
+	public CavanBleGatt(Context context, BluetoothDevice device, UUID uuid) throws Exception {
 		super();
-		mDevice = device;
 		mUuid = uuid;
+
+		mGatt = device.connectGatt(context, false, this);
+		if (mGatt == null) {
+			throw new Exception("Failed to connectGatt");
+		}
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		disconnect();
+		super.finalize();
 	}
 
 	protected void onConnected() {
@@ -189,32 +190,19 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 		}
 	}
 
-	synchronized public boolean connect(Context context) {
-		mGatt = mDevice.connectGatt(context, false, this);
-		if (mGatt == null) {
-			return false;
-		}
-
-		return true;
-	}
-
 	synchronized public CavanBleChar openChar(UUID uuid) {
-		CavanBleChar characteristic = new CavanBleChar();
-		if (characteristic.init(uuid)) {
-			return characteristic;
+		try {
+			return new CavanBleChar(uuid);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
 		return null;
 	}
 
 	synchronized public void disconnect() {
-		if (mGatt == null) {
-			return;
-		}
-
 		mGatt.disconnect();
 		mGatt.close();
-		mGatt = null;
 	}
 
 	public static String getPropertyName(int property) {

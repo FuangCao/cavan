@@ -3,6 +3,7 @@ package com.jwaoo.android;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 
 import com.cavan.android.CavanBleGatt;
 
@@ -18,12 +19,12 @@ public class JwaooBleToy extends CavanBleGatt {
 	private CavanBleChar mCharacteristicOta;
 	private CavanBleDataListener mTxDataListener;
 
-	public JwaooBleToy(BluetoothDevice device, UUID uuid) {
-		super(device, uuid);
+	public JwaooBleToy(Context context, BluetoothDevice device, UUID uuid) throws Exception {
+		super(context, device, uuid);
 	}
 
-	public JwaooBleToy(BluetoothDevice device) {
-		this(device, UUID_SERVICE);
+	public JwaooBleToy(Context context, BluetoothDevice device) throws Exception {
+		this(context, device, UUID_SERVICE);
 	}
 
 	public boolean sendData(byte[] data) {
@@ -40,7 +41,6 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public void setDataListener(CavanBleDataListener listener) {
 		mTxDataListener = listener;
-
 		if (mCharacteristicTx != null) {
 			mCharacteristicTx.setDataListener(listener);
 		}

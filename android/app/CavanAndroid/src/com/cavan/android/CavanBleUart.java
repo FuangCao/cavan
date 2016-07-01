@@ -3,6 +3,7 @@ package com.cavan.android;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 
 public class CavanBleUart extends CavanBleGatt {
 
@@ -14,13 +15,14 @@ public class CavanBleUart extends CavanBleGatt {
 	private CavanBleChar mCharacteristicTx;
 	private CavanBleChar mCharacteristicRx;
 	private CavanBleChar mCharacteristicOta;
+	private CavanBleDataListener mTxDataLinstener;
 
-	public CavanBleUart(BluetoothDevice device, UUID uuid) {
-		super(device, uuid);
+	public CavanBleUart(Context context, BluetoothDevice device, UUID uuid) throws Exception {
+		super(context, device, uuid);
 	}
 
-	public CavanBleUart(BluetoothDevice device) {
-		this(device, UUID_SERVICE);
+	public CavanBleUart(Context context, BluetoothDevice device) throws Exception {
+		this(context, device, UUID_SERVICE);
 	}
 
 	public boolean sendData(byte[] data) {
@@ -35,13 +37,26 @@ public class CavanBleUart extends CavanBleGatt {
 		return mCharacteristicOta != null && mCharacteristicOta.writeData(data, true);
 	}
 
+	public void setDataListener(CavanBleDataListener listener) {
+		mTxDataLinstener = listener;
+		if (mCharacteristicTx != null) {
+			mCharacteristicTx.setDataListener(listener);
+		}
+	}
+
 	@Override
 	protected boolean doInit() {
 		mCharacteristicRx = openChar(UUID_RX);
-		mCharacteristicTx = openChar(UUID_TX);
-		if (mCharacteristicRx == null || mCharacteristicTx == null) {
+		if (mCharacteristicRx == null) {
 			return false;
 		}
+
+		mCharacteristicTx = openChar(UUID_TX);
+		if (mCharacteristicTx == null) {
+			return false;
+		}
+
+		mCharacteristicTx.setDataListener(mTxDataLinstener);
 
 		mCharacteristicOta = openChar(UUID_OTA);
 

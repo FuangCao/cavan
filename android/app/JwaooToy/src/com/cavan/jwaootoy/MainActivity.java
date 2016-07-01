@@ -121,27 +121,28 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 				finish();
 			}
 
-			mBleToy = new JwaooBleToy(device) {
+			try {
+				mBleToy = new JwaooBleToy(this, device) {
 
-				@Override
-				protected void onDisconnected() {
-					CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
-				}
-			};
+					@Override
+					protected void onDisconnected() {
+						CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
+					}
+				};
 
-			if (!mBleToy.connect(this)) {
+				mBleToy.setDataListener(new CavanBleDataListener() {
+
+					@Override
+					public void onDataReceived(byte[] data) {
+						String text = new String(data);
+						CavanAndroid.logE("onDataReceived: " + text);
+						mHandler.obtainMessage(EVENT_DATA_RECEIVED, text).sendToTarget();
+					}
+				});
+			} catch (Exception e) {
+				e.printStackTrace();
 				finish();
 			}
-
-			mBleToy.setDataListener(new CavanBleDataListener() {
-
-				@Override
-				public void onDataReceived(byte[] data) {
-					String text = new String(data);
-					CavanAndroid.logE("onDataReceived: " + text);
-					mHandler.obtainMessage(EVENT_DATA_RECEIVED, text).sendToTarget();
-				}
-			});
 		} else {
 			finish();
 		}
