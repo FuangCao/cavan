@@ -68,6 +68,14 @@ public class ByteCache {
 		return writeValue16((short) (value & 0xFFFF)) && writeValue16((short) ((value >> 16) & 0xFFFF));
 	}
 
+	public boolean writeValueBe16(short value) {
+		return writeValue8((byte) ((value >> 8) & 0xFF)) && writeValue8((byte) (value & 0xFF));
+	}
+
+	public boolean writeValueBe32(int value) {
+		return writeValue16((short) ((value >> 16) & 0xFFFF)) && writeValue16((short) (value & 0xFFFF));
+	}
+
 	public byte readValue8() {
 		if (mOffset < mLength) {
 			return mBytes[mOffset++];
@@ -120,5 +128,13 @@ public class ByteCache {
 
 	public int readValue32() {
 		return readValue16() | (((int) readValue16()) << 16);
+	}
+
+	public short readValueBe16() {
+		return (short) ((((short) readValue8()) << 8) | readValue8());
+	}
+
+	public int readValueBe32() {
+		return (((int) readValue16()) << 16) | readValue16();
 	}
 }

@@ -15,6 +15,7 @@ import android.widget.EditText;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleScanner;
+import com.cavan.java.ByteCache;
 import com.jwaoo.android.JwaooBleToy;
 
 @SuppressLint("HandlerLeak")
@@ -28,6 +29,7 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 
 	private JwaooBleToy mBleToy;
 	private boolean mOtaBusy;
+	private boolean mSensorEnable;
 
 	private Button mButtonSend;
 	private Button mButtonUpgrade;
@@ -82,6 +84,13 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 	public void onClick(View v) {
 		switch (v.getId()) {
 		case R.id.buttonSend:
+			if (mSensorEnable) {
+				if (mBleToy.setSensorEnable(false)) {
+					mSensorEnable = false;
+				}
+			} else {
+				mSensorEnable = mBleToy.setSensorEnable(true);
+			}
 			break;
 
 		case R.id.buttonUpgrade:
@@ -137,12 +146,17 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 
 					@Override
 					protected void onDisconnected() {
+						CavanAndroid.logE("onDisconnected");
 						CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
 					}
 
 					@Override
 					protected void onSensorDataReceived(byte[] data) {
-						CavanAndroid.logE("onSensorDataReceived: length = " + data.length);
+						ByteCache cache = new ByteCache(data);
+						double x = cache.readValueBe16() * 9.8 / 16384;
+						double y = cache.readValueBe16() * 9.8 / 16384;
+						double z = cache.readValueBe16() * 9.8 / 16384;
+						CavanAndroid.logE(String.format("[%f, %f, %f]", x, y, z));
 					}
 				};
 			} catch (Exception e) {

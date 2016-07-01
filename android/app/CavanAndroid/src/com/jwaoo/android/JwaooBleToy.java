@@ -182,20 +182,31 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 		return true;
 	}
 
+	public boolean setSensorEnable(boolean enable) {
+		return sendCommandBool(JWAOO_TOY_CMD_SENSOR_ENABLE, enable);
+	}
+
+	public boolean setSensorDelay(int delay) {
+		return sendCommandInt(JWAOO_TOY_CMD_SENSOR_SET_DELAY, delay);
+	}
+
 	@Override
 	protected boolean doInit() {
 		mCharCommand = openChar(UUID_COMMAND);
 		if (mCharCommand == null) {
+			CavanAndroid.logE("uuid not found: " + UUID_COMMAND);
 			return false;
 		}
 
 		mCharFlash = openChar(UUID_FLASH);
 		if (mCharFlash == null) {
+			CavanAndroid.logE("uuid not found: " + UUID_FLASH);
 			return false;
 		}
 
 		mCharSensor = openChar(UUID_SENSOR);
 		if (mCharSensor == null) {
+			CavanAndroid.logE("uuid not found: " + UUID_SENSOR);
 			return false;
 		}
 
