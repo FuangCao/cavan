@@ -14,9 +14,7 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.cavan.android.CavanAndroid;
-import com.cavan.android.CavanBleGatt.CavanBleDataListener;
 import com.cavan.android.CavanBleScanner;
-import com.cavan.java.CavanHexFile;
 import com.jwaoo.android.JwaooBleToy;
 
 @SuppressLint("HandlerLeak")
@@ -24,8 +22,12 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 
 	public static final int BLE_SCAN_RESULT = 1;
 	private static final int EVENT_DATA_RECEIVED = 1;
+	private static final int EVENT_OTA_START = 2;
+	private static final int EVENT_OTA_FAILED = 3;
+	private static final int EVENT_OTA_SUCCESS = 4;
 
 	private JwaooBleToy mBleToy;
+	private boolean mOtaBusy;
 
 	private Button mButtonSend;
 	private Button mButtonUpgrade;
@@ -40,6 +42,18 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 				String text = (String) msg.obj;
 				mEditTextRecv.append(text);
 				break;
+
+			case EVENT_OTA_START:
+				CavanAndroid.showToast(getApplicationContext(), R.string.text_upgrade_start);
+				break;
+
+			case EVENT_OTA_FAILED:
+				CavanAndroid.showToast(getApplicationContext(), R.string.text_upgrade_failed);
+				break;
+
+			case EVENT_OTA_SUCCESS:
+				CavanAndroid.showToast(getApplicationContext(), R.string.text_upgrade_successfull);
+				break;
 			}
 		}
 	};
@@ -53,6 +67,8 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 		mEditTextRecv.setOnLongClickListener(this);
 
 		mEditTextSend = (EditText) findViewById(R.id.editTextSend);
+		mEditTextSend.setOnClickListener(this);
+
 		mButtonSend = (Button) findViewById(R.id.buttonSend);
 		mButtonSend.setOnClickListener(this);
 
@@ -62,41 +78,36 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 		CavanBleScanner.show(this, BLE_SCAN_RESULT);
 	}
 
-	public boolean sendText(String text) {
-		return mBleToy != null && mBleToy.sendText(text);
-	}
-
-	private boolean otaUpgrade() {
-		CavanHexFile file = new CavanHexFile("/data/local/tmp/dialog.hex");
-		byte[] bytes = file.parse();
-		if (bytes == null) {
-			CavanAndroid.logE("Failed to parse hex file");
-			return false;
-		}
-
-		int length = (bytes.length + 7) & (~0x07);
-		byte[] header = { 0x70, 0x50, 0x00, 0x00, 0x00, 0x00, (byte) ((length >> 8) & 0xFF), (byte) (length & 0xFF) };
-		if (mBleToy == null || mBleToy.writeOta(header) == false) {
-			return false;
-		}
-
-		return mBleToy != null && mBleToy.writeOta(bytes);
-	}
-
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
 		case R.id.buttonSend:
-			sendText(mEditTextSend.getText().toString());
 			break;
 
 		case R.id.buttonUpgrade:
-			CavanAndroid.showToast(this, R.string.text_upgrade_start);
-			if (otaUpgrade()) {
-				CavanAndroid.showToast(this, R.string.text_upgrade_successfull);
-			} else {
-				CavanAndroid.showToast(this, R.string.text_upgrade_failed);
+			if (mOtaBusy) {
+				break;
 			}
+
+			mOtaBusy = true;
+
+			new Thread() {
+
+				@Override
+				public void run() {
+					mHandler.sendEmptyMessage(EVENT_OTA_START);
+					if (mBleToy.doOtaUpgrade("/mnt/sdcard/jwaoo-toy.hex")) {
+						mHandler.sendEmptyMessage(EVENT_OTA_SUCCESS);
+					} else {
+						mHandler.sendEmptyMessage(EVENT_OTA_FAILED);
+					}
+
+					mOtaBusy = false;
+				}
+			}.start();
+			break;
+
+		case R.id.editTextSend:
 			break;
 		}
 	}
@@ -128,17 +139,12 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 					protected void onDisconnected() {
 						CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
 					}
-				};
-
-				mBleToy.setDataListener(new CavanBleDataListener() {
 
 					@Override
-					public void onDataReceived(byte[] data) {
-						String text = new String(data);
-						CavanAndroid.logE("onDataReceived: " + text);
-						mHandler.obtainMessage(EVENT_DATA_RECEIVED, text).sendToTarget();
+					protected void onSensorDataReceived(byte[] data) {
+						CavanAndroid.logE("onSensorDataReceived: length = " + data.length);
 					}
-				});
+				};
 			} catch (Exception e) {
 				e.printStackTrace();
 				finish();

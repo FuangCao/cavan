@@ -22,6 +22,7 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 
 	public static final int FRAME_SIZE = 20;
 	public static final int PROPERTY_NOTIFY_ALL = BluetoothGattCharacteristic.PROPERTY_NOTIFY;
+	public static final int PROPERTY_READ_ALL = BluetoothGattCharacteristic.PROPERTY_READ;
 	public static final int PROPERTY_WRITE_ALL = BluetoothGattCharacteristic.PROPERTY_WRITE |
 			BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE | BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE;
 	public static final UUID CFG_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
@@ -30,6 +31,7 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 	private UUID mUuid;
 	private BluetoothGatt mGatt;
 	private BluetoothGattService mService;
+	private HashMap<BluetoothGattCharacteristic, CavanBleChar> mHashMapRead = new HashMap<BluetoothGattCharacteristic, CavanBleGatt.CavanBleChar>();
 	private HashMap<BluetoothGattCharacteristic, CavanBleChar> mHashMapWrite = new HashMap<BluetoothGattCharacteristic, CavanBleGatt.CavanBleChar>();
 	private HashMap<BluetoothGattCharacteristic, CavanBleChar> mHashMapNotify = new HashMap<BluetoothGattCharacteristic, CavanBleGatt.CavanBleChar>();
 
@@ -42,6 +44,7 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 	public class CavanBleChar {
 
 		int mWriteStatus = -1;
+		int mReadStatus = -1;
 		private BluetoothGattCharacteristic mChar;
 		private CavanBleDataListener mListener;
 		private final CavanBleDataListener mListenerDefault = new CavanBleDataListener() {
@@ -75,17 +78,16 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 				mHashMapNotify.put(mChar, this);
 			}
 
+			if ((properties & PROPERTY_READ_ALL) != 0) {
+				mHashMapRead.put(mChar, this);
+			}
+
 			if ((properties & PROPERTY_WRITE_ALL) != 0) {
 				mHashMapWrite.put(mChar, this);
 			}
 		}
 
 		synchronized private boolean writeFrame(byte[] data, boolean sync) {
-			if (mChar == null) {
-				CavanAndroid.logE("mCharacteristic is null");
-				return false;
-			}
-
 			if (!mChar.setValue(data)) {
 				CavanAndroid.logE("Failed to setValue");
 				return false;
@@ -141,8 +143,42 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 			return writeFrame(data, sync);
 		}
 
+		synchronized public boolean sendReadCommand() {
+			return mGatt.readCharacteristic(mChar);
+		}
+
+		synchronized public byte[] readData(long timeout) {
+			mReadStatus = -110;
+
+			if (!sendReadCommand()) {
+				CavanAndroid.logE("Failed to sendReadCommand");
+				return null;
+			}
+
+			try {
+				if (timeout > 0) {
+					wait(timeout);
+				} else {
+					wait();
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			if (mReadStatus != 0) {
+				return null;
+			}
+
+			return mChar.getValue();
+		}
+
 		synchronized public void setWriteStatus(int status) {
 			mWriteStatus = status;
+			notify();
+		}
+
+		synchronized public void setReadStatus(int status) {
+			mReadStatus = status;
 			notify();
 		}
 
@@ -181,13 +217,6 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 
 	protected void onDisconnected() {
 		CavanAndroid.logE("onDisconnected");
-	}
-
-	private void onDataReceived(BluetoothGattCharacteristic characteristic) {
-		CavanBleChar bleChar = mHashMapNotify.get(characteristic);
-		if (bleChar != null) {
-			bleChar.onDataAvailable();
-		}
 	}
 
 	synchronized public CavanBleChar openChar(UUID uuid) {
@@ -336,10 +365,10 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 
 	@Override
 	public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-		CavanAndroid.logE("onCharacteristicRead: characteristic = " + characteristic.getUuid() + ", status = " + status);
-
-		if (status == 0) {
-			onDataReceived(characteristic);
+		CavanAndroid.logE("onDescriptorRead: characteristic = " + characteristic.getUuid() + ", status = " + status);
+		CavanBleChar bleChar = mHashMapRead.get(characteristic);
+		if (bleChar != null) {
+			bleChar.setReadStatus(status);
 		}
 
 		super.onCharacteristicRead(gatt, characteristic, status);
@@ -357,7 +386,11 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 
 	@Override
 	public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-		onDataReceived(characteristic);
+		CavanBleChar bleChar = mHashMapNotify.get(characteristic);
+		if (bleChar != null) {
+			bleChar.onDataAvailable();
+		}
+
 		super.onCharacteristicChanged(gatt, characteristic);
 	}
 
