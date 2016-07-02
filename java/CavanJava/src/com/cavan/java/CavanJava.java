@@ -6,20 +6,20 @@ import java.util.List;
 
 public class CavanJava {
 
-	public static void logE(String message) {
+	public static void printE(String message) {
 		System.err.println(message);
 	}
 
-	public static void logE(Throwable throwable) {
+	public static void printE(Throwable throwable) {
 		throwable.printStackTrace();
 	}
 
-	public static void logE(String message, Throwable throwable) {
-		logE(message);
-		logE(throwable);
+	public static void printE(String message, Throwable throwable) {
+		printE(message);
+		printE(throwable);
 	}
 
-	public static void logD(String message) {
+	public static void printD(String message) {
 		System.out.println(message);
 	}
 
@@ -38,7 +38,7 @@ public class CavanJava {
 	}
 
 	public static void printSep() {
-		logD(buildPrintSep());
+		printD(buildPrintSep());
 	}
 
 	public static String getEnv(String name) {
@@ -149,7 +149,7 @@ public class CavanJava {
 		return getCurrentStackTrace(3);
 	}
 
-	protected static String buildLogp() {
+	protected static String buildPosMessage() {
 		StackTraceElement trace = getCurrentStackTrace(4);
 		if (trace == null) {
 			return "unknown";
@@ -169,7 +169,7 @@ public class CavanJava {
 		return builder.toString();
 	}
 
-	protected static String buildLogp(String message) {
+	protected static String buildPosMessage(String message) {
 		StackTraceElement trace = getCurrentStackTrace(4);
 		if (trace == null) {
 			return "unknown";
@@ -186,20 +186,20 @@ public class CavanJava {
 		return builder.toString();
 	}
 
-	public static void logP() {
-		logE(buildLogp());
+	public static void printP() {
+		printE(buildPosMessage());
 	}
 
 	public static void logP(String message) {
-		logE(buildLogp(message));
+		printE(buildPosMessage(message));
 	}
 
 	public static void dumpstack(Throwable throwable) {
-		logE(throwable);
+		printE(throwable);
 	}
 
 	public static void dumpstack() {
-		logE(new Throwable());
+		printE(new Throwable());
 	}
 
 	public static int ArrayCopy(byte[] src, int srcOff, byte[] dest, int destOff, int count) {
@@ -225,6 +225,22 @@ public class CavanJava {
 		byte[] newBytes = new byte[count];
 		ArrayCopy(bytes, start, newBytes, 0, count);
 		return newBytes;
+	}
+
+	public static short buildValue16(byte[] bytes, int offset) {
+		return (short) ((bytes[offset] & 0xFF) | (bytes[offset + 1] & 0xFF) << 8);
+	}
+
+	public static int buildValue32(byte[] bytes, int offset) {
+		return (buildValue16(bytes, offset) & 0xFFFF) | (buildValue16(bytes, offset + 2) & 0xFFFF) << 16;
+	}
+
+	public static short buildValueBe16(byte[] bytes, int offset) {
+		return (short) ((bytes[offset + 1] & 0xFF) | (bytes[offset] & 0xFF) << 8);
+	}
+
+	public static int buildValueBe32(byte[] bytes, int offset) {
+		return (buildValue16(bytes, offset + 2) & 0xFFFF) | (buildValue16(bytes, offset) & 0xFFFF) << 16;
 	}
 
 	public static int parseChar(byte c) {

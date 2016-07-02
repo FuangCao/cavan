@@ -9,5 +9,6 @@
     <string name="text_upgrade_start">开始升级</string>
     <string name="text_upgrade_failed">升级失败</string>
     <string name="text_upgrade_successfull">升级成功</string>
+    <string name="text_reboot">重启</string>
 
 </resources>

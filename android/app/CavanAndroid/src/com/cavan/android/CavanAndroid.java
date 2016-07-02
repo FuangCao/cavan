@@ -43,11 +43,11 @@ public class CavanAndroid extends CavanJava {
 	}
 
 	public static void logP() {
-		logE(buildLogp());
+		logE(buildPosMessage());
 	}
 
 	public static void logP(String message) {
-		logE(buildLogp(message));
+		logE(buildPosMessage(message));
 	}
 
 	public static void dumpstack(Throwable throwable) {

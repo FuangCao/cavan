@@ -9,17 +9,14 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnLongClickListener;
 import android.widget.Button;
-import android.widget.EditText;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleScanner;
-import com.cavan.java.ByteCache;
 import com.jwaoo.android.JwaooBleToy;
 
 @SuppressLint("HandlerLeak")
-public class MainActivity extends Activity implements OnClickListener, OnLongClickListener {
+public class MainActivity extends Activity implements OnClickListener {
 
 	public static final int BLE_SCAN_RESULT = 1;
 	private static final int EVENT_DATA_RECEIVED = 1;
@@ -29,20 +26,16 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 
 	private JwaooBleToy mBleToy;
 	private boolean mOtaBusy;
-	private boolean mSensorEnable;
 
 	private Button mButtonSend;
 	private Button mButtonUpgrade;
-	private EditText mEditTextSend;
-	private EditText mEditTextRecv;
+	private Button mButtonReboot;
 	private Handler mHandler = new Handler() {
 
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case EVENT_DATA_RECEIVED:
-				String text = (String) msg.obj;
-				mEditTextRecv.append(text);
 				break;
 
 			case EVENT_OTA_START:
@@ -65,17 +58,14 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		mEditTextRecv = (EditText) findViewById(R.id.editTextRecv);
-		mEditTextRecv.setOnLongClickListener(this);
-
-		mEditTextSend = (EditText) findViewById(R.id.editTextSend);
-		mEditTextSend.setOnClickListener(this);
-
 		mButtonSend = (Button) findViewById(R.id.buttonSend);
 		mButtonSend.setOnClickListener(this);
 
 		mButtonUpgrade = (Button) findViewById(R.id.buttonUpgrade);
 		mButtonUpgrade.setOnClickListener(this);
+
+		mButtonReboot = (Button) findViewById(R.id.buttonReboot);
+		mButtonReboot.setOnClickListener(this);
 
 		CavanBleScanner.show(this, BLE_SCAN_RESULT);
 	}
@@ -84,13 +74,12 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 	public void onClick(View v) {
 		switch (v.getId()) {
 		case R.id.buttonSend:
-			if (mSensorEnable) {
-				if (mBleToy.setSensorEnable(false)) {
-					mSensorEnable = false;
-				}
-			} else {
-				mSensorEnable = mBleToy.setSensorEnable(true);
-			}
+			String identify = mBleToy.doIdentify();
+			CavanAndroid.logE("identify = " + identify);
+			String buildDate = mBleToy.readBuildDate();
+			CavanAndroid.logE("buildDate = " + buildDate);
+			int version = mBleToy.readVersion();
+			CavanAndroid.logE("version = " + Integer.toHexString(version));
 			break;
 
 		case R.id.buttonUpgrade:
@@ -116,20 +105,10 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 			}.start();
 			break;
 
-		case R.id.editTextSend:
+		case R.id.buttonReboot:
+			mBleToy.doReboot();
 			break;
 		}
-	}
-
-	@Override
-	public boolean onLongClick(View v) {
-		switch (v.getId()) {
-		case R.id.editTextRecv:
-			mEditTextRecv.setText(new String());
-			break;
-		}
-
-		return false;
 	}
 
 	@Override
@@ -152,11 +131,6 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 
 					@Override
 					protected void onSensorDataReceived(byte[] data) {
-						ByteCache cache = new ByteCache(data);
-						double x = cache.readValueBe16() * 9.8 / 16384;
-						double y = cache.readValueBe16() * 9.8 / 16384;
-						double z = cache.readValueBe16() * 9.8 / 16384;
-						CavanAndroid.logE(String.format("[%f, %f, %f]", x, y, z));
 					}
 				};
 			} catch (Exception e) {

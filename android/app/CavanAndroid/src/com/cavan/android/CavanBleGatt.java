@@ -96,7 +96,7 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 			if (sync) {
 				mWriteStatus = -110;
 
-				for (int i = 0; i < 10; i++) {
+				for (int i = 0; i < 50; i++) {
 					if (!mGatt.writeCharacteristic(mChar)) {
 						CavanAndroid.logE("Failed to writeCharacteristic");
 						return false;

@@ -5,51 +5,28 @@
     tools:context="${relativePackage}.${activityClass}" >
 
     <Button
+        android:id="@+id/buttonSend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:text="@string/text_send" />
+
+    <Button
         android:id="@+id/buttonUpgrade"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/buttonSend"
+        android:layout_alignParentTop="true"
         android:text="@string/text_upgrade" />
 
-    <EditText
-        android:id="@+id/editTextSend"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/buttonSend"
-        android:layout_alignParentLeft="true"
-        android:layout_toLeftOf="@+id/buttonSend"
-        android:singleLine="true" >
-
-        <requestFocus />
-    </EditText>
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/buttonUpgrade"
-        android:layout_alignParentLeft="true"
-        android:layout_toLeftOf="@+id/buttonUpgrade" />
-
-    <EditText
-        android:id="@+id/editTextRecv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:editable="false"
-        android:focusable="false"
-        android:focusableInTouchMode="false"
-        android:singleLine="true" />
-
     <Button
-        android:id="@+id/buttonSend"
+        android:id="@+id/buttonReboot"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/editTextRecv"
-        android:text="@string/text_send" />
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="22dp"
+        android:layout_toRightOf="@+id/buttonSend"
+        android:text="@string/text_reboot" />
 
 </RelativeLayout>
