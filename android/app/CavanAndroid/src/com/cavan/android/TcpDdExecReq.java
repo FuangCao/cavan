@@ -1,6 +1,7 @@
 package com.cavan.android;
 
-import com.cavan.java.ByteCache;
+import com.cavan.java.CavanByteCache;
+
 
 class TcpDdExecReq extends TcpDdPackage {
 	private short mLines;
@@ -29,7 +30,7 @@ class TcpDdExecReq extends TcpDdPackage {
 	}
 
 	@Override
-	protected boolean encodeBody(ByteCache cache) {
+	protected boolean encodeBody(CavanByteCache cache) {
 		if (!cache.writeValue16(mLines)) {
 			CavanAndroid.logE("Failed to writeValue16(mLines)");
 			return false;

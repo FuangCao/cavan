@@ -1,25 +1,25 @@
 package com.cavan.java;
 
-public class ByteCache {
+public class CavanByteCache {
 	private byte[] mBytes;
 	private int mOffset;
 	private int mLength;
 
-	public ByteCache(byte[] bytes, int offset, int length) {
+	public CavanByteCache(byte[] bytes, int offset, int length) {
 		mBytes = bytes;
 		mOffset = offset;
 		mLength = mOffset + length;
 	}
 
-	public ByteCache(byte[] bytes, int length) {
+	public CavanByteCache(byte[] bytes, int length) {
 		this(bytes, 0, length);
 	}
 
-	public ByteCache(byte[] bytes) {
+	public CavanByteCache(byte[] bytes) {
 		this(bytes, bytes.length);
 	}
 
-	public ByteCache(int length) {
+	public CavanByteCache(int length) {
 		this(new byte[length], length);
 	}
 
@@ -29,6 +29,10 @@ public class ByteCache {
 
 	public int getLength() {
 		return mOffset;
+	}
+
+	public void setOffset(int offset) {
+		mOffset = offset;
 	}
 
 	public boolean writeValue8(byte value) {
@@ -73,7 +77,7 @@ public class ByteCache {
 	}
 
 	public boolean writeValueBe32(int value) {
-		return writeValue16((short) ((value >> 16) & 0xFFFF)) && writeValue16((short) (value & 0xFFFF));
+		return writeValueBe16((short) ((value >> 16) & 0xFFFF)) && writeValueBe16((short) (value & 0xFFFF));
 	}
 
 	public byte readValue8() {
@@ -123,18 +127,18 @@ public class ByteCache {
 	}
 
 	public short readValue16() {
-		return (short) (readValue8() | (((short) readValue8()) << 8));
+		return (short) ((readValue8() & 0xFF) | ((readValue8() & 0xFF) << 8));
 	}
 
 	public int readValue32() {
-		return readValue16() | (((int) readValue16()) << 16);
+		return (readValue16() & 0xFFFF) | ((readValue16() & 0xFFFF) << 16);
 	}
 
 	public short readValueBe16() {
-		return (short) ((((short) readValue8()) << 8) | readValue8());
+		return (short) (((readValue8() & 0xFF) << 8) | (readValue8() & 0xFF));
 	}
 
 	public int readValueBe32() {
-		return (((int) readValue16()) << 16) | readValue16();
+		return ((readValueBe16() & 0xFFFF) << 16) | (readValueBe16() & 0xFFFF);
 	}
 }

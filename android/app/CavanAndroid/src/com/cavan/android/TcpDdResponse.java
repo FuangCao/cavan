@@ -2,7 +2,7 @@ package com.cavan.android;
 
 import android.annotation.SuppressLint;
 
-import com.cavan.java.ByteCache;
+import com.cavan.java.CavanByteCache;
 
 @SuppressLint("DefaultLocale")
 class TcpDdResponse extends TcpDdPackage {
@@ -39,7 +39,7 @@ class TcpDdResponse extends TcpDdPackage {
 	}
 
 	@Override
-	protected boolean encodeBody(ByteCache cache) {
+	protected boolean encodeBody(CavanByteCache cache) {
 		if (!cache.writeValue32(mCode)) {
 			CavanAndroid.logE("Failed to writeValue32(mCode)");
 			return false;
@@ -70,7 +70,7 @@ class TcpDdResponse extends TcpDdPackage {
 	}
 
 	@Override
-	protected boolean decodeBody(ByteCache cache) {
+	protected boolean decodeBody(CavanByteCache cache) {
 		if (mType != TcpDdClient.TCP_DD_RESPONSE) {
 			CavanAndroid.logE("Not a response type = " + mType);
 			return false;

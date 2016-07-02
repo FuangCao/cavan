@@ -7,7 +7,7 @@ import android.content.Context;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleGatt;
-import com.cavan.java.ByteCache;
+import com.cavan.java.CavanByteCache;
 import com.cavan.java.CavanHexFile;
 
 public abstract class JwaooBleToy extends CavanBleGatt {
@@ -89,7 +89,7 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 	}
 
 	public boolean sendCommandShort(byte type, short value) {
-		ByteCache cache = new ByteCache(3);
+		CavanByteCache cache = new CavanByteCache(3);
 
 		cache.writeValue8(type);
 		cache.writeValue16(value);
@@ -98,7 +98,7 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 	}
 
 	public boolean sendCommandInt(byte type, int value) {
-		ByteCache cache = new ByteCache(5);
+		CavanByteCache cache = new CavanByteCache(5);
 
 		cache.writeValue8(type);
 		cache.writeValue32(value);

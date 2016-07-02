@@ -4,7 +4,7 @@ import java.net.InetAddress;
 
 import android.net.LocalSocketAddress;
 
-import com.cavan.java.ByteCache;
+import com.cavan.java.CavanByteCache;
 
 public class TcpKeypadClient extends TcpInputClient {
 
@@ -19,7 +19,7 @@ public class TcpKeypadClient extends TcpInputClient {
 		super(address, TCP_KEYPAD_EVENT);
 	}
 
-	public boolean writeInputEvent(ByteCache cache, int type, int code, int value) {
+	public boolean writeInputEvent(CavanByteCache cache, int type, int code, int value) {
 		if (!cache.writeValue16((short) type)) {
 			return false;
 		}
@@ -31,11 +31,11 @@ public class TcpKeypadClient extends TcpInputClient {
 		return cache.writeValue32(value);
 	}
 
-	public boolean writeSyncEvent(ByteCache cache) {
+	public boolean writeSyncEvent(CavanByteCache cache) {
 		return writeInputEvent(cache, EVENT_TYPE_SYNC, 0, 0);
 	}
 
-	public boolean writeKeyEvent(ByteCache cache, int code, int value) {
+	public boolean writeKeyEvent(CavanByteCache cache, int code, int value) {
 		if (!writeInputEvent(cache, EVENT_TYPE_KEY, code, value)) {
 			return false;
 		}
@@ -43,7 +43,7 @@ public class TcpKeypadClient extends TcpInputClient {
 		return writeSyncEvent(cache);
 	}
 
-	public boolean writeKeyEvent(ByteCache cache, int code) {
+	public boolean writeKeyEvent(CavanByteCache cache, int code) {
 		if (!writeKeyEvent(cache, code, 1)) {
 			return false;
 		}
@@ -53,7 +53,7 @@ public class TcpKeypadClient extends TcpInputClient {
 
 	@Override
 	public boolean sendKeyEvent(int code) {
-		ByteCache cache = new ByteCache(32);
+		CavanByteCache cache = new CavanByteCache(32);
 		if (!writeKeyEvent(cache, code)) {
 			return false;
 		}
@@ -63,7 +63,7 @@ public class TcpKeypadClient extends TcpInputClient {
 
 	@Override
 	public boolean sendKeyEvent(int code, int value) {
-		ByteCache cache = new ByteCache(16);
+		CavanByteCache cache = new CavanByteCache(16);
 		if (!writeKeyEvent(cache, code, value)) {
 			return false;
 		}

@@ -1,6 +1,6 @@
 package com.cavan.android;
 
-import com.cavan.java.ByteCache;
+import com.cavan.java.CavanByteCache;
 
 class TcpDdPackage {
 	protected short mType;
@@ -39,11 +39,11 @@ class TcpDdPackage {
 		return String.format("type = %d, flags = 0x%08x", mType, mFlags);
 	}
 
-	protected boolean encodeBody(ByteCache cache) {
+	protected boolean encodeBody(CavanByteCache cache) {
 		return true;
 	}
 
-	protected byte[] encode(ByteCache cache) {
+	protected byte[] encode(CavanByteCache cache) {
 		if (!cache.writeValue32(TcpDdClient.TCP_DD_VERSION)) {
 			CavanAndroid.logE("Failed to writeValue32(TCP_DD_VERSION)");
 			return null;
@@ -74,18 +74,18 @@ class TcpDdPackage {
 
 	protected byte[] encode(int bodySize) {
 		byte[] bytes = new byte[TcpDdClient.TCP_DD_HEADER_LENGTH + bodySize];
-		return encode(new ByteCache(bytes));
+		return encode(new CavanByteCache(bytes));
 	}
 
 	public byte[] encode() {
 		return encode(0);
 	}
 
-	protected boolean decodeBody(ByteCache cache) {
+	protected boolean decodeBody(CavanByteCache cache) {
 		return true;
 	}
 
-	protected boolean decode(ByteCache cache) {
+	protected boolean decode(CavanByteCache cache) {
 		int version = cache.readValue32();
 		if (version != TcpDdClient.TCP_DD_VERSION) {
 			CavanAndroid.logE(String.format("Invalid version: 0x%08x", version));

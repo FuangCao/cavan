@@ -9,23 +9,37 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
 
-import com.cavan.android.CavanBleChar;
-import com.cavan.android.CavanBleScanner;
-import com.cavan.android.CavanBleUart;
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanBleScanner;
+import com.cavan.java.Mpu6050Parser;
+import com.jwaoo.android.JwaooBleToy;
 
 public class MainActivity extends Activity {
 
-	public static int BLE_SCAN_RESULT = 1;
+	public static final int BLE_SCAN_RESULT = 1;
 
-	private CavanBleUart mBleUart;
+	private static final int MSG_SENSOR_ENABLE = 1;
+
+	private JwaooBleToy mBleToy;
 	private BluetoothDevice mDevice;
 	private MySurfaceView mSurfaceView;
-	private Handler mHandler = new Handler();
+	private Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case MSG_SENSOR_ENABLE:
+				mBleToy.setSensorDelay(30);
+				mBleToy.setSensorEnable(true);
+				break;
+			}
+		}
+	};
 
 	class MySurfaceView extends SurfaceView implements Callback {
 
@@ -129,8 +143,8 @@ public class MainActivity extends Activity {
 
 	@Override
 	protected void onDestroy() {
-		if (mBleUart != null) {
-			mBleUart.disconnect();
+		if (mBleToy != null) {
+			mBleToy.disconnect();
 		}
 
 		super.onDestroy();
@@ -150,33 +164,28 @@ public class MainActivity extends Activity {
 				@Override
 				public void run() {
 
-					mBleUart = new CavanBleUart(mDevice) {
+					try {
+						mBleToy = new JwaooBleToy(MainActivity.this, mDevice) {
 
-						@Override
-						protected void onDisconnected() {
-							CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
-						}
-
-						@Override
-						protected void onDataReceived(CavanBleChar bleChar, byte[] data) {
-							if (data.length == 14) {
-								// double accX = ((double) (short) ((data[0] & 0xFF) << 8 | (data[1] & 0xFF))) * 9.8 / 16384;
-								double accY = ((double) (short) ((data[2] & 0xFF) << 8 | (data[3] & 0xFF))) * 9.8 / 16384;
-								// double accZ = ((double) (short) ((data[4] & 0xFF) << 8 | (data[5] & 0xFF))) * 9.8 / 16384;
-								// double temp = (((double) (short) ((data[6] & 0xFF) << 8 | (data[7] & 0xFF))) + 13200) / 280 - 13;
-								// double gyrX = ((double) (short) ((data[8] & 0xFF) << 8 | (data[9] & 0xFF))) / 131;
-								// double gyrY = ((double) (short) ((data[10] & 0xFF) << 8 | (data[11] & 0xFF))) / 131;
-								// double gyrZ = ((double) (short) ((data[12] & 0xFF) << 8 | (data[13] & 0xFF))) / 131;
-
-								// CavanAndroid.logE(String.format("ACC: [%f, %f, %f]", accX, accY, accZ));
-								// CavanAndroid.logE(String.format("GYR: [%f, %f, %f]", gyrX, gyrY, gyrZ));
-								// CavanAndroid.logE("temp = " + temp);
-								mSurfaceView.setValue((float) accY);;
+							@Override
+							protected void onConnected() {
+								mHandler.sendEmptyMessage(MSG_SENSOR_ENABLE);
+								super.onConnected();
 							}
-						}
-					};
 
-					if (!mBleUart.connect(MainActivity.this)) {
+							@Override
+							protected void onDisconnected() {
+								CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
+							}
+
+							@Override
+							protected void onSensorDataReceived(byte[] arg0) {
+								Mpu6050Parser parser = new Mpu6050Parser(arg0);
+								mSurfaceView.setValue((float) (parser.getAccelJoin() - 9.8));
+							}
+						};
+					} catch (Exception e) {
+						e.printStackTrace();
 						finish();
 					}
 				}
