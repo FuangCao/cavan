@@ -256,6 +256,20 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 		CavanAndroid.logE("Flash size = " + getFlashSize());
 		CavanAndroid.logE("Flash page size = " + getFlashPageSize());
 
+		CavanAndroid.logE("setFlashWriteEnable");
+
+		if (!setFlashWriteEnable(true)) {
+			CavanAndroid.logE("Failed to setFlashWriteEnable true");
+			return false;
+		}
+
+		CavanAndroid.logE("eraseFlash");
+
+		if (!eraseFlash()) {
+			CavanAndroid.logE("Failed to eraseFlash");
+			return false;
+		}
+
 		CavanAndroid.logE("startFlashWrite");
 
 		if (!startFlashWrite()) {
