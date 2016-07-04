@@ -21,6 +21,9 @@ import android.content.Context;
 public abstract class CavanBleGatt extends BluetoothGattCallback {
 
 	public static final int FRAME_SIZE = 20;
+	public static final long WRITE_TIMEOUT = 1000;
+	public static final long COMMAND_TIMEOUT = 2000;
+
 	public static final int PROPERTY_NOTIFY_ALL = BluetoothGattCharacteristic.PROPERTY_NOTIFY;
 	public static final int PROPERTY_READ_ALL = BluetoothGattCharacteristic.PROPERTY_READ;
 	public static final int PROPERTY_WRITE_ALL = BluetoothGattCharacteristic.PROPERTY_WRITE |
@@ -96,14 +99,14 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 			if (sync) {
 				mWriteStatus = -110;
 
-				for (int i = 0; i < 60; i++) {
+				for (int i = 0; i < 5; i++) {
 					if (!mGatt.writeCharacteristic(mChar)) {
 						CavanAndroid.logE("Failed to writeCharacteristic");
 						return false;
 					}
 
 					try {
-						wait(1000);
+						wait(WRITE_TIMEOUT);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
@@ -143,14 +146,14 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 			return writeFrame(data, sync);
 		}
 
-		synchronized public boolean sendReadCommand() {
+		synchronized public boolean readCharacteristic() {
 			return mGatt.readCharacteristic(mChar);
 		}
 
 		synchronized public byte[] readData(long timeout) {
 			mReadStatus = -110;
 
-			if (!sendReadCommand()) {
+			if (!readCharacteristic()) {
 				CavanAndroid.logE("Failed to sendReadCommand");
 				return null;
 			}
@@ -172,14 +175,38 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 			return mChar.getValue();
 		}
 
+		synchronized public byte[] sendCommand(byte[] command) {
+			if (writeData(command, true)) {
+				return readData(COMMAND_TIMEOUT);
+			}
+
+			return null;
+		}
+
 		synchronized public void setWriteStatus(int status) {
 			mWriteStatus = status;
 			notify();
 		}
 
+		synchronized public int getWriteStatus() {
+			return mWriteStatus;
+		}
+
 		synchronized public void setReadStatus(int status) {
 			mReadStatus = status;
 			notify();
+		}
+
+		synchronized public int getReadStatus() {
+			return mReadStatus;
+		}
+
+		synchronized public boolean isNotTimeout() {
+			return mWriteStatus != -110 && mReadStatus != -110;
+		}
+
+		synchronized public boolean isTimeout() {
+			return mWriteStatus == -110 || mReadStatus == -110;
 		}
 
 		synchronized public void setDataListener(CavanBleDataListener listener) {

@@ -13,7 +13,6 @@ import com.cavan.java.CavanJava;
 
 public abstract class JwaooBleToy extends CavanBleGatt {
 
-	public static final long COMMAND_TIMEOUT = 20000;
 	public static final  long DATA_TIMEOUT = 5000;
 	public static final UUID UUID_SERVICE = UUID.fromString("00001888-0000-1000-8000-00805f9b34fb");
 	public static final UUID UUID_COMMAND = UUID.fromString("00001889-0000-1000-8000-00805f9b34fb");
@@ -74,13 +73,8 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 		this(context, device, UUID_SERVICE);
 	}
 
-	public byte[] sendCommand(byte[] data) {
-		if (!mCharCommand.writeData(data, true)) {
-			CavanAndroid.logE("Failed to mCharCommand.writeData");
-			return null;
-		}
-
-		byte[] response = mCharCommand.readData(COMMAND_TIMEOUT);
+	public byte[] sendCommand(byte[] command) {
+		byte[] response = mCharCommand.sendCommand(command);
 		if (response == null || response.length < 1) {
 			CavanAndroid.logE("Failed to mCharCommand.readData");
 			return null;
@@ -237,7 +231,17 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 	}
 
 	public boolean finishWriteFlash() {
-		return sendCommandReadBool(JWAOO_TOY_CMD_FLASH_WRITE_FINISH, null);
+		for (int i = 0; i < 10; i++) {
+			if (sendCommandReadBool(JWAOO_TOY_CMD_FLASH_WRITE_FINISH, null)) {
+				return true;
+			}
+
+			if (mCharCommand.isNotTimeout()) {
+				break;
+			}
+		}
+
+		return false;
 	}
 
 	public boolean writeFlash(byte[] data) {
