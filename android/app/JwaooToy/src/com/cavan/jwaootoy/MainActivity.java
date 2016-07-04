@@ -29,10 +29,12 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	private JwaooBleToy mBleToy;
 	private boolean mOtaBusy;
+	private boolean mSensorEnable;
 
 	private Button mButtonSend;
 	private Button mButtonUpgrade;
 	private Button mButtonReboot;
+	private Button mButtonSensor;
 	private ProgressBar mProgressBar;
 	private Handler mHandler = new Handler() {
 
@@ -82,6 +84,9 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		mButtonReboot = (Button) findViewById(R.id.buttonReboot);
 		mButtonReboot.setOnClickListener(this);
+
+		mButtonSensor = (Button) findViewById(R.id.buttonSensor);
+		mButtonSensor.setOnClickListener(this);
 
 		mProgressBar = (ProgressBar) findViewById(R.id.progressBar1);
 
@@ -135,6 +140,16 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		case R.id.buttonReboot:
 			mBleToy.doReboot();
+			break;
+
+		case R.id.buttonSensor:
+			if (mSensorEnable) {
+				mBleToy.setSensorEnable(false);
+				mSensorEnable = false;
+			} else {
+				mBleToy.setSensorEnable(true);
+				mSensorEnable = true;
+			}
 			break;
 		}
 	}

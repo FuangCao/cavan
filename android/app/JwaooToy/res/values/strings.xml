@@ -10,5 +10,6 @@
     <string name="text_upgrade_failed">升级失败</string>
     <string name="text_upgrade_successfull">升级成功</string>
     <string name="text_reboot">重启</string>
+    <string name="text_sensor">传感器</string>
 
 </resources>
