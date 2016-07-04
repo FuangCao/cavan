@@ -10,9 +10,11 @@ import android.os.Message;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ProgressBar;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleScanner;
+import com.cavan.java.CavanProgressListener;
 import com.jwaoo.android.JwaooBleToy;
 
 @SuppressLint("HandlerLeak")
@@ -23,6 +25,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private static final int EVENT_OTA_START = 2;
 	private static final int EVENT_OTA_FAILED = 3;
 	private static final int EVENT_OTA_SUCCESS = 4;
+	private static final int EVENT_PROGRESS_UPDATED = 5;
 
 	private JwaooBleToy mBleToy;
 	private boolean mOtaBusy;
@@ -30,6 +33,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private Button mButtonSend;
 	private Button mButtonUpgrade;
 	private Button mButtonReboot;
+	private ProgressBar mProgressBar;
 	private Handler mHandler = new Handler() {
 
 		@Override
@@ -39,15 +43,27 @@ public class MainActivity extends Activity implements OnClickListener {
 				break;
 
 			case EVENT_OTA_START:
+				mButtonUpgrade.setEnabled(false);
+				mButtonReboot.setEnabled(false);
+				mButtonSend.setEnabled(false);
 				CavanAndroid.showToast(getApplicationContext(), R.string.text_upgrade_start);
 				break;
 
 			case EVENT_OTA_FAILED:
+				mButtonUpgrade.setEnabled(true);
+				mButtonSend.setEnabled(true);
 				CavanAndroid.showToast(getApplicationContext(), R.string.text_upgrade_failed);
 				break;
 
 			case EVENT_OTA_SUCCESS:
+				mButtonUpgrade.setEnabled(true);
+				mButtonReboot.setEnabled(true);
+				mButtonSend.setEnabled(true);
 				CavanAndroid.showToast(getApplicationContext(), R.string.text_upgrade_successfull);
+				break;
+
+			case EVENT_PROGRESS_UPDATED:
+				mProgressBar.setProgress(msg.arg1);
 				break;
 			}
 		}
@@ -67,7 +83,13 @@ public class MainActivity extends Activity implements OnClickListener {
 		mButtonReboot = (Button) findViewById(R.id.buttonReboot);
 		mButtonReboot.setOnClickListener(this);
 
+		mProgressBar = (ProgressBar) findViewById(R.id.progressBar1);
+
 		CavanBleScanner.show(this, BLE_SCAN_RESULT);
+	}
+
+	private void setUpgradeProgress(int progress) {
+		mHandler.obtainMessage(EVENT_PROGRESS_UPDATED, progress, 0).sendToTarget();
 	}
 
 	@Override
@@ -94,7 +116,13 @@ public class MainActivity extends Activity implements OnClickListener {
 				@Override
 				public void run() {
 					mHandler.sendEmptyMessage(EVENT_OTA_START);
-					if (mBleToy.doOtaUpgrade("/mnt/sdcard/jwaoo-toy.hex")) {
+					if (mBleToy.doOtaUpgrade("/mnt/sdcard/jwaoo-toy.hex", new CavanProgressListener() {
+
+						@Override
+						public void onProgressUpdated(int progress) {
+							setUpgradeProgress(progress);
+						}
+					})) {
 						mHandler.sendEmptyMessage(EVENT_OTA_SUCCESS);
 					} else {
 						mHandler.sendEmptyMessage(EVENT_OTA_FAILED);

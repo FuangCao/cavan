@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-import com.cavan.java.CavanJava;
-
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -16,6 +14,9 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
+
+import com.cavan.java.CavanJava;
+import com.cavan.java.CavanProgressListener;
 
 @SuppressLint("NewApi")
 public abstract class CavanBleGatt extends BluetoothGattCallback {
@@ -134,6 +135,8 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 					if (!writeFrame(block, true)) {
 						return false;
 					}
+
+					CavanAndroid.logE("writeData: " + (offset * 100 / data.length) + "%");
 				}
 
 				if (offset >= data.length) {
@@ -146,6 +149,39 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 			return writeFrame(data, sync);
 		}
 
+		public boolean writeData(byte[] data, CavanProgressListener listener) {
+			listener.setValueRange(data.length);
+
+			if (data.length > FRAME_SIZE) {
+				int offset = 0;
+				int last = data.length - FRAME_SIZE;
+				byte[] block = new byte[FRAME_SIZE];
+
+				while (offset <= last) {
+					CavanAndroid.ArrayCopy(data, offset, block, 0, FRAME_SIZE);
+					if (!writeFrame(block, true)) {
+						return false;
+					}
+
+					offset += FRAME_SIZE;
+					listener.setValue(offset);
+				}
+
+				if (offset < data.length) {
+					data = CavanAndroid.ArrayCopy(data, offset, data.length - offset);
+				} else {
+					return true;
+				}
+			}
+
+			if (!writeFrame(data, true)) {
+				return false;
+			}
+
+			listener.finishValue();
+
+			return true;
+		}
 		synchronized public boolean readCharacteristic() {
 			return mGatt.readCharacteristic(mChar);
 		}

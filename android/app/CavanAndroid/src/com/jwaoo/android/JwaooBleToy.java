@@ -10,6 +10,7 @@ import com.cavan.android.CavanBleGatt;
 import com.cavan.java.CavanByteCache;
 import com.cavan.java.CavanHexFile;
 import com.cavan.java.CavanJava;
+import com.cavan.java.CavanProgressListener;
 
 public abstract class JwaooBleToy extends CavanBleGatt {
 
@@ -248,7 +249,14 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 		return mCharFlash.writeData(data, true);
 	}
 
-	public boolean doOtaUpgrade(String pathname) {
+	public boolean writeFlash(byte[] data, CavanProgressListener listener) {
+		return mCharFlash.writeData(data, listener);
+	}
+
+	public boolean doOtaUpgrade(String pathname, CavanProgressListener listener) {
+		listener.setProgressRange(0, 99);;
+		listener.startProgress();
+
 		CavanHexFile file = new CavanHexFile(pathname);
 		byte[] bytes = file.parse();
 		if (bytes == null) {
@@ -262,10 +270,14 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 
 		CavanAndroid.logE("setFlashWriteEnable");
 
+		listener.addProgress();
+
 		if (!setFlashWriteEnable(true)) {
 			CavanAndroid.logE("Failed to setFlashWriteEnable true");
 			return false;
 		}
+
+		listener.addProgress();
 
 		CavanAndroid.logE("eraseFlash");
 
@@ -274,12 +286,16 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 			return false;
 		}
 
+		listener.addProgress();
+
 		CavanAndroid.logE("startFlashWrite");
 
 		if (!startFlashWrite()) {
 			CavanAndroid.logE("Failed to startFlashWrite");
 			return false;
 		}
+
+		listener.addProgress();
 
 		CavanAndroid.logE("writeFlash header");
 
@@ -290,9 +306,11 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 			return false;
 		}
 
+		listener.addProgress();
+
 		CavanAndroid.logE("writeFlash body");
 
-		if (!writeFlash(bytes)) {
+		if (!writeFlash(bytes, listener)) {
 			CavanAndroid.logE("Failed to writeFlash body");
 			return false;
 		}
@@ -303,6 +321,9 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 			CavanAndroid.logE("Failed to finishWriteFlash");
 			return false;
 		}
+
+		listener.setProgressMax(100);
+		listener.finishProgress();
 
 		return true;
 	}
