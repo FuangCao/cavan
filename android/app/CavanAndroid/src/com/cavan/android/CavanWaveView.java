@@ -1,5 +1,8 @@
 package com.cavan.android;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -10,7 +13,12 @@ import android.view.View;
 public class CavanWaveView extends View {
 
 	private Paint mPaint = new Paint();
-	private int mBackColor = Color.BLUE;
+	private int mBackColor = Color.BLACK;
+
+	private int mZoom = 1;
+	private double mValueMin;
+	private double mValueRange;
+	private List<Integer> mPoints = new ArrayList<Integer>();
 
 	public CavanWaveView(Context context) {
 		super(context);
@@ -36,6 +44,12 @@ public class CavanWaveView extends View {
 		mPaint.setColor(Color.YELLOW);
 	}
 
+	public void setZoom(int zoom) {
+		if (zoom > 0) {
+			mZoom = zoom;
+		}
+	}
+
 	public void setBackColor(int color) {
 		mBackColor = color;
 	}
@@ -48,10 +62,55 @@ public class CavanWaveView extends View {
 		mPaint.setStrokeWidth(width);
 	}
 
+	public void setValueRange(double min, double max) {
+		mValueMin = min;
+		mValueRange = max - min;
+	}
+
+	public boolean addValue(double value) {
+		int height = getHeight();
+		int point = (int) ((value - mValueMin) * height / mValueRange);
+		if (point < 0) {
+			point = 0;
+		} else if (point >= height) {
+			point = height - 1;
+		}
+
+		synchronized (mPoints) {
+			mPoints.add(height - point - 1);
+		}
+
+		postInvalidate();
+
+		return true;
+	}
+
 	@Override
 	protected void onDraw(Canvas canvas) {
 		canvas.drawColor(mBackColor);
-		canvas.drawLine(0, 0, getWidth(), getHeight(), mPaint);
+
+		synchronized (mPoints) {
+			int count = mPoints.size();
+			int width = getWidth();
+			int maxCount = width / mZoom;
+
+			while (count > maxCount) {
+				mPoints.remove(0);
+				count--;
+			}
+
+			if (count > 1) {
+				int y1 = mPoints.get(--count);
+
+				for (int x = width - 1; count > 0; x -= mZoom) {
+					int y0 = mPoints.get(--count);
+
+					canvas.drawLine(x - mZoom, y0, x, y1, mPaint);
+					y1 = y0;
+				}
+			}
+		}
+
 		super.onDraw(canvas);
 	}
 }

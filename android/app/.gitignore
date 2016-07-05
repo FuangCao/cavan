@@ -1,4 +1,6 @@
 Makefile
+/Test
+/CavanTest
 out
 libs
 android-support-v4.jar
