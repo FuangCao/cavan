@@ -1,9 +1,6 @@
 package com.cavan.java;
 
 public class AccelFreqParser {
-	private double mCoorX;
-	private double mCoorY;
-	private double mCoorZ;
 
 	private CavanFreqParser mParserX;
 	private CavanFreqParser mParserY;
@@ -16,13 +13,9 @@ public class AccelFreqParser {
 	}
 
 	public CavanFreqParser putValue(AccelDataCache cache) {
-		mCoorX = (mCoorX + cache.getCoorX()) / 2;
-		mCoorY = (mCoorY + cache.getCoorY()) / 2;
-		mCoorZ = (mCoorZ + cache.getCoorZ()) / 2;
-
-		mParserX.putValue(mCoorX);
-		mParserY.putValue(mCoorY);
-		mParserZ.putValue(mCoorZ);
+		mParserX.putValue(cache.getCoorX());
+		mParserY.putValue(cache.getCoorY());
+		mParserZ.putValue(cache.getCoorZ());
 
 		if (mParserX.getAvgDiff() > mParserY.getAvgDiff()) {
 			if (mParserX.getAvgDiff() > mParserZ.getAvgDiff()) {

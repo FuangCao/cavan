@@ -1,4 +1,4 @@
-package com.cavan.blesensor;
+package com.cavan.blecounter;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
@@ -10,8 +10,9 @@ import android.os.Message;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleScanner;
 import com.cavan.android.CavanWaveView;
-import com.cavan.java.AccelFreqParser;
 import com.cavan.java.CavanFreqParser;
+import com.cavan.java.CavanPeakValleyFinder;
+import com.cavan.java.CavanPeakValleyValue;
 import com.cavan.java.Mpu6050Accel;
 import com.jwaoo.android.JwaooBleToy;
 
@@ -20,6 +21,10 @@ public class MainActivity extends Activity {
 	public static final int BLE_SCAN_RESULT = 1;
 
 	private static final int MSG_SENSOR_ENABLE = 1;
+
+	private CavanFreqParser mParserX = new CavanFreqParser(2);
+	private CavanFreqParser mParserY = new CavanFreqParser(2);
+	private CavanFreqParser mParserZ = new CavanFreqParser(2);
 
 	private CavanWaveView mWaveViewX;
 	private CavanWaveView mWaveViewY;
@@ -47,15 +52,15 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 
 		mWaveViewX = (CavanWaveView) findViewById(R.id.waveViewX);
-		mWaveViewX.setValueRange(-19.6, 19.6);
+		mWaveViewX.setValueRange(0, 19.6);
 		mWaveViewX.setZoom(3);
 
 		mWaveViewY = (CavanWaveView) findViewById(R.id.waveViewY);
-		mWaveViewY.setValueRange(-19.6, 19.6);
+		mWaveViewY.setValueRange(0, 19.6);
 		mWaveViewY.setZoom(3);
 
 		mWaveViewZ = (CavanWaveView) findViewById(R.id.waveViewZ);
-		mWaveViewZ.setValueRange(-19.6, 19.6);
+		mWaveViewZ.setValueRange(0, 19.6);
 		mWaveViewZ.setZoom(3);
 
 		mWaveViewDepth = (CavanWaveView) findViewById(R.id.waveViewDepth);
@@ -105,12 +110,28 @@ public class MainActivity extends Activity {
 							@Override
 							protected void onSensorDataReceived(byte[] arg0) {
 								Mpu6050Accel accel = new Mpu6050Accel(arg0);
+								CavanPeakValleyValue value;
 
-								mWaveViewX.addValue(accel.getCoorX());
-								mWaveViewY.addValue(accel.getCoorY());
-								mWaveViewZ.addValue(accel.getCoorZ());
+								value = mParserX.putValue(accel.getCoorX());
+								if (value == null) {
+									mWaveViewX.addValue(0);
+								} else {
+									mWaveViewX.addValue(value.getDiff());
+								}
 
-								// CavanAndroid.logE(String.format("[%f, %f, %f]", accel.getCoorX(), accel.getCoorY(), accel.getCoorZ()));
+								value = mParserY.putValue(accel.getCoorY());
+								if (value == null) {
+									mWaveViewY.addValue(0);
+								} else {
+									mWaveViewY.addValue(value.getDiff());
+								}
+
+								value = mParserZ.putValue(accel.getCoorZ());
+								if (value == null) {
+									mWaveViewZ.addValue(0);
+								} else {
+									mWaveViewZ.addValue(value.getDiff());
+								}
 
 								int depth = accel.readValue8();
 								mWaveViewDepth.addValue(depth);

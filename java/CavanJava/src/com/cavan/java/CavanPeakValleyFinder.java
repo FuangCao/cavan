@@ -2,6 +2,7 @@ package com.cavan.java;
 
 public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 
+	private double mValue;
 	private boolean mFindPeak;
 	private boolean mFindValley;
 	private boolean mPeakFound;
@@ -20,9 +21,11 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 	public CavanPeakValleyValue putValue(double value) {
 		CavanPeakValleyValue result = null;
 
+		mValue = (mValue + value) / 2;
+
 		if (mFindPeak) {
-			if (value > mPeakValue) {
-				mPeakValue = value;
+			if (mValue > mPeakValue) {
+				mPeakValue = mValue;
 			} else {
 				mFindPeak = false;
 				mPeakFound = true;
@@ -33,35 +36,35 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 				}
 
 				mFindValley = true;
-				mValleyValue = value;
+				mValleyValue = mValue;
 			}
 		} else if (mFindValley) {
-			if (value < mValleyValue) {
-				mValleyValue = value;
+			if (mValue < mValleyValue) {
+				mValleyValue = mValue;
 			} else {
 				mValleyFound = true;
 
 				if (mPeakFound) {
 					mPeakFound = false;
-					result = new CavanPeakValleyValue(value, mValleyValue);
+					result = new CavanPeakValleyValue(mPeakValue, mValleyValue);
 				}
 
 				mFindPeak = true;
-				mPeakValue = value;
+				mPeakValue = mValue;
 			}
 		} else if (mInitialized) {
-			if (value > mPeakValue) {
+			if (mValue > mPeakValue) {
 				mFindPeak = true;
-				mPeakValue = value;
-			} else if (value < mValleyValue) {
+				mPeakValue = mValue;
+			} else if (mValue < mValleyValue) {
 				mFindValley = true;
-				mValleyValue = value;
+				mValleyValue = mValue;
 			} else {
-				mPeakValue = mValleyValue = value;
+				mPeakValue = mValleyValue = mValue;
 			}
 		} else {
 			mInitialized = true;
-			mPeakValue = mValleyValue = value;
+			mPeakValue = mValleyValue = mValue;
 		}
 
 		return result;

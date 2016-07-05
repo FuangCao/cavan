@@ -8,6 +8,6 @@ public class Mpu6050Accel extends AccelDataCache {
 
 	@Override
 	protected double readAccelValue() {
-		return readValueBe16() * 9.8 / 16384;
+		return readValue8() * 9.8 / 64;
 	}
 }
