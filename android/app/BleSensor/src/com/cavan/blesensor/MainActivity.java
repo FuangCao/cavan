@@ -10,7 +10,9 @@ import android.os.Message;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleScanner;
 import com.cavan.android.CavanWaveView;
-import com.cavan.java.Mpu6050Parser;
+import com.cavan.java.AccelFreqParser;
+import com.cavan.java.CavanFreqParser;
+import com.cavan.java.Mpu6050Accel;
 import com.jwaoo.android.JwaooBleToy;
 
 public class MainActivity extends Activity {
@@ -23,10 +25,7 @@ public class MainActivity extends Activity {
 	private CavanWaveView mWaveViewY;
 	private CavanWaveView mWaveViewZ;
 	private CavanWaveView mWaveViewDepth;
-
-	private float mAccelX;
-	private float mAccelY;
-	private float mAccelZ;
+	private AccelFreqParser mParser = new AccelFreqParser(2);
 
 	private JwaooBleToy mBleToy;
 	private BluetoothDevice mDevice;
@@ -49,11 +48,11 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 
 		mWaveViewX = (CavanWaveView) findViewById(R.id.waveViewX);
-		mWaveViewX.setValueRange(-9.8, 9.8);
+		mWaveViewX.setValueRange(0, 500);
 		mWaveViewX.setZoom(3);
 
 		mWaveViewY = (CavanWaveView) findViewById(R.id.waveViewY);
-		mWaveViewY.setValueRange(-9.8, 9.8);
+		mWaveViewY.setValueRange(0, 9.8);
 		mWaveViewY.setZoom(3);
 
 		mWaveViewZ = (CavanWaveView) findViewById(R.id.waveViewZ);
@@ -106,17 +105,13 @@ public class MainActivity extends Activity {
 
 							@Override
 							protected void onSensorDataReceived(byte[] arg0) {
-								Mpu6050Parser parser = new Mpu6050Parser(arg0);
+								Mpu6050Accel accel = new Mpu6050Accel(arg0);
+								CavanFreqParser parser = mParser.putValue(accel);
+								CavanAndroid.logE("freq = " + parser.getFreq());
+								mWaveViewX.addValue(parser.getFreq());
+								mWaveViewY.addValue(parser.getAvgDiff());
 
-								mAccelX = (mAccelX + parser.getAccelX() * 2) / 3;
-								mWaveViewX.addValue(mAccelX);
-
-								mAccelY = (mAccelY + parser.getAccelY() * 2) / 3;
-								mWaveViewY.addValue(mAccelY);
-
-								mWaveViewZ.addValue(parser.getAccelZ());
-
-								int depth = parser.readValue8();
+								int depth = accel.readValue8();
 								mWaveViewDepth.addValue(depth);
 							}
 						};
