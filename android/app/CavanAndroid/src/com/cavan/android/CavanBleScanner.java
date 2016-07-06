@@ -172,6 +172,10 @@ public class CavanBleScanner extends Activity implements LeScanCallback {
 		return true;
 	}
 
+	public static boolean show(Activity activity) {
+		return show(activity, 0);
+	}
+
 	@SuppressWarnings("deprecation")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

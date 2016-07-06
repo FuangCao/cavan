@@ -29,10 +29,16 @@ public class MainActivity extends Activity implements OnClickListener {
 	private static final int EVENT_PROGRESS_UPDATED = 5;
 	private static final int EVENT_FREQ_CHANGED = 6;
 	private static final int EVENT_DEPTH_CHANGED = 7;
+	private static final int EVENT_CONNECT = 8;
+	private static final int EVENT_AUTO_CONNECT = 9;
+	private static final int EVENT_CONNECTED = 10;
+	private static final int EVENT_DISCONNECTED = 11;
 
 	private int mFreq;
 	private int mDepth;
 
+	private boolean mAutoConnectDisable = true;
+	private BluetoothDevice mDevice;
 	private JwaooBleToy mBleToy;
 	private boolean mOtaBusy;
 	private boolean mSensorEnable;
@@ -65,10 +71,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				break;
 
 			case EVENT_OTA_START:
-				mButtonUpgrade.setEnabled(false);
-				mButtonReboot.setEnabled(false);
-				mButtonSend.setEnabled(false);
-				mButtonSensor.setEnabled(false);
+				updateUI(false);
 				CavanAndroid.showToast(getApplicationContext(), R.string.text_upgrade_start);
 				break;
 
@@ -79,10 +82,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				break;
 
 			case EVENT_OTA_SUCCESS:
-				mButtonUpgrade.setEnabled(true);
-				mButtonReboot.setEnabled(true);
-				mButtonSend.setEnabled(true);
-				mButtonSensor.setEnabled(true);
+				updateUI(true);
 				CavanAndroid.showToast(getApplicationContext(), R.string.text_upgrade_successfull);
 				break;
 
@@ -93,6 +93,52 @@ public class MainActivity extends Activity implements OnClickListener {
 			case EVENT_FREQ_CHANGED:
 			case EVENT_DEPTH_CHANGED:
 				setTitle("Depth = " + mDepth + ", Freq = " + mFreq);
+				break;
+
+			case EVENT_AUTO_CONNECT:
+				if (mDevice == null) {
+					break;
+				}
+
+				if (mAutoConnectDisable) {
+					CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
+					break;
+				}
+			case EVENT_CONNECT:
+				try {
+					mBleToy = new JwaooBleToy(getApplicationContext(), mDevice) {
+
+						@Override
+						protected void onConnected() {
+							CavanAndroid.logE("onConnected");
+							mAutoConnectDisable = false;
+							mHandler.sendEmptyMessage(EVENT_CONNECTED);
+						}
+
+						@Override
+						protected void onDisconnected() {
+							CavanAndroid.logE("onDisconnected");
+							mHandler.sendEmptyMessage(EVENT_DISCONNECTED);
+						}
+
+						@Override
+						protected void onSensorDataReceived(byte[] data) {
+							mSensor.putData(data);
+						}
+					};
+				} catch (Exception e) {
+					e.printStackTrace();
+					finish();
+				}
+				break;
+
+			case EVENT_CONNECTED:
+				updateUI(true);
+				break;
+
+			case EVENT_DISCONNECTED:
+				updateUI(false);
+				mHandler.sendEmptyMessageDelayed(EVENT_AUTO_CONNECT, 200);
 				break;
 			}
 		}
@@ -120,6 +166,13 @@ public class MainActivity extends Activity implements OnClickListener {
 		CavanBleScanner.show(this, BLE_SCAN_RESULT);
 	}
 
+	private void updateUI(boolean enable) {
+		mButtonUpgrade.setEnabled(enable);
+		mButtonReboot.setEnabled(enable);
+		mButtonSend.setEnabled(enable);
+		mButtonSensor.setEnabled(enable);
+	}
+
 	private void setUpgradeProgress(int progress) {
 		mHandler.obtainMessage(EVENT_PROGRESS_UPDATED, progress, 0).sendToTarget();
 	}
@@ -129,10 +182,24 @@ public class MainActivity extends Activity implements OnClickListener {
 		switch (v.getId()) {
 		case R.id.buttonSend:
 			String identify = mBleToy.doIdentify();
+			if (identify == null) {
+				break;
+			}
+
 			CavanAndroid.logE("identify = " + identify);
+
 			String buildDate = mBleToy.readBuildDate();
+			if (buildDate == null) {
+				break;
+			}
+
 			CavanAndroid.logE("buildDate = " + buildDate);
+
 			int version = mBleToy.readVersion();
+			if (version == 0) {
+				break;
+			}
+
 			CavanAndroid.logE("version = " + Integer.toHexString(version));
 			break;
 
@@ -171,11 +238,13 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		case R.id.buttonSensor:
 			if (mSensorEnable) {
-				mBleToy.setSensorEnable(false);
-				mSensorEnable = false;
-			} else {
-				mBleToy.setSensorEnable(true);
+				if (mBleToy.setSensorEnable(false)) {
+					mSensorEnable = false;
+					mButtonSensor.setText(R.string.text_open_sensor);
+				}
+			} else if (mBleToy.setSensorEnable(true)) {
 				mSensorEnable = true;
+				mButtonSensor.setText(R.string.text_close_sensor);
 			}
 			break;
 		}
@@ -185,28 +254,11 @@ public class MainActivity extends Activity implements OnClickListener {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		CavanAndroid.logE("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
 		if (requestCode == BLE_SCAN_RESULT && resultCode == RESULT_OK && data != null) {
-			BluetoothDevice device = data.getParcelableExtra("device");
-			if (device == null) {
+			mDevice = data.getParcelableExtra("device");
+			if (mDevice == null) {
 				finish();
-			}
-
-			try {
-				mBleToy = new JwaooBleToy(this, device) {
-
-					@Override
-					protected void onDisconnected() {
-						CavanAndroid.logE("onDisconnected");
-						CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
-					}
-
-					@Override
-					protected void onSensorDataReceived(byte[] data) {
-						mSensor.putData(data);
-					}
-				};
-			} catch (Exception e) {
-				e.printStackTrace();
-				finish();
+			} else {
+				mHandler.sendEmptyMessage(EVENT_CONNECT);
 			}
 		} else {
 			finish();
@@ -215,6 +267,8 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	@Override
 	protected void onDestroy() {
+		mDevice = null;
+
 		if (mBleToy != null) {
 			mBleToy.disconnect();
 		}
