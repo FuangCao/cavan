@@ -166,6 +166,15 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 		setFreq((int) ((count * 30000) / first.getTimeEarly(time)));
 	}
 
+	private void updateFreq(long time) {
+		int count = mValueList.size();
+		if (count > 1) {
+			setFreq(mValueList.get(0), time, count - 1);
+		} else {
+			setFreq(0);
+		}
+	}
+
 	public double putFreqValue(double value) {
 		long time = System.currentTimeMillis();
 
@@ -178,18 +187,9 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 			}
 
 			mValueList.add(result);
-
-			int count = mValueList.size();
-			if (count > 1) {
-				setFreq(mValueList.get(0), time, count);
-			}
+			updateFreq(time);
 		} else if (time - mTime < FREQ_TIMEOUT) {
-			int count = mValueList.size();
-			if (count > 1) {
-				setFreq(mValueList.get(0), time, count);
-			} else {
-				setFreq(0);
-			}
+			updateFreq(time);
 		} else {
 			mValueList.clear();
 			setFreq(0);

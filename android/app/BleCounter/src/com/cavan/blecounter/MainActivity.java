@@ -105,13 +105,13 @@ public class MainActivity extends Activity {
 							@Override
 							protected void onSensorDataReceived(byte[] arg0) {
 								Mpu6050Accel accel = new Mpu6050Accel(arg0);
-								CavanPeakValleyValue value;
+								double value = accel.getCoorZ();
 
-								mWaveViewX.addValue(accel.getCoorX());
+								mWaveViewX.addValue(value);
 
-								value = mFinder.putValue(accel.getCoorX());
-								if (value != null && value.isRising()) {
-									mWaveViewZ.addValue(value.getDiff());
+								CavanPeakValleyValue result = mFinder.putValue(value);
+								if (result != null && result.isRising()) {
+									mWaveViewZ.addValue(result.getDiff());
 								} else {
 									mWaveViewZ.addValue(0);
 								}

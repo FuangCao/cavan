@@ -26,7 +26,10 @@ public class AccelFreqParser {
 	}
 
 	private void setFreq(int freq) {
-		freq = (mFreq + freq) / 2;
+		if (freq > 0 && mFreq > 0) {
+			freq = (mFreq + freq) / 2;
+		}
+
 		if (mFreq != freq) {
 			mFreq = freq;
 			onFreqChanged(freq);
