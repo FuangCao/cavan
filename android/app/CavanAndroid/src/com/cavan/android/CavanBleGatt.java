@@ -33,7 +33,9 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 	public static final UUID DESC_UUID = UUID.fromString("00002901-0000-1000-8000-00805f9b34fb");
 
 	private UUID mUuid;
+	private Context mContext;
 	private BluetoothGatt mGatt;
+	private BluetoothDevice mDevice;
 	private BluetoothGattService mService;
 	private HashMap<BluetoothGattCharacteristic, CavanBleChar> mHashMapRead = new HashMap<BluetoothGattCharacteristic, CavanBleGatt.CavanBleChar>();
 	private HashMap<BluetoothGattCharacteristic, CavanBleChar> mHashMapWrite = new HashMap<BluetoothGattCharacteristic, CavanBleGatt.CavanBleChar>();
@@ -260,11 +262,13 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 
 	public CavanBleGatt(Context context, BluetoothDevice device, UUID uuid) throws Exception {
 		super();
-		mUuid = uuid;
 
-		mGatt = device.connectGatt(context, false, this);
-		if (mGatt == null) {
-			throw new Exception("Failed to connectGatt");
+		mUuid = uuid;
+		mDevice = device;
+		mContext = context;
+
+		if (!connect()) {
+			throw new Exception("Failed to connect");
 		}
 	}
 
@@ -292,9 +296,21 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 		return null;
 	}
 
+	synchronized public boolean connect() {
+		mGatt = mDevice.connectGatt(mContext, false, this);
+		return mGatt != null;
+	}
+
 	synchronized public void disconnect() {
-		mGatt.disconnect();
-		mGatt.close();
+		if (mGatt != null) {
+			mGatt.disconnect();
+			mGatt.close();
+		}
+	}
+
+	synchronized public boolean reconnect() {
+		disconnect();
+		return connect();
 	}
 
 	public static String getPropertyName(int property) {

@@ -61,6 +61,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private Button mButtonUpgrade;
 	private Button mButtonReboot;
 	private Button mButtonSensor;
+	private Button mButtonDisconnect;
 	private ProgressBar mProgressBar;
 	private Handler mHandler = new Handler() {
 
@@ -106,6 +107,10 @@ public class MainActivity extends Activity implements OnClickListener {
 				}
 			case EVENT_CONNECT:
 				try {
+					if (mBleToy != null) {
+						mBleToy.disconnect();
+					}
+
 					mBleToy = new JwaooBleToy(getApplicationContext(), mDevice) {
 
 						@Override
@@ -133,6 +138,13 @@ public class MainActivity extends Activity implements OnClickListener {
 				break;
 
 			case EVENT_CONNECTED:
+				String identify = mBleToy.doIdentify();
+				if (identify == null) {
+					mBleToy.disconnect();
+					CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
+					break;
+				}
+				CavanAndroid.logE("identify = " + identify);
 				updateUI(true);
 				break;
 
@@ -161,6 +173,9 @@ public class MainActivity extends Activity implements OnClickListener {
 		mButtonSensor = (Button) findViewById(R.id.buttonSensor);
 		mButtonSensor.setOnClickListener(this);
 
+		mButtonDisconnect = (Button) findViewById(R.id.buttonDisconnect);
+		mButtonDisconnect.setOnClickListener(this);
+
 		mProgressBar = (ProgressBar) findViewById(R.id.progressBar1);
 
 		CavanBleScanner.show(this, BLE_SCAN_RESULT);
@@ -171,6 +186,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		mButtonReboot.setEnabled(enable);
 		mButtonSend.setEnabled(enable);
 		mButtonSensor.setEnabled(enable);
+		mButtonDisconnect.setEnabled(enable);
 	}
 
 	private void setUpgradeProgress(int progress) {
@@ -245,6 +261,12 @@ public class MainActivity extends Activity implements OnClickListener {
 			} else if (mBleToy.setSensorEnable(true)) {
 				mSensorEnable = true;
 				mButtonSensor.setText(R.string.text_close_sensor);
+			}
+			break;
+
+		case R.id.buttonDisconnect:
+			if (mBleToy != null) {
+				mBleToy.disconnect();
 			}
 			break;
 		}

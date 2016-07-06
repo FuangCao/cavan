@@ -74,7 +74,11 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 		this(context, device, UUID_SERVICE);
 	}
 
-	public byte[] sendCommand(byte[] command) {
+	synchronized public byte[] sendCommand(byte[] command) {
+		if (mCharCommand == null) {
+			return null;
+		}
+
 		byte[] response = mCharCommand.sendCommand(command);
 		if (response == null || response.length < 1) {
 			CavanAndroid.logE("Failed to mCharCommand.readData");
@@ -195,7 +199,11 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 		return sendCommandReadInt(JWAOO_TOY_CMD_VERSION, 0);
 	}
 
-	public byte[] readFlash(int address) {
+	synchronized public byte[] readFlash(int address) {
+		if (mCharFlash == null) {
+			return null;
+		}
+
 		if (!sendCommandInt(JWAOO_TOY_CMD_FLASH_READ, address)) {
 			return null;
 		}
@@ -231,7 +239,7 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 		return sendCommandReadBool(JWAOO_TOY_CMD_FLASH_WRITE_START, null);
 	}
 
-	public boolean finishWriteFlash() {
+	synchronized public boolean finishWriteFlash() {
 		for (int i = 0; i < 10; i++) {
 			if (sendCommandReadBool(JWAOO_TOY_CMD_FLASH_WRITE_FINISH, null)) {
 				return true;
@@ -245,15 +253,23 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 		return false;
 	}
 
-	public boolean writeFlash(byte[] data) {
+	synchronized public boolean writeFlash(byte[] data) {
+		if (mCharFlash == null) {
+			return false;
+		}
+
 		return mCharFlash.writeData(data, true);
 	}
 
-	public boolean writeFlash(byte[] data, CavanProgressListener listener) {
+	synchronized public boolean writeFlash(byte[] data, CavanProgressListener listener) {
+		if (mCharFlash == null) {
+			return false;
+		}
+
 		return mCharFlash.writeData(data, listener);
 	}
 
-	public boolean doOtaUpgrade(String pathname, CavanProgressListener listener) {
+	synchronized public boolean doOtaUpgrade(String pathname, CavanProgressListener listener) {
 		listener.setProgressRange(0, 99);;
 		listener.startProgress();
 

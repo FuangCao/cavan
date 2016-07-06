@@ -13,5 +13,6 @@
     <string name="text_sensor">传感器</string>
     <string name="text_open_sensor">打开传感器</string>
     <string name="text_close_sensor">关闭传感器</string>
+    <string name="text_disconnect">断开连接</string>
 
 </resources>
