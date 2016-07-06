@@ -37,7 +37,6 @@ public class MainActivity extends Activity implements OnClickListener {
 	private int mFreq;
 	private int mDepth;
 
-	private boolean mAutoConnectDisable = true;
 	private BluetoothDevice mDevice;
 	private JwaooBleToy mBleToy;
 	private boolean mOtaBusy;
@@ -100,11 +99,6 @@ public class MainActivity extends Activity implements OnClickListener {
 				if (mDevice == null) {
 					break;
 				}
-
-				if (mAutoConnectDisable) {
-					CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
-					break;
-				}
 			case EVENT_CONNECT:
 				try {
 					if (mBleToy != null) {
@@ -114,16 +108,13 @@ public class MainActivity extends Activity implements OnClickListener {
 					mBleToy = new JwaooBleToy(getApplicationContext(), mDevice) {
 
 						@Override
-						protected void onConnected() {
-							CavanAndroid.logE("onConnected");
-							mAutoConnectDisable = false;
-							mHandler.sendEmptyMessage(EVENT_CONNECTED);
-						}
-
-						@Override
-						protected void onDisconnected() {
-							CavanAndroid.logE("onDisconnected");
-							mHandler.sendEmptyMessage(EVENT_DISCONNECTED);
+						protected void onConnectionStateChange(boolean connected) {
+							CavanAndroid.logE("onConnectionStateChange: connected = " + connected);
+							if (connected) {
+								mHandler.sendEmptyMessage(EVENT_CONNECTED);
+							} else {
+								mHandler.sendEmptyMessageDelayed(EVENT_AUTO_CONNECT, 500);
+							}
 						}
 
 						@Override
@@ -140,6 +131,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			case EVENT_CONNECTED:
 				String identify = mBleToy.doIdentify();
 				if (identify == null) {
+					mDevice = null;
 					mBleToy.disconnect();
 					CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
 					break;

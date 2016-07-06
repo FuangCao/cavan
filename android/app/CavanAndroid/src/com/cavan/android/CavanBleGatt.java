@@ -32,6 +32,7 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 	public static final UUID CFG_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 	public static final UUID DESC_UUID = UUID.fromString("00002901-0000-1000-8000-00805f9b34fb");
 
+	private boolean mConnected;
 	private UUID mUuid;
 	private Context mContext;
 	private BluetoothGatt mGatt;
@@ -278,12 +279,15 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 		super.finalize();
 	}
 
-	protected void onConnected() {
-		CavanAndroid.logE("onConnected");
+	protected void onConnectionStateChange(boolean connected) {
+		CavanAndroid.logE("onConnectStatusChanged: connected = " + connected);
 	}
 
-	protected void onDisconnected() {
-		CavanAndroid.logE("onDisconnected");
+	synchronized private void setConnectStatus(boolean connected) {
+		if (mConnected != connected) {
+			mConnected = connected;
+			onConnectionStateChange(connected);
+		}
 	}
 
 	synchronized public CavanBleChar openChar(UUID uuid) {
@@ -306,6 +310,8 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 			mGatt.disconnect();
 			mGatt.close();
 		}
+
+		setConnectStatus(false);
 	}
 
 	synchronized public boolean reconnect() {
@@ -394,7 +400,6 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 
 		case BluetoothProfile.STATE_DISCONNECTED:
 			disconnect();
-			onDisconnected();
 			break;
 		}
 	}
@@ -433,10 +438,9 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 
 		mService = mGatt.getService(mUuid);
 		if (mService != null && doInit()) {
-			onConnected();
+			setConnectStatus(true);
 		} else {
 			disconnect();
-			onDisconnected();
 		}
 
 		super.onServicesDiscovered(gatt, status);

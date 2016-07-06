@@ -125,8 +125,11 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 				mBleUart = new CavanBleUart(this, device) {
 
 					@Override
-					protected void onDisconnected() {
-						CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
+					protected void onConnectionStateChange(boolean connected) {
+						if (connected) {
+						} else {
+							CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
+						}
 					}
 				};
 

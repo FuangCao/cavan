@@ -94,14 +94,12 @@ public class MainActivity extends Activity {
 						mBleToy = new JwaooBleToy(MainActivity.this, mDevice) {
 
 							@Override
-							protected void onConnected() {
-								mHandler.sendEmptyMessage(MSG_SENSOR_ENABLE);
-								super.onConnected();
-							}
-
-							@Override
-							protected void onDisconnected() {
-								CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
+							protected void onConnectionStateChange(boolean connected) {
+								if (connected) {
+									mHandler.sendEmptyMessage(MSG_SENSOR_ENABLE);
+								} else {
+									CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
+								}
 							}
 
 							@Override
