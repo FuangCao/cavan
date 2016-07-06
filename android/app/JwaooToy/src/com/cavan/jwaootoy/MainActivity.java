@@ -16,6 +16,7 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleScanner;
 import com.cavan.java.CavanProgressListener;
 import com.jwaoo.android.JwaooBleToy;
+import com.jwaoo.android.JwaooToySensor;
 
 @SuppressLint("HandlerLeak")
 public class MainActivity extends Activity implements OnClickListener {
@@ -26,10 +27,29 @@ public class MainActivity extends Activity implements OnClickListener {
 	private static final int EVENT_OTA_FAILED = 3;
 	private static final int EVENT_OTA_SUCCESS = 4;
 	private static final int EVENT_PROGRESS_UPDATED = 5;
+	private static final int EVENT_FREQ_CHANGED = 6;
+	private static final int EVENT_DEPTH_CHANGED = 7;
+
+	private int mFreq;
+	private int mDepth;
 
 	private JwaooBleToy mBleToy;
 	private boolean mOtaBusy;
 	private boolean mSensorEnable;
+	private JwaooToySensor mSensor = new JwaooToySensor(100, 1) {
+
+		@Override
+		protected void onDepthChanged(int depth) {
+			mDepth = depth;
+			mHandler.sendEmptyMessage(EVENT_DEPTH_CHANGED);
+		}
+
+		@Override
+		protected void onFreqChanged(int freq) {
+			mFreq = freq;
+			mHandler.sendEmptyMessage(EVENT_FREQ_CHANGED);
+		}
+	};
 
 	private Button mButtonSend;
 	private Button mButtonUpgrade;
@@ -48,6 +68,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				mButtonUpgrade.setEnabled(false);
 				mButtonReboot.setEnabled(false);
 				mButtonSend.setEnabled(false);
+				mButtonSensor.setEnabled(false);
 				CavanAndroid.showToast(getApplicationContext(), R.string.text_upgrade_start);
 				break;
 
@@ -61,11 +82,17 @@ public class MainActivity extends Activity implements OnClickListener {
 				mButtonUpgrade.setEnabled(true);
 				mButtonReboot.setEnabled(true);
 				mButtonSend.setEnabled(true);
+				mButtonSensor.setEnabled(true);
 				CavanAndroid.showToast(getApplicationContext(), R.string.text_upgrade_successfull);
 				break;
 
 			case EVENT_PROGRESS_UPDATED:
 				mProgressBar.setProgress(msg.arg1);
+				break;
+
+			case EVENT_FREQ_CHANGED:
+			case EVENT_DEPTH_CHANGED:
+				setTitle("Depth = " + mDepth + ", Freq = " + mFreq);
 				break;
 			}
 		}
@@ -174,6 +201,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 					@Override
 					protected void onSensorDataReceived(byte[] data) {
+						mSensor.putData(data);
 					}
 				};
 			} catch (Exception e) {
@@ -183,5 +211,14 @@ public class MainActivity extends Activity implements OnClickListener {
 		} else {
 			finish();
 		}
+	}
+
+	@Override
+	protected void onDestroy() {
+		if (mBleToy != null) {
+			mBleToy.disconnect();
+		}
+
+		super.onDestroy();
 	}
 }

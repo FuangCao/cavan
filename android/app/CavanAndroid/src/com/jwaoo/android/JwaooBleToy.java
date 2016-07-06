@@ -279,19 +279,19 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 
 		listener.addProgress();
 
-		CavanAndroid.logE("eraseFlash");
+		CavanAndroid.logE("startFlashWrite");
 
-		if (!eraseFlash()) {
-			CavanAndroid.logE("Failed to eraseFlash");
+		if (!startFlashWrite()) {
+			CavanAndroid.logE("Failed to startFlashWrite");
 			return false;
 		}
 
 		listener.addProgress();
 
-		CavanAndroid.logE("startFlashWrite");
+		CavanAndroid.logE("eraseFlash");
 
-		if (!startFlashWrite()) {
-			CavanAndroid.logE("Failed to startFlashWrite");
+		if (!eraseFlash()) {
+			CavanAndroid.logE("Failed to eraseFlash");
 			return false;
 		}
 

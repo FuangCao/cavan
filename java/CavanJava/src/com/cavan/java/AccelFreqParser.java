@@ -2,31 +2,60 @@ package com.cavan.java;
 
 public class AccelFreqParser {
 
-	private CavanFreqParser mParserX;
-	private CavanFreqParser mParserY;
-	private CavanFreqParser mParserZ;
+	private int mFreq;
 
-	public AccelFreqParser(double fuzz) {
-		mParserX = new CavanFreqParser(fuzz);
-		mParserY = new CavanFreqParser(fuzz);
-		mParserZ = new CavanFreqParser(fuzz);
+	private CavanPeakValleyFinder mFinderX;
+	private CavanPeakValleyFinder mFinderY;
+	private CavanPeakValleyFinder mFinderZ;
+	private CavanPeakValleyFinder mFinderBetter;
+
+	protected void onFreqChanged(int freq) {
+		// CavanAndroid.logE("freq = " + freq);
 	}
 
-	public CavanFreqParser putValue(AccelDataCache cache) {
-		mParserX.putValue(cache.getCoorX());
-		mParserY.putValue(cache.getCoorY());
-		mParserZ.putValue(cache.getCoorZ());
+	public AccelFreqParser(long timeFuzz, double valueFuzz) {
+		mFinderX = new CavanPeakValleyFinder(timeFuzz, valueFuzz);
+		mFinderY = new CavanPeakValleyFinder(timeFuzz, valueFuzz);
+		mFinderZ = new CavanPeakValleyFinder(timeFuzz, valueFuzz);
 
-		if (mParserX.getAvgDiff() > mParserY.getAvgDiff()) {
-			if (mParserX.getAvgDiff() > mParserZ.getAvgDiff()) {
-				return mParserX;
-			} else {
-				return mParserZ;
-			}
-		} else if (mParserY.getAvgDiff() > mParserZ.getAvgDiff()) {
-			return mParserY;
-		} else {
-			return mParserZ;
+		mFinderBetter = mFinderX;
+	}
+
+	public int getFreq() {
+		return mFinderBetter.getFreq();
+	}
+
+	private void setFreq(int freq) {
+		freq = (mFreq + freq) / 2;
+		if (mFreq != freq) {
+			mFreq = freq;
+			onFreqChanged(freq);
 		}
+	}
+
+	public int putValue(double x, double y, double z) {
+		mFinderX.putFreqValue(x);
+		mFinderY.putFreqValue(y);
+		mFinderZ.putFreqValue(z);
+
+		if (mFinderX.getAvgDiff() > mFinderY.getAvgDiff()) {
+			if (mFinderX.getAvgDiff() > mFinderZ.getAvgDiff()) {
+				mFinderBetter = mFinderX;
+			} else {
+				mFinderBetter = mFinderZ;
+			}
+		} else if (mFinderY.getAvgDiff() > mFinderZ.getAvgDiff()) {
+			mFinderBetter = mFinderY;
+		} else {
+			mFinderBetter = mFinderZ;
+		}
+
+		setFreq(mFinderBetter.getFreq());
+
+		return mFreq;
+	}
+
+	public int putValue(AccelDataCache cache) {
+		return putValue(cache.getCoorX(), cache.getCoorY(), cache.getCoorZ());
 	}
 }

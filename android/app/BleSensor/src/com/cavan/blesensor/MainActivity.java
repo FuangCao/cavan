@@ -10,8 +10,6 @@ import android.os.Message;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleScanner;
 import com.cavan.android.CavanWaveView;
-import com.cavan.java.AccelFreqParser;
-import com.cavan.java.CavanFreqParser;
 import com.cavan.java.Mpu6050Accel;
 import com.jwaoo.android.JwaooBleToy;
 
