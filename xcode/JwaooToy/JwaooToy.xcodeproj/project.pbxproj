@@ -1,0 +1,534 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		86E90B1E1D2E71D400FB82B6 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E90B1D1D2E71D400FB82B6 /* AppDelegate.m */; };
+		86E90B211D2E71D400FB82B6 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E90B201D2E71D400FB82B6 /* main.m */; };
+		86E90B241D2E71D400FB82B6 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E90B231D2E71D400FB82B6 /* ViewController.m */; };
+		86E90B261D2E71D400FB82B6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 86E90B251D2E71D400FB82B6 /* Assets.xcassets */; };
+		86E90B291D2E71D400FB82B6 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 86E90B271D2E71D400FB82B6 /* Main.storyboard */; };
+		86E90B341D2E71D400FB82B6 /* JwaooToyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E90B331D2E71D400FB82B6 /* JwaooToyTests.m */; };
+		86E90B3F1D2E71D400FB82B6 /* JwaooToyUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E90B3E1D2E71D400FB82B6 /* JwaooToyUITests.m */; };
+		86E90B521D2E724600FB82B6 /* CavanBleChar.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E90B4F1D2E724600FB82B6 /* CavanBleChar.m */; };
+		86E90B531D2E724600FB82B6 /* CavanBleGatt.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E90B511D2E724600FB82B6 /* CavanBleGatt.m */; };
+		86E90B561D2E725200FB82B6 /* JwaooBleToy.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E90B551D2E725200FB82B6 /* JwaooBleToy.m */; };
+		86E90B581D2E726300FB82B6 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 86E90B571D2E726300FB82B6 /* CoreBluetooth.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		86E90B301D2E71D400FB82B6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 86E90B111D2E71D400FB82B6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 86E90B181D2E71D400FB82B6;
+			remoteInfo = JwaooToy;
+		};
+		86E90B3B1D2E71D400FB82B6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 86E90B111D2E71D400FB82B6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 86E90B181D2E71D400FB82B6;
+			remoteInfo = JwaooToy;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		86E90B191D2E71D400FB82B6 /* JwaooToy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JwaooToy.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		86E90B1C1D2E71D400FB82B6 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		86E90B1D1D2E71D400FB82B6 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		86E90B201D2E71D400FB82B6 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		86E90B221D2E71D400FB82B6 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		86E90B231D2E71D400FB82B6 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		86E90B251D2E71D400FB82B6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		86E90B281D2E71D400FB82B6 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		86E90B2A1D2E71D400FB82B6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		86E90B2F1D2E71D400FB82B6 /* JwaooToyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JwaooToyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		86E90B331D2E71D400FB82B6 /* JwaooToyTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JwaooToyTests.m; sourceTree = "<group>"; };
+		86E90B351D2E71D400FB82B6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		86E90B3A1D2E71D400FB82B6 /* JwaooToyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JwaooToyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		86E90B3E1D2E71D400FB82B6 /* JwaooToyUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JwaooToyUITests.m; sourceTree = "<group>"; };
+		86E90B401D2E71D400FB82B6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		86E90B4E1D2E724600FB82B6 /* CavanBleChar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CavanBleChar.h; sourceTree = "<group>"; };
+		86E90B4F1D2E724600FB82B6 /* CavanBleChar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CavanBleChar.m; sourceTree = "<group>"; };
+		86E90B501D2E724600FB82B6 /* CavanBleGatt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CavanBleGatt.h; sourceTree = "<group>"; };
+		86E90B511D2E724600FB82B6 /* CavanBleGatt.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CavanBleGatt.m; sourceTree = "<group>"; };
+		86E90B541D2E725200FB82B6 /* JwaooBleToy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JwaooBleToy.h; sourceTree = "<group>"; };
+		86E90B551D2E725200FB82B6 /* JwaooBleToy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JwaooBleToy.m; sourceTree = "<group>"; };
+		86E90B571D2E726300FB82B6 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		86E90B161D2E71D400FB82B6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				86E90B581D2E726300FB82B6 /* CoreBluetooth.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		86E90B2C1D2E71D400FB82B6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		86E90B371D2E71D400FB82B6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		86E90B101D2E71D400FB82B6 = {
+			isa = PBXGroup;
+			children = (
+				86E90B571D2E726300FB82B6 /* CoreBluetooth.framework */,
+				86E90B1B1D2E71D400FB82B6 /* JwaooToy */,
+				86E90B321D2E71D400FB82B6 /* JwaooToyTests */,
+				86E90B3D1D2E71D400FB82B6 /* JwaooToyUITests */,
+				86E90B1A1D2E71D400FB82B6 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		86E90B1A1D2E71D400FB82B6 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				86E90B191D2E71D400FB82B6 /* JwaooToy.app */,
+				86E90B2F1D2E71D400FB82B6 /* JwaooToyTests.xctest */,
+				86E90B3A1D2E71D400FB82B6 /* JwaooToyUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		86E90B1B1D2E71D400FB82B6 /* JwaooToy */ = {
+			isa = PBXGroup;
+			children = (
+				86E90B541D2E725200FB82B6 /* JwaooBleToy.h */,
+				86E90B551D2E725200FB82B6 /* JwaooBleToy.m */,
+				86E90B4E1D2E724600FB82B6 /* CavanBleChar.h */,
+				86E90B4F1D2E724600FB82B6 /* CavanBleChar.m */,
+				86E90B501D2E724600FB82B6 /* CavanBleGatt.h */,
+				86E90B511D2E724600FB82B6 /* CavanBleGatt.m */,
+				86E90B1C1D2E71D400FB82B6 /* AppDelegate.h */,
+				86E90B1D1D2E71D400FB82B6 /* AppDelegate.m */,
+				86E90B221D2E71D400FB82B6 /* ViewController.h */,
+				86E90B231D2E71D400FB82B6 /* ViewController.m */,
+				86E90B251D2E71D400FB82B6 /* Assets.xcassets */,
+				86E90B271D2E71D400FB82B6 /* Main.storyboard */,
+				86E90B2A1D2E71D400FB82B6 /* Info.plist */,
+				86E90B1F1D2E71D400FB82B6 /* Supporting Files */,
+			);
+			path = JwaooToy;
+			sourceTree = "<group>";
+		};
+		86E90B1F1D2E71D400FB82B6 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				86E90B201D2E71D400FB82B6 /* main.m */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		86E90B321D2E71D400FB82B6 /* JwaooToyTests */ = {
+			isa = PBXGroup;
+			children = (
+				86E90B331D2E71D400FB82B6 /* JwaooToyTests.m */,
+				86E90B351D2E71D400FB82B6 /* Info.plist */,
+			);
+			path = JwaooToyTests;
+			sourceTree = "<group>";
+		};
+		86E90B3D1D2E71D400FB82B6 /* JwaooToyUITests */ = {
+			isa = PBXGroup;
+			children = (
+				86E90B3E1D2E71D400FB82B6 /* JwaooToyUITests.m */,
+				86E90B401D2E71D400FB82B6 /* Info.plist */,
+			);
+			path = JwaooToyUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		86E90B181D2E71D400FB82B6 /* JwaooToy */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 86E90B431D2E71D400FB82B6 /* Build configuration list for PBXNativeTarget "JwaooToy" */;
+			buildPhases = (
+				86E90B151D2E71D400FB82B6 /* Sources */,
+				86E90B161D2E71D400FB82B6 /* Frameworks */,
+				86E90B171D2E71D400FB82B6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = JwaooToy;
+			productName = JwaooToy;
+			productReference = 86E90B191D2E71D400FB82B6 /* JwaooToy.app */;
+			productType = "com.apple.product-type.application";
+		};
+		86E90B2E1D2E71D400FB82B6 /* JwaooToyTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 86E90B461D2E71D400FB82B6 /* Build configuration list for PBXNativeTarget "JwaooToyTests" */;
+			buildPhases = (
+				86E90B2B1D2E71D400FB82B6 /* Sources */,
+				86E90B2C1D2E71D400FB82B6 /* Frameworks */,
+				86E90B2D1D2E71D400FB82B6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				86E90B311D2E71D400FB82B6 /* PBXTargetDependency */,
+			);
+			name = JwaooToyTests;
+			productName = JwaooToyTests;
+			productReference = 86E90B2F1D2E71D400FB82B6 /* JwaooToyTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		86E90B391D2E71D400FB82B6 /* JwaooToyUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 86E90B491D2E71D400FB82B6 /* Build configuration list for PBXNativeTarget "JwaooToyUITests" */;
+			buildPhases = (
+				86E90B361D2E71D400FB82B6 /* Sources */,
+				86E90B371D2E71D400FB82B6 /* Frameworks */,
+				86E90B381D2E71D400FB82B6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				86E90B3C1D2E71D400FB82B6 /* PBXTargetDependency */,
+			);
+			name = JwaooToyUITests;
+			productName = JwaooToyUITests;
+			productReference = 86E90B3A1D2E71D400FB82B6 /* JwaooToyUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		86E90B111D2E71D400FB82B6 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0730;
+				ORGANIZATIONNAME = "曹福昂";
+				TargetAttributes = {
+					86E90B181D2E71D400FB82B6 = {
+						CreatedOnToolsVersion = 7.3;
+					};
+					86E90B2E1D2E71D400FB82B6 = {
+						CreatedOnToolsVersion = 7.3;
+						TestTargetID = 86E90B181D2E71D400FB82B6;
+					};
+					86E90B391D2E71D400FB82B6 = {
+						CreatedOnToolsVersion = 7.3;
+						TestTargetID = 86E90B181D2E71D400FB82B6;
+					};
+				};
+			};
+			buildConfigurationList = 86E90B141D2E71D400FB82B6 /* Build configuration list for PBXProject "JwaooToy" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 86E90B101D2E71D400FB82B6;
+			productRefGroup = 86E90B1A1D2E71D400FB82B6 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				86E90B181D2E71D400FB82B6 /* JwaooToy */,
+				86E90B2E1D2E71D400FB82B6 /* JwaooToyTests */,
+				86E90B391D2E71D400FB82B6 /* JwaooToyUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		86E90B171D2E71D400FB82B6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				86E90B261D2E71D400FB82B6 /* Assets.xcassets in Resources */,
+				86E90B291D2E71D400FB82B6 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		86E90B2D1D2E71D400FB82B6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		86E90B381D2E71D400FB82B6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		86E90B151D2E71D400FB82B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				86E90B241D2E71D400FB82B6 /* ViewController.m in Sources */,
+				86E90B211D2E71D400FB82B6 /* main.m in Sources */,
+				86E90B1E1D2E71D400FB82B6 /* AppDelegate.m in Sources */,
+				86E90B561D2E725200FB82B6 /* JwaooBleToy.m in Sources */,
+				86E90B531D2E724600FB82B6 /* CavanBleGatt.m in Sources */,
+				86E90B521D2E724600FB82B6 /* CavanBleChar.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		86E90B2B1D2E71D400FB82B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				86E90B341D2E71D400FB82B6 /* JwaooToyTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		86E90B361D2E71D400FB82B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				86E90B3F1D2E71D400FB82B6 /* JwaooToyUITests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		86E90B311D2E71D400FB82B6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 86E90B181D2E71D400FB82B6 /* JwaooToy */;
+			targetProxy = 86E90B301D2E71D400FB82B6 /* PBXContainerItemProxy */;
+		};
+		86E90B3C1D2E71D400FB82B6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 86E90B181D2E71D400FB82B6 /* JwaooToy */;
+			targetProxy = 86E90B3B1D2E71D400FB82B6 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		86E90B271D2E71D400FB82B6 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				86E90B281D2E71D400FB82B6 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		86E90B411D2E71D400FB82B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		86E90B421D2E71D400FB82B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		86E90B441D2E71D400FB82B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = JwaooToy/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cavan.JwaooToy;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		86E90B451D2E71D400FB82B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = JwaooToy/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cavan.JwaooToy;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		86E90B471D2E71D400FB82B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = JwaooToyTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cavan.JwaooToyTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JwaooToy.app/Contents/MacOS/JwaooToy";
+			};
+			name = Debug;
+		};
+		86E90B481D2E71D400FB82B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = JwaooToyTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cavan.JwaooToyTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JwaooToy.app/Contents/MacOS/JwaooToy";
+			};
+			name = Release;
+		};
+		86E90B4A1D2E71D400FB82B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = JwaooToyUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cavan.JwaooToyUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = JwaooToy;
+			};
+			name = Debug;
+		};
+		86E90B4B1D2E71D400FB82B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = JwaooToyUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cavan.JwaooToyUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = JwaooToy;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		86E90B141D2E71D400FB82B6 /* Build configuration list for PBXProject "JwaooToy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				86E90B411D2E71D400FB82B6 /* Debug */,
+				86E90B421D2E71D400FB82B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		86E90B431D2E71D400FB82B6 /* Build configuration list for PBXNativeTarget "JwaooToy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				86E90B441D2E71D400FB82B6 /* Debug */,
+				86E90B451D2E71D400FB82B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		86E90B461D2E71D400FB82B6 /* Build configuration list for PBXNativeTarget "JwaooToyTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				86E90B471D2E71D400FB82B6 /* Debug */,
+				86E90B481D2E71D400FB82B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		86E90B491D2E71D400FB82B6 /* Build configuration list for PBXNativeTarget "JwaooToyUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				86E90B4A1D2E71D400FB82B6 /* Debug */,
+				86E90B4B1D2E71D400FB82B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 86E90B111D2E71D400FB82B6 /* Project object */;
+}
