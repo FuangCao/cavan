@@ -22,6 +22,8 @@
     NSCondition *mReadCond;
 }
 
++ (NSInteger)decodeError:(nullable NSError *)error;
+
 - (nullable CavanBleChar *)initWithCharacteristic:(nonnull CBCharacteristic *)characteristic
                                   peripheral:(nonnull CBPeripheral *)peripheral;
 - (void)postNotification;

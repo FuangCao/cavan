@@ -139,11 +139,13 @@
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {
     NSLog(@"didUpdateNotificationStateForCharacteristic: %@, characteristic = %@, error = %@", peripheral, characteristic, error);
-    if (error == nil) {
-        CavanBleChar *bleChar = [mDictChars objectForKey:characteristic.UUID];
-        if (bleChar != nil) {
-            // [bleChar postNotification];
-        }
+    if (error != nil) {
+        return;
+    }
+
+    CavanBleChar *bleChar = [mDictChars objectForKey:characteristic.UUID];
+    if (bleChar != nil) {
+        // [bleChar postNotification];
     }
 }
 

@@ -52,6 +52,8 @@
     } else if ([mBleToy setSensorEnable:TRUE]) {
         mSensorEnable = TRUE;
     }
+
+    NSLog(@"mSensorEnable = %d", mSensorEnable);
 }
 
 - (IBAction)sensorEnableButton:(NSButton *)sender {

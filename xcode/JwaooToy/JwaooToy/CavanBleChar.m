@@ -10,6 +10,20 @@
 
 @implementation CavanBleChar
 
++ (NSInteger)decodeError:(NSError *)error {
+    if (error == nil) {
+        return 0;
+    }
+
+    NSInteger code = error.code;
+
+    if (code == 0) {
+        return -1;
+    }
+
+    return code;
+}
+
 - (CavanBleChar *)initWithCharacteristic:(CBCharacteristic *)characteristic
                                   peripheral:(CBPeripheral *)peripheral; {
     if (self = [super init]) {
@@ -28,24 +42,16 @@
 }
 
 - (void)setWriteStatus:(NSError *)error {
-    if (error == nil) {
-        mWriteError = 0;
-    } else {
-        mWriteError = error.code;
-    }
-    
+    mWriteError = [self.class decodeError:error];
+
     // NSLog(@"mWriteError = %ld", (long)mWriteError);
 
     [mWriteCond signal];
 }
 
 - (void)setReadStatus:(NSError *)error {
-    if (error == nil) {
-        mReadError = 0;
-    } else {
-        mReadError = error.code;
-    }
-    
+    mReadError = [self.class decodeError:error];
+
     // NSLog(@"mReadError = %ld", (long)mReadError);
 
     [mReadCond signal];
@@ -97,7 +103,7 @@
     @synchronized (self) {
         while (length > CAVAN_BLE_FRAME_SIZE) {
             NSData *data = [[NSData alloc] initWithBytes:bytes length:length];
-            
+
             if (![self writeFrame:data]) {
                 return FALSE;
             }
@@ -108,7 +114,7 @@
 
         if (length > 0) {
             NSData *data = [[NSData alloc] initWithBytes:bytes length:length];
-            
+
             return [self writeFrame:data];
         }
     }
