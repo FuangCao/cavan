@@ -32,13 +32,18 @@
         mPeripheral = peripheral;
         mChar = characteristic;
 
-        [mPeripheral setNotifyValue:YES forCharacteristic:mChar];
+        NSLog(@"uuid = %@, properties = 0x%08lx", mChar.UUID, (long)mChar.properties);
+
+        if (mChar.properties & CBCharacteristicPropertyNotify) {
+            [mPeripheral setNotifyValue:YES forCharacteristic:mChar];
+        }
     }
 
     return self;
 }
 
 - (void)postNotification {
+    NSLog(@"postNotification: %@", mChar.value);
 }
 
 - (void)setWriteStatus:(NSError *)error {
