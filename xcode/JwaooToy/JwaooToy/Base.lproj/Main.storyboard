@@ -686,6 +686,16 @@
                                     <action selector="sendCommandButton:" target="XfG-lQ-9wD" id="h9N-mD-X9H"/>
                                 </connections>
                             </button>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5dN-a1-bB5">
+                                <rect key="frame" x="95" y="222" width="81" height="32"/>
+                                <buttonCell key="cell" type="push" title="传感器" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1R5-wx-jbO">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="sensorEnableButton:" target="XfG-lQ-9wD" id="eJW-ZV-wn0"/>
+                                </connections>
+                            </button>
                         </subviews>
                     </view>
                 </viewController>

@@ -24,7 +24,7 @@
     // Update the view, if already loaded.
 }
 
-- (void)testThread:(id)data {
+- (void)sendCommandThread:(NSButton *)sender {
     NSString *text = [mBleToy doIdentify];
     if (text != nil) {
         NSLog(@"doIdentify = %@", text);
@@ -41,8 +41,22 @@
 
 - (IBAction)sendCommandButton:(NSButton *)sender {
     NSLog(@"sendCommandButton");
+    [NSThread detachNewThreadSelector:@selector(sendCommandThread:) toTarget:self withObject:sender];
+}
 
-    [NSThread detachNewThreadSelector:@selector(testThread:) toTarget:self withObject:nil];
+- (void)sensorEnableThread:(NSButton *)sender {
+    if (mSensorEnable) {
+        if ([mBleToy setSensorEnable:FALSE]) {
+            mSensorEnable = FALSE;
+        }
+    } else if ([mBleToy setSensorEnable:TRUE]) {
+        mSensorEnable = TRUE;
+    }
+}
+
+- (IBAction)sensorEnableButton:(NSButton *)sender {
+    NSLog(@"sensorEnableButton");
+    [NSThread detachNewThreadSelector:@selector(sensorEnableThread:) toTarget:self withObject:sender];
 }
 
 @end

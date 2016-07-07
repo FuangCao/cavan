@@ -17,6 +17,8 @@
         mWriteCond = [NSCondition new];
         mPeripheral = peripheral;
         mChar = characteristic;
+
+        [mPeripheral setNotifyValue:YES forCharacteristic:mChar];
     }
 
     return self;

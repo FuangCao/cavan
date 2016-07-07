@@ -10,6 +10,7 @@
 #import "JwaooBleToy.h"
 
 @interface ViewController : NSViewController {
+    BOOL mSensorEnable;
     JwaooBleToy *mBleToy;
 }
 

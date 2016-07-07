@@ -79,6 +79,8 @@ struct jwaoo_toy_command {
                withBool:(BOOL)value;
 - (nullable NSData *)sendCommand:(uint8_t)type
             withValue16:(uint16_t)value;
+- (nullable NSData *)sendCommand:(uint8_t)type
+            withValue32:(uint32_t)value;
 
 - (BOOL)sendCommandReadBool:(uint8_t)type;
 - (uint8_t)sendCommandReadValue8:(uint8_t)type;
@@ -86,8 +88,19 @@ struct jwaoo_toy_command {
 - (uint32_t)sendCommandReadReadValue32:(uint8_t)type;
 - (nullable NSString *)sendCommandReadText:(uint8_t)type;
 
+- (BOOL)sendCommandReadBool:(uint8_t)type
+                   withBool:(BOOL)value;
+- (BOOL)sendCommandReadBool:(uint8_t)type
+                 withValue8:(uint8_t)value;
+- (BOOL)sendCommandReadBool:(uint8_t)type
+                withValue16:(uint16_t)value;
+- (BOOL)sendCommandReadBool:(uint8_t)type
+                withValue32:(uint32_t)value;
+
 - (nullable NSString *)doIdentify;
 - (nullable NSString *)readBuildDate;
 - (uint32_t)readVersion;
+- (BOOL)setSensorEnable:(BOOL)enable;
+- (BOOL)setSensorDelay:(uint32_t)delay;
 
 @end
