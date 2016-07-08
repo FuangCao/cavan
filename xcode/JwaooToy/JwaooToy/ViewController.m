@@ -7,6 +7,8 @@
 //
 
 #import "ViewController.h"
+#import "Mpu6050Sensor.h"
+#import "AccelFreqParser.h"
 
 @interface JwaooBleToyEventDelegate : NSObject <CavanBleCharDelegate> {
     ViewController *mController;
@@ -32,8 +34,9 @@
 
 @end
 
-@interface JwaooBleToySensorDelegate : NSObject <CavanBleCharDelegate> {
+@interface JwaooBleToySensorDelegate : NSObject <CavanBleCharDelegate, AccelFreqParserDelegate> {
     ViewController *mController;
+    AccelFreqParser *mParser;
 }
 
 - (JwaooBleToySensorDelegate *)initWithViewController:(ViewController *)controller;
@@ -45,16 +48,23 @@
 - (JwaooBleToySensorDelegate *)initWithViewController:(ViewController *)controller {
     if (self = [super init]) {
         mController = controller;
+        mParser = [[AccelFreqParser alloc] initWithValueFuzz:2.0 withTimeFuzz:0.1 withDelegate:self];
     }
 
     return self;
 }
 
+- (void)didDepthChanged:(int)depth {
+    NSLog(@"depth = %d", depth);
+}
+
+- (void)didFreqChanged:(int)freq {
+    NSLog(@"freq = %d", freq);
+}
+
 - (void)didNotifyForCharacteristic:(nonnull CavanBleChar *)characteristic {
-    NSLog(@"JwaooBleToySensorDelegate: didNotifyForCharacteristic");
-    NSData *data = [characteristic getData];
-    const int8_t *bytes = data.bytes;
-    NSLog(@"[%d, %d, %d]", bytes[0], bytes[1], bytes[2]);
+    // NSLog(@"JwaooBleToySensorDelegate: didNotifyForCharacteristic");
+    [mParser putBytes:[characteristic getData].bytes];
 }
 
 @end
@@ -102,6 +112,7 @@
             mSensorEnable = FALSE;
         }
     } else if ([mBleToy setSensorEnable:TRUE]) {
+        [mBleToy setSensorDelay:10];
         mSensorEnable = TRUE;
     }
 

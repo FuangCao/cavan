@@ -14,7 +14,7 @@
 @class CavanBleChar;
 
 @protocol CavanBleCharDelegate <NSObject>
-@optional
+@required
 - (void)didNotifyForCharacteristic:(nonnull CavanBleChar *)characteristic;
 @end
 
