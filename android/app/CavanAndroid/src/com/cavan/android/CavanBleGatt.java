@@ -32,7 +32,9 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 	public static final UUID CFG_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 	public static final UUID DESC_UUID = UUID.fromString("00002901-0000-1000-8000-00805f9b34fb");
 
+	private int mGattState;
 	private boolean mConnected;
+
 	private UUID mUuid;
 	private Context mContext;
 	private BluetoothGatt mGatt;
@@ -103,7 +105,7 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 			if (sync) {
 				mWriteStatus = -110;
 
-				for (int i = 0; i < 5; i++) {
+				for (int i = 0; i < 5 && isGattConnected(); i++) {
 					if (!mGatt.writeCharacteristic(mChar)) {
 						CavanAndroid.logE("Failed to writeCharacteristic");
 						return false;
@@ -185,8 +187,9 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 
 			return true;
 		}
+
 		synchronized public boolean readCharacteristic() {
-			return mGatt.readCharacteristic(mChar);
+			return isGattConnected() && mGatt.readCharacteristic(mChar);
 		}
 
 		synchronized public byte[] readData(long timeout) {
@@ -319,6 +322,14 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 		return connect();
 	}
 
+	public boolean isGattConnected() {
+		return mGattState == BluetoothProfile.STATE_CONNECTED;
+	}
+
+	public boolean isGattDisconnected() {
+		return mGattState != BluetoothProfile.STATE_CONNECTED;
+	}
+
 	public static String getPropertyName(int property) {
 		switch (property) {
 		case BluetoothGattCharacteristic.PROPERTY_BROADCAST:
@@ -392,6 +403,8 @@ public abstract class CavanBleGatt extends BluetoothGattCallback {
 	@Override
 	public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
 		CavanAndroid.logE("onConnectionStateChange: " + status + " => " + newState);
+
+		mGattState = newState;
 
 		switch (newState) {
 		case BluetoothProfile.STATE_CONNECTED:

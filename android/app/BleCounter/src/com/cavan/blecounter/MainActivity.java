@@ -20,6 +20,7 @@ public class MainActivity extends Activity {
 	public static final int BLE_SCAN_RESULT = 1;
 
 	private static final int MSG_SENSOR_ENABLE = 1;
+	private static final int MSG_SHOW_SPEED = 2;
 
 	private CavanPeakValleyFinder mFinder = new CavanPeakValleyFinder(100, 1);
 
@@ -28,6 +29,7 @@ public class MainActivity extends Activity {
 	private CavanWaveView mWaveViewZ;
 	private CavanWaveView mWaveViewDepth;
 
+	private int mCount;
 	private JwaooBleToy mBleToy;
 	private BluetoothDevice mDevice;
 	private Handler mHandler = new Handler() {
@@ -36,8 +38,18 @@ public class MainActivity extends Activity {
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case MSG_SENSOR_ENABLE:
-				mBleToy.setSensorDelay(20);
+				mBleToy.setSensorDelay(10);
 				mBleToy.setSensorEnable(true);
+				break;
+
+			case MSG_SHOW_SPEED:
+				int count = mCount;
+				mCount = 0;
+
+				if (count > 0) {
+					setTitle("count = " + count + ", speed = " + (1000.0 / count));
+				}
+				mHandler.sendEmptyMessageDelayed(MSG_SHOW_SPEED, 1000);
 				break;
 			}
 		}
@@ -64,6 +76,7 @@ public class MainActivity extends Activity {
 		mWaveViewDepth.setValueRange(0, 4);
 		mWaveViewDepth.setZoom(3);
 
+		mHandler.sendEmptyMessage(MSG_SHOW_SPEED);
 		CavanBleScanner.show(this, BLE_SCAN_RESULT);
 	}
 
@@ -120,6 +133,8 @@ public class MainActivity extends Activity {
 
 								int depth = accel.readValue8();
 								mWaveViewDepth.addValue(depth);
+
+								mCount++;
 							}
 						};
 					} catch (Exception e) {
