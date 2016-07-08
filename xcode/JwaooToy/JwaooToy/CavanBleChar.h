@@ -32,6 +32,10 @@
 - (nullable CavanBleChar *)initWithCharacteristic:(nonnull CBCharacteristic *)characteristic
                                   peripheral:(nonnull CBPeripheral *)peripheral
                                          delegate:(nullable id<CavanBleCharDelegate>)delegate;
+- (nullable NSData *)getData;
+- (nonnull CBCharacteristic *)getCharacteristic;
+- (nonnull CBPeripheral *)getPeripheral;
+
 - (void)setWriteStatus:(nullable NSError *)error;
 - (void)setReadStatus:(nullable NSError *)error;
 - (nullable NSData *)readData;

@@ -14,7 +14,7 @@
 
 - (CavanBleGatt *)initWithName:(NSString *)name
                           uuid:(CBUUID *)uuid {
-    if (self = [super initWithDelegate:self queue:nil]) {
+    if (self = [super initWithDelegate:self queue:dispatch_queue_create("com.cavan.bluetooth.gatt", DISPATCH_QUEUE_SERIAL)]) {
         mName = name;
         mUUID = uuid;
         mDictChars = [NSMutableDictionary new];

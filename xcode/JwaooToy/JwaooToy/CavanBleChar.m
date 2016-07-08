@@ -30,6 +30,18 @@
     return self;
 }
 
+- (nullable NSData *)getData {
+    return mChar.value;
+}
+
+- (nonnull CBCharacteristic *)getCharacteristic {
+    return mChar;
+}
+
+- (nonnull CBPeripheral *)getPeripheral {
+    return mPeripheral;
+}
+
 - (void)setWriteStatus:(NSError *)error {
     mWriteError = error;
     [mWriteCond signal];

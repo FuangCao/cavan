@@ -52,6 +52,9 @@
 
 - (void)didNotifyForCharacteristic:(nonnull CavanBleChar *)characteristic {
     NSLog(@"JwaooBleToySensorDelegate: didNotifyForCharacteristic");
+    NSData *data = [characteristic getData];
+    const int8_t *bytes = data.bytes;
+    NSLog(@"[%d, %d, %d]", bytes[0], bytes[1], bytes[2]);
 }
 
 @end
@@ -74,7 +77,9 @@
     // Update the view, if already loaded.
 }
 
-- (void)sendCommandThread:(NSButton *)sender {
+- (IBAction)sendCommandButton:(NSButton *)sender {
+    NSLog(@"sendCommandButton");
+
     NSString *text = [mBleToy doIdentify];
     if (text != nil) {
         NSLog(@"doIdentify = %@", text);
@@ -89,12 +94,9 @@
     NSLog(@"version = 0x%08x", version);
 }
 
-- (IBAction)sendCommandButton:(NSButton *)sender {
-    NSLog(@"sendCommandButton");
-    [NSThread detachNewThreadSelector:@selector(sendCommandThread:) toTarget:self withObject:sender];
-}
+- (IBAction)sensorEnableButton:(NSButton *)sender {
+    NSLog(@"sensorEnableButton");
 
-- (void)sensorEnableThread:(NSButton *)sender {
     if (mSensorEnable) {
         if ([mBleToy setSensorEnable:FALSE]) {
             mSensorEnable = FALSE;
@@ -104,11 +106,6 @@
     }
 
     NSLog(@"mSensorEnable = %d", mSensorEnable);
-}
-
-- (IBAction)sensorEnableButton:(NSButton *)sender {
-    NSLog(@"sensorEnableButton");
-    [NSThread detachNewThreadSelector:@selector(sensorEnableThread:) toTarget:self withObject:sender];
 }
 
 @end
