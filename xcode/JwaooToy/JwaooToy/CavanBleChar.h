@@ -11,22 +11,27 @@
 
 #define CAVAN_BLE_FRAME_SIZE    20
 
+@class CavanBleChar;
+
+@protocol CavanBleCharDelegate <NSObject>
+@optional
+- (void)didNotifyForCharacteristic:(nonnull CavanBleChar *)characteristic;
+@end
+
 @interface CavanBleChar : NSObject {
     CBCharacteristic *mChar;
     CBPeripheral *mPeripheral;
+    id<CavanBleCharDelegate> mDelegate;
 
-
-    NSInteger mWriteError;
+    NSError *mWriteError;
     NSCondition *mWriteCond;
-    NSInteger mReadError;
+    NSError *mReadError;
     NSCondition *mReadCond;
 }
 
-+ (NSInteger)decodeError:(nullable NSError *)error;
-
 - (nullable CavanBleChar *)initWithCharacteristic:(nonnull CBCharacteristic *)characteristic
-                                  peripheral:(nonnull CBPeripheral *)peripheral;
-- (void)postNotification;
+                                  peripheral:(nonnull CBPeripheral *)peripheral
+                                         delegate:(nullable id<CavanBleCharDelegate>)delegate;
 - (void)setWriteStatus:(nullable NSError *)error;
 - (void)setReadStatus:(nullable NSError *)error;
 - (nullable NSData *)readData;

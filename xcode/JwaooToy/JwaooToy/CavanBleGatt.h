@@ -24,6 +24,7 @@
 - (void)startScan;
 - (void)addBleChar:(nonnull CavanBleChar *)bleChar
           withUUID:(nonnull CBUUID *)uuid;
-- (nonnull CavanBleChar *)createBleChar:(nonnull CBCharacteristic *)characteristic;
+- (nullable CavanBleChar *)createBleChar:(nonnull CBCharacteristic *)characteristic
+                       degelate:(nullable id<CavanBleCharDelegate>)delegate;
 
 @end

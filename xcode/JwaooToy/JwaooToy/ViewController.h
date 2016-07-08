@@ -14,6 +14,5 @@
     JwaooBleToy *mBleToy;
 }
 
-
 @end
 

@@ -61,6 +61,9 @@ struct jwaoo_toy_command {
     CavanBleChar *mCharEvent;
     CavanBleChar *mCharFlash;
     CavanBleChar *mCharSensor;
+
+    id<CavanBleCharDelegate> mEventDelegate;
+    id<CavanBleCharDelegate> mSensorDelegate;
 }
 
 + (BOOL)parseResponseBool:(nullable NSData *)response;
@@ -102,5 +105,8 @@ struct jwaoo_toy_command {
 - (uint32_t)readVersion;
 - (BOOL)setSensorEnable:(BOOL)enable;
 - (BOOL)setSensorDelay:(uint32_t)delay;
+
+- (void)setEventDelegate:(nonnull id<CavanBleCharDelegate>)delegate;
+- (void)setSensorDelegate:(nonnull id<CavanBleCharDelegate>)delegate;
 
 @end

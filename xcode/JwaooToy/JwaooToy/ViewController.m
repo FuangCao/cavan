@@ -8,6 +8,54 @@
 
 #import "ViewController.h"
 
+@interface JwaooBleToyEventDelegate : NSObject <CavanBleCharDelegate> {
+    ViewController *mController;
+}
+
+- (JwaooBleToyEventDelegate *)initWithViewController:(ViewController *)controller;
+
+@end
+
+@implementation JwaooBleToyEventDelegate
+
+- (JwaooBleToyEventDelegate *)initWithViewController:(ViewController *)controller {
+    if (self = [super init]) {
+        mController = controller;
+    }
+
+    return self;
+}
+
+- (void)didNotifyForCharacteristic:(nonnull CavanBleChar *)characteristic {
+    NSLog(@"JwaooBleToyEventDelegate: didNotifyForCharacteristic");
+}
+
+@end
+
+@interface JwaooBleToySensorDelegate : NSObject <CavanBleCharDelegate> {
+    ViewController *mController;
+}
+
+- (JwaooBleToySensorDelegate *)initWithViewController:(ViewController *)controller;
+
+@end
+
+@implementation JwaooBleToySensorDelegate
+
+- (JwaooBleToySensorDelegate *)initWithViewController:(ViewController *)controller {
+    if (self = [super init]) {
+        mController = controller;
+    }
+
+    return self;
+}
+
+- (void)didNotifyForCharacteristic:(nonnull CavanBleChar *)characteristic {
+    NSLog(@"JwaooBleToySensorDelegate: didNotifyForCharacteristic");
+}
+
+@end
+
 @implementation ViewController
 
 - (void)viewDidLoad {
@@ -15,6 +63,8 @@
 
     // Do any additional setup after loading the view.
     mBleToy = [[JwaooBleToy alloc] initWithName:@"JwaooToy" uuid:nil];
+    [mBleToy setEventDelegate:[[JwaooBleToyEventDelegate alloc] initWithViewController:self]];
+    [mBleToy setSensorDelegate:[[JwaooBleToySensorDelegate alloc] initWithViewController:self]];
     [mBleToy startScan];
 }
 

@@ -36,8 +36,9 @@
     [mDictChars setObject:bleChar forKey:uuid];
 }
 
-- (CavanBleChar *)createBleChar:(CBCharacteristic *)characteristic {
-    CavanBleChar *bleChar = [[CavanBleChar alloc] initWithCharacteristic:characteristic peripheral:mPeripheral];
+- (CavanBleChar *)createBleChar:(CBCharacteristic *)characteristic
+                       degelate:(id<CavanBleCharDelegate>)delegate {
+    CavanBleChar *bleChar = [[CavanBleChar alloc] initWithCharacteristic:characteristic peripheral:mPeripheral delegate:delegate];
 
     [self addBleChar:bleChar withUUID:characteristic.UUID];
 
@@ -67,7 +68,7 @@
     if (mName == nil || [peripheral.name isEqualToString:mName]) {
         [self stopScan];
         mPeripheral = peripheral;
-        [self connectPeripheral:peripheral options:@{CBConnectPeripheralOptionNotifyOnDisconnectionKey: [NSNumber numberWithBool:YES]}];
+        [self connectPeripheral:peripheral options:nil];
     }
 }
 
@@ -122,7 +123,7 @@
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {
-    NSLog(@"didUpdateValueForCharacteristic: %@, characteristic = %@, error = %@", peripheral, characteristic, error);
+    // NSLog(@"didUpdateValueForCharacteristic: %@, characteristic = %@, error = %@", peripheral, characteristic, error);
     CavanBleChar *bleChar = [mDictChars objectForKey:characteristic.UUID];
     if (bleChar != nil) {
         [bleChar setReadStatus:error];
@@ -130,7 +131,7 @@
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didWriteValueForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {
-    NSLog(@"didWriteValueForCharacteristic: %@, characteristic = %@, error = %@", peripheral, characteristic, error);
+    // NSLog(@"didWriteValueForCharacteristic: %@, characteristic = %@, error = %@", peripheral, characteristic, error);
     CavanBleChar *bleChar = [mDictChars objectForKey:characteristic.UUID];
     if (bleChar != nil) {
         [bleChar setWriteStatus:error];
@@ -139,6 +140,7 @@
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {
     NSLog(@"didUpdateNotificationStateForCharacteristic: %@, characteristic = %@, error = %@", peripheral, characteristic.UUID, error);
+    NSLog(@"isNotifying = %d", characteristic.isNotifying);
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverDescriptorsForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {

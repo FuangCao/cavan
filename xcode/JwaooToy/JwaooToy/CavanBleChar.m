@@ -10,27 +10,15 @@
 
 @implementation CavanBleChar
 
-+ (NSInteger)decodeError:(NSError *)error {
-    if (error == nil) {
-        return 0;
-    }
-
-    NSInteger code = error.code;
-
-    if (code == 0) {
-        return -1;
-    }
-
-    return code;
-}
-
 - (CavanBleChar *)initWithCharacteristic:(CBCharacteristic *)characteristic
-                                  peripheral:(CBPeripheral *)peripheral; {
+                                  peripheral:(CBPeripheral *)peripheral
+                                delegate:(id<CavanBleCharDelegate>)delegate {
     if (self = [super init]) {
         mReadCond = [NSCondition new];
         mWriteCond = [NSCondition new];
         mPeripheral = peripheral;
         mChar = characteristic;
+        mDelegate = delegate;
 
         NSLog(@"uuid = %@, properties = 0x%08lx", mChar.UUID, (long)mChar.properties);
 
@@ -42,22 +30,17 @@
     return self;
 }
 
-- (void)postNotification {
-    NSLog(@"postNotification: %@", mChar.value);
-}
-
 - (void)setWriteStatus:(NSError *)error {
-    mWriteError = [self.class decodeError:error];
-
-    // NSLog(@"mWriteError = %ld", (long)mWriteError);
-
+    mWriteError = error;
     [mWriteCond signal];
 }
 
 - (void)setReadStatus:(NSError *)error {
-    mReadError = [self.class decodeError:error];
+    mReadError = error;
 
-    // NSLog(@"mReadError = %ld", (long)mReadError);
+    if (error == nil && mChar.isNotifying) {
+        [mDelegate didNotifyForCharacteristic:self];
+    }
 
     [mReadCond signal];
 }
@@ -69,7 +52,7 @@
         [mReadCond lock];
         [mPeripheral readValueForCharacteristic:mChar];
 
-        if ([mReadCond waitUntilDate:[[NSDate alloc] initWithTimeIntervalSinceNow:2.0]] && mReadError == 0) {
+        if ([mReadCond waitUntilDate:[[NSDate alloc] initWithTimeIntervalSinceNow:2.0]] && mReadError == nil) {
             value = mChar.value;
         } else {
             value = nil;
@@ -90,7 +73,7 @@
         for (int i = 0; i < 5; i++) {
             [mPeripheral writeValue:data forCharacteristic:mChar type:CBCharacteristicWriteWithResponse];
             if ([mWriteCond waitUntilDate:[[NSDate alloc] initWithTimeIntervalSinceNow:1.0]]) {
-                success = (mWriteError == 0);
+                success = (mWriteError == nil);
                 break;
             }
 

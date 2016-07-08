@@ -14,16 +14,16 @@
     NSLog(@"didDiscoverCharacteristicsForService: %@, service = %@, error = %@", peripheral, service, error);
     for (CBCharacteristic *characteristic in service.characteristics) {
         if ([characteristic.UUID isEqual:[CBUUID UUIDWithString:@"1889"]]) {
-            mCharCommand = [self createBleChar:characteristic];
+            mCharCommand = [self createBleChar:characteristic degelate:nil];
             NSLog(@"mCharCommand = %@", characteristic.UUID);
         } else if ([characteristic.UUID isEqual:[CBUUID UUIDWithString:@"188a"]]) {
-            mCharEvent = [self createBleChar:characteristic];
+            mCharEvent = [self createBleChar:characteristic degelate:mEventDelegate];
             NSLog(@"mCharEvent = %@", characteristic.UUID);
         } else if ([characteristic.UUID isEqual:[CBUUID UUIDWithString:@"188b"]]) {
-            mCharFlash = [self createBleChar:characteristic];
+            mCharFlash = [self createBleChar:characteristic degelate:nil];
             NSLog(@"mCharFlash = %@", characteristic.UUID);
         } else if ([characteristic.UUID isEqual:[CBUUID UUIDWithString:@"188c"]]) {
-            mCharSensor = [self createBleChar:characteristic];
+            mCharSensor = [self createBleChar:characteristic degelate:mSensorDelegate];
             NSLog(@"mCharSensor = %@", characteristic.UUID);
         } else {
             NSLog(@"Unknown characteristic = %@", characteristic.UUID);
@@ -213,6 +213,16 @@
 
 - (BOOL)setSensorDelay:(uint32_t)delay {
     return [self sendCommandReadBool:JWAOO_TOY_CMD_SENSOR_SET_DELAY withValue32:delay];
+}
+
+// ================================================================================
+
+- (void)setEventDelegate:(nonnull id<CavanBleCharDelegate>)delegate {
+    mEventDelegate = delegate;
+}
+
+- (void)setSensorDelegate:(nonnull id<CavanBleCharDelegate>)delegate {
+    mSensorDelegate = delegate;
 }
 
 @end
