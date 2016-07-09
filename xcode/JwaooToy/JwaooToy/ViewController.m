@@ -78,7 +78,6 @@
     mBleToy = [[JwaooBleToy alloc] initWithName:@"JwaooToy" uuid:nil];
     [mBleToy setEventDelegate:[[JwaooBleToyEventDelegate alloc] initWithViewController:self]];
     [mBleToy setSensorDelegate:[[JwaooBleToySensorDelegate alloc] initWithViewController:self]];
-    [mBleToy startScan];
 }
 
 - (void)setRepresentedObject:(id)representedObject {
@@ -117,6 +116,27 @@
     }
 
     NSLog(@"mSensorEnable = %d", mSensorEnable);
+}
+
+- (void)upgradeThread:(id)data {
+    if ([mBleToy upgradeFirmware:"/host/tmp/jwaoo-toy.hex"]) {
+        NSLog(@"upgrade successfull");
+    } else {
+        NSLog(@"upgrade failed");
+    }
+}
+
+- (IBAction)upgradeButton:(NSButton *)sender {
+    NSLog(@"upgradeButton");
+    [NSThread detachNewThreadSelector:@selector(upgradeThread:) toTarget:self withObject:nil];
+}
+
+- (IBAction)rebootButton:(NSButton *)sender {
+    if ([mBleToy doReboot]) {
+        NSLog(@"reboot successfull");
+    } else {
+        NSLog(@"reboot failed");
+    }
 }
 
 @end

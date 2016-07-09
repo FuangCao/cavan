@@ -696,6 +696,26 @@
                                     <action selector="sensorEnableButton:" target="XfG-lQ-9wD" id="eJW-ZV-wn0"/>
                                 </connections>
                             </button>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="zuK-u1-yJh">
+                                <rect key="frame" x="385" y="222" width="81" height="32"/>
+                                <buttonCell key="cell" type="push" title="固件升级" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Shd-Ge-YEb">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="upgradeButton:" target="XfG-lQ-9wD" id="WOj-C5-Zmc"/>
+                                </connections>
+                            </button>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="WV1-yi-9oZ">
+                                <rect key="frame" x="304" y="222" width="81" height="32"/>
+                                <buttonCell key="cell" type="push" title="重启" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="lWW-0l-d4M">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="rebootButton:" target="XfG-lQ-9wD" id="1Iu-Cu-z1z"/>
+                                </connections>
+                            </button>
                         </subviews>
                     </view>
                 </viewController>

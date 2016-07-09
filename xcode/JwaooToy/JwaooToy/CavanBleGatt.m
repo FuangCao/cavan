@@ -48,7 +48,11 @@
 // ================================================================================
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central {
-    NSLog(@"centralManagerDidUpdateState");
+    NSLog(@"centralManagerDidUpdateState: state = %ld", (long)central.state);
+
+    if (central.state == CBCentralManagerStatePoweredOn || central.state == CBCentralManagerStateResetting) {
+        [self startScan];
+    }
 }
 
 - (void)centralManager:(CBCentralManager *)central willRestoreState:(NSDictionary<NSString *, id> *)dict {
@@ -123,7 +127,10 @@
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {
-    // NSLog(@"didUpdateValueForCharacteristic: %@, characteristic = %@, error = %@", peripheral, characteristic, error);
+    if (error != nil) {
+        NSLog(@"didUpdateValueForCharacteristic: %@, characteristic = %@, error = %@", peripheral, characteristic, error);
+    }
+
     CavanBleChar *bleChar = [mDictChars objectForKey:characteristic.UUID];
     if (bleChar != nil) {
         [bleChar setReadStatus:error];
@@ -131,7 +138,10 @@
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didWriteValueForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {
-    // NSLog(@"didWriteValueForCharacteristic: %@, characteristic = %@, error = %@", peripheral, characteristic, error);
+    if (error != nil) {
+        NSLog(@"didWriteValueForCharacteristic: %@, characteristic = %@, error = %@", peripheral, characteristic, error);
+    }
+
     CavanBleChar *bleChar = [mDictChars objectForKey:characteristic.UUID];
     if (bleChar != nil) {
         [bleChar setWriteStatus:error];
@@ -139,7 +149,10 @@
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {
-    NSLog(@"didUpdateNotificationStateForCharacteristic: %@, characteristic = %@, error = %@", peripheral, characteristic.UUID, error);
+    if (error != nil) {
+        NSLog(@"didUpdateNotificationStateForCharacteristic: %@, characteristic = %@, error = %@", peripheral, characteristic.UUID, error);
+    }
+
     NSLog(@"isNotifying = %d", characteristic.isNotifying);
 }
 

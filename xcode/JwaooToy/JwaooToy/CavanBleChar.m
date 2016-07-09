@@ -101,21 +101,30 @@
 - (BOOL)writeData:(const void *)bytes
            length:(NSUInteger)length {
     @synchronized (self) {
-        while (length > CAVAN_BLE_FRAME_SIZE) {
-            NSData *data = [[NSData alloc] initWithBytes:bytes length:length];
+        while (1) {
+            NSUInteger wrlen;
+
+            if (length < CAVAN_BLE_FRAME_SIZE) {
+                if (length == 0) {
+                    break;
+                }
+
+                wrlen = length;
+            } else {
+                wrlen = CAVAN_BLE_FRAME_SIZE;
+            }
+
+            NSLog(@"length = %ld, wrlen = %ld", length, wrlen);
+
+            NSData *data = [[NSData alloc] initWithBytes:bytes length:wrlen];
 
             if (![self writeFrame:data]) {
+                NSLog(@"Failed to writeFrame");
                 return FALSE;
             }
 
-            bytes += CAVAN_BLE_FRAME_SIZE;
-            length -= CAVAN_BLE_FRAME_SIZE;
-        }
-
-        if (length > 0) {
-            NSData *data = [[NSData alloc] initWithBytes:bytes length:length];
-
-            return [self writeFrame:data];
+            bytes += wrlen;
+            length -= wrlen;
         }
     }
 

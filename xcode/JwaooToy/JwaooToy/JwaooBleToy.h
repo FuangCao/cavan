@@ -9,6 +9,9 @@
 #import <Foundation/Foundation.h>
 #import "CavanBleChar.h"
 #import "CavanBleGatt.h"
+#import "CavanHexFile.h"
+
+#define JWAOO_TOY_FLASH_MAGIC       0x00005070
 
 enum
 {
@@ -54,7 +57,17 @@ struct jwaoo_toy_command {
     };
 };
 
+struct jwaoo_toy_flash_header {
+    uint32_t magic;
+    uint32_t size;
+};
+
 #pragma pack()
+
+@protocol CavanProgressDelegate <NSObject>
+@required
+- (void)didProgressUpdated:(int)progress;
+@end
 
 @interface JwaooBleToy : CavanBleGatt {
     CavanBleChar *mCharCommand;
@@ -64,6 +77,8 @@ struct jwaoo_toy_command {
 
     id<CavanBleCharDelegate> mEventDelegate;
     id<CavanBleCharDelegate> mSensorDelegate;
+
+    BOOL mUpgradeBusy;
 }
 
 + (BOOL)parseResponseBool:(nullable NSData *)response;
@@ -103,8 +118,21 @@ struct jwaoo_toy_command {
 - (nullable NSString *)doIdentify;
 - (nullable NSString *)readBuildDate;
 - (uint32_t)readVersion;
+- (BOOL)doReboot;
+
 - (BOOL)setSensorEnable:(BOOL)enable;
 - (BOOL)setSensorDelay:(uint32_t)delay;
+
+- (uint32_t)getFlashId;
+- (uint32_t)getFlashSize;
+- (uint32_t)getFlashPageSize;
+- (BOOL)setFlashWriteEnable:(BOOL)enable;
+- (BOOL)eraseFlash;
+- (BOOL)startFlashUpgrade;
+- (BOOL)finishFlashUpgrade;
+- (BOOL)writeFlash:(nonnull const void *)data
+              size:(int)size;
+- (BOOL)upgradeFirmware:(nonnull const char *)pathname;
 
 - (void)setEventDelegate:(nonnull id<CavanBleCharDelegate>)delegate;
 - (void)setSensorDelegate:(nonnull id<CavanBleCharDelegate>)delegate;

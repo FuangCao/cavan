@@ -22,6 +22,7 @@
 		86E90B531D2E724600FB82B6 /* CavanBleGatt.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E90B511D2E724600FB82B6 /* CavanBleGatt.m */; };
 		86E90B561D2E725200FB82B6 /* JwaooBleToy.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E90B551D2E725200FB82B6 /* JwaooBleToy.m */; };
 		86E90B581D2E726300FB82B6 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 86E90B571D2E726300FB82B6 /* CoreBluetooth.framework */; };
+		86F500DA1D30C09B00BADEB8 /* CavanHexFile.m in Sources */ = {isa = PBXBuildFile; fileRef = 86F500D91D30C09B00BADEB8 /* CavanHexFile.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -72,6 +73,8 @@
 		86E90B541D2E725200FB82B6 /* JwaooBleToy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JwaooBleToy.h; sourceTree = "<group>"; };
 		86E90B551D2E725200FB82B6 /* JwaooBleToy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JwaooBleToy.m; sourceTree = "<group>"; };
 		86E90B571D2E726300FB82B6 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
+		86F500D81D30C09B00BADEB8 /* CavanHexFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CavanHexFile.h; sourceTree = "<group>"; };
+		86F500D91D30C09B00BADEB8 /* CavanHexFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CavanHexFile.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -124,6 +127,8 @@
 		86E90B1B1D2E71D400FB82B6 /* JwaooToy */ = {
 			isa = PBXGroup;
 			children = (
+				86F500D81D30C09B00BADEB8 /* CavanHexFile.h */,
+				86F500D91D30C09B00BADEB8 /* CavanHexFile.m */,
 				86E4B1521D2FF99900F2B897 /* AccelFreqParser.h */,
 				86E4B1531D2FF99900F2B897 /* AccelFreqParser.m */,
 				86E4B14F1D2FE38A00F2B897 /* Mpu6050Sensor.h */,
@@ -313,6 +318,7 @@
 				86E4B1541D2FF99900F2B897 /* AccelFreqParser.m in Sources */,
 				86E90B531D2E724600FB82B6 /* CavanBleGatt.m in Sources */,
 				86E90B521D2E724600FB82B6 /* CavanBleChar.m in Sources */,
+				86F500DA1D30C09B00BADEB8 /* CavanHexFile.m in Sources */,
 				86E4B14B1D2F9C6700F2B897 /* CavanPeakValleyValue.m in Sources */,
 				86E4B1511D2FE38A00F2B897 /* Mpu6050Sensor.m in Sources */,
 			);
