@@ -9,10 +9,17 @@
 #import <Cocoa/Cocoa.h>
 #import "JwaooBleToy.h"
 
-@interface ViewController : NSViewController {
+@interface ViewController : NSViewController <CavanProgressDelegate> {
     BOOL mSensorEnable;
     JwaooBleToy *mBleToy;
 }
+
+@property (weak) IBOutlet NSProgressIndicator *mProgressBar;
+@property (weak) IBOutlet NSButton *mButtonSensCommand;
+@property (weak) IBOutlet NSButton *mButtonSensor;
+@property (weak) IBOutlet NSButton *mButtonDisconnect;
+@property (weak) IBOutlet NSButton *mButtonReboot;
+@property (weak) IBOutlet NSButton *mButtonUpgrade;
 
 @end
 

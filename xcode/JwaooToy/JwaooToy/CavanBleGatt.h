@@ -26,5 +26,6 @@
           withUUID:(nonnull CBUUID *)uuid;
 - (nullable CavanBleChar *)createBleChar:(nonnull CBCharacteristic *)characteristic
                        degelate:(nullable id<CavanBleCharDelegate>)delegate;
+- (void)disconnect;
 
 @end

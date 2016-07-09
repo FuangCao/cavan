@@ -103,14 +103,11 @@
             return nil;
         }
 
-        // NSLog(@"type = 0x%02x, length = %d", line->type, line->length);
-
         switch (line->type) {
             case 0x00:
                 offset = [self.class getHexValue:line->offset size:sizeof(line->offset)];
-                // NSLog(@"offset = 0x%04x", offset);
                 if (offset > binData.length) {
-                    NSLog(@"set size to: %d", offset);
+                    NSLog(@"seek to: %d", offset);
                     [binData setLength:offset];
                 }
 

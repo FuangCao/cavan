@@ -10,6 +10,7 @@
 #import "CavanBleChar.h"
 #import "CavanBleGatt.h"
 #import "CavanHexFile.h"
+#import "CavanProgressManager.h"
 
 #define JWAOO_TOY_FLASH_MAGIC       0x00005070
 
@@ -63,11 +64,6 @@ struct jwaoo_toy_flash_header {
 };
 
 #pragma pack()
-
-@protocol CavanProgressDelegate <NSObject>
-@required
-- (void)didProgressUpdated:(int)progress;
-@end
 
 @interface JwaooBleToy : CavanBleGatt {
     CavanBleChar *mCharCommand;
@@ -131,8 +127,10 @@ struct jwaoo_toy_flash_header {
 - (BOOL)startFlashUpgrade;
 - (BOOL)finishFlashUpgrade;
 - (BOOL)writeFlash:(nonnull const void *)data
-              size:(int)size;
-- (BOOL)upgradeFirmware:(nonnull const char *)pathname;
+              size:(int)size
+      withProgress:(nullable CavanProgressManager *)progress;
+- (BOOL)upgradeFirmware:(nonnull const char *)pathname
+           withProgress:(nullable CavanProgressManager *)progress;
 
 - (void)setEventDelegate:(nonnull id<CavanBleCharDelegate>)delegate;
 - (void)setSensorDelegate:(nonnull id<CavanBleCharDelegate>)delegate;

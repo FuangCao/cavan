@@ -677,7 +677,7 @@
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="kRt-qw-1Q3">
-                                <rect key="frame" x="14" y="222" width="81" height="32"/>
+                                <rect key="frame" x="14" y="184" width="81" height="32"/>
                                 <buttonCell key="cell" type="push" title="发送命令" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Hed-Mc-0ne">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -686,18 +686,8 @@
                                     <action selector="sendCommandButton:" target="XfG-lQ-9wD" id="h9N-mD-X9H"/>
                                 </connections>
                             </button>
-                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5dN-a1-bB5">
-                                <rect key="frame" x="95" y="222" width="81" height="32"/>
-                                <buttonCell key="cell" type="push" title="传感器" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1R5-wx-jbO">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                                <connections>
-                                    <action selector="sensorEnableButton:" target="XfG-lQ-9wD" id="eJW-ZV-wn0"/>
-                                </connections>
-                            </button>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="zuK-u1-yJh">
-                                <rect key="frame" x="385" y="222" width="81" height="32"/>
+                                <rect key="frame" x="385" y="184" width="81" height="32"/>
                                 <buttonCell key="cell" type="push" title="固件升级" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Shd-Ge-YEb">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -707,7 +697,7 @@
                                 </connections>
                             </button>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="WV1-yi-9oZ">
-                                <rect key="frame" x="304" y="222" width="81" height="32"/>
+                                <rect key="frame" x="223" y="184" width="81" height="32"/>
                                 <buttonCell key="cell" type="push" title="重启" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="lWW-0l-d4M">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -716,12 +706,43 @@
                                     <action selector="rebootButton:" target="XfG-lQ-9wD" id="1Iu-Cu-z1z"/>
                                 </connections>
                             </button>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="TDE-jM-8Vb">
+                                <rect key="frame" x="304" y="184" width="81" height="32"/>
+                                <buttonCell key="cell" type="push" title="断开连接" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="5I4-Iq-t90">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="disconnectButton:" target="XfG-lQ-9wD" id="1oW-lS-n8G"/>
+                                </connections>
+                            </button>
+                            <progressIndicator wantsLayer="YES" fixedFrame="YES" maxValue="100" style="bar" translatesAutoresizingMaskIntoConstraints="NO" id="vY5-VD-re9">
+                                <rect key="frame" x="20" y="231" width="440" height="20"/>
+                            </progressIndicator>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5dN-a1-bB5">
+                                <rect key="frame" x="95" y="184" width="81" height="32"/>
+                                <buttonCell key="cell" type="push" title="传感器" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1R5-wx-jbO">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="sensorEnableButton:" target="XfG-lQ-9wD" id="eJW-ZV-wn0"/>
+                                </connections>
+                            </button>
                         </subviews>
                     </view>
+                    <connections>
+                        <outlet property="mButtonDisconnect" destination="TDE-jM-8Vb" id="u3T-w6-Ape"/>
+                        <outlet property="mButtonReboot" destination="WV1-yi-9oZ" id="fYr-7j-Prq"/>
+                        <outlet property="mButtonSensCommand" destination="kRt-qw-1Q3" id="cwL-bP-GuI"/>
+                        <outlet property="mButtonSensor" destination="5dN-a1-bB5" id="7iT-xc-hzG"/>
+                        <outlet property="mButtonUpgrade" destination="zuK-u1-yJh" id="qkW-Vn-yg5"/>
+                        <outlet property="mProgressBar" destination="vY5-VD-re9" id="Wrc-9g-kcJ"/>
+                    </connections>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="75" y="655"/>
+            <point key="canvasLocation" x="29" y="656"/>
         </scene>
     </scenes>
 </document>

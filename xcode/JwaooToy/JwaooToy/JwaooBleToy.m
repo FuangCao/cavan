@@ -257,18 +257,22 @@
 }
 
 - (BOOL)writeFlash:(const void *)data
-              size:(int)size {
+              size:(int)size
+      withProgress:(CavanProgressManager *)progress {
     if (mCharFlash == nil) {
         return false;
     }
 
-    return [mCharFlash writeData:data length:size];
+    return [mCharFlash writeData:data length:size withProgress:progress];
 }
 
-- (BOOL)upgradeFirmwareSafe:(nonnull const char *)pathname {
+- (BOOL)upgradeFirmwareSafe:(nonnull const char *)pathname
+               withProgress:(nullable CavanProgressManager *)progress {
     uint32_t flashId = [self getFlashId];
     uint32_t flashSize = [self getFlashSize];
     uint32_t flashPageSize = [self getFlashPageSize];
+
+    [progress setProgressRange:99];
 
     NSLog(@"ID = 0x%08x, size = %d, page_size = %d", flashId, flashSize, flashPageSize);
 
@@ -276,6 +280,8 @@
     if (file == nil) {
         return FALSE;
     }
+
+    [progress addProgress];
 
     NSLog(@"readBinData");
 
@@ -285,14 +291,17 @@
         return FALSE;
     }
 
-    NSLog(@"length = %ld = 0x%08lx", data.length, data.length);
+    [progress addProgress];
 
+    NSLog(@"length = %ld = 0x%08lx", data.length, data.length);
     NSLog(@"setFlashWriteEnable true");
 
     if (![self setFlashWriteEnable:true]) {
         NSLog(@"Failed to setWriteEnable true");
         return false;
     }
+
+    [progress addProgress];
 
     NSLog(@"startFlashUpgrade");
 
@@ -301,6 +310,8 @@
         return false;
     }
 
+    [progress addProgress];
+
     NSLog(@"doFlashErase");
 
     if (![self eraseFlash]) {
@@ -308,20 +319,24 @@
         return false;
     }
 
+    [progress addProgress];
+
     NSLog(@"writeFlash header");
 
     uint32_t length = (uint32_t)(data.length + 7) & (~7);
     NSLog(@"length = %d = 0x%08x", length, length);
 
     struct jwaoo_toy_flash_header header = { JWAOO_TOY_FLASH_MAGIC, [CavanHexFile endianConvert32:length]};
-    if (![self writeFlash:&header size:sizeof(header)]) {
+    if (![self writeFlash:&header size:sizeof(header) withProgress:nil]) {
         NSLog(@"Failed to write flash header");
         return false;
     }
 
+    [progress addProgress];
+
     NSLog(@"writeFlash data");
 
-    if (![self writeFlash:data.bytes size:(int)data.length]) {
+    if (![self writeFlash:data.bytes size:(int)data.length withProgress:progress]) {
         NSLog(@"Failed to write flash data");
         return false;
     }
@@ -337,17 +352,21 @@
 
     [self setFlashWriteEnable:false];
 
+    [progress setProgressMax:100];
+    [progress finish];
+
     return true;
 }
 
-- (BOOL)upgradeFirmware:(nonnull const char *)pathname {
+- (BOOL)upgradeFirmware:(nonnull const char *)pathname
+           withProgress:(nullable CavanProgressManager *)progress {
     if (mUpgradeBusy) {
         NSLog(@"upgrade busy");
         return false;
     }
 
     mUpgradeBusy = true;
-    BOOL result = [self upgradeFirmwareSafe:pathname];
+    BOOL result = [self upgradeFirmwareSafe:pathname withProgress:progress];
     mUpgradeBusy = false;
 
     return result;

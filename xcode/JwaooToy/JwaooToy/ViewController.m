@@ -118,17 +118,60 @@
     NSLog(@"mSensorEnable = %d", mSensorEnable);
 }
 
+- (void)enableButton:(NSButton *)button {
+    if ([NSThread isMainThread]) {
+        button.enabled = true;
+    } else {
+        [self performSelectorOnMainThread:@selector(enableButton:) withObject:button waitUntilDone:TRUE];
+    }
+}
+
+- (void)disableButton:(NSButton *)button {
+    if ([NSThread isMainThread]) {
+        button.enabled = false;
+    } else {
+        [self performSelectorOnMainThread:@selector(disableButton:) withObject:button waitUntilDone:TRUE];
+    }
+}
+
+- (void)updateUI:(NSNumber *)enable {
+    if ([NSThread isMainThread]) {
+        _mButtonReboot.enabled = enable.boolValue;
+        _mButtonSensor.enabled = enable.boolValue;
+        _mButtonUpgrade.enabled = enable.boolValue;
+        _mButtonDisconnect.enabled = enable.boolValue;
+        _mButtonSensCommand.enabled = enable.boolValue;
+    } else {
+        [self performSelectorOnMainThread:@selector(updateUI:) withObject:enable waitUntilDone:YES];
+    }
+}
+
+- (void)didProgressUpdated:(NSNumber *)progress {
+    if ([NSThread isMainThread]) {
+        _mProgressBar.doubleValue = progress.intValue;
+    } else {
+        [self performSelectorOnMainThread:@selector(didProgressUpdated:) withObject:progress waitUntilDone:NO];
+    }
+}
+
 - (void)upgradeThread:(id)data {
-    if ([mBleToy upgradeFirmware:"/host/tmp/jwaoo-toy.hex"]) {
+    [self updateUI:[NSNumber numberWithBool:FALSE]];
+
+    CavanProgressManager *progress = [[CavanProgressManager alloc] initWithDelegate:self];
+    if ([mBleToy upgradeFirmware:"/host/tmp/jwaoo-toy.hex" withProgress:progress]) {
         NSLog(@"upgrade successfull");
     } else {
         NSLog(@"upgrade failed");
     }
+
+    [self updateUI:[NSNumber numberWithBool:TRUE]];
 }
 
 - (IBAction)upgradeButton:(NSButton *)sender {
     NSLog(@"upgradeButton");
-    [NSThread detachNewThreadSelector:@selector(upgradeThread:) toTarget:self withObject:nil];
+    _mProgressBar.minValue = 0;
+    _mProgressBar.maxValue = 100;
+    [NSThread detachNewThreadSelector:@selector(upgradeThread:) toTarget:self withObject:sender];
 }
 
 - (IBAction)rebootButton:(NSButton *)sender {
@@ -137,6 +180,10 @@
     } else {
         NSLog(@"reboot failed");
     }
+}
+
+- (IBAction)disconnectButton:(NSButton *)sender {
+    [mBleToy disconnect];
 }
 
 @end

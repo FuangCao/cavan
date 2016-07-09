@@ -45,6 +45,12 @@
     return bleChar;
 }
 
+- (void)disconnect {
+    if (mPeripheral != nil) {
+        [self cancelPeripheralConnection:mPeripheral];
+    }
+}
+
 // ================================================================================
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central {
@@ -150,10 +156,10 @@
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {
     if (error != nil) {
-        NSLog(@"didUpdateNotificationStateForCharacteristic: %@, characteristic = %@, error = %@", peripheral, characteristic.UUID, error);
+        NSLog(@"didUpdateNotificationStateForCharacteristic: %@, characteristic = %@, error = %@", peripheral, characteristic, error);
     }
 
-    NSLog(@"isNotifying = %d", characteristic.isNotifying);
+    NSLog(@"uuid = %@, isNotifying = %d", characteristic.UUID, characteristic.isNotifying);
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverDescriptorsForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {

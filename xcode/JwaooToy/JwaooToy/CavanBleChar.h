@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreBluetooth/CoreBluetooth.h>
+#import "CavanProgressManager.h"
 
 #define CAVAN_BLE_FRAME_SIZE    20
 
@@ -41,7 +42,8 @@
 - (nullable NSData *)readData;
 - (BOOL)writeFrame:(nonnull NSData *)data;
 - (BOOL)writeData:(nonnull const void *)bytes
-           length:(NSUInteger)length;
+           length:(NSUInteger)length
+     withProgress:(nullable CavanProgressManager *)progress;
 - (nullable NSData *)sendCommand:(nonnull NSData *)command;
 
 @end

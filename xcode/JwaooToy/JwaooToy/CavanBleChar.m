@@ -99,7 +99,11 @@
 }
 
 - (BOOL)writeData:(const void *)bytes
-           length:(NSUInteger)length {
+           length:(NSUInteger)length
+     withProgress:(CavanProgressManager *)progress {
+
+    [progress setValueRange:length];
+
     @synchronized (self) {
         while (1) {
             NSUInteger wrlen;
@@ -114,17 +118,14 @@
                 wrlen = CAVAN_BLE_FRAME_SIZE;
             }
 
-            NSLog(@"length = %ld, wrlen = %ld", length, wrlen);
-
-            NSData *data = [[NSData alloc] initWithBytes:bytes length:wrlen];
-
-            if (![self writeFrame:data]) {
+            if (![self writeFrame:[[NSData alloc] initWithBytes:bytes length:wrlen]]) {
                 NSLog(@"Failed to writeFrame");
                 return FALSE;
             }
 
             bytes += wrlen;
             length -= wrlen;
+            [progress addValue:wrlen];
         }
     }
 

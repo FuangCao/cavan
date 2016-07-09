@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		86685CF01D31176300C1BD37 /* CavanProgressManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 86685CEF1D31176300C1BD37 /* CavanProgressManager.m */; };
 		86E4B14B1D2F9C6700F2B897 /* CavanPeakValleyValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E4B14A1D2F9C6700F2B897 /* CavanPeakValleyValue.m */; };
 		86E4B14E1D2F9C8900F2B897 /* CavanPeakValleyFinder.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E4B14D1D2F9C8900F2B897 /* CavanPeakValleyFinder.m */; };
 		86E4B1511D2FE38A00F2B897 /* Mpu6050Sensor.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E4B1501D2FE38A00F2B897 /* Mpu6050Sensor.m */; };
@@ -43,6 +44,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		86685CEE1D31176300C1BD37 /* CavanProgressManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CavanProgressManager.h; sourceTree = "<group>"; };
+		86685CEF1D31176300C1BD37 /* CavanProgressManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CavanProgressManager.m; sourceTree = "<group>"; };
 		86E4B1491D2F9C6700F2B897 /* CavanPeakValleyValue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CavanPeakValleyValue.h; sourceTree = "<group>"; };
 		86E4B14A1D2F9C6700F2B897 /* CavanPeakValleyValue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CavanPeakValleyValue.m; sourceTree = "<group>"; };
 		86E4B14C1D2F9C8900F2B897 /* CavanPeakValleyFinder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CavanPeakValleyFinder.h; sourceTree = "<group>"; };
@@ -127,6 +130,8 @@
 		86E90B1B1D2E71D400FB82B6 /* JwaooToy */ = {
 			isa = PBXGroup;
 			children = (
+				86685CEE1D31176300C1BD37 /* CavanProgressManager.h */,
+				86685CEF1D31176300C1BD37 /* CavanProgressManager.m */,
 				86F500D81D30C09B00BADEB8 /* CavanHexFile.h */,
 				86F500D91D30C09B00BADEB8 /* CavanHexFile.m */,
 				86E4B1521D2FF99900F2B897 /* AccelFreqParser.h */,
@@ -315,6 +320,7 @@
 				86E90B211D2E71D400FB82B6 /* main.m in Sources */,
 				86E90B1E1D2E71D400FB82B6 /* AppDelegate.m in Sources */,
 				86E90B561D2E725200FB82B6 /* JwaooBleToy.m in Sources */,
+				86685CF01D31176300C1BD37 /* CavanProgressManager.m in Sources */,
 				86E4B1541D2FF99900F2B897 /* AccelFreqParser.m in Sources */,
 				86E90B531D2E724600FB82B6 /* CavanBleGatt.m in Sources */,
 				86E90B521D2E724600FB82B6 /* CavanBleChar.m in Sources */,
