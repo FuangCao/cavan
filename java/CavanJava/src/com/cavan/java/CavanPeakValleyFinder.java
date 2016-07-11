@@ -23,6 +23,7 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 
 	private double mValueFuzz;
 	private double mValueFuzzMin;
+	private double mLastValue;
 	private double mLastPeak;
 	private double mLastValley;
 
@@ -50,7 +51,7 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 
 	public void setValueFuzz(double fuzz) {
 		mValueFuzz = fuzz;
-		mValueFuzzMin = fuzz / 4;
+		mValueFuzzMin = fuzz / 3;
 	}
 
 	public void setTimeFuzz(long fuzz) {
@@ -70,18 +71,26 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 		return mAvgValue;
 	}
 
-	public CavanPeakValleyValue buildValue(double peak, double valley, int type) {
-		CavanPeakValleyValue result = new CavanPeakValleyValue(peak, valley, type);
+	public CavanPeakValleyValue createPeakValley(int type, long time) {
+		if (mType == type) {
+			return null;
+		}
+
+		mType = type;
+
+		CavanPeakValleyValue result = new CavanPeakValleyValue(mLastPeak, mLastValley, type, time);
 		mAvgDiff = (mAvgDiff * 2 + result.getDiff()) / 3;
+
 		return result;
 	}
 
-	public CavanPeakValleyValue buildValueRising() {
-		return buildValue(mPeakValue, mLastValley, TYPE_RISING);
-	}
+	public boolean isValidPeakValley(long time) {
+		double diff = getDiff();
+		if (diff > mValueFuzz) {
+			return true;
+		}
 
-	public CavanPeakValleyValue buildValueFalling() {
-		return buildValue(mLastPeak, mValleyValue, TYPE_FALLING);
+		return diff > mValueFuzzMin && time > mTimeFuzz;
 	}
 
 	public CavanPeakValleyValue putAvgValue(double value) {
@@ -89,53 +98,37 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 		CavanPeakValleyValue result = null;
 
 		if (mFindPeak) {
-			if (value > mPeakValue) {
-				mPeakValue = value;
-			} else {
+			if (value < mLastValue) {
+				mPeakValue = mLastValue;
 				mPeakTime = System.currentTimeMillis();
 
-				double diff = getDiff();
-
-				if (diff > mValueFuzz || (diff > mValueFuzzMin &&  mPeakTime - mValleyTime > mTimeFuzz)) {
-					if (mValleyTime - mLastPeakTime > mTimeFuzz || mLastPeak - mValleyValue > mValueFuzz) {
-						result = buildValueFalling();
-					}
+				if (isValidPeakValley(mPeakTime - mValleyTime)) {
+					result = createPeakValley(TYPE_FALLING, mLastValleyTime);
+					mLastPeak = mPeakValue;
+					mLastPeakTime = mPeakTime;
 				}
 
 				mFindPeak = false;
 				mFindValley = true;
-
-				mLastValleyTime = mValleyTime;
-				mLastValley = mValleyValue;
-				mValleyValue = value;
 			}
 		} else if (mFindValley) {
-			if (value < mValleyValue) {
-				mValleyValue = value;
-			} else {
+			if (value > mLastValue) {
+				mValleyValue = mLastValue;
 				mValleyTime = System.currentTimeMillis();
 
-				double diff = getDiff();
-
-				if (getDiff() > mValueFuzz || (diff > mValueFuzzMin && mValleyTime - mPeakTime > mTimeFuzz)) {
-					if(mPeakTime - mLastValleyTime > mTimeFuzz || mPeakValue - mLastValley > mValueFuzz) {
-						result = buildValueRising();
-					}
+				if (isValidPeakValley(mValleyTime - mPeakTime)) {
+					result = createPeakValley(TYPE_RISING, mLastPeakTime);
+					mLastValley = mValleyValue;
+					mLastValleyTime = mValleyTime;
 				}
 
 				mFindPeak = true;
-
-				mLastPeakTime = mPeakTime;
-				mLastPeak = mPeakValue;
-				mPeakValue = value;
 			}
 		} else if (mInitialized) {
-			if (value > mPeakValue) {
+			if (value > mLastValue) {
 				mFindPeak = true;
-				mPeakValue = value;
-			} else if (value < mValleyValue) {
+			} else if (value < mLastValue) {
 				mFindValley = true;
-				mValleyValue = value;
 			} else {
 				init(value);
 			}
@@ -143,6 +136,8 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 			init(value);
 			mInitialized = true;
 		}
+
+		mLastValue = value;
 
 		return result;
 	}
@@ -175,26 +170,27 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 		}
 	}
 
-	public double putFreqValue(double value) {
-		long time = System.currentTimeMillis();
-
+	public CavanPeakValleyValue putFreqValue(double value) {
 		CavanPeakValleyValue result = putValue(value);
 		if (result != null) {
-			mTime = time;
+			mTime = result.getTime();
 
 			while (mValueList.size() > FREQ_COUNT) {
 				mValueList.remove(0);
 			}
 
 			mValueList.add(result);
-			updateFreq(time);
-		} else if (time - mTime < FREQ_TIMEOUT) {
-			updateFreq(time);
+			updateFreq(mTime);
 		} else {
-			mValueList.clear();
-			setFreq(0);
+			long time = System.currentTimeMillis();
+			if (time - mTime > FREQ_TIMEOUT) {
+				mValueList.clear();
+				setFreq(0);
+			} else {
+				updateFreq(time);
+			}
 		}
 
-		return mFreq;
+		return result;
 	}
 }

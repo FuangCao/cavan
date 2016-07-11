@@ -45,8 +45,9 @@ public class MainActivity extends Activity {
 				mCount = 0;
 
 				if (count > 0) {
-					setTitle("count = " + count + ", speed = " + (1000.0 / count));
+					setTitle("freq = " + mFinder.getFreq() + ", count = " + count + ", speed = " + (1000.0 / count));
 				}
+
 				mHandler.sendEmptyMessageDelayed(MSG_SHOW_SPEED, 1000);
 				break;
 			}
@@ -120,8 +121,8 @@ public class MainActivity extends Activity {
 
 								mWaveViewX.addValue(value);
 
-								CavanPeakValleyValue result = mFinder.putValue(value);
-								if (result != null && result.isRising()) {
+								CavanPeakValleyValue result = mFinder.putFreqValue(value);
+								if (result != null) {
 									mWaveViewZ.addValue(result.getDiff());
 								} else {
 									mWaveViewZ.addValue(0);
