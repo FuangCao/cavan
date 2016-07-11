@@ -17,8 +17,6 @@ import com.jwaoo.android.JwaooBleToy;
 
 public class MainActivity extends Activity {
 
-	public static final int BLE_SCAN_RESULT = 1;
-
 	private static final int MSG_SENSOR_ENABLE = 1;
 	private static final int MSG_SHOW_SPEED = 2;
 
@@ -77,7 +75,7 @@ public class MainActivity extends Activity {
 		mWaveViewDepth.setZoom(3);
 
 		mHandler.sendEmptyMessage(MSG_SHOW_SPEED);
-		CavanBleScanner.show(this, BLE_SCAN_RESULT);
+		CavanBleScanner.show(this);
 	}
 
 	@Override
@@ -92,7 +90,7 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		CavanAndroid.logE("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
-		if (requestCode == BLE_SCAN_RESULT && resultCode == RESULT_OK && data != null) {
+		if (resultCode == RESULT_OK && data != null) {
 			mDevice = data.getParcelableExtra("device");
 			if (mDevice == null) {
 				finish();
@@ -111,7 +109,7 @@ public class MainActivity extends Activity {
 								if (connected) {
 									mHandler.sendEmptyMessage(MSG_SENSOR_ENABLE);
 								} else {
-									CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
+									CavanBleScanner.show(MainActivity.this);
 								}
 							}
 
@@ -137,6 +135,10 @@ public class MainActivity extends Activity {
 								mCount++;
 							}
 						};
+
+						if (!mBleToy.connect(true)) {
+							CavanBleScanner.show(MainActivity.this);
+						}
 					} catch (Exception e) {
 						e.printStackTrace();
 						finish();

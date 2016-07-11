@@ -32,7 +32,38 @@ function cavan-virtualbox-set-resolution()
 		return 1
 	}
 
-	VBoxManage setextradata "$1" "VBoxInternal2/EfiGopMode" "$2"
+	if [ "$3" ]
+	then
+		VBoxManage setextradata "$1" "VBoxInternal2/UgaHorizontalResolution" "$2" || return 1
+		VBoxManage setextradata "$1" "VBoxInternal2/UgaVerticalResolution" "$3" || return 1
+	else
+		VBoxManage setextradata "$1" "VBoxInternal2/EfiGopMode" "$2" || return 1
+	fi
+}
+
+function cavan-virtualbox-set-bootarg()
+{
+	[ "$#" -lt "2" ] &&
+	{
+		echo "cavan-virtualbox-set-bootarg <VM> <ARG>"
+		return 1
+	}
+
+	VBoxManage setextradata "$1" "VBoxInternal2/EfiBootArgs" "$2"
+}
+
+function cavan-virtualbox-osx-set-safemode()
+{
+	local bootarg
+
+	if [ "$2" = "1" ]
+	then
+		bootarg="-x"
+	else
+		bootarg=""
+	fi
+
+	cavan-virtualbox-set-bootarg "$1" "${bootarg}"
 }
 
 function cavan-virtualbox-add-resolution()

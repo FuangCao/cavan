@@ -15,6 +15,7 @@ import com.cavan.java.CavanProgressListener;
 public abstract class JwaooBleToy extends CavanBleGatt {
 
 	public static final  long DATA_TIMEOUT = 5000;
+	public static final String IDENTIFY = "JwaooToy";
 	public static final UUID UUID_SERVICE = UUID.fromString("00001888-0000-1000-8000-00805f9b34fb");
 	public static final UUID UUID_COMMAND = UUID.fromString("00001889-0000-1000-8000-00805f9b34fb");
 	public static final UUID UUID_EVENT = UUID.fromString("0000188a-0000-1000-8000-00805f9b34fb");
@@ -66,11 +67,11 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 		}
 	};
 
-	public JwaooBleToy(Context context, BluetoothDevice device, UUID uuid) throws Exception {
+	public JwaooBleToy(Context context, BluetoothDevice device, UUID uuid) {
 		super(context, device, uuid);
 	}
 
-	public JwaooBleToy(Context context, BluetoothDevice device) throws Exception {
+	public JwaooBleToy(Context context, BluetoothDevice device) {
 		this(context, device, UUID_SERVICE);
 	}
 
@@ -81,7 +82,7 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 
 		byte[] response = mCharCommand.sendCommand(command);
 		if (response == null || response.length < 1) {
-			CavanAndroid.logE("Failed to mCharCommand.readData");
+			CavanAndroid.logE("Failed to mCharCommand.sendCommand");
 			return null;
 		}
 
@@ -383,6 +384,20 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 		}
 
 		mCharSensor.setDataListener(mSensorListener);
+		setAutoConnectAllow(true);
+
+		String identify = doIdentify();
+		if (identify == null) {
+			CavanAndroid.logE("Failed to doIdentify");
+			return false;
+		}
+
+		CavanAndroid.logE("identify = " + identify);
+
+		if (!IDENTIFY.equals(identify)) {
+			CavanAndroid.logE("Invalid identify");
+			return false;
+		}
 
 		return true;
 	}

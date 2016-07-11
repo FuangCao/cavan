@@ -21,7 +21,6 @@ import com.jwaoo.android.JwaooToySensor;
 @SuppressLint("HandlerLeak")
 public class MainActivity extends Activity implements OnClickListener {
 
-	public static final int BLE_SCAN_RESULT = 1;
 	private static final int EVENT_DATA_RECEIVED = 1;
 	private static final int EVENT_OTA_START = 2;
 	private static final int EVENT_OTA_FAILED = 3;
@@ -29,8 +28,6 @@ public class MainActivity extends Activity implements OnClickListener {
 	private static final int EVENT_PROGRESS_UPDATED = 5;
 	private static final int EVENT_FREQ_CHANGED = 6;
 	private static final int EVENT_DEPTH_CHANGED = 7;
-	private static final int EVENT_CONNECT = 8;
-	private static final int EVENT_AUTO_CONNECT = 9;
 	private static final int EVENT_CONNECTED = 10;
 	private static final int EVENT_DISCONNECTED = 11;
 
@@ -95,54 +92,13 @@ public class MainActivity extends Activity implements OnClickListener {
 				setTitle("Depth = " + mDepth + ", Freq = " + mFreq);
 				break;
 
-			case EVENT_AUTO_CONNECT:
-				if (mDevice == null) {
-					break;
-				}
-			case EVENT_CONNECT:
-				try {
-					if (mBleToy != null) {
-						mBleToy.disconnect();
-					}
-
-					mBleToy = new JwaooBleToy(getApplicationContext(), mDevice) {
-
-						@Override
-						protected void onConnectionStateChange(boolean connected) {
-							CavanAndroid.logE("onConnectionStateChange: connected = " + connected);
-							if (connected) {
-								mHandler.sendEmptyMessage(EVENT_CONNECTED);
-							} else {
-								mHandler.sendEmptyMessageDelayed(EVENT_AUTO_CONNECT, 500);
-							}
-						}
-
-						@Override
-						protected void onSensorDataReceived(byte[] data) {
-							mSensor.putData(data);
-						}
-					};
-				} catch (Exception e) {
-					e.printStackTrace();
-					finish();
-				}
-				break;
-
 			case EVENT_CONNECTED:
-				String identify = mBleToy.doIdentify();
-				if (identify == null) {
-					mDevice = null;
-					mBleToy.disconnect();
-					CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
-					break;
-				}
-				CavanAndroid.logE("identify = " + identify);
 				updateUI(true);
 				break;
 
 			case EVENT_DISCONNECTED:
 				updateUI(false);
-				mHandler.sendEmptyMessageDelayed(EVENT_AUTO_CONNECT, 200);
+				CavanBleScanner.show(MainActivity.this);
 				break;
 			}
 		}
@@ -170,7 +126,8 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		mProgressBar = (ProgressBar) findViewById(R.id.progressBar1);
 
-		CavanBleScanner.show(this, BLE_SCAN_RESULT);
+		updateUI(false);
+		CavanBleScanner.show(this);
 	}
 
 	private void updateUI(boolean enable) {
@@ -257,8 +214,10 @@ public class MainActivity extends Activity implements OnClickListener {
 			break;
 
 		case R.id.buttonDisconnect:
-			if (mBleToy != null) {
+			if (mBleToy != null && mBleToy.isConnected()) {
 				mBleToy.disconnect();
+			} else {
+				CavanBleScanner.show(MainActivity.this);
 			}
 			break;
 		}
@@ -267,12 +226,32 @@ public class MainActivity extends Activity implements OnClickListener {
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		CavanAndroid.logE("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
-		if (requestCode == BLE_SCAN_RESULT && resultCode == RESULT_OK && data != null) {
+		if (resultCode == RESULT_OK && data != null) {
 			mDevice = data.getParcelableExtra("device");
 			if (mDevice == null) {
 				finish();
 			} else {
-				mHandler.sendEmptyMessage(EVENT_CONNECT);
+				mBleToy = new JwaooBleToy(getApplicationContext(), mDevice) {
+
+					@Override
+					protected void onConnectionStateChange(boolean connected) {
+						CavanAndroid.logE("onConnectionStateChange: connected = " + connected);
+						if (connected) {
+							mHandler.sendEmptyMessage(EVENT_CONNECTED);
+						} else if (mDevice != null) {
+							CavanBleScanner.show(MainActivity.this);
+						}
+					}
+
+					@Override
+					protected void onSensorDataReceived(byte[] data) {
+						mSensor.putData(data);
+					}
+				};
+
+				if (!mBleToy.connect(true)) {
+					CavanBleScanner.show(MainActivity.this);
+				}
 			}
 		} else {
 			finish();
