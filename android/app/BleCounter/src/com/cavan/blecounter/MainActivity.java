@@ -8,11 +8,11 @@ import android.os.Handler;
 import android.os.Message;
 
 import com.cavan.android.CavanAndroid;
-import com.cavan.android.CavanBleScanner;
 import com.cavan.android.CavanWaveView;
 import com.cavan.java.CavanPeakValleyFinder;
 import com.cavan.java.CavanPeakValleyValue;
 import com.cavan.java.Mpu6050Accel;
+import com.cavan.resource.CavanBleScanner;
 import com.jwaoo.android.JwaooBleToy;
 
 public class MainActivity extends Activity {

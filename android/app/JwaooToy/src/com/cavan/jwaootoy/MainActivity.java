@@ -13,8 +13,8 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 
 import com.cavan.android.CavanAndroid;
-import com.cavan.android.CavanBleScanner;
 import com.cavan.java.CavanProgressListener;
+import com.cavan.resource.CavanBleScanner;
 import com.jwaoo.android.JwaooBleToy;
 import com.jwaoo.android.JwaooToySensor;
 

@@ -1,4 +1,4 @@
-package com.cavan.android;
+package com.cavan.resource;
 
 import java.util.ArrayList;
 import java.util.HashMap;

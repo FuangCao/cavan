@@ -1,15 +1,2 @@
 <resources>
-
-    <string name="text_port_setting">端口号设置</string>
-    <string name="text_port">端口号</string>
-    <string name="text_running">正在运行</string>
-    <string name="text_stopped">已停止运行</string>
-    <string name="text_service_connected">已连接到服务</string>
-    <string name="text_service_disconnected">已断开服务</string>
-    <string name="text_not_start">未启动</string>
-    <string name="text_start">启动</string>
-    <string name="text_stop">停止</string>
-    <string name="text_scanning">正在扫描</string>
-    <string name="text_sample_rate">采样率</string>
-
 </resources>

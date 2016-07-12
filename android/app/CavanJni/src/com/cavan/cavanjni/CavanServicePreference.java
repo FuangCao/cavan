@@ -1,7 +1,5 @@
 package com.cavan.cavanjni;
 
-import com.cavan.android.CavanAndroid;
-
 import android.annotation.SuppressLint;
 import android.app.AlertDialog.Builder;
 import android.content.BroadcastReceiver;
@@ -21,6 +19,8 @@ import android.text.InputType;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.EditText;
+
+import com.cavan.android.CavanAndroid;
 
 @SuppressLint("HandlerLeak")
 public abstract class CavanServicePreference extends EditTextPreference {

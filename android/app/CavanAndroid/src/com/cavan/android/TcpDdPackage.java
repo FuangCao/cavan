@@ -2,7 +2,7 @@ package com.cavan.android;
 
 import com.cavan.java.CavanByteCache;
 
-class TcpDdPackage {
+public class TcpDdPackage {
 	protected short mType;
 	protected int mFlags;
 

@@ -9,7 +9,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.widget.Toast;
 
 @SuppressLint("DefaultLocale")
 public abstract class DiscoveryService extends Service {
@@ -39,7 +38,7 @@ public abstract class DiscoveryService extends Service {
 				return false;
 			}
 
-			Toast.makeText(getApplicationContext(), R.string.text_scanning, Toast.LENGTH_SHORT).show();
+			// Toast.makeText(getApplicationContext(), R.string.text_scanning, Toast.LENGTH_SHORT).show();
 
 			return true;
 		}

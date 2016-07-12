@@ -15,9 +15,9 @@ import android.widget.EditText;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleGatt.CavanBleDataListener;
-import com.cavan.android.CavanBleScanner;
 import com.cavan.android.CavanBleUart;
 import com.cavan.java.CavanHexFile;
+import com.cavan.resource.CavanBleScanner;
 
 @SuppressLint("HandlerLeak")
 public class MainActivity extends Activity implements OnClickListener, OnLongClickListener {

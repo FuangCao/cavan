@@ -1,4 +1,4 @@
-package com.cavan.android;
+package com.cavan.resource;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog.Builder;
