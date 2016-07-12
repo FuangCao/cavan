@@ -75,7 +75,7 @@
     [super viewDidLoad];
 
     // Do any additional setup after loading the view.
-    mBleToy = [[JwaooBleToy alloc] initWithName:@"JwaooToy" uuid:nil];
+    mBleToy = [[JwaooBleToy alloc] initWithName:@"JwaooToy" uuid:JWAOO_TOY_UUID_SERVICE];
     [mBleToy setEventDelegate:[[JwaooBleToyEventDelegate alloc] initWithViewController:self]];
     [mBleToy setSensorDelegate:[[JwaooBleToySensorDelegate alloc] initWithViewController:self]];
 }

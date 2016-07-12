@@ -27,13 +27,19 @@
 }
 
 - (void)startScan {
-    mDate = [NSDate date];
+    NSArray *services;
 
     if (mUUID == nil) {
-        [self scanForPeripheralsWithServices:nil options:nil];
+        services = nil;
     } else {
-        [self scanForPeripheralsWithServices:@[ mUUID ] options:nil];
+        services = nil; // [NSArray arrayWithObject:mUUID];
     }
+
+    NSLog(@"services = %@", services);
+
+    mPeripheral = nil;
+    mDate = [NSDate date];
+    [self scanForPeripheralsWithServices:services options:nil];
 }
 
 - (void)addBleChar:(CavanBleChar *)bleChar
@@ -59,11 +65,39 @@
 // ================================================================================
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central {
-    NSLog(@"centralManagerDidUpdateState: state = %ld", (long)central.state);
+    NSString *strState;
 
-    if (central.state == CBCentralManagerStatePoweredOn || central.state == CBCentralManagerStateResetting) {
-        [self startScan];
+    switch (central.state) {
+        case CBCentralManagerStateUnknown:
+            strState = @"CBCentralManagerStateUnknown";
+            break;
+
+        case CBCentralManagerStateResetting:
+            strState = @"CBCentralManagerStateResetting";
+            break;
+
+        case CBCentralManagerStateUnsupported:
+            strState = @"CBCentralManagerStateUnsupported";
+            break;
+
+        case CBCentralManagerStateUnauthorized:
+            strState = @"CBCentralManagerStateUnauthorized";
+            break;
+
+        case CBCentralManagerStatePoweredOff:
+            strState = @"CBCentralManagerStatePoweredOff";
+            break;
+
+        case CBCentralManagerStatePoweredOn:
+            strState = @"CBCentralManagerStatePoweredOn";
+            [self startScan];
+            break;
+
+        default:
+            strState = @"Unknown";
     }
+
+    NSLog(@"centralManagerDidUpdateState: %@", strState);
 }
 
 - (void)centralManager:(CBCentralManager *)central willRestoreState:(NSDictionary<NSString *, id> *)dict {
@@ -87,9 +121,9 @@
             mRssi = RSSI;
         }
 
-        if ([[NSDate date] timeIntervalSinceDate:mDate] > CAVAN_BLE_SCAN_TIMEOUT) {
+        if ([[NSDate date] timeIntervalSinceDate:mDate] > CAVAN_BLE_SCAN_TIME) {
             [self stopScan];
-            [self connectPeripheral:peripheral options:nil];
+            [self connectPeripheral:mPeripheral options:nil];
         }
     }
 }
@@ -102,12 +136,12 @@
 
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error {
     NSLog(@"didFailToConnectPeripheral: %@", peripheral);
+    [self startScan];
 }
 
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error {
     NSLog(@"didDisconnectPeripheral: %@", peripheral);
-    mPeripheral = nil;
-    [self startScan];
+    [self connectPeripheral:peripheral options:nil];
 }
 
 // ================================================================================
@@ -132,7 +166,9 @@
     NSLog(@"didDiscoverServices: %@, error = %@", peripheral, error);
     for (CBService *service in peripheral.services) {
         NSLog(@"service = %@", service.UUID);
-        [peripheral discoverCharacteristics:nil forService:service];
+        if (mUUID == nil || [service.UUID isEqualTo:mUUID]) {
+            [peripheral discoverCharacteristics:nil forService:service];
+        }
     }
 }
 

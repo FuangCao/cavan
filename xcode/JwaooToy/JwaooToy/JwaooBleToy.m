@@ -14,16 +14,16 @@
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(nullable NSError *)error {
     NSLog(@"didDiscoverCharacteristicsForService: %@, service = %@, error = %@", peripheral, service, error);
     for (CBCharacteristic *characteristic in service.characteristics) {
-        if ([characteristic.UUID isEqual:[CBUUID UUIDWithString:@"1889"]]) {
+        if ([characteristic.UUID isEqual:JWAOO_TOY_UUID_COMMAND]) {
             mCharCommand = [self createBleChar:characteristic degelate:nil];
             NSLog(@"mCharCommand = %@", characteristic.UUID);
-        } else if ([characteristic.UUID isEqual:[CBUUID UUIDWithString:@"188a"]]) {
+        } else if ([characteristic.UUID isEqual:JWAOO_TOY_UUID_EVENT]) {
             mCharEvent = [self createBleChar:characteristic degelate:mEventDelegate];
             NSLog(@"mCharEvent = %@", characteristic.UUID);
-        } else if ([characteristic.UUID isEqual:[CBUUID UUIDWithString:@"188b"]]) {
+        } else if ([characteristic.UUID isEqual:JWAOO_TOY_UUID_FLASH]) {
             mCharFlash = [self createBleChar:characteristic degelate:nil];
             NSLog(@"mCharFlash = %@", characteristic.UUID);
-        } else if ([characteristic.UUID isEqual:[CBUUID UUIDWithString:@"188c"]]) {
+        } else if ([characteristic.UUID isEqual:JWAOO_TOY_UUID_SENSOR]) {
             mCharSensor = [self createBleChar:characteristic degelate:mSensorDelegate];
             NSLog(@"mCharSensor = %@", characteristic.UUID);
         } else {

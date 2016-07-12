@@ -10,7 +10,7 @@
 #import <CoreBluetooth/CoreBluetooth.h>
 #import "CavanBleChar.h"
 
-#define CAVAN_BLE_SCAN_TIMEOUT      3
+#define CAVAN_BLE_SCAN_TIME     3.0
 
 @interface CavanBleGatt : CBCentralManager <CBCentralManagerDelegate, CBPeripheralDelegate> {
     CBUUID *mUUID;

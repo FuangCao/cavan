@@ -13,6 +13,11 @@
 #import "CavanProgressManager.h"
 
 #define JWAOO_TOY_FLASH_MAGIC       0x00005070
+#define JWAOO_TOY_UUID_SERVICE      [CBUUID UUIDWithString:@"1888"]
+#define JWAOO_TOY_UUID_COMMAND      [CBUUID UUIDWithString:@"1889"]
+#define JWAOO_TOY_UUID_EVENT        [CBUUID UUIDWithString:@"188a"]
+#define JWAOO_TOY_UUID_FLASH        [CBUUID UUIDWithString:@"188b"]
+#define JWAOO_TOY_UUID_SENSOR       [CBUUID UUIDWithString:@"188c"]
 
 enum
 {
