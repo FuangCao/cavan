@@ -28,6 +28,10 @@ typedef NS_OPTIONS(uint8_t, CavanPeakValleyValueType) {
 
 - (CavanPeakValleyValue *)initWithPeak:(double)peak
                             withValley:(double)valley
+                              withType:(CavanPeakValleyValueType)type
+                              withDate:(NSDate *)date;
+- (CavanPeakValleyValue *)initWithPeak:(double)peak
+                            withValley:(double)valley
                               withType:(CavanPeakValleyValueType)type;
 - (CavanPeakValleyValue *)initWithValue:(double)value;
 

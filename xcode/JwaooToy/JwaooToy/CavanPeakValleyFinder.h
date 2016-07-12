@@ -27,14 +27,14 @@
     NSTimeInterval mTimeFuzz;
 
     double mLastPeak;
-    NSDate *mPeakDate;
-
     double mLastValley;
+
+    NSDate *mPeakDate;
     NSDate *mValleyDate;
+    NSDate *mLastDate;
 
     int mFreq;
-    NSDate *mLastDate;
-    NSMutableArray *mValueList;
+    NSMutableArray *mFreqValueList;
 }
 
 @property (readonly) double diff;
@@ -43,7 +43,7 @@
 - (nullable CavanPeakValleyFinder *)initWithValueFuzz:(double)valueFuzz
                                 withTimeFuzz:(NSTimeInterval)timeFuzz;
 - (BOOL)isValidPeakValley:(NSTimeInterval)interval;
-- (nullable CavanPeakValleyValue *)createValue:(CavanPeakValleyValueType)type;
+- (nullable CavanPeakValleyValue *)createPeakValleyValue:(CavanPeakValleyValueType)type;
 - (nullable CavanPeakValleyValue *)putValue:(double)value;
 - (int)putFreqValue:(double)value;
 @end

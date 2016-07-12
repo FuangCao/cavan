@@ -18,15 +18,22 @@
 
 - (CavanPeakValleyValue *)initWithPeak:(double)peak
                             withValley:(double)valley
-                              withType:(CavanPeakValleyValueType)type {
+                              withType:(CavanPeakValleyValueType)type
+                              withDate:(NSDate *)date {
     if (self = [super init]) {
         mType = type;
         mPeakValue = peak;
         mValleyValue = valley;
-        mDate = [NSDate date];
+        mDate = date;
     }
 
     return self;
+}
+
+- (CavanPeakValleyValue *)initWithPeak:(double)peak
+                            withValley:(double)valley
+                              withType:(CavanPeakValleyValueType)type {
+    return [self initWithPeak:peak withValley:valley withType:type withDate:[NSDate date]];
 }
 
 - (CavanPeakValleyValue *)initWithValue:(double)value {

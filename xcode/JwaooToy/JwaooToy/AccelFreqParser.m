@@ -23,7 +23,7 @@
         mFinderX = [[CavanPeakValleyFinder alloc] initWithValueFuzz:valueFuzz withTimeFuzz:timeFuzz];
         mFinderY = [[CavanPeakValleyFinder alloc] initWithValueFuzz:valueFuzz withTimeFuzz:timeFuzz];
         mFinderZ = [[CavanPeakValleyFinder alloc] initWithValueFuzz:valueFuzz withTimeFuzz:timeFuzz];
-        mFinderBetter = mFinderX;
+        mFinderBest = mFinderX;
     }
 
     return self;
@@ -50,26 +50,27 @@
 
 - (CavanPeakValleyFinder *)putBytes:(const int8_t *)bytes {
     [mSensor setValueWithBytes8:bytes];
+
     [mFinderX putFreqValue:mSensor.x];
     [mFinderY putFreqValue:mSensor.y];
     [mFinderZ putFreqValue:mSensor.z];
 
     if (mFinderX.diff > mFinderY.diff) {
         if (mFinderX.diff > mFinderZ.diff) {
-            mFinderBetter = mFinderX;
+            mFinderBest = mFinderX;
         } else {
-            mFinderBetter = mFinderZ;
+            mFinderBest = mFinderZ;
         }
     } else if (mFinderY.diff > mFinderZ.diff) {
-        mFinderBetter = mFinderY;
+        mFinderBest = mFinderY;
     } else {
-        mFinderBetter = mFinderZ;
+        mFinderBest = mFinderZ;
     }
 
-    [self setFreq:mFinderBetter.freq];
+    [self setFreq:mFinderBest.freq];
     [self setDepth:bytes[3]];
 
-    return mFinderBetter;
+    return mFinderBest;
 }
 
 @end

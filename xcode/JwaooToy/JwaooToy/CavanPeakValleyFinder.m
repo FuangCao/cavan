@@ -19,8 +19,8 @@
         mTimeFuzz = timeFuzz;
         mValueFuzz = valueFuzz;
         mValueFuzzMin = valueFuzz / 2;
-        mValueList = [NSMutableArray new];
-        mLastDate = [NSDate date];
+
+        mFreqValueList = [NSMutableArray new];
     }
 
     return self;
@@ -29,27 +29,27 @@
 - (BOOL)isValidPeakValley:(NSTimeInterval)interval {
     double diff = mPeakValue - mValleyValue;
 
-    if (diff < mValueFuzzMin) {
-        return false;
+    if (diff > mValueFuzz) {
+        return true;
     }
 
     // NSLog(@"interval = %f, mTimeFuzz = %f", interval, mTimeFuzz);
 
-    if (diff < mValueFuzz && interval < mTimeFuzz) {
-        return false;
+    if (diff > mValueFuzzMin && interval > mTimeFuzz) {
+        return true;
     }
 
-    return true;
+    return false;
 }
 
-- (CavanPeakValleyValue *)createValue:(CavanPeakValleyValueType)type {
+- (CavanPeakValleyValue *)createPeakValleyValue:(CavanPeakValleyValueType)type {
     if (mType == type) {
         return nil;
     }
 
     mType = type;
 
-    return [[CavanPeakValleyValue alloc] initWithPeak:mLastPeak withValley:mLastValley withType:type];
+    return [[CavanPeakValleyValue alloc] initWithPeak:mLastPeak withValley:mLastValley withType:type withDate:mLastDate];
 }
 
 - (CavanPeakValleyValue *)putValue:(double)value {
@@ -63,8 +63,9 @@
             mPeakDate = [NSDate date];
 
             if ([self isValidPeakValley:[mPeakDate timeIntervalSinceDate:mValleyDate]]) {
-                result = [self createValue:CavanPeakValleyValueFalling];
+                result = [self createPeakValleyValue:CavanPeakValleyValueFalling];
                 mLastPeak = mPeakValue;
+                mLastDate = mPeakDate;
             }
         }
     } else if (mFindValley) {
@@ -74,8 +75,9 @@
             mValleyDate = [NSDate date];
 
             if ([self isValidPeakValley:[mValleyDate timeIntervalSinceDate:mPeakDate]]) {
-                result = [self createValue:CavanPeakValleyValueRising];
+                result = [self createPeakValleyValue:CavanPeakValleyValueRising];
                 mLastValley = mValleyValue;
+                mLastDate = mValleyDate;
             }
         }
     } else if (mInitialized) {
@@ -86,7 +88,7 @@
         }
     } else {
         mInitialized = true;
-        mPeakDate = mValleyDate = [NSDate date];
+        mPeakDate = mValleyDate = mLastDate = [NSDate date];
         mPeakValue = mValleyValue = mLastPeak = mLastValley = value;
     }
 
@@ -96,28 +98,39 @@
 }
 
 - (int)putFreqValue:(double)value {
-    NSDate *date = [NSDate date];
-    CavanPeakValleyValue *pvValue = [self putValue:value];
-    if (pvValue == nil) {
-        if ([date timeIntervalSinceDate:mLastDate] > CAVAN_PEAK_VALLEY_FREQ_TIMEOUT) {
-            [mValueList removeAllObjects];
-            mAvgDiff = 0;
+    NSDate *date;
+    CavanPeakValleyValue *result = [self putValue:value];
+    if (result == nil) {
+        date = [NSDate date];
+
+        while (1) {
+            CavanPeakValleyValue *first = [mFreqValueList firstObject];
+            if (first == nil) {
+                break;
+            }
+
+            if ([first timeIntervalEarly:date] < CAVAN_PEAK_VALLEY_FREQ_TIMEOUT) {
+                break;
+            }
+
+            [mFreqValueList removeObjectAtIndex:0];
         }
     } else {
-        mLastDate = date;
-        [mValueList addObject:pvValue];
-        mAvgDiff = (mAvgDiff + pvValue.getDiff) / 2;
+        date = result.date;
+        mAvgDiff = (mAvgDiff + result.getDiff) / 2;
+
+        while (mFreqValueList.count > CAVAN_PEAK_VALLEY_FREQ_COUNT) {
+            [mFreqValueList removeObjectAtIndex:0];
+        }
+
+        [mFreqValueList addObject:result];
     }
 
-    while (mValueList.count > CAVAN_PEAK_VALLEY_FREQ_COUNT) {
-        [mValueList removeObjectAtIndex:0];
-    }
-
-    if (mValueList.count < 2) {
+    if (mFreqValueList.count < 2) {
         mFreq = 0;
     } else {
-        pvValue = [mValueList firstObject];
-        mFreq = 60 * (mValueList.count - 1) / [pvValue timeIntervalEarly:date] / 2;
+        CavanPeakValleyValue *first = [mFreqValueList firstObject];
+        mFreq = 60 * (mFreqValueList.count - 1) / [first timeIntervalEarly:date] / 2;
     }
 
     return mFreq;

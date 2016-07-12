@@ -48,7 +48,7 @@
 - (JwaooBleToySensorDelegate *)initWithViewController:(ViewController *)controller {
     if (self = [super init]) {
         mController = controller;
-        mParser = [[AccelFreqParser alloc] initWithValueFuzz:2.0 withTimeFuzz:0.1 withDelegate:self];
+        mParser = [[AccelFreqParser alloc] initWithValueFuzz:2.0 withTimeFuzz:0.06 withDelegate:self];
     }
 
     return self;

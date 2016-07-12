@@ -24,7 +24,7 @@
     CavanPeakValleyFinder *mFinderX;
     CavanPeakValleyFinder *mFinderY;
     CavanPeakValleyFinder *mFinderZ;
-    CavanPeakValleyFinder *mFinderBetter;
+    CavanPeakValleyFinder *mFinderBest;
     Mpu6050Sensor *mSensor;
 }
 
