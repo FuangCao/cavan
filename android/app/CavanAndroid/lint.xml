@@ -2,5 +2,6 @@
 <lint>
     <issue id="DefaultLocale" severity="ignore" />
     <issue id="HandlerLeak" severity="ignore" />
+    <issue id="InlinedApi" severity="ignore" />
     <issue id="NewApi" severity="ignore" />
 </lint>

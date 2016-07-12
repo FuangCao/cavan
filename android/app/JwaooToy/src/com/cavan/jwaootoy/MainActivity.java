@@ -234,6 +234,13 @@ public class MainActivity extends Activity implements OnClickListener {
 				mBleToy = new JwaooBleToy(getApplicationContext(), mDevice) {
 
 					@Override
+					protected boolean onInitialized() {
+						mBleToy.setSensorDelay(20);
+						mBleToy.setSensorEnable(true);
+						return super.onInitialized();
+					}
+
+					@Override
 					protected void onConnectionStateChange(boolean connected) {
 						CavanAndroid.logE("onConnectionStateChange: connected = " + connected);
 						if (connected) {

@@ -99,6 +99,10 @@ public class CavanPeakValleyValue {
 		return mPeakValue - mValleyValue;
 	}
 
+	public double getBaseline() {
+		return (mPeakValue + mValleyValue) / 2;
+	}
+
 	public void extend(CavanPeakValleyValue value) {
 		if (value.getPeakValue() > mPeakValue) {
 			mPeakValue = value.getPeakValue();

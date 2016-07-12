@@ -20,12 +20,17 @@ public class MainActivity extends Activity {
 	private static final int MSG_SENSOR_ENABLE = 1;
 	private static final int MSG_SHOW_SPEED = 2;
 
-	private CavanPeakValleyFinder mFinder = new CavanPeakValleyFinder(100, 1);
+	private CavanPeakValleyFinder mFinders[] = {
+			new CavanPeakValleyFinder(100, 1),
+			new CavanPeakValleyFinder(100, 1),
+			new CavanPeakValleyFinder(100, 1),
+			new CavanPeakValleyFinder(100, 1),
+	};
 
-	private CavanWaveView mWaveViewX;
-	private CavanWaveView mWaveViewY;
-	private CavanWaveView mWaveViewZ;
-	private CavanWaveView mWaveViewDepth;
+	private CavanWaveView mWaveView1;
+	private CavanWaveView mWaveView2;
+	private CavanWaveView mWaveView3;
+	private CavanWaveView mWaveView4;
 
 	private int mCount;
 	private JwaooBleToy mBleToy;
@@ -45,7 +50,7 @@ public class MainActivity extends Activity {
 				mCount = 0;
 
 				if (count > 0) {
-					setTitle("freq = " + mFinder.getFreq() + ", count = " + count + ", speed = " + (1000.0 / count));
+					setTitle("freq = " + mFinders[0].getFreq() + ", count = " + count + ", speed = " + (1000.0 / count));
 				}
 
 				mHandler.sendEmptyMessageDelayed(MSG_SHOW_SPEED, 1000);
@@ -59,21 +64,21 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		mWaveViewX = (CavanWaveView) findViewById(R.id.waveViewX);
-		mWaveViewX.setValueRange(-19.6, 19.6);
-		mWaveViewX.setZoom(3);
+		mWaveView1 = (CavanWaveView) findViewById(R.id.waveViewX);
+		mWaveView1.setValueRange(-19.6, 19.6);
+		mWaveView1.setZoom(3);
 
-		mWaveViewY = (CavanWaveView) findViewById(R.id.waveViewY);
-		mWaveViewY.setValueRange(-19.6, 19.6);
-		mWaveViewY.setZoom(3);
+		mWaveView2 = (CavanWaveView) findViewById(R.id.waveViewY);
+		mWaveView2.setValueRange(-19.6, 19.6);
+		mWaveView2.setZoom(3);
 
-		mWaveViewZ = (CavanWaveView) findViewById(R.id.waveViewZ);
-		mWaveViewZ.setValueRange(0, 19.6);
-		mWaveViewZ.setZoom(3);
+		mWaveView3 = (CavanWaveView) findViewById(R.id.waveViewZ);
+		mWaveView3.setValueRange(0, 19.6);
+		mWaveView3.setZoom(3);
 
-		mWaveViewDepth = (CavanWaveView) findViewById(R.id.waveViewDepth);
-		mWaveViewDepth.setValueRange(0, 4);
-		mWaveViewDepth.setZoom(3);
+		mWaveView4 = (CavanWaveView) findViewById(R.id.waveViewDepth);
+		mWaveView4.setValueRange(-19.6, 19.6);
+		mWaveView4.setZoom(3);
 
 		mHandler.sendEmptyMessage(MSG_SHOW_SPEED);
 		CavanBleScanner.show(this);
@@ -117,21 +122,36 @@ public class MainActivity extends Activity {
 							@Override
 							protected void onSensorDataReceived(byte[] arg0) {
 								Mpu6050Accel accel = new Mpu6050Accel(arg0);
+
 								double value = accel.getCoorZ();
+								/* double x = accel.getCoorX();
+								double y = accel.getCoorY();
+								double z = accel.getCoorZ();
+								double value = Math.sqrt(x * x + y * y + z * z); */
 
-								mWaveViewX.addValue(value);
+								mWaveView1.addValue(value);
 
-								CavanPeakValleyValue result = mFinder.putFreqValue(value);
+								CavanPeakValleyValue result = mFinders[0].putFreqValue(value);
 								if (result != null) {
-									mWaveViewZ.addValue(result.getDiff());
+									mWaveView3.addValue(result.getDiff());
 								} else {
-									mWaveViewZ.addValue(0);
+									mWaveView3.addValue(0);
 								}
 
-								mWaveViewY.addValue(mFinder.getAvgValue());
+								mWaveView2.addValue(mFinders[0].getAvgValue());
 
-								int depth = accel.readValue8();
-								mWaveViewDepth.addValue(depth);
+								// int depth = accel.readValue8();
+								// mWaveViewDepth.addValue(depth);
+
+								// mWaveView4.addValue(value - mFinders[0].getValleyValue());
+								/* mFinders[1].putValue(accel.getCoorX());
+								mFinders[2].putValue(accel.getCoorY());
+								mFinders[3].putValue(accel.getCoorZ());
+								value = accel.getCoorX() - mFinders[1].getValleyValue();
+								value += accel.getCoorY() - mFinders[2].getValleyValue();
+								value += accel.getCoorZ() - mFinders[3].getValleyValue();
+								mWaveView4.addValue(value); */
+								mWaveView4.addValue(mFinders[0].getBaseline());
 
 								mCount++;
 							}

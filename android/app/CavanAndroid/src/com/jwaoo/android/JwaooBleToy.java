@@ -358,7 +358,7 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 	}
 
 	@Override
-	protected boolean doInit() {
+	protected boolean doInitialize() {
 		mCharCommand = openChar(UUID_COMMAND);
 		if (mCharCommand == null) {
 			CavanAndroid.logE("uuid not found: " + UUID_COMMAND);
