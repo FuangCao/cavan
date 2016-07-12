@@ -10,13 +10,20 @@
 #import <CoreBluetooth/CoreBluetooth.h>
 #import "CavanBleChar.h"
 
+#define CAVAN_BLE_SCAN_TIMEOUT      3
+
 @interface CavanBleGatt : CBCentralManager <CBCentralManagerDelegate, CBPeripheralDelegate> {
     CBUUID *mUUID;
+    NSDate *mDate;
+    NSNumber *mRssi;
     CBPeripheral *mPeripheral;
 
     NSString *mName;
     NSMutableDictionary *mDictChars;
 }
+
+@property (nullable) NSNumber *rssi;
+@property (nullable) CBPeripheral *peripheral;
 
 - (nullable CavanBleGatt *)initWithName:(nullable NSString *)name
                           uuid:(nullable CBUUID *)uuid;

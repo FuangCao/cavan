@@ -10,6 +10,9 @@
 
 @implementation CavanBleGatt
 
+@synthesize rssi = mRssi;
+@synthesize peripheral = mPeripheral;
+
 // ================================================================================
 
 - (CavanBleGatt *)initWithName:(NSString *)name
@@ -24,6 +27,8 @@
 }
 
 - (void)startScan {
+    mDate = [NSDate date];
+
     if (mUUID == nil) {
         [self scanForPeripheralsWithServices:nil options:nil];
     } else {
@@ -74,11 +79,18 @@
 }
 
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *, id> *)advertisementData RSSI:(NSNumber *)RSSI {
-    NSLog(@"didDiscoverPeripheral: %@", peripheral);
+    NSLog(@"didDiscoverPeripheral: %@, rssi = %@", peripheral, RSSI);
     if (mName == nil || [peripheral.name isEqualToString:mName]) {
-        [self stopScan];
-        mPeripheral = peripheral;
-        [self connectPeripheral:peripheral options:nil];
+        if (mPeripheral == nil || RSSI.intValue > mRssi.intValue) {
+            NSLog(@"Modify peripheral: %@ => %@", mPeripheral, peripheral);
+            mPeripheral = peripheral;
+            mRssi = RSSI;
+        }
+
+        if ([[NSDate date] timeIntervalSinceDate:mDate] > CAVAN_BLE_SCAN_TIMEOUT) {
+            [self stopScan];
+            [self connectPeripheral:peripheral options:nil];
+        }
     }
 }
 
