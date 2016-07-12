@@ -38,7 +38,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private JwaooBleToy mBleToy;
 	private boolean mOtaBusy;
 	private boolean mSensorEnable;
-	private JwaooToySensor mSensor = new JwaooToySensor(100, 1) {
+	private JwaooToySensor mSensor = new JwaooToySensor(60, 1) {
 
 		@Override
 		protected void onDepthChanged(int depth) {

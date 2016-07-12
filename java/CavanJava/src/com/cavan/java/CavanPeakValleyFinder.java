@@ -18,8 +18,7 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 	private long mTimeFuzz;
 	private long mPeakTime;
 	private long mValleyTime;
-	private long mLastPeakTime;
-	private long mLastValleyTime;
+	private long mLastTime;
 
 	private double mValueFuzz;
 	private double mValueFuzzMin;
@@ -60,7 +59,7 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 
 	public void init(double value) {
 		mPeakValue = mValleyValue = mLastPeak = mLastValley = value;
-		mPeakTime = mValleyTime = mLastPeakTime = mLastValleyTime = System.currentTimeMillis();
+		mPeakTime = mValleyTime = mLastTime = System.currentTimeMillis();
 	}
 
 	public double getAvgDiff() {
@@ -71,14 +70,14 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 		return mAvgValue;
 	}
 
-	public CavanPeakValleyValue createPeakValley(int type, long time) {
+	public CavanPeakValleyValue createPeakValley(int type) {
 		if (mType == type) {
 			return null;
 		}
 
 		mType = type;
 
-		CavanPeakValleyValue result = new CavanPeakValleyValue(mLastPeak, mLastValley, type, time);
+		CavanPeakValleyValue result = new CavanPeakValleyValue(mLastPeak, mLastValley, type, mLastTime);
 		mAvgDiff = (mAvgDiff * 2 + result.getDiff()) / 3;
 
 		return result;
@@ -103,9 +102,9 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 				mPeakTime = System.currentTimeMillis();
 
 				if (isValidPeakValley(mPeakTime - mValleyTime)) {
-					result = createPeakValley(TYPE_FALLING, mLastValleyTime);
+					result = createPeakValley(TYPE_FALLING);
 					mLastPeak = mPeakValue;
-					mLastPeakTime = mPeakTime;
+					mLastTime = mPeakTime;
 				}
 
 				mFindPeak = false;
@@ -117,9 +116,9 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 				mValleyTime = System.currentTimeMillis();
 
 				if (isValidPeakValley(mValleyTime - mPeakTime)) {
-					result = createPeakValley(TYPE_RISING, mLastPeakTime);
+					result = createPeakValley(TYPE_RISING);
 					mLastValley = mValleyValue;
-					mLastValleyTime = mValleyTime;
+					mLastTime = mValleyTime;
 				}
 
 				mFindPeak = true;
@@ -161,34 +160,32 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 		setFreq((int) ((count * 30000) / first.getTimeEarly(time)));
 	}
 
-	private void updateFreq(long time) {
-		int count = mValueList.size();
-		if (count > 1) {
-			setFreq(mValueList.get(0), time, count - 1);
-		} else {
-			setFreq(0);
-		}
-	}
-
 	public CavanPeakValleyValue putFreqValue(double value) {
+		long time;
 		CavanPeakValleyValue result = putValue(value);
 		if (result != null) {
-			mTime = result.getTime();
+			time = result.getTime();
 
 			while (mValueList.size() > FREQ_COUNT) {
 				mValueList.remove(0);
 			}
 
 			mValueList.add(result);
-			updateFreq(mTime);
 		} else {
-			long time = System.currentTimeMillis();
-			if (time - mTime > FREQ_TIMEOUT) {
-				mValueList.clear();
-				setFreq(0);
-			} else {
-				updateFreq(time);
+			time = System.currentTimeMillis();
+
+			while (mValueList.size() > 0) {
+				if (mValueList.get(0).getTimeEarly(time) < FREQ_TIMEOUT) {
+					break;
+				}
 			}
+		}
+
+		int count = mValueList.size();
+		if (count > 1) {
+			setFreq(mValueList.get(0), time, count - 1);
+		} else {
+			setFreq(0);
 		}
 
 		return result;
