@@ -40,6 +40,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private boolean mSensorEnable;
 	private JwaooToySensor mSensor = new JwaooToySensor(60, 1) {
 
+		/*
 		@Override
 		protected void onDepthChanged(int depth) {
 			mDepth = depth;
@@ -51,6 +52,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			mFreq = freq;
 			mHandler.sendEmptyMessage(EVENT_FREQ_CHANGED);
 		}
+		*/
 	};
 
 	private Button mButtonSend;
@@ -253,6 +255,9 @@ public class MainActivity extends Activity implements OnClickListener {
 					@Override
 					protected void onSensorDataReceived(byte[] data) {
 						mSensor.putData(data);
+						mDepth = mSensor.getDepth();
+						mFreq = mSensor.getFreq();
+						mHandler.sendEmptyMessage(EVENT_FREQ_CHANGED);
 					}
 				};
 

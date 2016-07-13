@@ -15,17 +15,20 @@ public class JwaooToySensor extends AccelFreqParser {
 
 	}
 
-	private void setDepth(int depth) {
+	private void updateDepth(int depth) {
 		if (mDepth != depth) {
 			mDepth = depth;
 			onDepthChanged(depth);
 		}
 	}
 
-	public int putData(byte[] bytes) {
-		Mpu6050Accel accel = new Mpu6050Accel(bytes);
-		setDepth(accel.readValue8());
+	public int getDepth() {
+		return mDepth;
+	}
 
-		return putValue(accel);
+	public void putData(byte[] bytes) {
+		Mpu6050Accel accel = new Mpu6050Accel(bytes);
+		updateDepth(accel.readValue8());
+		putValue(accel);
 	}
 }

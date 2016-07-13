@@ -7,7 +7,7 @@ public class AccelFreqParser {
 	private CavanPeakValleyFinder mFinderX;
 	private CavanPeakValleyFinder mFinderY;
 	private CavanPeakValleyFinder mFinderZ;
-	private CavanPeakValleyFinder mFinderBetter;
+	private CavanPeakValleyFinder mFinderBest;
 
 	protected void onFreqChanged(int freq) {
 		// CavanAndroid.logE("freq = " + freq);
@@ -18,14 +18,14 @@ public class AccelFreqParser {
 		mFinderY = new CavanPeakValleyFinder(timeFuzz, valueFuzz);
 		mFinderZ = new CavanPeakValleyFinder(timeFuzz, valueFuzz);
 
-		mFinderBetter = mFinderX;
+		mFinderBest = mFinderX;
 	}
 
 	public int getFreq() {
-		return mFinderBetter.getFreq();
+		return mFinderBest.getFreq();
 	}
 
-	private void setFreq(int freq) {
+	private void updateFreq(int freq) {
 		if (freq > 0 && mFreq > 0) {
 			freq = (mFreq + freq) / 2;
 		}
@@ -36,29 +36,27 @@ public class AccelFreqParser {
 		}
 	}
 
-	public int putValue(double x, double y, double z) {
+	public void putValue(double x, double y, double z) {
 		mFinderX.putFreqValue(x);
 		mFinderY.putFreqValue(y);
 		mFinderZ.putFreqValue(z);
 
 		if (mFinderX.getAvgDiff() > mFinderY.getAvgDiff()) {
 			if (mFinderX.getAvgDiff() > mFinderZ.getAvgDiff()) {
-				mFinderBetter = mFinderX;
+				mFinderBest = mFinderX;
 			} else {
-				mFinderBetter = mFinderZ;
+				mFinderBest = mFinderZ;
 			}
 		} else if (mFinderY.getAvgDiff() > mFinderZ.getAvgDiff()) {
-			mFinderBetter = mFinderY;
+			mFinderBest = mFinderY;
 		} else {
-			mFinderBetter = mFinderZ;
+			mFinderBest = mFinderZ;
 		}
 
-		setFreq(mFinderBetter.getFreq());
-
-		return mFreq;
+		updateFreq(mFinderBest.getFreq());
 	}
 
-	public int putValue(AccelDataCache cache) {
-		return putValue(cache.getCoorX(), cache.getCoorY(), cache.getCoorZ());
+	public void putValue(AccelDataCache cache) {
+		putValue(cache.getCoorX(), cache.getCoorY(), cache.getCoorZ());
 	}
 }
