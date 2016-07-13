@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "CavanPeakValleyFinder.h"
-#import "Mpu6050Sensor.h"
+#import "CavanAccelSensor.h"
 
 @protocol AccelFreqParserDelegate <NSObject>
 @required
@@ -25,15 +25,14 @@
     CavanPeakValleyFinder *mFinderY;
     CavanPeakValleyFinder *mFinderZ;
     CavanPeakValleyFinder *mFinderBest;
-    Mpu6050Sensor *mSensor;
 }
 
 @property (readonly) int freq;
 @property (readonly) int depth;
 
-- (AccelFreqParser *)initWithValueFuzz:(double)valueFuzz
+- (nonnull AccelFreqParser *)initWithValueFuzz:(double)valueFuzz
                           withTimeFuzz:(NSTimeInterval)timeFuzz
-                          withDelegate:delegate;
-- (void)putBytes:(const int8_t *)bytes;
+                          withDelegate:(nullable id<AccelFreqParserDelegate>)delegate;
+- (void)putSensorData:(nonnull CavanAccelSensor *)sensor;
 
 @end

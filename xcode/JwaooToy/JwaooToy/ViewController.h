@@ -9,7 +9,7 @@
 #import <Cocoa/Cocoa.h>
 #import "JwaooBleToy.h"
 
-@interface ViewController : NSViewController <CavanProgressDelegate> {
+@interface ViewController : NSViewController <CavanProgressDelegate, JwaooBleToyDelegate> {
     BOOL mSensorEnable;
     JwaooBleToy *mBleToy;
     int mFreq;
@@ -27,9 +27,6 @@
 @property (weak) IBOutlet NSTextField *mLabelDataSpeed;
 @property (weak) IBOutlet NSTextField *mLabelFreq;
 @property (weak) IBOutlet NSTextField *mLabelDepth;
-
-- (void)setFreq:(int)freq
-      withDepth:(int)depth;
 
 @end
 

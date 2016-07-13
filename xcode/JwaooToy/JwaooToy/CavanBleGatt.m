@@ -38,7 +38,7 @@
     NSLog(@"services = %@", services);
 
     mPeripheral = nil;
-    mDate = [NSDate date];
+    mTime = [NSDate timeIntervalSinceReferenceDate];
     [self scanForPeripheralsWithServices:services options:nil];
 }
 
@@ -48,7 +48,7 @@
 }
 
 - (CavanBleChar *)createBleChar:(CBCharacteristic *)characteristic
-                       degelate:(id<CavanBleCharDelegate>)delegate {
+                   withDelegate:(id<CavanBleCharDelegate>)delegate {
     CavanBleChar *bleChar = [[CavanBleChar alloc] initWithCharacteristic:characteristic peripheral:mPeripheral delegate:delegate];
 
     [self addBleChar:bleChar withUUID:characteristic.UUID];
@@ -60,6 +60,45 @@
     if (mPeripheral != nil) {
         [self cancelPeripheralConnection:mPeripheral];
     }
+}
+
+- (BOOL)onInitialized {
+    NSLog(@"onInitialized");
+    return true;
+}
+
+- (void)onConnectStateChanged:(BOOL)connected {
+    NSLog(@"onConnectStateChanged: connected = %d", connected);
+}
+
+- (BOOL)doInitialize:(nonnull CBService *)service {
+    NSLog(@"doInitialize");
+    return true;
+}
+
+- (void)setConnectState:(BOOL)connected {
+    if (mConnected != connected) {
+        mConnected = connected;
+        [self onConnectStateChanged:connected];
+    }
+}
+
+- (void)connectThread:(CBService *)service {
+    NSLog(@"connectThread");
+
+    mConnRunning = true;
+
+    while (mConnPending) {
+        mConnPending = false;
+
+        if ([self doInitialize:service] && [self onInitialized]) {
+            [self setConnectState:true];
+        } else {
+            [self disconnect];
+        }
+    };
+
+    mConnRunning = false;
 }
 
 // ================================================================================
@@ -121,7 +160,7 @@
             mRssi = RSSI;
         }
 
-        if ([[NSDate date] timeIntervalSinceDate:mDate] > CAVAN_BLE_SCAN_TIME) {
+        if ([NSDate timeIntervalSinceReferenceDate] - mTime > CAVAN_BLE_SCAN_TIME) {
             [self stopScan];
             [self connectPeripheral:mPeripheral options:nil];
         }
@@ -142,6 +181,7 @@
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error {
     NSLog(@"didDisconnectPeripheral: %@", peripheral);
     // [self connectPeripheral:peripheral options:nil];
+    [self setConnectState:false];
     [self startScan];
 }
 
@@ -179,6 +219,13 @@
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(nullable NSError *)error {
     NSLog(@"didDiscoverCharacteristicsForService: %@, service = %@, error = %@", peripheral, service, error);
+    if (error == nil) {
+        mConnPending = true;
+
+        if (!mConnRunning) {
+            [NSThread detachNewThreadSelector:@selector(connectThread:) toTarget:self withObject:service];
+        }
+    }
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {

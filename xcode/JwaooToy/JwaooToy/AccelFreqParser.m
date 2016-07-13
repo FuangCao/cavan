@@ -15,11 +15,10 @@
 
 - (AccelFreqParser *)initWithValueFuzz:(double)valueFuzz
                           withTimeFuzz:(NSTimeInterval)timeFuzz
-                          withDelegate:(id)delegate
+                          withDelegate:(id<AccelFreqParserDelegate>)delegate
 {
     if (self = [super init]) {
         mDelegate = delegate;
-        mSensor = [Mpu6050Sensor new];
         mFinderX = [[CavanPeakValleyFinder alloc] initWithValueFuzz:valueFuzz withTimeFuzz:timeFuzz];
         mFinderY = [[CavanPeakValleyFinder alloc] initWithValueFuzz:valueFuzz withTimeFuzz:timeFuzz];
         mFinderZ = [[CavanPeakValleyFinder alloc] initWithValueFuzz:valueFuzz withTimeFuzz:timeFuzz];
@@ -48,12 +47,11 @@
     }
 }
 
-- (void)putBytes:(const int8_t *)bytes {
-    [mSensor setValueWithBytes8:bytes];
-
-    [mFinderX putFreqValue:mSensor.x];
-    [mFinderY putFreqValue:mSensor.y];
-    [mFinderZ putFreqValue:mSensor.z];
+- (void)putSensorData:(nonnull CavanAccelSensor *)sensor {
+#if 1
+    [mFinderX putFreqValue:sensor.x];
+    [mFinderY putFreqValue:sensor.y];
+    [mFinderZ putFreqValue:sensor.z];
 
     if (mFinderX.diff > mFinderY.diff) {
         if (mFinderX.diff > mFinderZ.diff) {
@@ -66,9 +64,12 @@
     } else {
         mFinderBest = mFinderZ;
     }
+#else
+    [mFinderZ putFreqValue:sensor.z];
+    mFinderBest = mFinderZ;
+#endif
 
     [self updateFreq:mFinderBest.freq];
-    [self updateDepth:bytes[3]];
 }
 
 @end

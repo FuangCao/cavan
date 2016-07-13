@@ -10,73 +10,13 @@
 #import "Mpu6050Sensor.h"
 #import "AccelFreqParser.h"
 
-@interface JwaooBleToyEventDelegate : NSObject <CavanBleCharDelegate> {
-    ViewController *mController;
-}
-
-- (JwaooBleToyEventDelegate *)initWithViewController:(ViewController *)controller;
-
-@end
-
-@implementation JwaooBleToyEventDelegate
-
-- (JwaooBleToyEventDelegate *)initWithViewController:(ViewController *)controller {
-    if (self = [super init]) {
-        mController = controller;
-    }
-
-    return self;
-}
-
-- (void)didNotifyForCharacteristic:(nonnull CavanBleChar *)characteristic {
-    NSLog(@"JwaooBleToyEventDelegate: didNotifyForCharacteristic");
-}
-
-@end
-
-@interface JwaooBleToySensorDelegate : NSObject <CavanBleCharDelegate, AccelFreqParserDelegate> {
-    ViewController *mController;
-    AccelFreqParser *mParser;
-}
-
-- (JwaooBleToySensorDelegate *)initWithViewController:(ViewController *)controller;
-
-@end
-
-@implementation JwaooBleToySensorDelegate
-
-- (JwaooBleToySensorDelegate *)initWithViewController:(ViewController *)controller {
-    if (self = [super init]) {
-        mController = controller;
-        mParser = [[AccelFreqParser alloc] initWithValueFuzz:2.0 withTimeFuzz:0.06 withDelegate:self];
-    }
-
-    return self;
-}
-
-- (void)didDepthChanged:(int)depth {
-}
-
-- (void)didFreqChanged:(int)freq {
-}
-
-- (void)didNotifyForCharacteristic:(nonnull CavanBleChar *)characteristic {
-    // NSLog(@"JwaooBleToySensorDelegate: didNotifyForCharacteristic");
-    [mParser putBytes:[characteristic getData].bytes];
-    [mController setFreq:mParser.freq withDepth:mParser.depth];
-}
-
-@end
-
 @implementation ViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
 
     // Do any additional setup after loading the view.
-    mBleToy = [[JwaooBleToy alloc] initWithName:@"JwaooToy" uuid:JWAOO_TOY_UUID_SERVICE];
-    [mBleToy setEventDelegate:[[JwaooBleToyEventDelegate alloc] initWithViewController:self]];
-    [mBleToy setSensorDelegate:[[JwaooBleToySensorDelegate alloc] initWithViewController:self]];
+    mBleToy = [[JwaooBleToy alloc] initWithSensor:[Mpu6050Sensor new] withDelegate:self];
 
     [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(dataSpeedTimer) userInfo:nil repeats:YES];
 }
@@ -85,6 +25,22 @@
     [super setRepresentedObject:representedObject];
 
     // Update the view, if already loaded.
+}
+
+- (BOOL)didInitialized:(JwaooBleToy *)bleToy {
+    NSLog(@"didInitialized");
+    return true;
+}
+
+- (void)didConnectStateChanged:(BOOL)connected {
+    NSLog(@"didConnectStateChanged: connected = %d", connected);
+}
+
+- (void)didSensorDataReceived:(nonnull CavanBleChar *)bleChar {
+    mCount++;
+    mFreq = mBleToy.freq;
+    mDepth = mBleToy.depth;
+    [self performSelectorOnMainThread:@selector(updateFreqDepth) withObject:nil waitUntilDone:NO];
 }
 
 - (void)dataSpeedTimer {
@@ -121,7 +77,7 @@
             mSensorEnable = FALSE;
         }
     } else if ([mBleToy setSensorEnable:TRUE]) {
-        [mBleToy setSensorDelay:20];
+        [mBleToy setSensorDelay:30];
         mSensorEnable = TRUE;
     }
 
@@ -169,14 +125,6 @@
 - (void)updateFreqDepth {
     _mLabelFreq.intValue = mFreq;
     _mLabelDepth.intValue = mDepth;
-}
-
-- (void)setFreq:(int)freq
-      withDepth:(int)depth {
-    mCount++;
-    mFreq = freq;
-    mDepth = depth;
-    [self performSelectorOnMainThread:@selector(updateFreqDepth) withObject:self waitUntilDone:NO];
 }
 
 - (void)didProgressUpdated:(NSNumber *)progress {

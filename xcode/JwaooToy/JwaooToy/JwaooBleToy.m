@@ -9,27 +9,186 @@
 #import "JwaooBleToy.h"
 #import "CavanHexFile.h"
 
+// ================================================================================
+
+@interface JwaooBleToyCharDelegate : NSObject <CavanBleCharDelegate> {
+    JwaooBleToy *mBleToy;
+}
+
+- (JwaooBleToyCharDelegate *)initWithBleToy:(JwaooBleToy *)bleToy;
+
+@end
+
+@implementation JwaooBleToyCharDelegate
+
+- (void)didNotifyReceived:(nonnull CavanBleChar *)bleChar
+{
+    NSLog(@"didNotifyReceived");
+}
+
+- (JwaooBleToyCharDelegate *)initWithBleToy:(JwaooBleToy *)bleToy {
+    if (self = [super init]) {
+        mBleToy = bleToy;
+    }
+
+    return self;
+}
+
+@end
+
+// ================================================================================
+
+@interface JwaooBleToyEventCharDelegate : JwaooBleToyCharDelegate
+
+@end
+
+@implementation JwaooBleToyEventCharDelegate
+
+- (void)didNotifyReceived:(nonnull CavanBleChar *)bleChar
+{
+    [mBleToy onEventReceived:bleChar];
+}
+
+@end
+
+// ================================================================================
+
+@interface JwaooBleToySensorCharDelegate : JwaooBleToyCharDelegate
+
+@end
+
+@implementation JwaooBleToySensorCharDelegate
+
+- (void)didNotifyReceived:(nonnull CavanBleChar *)bleChar
+{
+    [mBleToy onSensorDataReceived:bleChar];
+}
+
+@end
+
+// ================================================================================
+
 @implementation JwaooBleToy
 
-- (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(nullable NSError *)error {
-    NSLog(@"didDiscoverCharacteristicsForService: %@, service = %@, error = %@", peripheral, service, error);
+- (int) freq {
+    return mParser.freq;
+}
+
+- (int) depth {
+    return mParser.depth;
+}
+
+- (JwaooBleToy *)initWithSensor:(CavanAccelSensor *)sensor
+                   withDelegate:(id<JwaooBleToyDelegate>)delegate {
+    if (self = [super initWithName:@"JwaooToy" uuid:JWAOO_TOY_UUID_SERVICE]) {
+        mSensor = sensor;
+        mDelegate = delegate;
+        mParser = [[AccelFreqParser alloc] initWithValueFuzz:2.0 withTimeFuzz:0.1 withDelegate:self];
+    }
+
+    return self;
+}
+
+- (void)didFreqChanged:(int)freq {
+    if ([mDelegate respondsToSelector:@selector(didFreqChanged:)]) {
+        [mDelegate didFreqChanged:freq];
+    }
+}
+
+- (void)didDepthChanged:(int)depth {
+    if ([mDelegate respondsToSelector:@selector(didDepthChanged:)]) {
+        [mDelegate didDepthChanged:depth];
+    }
+}
+
+- (void)onEventReceived:(CavanBleChar *)bleChar {
+    if ([mDelegate respondsToSelector:@selector(didEventReceived:)]) {
+        [mDelegate didEventReceived:bleChar];
+    }
+}
+
+- (void)onSensorDataReceived:(CavanBleChar *)bleChar {
+    [mSensor parseBytes:bleChar.bytes];
+    [mParser putSensorData:mSensor];
+
+    if ([mDelegate respondsToSelector:@selector(didSensorDataReceived:)]) {
+        [mDelegate didSensorDataReceived:bleChar];
+    }
+}
+
+- (BOOL)onInitialized {
+    return [mDelegate didInitialized:self];
+}
+
+- (void)onConnectStateChanged:(BOOL)connected {
+    if ([mDelegate respondsToSelector:@selector(didConnectStateChanged:)]) {
+        [mDelegate didConnectStateChanged:connected];
+    } else {
+        [self onConnectStateChanged:connected];
+    }
+}
+
+- (BOOL)doInitialize:(CBService *)service {
+    if (![service.UUID isEqualTo:JWAOO_TOY_UUID_SERVICE]) {
+        NSLog(@"Invalid service uuid: %@", service.UUID);
+        return false;
+    }
+
+    mCharCommand = mCharEvent = mCharFlash = mCharSensor = nil;
+
     for (CBCharacteristic *characteristic in service.characteristics) {
         if ([characteristic.UUID isEqual:JWAOO_TOY_UUID_COMMAND]) {
-            mCharCommand = [self createBleChar:characteristic degelate:nil];
+            mCharCommand = [self createBleChar:characteristic withDelegate:nil];
             NSLog(@"mCharCommand = %@", characteristic.UUID);
         } else if ([characteristic.UUID isEqual:JWAOO_TOY_UUID_EVENT]) {
-            mCharEvent = [self createBleChar:characteristic degelate:mEventDelegate];
+            mCharEvent = [self createBleChar:characteristic withDelegate:[[JwaooBleToyEventCharDelegate alloc] initWithBleToy:self]];
             NSLog(@"mCharEvent = %@", characteristic.UUID);
         } else if ([characteristic.UUID isEqual:JWAOO_TOY_UUID_FLASH]) {
-            mCharFlash = [self createBleChar:characteristic degelate:nil];
+            mCharFlash = [self createBleChar:characteristic withDelegate:nil];
             NSLog(@"mCharFlash = %@", characteristic.UUID);
         } else if ([characteristic.UUID isEqual:JWAOO_TOY_UUID_SENSOR]) {
-            mCharSensor = [self createBleChar:characteristic degelate:mSensorDelegate];
+            mCharSensor = [self createBleChar:characteristic withDelegate:[[JwaooBleToySensorCharDelegate alloc] initWithBleToy:self]];
             NSLog(@"mCharSensor = %@", characteristic.UUID);
         } else {
             NSLog(@"Unknown characteristic = %@", characteristic.UUID);
+            return false;
         }
     }
+
+    if (mCharCommand == nil) {
+        NSLog(@"Command characteristic not found: uuid = %@", JWAOO_TOY_UUID_COMMAND);
+        return false;
+    }
+
+    if (mCharEvent == nil) {
+        NSLog(@"Event characteristic not found: uuid = %@", JWAOO_TOY_UUID_EVENT);
+        return false;
+    }
+
+    if (mCharFlash == nil) {
+        NSLog(@"Flash characteristic not found: uuid = %@", JWAOO_TOY_UUID_FLASH);
+        return false;
+    }
+
+    if (mCharSensor == nil) {
+        NSLog(@"Sensor characteristic not found: uuid = %@", JWAOO_TOY_UUID_SENSOR);
+        return false;
+    }
+
+    NSString *identify = [self doIdentify];
+    if (identify == nil) {
+        NSLog(@"Failed to doIdentify");
+        return false;
+    }
+
+    NSLog(@"identify = %@", identify);
+
+    if (![identify isEqualToString:JWAOO_TOY_IDENTIFY]) {
+        NSLog(@"Invalid identify");
+        return false;
+    }
+
+    return true;
 }
 
 // ================================================================================
@@ -370,16 +529,6 @@
     mUpgradeBusy = false;
 
     return result;
-}
-
-// ================================================================================
-
-- (void)setEventDelegate:(nonnull id<CavanBleCharDelegate>)delegate {
-    mEventDelegate = delegate;
-}
-
-- (void)setSensorDelegate:(nonnull id<CavanBleCharDelegate>)delegate {
-    mSensorDelegate = delegate;
 }
 
 @end

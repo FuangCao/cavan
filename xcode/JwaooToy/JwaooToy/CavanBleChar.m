@@ -10,6 +10,16 @@
 
 @implementation CavanBleChar
 
+@synthesize delegate = mDelegate;
+
+- (NSData *)data {
+    return mChar.value;
+}
+
+- (const void *)bytes {
+    return mChar.value.bytes;
+}
+
 - (CavanBleChar *)initWithCharacteristic:(CBCharacteristic *)characteristic
                                   peripheral:(CBPeripheral *)peripheral
                                 delegate:(id<CavanBleCharDelegate>)delegate {
@@ -30,15 +40,11 @@
     return self;
 }
 
-- (nullable NSData *)getData {
-    return mChar.value;
-}
-
-- (nonnull CBCharacteristic *)getCharacteristic {
+- (CBCharacteristic *)getCharacteristic {
     return mChar;
 }
 
-- (nonnull CBPeripheral *)getPeripheral {
+- (CBPeripheral *)getPeripheral {
     return mPeripheral;
 }
 
@@ -51,7 +57,7 @@
     mReadError = error;
 
     if (error == nil && mChar.isNotifying) {
-        [mDelegate didNotifyForCharacteristic:self];
+        [mDelegate didNotifyReceived:self];
     }
 
     [mReadCond signal];

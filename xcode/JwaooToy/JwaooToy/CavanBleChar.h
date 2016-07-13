@@ -16,27 +16,28 @@
 
 @protocol CavanBleCharDelegate <NSObject>
 @required
-- (void)didNotifyForCharacteristic:(nonnull CavanBleChar *)characteristic;
+- (void)didNotifyReceived:(nonnull CavanBleChar *)bleChar;
 @end
 
 @interface CavanBleChar : NSObject {
     CBCharacteristic *mChar;
     CBPeripheral *mPeripheral;
-    id<CavanBleCharDelegate> mDelegate;
 
     NSError *mWriteError;
     NSCondition *mWriteCond;
     NSError *mReadError;
     NSCondition *mReadCond;
+
+    id<CavanBleCharDelegate> mDelegate;
 }
 
-- (nullable CavanBleChar *)initWithCharacteristic:(nonnull CBCharacteristic *)characteristic
-                                  peripheral:(nonnull CBPeripheral *)peripheral
-                                         delegate:(nullable id<CavanBleCharDelegate>)delegate;
-- (nullable NSData *)getData;
-- (nonnull CBCharacteristic *)getCharacteristic;
-- (nonnull CBPeripheral *)getPeripheral;
+@property (nullable) id<CavanBleCharDelegate> delegate;
+@property (nonnull, readonly, retain) NSData *data;
+@property (nonnull, readonly) const void *bytes;
 
+- (nullable CavanBleChar *)initWithCharacteristic:(nonnull CBCharacteristic *)characteristic
+                                       peripheral:(nonnull CBPeripheral *)peripheral
+                                         delegate:(nullable id<CavanBleCharDelegate>)delegate;
 - (void)setWriteStatus:(nullable NSError *)error;
 - (void)setReadStatus:(nullable NSError *)error;
 - (nullable NSData *)readData;

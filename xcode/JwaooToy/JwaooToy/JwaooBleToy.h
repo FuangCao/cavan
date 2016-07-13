@@ -10,9 +10,13 @@
 #import "CavanBleChar.h"
 #import "CavanBleGatt.h"
 #import "CavanHexFile.h"
+#import "CavanAccelSensor.h"
+#import "AccelFreqParser.h"
 #import "CavanProgressManager.h"
 
 #define JWAOO_TOY_FLASH_MAGIC       0x00005070
+#define JWAOO_TOY_IDENTIFY          @"JwaooToy"
+
 #define JWAOO_TOY_UUID_SERVICE      [CBUUID UUIDWithString:@"1888"]
 #define JWAOO_TOY_UUID_COMMAND      [CBUUID UUIDWithString:@"1889"]
 #define JWAOO_TOY_UUID_EVENT        [CBUUID UUIDWithString:@"188a"]
@@ -53,7 +57,7 @@ enum
 
 struct jwaoo_toy_command {
     uint8_t type;
-    
+
     union {
         uint32_t value32;
         uint16_t value16;
@@ -70,23 +74,48 @@ struct jwaoo_toy_flash_header {
 
 #pragma pack()
 
-@interface JwaooBleToy : CavanBleGatt {
+@class JwaooBleToy;
+
+@protocol JwaooBleToyDelegate <NSObject>
+@required
+- (BOOL)didInitialized:(nonnull JwaooBleToy *)bleToy;
+
+@optional
+- (void)didEventReceived:(nonnull CavanBleChar *)bleChar;
+- (void)didSensorDataReceived:(nonnull CavanBleChar *)bleChar;
+- (void)didDepthChanged:(int)depth;
+- (void)didFreqChanged:(int)freq;
+- (void)didConnectStateChanged:(BOOL)connected;
+
+@end
+
+@interface JwaooBleToy : CavanBleGatt <AccelFreqParserDelegate> {
     CavanBleChar *mCharCommand;
     CavanBleChar *mCharEvent;
     CavanBleChar *mCharFlash;
     CavanBleChar *mCharSensor;
 
-    id<CavanBleCharDelegate> mEventDelegate;
-    id<CavanBleCharDelegate> mSensorDelegate;
+    CavanAccelSensor *mSensor;
+    AccelFreqParser *mParser;
+    id<JwaooBleToyDelegate> mDelegate;
 
     BOOL mUpgradeBusy;
 }
+
+@property (readonly) int freq;
+@property (readonly) int depth;
+
+- (nonnull JwaooBleToy *)initWithSensor:(nonnull CavanAccelSensor *)sensor
+                   withDelegate:(nullable id<JwaooBleToyDelegate>)delegate;
 
 + (BOOL)parseResponseBool:(nullable NSData *)response;
 + (uint8_t)parseResponseValue8:(nullable NSData *)response;
 + (uint16_t)parseResponseValue16:(nullable NSData *)response;
 + (uint32_t)parseResponseValue32:(nullable NSData *)response;
 + (nullable NSString *)parseResponseText:(nullable NSData *)response;
+
+- (void)onEventReceived:(nonnull CavanBleChar *)bleChar;
+- (void)onSensorDataReceived:(nonnull CavanBleChar *)bleChar;
 
 - (nullable NSData *)sendCommand:(nonnull NSData *)command;
 - (nullable NSData *)sendCommand:(nonnull struct jwaoo_toy_command *)command
@@ -136,8 +165,4 @@ struct jwaoo_toy_flash_header {
       withProgress:(nullable CavanProgressManager *)progress;
 - (BOOL)upgradeFirmware:(nonnull const char *)pathname
            withProgress:(nullable CavanProgressManager *)progress;
-
-- (void)setEventDelegate:(nonnull id<CavanBleCharDelegate>)delegate;
-- (void)setSensorDelegate:(nonnull id<CavanBleCharDelegate>)delegate;
-
 @end

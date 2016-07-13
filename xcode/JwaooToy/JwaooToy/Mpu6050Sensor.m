@@ -10,10 +10,6 @@
 
 @implementation Mpu6050Sensor
 
-@synthesize x;
-@synthesize y;
-@synthesize z;
-
 + (double)buildAxisWithValue8:(int8_t)value {
     return value * 9.8 / 64;
 }
@@ -22,36 +18,20 @@
     return value * 9.8 / 16384;
 }
 
-- (Mpu6050Sensor *)initWithBytes8:(const int8_t *)bytes {
-    if (self = [super init]) {
-        [self setValueWithBytes8:bytes];
-    }
+- (void)parseBytes:(const void *)bytes {
+#if 0
+    const uint16_t *values = bytes;
 
-    return self;
-}
+    x = [self.class buildAxisWithValue16:values[0]];
+    y = [self.class buildAxisWithValue16:values[1]];
+    z = [self.class buildAxisWithValue16:values[2]];
+#else
+    const uint8_t *values = bytes;
 
-- (Mpu6050Sensor *)initWithBytes16:(const int16_t *)bytes {
-    if (self = [super init]) {
-        [self setValueWithBytes16:bytes];
-    }
-
-    return self;
-}
-
-- (NSString *)description {
-    return [NSString stringWithFormat:@"[%f, %f, %f]", x, y, z];
-}
-
-- (void)setValueWithBytes8:(const int8_t *)bytes {
-    x = [self.class buildAxisWithValue8:bytes[0]];
-    y = [self.class buildAxisWithValue8:bytes[1]];
-    z = [self.class buildAxisWithValue8:bytes[2]];
-}
-
-- (void)setValueWithBytes16:(const int16_t *)bytes {
-    x = [self.class buildAxisWithValue16:bytes[0]];
-    y = [self.class buildAxisWithValue16:bytes[1]];
-    z = [self.class buildAxisWithValue16:bytes[2]];
+    x = [self.class buildAxisWithValue8:values[0]];
+    y = [self.class buildAxisWithValue8:values[1]];
+    z = [self.class buildAxisWithValue8:values[2]];
+#endif
 }
 
 @end

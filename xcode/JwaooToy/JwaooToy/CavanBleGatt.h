@@ -14,12 +14,16 @@
 
 @interface CavanBleGatt : CBCentralManager <CBCentralManagerDelegate, CBPeripheralDelegate> {
     CBUUID *mUUID;
-    NSDate *mDate;
     NSNumber *mRssi;
+    NSTimeInterval mTime;
     CBPeripheral *mPeripheral;
 
     NSString *mName;
     NSMutableDictionary *mDictChars;
+
+    BOOL mConnected;
+    BOOL mConnPending;
+    BOOL mConnRunning;
 }
 
 @property (nullable) NSNumber *rssi;
@@ -31,8 +35,12 @@
 - (void)startScan;
 - (void)addBleChar:(nonnull CavanBleChar *)bleChar
           withUUID:(nonnull CBUUID *)uuid;
-- (nullable CavanBleChar *)createBleChar:(nonnull CBCharacteristic *)characteristic
-                       degelate:(nullable id<CavanBleCharDelegate>)delegate;
+- (nonnull CavanBleChar *)createBleChar:(nonnull CBCharacteristic *)characteristic
+                   withDelegate:(nullable id<CavanBleCharDelegate>)delegate;
 - (void)disconnect;
+
+- (BOOL)onInitialized;
+- (BOOL)doInitialize:(nonnull CBService *)service;
+- (void)onConnectStateChanged:(BOOL)connected;
 
 @end
