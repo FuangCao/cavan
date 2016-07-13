@@ -141,7 +141,8 @@
 
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error {
     NSLog(@"didDisconnectPeripheral: %@", peripheral);
-    [self connectPeripheral:peripheral options:nil];
+    // [self connectPeripheral:peripheral options:nil];
+    [self startScan];
 }
 
 // ================================================================================

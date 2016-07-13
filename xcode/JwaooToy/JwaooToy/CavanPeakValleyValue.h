@@ -14,22 +14,21 @@ typedef NS_OPTIONS(uint8_t, CavanPeakValleyValueType) {
 };
 
 @interface CavanPeakValleyValue : NSObject {
-    NSDate *mDate;
     double mPeakValue;
     double mValleyValue;
+    NSTimeInterval mTime;
     CavanPeakValleyValueType mType;
 }
 
-@property CavanPeakValleyValueType type;
-@property NSTimeInterval interval;
 @property double peak;
 @property double valley;
-@property NSDate *date;
+@property NSTimeInterval time;
+@property CavanPeakValleyValueType type;
 
 - (CavanPeakValleyValue *)initWithPeak:(double)peak
                             withValley:(double)valley
                               withType:(CavanPeakValleyValueType)type
-                              withDate:(NSDate *)date;
+                              withTime:(NSTimeInterval)time;
 - (CavanPeakValleyValue *)initWithPeak:(double)peak
                             withValley:(double)valley
                               withType:(CavanPeakValleyValueType)type;
@@ -40,8 +39,7 @@ typedef NS_OPTIONS(uint8_t, CavanPeakValleyValueType) {
 - (double)getDiff;
 - (BOOL)isFalling;
 - (BOOL)isRising;
-- (NSTimeInterval)timeIntervalLate:(NSDate *)date;
-- (NSTimeInterval)timeIntervalEarly:(NSDate *)date;
-- (NSTimeInterval)timeIntervalLateWithValue:(CavanPeakValleyValue *)value;
-- (NSTimeInterval)timeIntervalEarlyWithValue:(CavanPeakValleyValue *)value;
+- (NSTimeInterval)timeIntervalSinceTime:(NSTimeInterval)time;
+- (NSTimeInterval)timeIntervalSince:(CavanPeakValleyValue *)value;
+- (NSTimeInterval)timeIntervalSinceDate:(NSDate *)date;
 @end

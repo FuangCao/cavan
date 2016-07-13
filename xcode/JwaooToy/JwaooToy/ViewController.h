@@ -12,6 +12,9 @@
 @interface ViewController : NSViewController <CavanProgressDelegate> {
     BOOL mSensorEnable;
     JwaooBleToy *mBleToy;
+    int mFreq;
+    int mDepth;
+    int mCount;
 }
 
 @property (weak) IBOutlet NSProgressIndicator *mProgressBar;
@@ -20,6 +23,13 @@
 @property (weak) IBOutlet NSButton *mButtonDisconnect;
 @property (weak) IBOutlet NSButton *mButtonReboot;
 @property (weak) IBOutlet NSButton *mButtonUpgrade;
+@property (weak) IBOutlet NSTextField *mLabelDataCount;
+@property (weak) IBOutlet NSTextField *mLabelDataSpeed;
+@property (weak) IBOutlet NSTextField *mLabelFreq;
+@property (weak) IBOutlet NSTextField *mLabelDepth;
+
+- (void)setFreq:(int)freq
+      withDepth:(int)depth;
 
 @end
 

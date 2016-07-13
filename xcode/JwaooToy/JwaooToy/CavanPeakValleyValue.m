@@ -11,20 +11,19 @@
 @implementation CavanPeakValleyValue
 
 @synthesize type = mType;
-@synthesize date = mDate;
+@synthesize time = mTime;
 @synthesize peak = mPeakValue;
 @synthesize valley = mValleyValue;
-@synthesize interval = mInterval;
 
 - (CavanPeakValleyValue *)initWithPeak:(double)peak
                             withValley:(double)valley
                               withType:(CavanPeakValleyValueType)type
-                              withDate:(NSDate *)date {
+                              withTime:(NSTimeInterval)time {
     if (self = [super init]) {
         mType = type;
+        mTime = time;
         mPeakValue = peak;
         mValleyValue = valley;
-        mDate = date;
     }
 
     return self;
@@ -33,7 +32,7 @@
 - (CavanPeakValleyValue *)initWithPeak:(double)peak
                             withValley:(double)valley
                               withType:(CavanPeakValleyValueType)type {
-    return [self initWithPeak:peak withValley:valley withType:type withDate:[NSDate date]];
+    return [self initWithPeak:peak withValley:valley withType:type withTime:[NSDate timeIntervalSinceReferenceDate]];
 }
 
 - (CavanPeakValleyValue *)initWithValue:(double)value {
@@ -64,19 +63,16 @@
     return mType == CavanPeakValleyValueRising;
 }
 
-- (NSTimeInterval)timeIntervalLate:(NSDate *)date {
-    return [mDate timeIntervalSinceDate:date];
+- (NSTimeInterval)timeIntervalSinceTime:(NSTimeInterval)time {
+    return mTime - time;
 }
 
-- (NSTimeInterval)timeIntervalEarly:(NSDate *)date {
-    return [date timeIntervalSinceDate:mDate];
+- (NSTimeInterval)timeIntervalSince:(CavanPeakValleyValue *)value {
+    return [self timeIntervalSinceTime:value.time];
 }
 
-- (NSTimeInterval)timeIntervalLateWithValue:(CavanPeakValleyValue *)value {
-    return [self timeIntervalLate:value.date];
+- (NSTimeInterval)timeIntervalSinceDate:(NSDate *)date {
+    return [self timeIntervalSinceTime:[date timeIntervalSinceReferenceDate]];
 }
 
-- (NSTimeInterval)timeIntervalEarlyWithValue:(CavanPeakValleyValue *)value {
-    return [self timeIntervalEarly:value.date];
-}
 @end

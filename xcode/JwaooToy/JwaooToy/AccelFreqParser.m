@@ -29,7 +29,7 @@
     return self;
 }
 
-- (void)setDepth:(int)depth {
+- (void)updateDepth:(int)depth {
     depth = (mDepth + depth) / 2;
     if (mDepth != depth) {
         mDepth = depth;
@@ -37,8 +37,8 @@
     }
 }
 
-- (void)setFreq:(int)freq {
-    if (freq > 0) {
+- (void)updateFreq:(int)freq {
+    if (freq > 0 && mFreq > 0) {
         freq = (mFreq + freq) / 2;
     }
 
@@ -48,7 +48,7 @@
     }
 }
 
-- (CavanPeakValleyFinder *)putBytes:(const int8_t *)bytes {
+- (void)putBytes:(const int8_t *)bytes {
     [mSensor setValueWithBytes8:bytes];
 
     [mFinderX putFreqValue:mSensor.x];
@@ -67,10 +67,8 @@
         mFinderBest = mFinderZ;
     }
 
-    [self setFreq:mFinderBest.freq];
-    [self setDepth:bytes[3]];
-
-    return mFinderBest;
+    [self updateFreq:mFinderBest.freq];
+    [self updateDepth:bytes[3]];
 }
 
 @end

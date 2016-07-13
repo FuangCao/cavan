@@ -9,8 +9,8 @@
 #import <Foundation/Foundation.h>
 #import "CavanPeakValleyValue.h"
 
-#define CAVAN_PEAK_VALLEY_FREQ_COUNT    10
-#define CAVAN_PEAK_VALLEY_FREQ_TIMEOUT  2
+#define CAVAN_PEAK_VALLEY_FREQ_COUNT    5
+#define CAVAN_PEAK_VALLEY_FREQ_TIMEOUT  3.0
 
 @interface CavanPeakValleyFinder : CavanPeakValleyValue {
     BOOL mInitialized;
@@ -29,12 +29,12 @@
     double mLastPeak;
     double mLastValley;
 
-    NSDate *mPeakDate;
-    NSDate *mValleyDate;
-    NSDate *mLastDate;
+    NSTimeInterval mLastTime;
+    NSTimeInterval mPeakTime;
+    NSTimeInterval mValleyTime;
 
     int mFreq;
-    NSMutableArray *mFreqValueList;
+    NSMutableArray *mFreqList;
 }
 
 @property (readonly) double diff;
@@ -45,5 +45,5 @@
 - (BOOL)isValidPeakValley:(NSTimeInterval)interval;
 - (nullable CavanPeakValleyValue *)createPeakValleyValue:(CavanPeakValleyValueType)type;
 - (nullable CavanPeakValleyValue *)putValue:(double)value;
-- (int)putFreqValue:(double)value;
+- (nullable CavanPeakValleyValue *)putFreqValue:(double)value;
 @end

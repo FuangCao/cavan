@@ -55,16 +55,15 @@
 }
 
 - (void)didDepthChanged:(int)depth {
-    NSLog(@"depth = %d", depth);
 }
 
 - (void)didFreqChanged:(int)freq {
-    NSLog(@"freq = %d", freq);
 }
 
 - (void)didNotifyForCharacteristic:(nonnull CavanBleChar *)characteristic {
     // NSLog(@"JwaooBleToySensorDelegate: didNotifyForCharacteristic");
     [mParser putBytes:[characteristic getData].bytes];
+    [mController setFreq:mParser.freq withDepth:mParser.depth];
 }
 
 @end
@@ -78,12 +77,23 @@
     mBleToy = [[JwaooBleToy alloc] initWithName:@"JwaooToy" uuid:JWAOO_TOY_UUID_SERVICE];
     [mBleToy setEventDelegate:[[JwaooBleToyEventDelegate alloc] initWithViewController:self]];
     [mBleToy setSensorDelegate:[[JwaooBleToySensorDelegate alloc] initWithViewController:self]];
+
+    [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(dataSpeedTimer) userInfo:nil repeats:YES];
 }
 
 - (void)setRepresentedObject:(id)representedObject {
     [super setRepresentedObject:representedObject];
 
     // Update the view, if already loaded.
+}
+
+- (void)dataSpeedTimer {
+    int count;
+
+    count = mCount;
+    mCount = 0;
+
+    [self performSelectorOnMainThread:@selector(updateDataSpeed:) withObject:[NSNumber numberWithInt:count] waitUntilDone:NO];
 }
 
 - (IBAction)sendCommandButton:(NSButton *)sender {
@@ -111,7 +121,7 @@
             mSensorEnable = FALSE;
         }
     } else if ([mBleToy setSensorEnable:TRUE]) {
-        [mBleToy setSensorDelay:10];
+        [mBleToy setSensorDelay:20];
         mSensorEnable = TRUE;
     }
 
@@ -142,8 +152,31 @@
         _mButtonDisconnect.enabled = enable.boolValue;
         _mButtonSensCommand.enabled = enable.boolValue;
     } else {
-        [self performSelectorOnMainThread:@selector(updateUI:) withObject:enable waitUntilDone:YES];
+        [self performSelectorOnMainThread:@selector(updateUI:) withObject:enable waitUntilDone:NO];
     }
+}
+
+- (void)updateDataSpeed:(NSNumber *)count {
+    _mLabelDataCount.intValue = count.intValue;
+
+    if (count.intValue > 0) {
+        _mLabelDataSpeed.doubleValue = 1000.0 / count.intValue;
+    } else {
+        _mLabelDataSpeed.stringValue = @"-";
+    }
+}
+
+- (void)updateFreqDepth {
+    _mLabelFreq.intValue = mFreq;
+    _mLabelDepth.intValue = mDepth;
+}
+
+- (void)setFreq:(int)freq
+      withDepth:(int)depth {
+    mCount++;
+    mFreq = freq;
+    mDepth = depth;
+    [self performSelectorOnMainThread:@selector(updateFreqDepth) withObject:self waitUntilDone:NO];
 }
 
 - (void)didProgressUpdated:(NSNumber *)progress {

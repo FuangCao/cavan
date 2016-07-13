@@ -34,8 +34,6 @@
 - (AccelFreqParser *)initWithValueFuzz:(double)valueFuzz
                           withTimeFuzz:(NSTimeInterval)timeFuzz
                           withDelegate:delegate;
-- (void)setDepth:(int)depth;
-- (void)setFreq:(int)freq;
-- (CavanPeakValleyFinder *)putBytes:(const int8_t *)bytes;
+- (void)putBytes:(const int8_t *)bytes;
 
 @end

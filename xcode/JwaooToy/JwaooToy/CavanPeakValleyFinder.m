@@ -20,7 +20,7 @@
         mValueFuzz = valueFuzz;
         mValueFuzzMin = valueFuzz / 2;
 
-        mFreqValueList = [NSMutableArray new];
+        mFreqList = [NSMutableArray new];
     }
 
     return self;
@@ -49,7 +49,7 @@
 
     mType = type;
 
-    return [[CavanPeakValleyValue alloc] initWithPeak:mLastPeak withValley:mLastValley withType:type withDate:mLastDate];
+    return [[CavanPeakValleyValue alloc] initWithPeak:mLastPeak withValley:mLastValley withType:type withTime:mLastTime];
 }
 
 - (CavanPeakValleyValue *)putValue:(double)value {
@@ -60,24 +60,24 @@
             mFindPeak = false;
             mFindValley = true;
             mPeakValue = mValue;
-            mPeakDate = [NSDate date];
+            mPeakTime = [NSDate timeIntervalSinceReferenceDate];
 
-            if ([self isValidPeakValley:[mPeakDate timeIntervalSinceDate:mValleyDate]]) {
+            if ([self isValidPeakValley:(mPeakTime - mValleyTime)]) {
                 result = [self createPeakValleyValue:CavanPeakValleyValueFalling];
                 mLastPeak = mPeakValue;
-                mLastDate = mPeakDate;
+                mLastTime = mPeakTime;
             }
         }
     } else if (mFindValley) {
         if (value > mValue) {
             mFindPeak = true;
             mValleyValue = mValue;
-            mValleyDate = [NSDate date];
+            mValleyTime = [NSDate timeIntervalSinceReferenceDate];
 
-            if ([self isValidPeakValley:[mValleyDate timeIntervalSinceDate:mPeakDate]]) {
+            if ([self isValidPeakValley:(mValleyTime - mPeakTime)]) {
                 result = [self createPeakValleyValue:CavanPeakValleyValueRising];
                 mLastValley = mValleyValue;
-                mLastDate = mValleyDate;
+                mLastTime = mValleyTime;
             }
         }
     } else if (mInitialized) {
@@ -86,9 +86,10 @@
         } else if (value < mValue) {
             mFindValley = true;
         }
+
+        mPeakTime = mValleyTime = mLastTime = [NSDate timeIntervalSinceReferenceDate];
     } else {
         mInitialized = true;
-        mPeakDate = mValleyDate = mLastDate = [NSDate date];
         mPeakValue = mValleyValue = mLastPeak = mLastValley = value;
     }
 
@@ -97,43 +98,46 @@
     return result;
 }
 
-- (int)putFreqValue:(double)value {
-    NSDate *date;
+- (CavanPeakValleyValue *)putFreqValue:(double)value {
+    BOOL needUpdate;
     CavanPeakValleyValue *result = [self putValue:value];
-    if (result == nil) {
-        date = [NSDate date];
-
-        while (1) {
-            CavanPeakValleyValue *first = [mFreqValueList firstObject];
-            if (first == nil) {
-                break;
-            }
-
-            if ([first timeIntervalEarly:date] < CAVAN_PEAK_VALLEY_FREQ_TIMEOUT) {
-                break;
-            }
-
-            [mFreqValueList removeObjectAtIndex:0];
-        }
+    if (result != nil) {
+        [mFreqList addObject:result];
+        needUpdate = true;
     } else {
-        date = result.date;
-        mAvgDiff = (mAvgDiff + result.getDiff) / 2;
-
-        while (mFreqValueList.count > CAVAN_PEAK_VALLEY_FREQ_COUNT) {
-            [mFreqValueList removeObjectAtIndex:0];
-        }
-
-        [mFreqValueList addObject:result];
+        needUpdate = false;
     }
 
-    if (mFreqValueList.count < 2) {
-        mFreq = 0;
-    } else {
-        CavanPeakValleyValue *first = [mFreqValueList firstObject];
-        mFreq = 60 * (mFreqValueList.count - 1) / [first timeIntervalEarly:date] / 2;
+    NSTimeInterval lastTime = [NSDate timeIntervalSinceReferenceDate] - CAVAN_PEAK_VALLEY_FREQ_TIMEOUT;
+
+    while (1) {
+        CavanPeakValleyValue *first = mFreqList.firstObject;
+        if (first == nil || first.time > lastTime) {
+            break;
+        }
+
+        [mFreqList removeObjectAtIndex:0];
+        needUpdate = true;
     }
 
-    return mFreq;
+    if (needUpdate) {
+        NSUInteger count = mFreqList.count;
+        if (count > 1) {
+            NSTimeInterval time;
+
+            if (count < CAVAN_PEAK_VALLEY_FREQ_COUNT) {
+                time = [NSDate timeIntervalSinceReferenceDate];
+            } else {
+                time = ((CavanPeakValleyValue *)mFreqList.lastObject).time;
+            }
+
+            mFreq = (count - 1) * 30 / (time - [mFreqList.firstObject time]);
+        } else {
+            mFreq = 0;
+        }
+    }
+
+    return result;
 }
 
 @end
