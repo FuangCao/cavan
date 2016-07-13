@@ -1,5 +1,6 @@
 Makefile
 /Test
+/TestJava
 /CavanTest
 out
 libs

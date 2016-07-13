@@ -77,7 +77,7 @@ public class MainActivity extends Activity {
 		mWaveView3.setZoom(3);
 
 		mWaveView4 = (CavanWaveView) findViewById(R.id.waveViewDepth);
-		mWaveView4.setValueRange(-19.6, 19.6);
+		mWaveView4.setValueRange(0, 500);
 		mWaveView4.setZoom(3);
 
 		mHandler.sendEmptyMessage(MSG_SHOW_SPEED);
@@ -151,7 +151,7 @@ public class MainActivity extends Activity {
 								value += accel.getCoorY() - mFinders[2].getValleyValue();
 								value += accel.getCoorZ() - mFinders[3].getValleyValue();
 								mWaveView4.addValue(value); */
-								mWaveView4.addValue(mFinders[0].getBaseline());
+								mWaveView4.addValue(mFinders[0].getFreq());
 
 								mCount++;
 							}

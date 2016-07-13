@@ -5,8 +5,8 @@ import java.util.List;
 
 public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 
-	public static final long FREQ_TIMEOUT = 2000;
-	public static final long FREQ_COUNT = 10;
+	public static final long FREQ_TIMEOUT = 3000;
+	public static final long FREQ_COUNT = 5;
 
 	private double mAvgDiff;
 	private double mAvgValue;
@@ -27,7 +27,7 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 	private double mLastValley;
 
 	private int mFreq;
-	private List<CavanPeakValleyValue> mValueList = new ArrayList<CavanPeakValleyValue>();
+	private List<CavanPeakValleyValue> mFreqList = new ArrayList<CavanPeakValleyValue>();
 
 	public CavanPeakValleyFinder(long timeFuzz, double valueFuzz) {
 		super(0);
@@ -161,31 +161,37 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 	}
 
 	public CavanPeakValleyValue putFreqValue(double value) {
-		long time;
+		boolean changed;
 		CavanPeakValleyValue result = putValue(value);
 		if (result != null) {
-			time = result.getTime();
-
-			while (mValueList.size() > FREQ_COUNT) {
-				mValueList.remove(0);
-			}
-
-			mValueList.add(result);
+			mFreqList.add(result);
+			changed = true;
 		} else {
-			time = System.currentTimeMillis();
-
-			while (mValueList.size() > 0) {
-				if (mValueList.get(0).getTimeEarly(time) < FREQ_TIMEOUT) {
-					break;
-				}
-			}
+			changed = false;
 		}
 
-		int count = mValueList.size();
-		if (count > 1) {
-			setFreq(mValueList.get(0), time, count - 1);
-		} else {
-			setFreq(0);
+		long earlyTime = System.currentTimeMillis() - FREQ_TIMEOUT;
+
+		while (mFreqList.size() > 0 && mFreqList.get(0).getTime() < earlyTime) {
+			mFreqList.remove(0);
+			changed = true;
+		}
+
+		if (changed) {
+			int count = mFreqList.size();
+			if (count > 1) {
+				long time;
+
+				if (count < FREQ_COUNT) {
+					time = System.currentTimeMillis();
+				} else {
+					time = mFreqList.get(count - 1).getTime();
+				}
+
+				setFreq(mFreqList.get(0), time, count - 1);
+			} else {
+				setFreq(0);
+			}
 		}
 
 		return result;
