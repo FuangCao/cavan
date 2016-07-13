@@ -59,34 +59,6 @@ public class CavanPeakValleyValue {
 		return mTime;
 	}
 
-	public long getTimeEarly(long time) {
-		return time - mTime;
-	}
-
-	public long getTimeEarly(CavanPeakValleyValue value) {
-		return getTimeEarly(value.getTime());
-	}
-
-	public long getTimeLate(long time) {
-		return mTime - time;
-	}
-
-	public long getTimeLate(CavanPeakValleyValue value) {
-		return getTimeLate(value.getTime());
-	}
-
-	public long getTimeDiff(long time) {
-		if (mTime > time) {
-			return mTime - time;
-		} else {
-			return time - mTime;
-		}
-	}
-
-	public long getTimeDiff(CavanPeakValleyValue value) {
-		return getTimeDiff(value.getTime());
-	}
-
 	public boolean isFalling() {
 		return mType == TYPE_FALLING;
 	}

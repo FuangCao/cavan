@@ -25,6 +25,10 @@ public class AccelFreqParser {
 		return mFinderBest.getFreq();
 	}
 
+	public CavanPeakValleyFinder getFinder() {
+		return mFinderBest;
+	}
+
 	private void updateFreq(int freq) {
 		if (freq > 0 && mFreq > 0) {
 			freq = (mFreq + freq) / 2;

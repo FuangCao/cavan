@@ -17,8 +17,8 @@ import com.jwaoo.android.JwaooBleToy;
 
 public class MainActivity extends Activity {
 
-	private static final int MSG_SENSOR_ENABLE = 1;
-	private static final int MSG_SHOW_SPEED = 2;
+	private static final int SENSOR_DELAY = 30;
+	private static final int MSG_SHOW_SPEED = 1;
 
 	private CavanPeakValleyFinder mFinders[] = {
 			new CavanPeakValleyFinder(100, 1),
@@ -40,11 +40,6 @@ public class MainActivity extends Activity {
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
-			case MSG_SENSOR_ENABLE:
-				mBleToy.setSensorDelay(10);
-				mBleToy.setSensorEnable(true);
-				break;
-
 			case MSG_SHOW_SPEED:
 				int count = mCount;
 				mCount = 0;
@@ -111,10 +106,15 @@ public class MainActivity extends Activity {
 						mBleToy = new JwaooBleToy(MainActivity.this, mDevice) {
 
 							@Override
+							protected boolean onInitialized() {
+								setSensorDelay(SENSOR_DELAY);
+								setSensorEnable(true);
+								return super.onInitialized();
+							}
+
+							@Override
 							protected void onConnectionStateChange(boolean connected) {
-								if (connected) {
-									mHandler.sendEmptyMessage(MSG_SENSOR_ENABLE);
-								} else {
+								if (!connected) {
 									CavanBleScanner.show(MainActivity.this);
 								}
 							}

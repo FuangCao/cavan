@@ -19,6 +19,7 @@ import com.cavan.java.CavanProgressListener;
 
 public class CavanBleGatt extends BluetoothGattCallback {
 
+	public static final int AUTO_CONN_COUNT = 10;
 	public static final int FRAME_SIZE = 20;
 	public static final long WRITE_TIMEOUT = 1000;
 	public static final long COMMAND_TIMEOUT = 2000;
@@ -32,10 +33,12 @@ public class CavanBleGatt extends BluetoothGattCallback {
 
 	private int mGattState;
 	private boolean mConnected;
-	private boolean mDisconnectSend;
-	private boolean mAutoConnectAllow;
-	private boolean mAutoConnectEnable;
+	private boolean mDisconnSend;
 	private BleConnectThread mConnThread;
+
+	private int mAutoConnCount;
+	private boolean mAutoConnAllow;
+	private boolean mAutoConnEnable;
 
 	private UUID mUuid;
 	private Context mContext;
@@ -79,27 +82,28 @@ public class CavanBleGatt extends BluetoothGattCallback {
 	}
 
 	synchronized public void setAutoConnectEnable(boolean enable) {
-		mAutoConnectEnable = enable;
+		mAutoConnEnable = enable;
 	}
 
 	synchronized public void setAutoConnectAllow(boolean allow) {
-		mAutoConnectAllow = allow;
+		mAutoConnAllow = allow;
 	}
 
 	synchronized private void setConnectStatus(boolean connected) {
 		if (connected) {
-			mAutoConnectAllow = true;
-			mDisconnectSend = false;
+			mAutoConnCount = 0;
+			mAutoConnAllow = true;
+			mDisconnSend = false;
 
 			if (mConnected) {
 				return;
 			}
 		} else {
-			if (mDisconnectSend) {
+			if (mDisconnSend) {
 				return;
 			}
 
-			mDisconnectSend = true;
+			mDisconnSend = true;
 		}
 
 		mConnected = connected;
@@ -128,7 +132,7 @@ public class CavanBleGatt extends BluetoothGattCallback {
 	}
 
 	synchronized public boolean connect(boolean autoConnect) {
-		mAutoConnectEnable = autoConnect;
+		mAutoConnEnable = autoConnect;
 		return connect();
 	}
 
@@ -143,8 +147,10 @@ public class CavanBleGatt extends BluetoothGattCallback {
 	synchronized private boolean autoConnect() {
 		disconnectInternal();
 
-		if (mAutoConnectAllow && mAutoConnectEnable) {
-			CavanAndroid.logE("Auto Connect");
+		if (mAutoConnAllow && mAutoConnEnable && mAutoConnCount < AUTO_CONN_COUNT) {
+			CavanAndroid.logE("Auto Connect" + mAutoConnCount);
+
+			mAutoConnCount++;
 
 			if (connect()) {
 				return true;
@@ -157,7 +163,7 @@ public class CavanBleGatt extends BluetoothGattCallback {
 	}
 
 	synchronized public void disconnect() {
-		mAutoConnectEnable = false;
+		mAutoConnEnable = false;
 
 		disconnectInternal();
 		setConnectStatus(false);

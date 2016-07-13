@@ -44,10 +44,6 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 		mInitialized = true;
 	}
 
-	protected void onFreqChanged(int freq) {
-		// CavanAndroid.logE("freq = " + freq);
-	}
-
 	public void setValueFuzz(double fuzz) {
 		mValueFuzz = fuzz;
 		mValueFuzzMin = fuzz / 3;
@@ -149,17 +145,6 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 		return mFreq;
 	}
 
-	private void setFreq(int freq) {
-		if (mFreq != freq) {
-			mFreq = freq;
-			onFreqChanged(freq);
-		}
-	}
-
-	private void setFreq(CavanPeakValleyValue first, long time, int count) {
-		setFreq((int) ((count * 30000) / first.getTimeEarly(time)));
-	}
-
 	public CavanPeakValleyValue putFreqValue(double value) {
 		boolean changed;
 		CavanPeakValleyValue result = putValue(value);
@@ -170,9 +155,9 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 			changed = false;
 		}
 
-		long earlyTime = System.currentTimeMillis() - FREQ_TIMEOUT;
+		long lastTime = System.currentTimeMillis() - FREQ_TIMEOUT;
 
-		while (mFreqList.size() > 0 && mFreqList.get(0).getTime() < earlyTime) {
+		while (mFreqList.size() > 0 && mFreqList.get(0).getTime() < lastTime) {
 			mFreqList.remove(0);
 			changed = true;
 		}
@@ -188,9 +173,9 @@ public class CavanPeakValleyFinder extends CavanPeakValleyValue {
 					time = mFreqList.get(count - 1).getTime();
 				}
 
-				setFreq(mFreqList.get(0), time, count - 1);
+				mFreq = (int) ((count - 1) * 30000 / (time - mFreqList.get(0).getTime()));
 			} else {
-				setFreq(0);
+				mFreq = 0;
 			}
 		}
 
