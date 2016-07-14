@@ -93,7 +93,7 @@ struct jwaoo_toy_flash_header {
 
 @end
 
-@interface JwaooBleToy : CavanBleGatt <JwaooToyParserDelegate> {
+@interface JwaooBleToy : CavanBleGatt {
     CavanBleChar *mCharCommand;
     CavanBleChar *mCharEvent;
     CavanBleChar *mCharFlash;

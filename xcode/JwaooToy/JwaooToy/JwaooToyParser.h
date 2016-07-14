@@ -10,21 +10,16 @@
 #import "CavanAccelFreqParser.h"
 #import "JwaooToySensor.h"
 
-@protocol JwaooToyParserDelegate <CavanAccelFreqParserDelegate>
-@required
-- (void)didDepthChanged:(int)depth;
-@end
-
 @interface JwaooToyParser : CavanAccelFreqParser {
     int mDepth;
-    id<JwaooToyParserDelegate> mDelegate2;
+    SEL mDepthSelector;
+    NSObject *mDepthTarget;
 }
 
 @property int depth;
 
-- (nonnull CavanAccelFreqParser *)initWithValueFuzz:(double)valueFuzz
-                                       withTimeFuzz:(NSTimeInterval)timeFuzz
-                                       withDelegate:(nullable id<JwaooToyParserDelegate>)delegate;
+- (void)setDepthSelector:(nonnull SEL)selector
+              withTarget:(nullable NSObject *)target;
 - (void)putSensorData:(nonnull JwaooToySensor *)sensor;
 
 @end

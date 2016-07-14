@@ -8,22 +8,20 @@
 
 #import "JwaooToyParser.h"
 
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+
 @implementation JwaooToyParser
 
 @synthesize depth = mDepth;
 
-- (CavanAccelFreqParser *)initWithValueFuzz:(double)valueFuzz
-                                       withTimeFuzz:(NSTimeInterval)timeFuzz
-                                       withDelegate:(nullable id<JwaooToyParserDelegate>)delegate {
-    if (self = [super initWithValueFuzz:valueFuzz withTimeFuzz:timeFuzz withDelegate:delegate]) {
-        mDelegate2 = delegate;
-    }
-
-    return self;
+- (void)setDepthSelector:(SEL)selector
+              withTarget:(NSObject *)target {
+    mDepthSelector = selector;
+    mDepthTarget = target;
 }
 
 - (void)onDepthChanged:(int)depth {
-    [mDelegate2 didDepthChanged:depth];
+    [mDepthTarget performSelector:mDepthSelector withObject:[NSNumber numberWithInt:depth]];
 }
 
 - (void)updateDepth:(int)depth {

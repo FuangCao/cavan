@@ -33,7 +33,7 @@
 - (nullable CavanBleChar *)initWithCharacteristic:(nonnull CBCharacteristic *)characteristic
                                        peripheral:(nonnull CBPeripheral *)peripheral;
 - (void)enableNotifyWithSelector:(nonnull SEL)selector
-               withTarget:(nonnull NSObject *)target;
+               withTarget:(nullable NSObject *)target;
 - (void)setWriteStatus:(nullable NSError *)error;
 - (void)setReadStatus:(nullable NSError *)error;
 - (nullable NSData *)readData;

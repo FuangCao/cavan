@@ -40,7 +40,7 @@
     mNotifyTarget = target;
 
     if (mChar.properties & CBCharacteristicPropertyNotify) {
-        [mPeripheral setNotifyValue:YES forCharacteristic:mChar];
+        [mPeripheral setNotifyValue:(target != nil) forCharacteristic:mChar];
     }
 }
 

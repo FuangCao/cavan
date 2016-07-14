@@ -8,16 +8,16 @@
 
 #import "CavanAccelFreqParser.h"
 
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+
 @implementation CavanAccelFreqParser
 
 @synthesize freq = mFreq;
 
 - (CavanAccelFreqParser *)initWithValueFuzz:(double)valueFuzz
                           withTimeFuzz:(NSTimeInterval)timeFuzz
-                          withDelegate:(id<CavanAccelFreqParserDelegate>)delegate
 {
     if (self = [super init]) {
-        mDelegate = delegate;
         mFinderX = [[CavanPeakValleyFinder alloc] initWithValueFuzz:valueFuzz withTimeFuzz:timeFuzz];
         mFinderY = [[CavanPeakValleyFinder alloc] initWithValueFuzz:valueFuzz withTimeFuzz:timeFuzz];
         mFinderZ = [[CavanPeakValleyFinder alloc] initWithValueFuzz:valueFuzz withTimeFuzz:timeFuzz];
@@ -27,8 +27,14 @@
     return self;
 }
 
+- (void)setFreqSelector:(SEL)selector
+             withTarget:(NSObject *)target {
+    mFreqSelector = selector;
+    mFreqTarget = target;
+}
+
 - (void)onFreqChanged:(int)freq {
-    [mDelegate didFreqChanged:freq];
+    [mFreqTarget performSelector:mFreqSelector withObject:[NSNumber numberWithInt:freq]];
 }
 
 - (void)updateFreq:(int)freq {

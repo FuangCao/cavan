@@ -10,14 +10,10 @@
 #import "CavanPeakValleyFinder.h"
 #import "CavanAccelSensor.h"
 
-@protocol CavanAccelFreqParserDelegate <NSObject>
-@required
-- (void)didFreqChanged:(int)freq;
-@end
-
 @interface CavanAccelFreqParser : NSObject {
     int mFreq;
-    id<CavanAccelFreqParserDelegate> mDelegate;
+    SEL mFreqSelector;
+    NSObject *mFreqTarget;
 
     CavanPeakValleyFinder *mFinderX;
     CavanPeakValleyFinder *mFinderY;
@@ -28,8 +24,9 @@
 @property (readonly) int freq;
 
 - (nonnull CavanAccelFreqParser *)initWithValueFuzz:(double)valueFuzz
-                          withTimeFuzz:(NSTimeInterval)timeFuzz
-                          withDelegate:(nullable id<CavanAccelFreqParserDelegate>)delegate;
+                          withTimeFuzz:(NSTimeInterval)timeFuzz;
+- (void)setFreqSelector:(nonnull SEL)selector
+             withTarget:(nullable NSObject *)target;
 - (void)onFreqChanged:(int)freq;
 - (void)putSensorData:(nonnull CavanAccelSensor *)sensor;
 

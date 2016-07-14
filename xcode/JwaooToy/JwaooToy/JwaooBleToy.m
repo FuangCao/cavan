@@ -24,21 +24,24 @@
     if (self = [super initWithName:@"JwaooToy" uuid:JWAOO_TOY_UUID_SERVICE]) {
         mDelegate = delegate;
         mSensor = [Mpu6050Sensor new];
-        mParser = [[JwaooToyParser alloc] initWithValueFuzz:JWAOO_TOY_VALUE_FUZZ withTimeFuzz:JWAOO_TOY_TIME_FUZZ withDelegate:self];
+
+        mParser = [[JwaooToyParser alloc] initWithValueFuzz:JWAOO_TOY_VALUE_FUZZ withTimeFuzz:JWAOO_TOY_TIME_FUZZ];
+        [mParser setDepthSelector:@selector(onDepthChanged:) withTarget:self];
+        [mParser setFreqSelector:@selector(onFreqChanged:) withTarget:self];
     }
 
     return self;
 }
 
-- (void)didFreqChanged:(int)freq {
+- (void)onFreqChanged:(NSNumber *)freq {
     if ([mDelegate respondsToSelector:@selector(didFreqChanged:)]) {
-        [mDelegate didFreqChanged:freq];
+        [mDelegate didFreqChanged:freq.intValue];
     }
 }
 
-- (void)didDepthChanged:(int)depth {
+- (void)onDepthChanged:(NSNumber *)depth {
     if ([mDelegate respondsToSelector:@selector(didDepthChanged:)]) {
-        [mDelegate didDepthChanged:depth];
+        [mDelegate didDepthChanged:depth.intValue];
     }
 }
 
