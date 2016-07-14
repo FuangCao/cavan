@@ -18,19 +18,20 @@
     return value * 9.8 / 16384;
 }
 
-- (void)parseBytes:(const void *)bytes {
+- (void)putBytes:(const void *)bytes {
 #if 0
     const uint16_t *values = bytes;
 
-    x = [self.class buildAxisWithValue16:values[0]];
-    y = [self.class buildAxisWithValue16:values[1]];
-    z = [self.class buildAxisWithValue16:values[2]];
+    mAxisX = [self.class buildAxisWithValue16:values[0]];
+    mAxisY = [self.class buildAxisWithValue16:values[1]];
+    mAxisZ = [self.class buildAxisWithValue16:values[2]];
 #else
     const uint8_t *values = bytes;
 
-    x = [self.class buildAxisWithValue8:values[0]];
-    y = [self.class buildAxisWithValue8:values[1]];
-    z = [self.class buildAxisWithValue8:values[2]];
+    mAxisX = [self.class buildAxisWithValue8:values[0]];
+    mAxisY = [self.class buildAxisWithValue8:values[1]];
+    mAxisZ = [self.class buildAxisWithValue8:values[2]];
+    mDepth = values[3];
 #endif
 }
 

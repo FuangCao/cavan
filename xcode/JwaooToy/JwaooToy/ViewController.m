@@ -7,8 +7,6 @@
 //
 
 #import "ViewController.h"
-#import "Mpu6050Sensor.h"
-#import "AccelFreqParser.h"
 
 @implementation ViewController
 
@@ -16,7 +14,7 @@
     [super viewDidLoad];
 
     // Do any additional setup after loading the view.
-    mBleToy = [[JwaooBleToy alloc] initWithSensor:[Mpu6050Sensor new] withDelegate:self];
+    mBleToy = [[JwaooBleToy alloc] initWithDelegate:self];
     [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(dataSpeedTimer) userInfo:nil repeats:YES];
 }
 
@@ -40,6 +38,14 @@
     mFreq = mBleToy.freq;
     mDepth = mBleToy.depth;
     [self performSelectorOnMainThread:@selector(updateFreqDepth) withObject:nil waitUntilDone:NO];
+}
+
+- (void)didDepthChanged:(int)depth {
+    // NSLog(@"didDepthChanged: depth = %d", depth);
+}
+
+- (void)didFreqChanged:(int)freq {
+    // NSLog(@"didFreqChanged: freq = %d", freq);
 }
 
 - (void)dataSpeedTimer {

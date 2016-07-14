@@ -9,9 +9,9 @@
 #import <Foundation/Foundation.h>
 
 @interface CavanAccelSensor : NSObject {
-    double x;
-    double y;
-    double z;
+    double mAxisX;
+    double mAxisY;
+    double mAxisZ;
 }
 
 @property double x;
@@ -19,6 +19,6 @@
 @property double z;
 
 - (nonnull CavanAccelSensor *)initWithBytes:(nonnull const void *)bytes;
-- (void)parseBytes:(nonnull const void *)bytes;
+- (void)putBytes:(nonnull const void *)bytes;
 
 @end

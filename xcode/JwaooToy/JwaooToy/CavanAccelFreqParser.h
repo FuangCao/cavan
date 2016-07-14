@@ -1,5 +1,5 @@
 //
-//  AccelFreqParser.h
+//  CavanAccelFreqParser.h
 //  JwaooToy
 //
 //  Created by 曹福昂 on 16/7/8.
@@ -10,16 +10,14 @@
 #import "CavanPeakValleyFinder.h"
 #import "CavanAccelSensor.h"
 
-@protocol AccelFreqParserDelegate <NSObject>
+@protocol CavanAccelFreqParserDelegate <NSObject>
 @required
 - (void)didFreqChanged:(int)freq;
-- (void)didDepthChanged:(int)depth;
 @end
 
-@interface AccelFreqParser : NSObject {
+@interface CavanAccelFreqParser : NSObject {
     int mFreq;
-    int mDepth;
-    id<AccelFreqParserDelegate> mDelegate;
+    id<CavanAccelFreqParserDelegate> mDelegate;
 
     CavanPeakValleyFinder *mFinderX;
     CavanPeakValleyFinder *mFinderY;
@@ -28,11 +26,11 @@
 }
 
 @property (readonly) int freq;
-@property (readonly) int depth;
 
-- (nonnull AccelFreqParser *)initWithValueFuzz:(double)valueFuzz
+- (nonnull CavanAccelFreqParser *)initWithValueFuzz:(double)valueFuzz
                           withTimeFuzz:(NSTimeInterval)timeFuzz
-                          withDelegate:(nullable id<AccelFreqParserDelegate>)delegate;
+                          withDelegate:(nullable id<CavanAccelFreqParserDelegate>)delegate;
+- (void)onFreqChanged:(int)freq;
 - (void)putSensorData:(nonnull CavanAccelSensor *)sensor;
 
 @end

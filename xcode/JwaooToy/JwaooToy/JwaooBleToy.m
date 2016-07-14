@@ -8,6 +8,7 @@
 
 #import "JwaooBleToy.h"
 #import "CavanHexFile.h"
+#import "Mpu6050Sensor.h"
 
 // ================================================================================
 
@@ -78,12 +79,11 @@
     return mParser.depth;
 }
 
-- (JwaooBleToy *)initWithSensor:(CavanAccelSensor *)sensor
-                   withDelegate:(id<JwaooBleToyDelegate>)delegate {
+- (JwaooBleToy *)initWithDelegate:(id<JwaooBleToyDelegate>)delegate {
     if (self = [super initWithName:@"JwaooToy" uuid:JWAOO_TOY_UUID_SERVICE]) {
-        mSensor = sensor;
         mDelegate = delegate;
-        mParser = [[AccelFreqParser alloc] initWithValueFuzz:2.0 withTimeFuzz:0.1 withDelegate:self];
+        mSensor = [Mpu6050Sensor new];
+        mParser = [[JwaooToyParser alloc] initWithValueFuzz:JWAOO_TOY_VALUE_FUZZ withTimeFuzz:JWAOO_TOY_TIME_FUZZ withDelegate:self];
     }
 
     return self;
@@ -108,7 +108,7 @@
 }
 
 - (void)onSensorDataReceived:(CavanBleChar *)bleChar {
-    [mSensor parseBytes:bleChar.bytes];
+    [mSensor putBytes:bleChar.bytes];
     [mParser putSensorData:mSensor];
 
     if ([mDelegate respondsToSelector:@selector(didSensorDataReceived:)]) {

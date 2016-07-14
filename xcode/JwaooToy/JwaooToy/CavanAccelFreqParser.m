@@ -1,21 +1,20 @@
 //
-//  AccelFreqParser.m
+//  CavanAccelFreqParser.m
 //  JwaooToy
 //
 //  Created by 曹福昂 on 16/7/8.
 //  Copyright © 2016年 曹福昂. All rights reserved.
 //
 
-#import "AccelFreqParser.h"
+#import "CavanAccelFreqParser.h"
 
-@implementation AccelFreqParser
+@implementation CavanAccelFreqParser
 
 @synthesize freq = mFreq;
-@synthesize depth = mDepth;
 
-- (AccelFreqParser *)initWithValueFuzz:(double)valueFuzz
+- (CavanAccelFreqParser *)initWithValueFuzz:(double)valueFuzz
                           withTimeFuzz:(NSTimeInterval)timeFuzz
-                          withDelegate:(id<AccelFreqParserDelegate>)delegate
+                          withDelegate:(id<CavanAccelFreqParserDelegate>)delegate
 {
     if (self = [super init]) {
         mDelegate = delegate;
@@ -28,12 +27,8 @@
     return self;
 }
 
-- (void)updateDepth:(int)depth {
-    depth = (mDepth + depth) / 2;
-    if (mDepth != depth) {
-        mDepth = depth;
-        [mDelegate didDepthChanged:depth];
-    }
+- (void)onFreqChanged:(int)freq {
+    [mDelegate didFreqChanged:freq];
 }
 
 - (void)updateFreq:(int)freq {
@@ -43,7 +38,7 @@
 
     if (mFreq != freq) {
         mFreq = freq;
-        [mDelegate didFreqChanged:freq];
+        [self onFreqChanged:freq];
     }
 }
 

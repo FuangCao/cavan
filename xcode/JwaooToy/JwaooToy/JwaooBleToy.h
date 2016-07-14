@@ -10,8 +10,8 @@
 #import "CavanBleChar.h"
 #import "CavanBleGatt.h"
 #import "CavanHexFile.h"
-#import "CavanAccelSensor.h"
-#import "AccelFreqParser.h"
+#import "JwaooToySensor.h"
+#import "JwaooToyParser.h"
 #import "CavanProgressManager.h"
 
 #define JWAOO_TOY_FLASH_MAGIC       0x00005070
@@ -22,6 +22,9 @@
 #define JWAOO_TOY_UUID_EVENT        [CBUUID UUIDWithString:@"188a"]
 #define JWAOO_TOY_UUID_FLASH        [CBUUID UUIDWithString:@"188b"]
 #define JWAOO_TOY_UUID_SENSOR       [CBUUID UUIDWithString:@"188c"]
+
+#define JWAOO_TOY_TIME_FUZZ         0.1
+#define JWAOO_TOY_VALUE_FUZZ        2.0
 
 enum
 {
@@ -90,14 +93,14 @@ struct jwaoo_toy_flash_header {
 
 @end
 
-@interface JwaooBleToy : CavanBleGatt <AccelFreqParserDelegate> {
+@interface JwaooBleToy : CavanBleGatt <JwaooToyParserDelegate> {
     CavanBleChar *mCharCommand;
     CavanBleChar *mCharEvent;
     CavanBleChar *mCharFlash;
     CavanBleChar *mCharSensor;
 
-    CavanAccelSensor *mSensor;
-    AccelFreqParser *mParser;
+    JwaooToySensor *mSensor;
+    JwaooToyParser *mParser;
     id<JwaooBleToyDelegate> mDelegate;
 
     BOOL mUpgradeBusy;
@@ -106,8 +109,7 @@ struct jwaoo_toy_flash_header {
 @property (readonly) int freq;
 @property (readonly) int depth;
 
-- (nonnull JwaooBleToy *)initWithSensor:(nonnull CavanAccelSensor *)sensor
-                   withDelegate:(nullable id<JwaooBleToyDelegate>)delegate;
+- (nonnull JwaooBleToy *)initWithDelegate:(nullable id<JwaooBleToyDelegate>)delegate;
 
 + (BOOL)parseResponseBool:(nullable NSData *)response;
 + (uint8_t)parseResponseValue8:(nullable NSData *)response;

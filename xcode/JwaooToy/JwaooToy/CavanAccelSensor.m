@@ -10,24 +10,24 @@
 
 @implementation CavanAccelSensor
 
-@synthesize x;
-@synthesize y;
-@synthesize z;
+@synthesize x = mAxisX;
+@synthesize y = mAxisY;
+@synthesize z = mAxisZ;
 
 - (CavanAccelSensor *)initWithBytes:(const void *)bytes {
     if (self = [super init]) {
-        [self parseBytes:bytes];
+        [self putBytes:bytes];
     }
 
     return self;
 }
 
 - (NSString *)description {
-    return [NSString stringWithFormat:@"[%f, %f, %f]", x, y, z];
+    return [NSString stringWithFormat:@"[%f, %f, %f]", mAxisX, mAxisY, mAxisZ];
 }
 
-- (void)parseBytes:(const void *)bytes {
-    x = y = z = 0;
+- (void)putBytes:(const void *)bytes {
+    mAxisX = mAxisY = mAxisZ = 0;
 }
 
 @end
