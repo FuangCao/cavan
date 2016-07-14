@@ -8,11 +8,6 @@
 
 #import <Foundation/Foundation.h>
 
-@protocol CavanProgressDelegate <NSObject>
-@required
-- (void)didProgressUpdated:(nonnull NSNumber *)progress;
-@end
-
 @interface CavanProgressManager : NSObject {
     double mValue;
     double mValueMin;
@@ -24,16 +19,18 @@
     int mProgressMax;
     int mProgressRange;
 
-    id<CavanProgressDelegate> mDelegate;
+    SEL mProgressSelector;
+    NSObject *mProgressTarget;
 }
 
-@property (nonnull) id<CavanProgressDelegate> delegate;
-
-- (nonnull CavanProgressManager *)initWithDelegate:(nonnull id<CavanProgressDelegate>)delegate;
+- (nonnull CavanProgressManager *)initWithSelector:(nonnull SEL)selector
+                                withTarget:(nullable NSObject *)target;
 - (nonnull CavanProgressManager *)initWithProgressMin:(int)min
                                       withMax:(int)max;
 - (nonnull CavanProgressManager *)initWithProgressRange:(int)range;
-
+- (void)setProgressSelector:(nonnull SEL)selector
+                 withTarget:(nullable NSObject *)target;
+- (void)onProgressUpdated:(int)progress;
 - (void)setProgressMax:(int)max;
 - (void)setProgressMin:(int)min
                withMax:(int)max;

@@ -100,18 +100,18 @@
     _mLabelDepth.intValue = mDepth;
 }
 
-- (void)didProgressUpdated:(NSNumber *)progress {
+- (void)onProgressUpdated:(NSNumber *)progress {
     if ([NSThread isMainThread]) {
         _mProgressBar.doubleValue = progress.intValue;
     } else {
-        [self performSelectorOnMainThread:@selector(didProgressUpdated:) withObject:progress waitUntilDone:NO];
+        [self performSelectorOnMainThread:@selector(onProgressUpdated:) withObject:progress waitUntilDone:NO];
     }
 }
 
 - (void)upgradeThread:(id)data {
     [self updateUI:[NSNumber numberWithBool:FALSE]];
 
-    CavanProgressManager *progress = [[CavanProgressManager alloc] initWithDelegate:self];
+    CavanProgressManager *progress = [[CavanProgressManager alloc] initWithSelector:@selector(onProgressUpdated:) withTarget:self];
     if ([mBleToy upgradeFirmware:"/host/tmp/jwaoo-toy.hex" withProgress:progress]) {
         NSLog(@"upgrade successfull");
     } else {

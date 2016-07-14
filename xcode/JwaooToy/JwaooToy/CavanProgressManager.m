@@ -8,13 +8,15 @@
 
 #import "CavanProgressManager.h"
 
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+
 @implementation CavanProgressManager
 
-@synthesize delegate = mDelegate;
-
-- (CavanProgressManager *)initWithDelegate:(id<CavanProgressDelegate>)delegate {
+- (CavanProgressManager *)initWithSelector:(SEL)selector
+                                withTarget:(NSObject *)target {
     if (self = [super init]) {
-        mDelegate = delegate;
+        mProgressSelector = selector;
+        mProgressTarget = target;
     }
 
     return self;
@@ -39,6 +41,15 @@
     return self;
 }
 
+- (void)setProgressSelector:(SEL)selector
+                 withTarget:(NSObject *)target {
+    mProgressSelector = selector;
+    mProgressTarget = target;
+}
+
+- (void)onProgressUpdated:(int)progress {
+    [mProgressTarget performSelector:mProgressSelector withObject:[NSNumber numberWithInt:mProgress]];
+}
 
 - (void)setProgressMax:(int)max {
     mProgressMax = max;
@@ -51,7 +62,7 @@
     [self setProgressMax:max];
 
     mProgress = min;
-    [mDelegate didProgressUpdated:[NSNumber numberWithInt:mProgress]];
+    [self onProgressUpdated:min];
 }
 
 - (void)setProgressRange:(int)range {
@@ -67,7 +78,7 @@
 
     if (mProgress != progress) {
         mProgress = progress;
-        [mDelegate didProgressUpdated:[NSNumber numberWithInt:progress]];
+        [self onProgressUpdated:progress];
     }
 }
 

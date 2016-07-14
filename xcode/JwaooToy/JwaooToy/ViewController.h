@@ -9,7 +9,7 @@
 #import <Cocoa/Cocoa.h>
 #import "JwaooBleToy.h"
 
-@interface ViewController : NSViewController <CavanProgressDelegate, JwaooBleToyDelegate> {
+@interface ViewController : NSViewController <JwaooBleToyDelegate> {
     BOOL mSensorEnable;
     JwaooBleToy *mBleToy;
     int mFreq;
