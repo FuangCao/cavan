@@ -31,14 +31,15 @@ enum
     JWAOO_TOY_RSP_U32,
     JWAOO_TOY_RSP_DATA,
     JWAOO_TOY_RSP_TEXT,
-    JWAOO_TOY_CMD_NOP = 50,
+    JWAOO_TOY_CMD_NOOP = 20,
     JWAOO_TOY_CMD_IDENTIFY,
     JWAOO_TOY_CMD_VERSION,
     JWAOO_TOY_CMD_BUILD_DATE,
     JWAOO_TOY_CMD_REBOOT,
     JWAOO_TOY_CMD_SHUTDOWN,
     JWAOO_TOY_CMD_BATT_INFO,
-    JWAOO_TOY_CMD_FLASH_ID,
+    JWAOO_TOY_CMD_FIND,
+    JWAOO_TOY_CMD_FLASH_ID = 50,
     JWAOO_TOY_CMD_FLASH_SIZE,
     JWAOO_TOY_CMD_FLASH_PAGE_SIZE,
     JWAOO_TOY_CMD_FLASH_READ,
@@ -47,9 +48,9 @@ enum
     JWAOO_TOY_CMD_FLASH_WRITE_ENABLE,
     JWAOO_TOY_CMD_FLASH_WRITE_START,
     JWAOO_TOY_CMD_FLASH_WRITE_FINISH,
-    JWAOO_TOY_CMD_SENSOR_ENABLE,
+    JWAOO_TOY_CMD_SENSOR_ENABLE = 70,
     JWAOO_TOY_CMD_SENSOR_SET_DELAY,
-    JWAOO_TOY_CMD_MOTO_ENABLE,
+    JWAOO_TOY_CMD_MOTO_ENABLE = 80,
     JWAOO_TOY_CMD_MOTO_SET_LEVEL,
 };
 
@@ -78,7 +79,7 @@ struct jwaoo_toy_flash_header {
 
 @protocol JwaooBleToyDelegate <NSObject>
 @required
-- (BOOL)didInitialized:(nonnull JwaooBleToy *)bleToy;
+- (BOOL)doInitialize:(nonnull JwaooBleToy *)bleToy;
 
 @optional
 - (void)didEventReceived:(nonnull CavanBleChar *)bleChar;

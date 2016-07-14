@@ -116,10 +116,6 @@
     }
 }
 
-- (BOOL)onInitialized {
-    return [mDelegate didInitialized:self];
-}
-
 - (void)onConnectStateChanged:(BOOL)connected {
     if ([mDelegate respondsToSelector:@selector(didConnectStateChanged:)]) {
         [mDelegate didConnectStateChanged:connected];
@@ -128,15 +124,15 @@
     }
 }
 
-- (BOOL)doInitialize:(CBService *)service {
-    if (![service.UUID isEqualTo:JWAOO_TOY_UUID_SERVICE]) {
-        NSLog(@"Invalid service uuid: %@", service.UUID);
+- (BOOL)doInitialize {
+    if (![mService.UUID isEqualTo:JWAOO_TOY_UUID_SERVICE]) {
+        NSLog(@"Invalid service uuid: %@", mService.UUID);
         return false;
     }
 
     mCharCommand = mCharEvent = mCharFlash = mCharSensor = nil;
 
-    for (CBCharacteristic *characteristic in service.characteristics) {
+    for (CBCharacteristic *characteristic in mService.characteristics) {
         if ([characteristic.UUID isEqual:JWAOO_TOY_UUID_COMMAND]) {
             mCharCommand = [self createBleChar:characteristic withDelegate:nil];
             NSLog(@"mCharCommand = %@", characteristic.UUID);
@@ -188,7 +184,7 @@
         return false;
     }
 
-    return true;
+    return [mDelegate doInitialize:self];
 }
 
 // ================================================================================

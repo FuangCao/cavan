@@ -11,6 +11,7 @@
 @implementation CavanBleGatt
 
 @synthesize rssi = mRssi;
+@synthesize service = mService;
 @synthesize peripheral = mPeripheral;
 
 // ================================================================================
@@ -59,19 +60,15 @@
 - (void)disconnect {
     if (mPeripheral != nil) {
         [self cancelPeripheralConnection:mPeripheral];
+        mPeripheral = nil;
     }
-}
-
-- (BOOL)onInitialized {
-    NSLog(@"onInitialized");
-    return true;
 }
 
 - (void)onConnectStateChanged:(BOOL)connected {
     NSLog(@"onConnectStateChanged: connected = %d", connected);
 }
 
-- (BOOL)doInitialize:(nonnull CBService *)service {
+- (BOOL)doInitialize {
     NSLog(@"doInitialize");
     return true;
 }
@@ -91,7 +88,9 @@
     while (mConnPending) {
         mConnPending = false;
 
-        if ([self doInitialize:service] && [self onInitialized]) {
+        mService = service;
+
+        if ([self doInitialize]) {
             [self setConnectState:true];
         } else {
             [self disconnect];
@@ -180,9 +179,12 @@
 
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error {
     NSLog(@"didDisconnectPeripheral: %@", peripheral);
-    // [self connectPeripheral:peripheral options:nil];
-    [self setConnectState:false];
-    [self startScan];
+    if (mPeripheral != nil) {
+        [self connectPeripheral:peripheral options:nil];
+    } else {
+        [self setConnectState:false];
+        [self startScan];
+    }
 }
 
 // ================================================================================

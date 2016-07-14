@@ -128,7 +128,7 @@
             if (count < CAVAN_PEAK_VALLEY_FREQ_COUNT) {
                 time = [NSDate timeIntervalSinceReferenceDate];
             } else {
-                time = ((CavanPeakValleyValue *)mFreqList.lastObject).time;
+                time = ((CavanPeakValleyValue *) mFreqList.lastObject).time;
             }
 
             mFreq = (count - 1) * 30 / (time - [mFreqList.firstObject time]);

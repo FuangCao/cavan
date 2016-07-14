@@ -17,7 +17,6 @@
 
     // Do any additional setup after loading the view.
     mBleToy = [[JwaooBleToy alloc] initWithSensor:[Mpu6050Sensor new] withDelegate:self];
-
     [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(dataSpeedTimer) userInfo:nil repeats:YES];
 }
 
@@ -27,8 +26,8 @@
     // Update the view, if already loaded.
 }
 
-- (BOOL)didInitialized:(JwaooBleToy *)bleToy {
-    NSLog(@"didInitialized");
+- (BOOL)doInitialize:(JwaooBleToy *)bleToy {
+    NSLog(@"doInitialize");
     return true;
 }
 
