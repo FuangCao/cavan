@@ -57,38 +57,6 @@
     [self performSelectorOnMainThread:@selector(updateDataSpeed:) withObject:[NSNumber numberWithInt:count] waitUntilDone:NO];
 }
 
-- (IBAction)sendCommandButton:(NSButton *)sender {
-    NSLog(@"sendCommandButton");
-
-    NSString *text = [mBleToy doIdentify];
-    if (text != nil) {
-        NSLog(@"doIdentify = %@", text);
-    }
-
-    text = [mBleToy readBuildDate];
-    if  (text != nil) {
-        NSLog(@"BuildDate = %@", text);
-    }
-
-    uint32_t version = [mBleToy readVersion];
-    NSLog(@"version = 0x%08x", version);
-}
-
-- (IBAction)sensorEnableButton:(NSButton *)sender {
-    NSLog(@"sensorEnableButton");
-
-    if (mSensorEnable) {
-        if ([mBleToy setSensorEnable:FALSE]) {
-            mSensorEnable = FALSE;
-        }
-    } else if ([mBleToy setSensorEnable:TRUE]) {
-        [mBleToy setSensorDelay:30];
-        mSensorEnable = TRUE;
-    }
-
-    NSLog(@"mSensorEnable = %d", mSensorEnable);
-}
-
 - (void)enableButton:(NSButton *)button {
     if ([NSThread isMainThread]) {
         button.enabled = true;
@@ -158,6 +126,38 @@
     _mProgressBar.minValue = 0;
     _mProgressBar.maxValue = 100;
     [NSThread detachNewThreadSelector:@selector(upgradeThread:) toTarget:self withObject:sender];
+}
+
+- (IBAction)sendCommandButton:(NSButton *)sender {
+    NSLog(@"sendCommandButton");
+
+    NSString *text = [mBleToy doIdentify];
+    if (text != nil) {
+        NSLog(@"doIdentify = %@", text);
+    }
+
+    text = [mBleToy readBuildDate];
+    if  (text != nil) {
+        NSLog(@"BuildDate = %@", text);
+    }
+
+    uint32_t version = [mBleToy readVersion];
+    NSLog(@"version = 0x%08x", version);
+}
+
+- (IBAction)sensorEnableButton:(NSButton *)sender {
+    NSLog(@"sensorEnableButton");
+
+    if (mSensorEnable) {
+        if ([mBleToy setSensorEnable:FALSE]) {
+            mSensorEnable = FALSE;
+        }
+    } else if ([mBleToy setSensorEnable:TRUE]) {
+        [mBleToy setSensorDelay:30];
+        mSensorEnable = TRUE;
+    }
+
+    NSLog(@"mSensorEnable = %d", mSensorEnable);
 }
 
 - (IBAction)rebootButton:(NSButton *)sender {

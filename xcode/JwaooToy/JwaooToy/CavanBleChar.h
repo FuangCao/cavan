@@ -14,11 +14,6 @@
 
 @class CavanBleChar;
 
-@protocol CavanBleCharDelegate <NSObject>
-@required
-- (void)didNotifyReceived:(nonnull CavanBleChar *)bleChar;
-@end
-
 @interface CavanBleChar : NSObject {
     CBCharacteristic *mChar;
     CBPeripheral *mPeripheral;
@@ -28,16 +23,17 @@
     NSError *mReadError;
     NSCondition *mReadCond;
 
-    id<CavanBleCharDelegate> mDelegate;
+    SEL mNotifySelector;
+    NSObject *mNotifyTarget;
 }
 
-@property (nullable) id<CavanBleCharDelegate> delegate;
 @property (nonnull, readonly, retain) NSData *data;
 @property (nonnull, readonly) const void *bytes;
 
 - (nullable CavanBleChar *)initWithCharacteristic:(nonnull CBCharacteristic *)characteristic
-                                       peripheral:(nonnull CBPeripheral *)peripheral
-                                         delegate:(nullable id<CavanBleCharDelegate>)delegate;
+                                       peripheral:(nonnull CBPeripheral *)peripheral;
+- (void)enableNotifyWithSelector:(nonnull SEL)selector
+               withTarget:(nonnull NSObject *)target;
 - (void)setWriteStatus:(nullable NSError *)error;
 - (void)setReadStatus:(nullable NSError *)error;
 - (nullable NSData *)readData;

@@ -48,9 +48,8 @@
     [mDictChars setObject:bleChar forKey:uuid];
 }
 
-- (CavanBleChar *)createBleChar:(CBCharacteristic *)characteristic
-                   withDelegate:(id<CavanBleCharDelegate>)delegate {
-    CavanBleChar *bleChar = [[CavanBleChar alloc] initWithCharacteristic:characteristic peripheral:mPeripheral delegate:delegate];
+- (CavanBleChar *)createBleChar:(CBCharacteristic *)characteristic {
+    CavanBleChar *bleChar = [[CavanBleChar alloc] initWithCharacteristic:characteristic peripheral:mPeripheral];
 
     [self addBleChar:bleChar withUUID:characteristic.UUID];
 

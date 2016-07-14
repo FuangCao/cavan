@@ -10,65 +10,6 @@
 #import "CavanHexFile.h"
 #import "Mpu6050Sensor.h"
 
-// ================================================================================
-
-@interface JwaooBleToyCharDelegate : NSObject <CavanBleCharDelegate> {
-    JwaooBleToy *mBleToy;
-}
-
-- (JwaooBleToyCharDelegate *)initWithBleToy:(JwaooBleToy *)bleToy;
-
-@end
-
-@implementation JwaooBleToyCharDelegate
-
-- (void)didNotifyReceived:(nonnull CavanBleChar *)bleChar
-{
-    NSLog(@"didNotifyReceived");
-}
-
-- (JwaooBleToyCharDelegate *)initWithBleToy:(JwaooBleToy *)bleToy {
-    if (self = [super init]) {
-        mBleToy = bleToy;
-    }
-
-    return self;
-}
-
-@end
-
-// ================================================================================
-
-@interface JwaooBleToyEventCharDelegate : JwaooBleToyCharDelegate
-
-@end
-
-@implementation JwaooBleToyEventCharDelegate
-
-- (void)didNotifyReceived:(nonnull CavanBleChar *)bleChar
-{
-    [mBleToy onEventReceived:bleChar];
-}
-
-@end
-
-// ================================================================================
-
-@interface JwaooBleToySensorCharDelegate : JwaooBleToyCharDelegate
-
-@end
-
-@implementation JwaooBleToySensorCharDelegate
-
-- (void)didNotifyReceived:(nonnull CavanBleChar *)bleChar
-{
-    [mBleToy onSensorDataReceived:bleChar];
-}
-
-@end
-
-// ================================================================================
-
 @implementation JwaooBleToy
 
 - (int) freq {
@@ -134,16 +75,18 @@
 
     for (CBCharacteristic *characteristic in mService.characteristics) {
         if ([characteristic.UUID isEqual:JWAOO_TOY_UUID_COMMAND]) {
-            mCharCommand = [self createBleChar:characteristic withDelegate:nil];
+            mCharCommand = [self createBleChar:characteristic];
             NSLog(@"mCharCommand = %@", characteristic.UUID);
         } else if ([characteristic.UUID isEqual:JWAOO_TOY_UUID_EVENT]) {
-            mCharEvent = [self createBleChar:characteristic withDelegate:[[JwaooBleToyEventCharDelegate alloc] initWithBleToy:self]];
+            mCharEvent = [self createBleChar:characteristic];
+            [mCharEvent enableNotifyWithSelector:@selector(onEventReceived:) withTarget:self];
             NSLog(@"mCharEvent = %@", characteristic.UUID);
         } else if ([characteristic.UUID isEqual:JWAOO_TOY_UUID_FLASH]) {
-            mCharFlash = [self createBleChar:characteristic withDelegate:nil];
+            mCharFlash = [self createBleChar:characteristic];
             NSLog(@"mCharFlash = %@", characteristic.UUID);
         } else if ([characteristic.UUID isEqual:JWAOO_TOY_UUID_SENSOR]) {
-            mCharSensor = [self createBleChar:characteristic withDelegate:[[JwaooBleToySensorCharDelegate alloc] initWithBleToy:self]];
+            mCharSensor = [self createBleChar:characteristic];
+            [mCharSensor enableNotifyWithSelector:@selector(onSensorDataReceived:) withTarget:self];
             NSLog(@"mCharSensor = %@", characteristic.UUID);
         } else {
             NSLog(@"Unknown characteristic = %@", characteristic.UUID);

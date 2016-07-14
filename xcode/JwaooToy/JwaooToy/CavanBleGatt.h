@@ -37,8 +37,7 @@
 - (void)startScan;
 - (void)addBleChar:(nonnull CavanBleChar *)bleChar
           withUUID:(nonnull CBUUID *)uuid;
-- (nonnull CavanBleChar *)createBleChar:(nonnull CBCharacteristic *)characteristic
-                   withDelegate:(nullable id<CavanBleCharDelegate>)delegate;
+- (nonnull CavanBleChar *)createBleChar:(nonnull CBCharacteristic *)characteristic;
 - (void)disconnect;
 - (BOOL)doInitialize;
 - (void)onConnectStateChanged:(BOOL)connected;

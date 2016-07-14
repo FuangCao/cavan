@@ -8,9 +8,9 @@
 
 #import "CavanBleChar.h"
 
-@implementation CavanBleChar
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
 
-@synthesize delegate = mDelegate;
+@implementation CavanBleChar
 
 - (NSData *)data {
     return mChar.value;
@@ -21,23 +21,27 @@
 }
 
 - (CavanBleChar *)initWithCharacteristic:(CBCharacteristic *)characteristic
-                                  peripheral:(CBPeripheral *)peripheral
-                                delegate:(id<CavanBleCharDelegate>)delegate {
+                                  peripheral:(CBPeripheral *)peripheral {
     if (self = [super init]) {
         mReadCond = [NSCondition new];
         mWriteCond = [NSCondition new];
         mPeripheral = peripheral;
         mChar = characteristic;
-        mDelegate = delegate;
 
         NSLog(@"uuid = %@, properties = 0x%08lx", mChar.UUID, (long)mChar.properties);
-
-        if (mChar.properties & CBCharacteristicPropertyNotify) {
-            [mPeripheral setNotifyValue:YES forCharacteristic:mChar];
-        }
     }
 
     return self;
+}
+
+- (void)enableNotifyWithSelector:(SEL)selector
+               withTarget:(NSObject *)target {
+    mNotifySelector = selector;
+    mNotifyTarget = target;
+
+    if (mChar.properties & CBCharacteristicPropertyNotify) {
+        [mPeripheral setNotifyValue:YES forCharacteristic:mChar];
+    }
 }
 
 - (CBCharacteristic *)getCharacteristic {
@@ -57,7 +61,7 @@
     mReadError = error;
 
     if (error == nil && mChar.isNotifying) {
-        [mDelegate didNotifyReceived:self];
+        [mNotifyTarget performSelector:mNotifySelector withObject:self];
     }
 
     [mReadCond signal];
