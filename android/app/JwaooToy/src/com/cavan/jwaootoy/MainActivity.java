@@ -236,10 +236,10 @@ public class MainActivity extends Activity implements OnClickListener {
 				mBleToy = new JwaooBleToy(getApplicationContext(), mDevice) {
 
 					@Override
-					protected boolean onInitialized() {
+					protected boolean onInitialize() {
 						mBleToy.setSensorDelay(20);
 						mBleToy.setSensorEnable(true);
-						return super.onInitialized();
+						return super.onInitialize();
 					}
 
 					@Override

@@ -54,8 +54,8 @@ public class CavanBleGatt extends BluetoothGattCallback {
 		return true;
 	}
 
-	protected boolean onInitialized() {
-		CavanAndroid.logE("onInitialized");
+	protected boolean onInitialize() {
+		CavanAndroid.logE("onInitialize");
 		return true;
 	}
 
@@ -399,7 +399,7 @@ public class CavanBleGatt extends BluetoothGattCallback {
 				}
 
 				mService = mGatt.getService(mUuid);
-				if (mService != null && doInitialize() && onInitialized()) {
+				if (mService != null && doInitialize() && onInitialize()) {
 					setConnectStatus(true);
 				} else if (isGattConnected()) {
 					autoConnect();

@@ -106,10 +106,10 @@ public class MainActivity extends Activity {
 						mBleToy = new JwaooBleToy(MainActivity.this, mDevice) {
 
 							@Override
-							protected boolean onInitialized() {
+							protected boolean onInitialize() {
 								setSensorDelay(SENSOR_DELAY);
 								setSensorEnable(true);
-								return super.onInitialized();
+								return super.onInitialize();
 							}
 
 							@Override
