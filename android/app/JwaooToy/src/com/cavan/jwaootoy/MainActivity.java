@@ -16,7 +16,6 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanProgressListener;
 import com.cavan.resource.CavanBleScanner;
 import com.jwaoo.android.JwaooBleToy;
-import com.jwaoo.android.JwaooToySensor;
 
 @SuppressLint("HandlerLeak")
 public class MainActivity extends Activity implements OnClickListener {
@@ -38,22 +37,6 @@ public class MainActivity extends Activity implements OnClickListener {
 	private JwaooBleToy mBleToy;
 	private boolean mOtaBusy;
 	private boolean mSensorEnable;
-	private JwaooToySensor mSensor = new JwaooToySensor(60, 1) {
-
-		/*
-		@Override
-		protected void onDepthChanged(int depth) {
-			mDepth = depth;
-			mHandler.sendEmptyMessage(EVENT_DEPTH_CHANGED);
-		}
-
-		@Override
-		protected void onFreqChanged(int freq) {
-			mFreq = freq;
-			mHandler.sendEmptyMessage(EVENT_FREQ_CHANGED);
-		}
-		*/
-	};
 
 	private Button mButtonSend;
 	private Button mButtonUpgrade;
@@ -237,8 +220,8 @@ public class MainActivity extends Activity implements OnClickListener {
 
 					@Override
 					protected boolean onInitialize() {
-						mBleToy.setSensorDelay(20);
-						mBleToy.setSensorEnable(true);
+						setSensorDelay(20);
+						setSensorEnable(true);
 						return super.onInitialize();
 					}
 
@@ -254,9 +237,9 @@ public class MainActivity extends Activity implements OnClickListener {
 
 					@Override
 					protected void onSensorDataReceived(byte[] data) {
-						mSensor.putData(data);
-						mDepth = mSensor.getDepth();
-						mFreq = mSensor.getFreq();
+						super.onSensorDataReceived(data);
+						mDepth = getDepth();
+						mFreq = getFreq();
 						mHandler.sendEmptyMessage(EVENT_FREQ_CHANGED);
 					}
 				};

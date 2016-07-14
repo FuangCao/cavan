@@ -6,7 +6,7 @@ public class CavanByteCache {
 	private int mLength;
 
 	public CavanByteCache(byte[] bytes, int offset, int length) {
-		init(bytes, offset, length);
+		setBytes(bytes, offset, length);
 	}
 
 	public CavanByteCache(byte[] bytes, int length) {
@@ -21,22 +21,26 @@ public class CavanByteCache {
 		this(new byte[length], length);
 	}
 
-	public void init(byte[] bytes, int offset, int length) {
+	public CavanByteCache() {
+		this(null, 0);
+	}
+
+	public void setBytes(byte[] bytes, int offset, int length) {
 		mBytes = bytes;
 		mOffset = offset;
 		mLength = mOffset + length;
 	}
 
-	public void init(byte[] bytes, int length) {
-		init(bytes, 0, length);
+	public void setBytes(byte[] bytes, int length) {
+		setBytes(bytes, 0, length);
 	}
 
-	public void init(byte[] bytes) {
-		init(bytes, bytes.length);
+	public void setBytes(byte[] bytes) {
+		setBytes(bytes, bytes.length);
 	}
 
-	public void init(int length) {
-		init(new byte[length], length);
+	public void setData(int length) {
+		setBytes(new byte[length], length);
 	}
 
 	public byte[] getBytes() {

@@ -1,6 +1,6 @@
 package com.cavan.java;
 
-public class AccelFreqParser {
+public class CavanAccelFreqParser {
 
 	private int mFreq;
 
@@ -9,11 +9,9 @@ public class AccelFreqParser {
 	private CavanPeakValleyFinder mFinderZ;
 	private CavanPeakValleyFinder mFinderBest;
 
-	protected void onFreqChanged(int freq) {
-		// CavanAndroid.logE("freq = " + freq);
-	}
+	protected void onFreqChanged(int freq) {}
 
-	public AccelFreqParser(long timeFuzz, double valueFuzz) {
+	public CavanAccelFreqParser(long timeFuzz, double valueFuzz) {
 		mFinderX = new CavanPeakValleyFinder(timeFuzz, valueFuzz);
 		mFinderY = new CavanPeakValleyFinder(timeFuzz, valueFuzz);
 		mFinderZ = new CavanPeakValleyFinder(timeFuzz, valueFuzz);
@@ -23,6 +21,18 @@ public class AccelFreqParser {
 
 	public int getFreq() {
 		return mFinderBest.getFreq();
+	}
+
+	public void setValueFuzz(double fuzz) {
+		mFinderX.setValueFuzz(fuzz);
+		mFinderY.setValueFuzz(fuzz);
+		mFinderZ.setValueFuzz(fuzz);
+	}
+
+	public void setTimeFuzz(long fuzz) {
+		mFinderX.setTimeFuzz(fuzz);
+		mFinderY.setTimeFuzz(fuzz);
+		mFinderZ.setTimeFuzz(fuzz);
 	}
 
 	public CavanPeakValleyFinder getFinder() {
@@ -60,7 +70,7 @@ public class AccelFreqParser {
 		updateFreq(mFinderBest.getFreq());
 	}
 
-	public void putValue(AccelDataCache cache) {
-		putValue(cache.getCoorX(), cache.getCoorY(), cache.getCoorZ());
+	public void putData(CavanAccelSensor sensor) {
+		putValue(sensor.getAxisX(), sensor.getAxisY(), sensor.getAxisZ());
 	}
 }

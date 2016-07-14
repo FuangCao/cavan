@@ -12,10 +12,14 @@ import com.cavan.java.CavanHexFile;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanProgressListener;
 
-public abstract class JwaooBleToy extends CavanBleGatt {
+public class JwaooBleToy extends CavanBleGatt {
 
-	public static final  long DATA_TIMEOUT = 5000;
+	public static final long DATA_TIMEOUT = 5000;
+	public static final long JWAOO_TOY_TIME_FUZZ = 100;
+	public static final double JWAOO_TOY_VALUE_FUZZ = 2.0;
+
 	public static final String IDENTIFY = "JwaooToy";
+
 	public static final UUID UUID_SERVICE = UUID.fromString("00001888-0000-1000-8000-00805f9b34fb");
 	public static final UUID UUID_COMMAND = UUID.fromString("00001889-0000-1000-8000-00805f9b34fb");
 	public static final UUID UUID_EVENT = UUID.fromString("0000188a-0000-1000-8000-00805f9b34fb");
@@ -53,12 +57,32 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_EVT_BATT_INFO = 0;
 	public static final byte JWAOO_TOY_EVT_FLASH_ERROR = 1;
 
-	private CavanBleChar mCharCommand;
-	private CavanBleChar mCharEvent;
-	private CavanBleChar mCharFlash;
-	private CavanBleChar mCharSensor;
+	protected CavanBleChar mCharCommand;
+	protected CavanBleChar mCharEvent;
+	protected CavanBleChar mCharFlash;
+	protected CavanBleChar mCharSensor;
 
-	protected abstract void onSensorDataReceived(byte[] data);
+	protected JwaooToySensor mSensor;
+	protected JwaooToyParser mParser = new JwaooToyParser(JWAOO_TOY_TIME_FUZZ, JWAOO_TOY_VALUE_FUZZ) {
+
+		@Override
+		protected void onDepthChanged(int depth) {
+			JwaooBleToy.this.onDepthChanged(depth);
+		}
+
+		@Override
+		protected void onFreqChanged(int freq) {
+			JwaooBleToy.this.onFreqChanged(freq);
+		}
+	};
+
+	private CavanBleDataListener mEventListener = new CavanBleDataListener() {
+
+		@Override
+		public void onDataReceived(byte[] data) {
+			onEventReceived();
+		}
+	};
 
 	private CavanBleDataListener mSensorListener = new CavanBleDataListener() {
 
@@ -68,12 +92,52 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 		}
 	};
 
-	public JwaooBleToy(Context context, BluetoothDevice device, UUID uuid) {
+	protected void onDepthChanged(int depth) {}
+	protected void onFreqChanged(int freq) {}
+	protected void onEventReceived() {}
+
+	protected void onSensorDataReceived(byte[] data) {
+		mSensor.putBytes(data);
+		mParser.putData(mSensor);
+	}
+
+	public JwaooBleToy(Context context, BluetoothDevice device, JwaooToySensor sensor, UUID uuid) {
 		super(context, device, uuid);
+		mSensor = sensor;
+	}
+
+	public JwaooBleToy(Context context, BluetoothDevice device, JwaooToySensor sensor) {
+		this(context, device, sensor, UUID_SERVICE);
 	}
 
 	public JwaooBleToy(Context context, BluetoothDevice device) {
-		this(context, device, UUID_SERVICE);
+		this(context, device, new JwaooToySensorMpu6050(), UUID_SERVICE);
+	}
+
+	public JwaooToySensor getSensor() {
+		return mSensor;
+	}
+
+	public void setSensor(JwaooToySensor sensor) {
+		if (sensor != null) {
+			mSensor = sensor;
+		}
+	}
+
+	public void setValueFuzz(double fuzz) {
+		mParser.setValueFuzz(fuzz);
+	}
+
+	public void setTimeFuzz(long fuzz) {
+		mParser.setTimeFuzz(fuzz);
+	}
+
+	public int getDepth() {
+		return mParser.getDepth();
+	}
+
+	public int getFreq() {
+		return mParser.getFreq();
 	}
 
 	synchronized public byte[] sendCommand(byte[] command) {
@@ -384,7 +448,9 @@ public abstract class JwaooBleToy extends CavanBleGatt {
 			return false;
 		}
 
+		mCharEvent.setDataListener(mEventListener);
 		mCharSensor.setDataListener(mSensorListener);
+
 		setAutoConnectAllow(true);
 
 		String identify = doIdentify();

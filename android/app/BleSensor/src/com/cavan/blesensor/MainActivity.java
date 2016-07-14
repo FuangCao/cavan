@@ -9,7 +9,6 @@ import android.os.Message;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanWaveView;
-import com.cavan.java.Mpu6050Accel;
 import com.cavan.resource.CavanBleScanner;
 import com.jwaoo.android.JwaooBleToy;
 
@@ -98,16 +97,11 @@ public class MainActivity extends Activity {
 
 							@Override
 							protected void onSensorDataReceived(byte[] arg0) {
-								Mpu6050Accel accel = new Mpu6050Accel(arg0);
-
-								mWaveViewX.addValue(accel.getCoorX());
-								mWaveViewY.addValue(accel.getCoorY());
-								mWaveViewZ.addValue(accel.getCoorZ());
-
-								// CavanAndroid.logE(String.format("[%f, %f, %f]", accel.getCoorX(), accel.getCoorY(), accel.getCoorZ()));
-
-								int depth = accel.readValue8();
-								mWaveViewDepth.addValue(depth);
+								mSensor.putBytes(arg0);
+								mWaveViewX.addValue(mSensor.getAxisX());
+								mWaveViewY.addValue(mSensor.getAxisY());
+								mWaveViewZ.addValue(mSensor.getAxisZ());
+								mWaveViewDepth.addValue(mSensor.getDepth());
 							}
 						};
 					} catch (Exception e) {

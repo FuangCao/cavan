@@ -11,7 +11,6 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanWaveView;
 import com.cavan.java.CavanPeakValleyFinder;
 import com.cavan.java.CavanPeakValleyValue;
-import com.cavan.java.Mpu6050Accel;
 import com.cavan.resource.CavanBleScanner;
 import com.jwaoo.android.JwaooBleToy;
 
@@ -121,9 +120,9 @@ public class MainActivity extends Activity {
 
 							@Override
 							protected void onSensorDataReceived(byte[] arg0) {
-								Mpu6050Accel accel = new Mpu6050Accel(arg0);
+								mSensor.putBytes(arg0);
 
-								double value = accel.getCoorZ();
+								double value = mSensor.getAxisZ();
 								/* double x = accel.getCoorX();
 								double y = accel.getCoorY();
 								double z = accel.getCoorZ();
