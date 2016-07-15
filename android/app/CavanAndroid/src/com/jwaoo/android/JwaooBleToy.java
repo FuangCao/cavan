@@ -49,6 +49,8 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_FLASH_WRITE_ENABLE = 56;
 	public static final byte JWAOO_TOY_CMD_FLASH_WRITE_START = 57;
 	public static final byte JWAOO_TOY_CMD_FLASH_WRITE_FINISH = 58;
+	public static final byte JWAOO_TOY_CMD_FLASH_READ_BD_ADDR = 59;
+	public static final byte JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR = 60;
 	public static final byte JWAOO_TOY_CMD_SENSOR_ENABLE = 70;
 	public static final byte JWAOO_TOY_CMD_SENSOR_SET_DELAY = 71;
 	public static final byte JWAOO_TOY_CMD_MOTO_ENABLE = 80;
@@ -223,6 +225,15 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		return new String(response, 1, response.length - 1);
+	}
+
+	public byte[] sendCommandReadData(byte[] command) {
+		byte[] response = sendCommand(command);
+		if (response == null || response.length < 1 || response[0] != JWAOO_TOY_RSP_DATA) {
+			return null;
+		}
+
+		return CavanJava.ArrayCopy(response, 1, response.length - 1);
 	}
 
 	public String sendCommandReadText(byte type, byte[] data) {
@@ -432,6 +443,24 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public boolean doReboot() {
 		return sendCommandReadBool(JWAOO_TOY_CMD_REBOOT, null);
+	}
+
+	public byte[] readBdAddress() {
+		return sendCommandReadData(new byte[] { JWAOO_TOY_CMD_FLASH_READ_BD_ADDR });
+	}
+
+	public boolean writeBdAddress(byte[] bytes) {
+		if (!setFlashWriteEnable(true)) {
+			CavanAndroid.logE("Failed to setFlashWriteEnable true");
+			return false;
+		}
+
+		if (!sendCommandReadBool(JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR, bytes)) {
+			CavanAndroid.logE("Failed to sendCommandReadBool JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR");
+			return false;
+		}
+
+		return setFlashWriteEnable(false);
 	}
 
 	@Override

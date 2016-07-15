@@ -10,6 +10,7 @@ import android.os.Message;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 
 import com.cavan.android.CavanAndroid;
@@ -43,7 +44,10 @@ public class MainActivity extends Activity implements OnClickListener {
 	private Button mButtonReboot;
 	private Button mButtonSensor;
 	private Button mButtonDisconnect;
+	private Button mButtonReadBdAddr;
+	private Button mButtonWriteBdAddr;
 	private ProgressBar mProgressBar;
+	private EditText mEditTextBdAddr;
 	private Handler mHandler = new Handler() {
 
 		@Override
@@ -109,7 +113,14 @@ public class MainActivity extends Activity implements OnClickListener {
 		mButtonDisconnect = (Button) findViewById(R.id.buttonDisconnect);
 		mButtonDisconnect.setOnClickListener(this);
 
+		mButtonReadBdAddr = (Button) findViewById(R.id.buttonReadBdAddr);
+		mButtonReadBdAddr.setOnClickListener(this);
+
+		mButtonWriteBdAddr = (Button) findViewById(R.id.buttonWriteBdAddr);
+		mButtonWriteBdAddr.setOnClickListener(this);
+
 		mProgressBar = (ProgressBar) findViewById(R.id.progressBar1);
+		mEditTextBdAddr = (EditText) findViewById(R.id.editTextBdAddr);
 
 		updateUI(false);
 		CavanBleScanner.show(this);
@@ -121,6 +132,8 @@ public class MainActivity extends Activity implements OnClickListener {
 		mButtonSend.setEnabled(enable);
 		mButtonSensor.setEnabled(enable);
 		mButtonDisconnect.setEnabled(enable);
+		mButtonReadBdAddr.setEnabled(enable);
+		mButtonWriteBdAddr.setEnabled(enable);
 	}
 
 	private void setUpgradeProgress(int progress) {
@@ -203,6 +216,35 @@ public class MainActivity extends Activity implements OnClickListener {
 				mBleToy.disconnect();
 			} else {
 				CavanBleScanner.show(MainActivity.this);
+			}
+			break;
+
+		case R.id.buttonReadBdAddr:
+			byte[] bdAddr = mBleToy.readBdAddress();
+			if (bdAddr != null) {
+				mEditTextBdAddr.setText(String.format("%02x:%02x:%02x:%02x:%02x:%02x",
+						bdAddr[0], bdAddr[1], bdAddr[2], bdAddr[3], bdAddr[4], bdAddr[5]));
+			} else {
+				CavanAndroid.logE("Failed to readBdAddress");
+			}
+			break;
+
+		case R.id.buttonWriteBdAddr:
+			String[] texts = mEditTextBdAddr.getText().toString().split("\\s*:\\s*");
+			if (texts.length == 6) {
+				bdAddr = new byte[6];
+
+				for (int i = 0; i < 6; i++) {
+					bdAddr[i] = (byte) (Integer.parseInt(texts[i], 16) & 0xFF);
+				}
+
+				if (mBleToy.writeBdAddress(bdAddr)) {
+					CavanAndroid.logE("writeBdAddress successfull");
+				} else {
+					CavanAndroid.logE("Failed to writeBdAddress");
+				}
+			} else {
+				CavanAndroid.logE("Invalid format");
 			}
 			break;
 		}

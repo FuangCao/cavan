@@ -4,6 +4,18 @@
     android:layout_height="match_parent"
     tools:context="${relativePackage}.${activityClass}" >
 
+    <EditText
+        android:id="@+id/editTextBdAddr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:ems="10" >
+
+        <requestFocus />
+    </EditText>
+
     <ProgressBar
         android:id="@+id/progressBar1"
         style="?android:attr/progressBarStyleHorizontal"
@@ -11,16 +23,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
+        android:layout_below="@+id/editTextBdAddr"
         android:max="100" />
-
-    <Button
-        android:id="@+id/buttonSend"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/progressBar1"
-        android:text="@string/text_send" />
 
     <Button
         android:id="@+id/buttonUpgrade"
@@ -34,26 +38,50 @@
         android:id="@+id/buttonReboot"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/buttonUpgrade"
-        android:layout_alignBottom="@+id/buttonUpgrade"
-        android:layout_toLeftOf="@+id/buttonUpgrade"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/buttonUpgrade"
         android:text="@string/text_reboot" />
-
-    <Button
-        android:id="@+id/buttonSensor"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/progressBar1"
-        android:layout_toRightOf="@+id/buttonSend"
-        android:text="@string/text_sensor" />
 
     <Button
         android:id="@+id/buttonDisconnect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/buttonSensor"
-        android:layout_alignBottom="@+id/buttonSensor"
-        android:layout_toRightOf="@+id/buttonSensor"
+        android:layout_below="@+id/buttonUpgrade"
+        android:layout_toLeftOf="@+id/buttonUpgrade"
         android:text="@string/text_disconnect" />
+
+    <Button
+        android:id="@+id/buttonWriteBdAddr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonUpgrade"
+        android:layout_alignBottom="@+id/buttonUpgrade"
+        android:layout_toLeftOf="@+id/buttonUpgrade"
+        android:text="@string/text_write_bd_addr" />
+
+    <Button
+        android:id="@+id/buttonReadBdAddr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonDisconnect"
+        android:layout_alignParentLeft="true"
+        android:text="@string/text_read_bd_addr" />
+
+    <Button
+        android:id="@+id/buttonSend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/buttonReadBdAddr"
+        android:text="@string/text_send" />
+
+    <Button
+        android:id="@+id/buttonSensor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonSend"
+        android:layout_alignBottom="@+id/buttonSend"
+        android:layout_toRightOf="@+id/buttonSend"
+        android:text="@string/text_sensor" />
 
 </RelativeLayout>

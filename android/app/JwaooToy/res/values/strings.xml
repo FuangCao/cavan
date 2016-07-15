@@ -14,5 +14,7 @@
     <string name="text_open_sensor">打开传感器</string>
     <string name="text_close_sensor">关闭传感器</string>
     <string name="text_disconnect">断开连接</string>
+    <string name="text_write_bd_addr">写硬件地址</string>
+    <string name="text_read_bd_addr">读硬件地址</string>
 
 </resources>

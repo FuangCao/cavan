@@ -227,6 +227,14 @@ public class CavanJava {
 		return newBytes;
 	}
 
+	public static byte[] ArrayCopy(byte[] bytes, int count) {
+		return ArrayCopy(bytes, 0, count);
+	}
+
+	public static byte[] ArrayCopy(byte[] bytes) {
+		return ArrayCopy(bytes, 0, bytes.length);
+	}
+
 	public static short buildValue16(byte[] bytes, int offset) {
 		return (short) ((bytes[offset] & 0xFF) | (bytes[offset + 1] & 0xFF) << 8);
 	}
