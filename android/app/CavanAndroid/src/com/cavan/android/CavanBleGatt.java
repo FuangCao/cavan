@@ -21,7 +21,7 @@ public class CavanBleGatt extends BluetoothGattCallback {
 
 	public static final int AUTO_CONN_COUNT = 10;
 	public static final int FRAME_SIZE = 20;
-	public static final long WRITE_TIMEOUT = 1000;
+	public static final long WRITE_TIMEOUT = 5000;
 	public static final long COMMAND_TIMEOUT = 2000;
 
 	public static final int PROPERTY_NOTIFY_ALL = BluetoothGattCharacteristic.PROPERTY_NOTIFY;
@@ -479,7 +479,7 @@ public class CavanBleGatt extends BluetoothGattCallback {
 			if (sync) {
 				mWriteStatus = -110;
 
-				for (int i = 0; i < 5 && isGattConnected(); i++) {
+				for (int i = 0; i < 3 && isGattConnected(); i++) {
 					if (mGatt.writeCharacteristic(mChar)) {
 						try {
 							wait(WRITE_TIMEOUT);
@@ -513,32 +513,11 @@ public class CavanBleGatt extends BluetoothGattCallback {
 			}
 		}
 
-		public boolean writeData(byte[] data, boolean sync) {
-			if (data.length > FRAME_SIZE) {
-				int last, offset;
-				byte[] block = new byte[FRAME_SIZE];
-
-				for (offset = 0, last = data.length - FRAME_SIZE; offset <= last; offset += FRAME_SIZE) {
-					CavanAndroid.ArrayCopy(data, offset, block, 0, FRAME_SIZE);
-					if (!writeFrame(block, true)) {
-						return false;
-					}
-
-					CavanAndroid.logE("writeData: " + (offset * 100 / data.length) + "%");
-				}
-
-				if (offset >= data.length) {
-					return true;
-				}
-
-				data = CavanAndroid.ArrayCopy(data, offset, data.length - offset);
+		public boolean writeData(byte[] data, CavanProgressListener listener, boolean sync) {
+			if (listener != null) {
+				listener.setValueRange(data.length);
+				sync = true;
 			}
-
-			return writeFrame(data, sync);
-		}
-
-		public boolean writeData(byte[] data, CavanProgressListener listener) {
-			listener.setValueRange(data.length);
 
 			if (data.length > FRAME_SIZE) {
 				int offset = 0;
@@ -547,12 +526,15 @@ public class CavanBleGatt extends BluetoothGattCallback {
 
 				while (offset <= last) {
 					CavanAndroid.ArrayCopy(data, offset, block, 0, FRAME_SIZE);
-					if (!writeFrame(block, true)) {
+					if (!writeFrame(block, sync)) {
 						return false;
 					}
 
 					offset += FRAME_SIZE;
-					listener.setValue(offset);
+
+					if (listener != null) {
+						listener.setValue(offset);
+					}
 				}
 
 				if (offset < data.length) {
@@ -562,13 +544,27 @@ public class CavanBleGatt extends BluetoothGattCallback {
 				}
 			}
 
-			if (!writeFrame(data, true)) {
+			if (!writeFrame(data, sync)) {
 				return false;
 			}
 
-			listener.finishValue();
+			if (listener != null) {
+				listener.finishValue();
+			}
 
 			return true;
+		}
+
+		public boolean writeData(byte[] data, boolean sync) {
+			return writeData(data, null, sync);
+		}
+
+		public boolean writeData(byte[] data, CavanProgressListener listener) {
+			return writeData(data, listener, true);
+		}
+
+		public boolean writeData(byte[] data) {
+			return writeData(data, true);
 		}
 
 		synchronized public boolean readCharacteristic() {

@@ -57,6 +57,8 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_EVT_BATT_INFO = 0;
 	public static final byte JWAOO_TOY_EVT_FLASH_ERROR = 1;
 
+	private byte mFlashCrc;
+
 	protected CavanBleChar mCharCommand;
 	protected CavanBleChar mCharEvent;
 	protected CavanBleChar mCharFlash;
@@ -305,9 +307,11 @@ public class JwaooBleToy extends CavanBleGatt {
 		return sendCommandReadBool(JWAOO_TOY_CMD_FLASH_WRITE_START, null);
 	}
 
-	synchronized public boolean finishWriteFlash() {
+	synchronized public boolean finishWriteFlash(int length) {
+		byte[] command = { JWAOO_TOY_CMD_FLASH_WRITE_FINISH, mFlashCrc, (byte) (length & 0xFF), (byte) ((length >> 8) & 0xFF) };
+
 		for (int i = 0; i < 10; i++) {
-			if (sendCommandReadBool(JWAOO_TOY_CMD_FLASH_WRITE_FINISH, null)) {
+			if (sendCommandReadBool(command)) {
 				return true;
 			}
 
@@ -319,20 +323,28 @@ public class JwaooBleToy extends CavanBleGatt {
 		return false;
 	}
 
-	synchronized public boolean writeFlash(byte[] data) {
-		if (mCharFlash == null) {
-			return false;
-		}
-
-		return mCharFlash.writeData(data, true);
-	}
-
 	synchronized public boolean writeFlash(byte[] data, CavanProgressListener listener) {
 		if (mCharFlash == null) {
 			return false;
 		}
 
-		return mCharFlash.writeData(data, listener);
+		if (!mCharFlash.writeData(data, listener)) {
+			return false;
+		}
+
+		for (byte value : data) {
+			mFlashCrc ^= value;
+		}
+
+		return true;
+	}
+
+	synchronized private boolean writeFlashHeader(int length) {
+		length = (length + 7) & (~0x07);
+
+		byte[] header = { 0x70, 0x50, 0x00, 0x00, 0x00, 0x00, (byte) ((length >> 8) & 0xFF), (byte) (length & 0xFF) };
+
+		return writeFlash(header, null);
 	}
 
 	synchronized public boolean doOtaUpgrade(String pathname, CavanProgressListener listener) {
@@ -379,12 +391,12 @@ public class JwaooBleToy extends CavanBleGatt {
 
 		listener.addProgress();
 
-		CavanAndroid.logE("writeFlash header");
+		mFlashCrc = (byte) 0xFF;
 
-		int length = (bytes.length + 7) & (~0x07);
-		byte[] header = { 0x70, 0x50, 0x00, 0x00, 0x00, 0x00, (byte) ((length >> 8) & 0xFF), (byte) (length & 0xFF) };
-		if (!writeFlash(header)) {
-			CavanAndroid.logE("Failed to writeFlash header");
+		CavanAndroid.logE("writeFlashHeader");
+
+		if (!writeFlashHeader(bytes.length)) {
+			CavanAndroid.logE("Failed to writeFlashHeader");
 			return false;
 		}
 
@@ -399,7 +411,7 @@ public class JwaooBleToy extends CavanBleGatt {
 
 		CavanAndroid.logE("finishWriteFlash");
 
-		if (!finishWriteFlash()) {
+		if (!finishWriteFlash(bytes.length + 8)) {
 			CavanAndroid.logE("Failed to finishWriteFlash");
 			return false;
 		}
