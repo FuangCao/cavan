@@ -27,6 +27,7 @@
 @property (weak) IBOutlet NSTextField *mLabelDataSpeed;
 @property (weak) IBOutlet NSTextField *mLabelFreq;
 @property (weak) IBOutlet NSTextField *mLabelDepth;
+@property (weak) IBOutlet NSTextField *mTextFieldBdAddr;
 
 @end
 
