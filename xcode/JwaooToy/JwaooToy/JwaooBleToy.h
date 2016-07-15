@@ -14,7 +14,6 @@
 #import "JwaooToyParser.h"
 #import "CavanProgressManager.h"
 
-#define JWAOO_TOY_FLASH_MAGIC       0x00005070
 #define JWAOO_TOY_IDENTIFY          @"JwaooToy"
 
 #define JWAOO_TOY_UUID_SERVICE      [CBUUID UUIDWithString:@"1888"]
@@ -71,11 +70,6 @@ struct jwaoo_toy_command {
     };
 };
 
-struct jwaoo_toy_flash_header {
-    uint32_t magic;
-    uint32_t size;
-};
-
 #pragma pack()
 
 @class JwaooBleToy;
@@ -104,6 +98,7 @@ struct jwaoo_toy_flash_header {
     id<JwaooBleToyDelegate> mDelegate;
 
     BOOL mUpgradeBusy;
+    uint8_t mFlashCrc;
 }
 
 @property (readonly) int freq;
@@ -121,9 +116,11 @@ struct jwaoo_toy_flash_header {
 - (void)onSensorDataReceived:(nonnull CavanBleChar *)bleChar;
 
 - (nullable NSData *)sendCommand:(nonnull NSData *)command;
-- (nullable NSData *)sendCommand:(nonnull struct jwaoo_toy_command *)command
-                 length:(NSUInteger)length;
-- (nullable NSData *)sendEmptyCommand:(uint8_t) command;
+- (nullable NSData *)sendCommand:(nonnull const void *)command
+                          length:(NSUInteger)length;
+- (BOOL)sendCommandReadBool:(nonnull const void *)command
+                     length:(NSUInteger)length;
+
 - (nullable NSData *)sendCommand:(uint8_t)type
              withValue8:(uint8_t)value;
 - (nullable NSData *)sendCommand:(uint8_t)type
@@ -133,20 +130,21 @@ struct jwaoo_toy_flash_header {
 - (nullable NSData *)sendCommand:(uint8_t)type
             withValue32:(uint32_t)value;
 
-- (BOOL)sendCommandReadBool:(uint8_t)type;
-- (uint8_t)sendCommandReadValue8:(uint8_t)type;
-- (uint16_t)sendCommandReadValue16:(uint8_t)type;
-- (uint32_t)sendCommandReadReadValue32:(uint8_t)type;
-- (nullable NSString *)sendCommandReadText:(uint8_t)type;
+- (nullable NSData *)sendEmptyCommand:(uint8_t) command;
+- (BOOL)sendEmptyCommandReadBool:(uint8_t)type;
+- (uint8_t)sendEmptyCommandReadValue8:(uint8_t)type;
+- (uint16_t)sendEmptyCommandReadValue16:(uint8_t)type;
+- (uint32_t)sendEmptyCommandReadValue32:(uint8_t)type;
+- (nullable NSString *)sendEmptyCommandReadText:(uint8_t)type;
 
-- (BOOL)sendCommandReadBool:(uint8_t)type
+- (BOOL)sendEmptyCommandReadBool:(uint8_t)type
                    withBool:(BOOL)value;
-- (BOOL)sendCommandReadBool:(uint8_t)type
-                 withValue8:(uint8_t)value;
-- (BOOL)sendCommandReadBool:(uint8_t)type
-                withValue16:(uint16_t)value;
-- (BOOL)sendCommandReadBool:(uint8_t)type
-                withValue32:(uint32_t)value;
+- (BOOL)sendEmptyCommandReadBool:(uint8_t)type
+                      withValue8:(uint8_t)value;
+- (BOOL)sendEmptyCommandReadBool:(uint8_t)type
+                     withValue16:(uint16_t)value;
+- (BOOL)sendEmptyCommandReadBool:(uint8_t)type
+                     withValue32:(uint32_t)value;
 
 - (nullable NSString *)doIdentify;
 - (nullable NSString *)readBuildDate;
@@ -162,7 +160,7 @@ struct jwaoo_toy_flash_header {
 - (BOOL)setFlashWriteEnable:(BOOL)enable;
 - (BOOL)eraseFlash;
 - (BOOL)startFlashUpgrade;
-- (BOOL)finishFlashUpgrade;
+- (BOOL)finishFlashUpgrade:(uint16_t)length;
 - (BOOL)writeFlash:(nonnull const void *)data
               size:(int)size
       withProgress:(nullable CavanProgressManager *)progress;

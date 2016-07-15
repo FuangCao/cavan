@@ -40,7 +40,7 @@
 }
 
 - (CavanPeakValleyValue *)copy {
-    return [[CavanPeakValleyValue alloc] initWithPeak:mPeakValue withValley:mValleyValue withType:mType];
+    return [[self.class alloc] initWithPeak:mPeakValue withValley:mValleyValue withType:mType];
 }
 
 - (NSString *)description {

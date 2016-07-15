@@ -215,11 +215,17 @@
     return [mCharCommand sendCommand:command];
 }
 
-- (NSData *)sendCommand:(struct jwaoo_toy_command *)command
+- (NSData *)sendCommand:(const void *)command
                  length:(NSUInteger)length {
     NSData *data = [[NSData alloc] initWithBytes:command length:length];
 
     return [self sendCommand:data];
+}
+
+- (BOOL)sendCommandReadBool:(const void *)command
+                     length:(NSUInteger)length {
+    NSData *response = [self sendCommand:command length:length];
+    return [self.class parseResponseBool:response];
 }
 
 - (NSData *)sendEmptyCommand:(uint8_t) command {
@@ -254,51 +260,51 @@
     return [self sendCommand:&command length:5];
 }
 
-- (BOOL)sendCommandReadBool:(uint8_t)type {
+- (BOOL)sendEmptyCommandReadBool:(uint8_t)type {
     NSData *response = [self sendEmptyCommand:type];
     return [self.class parseResponseBool:response];
 }
 
-- (uint8_t)sendCommandReadValue8:(uint8_t)type {
+- (uint8_t)sendEmptyCommandReadValue8:(uint8_t)type {
     NSData *response = [self sendEmptyCommand:type];
     return [self.class parseResponseValue8:response];
 }
 
-- (uint16_t)sendCommandReadValue16:(uint8_t)type {
+- (uint16_t)sendEmptyCommandReadValue16:(uint8_t)type {
     NSData *response = [self sendEmptyCommand:type];
     return [self.class parseResponseValue16:response];
 }
 
-- (uint32_t)sendCommandReadReadValue32:(uint8_t)type {
+- (uint32_t)sendEmptyCommandReadValue32:(uint8_t)type {
     NSData *response = [self sendEmptyCommand:type];
     return [self.class parseResponseValue32:response];
 }
 
-- (NSString *)sendCommandReadText:(uint8_t)type {
+- (NSString *)sendEmptyCommandReadText:(uint8_t)type {
     NSData *response = [self sendEmptyCommand:type];
     return [self.class parseResponseText:response];
 }
 
-- (BOOL)sendCommandReadBool:(uint8_t)type
-                   withBool:(BOOL)value {
+- (BOOL)sendEmptyCommandReadBool:(uint8_t)type
+                        withBool:(BOOL)value {
     NSData *response = [self sendCommand:type withBool:value];
     return [self.class parseResponseBool:response];
 }
 
-- (BOOL)sendCommandReadBool:(uint8_t)type
-                 withValue8:(uint8_t)value {
+- (BOOL)sendEmptyCommandReadBool:(uint8_t)type
+                      withValue8:(uint8_t)value {
     NSData *response = [self sendCommand:type withValue8:value];
     return [self.class parseResponseBool:response];
 }
 
-- (BOOL)sendCommandReadBool:(uint8_t)type
-                withValue16:(uint16_t)value {
+- (BOOL)sendEmptyCommandReadBool:(uint8_t)type
+                     withValue16:(uint16_t)value {
     NSData *response = [self sendCommand:type withValue16:value];
     return [self.class parseResponseBool:response];
 }
 
-- (BOOL)sendCommandReadBool:(uint8_t)type
-                withValue32:(uint32_t)value {
+- (BOOL)sendEmptyCommandReadBool:(uint8_t)type
+                     withValue32:(uint32_t)value {
     NSData *response = [self sendCommand:type withValue32:value];
     return [self.class parseResponseBool:response];
 }
@@ -306,55 +312,56 @@
 // ================================================================================
 
 - (NSString *)doIdentify {
-    return [self sendCommandReadText:JWAOO_TOY_CMD_IDENTIFY];
+    return [self sendEmptyCommandReadText:JWAOO_TOY_CMD_IDENTIFY];
 }
 
 - (NSString *)readBuildDate {
-    return [self sendCommandReadText:JWAOO_TOY_CMD_BUILD_DATE];
+    return [self sendEmptyCommandReadText:JWAOO_TOY_CMD_BUILD_DATE];
 }
 
 - (uint32_t)readVersion {
-    return [self sendCommandReadReadValue32:JWAOO_TOY_CMD_VERSION];
+    return [self sendEmptyCommandReadValue32:JWAOO_TOY_CMD_VERSION];
 }
 
 - (BOOL)doReboot {
-    return [self sendCommandReadBool:JWAOO_TOY_CMD_REBOOT];
+    return [self sendEmptyCommandReadBool:JWAOO_TOY_CMD_REBOOT];
 }
 
 - (BOOL)setSensorEnable:(BOOL)enable {
-    return [self sendCommandReadBool:JWAOO_TOY_CMD_SENSOR_ENABLE withBool:enable];
+    return [self sendEmptyCommandReadBool:JWAOO_TOY_CMD_SENSOR_ENABLE withBool:enable];
 }
 
 - (BOOL)setSensorDelay:(uint32_t)delay {
-    return [self sendCommandReadBool:JWAOO_TOY_CMD_SENSOR_SET_DELAY withValue32:delay];
+    return [self sendEmptyCommandReadBool:JWAOO_TOY_CMD_SENSOR_SET_DELAY withValue32:delay];
 }
 
 - (uint32_t)getFlashId {
-    return [self sendCommandReadReadValue32:JWAOO_TOY_CMD_FLASH_ID];
+    return [self sendEmptyCommandReadValue32:JWAOO_TOY_CMD_FLASH_ID];
 }
 
 - (uint32_t)getFlashSize {
-    return [self sendCommandReadReadValue32:JWAOO_TOY_CMD_FLASH_SIZE];
+    return [self sendEmptyCommandReadValue32:JWAOO_TOY_CMD_FLASH_SIZE];
 }
 
 - (uint32_t)getFlashPageSize {
-    return [self sendCommandReadReadValue32:JWAOO_TOY_CMD_FLASH_PAGE_SIZE];
+    return [self sendEmptyCommandReadValue32:JWAOO_TOY_CMD_FLASH_PAGE_SIZE];
 }
 
 - (BOOL)setFlashWriteEnable:(BOOL)enable {
-    return [self sendCommandReadBool:JWAOO_TOY_CMD_FLASH_WRITE_ENABLE withBool:enable];
+    return [self sendEmptyCommandReadBool:JWAOO_TOY_CMD_FLASH_WRITE_ENABLE withBool:enable];
 }
 
 - (BOOL)eraseFlash {
-    return [self sendCommandReadBool:JWAOO_TOY_CMD_FLASH_ERASE];
+    return [self sendEmptyCommandReadBool:JWAOO_TOY_CMD_FLASH_ERASE];
 }
 
 - (BOOL)startFlashUpgrade {
-    return [self sendCommandReadBool:JWAOO_TOY_CMD_FLASH_WRITE_START];
+    return [self sendEmptyCommandReadBool:JWAOO_TOY_CMD_FLASH_WRITE_START];
 }
 
-- (BOOL)finishFlashUpgrade {
-    return [self sendCommandReadBool:JWAOO_TOY_CMD_FLASH_WRITE_FINISH];
+- (BOOL)finishFlashUpgrade:(uint16_t)length {
+    uint8_t command[] = { JWAOO_TOY_CMD_FLASH_WRITE_FINISH, mFlashCrc, length & 0xFF, length >> 8 };
+    return [self sendCommandReadBool:command length:sizeof(command)];
 }
 
 - (BOOL)writeFlash:(const void *)data
@@ -364,7 +371,25 @@
         return false;
     }
 
-    return [mCharFlash writeData:data length:size withProgress:progress];
+    if ([mCharFlash writeData:data length:size withProgress:progress]) {
+        const uint8_t *p, *p_end;
+
+        for (p = data, p_end = p + size; p < p_end; p++) {
+            mFlashCrc ^= *p;
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+- (BOOL)writeFlashHeader:(uint16_t)length {
+    length = (length + 7) & (~7);
+
+    uint8_t header[8] = { 0x70, 0x50, 0x00, 0x00, 0x00, 0x00, length >> 8, length & 0xFF };
+
+    return [self writeFlash:header size:sizeof(header) withProgress:nil];
 }
 
 - (BOOL)upgradeFirmwareSafe:(nonnull const char *)pathname
@@ -422,13 +447,11 @@
 
     [progress addProgress];
 
-    NSLog(@"writeFlash header");
+    mFlashCrc = 0xFF;
 
-    uint32_t length = (uint32_t)(data.length + 7) & (~7);
-    NSLog(@"length = %d = 0x%08x", length, length);
+    NSLog(@"writeFlashHeader");
 
-    struct jwaoo_toy_flash_header header = { JWAOO_TOY_FLASH_MAGIC, [CavanHexFile endianConvert32:length]};
-    if (![self writeFlash:&header size:sizeof(header) withProgress:nil]) {
+    if (![self writeFlashHeader:data.length]) {
         NSLog(@"Failed to write flash header");
         return false;
     }
@@ -444,7 +467,7 @@
 
     NSLog(@"finishFlashUpgrade");
 
-    if (![self finishFlashUpgrade]) {
+    if (![self finishFlashUpgrade:(data.length + 8)]) {
         NSLog(@"Failed to finishUpgrade");
         return false;
     }

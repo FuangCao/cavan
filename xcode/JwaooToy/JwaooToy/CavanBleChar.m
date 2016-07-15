@@ -74,7 +74,7 @@
         [mReadCond lock];
         [mPeripheral readValueForCharacteristic:mChar];
 
-        if ([mReadCond waitUntilDate:[NSDate dateWithTimeIntervalSinceNow:2.0]] && mReadError == nil) {
+        if ([mReadCond waitUntilDate:[NSDate dateWithTimeIntervalSinceNow:5.0]] && mReadError == nil) {
             value = mChar.value;
         } else {
             value = nil;
@@ -92,9 +92,9 @@
     @synchronized (self) {
         [mWriteCond lock];
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 3; i++) {
             [mPeripheral writeValue:data forCharacteristic:mChar type:CBCharacteristicWriteWithResponse];
-            if ([mWriteCond waitUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]]) {
+            if ([mWriteCond waitUntilDate:[NSDate dateWithTimeIntervalSinceNow:5.0]]) {
                 success = (mWriteError == nil);
                 break;
             }
