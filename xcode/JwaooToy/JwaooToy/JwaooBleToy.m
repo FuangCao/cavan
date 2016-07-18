@@ -46,8 +46,28 @@
 }
 
 - (void)onEventReceived:(CavanBleChar *)bleChar {
-    if ([mDelegate respondsToSelector:@selector(didEventReceived:)]) {
-        [mDelegate didEventReceived:bleChar];
+    NSData *event = bleChar.data;
+    NSUInteger length = event.length;
+
+    if (length > 0) {
+        const uint8_t *bytes = event.bytes;
+
+        switch (bytes[0]) {
+            case JWAOO_TOY_EVT_KEY_CLICK:
+                if (length < 2) {
+                    break;
+                }
+
+                if ([mDelegate respondsToSelector:@selector(didKeyClicked:)]) {
+                    [mDelegate didKeyClicked:bytes[1]];
+                } else {
+                    NSLog(@"key clicked: keycode = %d", bytes[1]);
+                }
+                break;
+
+            default:
+                NSLog(@"unknown event%d", bytes[0]);
+        }
     }
 }
 

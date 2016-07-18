@@ -58,6 +58,14 @@ enum
     JWAOO_TOY_CMD_MOTO_SET_LEVEL,
 };
 
+enum
+{
+    JWAOO_TOY_EVT_NOOP,
+    JWAOO_TOY_EVT_BATT_INFO,
+    JWAOO_TOY_EVT_KEY_STATE,
+    JWAOO_TOY_EVT_KEY_CLICK,
+};
+
 #pragma pack(1)
 
 struct jwaoo_toy_command {
@@ -81,7 +89,7 @@ struct jwaoo_toy_command {
 - (BOOL)doInitialize:(nonnull JwaooBleToy *)bleToy;
 
 @optional
-- (void)didEventReceived:(nonnull CavanBleChar *)bleChar;
+- (void)didKeyClicked:(uint8_t)keycode;
 - (void)didSensorDataReceived:(nonnull CavanBleChar *)bleChar;
 - (void)didDepthChanged:(int)depth;
 - (void)didFreqChanged:(int)freq;
