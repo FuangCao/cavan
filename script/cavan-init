@@ -6,6 +6,7 @@ FILE_PARTITIONS="/proc/partitions"
 FILE_BASHRC="/etc/bash.bashrc"
 FILE_VIMRC="/etc/vim/vimrc"
 FILE_GROUP="/etc/group"
+FILE_PASSWD="/etc/passwd"
 FILE_EXPORTS="/etc/exports"
 FILE_SAMBA_CONFIG="/etc/samba/smb.conf"
 FILE_CAVAN_SERVICE="/etc/init.d/cavan"
@@ -66,26 +67,38 @@ source "${CORE_PATH}/alias.sh"
 
 LOCAL_UBUNTU="${UBUNTU_PATH}/${DISTRIB_RELEASE}"
 
-USER_LIST=""
-USER_HAS_CAVAN="false"
+function get_user_config()
+{
+	awk -F ':' '$6 ~ /^\/(home|root)/ { print "username="$1, "homepath="$6 }' "${FILE_PASSWD}"
+}
 
-for username in $(ls /home)
+function get_user_list()
+{
+	local username homepath
+
+	get_user_config | while read line
+	do
+		eval "$line"
+		[ -d "${homepath}" ] && echo "${username}"
+	done
+}
+
+unset USER_LIST USER_HAS_CAVAN
+
+for username in $(get_user_list)
 do
-	cat /etc/group | grep "^${username}" &&
-	{
-		[ "${username}" = "cavan" ] && USER_HAS_CAVAN="true"
+	[ "${username}" = "cavan" ] && USER_HAS_CAVAN="true"
 
-		if [ "${USER_LIST}" ]
-		then
-			USER_LIST="${username} ${USER_LIST}"
-		else
-			USER_LIST="${username}"
-		fi
-	}
+	if [ "${USER_LIST}" ]
+	then
+		USER_LIST+=" ${username}"
+	else
+		USER_LIST="${username}"
+	fi
 done
 
-echo "USER_HAS_CAVAN = ${USER_HAS_CAVAN}"
 echo "USER_LIST = ${USER_LIST}"
+echo "USER_HAS_CAVAN = ${USER_HAS_CAVAN}"
 
 function mount_disk()
 {
@@ -318,17 +331,24 @@ function config_aptget()
 
 function config_git()
 {
+	local file_gitconfig username homepath
 	local GIT_EXEC_PATH="$(git --exec-path)"
 	local CMD_GIT_DAEMON="${GIT_EXEC_PATH}/git-daemon --verbose --export-all --enable=receive-pack --enable=upload-pack --enable=upload-archive --base-path=/git"
 
 	cavan-git-config || return 1
 
-	for home in /home/*
-	do
-		local user="$(basename ${home})"
+	file_gitconfig="${HOME}/.gitconfig"
+	echo "file_gitconfig = ${file_gitconfig}"
 
-		cp /root/.gitconfig ${home}/.gitconfig -av || return 1
-		chown ${user}:${user} ${home}/.gitconfig -v
+	get_user_config | while read line
+	do
+		eval ${line}
+
+		[ -d "${homepath}" ] || continue
+		[ "${homepath}" = "${HOME}" ] && continue
+
+		cp -av "${file_gitconfig}" "${homepath}" || return 1
+		chown -v "${username}:${username}" "${homepath}/.gitconfig" || return 1
 	done
 
 	if [ -e "${FILE_GIT_DAEMON_RUN}" ]
