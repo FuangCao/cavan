@@ -56,8 +56,9 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_MOTO_ENABLE = 80;
 	public static final byte JWAOO_TOY_CMD_MOTO_SET_LEVEL = 81;
 
-	public static final byte JWAOO_TOY_EVT_BATT_INFO = 0;
-	public static final byte JWAOO_TOY_EVT_FLASH_ERROR = 1;
+	public static final byte JWAOO_TOY_EVT_BATT_INFO = 1;
+	public static final byte JWAOO_TOY_EVT_KEY_STATE = 2;
+	public static final byte JWAOO_TOY_EVT_KEY_CLICK = 3;
 
 	private byte mFlashCrc;
 
@@ -84,7 +85,7 @@ public class JwaooBleToy extends CavanBleGatt {
 
 		@Override
 		public void onDataReceived(byte[] data) {
-			onEventReceived();
+			onEventReceived(data);
 		}
 	};
 
@@ -98,7 +99,25 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	protected void onDepthChanged(int depth) {}
 	protected void onFreqChanged(int freq) {}
-	protected void onEventReceived() {}
+
+	protected void onKeyClicked(int keycode) {
+		CavanAndroid.logE("onKeyClicked: keycode = " + keycode);
+	}
+
+	protected void onEventReceived(byte[] event) {
+		if (event.length > 0) {
+			switch (event[0]) {
+			case JWAOO_TOY_EVT_KEY_CLICK:
+				if (event.length > 1) {
+					onKeyClicked(event[1]);
+				}
+				break;
+
+			default:
+				CavanAndroid.logE("unknown event" + event[0]);
+			}
+		}
+	}
 
 	protected void onSensorDataReceived(byte[] data) {
 		mSensor.putBytes(data);
