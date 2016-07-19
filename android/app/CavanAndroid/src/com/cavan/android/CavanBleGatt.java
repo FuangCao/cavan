@@ -455,12 +455,6 @@ public class CavanBleGatt extends BluetoothGattCallback {
 				}
 
 				mHashMapChar.put(mChar.getUuid(), this);
-
-				mGatt.setCharacteristicNotification(mChar, true);
-
-				if ((mChar.getProperties() & PROPERTY_NOTIFY_ALL) != 0) {
-					writeDesc(CFG_UUID, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-				}
 			}
 		}
 
@@ -607,35 +601,18 @@ public class CavanBleGatt extends BluetoothGattCallback {
 
 			mDescWriteStatus = -110;
 
-			for (int i = 0; i < 3 && isGattConnected(); i++) {
-				if (mGatt.writeDescriptor(descriptor)) {
-					try {
-						wait(WRITE_TIMEOUT);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-
-					if (mDescWriteStatus != -110) {
-						return (mDescWriteStatus == 0);
-					}
-
-					CavanAndroid.logE("Failed to writeDescriptor" + i + ": status = " + mWriteStatus);
-				} else {
-					CavanAndroid.logE("Failed to writeDescriptor" + i);
-
-					if (isGattConnected()) {
-						try {
-							wait(WRITE_TIMEOUT);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					} else {
-						return false;
-					}
-				}
+			if (!mGatt.writeDescriptor(descriptor)) {
+				CavanAndroid.logE("Failed to writeDescriptor");
+				return false;
 			}
 
-			return false;
+			try {
+				wait(WRITE_TIMEOUT);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			return (mDescWriteStatus == 0);
 		}
 
 		synchronized public boolean writeDesc(UUID uuid, byte[] value) {
@@ -687,6 +664,26 @@ public class CavanBleGatt extends BluetoothGattCallback {
 			}
 
 			return readDesc(descriptor, timeout);
+		}
+
+		synchronized public boolean setNotifyEnable(boolean enable) {
+			if (mChar == null) {
+				return false;
+			}
+
+			if (!mGatt.setCharacteristicNotification(mChar, enable)) {
+				return false;
+			}
+
+			byte[] value;
+
+			if (enable) {
+				value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE;
+			} else {
+				value = BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
+			}
+
+			return writeDesc(CFG_UUID, value);
 		}
 
 		synchronized public byte[] sendCommand(byte[] command) {
@@ -741,12 +738,19 @@ public class CavanBleGatt extends BluetoothGattCallback {
 			return mWriteStatus == -110 || mReadStatus == -110;
 		}
 
-		synchronized public void setDataListener(CavanBleDataListener listener) {
+		synchronized public boolean setDataListener(CavanBleDataListener listener) {
+			boolean enable;
+
 			if (listener == null) {
 				listener = mListenerDefault;
+				enable = false;
+			} else {
+				enable = true;
 			}
 
 			mListener = listener;
+
+			return setNotifyEnable(enable);
 		}
 
 		synchronized public final void onDataAvailable() {

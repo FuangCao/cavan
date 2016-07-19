@@ -104,7 +104,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	protected void onFreqChanged(int freq) {}
 
 	protected void onKeyStateChanged(int code, int state) {
-		CavanAndroid.logE("onKeyClicked: code = " + code + ", state = " + state);
+		CavanAndroid.logE("onKeyStateChanged: code = " + code + ", state = " + state);
 	}
 
 	protected void onKeyClicked(int code, int count) {
@@ -579,10 +579,17 @@ public class JwaooBleToy extends CavanBleGatt {
 			return false;
 		}
 
-		mCharEvent.setDataListener(mEventListener);
-		mCharSensor.setDataListener(mSensorListener);
-
 		setAutoConnectAllow(true);
+
+		if (!mCharEvent.setDataListener(mEventListener)) {
+			CavanAndroid.logE("mCharEvent.setDataListener");
+			return false;
+		}
+
+		if (!mCharSensor.setDataListener(mSensorListener)) {
+			CavanAndroid.logE("mCharSensor.setDataListener");
+			return false;
+		}
 
 		String identify = doIdentify();
 		if (identify == null) {
