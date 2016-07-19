@@ -5,18 +5,16 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanWaveView;
 import com.cavan.resource.CavanBleScanner;
 import com.jwaoo.android.JwaooBleToy;
+import com.jwaoo.android.JwaooToySensor;
 
 public class MainActivity extends Activity {
 
 	private static final int SENSOR_DELAY = 30;
-
-	private static final int MSG_SENSOR_ENABLE = 1;
 
 	private CavanWaveView mWaveViewX;
 	private CavanWaveView mWaveViewY;
@@ -25,17 +23,7 @@ public class MainActivity extends Activity {
 
 	private JwaooBleToy mBleToy;
 	private BluetoothDevice mDevice;
-	private Handler mHandler = new Handler() {
-
-		@Override
-		public void handleMessage(Message msg) {
-			switch (msg.what) {
-			case MSG_SENSOR_ENABLE:
-				mBleToy.setSensorEnable(true, SENSOR_DELAY);
-				break;
-			}
-		}
-	};
+	private Handler mHandler = new Handler();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +43,7 @@ public class MainActivity extends Activity {
 		mWaveViewZ.setZoom(3);
 
 		mWaveViewDepth = (CavanWaveView) findViewById(R.id.waveViewDepth);
-		mWaveViewDepth.setValueRange(0, 4);
+		mWaveViewDepth.setValueRange(0, JwaooToySensor.MAX_DEPTH);
 		mWaveViewDepth.setZoom(3);
 
 		CavanBleScanner.show(this);
@@ -89,11 +77,15 @@ public class MainActivity extends Activity {
 
 							@Override
 							protected void onConnectionStateChange(boolean connected) {
-								if (connected) {
-									mHandler.sendEmptyMessage(MSG_SENSOR_ENABLE);
-								} else {
+								if (!connected) {
 									CavanBleScanner.show(MainActivity.this);
 								}
+							}
+
+							@Override
+							protected boolean onInitialize() {
+								mBleToy.setSensorEnable(true, SENSOR_DELAY);
+								return super.onInitialize();
 							}
 
 							@Override
