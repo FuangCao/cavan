@@ -106,8 +106,7 @@ public class MainActivity extends Activity {
 
 							@Override
 							protected boolean onInitialize() {
-								setSensorDelay(SENSOR_DELAY);
-								setSensorEnable(true);
+								setSensorEnable(true, SENSOR_DELAY);
 								return super.onInitialize();
 							}
 

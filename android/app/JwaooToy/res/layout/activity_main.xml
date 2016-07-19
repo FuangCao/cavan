@@ -75,13 +75,36 @@
         android:layout_below="@+id/buttonReadBdAddr"
         android:text="@string/text_send" />
 
-    <Button
-        android:id="@+id/buttonSensor"
+    <CheckBox
+        android:id="@+id/checkBoxLongClick"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/buttonSend"
-        android:layout_alignBottom="@+id/buttonSend"
-        android:layout_toRightOf="@+id/buttonSend"
-        android:text="@string/text_sensor" />
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/buttonSend"
+        android:text="@string/text_long_click" />
+
+    <CheckBox
+        android:id="@+id/checkBoxClick"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/checkBoxLongClick"
+        android:text="@string/text_click_enable" />
+
+    <CheckBox
+        android:id="@+id/checkBoxSensor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/buttonWriteBdAddr"
+        android:layout_below="@+id/buttonReboot"
+        android:text="@string/text_sensor_enable" />
+
+    <CheckBox
+        android:id="@+id/checkBoxMultiClick"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/checkBoxSensor"
+        android:layout_below="@+id/checkBoxSensor"
+        android:text="@string/text_multi_click" />
 
 </RelativeLayout>

@@ -14,6 +14,8 @@ import com.jwaoo.android.JwaooBleToy;
 
 public class MainActivity extends Activity {
 
+	private static final int SENSOR_DELAY = 30;
+
 	private static final int MSG_SENSOR_ENABLE = 1;
 
 	private CavanWaveView mWaveViewX;
@@ -29,8 +31,7 @@ public class MainActivity extends Activity {
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case MSG_SENSOR_ENABLE:
-				mBleToy.setSensorDelay(20);
-				mBleToy.setSensorEnable(true);
+				mBleToy.setSensorEnable(true, SENSOR_DELAY);
 				break;
 			}
 		}

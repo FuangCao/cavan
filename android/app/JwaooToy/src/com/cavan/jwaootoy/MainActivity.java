@@ -1,5 +1,8 @@
 package com.cavan.jwaootoy;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
@@ -10,6 +13,9 @@ import android.os.Message;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 
@@ -19,7 +25,9 @@ import com.cavan.resource.CavanBleScanner;
 import com.jwaoo.android.JwaooBleToy;
 
 @SuppressLint("HandlerLeak")
-public class MainActivity extends Activity implements OnClickListener {
+public class MainActivity extends Activity implements OnClickListener, OnCheckedChangeListener {
+
+	private static final int SENSOR_DELAY = 30;
 
 	private static final int EVENT_DATA_RECEIVED = 1;
 	private static final int EVENT_OTA_START = 2;
@@ -37,17 +45,24 @@ public class MainActivity extends Activity implements OnClickListener {
 	private BluetoothDevice mDevice;
 	private JwaooBleToy mBleToy;
 	private boolean mOtaBusy;
-	private boolean mSensorEnable;
 
 	private Button mButtonSend;
 	private Button mButtonUpgrade;
 	private Button mButtonReboot;
-	private Button mButtonSensor;
 	private Button mButtonDisconnect;
 	private Button mButtonReadBdAddr;
 	private Button mButtonWriteBdAddr;
+
+	private CheckBox mCheckBoxSensor;
+	private CheckBox mCheckBoxClick;
+	private CheckBox mCheckBoxLongClick;
+	private CheckBox mCheckBoxMultiClick;
+
 	private ProgressBar mProgressBar;
 	private EditText mEditTextBdAddr;
+
+	private List<View> mListViews = new ArrayList<View>();
+
 	private Handler mHandler = new Handler() {
 
 		@Override
@@ -100,40 +115,58 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		mButtonSend = (Button) findViewById(R.id.buttonSend);
 		mButtonSend.setOnClickListener(this);
+		mListViews.add(mButtonSend);
 
 		mButtonUpgrade = (Button) findViewById(R.id.buttonUpgrade);
 		mButtonUpgrade.setOnClickListener(this);
+		mListViews.add(mButtonUpgrade);
 
 		mButtonReboot = (Button) findViewById(R.id.buttonReboot);
 		mButtonReboot.setOnClickListener(this);
-
-		mButtonSensor = (Button) findViewById(R.id.buttonSensor);
-		mButtonSensor.setOnClickListener(this);
+		mListViews.add(mButtonReboot);
 
 		mButtonDisconnect = (Button) findViewById(R.id.buttonDisconnect);
 		mButtonDisconnect.setOnClickListener(this);
+		mListViews.add(mButtonDisconnect);
 
 		mButtonReadBdAddr = (Button) findViewById(R.id.buttonReadBdAddr);
 		mButtonReadBdAddr.setOnClickListener(this);
+		mListViews.add(mButtonReadBdAddr);
 
 		mButtonWriteBdAddr = (Button) findViewById(R.id.buttonWriteBdAddr);
 		mButtonWriteBdAddr.setOnClickListener(this);
+		mListViews.add(mButtonWriteBdAddr);
+
+		mCheckBoxSensor = (CheckBox) findViewById(R.id.checkBoxSensor);
+		mCheckBoxSensor.setOnCheckedChangeListener(this);
+		mListViews.add(mCheckBoxSensor);
+
+		mCheckBoxClick = (CheckBox) findViewById(R.id.checkBoxClick);
+		mCheckBoxClick.setOnCheckedChangeListener(this);
+		mListViews.add(mCheckBoxClick);
+
+		mCheckBoxLongClick = (CheckBox) findViewById(R.id.checkBoxLongClick);
+		mCheckBoxLongClick.setOnCheckedChangeListener(this);
+		mListViews.add(mCheckBoxLongClick);
+
+		mCheckBoxMultiClick = (CheckBox) findViewById(R.id.checkBoxMultiClick);
+		mCheckBoxMultiClick.setOnCheckedChangeListener(this);
+		mListViews.add(mCheckBoxMultiClick);
 
 		mProgressBar = (ProgressBar) findViewById(R.id.progressBar1);
+		mListViews.add(mProgressBar);
+
 		mEditTextBdAddr = (EditText) findViewById(R.id.editTextBdAddr);
+		mListViews.add(mEditTextBdAddr);
 
 		updateUI(false);
 		CavanBleScanner.show(this);
 	}
 
 	private void updateUI(boolean enable) {
-		mButtonUpgrade.setEnabled(enable);
-		mButtonReboot.setEnabled(enable);
-		mButtonSend.setEnabled(enable);
-		mButtonSensor.setEnabled(enable);
-		mButtonDisconnect.setEnabled(enable);
-		mButtonReadBdAddr.setEnabled(enable);
-		mButtonWriteBdAddr.setEnabled(enable);
+		for (View view : mListViews) {
+			view.setEnabled(enable);
+		}
 	}
 
 	private void setUpgradeProgress(int progress) {
@@ -199,18 +232,6 @@ public class MainActivity extends Activity implements OnClickListener {
 			mBleToy.doReboot();
 			break;
 
-		case R.id.buttonSensor:
-			if (mSensorEnable) {
-				if (mBleToy.setSensorEnable(false)) {
-					mSensorEnable = false;
-					mButtonSensor.setText(R.string.text_open_sensor);
-				}
-			} else if (mBleToy.setSensorEnable(true)) {
-				mSensorEnable = true;
-				mButtonSensor.setText(R.string.text_close_sensor);
-			}
-			break;
-
 		case R.id.buttonDisconnect:
 			if (mBleToy != null && mBleToy.isConnected()) {
 				mBleToy.disconnect();
@@ -262,8 +283,26 @@ public class MainActivity extends Activity implements OnClickListener {
 
 					@Override
 					protected boolean onInitialize() {
-						setSensorDelay(20);
-						setSensorEnable(true);
+						if (!mBleToy.setSensorEnable(mCheckBoxSensor.isChecked(), SENSOR_DELAY)) {
+							CavanAndroid.logE("Failed to setSensorEnable");
+							return false;
+						}
+
+						if (!mBleToy.setClickEnable(mCheckBoxClick.isChecked())) {
+							CavanAndroid.logE("Failed to setClickEnable");
+							return false;
+						}
+
+						if (!mBleToy.setLongClickEnable(mCheckBoxLongClick.isChecked())) {
+							CavanAndroid.logE("Failed to setLongClickEnable");
+							return false;
+						}
+
+						if (!mBleToy.setMultiClickEnable(mCheckBoxMultiClick.isChecked())) {
+							CavanAndroid.logE("Failed to setMultiClickEnable");
+							return false;
+						}
+
 						return super.onInitialize();
 					}
 
@@ -304,5 +343,26 @@ public class MainActivity extends Activity implements OnClickListener {
 		}
 
 		super.onDestroy();
+	}
+
+	@Override
+	public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+		switch (buttonView.getId()) {
+		case R.id.checkBoxSensor:
+			mBleToy.setSensorEnable(isChecked, SENSOR_DELAY);
+			break;
+
+		case R.id.checkBoxClick:
+			mBleToy.setClickEnable(isChecked);
+			break;
+
+		case R.id.checkBoxLongClick:
+			mBleToy.setLongClickEnable(isChecked);
+			break;
+
+		case R.id.checkBoxMultiClick:
+			mBleToy.setMultiClickEnable(isChecked);
+			break;
+		}
 	}
 }

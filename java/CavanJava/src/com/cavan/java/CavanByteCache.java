@@ -64,6 +64,10 @@ public class CavanByteCache {
 		return false;
 	}
 
+	public boolean writeBool(boolean value) {
+		return writeValue8(CavanJava.getBoolValueByte(value));
+	}
+
 	public boolean writeBytes(byte[] bytes, int offset, int count) {
 		if (mOffset + count > mLength) {
 			return false;

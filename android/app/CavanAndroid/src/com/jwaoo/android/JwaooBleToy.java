@@ -52,13 +52,16 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_FLASH_READ_BD_ADDR = 59;
 	public static final byte JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR = 60;
 	public static final byte JWAOO_TOY_CMD_SENSOR_ENABLE = 70;
-	public static final byte JWAOO_TOY_CMD_SENSOR_SET_DELAY = 71;
 	public static final byte JWAOO_TOY_CMD_MOTO_ENABLE = 80;
 	public static final byte JWAOO_TOY_CMD_MOTO_SET_LEVEL = 81;
+	public static final byte JWAOO_TOY_CMD_KEY_CLICK_ENABLE = 90;
+	public static final byte JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE = 91;
+	public static final byte JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE = 92;
 
 	public static final byte JWAOO_TOY_EVT_BATT_INFO = 1;
 	public static final byte JWAOO_TOY_EVT_KEY_STATE = 2;
 	public static final byte JWAOO_TOY_EVT_KEY_CLICK = 3;
+	public static final byte JWAOO_TOY_EVT_KEY_LONG_CLICK = 4;
 
 	private byte mFlashCrc;
 
@@ -100,16 +103,44 @@ public class JwaooBleToy extends CavanBleGatt {
 	protected void onDepthChanged(int depth) {}
 	protected void onFreqChanged(int freq) {}
 
-	protected void onKeyClicked(int keycode) {
-		CavanAndroid.logE("onKeyClicked: keycode = " + keycode);
+	protected void onKeyStateChanged(int code, int state) {
+		CavanAndroid.logE("onKeyClicked: code = " + code + ", state = " + state);
+	}
+
+	protected void onKeyClicked(int code, int count) {
+		CavanAndroid.logE("onKeyClicked: code = " + code + ", count = " + count);
+	}
+
+	protected void onKeyLongClicked(int code) {
+		CavanAndroid.logE("onKeyLongClicked: code = " + code);
 	}
 
 	protected void onEventReceived(byte[] event) {
 		if (event.length > 0) {
 			switch (event[0]) {
+			case JWAOO_TOY_EVT_KEY_STATE:
+				if (event.length > 2) {
+					onKeyStateChanged(event[1], event[2]);
+				}
+				break;
+
 			case JWAOO_TOY_EVT_KEY_CLICK:
 				if (event.length > 1) {
-					onKeyClicked(event[1]);
+					int count;
+
+					if (event.length > 2) {
+						count = event[2];
+					} else {
+						count = 1;
+					}
+
+					onKeyClicked(event[1], count);
+				}
+				break;
+
+			case JWAOO_TOY_EVT_KEY_LONG_CLICK:
+				if (event.length > 1) {
+					onKeyLongClicked(event[1]);
 				}
 				break;
 
@@ -208,6 +239,26 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public boolean sendCommandReadBool(byte type, byte[] data) {
 		return sendCommandReadBool(buildCommand(type, data));
+	}
+
+	public boolean sendEnableCommand16(byte type, boolean enable, short delay) {
+		CavanByteCache cache = new CavanByteCache(4);
+
+		cache.writeValue8(type);
+		cache.writeBool(enable);
+		cache.writeValue16(delay);
+
+		return sendCommandReadBool(cache.getBytes());
+	}
+
+	public boolean sendEnableCommand32(byte type, boolean enable, int delay) {
+		CavanByteCache cache = new CavanByteCache(6);
+
+		cache.writeValue8(type);
+		cache.writeBool(enable);
+		cache.writeValue32(delay);
+
+		return sendCommandReadBool(cache.getBytes());
 	}
 
 	public byte sendCommandReadByte(byte type, byte defValue) {
@@ -456,8 +507,8 @@ public class JwaooBleToy extends CavanBleGatt {
 		return sendCommandBool(JWAOO_TOY_CMD_SENSOR_ENABLE, enable);
 	}
 
-	public boolean setSensorDelay(int delay) {
-		return sendCommandInt(JWAOO_TOY_CMD_SENSOR_SET_DELAY, delay);
+	public boolean setSensorEnable(boolean enable, int delay) {
+		return sendEnableCommand32(JWAOO_TOY_CMD_SENSOR_ENABLE, enable, delay);
 	}
 
 	public boolean doReboot() {
@@ -480,6 +531,26 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		return setFlashWriteEnable(false);
+	}
+
+	public boolean setClickEnable(boolean enable) {
+		return sendCommandBool(JWAOO_TOY_CMD_KEY_CLICK_ENABLE, enable);
+	}
+
+	public boolean setMultiClickEnable(boolean enable) {
+		return sendCommandBool(JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE, enable);
+	}
+
+	public boolean setMultiClickEnable(boolean enable, int delay) {
+		return sendEnableCommand16(JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE, enable, (short) delay);
+	}
+
+	public boolean setLongClickEnable(boolean enable) {
+		return sendCommandBool(JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE, enable);
+	}
+
+	public boolean setLongClickEnable(boolean enable, int delay) {
+		return sendEnableCommand16(JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE, enable, (short) delay);
 	}
 
 	@Override

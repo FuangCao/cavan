@@ -327,4 +327,20 @@ public class CavanJava {
 
 		return builder.toString();
 	}
+
+	public static int getBoolValueInt(boolean value) {
+		return value ? 1 : 0;
+	}
+
+	public static short getBoolValueShort(boolean value) {
+		return (short) getBoolValueInt(value);
+	}
+
+	public static byte getBoolValueByte(boolean value) {
+		return (byte) getBoolValueInt(value);
+	}
+
+	public static long getBoolValueLong(boolean value) {
+		return getBoolValueInt(value);
+	}
 }

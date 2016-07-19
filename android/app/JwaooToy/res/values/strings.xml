@@ -16,5 +16,9 @@
     <string name="text_disconnect">断开连接</string>
     <string name="text_write_bd_addr">写硬件地址</string>
     <string name="text_read_bd_addr">读硬件地址</string>
+    <string name="text_long_click">允许长按</string>
+    <string name="text_multi_click">允许多次点击</string>
+    <string name="text_sensor_enable">打开传感器</string>
+    <string name="text_click_enable">允许点击</string>
 
 </resources>
