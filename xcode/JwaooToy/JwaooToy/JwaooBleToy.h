@@ -91,7 +91,9 @@
 - (BOOL)upgradeFirmware:(nonnull const char *)pathname
            withProgress:(nullable CavanProgressManager *)progress;
 - (nullable NSData *)readBdAddress;
-- (BOOL)writeBdAddress:(nonnull const uint8_t *)bd_addr;
+- (nullable NSString *)readBdAddressString;
+- (BOOL)writeBdAddressWithBytes:(nonnull const uint8_t *)bytes;
+- (BOOL)writeBdAddressWithString:(nonnull NSString *)addr;
 - (BOOL)setKeyClickEnable:(BOOL)enable;
 - (BOOL)setKeyLongClickEnable:(BOOL)enable;
 - (BOOL)setKeyLongClickEnable:(BOOL)enable

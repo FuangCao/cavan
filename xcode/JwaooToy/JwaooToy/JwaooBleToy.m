@@ -376,16 +376,48 @@
     return data;
 }
 
-- (BOOL)writeBdAddress:(const uint8_t *)bd_addr {
+- (NSString *)readBdAddressString {
+    NSData *data = [self readBdAddress];
+    if (data == nil) {
+        return nil;
+    }
+
+    const uint8_t *bytes = data.bytes;
+
+    return [NSString stringWithFormat:@"%02x:%02x:%02x:%02x:%02x:%02x",
+            bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]];
+}
+
+- (BOOL)writeBdAddressWithBytes:(const uint8_t *)bytes {
     if (![self setFlashWriteEnable:true]) {
         return false;
     }
 
-    if (![mCommand readBoolWithType:JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR withBytes:bd_addr length:6]) {
+    if (![mCommand readBoolWithType:JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR withBytes:bytes length:6]) {
         return false;
     }
 
     return [self setFlashWriteEnable:false];
+}
+
+- (BOOL)writeBdAddressWithString:(NSString *)addr {
+    const char *text = [addr cStringUsingEncoding:NSASCIIStringEncoding];
+    int values[6];
+
+    if (sscanf(text, "%02x:%02x:%02x:%02x:%02x:%02x",
+               values, values + 1, values + 2, values + 3, values + 4, values + 5) == 6) {
+        uint8_t bytes[6];
+
+        for (int i = 0; i < 6; i++) {
+            bytes[i] = values[i];
+        }
+
+        return [self writeBdAddressWithBytes:bytes];
+    }
+
+    NSLog(@"Invalid format");
+
+    return false;
 }
 
 - (BOOL)setKeyClickEnable:(BOOL)enable {

@@ -190,35 +190,17 @@
 }
 
 - (IBAction)buttonReadBdAddr:(NSButton *)sender {
-    NSData *addr = [mBleToy readBdAddress];
+    NSString *addr = [mBleToy readBdAddressString];
     if (addr != nil) {
-        const uint8_t *bytes = addr.bytes;
-
-        _mTextFieldBdAddr.stringValue = [NSString stringWithFormat:@"%02x:%02x:%02x:%02x:%02x:%02x", bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]];
-    } else {
-        NSLog(@"Failed to readBdAddress");
+        _mTextFieldBdAddr.stringValue = addr;
     }
 }
 
 - (IBAction)buttonWriteBdAddr:(NSButton *)sender {
-    const char *text = [_mTextFieldBdAddr.stringValue cStringUsingEncoding:NSASCIIStringEncoding];
-
-    int values[6];
-
-    if (sscanf(text, "%02x:%02x:%02x:%02x:%02x:%02x", values, values + 1, values + 2, values + 3, values + 4, values + 5) == 6) {
-        uint8_t bytes[6];
-
-        for (int i = 0; i < 6; i++) {
-            bytes[i] = values[i];
-        }
-
-        if ([mBleToy writeBdAddress:bytes]) {
-            NSLog(@"writeBdAddress successfull");
-        } else {
-            NSLog(@"Failed to writeBdAddress");
-        }
+    if ([mBleToy writeBdAddressWithString:_mTextFieldBdAddr.stringValue]) {
+        NSLog(@"writeBdAddress successfull");
     } else {
-        NSLog(@"Invalid format");
+        NSLog(@"Failed to writeBdAddress");
     }
 }
 
