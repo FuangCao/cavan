@@ -104,6 +104,8 @@
         _mButtonClick.enabled = enable.boolValue;
         _mButtonLongClick.enabled = enable.boolValue;
         _mButtonMultiClick.enabled = enable.boolValue;
+        _mButtonReadBdAddr.enabled = enable.boolValue;
+        _mButtonWriteBdAddr.enabled = enable.boolValue;
     } else {
         [self performSelectorOnMainThread:@selector(updateUI:) withObject:enable waitUntilDone:NO];
     }

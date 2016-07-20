@@ -793,16 +793,6 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YwY-La-VDQ">
-                                <rect key="frame" x="290" y="238" width="95" height="32"/>
-                                <buttonCell key="cell" type="push" title="写硬件地址" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="GXx-FW-VL0">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                                <connections>
-                                    <action selector="buttonWriteBdAddr:" target="XfG-lQ-9wD" id="LNa-OA-CYT"/>
-                                </connections>
-                            </button>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IAp-4W-ETA">
                                 <rect key="frame" x="18" y="287" width="73" height="17"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="硬件地址：" id="oD4-ck-06L">
@@ -861,6 +851,16 @@
                                     <action selector="buttonClick:" target="XfG-lQ-9wD" id="c0n-rQ-8cq"/>
                                 </connections>
                             </button>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YwY-La-VDQ">
+                                <rect key="frame" x="290" y="238" width="95" height="32"/>
+                                <buttonCell key="cell" type="push" title="写硬件地址" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="GXx-FW-VL0">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="buttonWriteBdAddr:" target="XfG-lQ-9wD" id="LNa-OA-CYT"/>
+                                </connections>
+                            </button>
                         </subviews>
                     </view>
                     <connections>
@@ -868,10 +868,12 @@
                         <outlet property="mButtonDisconnect" destination="TDE-jM-8Vb" id="u3T-w6-Ape"/>
                         <outlet property="mButtonLongClick" destination="hp0-Tm-8ts" id="xTa-wG-RYi"/>
                         <outlet property="mButtonMultiClick" destination="hxh-1X-er6" id="n4z-ZY-8he"/>
+                        <outlet property="mButtonReadBdAddr" destination="74b-zQ-GoM" id="Dl0-dX-byc"/>
                         <outlet property="mButtonReboot" destination="WV1-yi-9oZ" id="fYr-7j-Prq"/>
                         <outlet property="mButtonSensCommand" destination="kRt-qw-1Q3" id="cwL-bP-GuI"/>
                         <outlet property="mButtonSensor" destination="XOh-ST-Ym8" id="f2f-wM-25d"/>
                         <outlet property="mButtonUpgrade" destination="zuK-u1-yJh" id="qkW-Vn-yg5"/>
+                        <outlet property="mButtonWriteBdAddr" destination="YwY-La-VDQ" id="ICI-CL-Ipf"/>
                         <outlet property="mLabelDataCount" destination="scV-vQ-wXh" id="2XR-M6-Jmg"/>
                         <outlet property="mLabelDataSpeed" destination="Cid-hb-tDB" id="7gC-2L-eaJ"/>
                         <outlet property="mLabelDepth" destination="7f7-e7-9mk" id="osV-cz-K18"/>
