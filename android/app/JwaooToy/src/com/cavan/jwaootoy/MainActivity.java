@@ -241,31 +241,19 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 			break;
 
 		case R.id.buttonReadBdAddr:
-			byte[] bdAddr = mBleToy.readBdAddress();
-			if (bdAddr != null) {
-				mEditTextBdAddr.setText(String.format("%02x:%02x:%02x:%02x:%02x:%02x",
-						bdAddr[0], bdAddr[1], bdAddr[2], bdAddr[3], bdAddr[4], bdAddr[5]));
+			String addr = mBleToy.readBdAddressString();
+			if (addr != null) {
+				mEditTextBdAddr.setText(addr);
 			} else {
 				CavanAndroid.logE("Failed to readBdAddress");
 			}
 			break;
 
 		case R.id.buttonWriteBdAddr:
-			String[] texts = mEditTextBdAddr.getText().toString().split("\\s*:\\s*");
-			if (texts.length == 6) {
-				bdAddr = new byte[6];
-
-				for (int i = 0; i < 6; i++) {
-					bdAddr[i] = (byte) (Integer.parseInt(texts[i], 16) & 0xFF);
-				}
-
-				if (mBleToy.writeBdAddress(bdAddr)) {
-					CavanAndroid.logE("writeBdAddress successfull");
-				} else {
-					CavanAndroid.logE("Failed to writeBdAddress");
-				}
+			if (mBleToy.writeBdAddress(mEditTextBdAddr.getText().toString())) {
+				CavanAndroid.logE("writeBdAddress successfull");
 			} else {
-				CavanAndroid.logE("Invalid format");
+				CavanAndroid.logE("Failed to writeBdAddress");
 			}
 			break;
 		}

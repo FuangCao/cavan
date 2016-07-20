@@ -383,6 +383,15 @@ public class JwaooBleToy extends CavanBleGatt {
 		return null;
 	}
 
+	public String readBdAddressString() {
+		byte[] bytes = readBdAddress();
+		if (bytes == null) {
+			return null;
+		}
+
+		return String.format("%02x:%02x:%02x:%02x:%02x:%02x", bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]);
+	}
+
 	public boolean writeBdAddress(byte[] bytes) {
 		if (!setFlashWriteEnable(true)) {
 			CavanAndroid.logE("Failed to setFlashWriteEnable true");
@@ -394,6 +403,21 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		return setFlashWriteEnable(false);
+	}
+
+	public boolean writeBdAddress(String addr) {
+		String[] addresses = addr.split("\\s*:\\s*");
+		if (addresses.length != 6) {
+			CavanAndroid.logE("Invalid format");
+		}
+
+		byte[] bytes = new byte[6];
+
+		for (int i = 0; i < 6; i++) {
+			bytes[i] = (byte) Integer.parseInt(addresses[i], 16);
+		}
+
+		return writeBdAddress(bytes);
 	}
 
 	public boolean setClickEnable(boolean enable) {
