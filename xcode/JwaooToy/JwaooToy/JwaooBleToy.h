@@ -34,7 +34,11 @@
 - (BOOL)doInitialize:(nonnull JwaooBleToy *)bleToy;
 
 @optional
-- (void)didKeyClicked:(uint8_t)keycode;
+- (void)didKeyStateChanged:(uint8_t)code
+                     value:(uint8_t)value;
+- (void)didKeyClicked:(uint8_t)code
+                count:(uint8_t)count;
+- (void)didKeyLongClicked:(uint8_t)code;
 - (void)didSensorDataReceived:(nonnull CavanBleChar *)bleChar;
 - (void)didDepthChanged:(int)depth;
 - (void)didFreqChanged:(int)freq;

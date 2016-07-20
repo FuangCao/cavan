@@ -53,15 +53,39 @@
         const uint8_t *bytes = event.bytes;
 
         switch (bytes[0]) {
+            case JWAOO_TOY_EVT_KEY_STATE:
+                if (length < 3) {
+                    break;
+                }
+
+                if ([mDelegate respondsToSelector:@selector(didKeyStateChanged:value:)]) {
+                    [mDelegate didKeyStateChanged:bytes[1] value:bytes[2]];
+                } else {
+                    NSLog(@"KeyStateChanged: code = %d, value = %d", bytes[1], bytes[2]);
+                }
+                break;
+
             case JWAOO_TOY_EVT_KEY_CLICK:
+                if (length < 3) {
+                    break;
+                }
+
+                if ([mDelegate respondsToSelector:@selector(didKeyClicked:count:)]) {
+                    [mDelegate didKeyClicked:bytes[1] count:bytes[2]];
+                } else {
+                    NSLog(@"KeyClicked: code = %d, count = %d", bytes[1], bytes[2]);
+                }
+                break;
+
+            case JWAOO_TOY_EVT_KEY_LONG_CLICK:
                 if (length < 2) {
                     break;
                 }
 
-                if ([mDelegate respondsToSelector:@selector(didKeyClicked:)]) {
-                    [mDelegate didKeyClicked:bytes[1]];
+                if ([mDelegate respondsToSelector:@selector(didKeyLongClicked:)]) {
+                    [mDelegate didKeyLongClicked:bytes[1]];
                 } else {
-                    NSLog(@"key clicked: keycode = %d", bytes[1]);
+                    NSLog(@"KeyLongClicked: code = %d", bytes[1]);
                 }
                 break;
 
@@ -154,14 +178,6 @@
 
     return [mDelegate doInitialize:self];
 }
-
-// ================================================================================
-
-
-
-// ================================================================================
-
-
 
 // ================================================================================
 
