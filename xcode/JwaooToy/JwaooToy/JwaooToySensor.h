@@ -10,9 +10,15 @@
 #import "CavanAccelSensor.h"
 
 @interface JwaooToySensor : CavanAccelSensor {
-    int mDepth;
+    double mDepth;
+    int mCapacitys[4];
 }
 
-@property int depth;
+@property (readonly) int depth;
+
+- (void)setCapacity:(int)index
+              value:(int)value;
+- (void)setCapacityWithBytes:(const int8_t *)bytes;
+- (void)updateDepth;
 
 @end
