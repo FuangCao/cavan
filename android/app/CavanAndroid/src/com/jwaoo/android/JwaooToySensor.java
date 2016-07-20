@@ -4,7 +4,7 @@ import com.cavan.java.CavanAccelSensor;
 
 public abstract class JwaooToySensor extends CavanAccelSensor {
 
-	public static final int MAX_DEPTH = 100;
+	public static final int MAX_DEPTH = 127;
 
 	private double mDepth;
 	private int[] mCapacitys = new int[4];
@@ -24,12 +24,15 @@ public abstract class JwaooToySensor extends CavanAccelSensor {
 	protected void updateDepth() {
 		double depth = 0;
 
+		// CavanAndroid.logE(String.format("capacity: [%4d, %4d, %4d, %4d]", mCapacitys[0], mCapacitys[1], mCapacitys[2], mCapacitys[3]));
+
 		for (int capacity : mCapacitys) {
-			depth += capacity;
+			if (capacity > 0) {
+				depth += capacity;
+			}
 		}
 
-		depth = depth * MAX_DEPTH / 1020;
-		mDepth = (mDepth + depth) / 2;
+		mDepth = (mDepth + (depth / 4)) / 2;
 	}
 
 	public void setCapacity(int index, int capacity) {

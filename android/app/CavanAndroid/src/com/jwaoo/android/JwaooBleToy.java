@@ -32,6 +32,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_RSP_U32 = 3;
 	public static final byte JWAOO_TOY_RSP_DATA = 4;
 	public static final byte JWAOO_TOY_RSP_TEXT = 5;
+
 	public static final byte JWAOO_TOY_CMD_NOOP = 20;
 	public static final byte JWAOO_TOY_CMD_IDENTIFY = 21;
 	public static final byte JWAOO_TOY_CMD_VERSION = 22;
@@ -39,7 +40,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_REBOOT = 24;
 	public static final byte JWAOO_TOY_CMD_SHUTDOWN = 25;
 	public static final byte JWAOO_TOY_CMD_BATT_INFO = 26;
-	public static final byte JWAOO_TOY_CMD_FIND = 27;
+	public static final byte JWAOO_TOY_CMD_I2C_RW = 27;
 	public static final byte JWAOO_TOY_CMD_FLASH_ID = 50;
 	public static final byte JWAOO_TOY_CMD_FLASH_SIZE = 51;
 	public static final byte JWAOO_TOY_CMD_FLASH_PAGE_SIZE = 52;
@@ -53,7 +54,6 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR = 60;
 	public static final byte JWAOO_TOY_CMD_SENSOR_ENABLE = 70;
 	public static final byte JWAOO_TOY_CMD_MOTO_ENABLE = 80;
-	public static final byte JWAOO_TOY_CMD_MOTO_SET_LEVEL = 81;
 	public static final byte JWAOO_TOY_CMD_KEY_CLICK_ENABLE = 90;
 	public static final byte JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE = 91;
 	public static final byte JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE = 92;
@@ -69,6 +69,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	protected CavanBleChar mCharEvent;
 	protected CavanBleChar mCharFlash;
 	protected CavanBleChar mCharSensor;
+	protected JwaooToyCommand mCommand = new JwaooToyCommand();
 
 	protected JwaooToySensor mSensor;
 	protected JwaooToyParser mParser = new JwaooToyParser(JWAOO_TOY_TIME_FUZZ, JWAOO_TOY_VALUE_FUZZ) {
@@ -194,158 +195,16 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mParser.getFreq();
 	}
 
-	synchronized public byte[] sendCommand(byte[] command) {
-		if (mCharCommand == null) {
-			return null;
-		}
-
-		byte[] response = mCharCommand.sendCommand(command);
-		if (response == null || response.length < 1) {
-			CavanAndroid.logE("Failed to mCharCommand.sendCommand");
-			return null;
-		}
-
-		CavanAndroid.logE("response: length = " + response.length + ", type = " + response[0]);
-
-		return response;
-	}
-
-	public byte[] buildCommand(byte type, byte[] data) {
-		if (data != null && data.length > 0) {
-			byte[] command = new byte[data.length + 1];
-
-			command[0] = type;
-			CavanJava.ArrayCopy(data, 0, command, 1, data.length);
-
-			return command;
-
-		} else {
-			return new byte[] { type };
-		}
-	}
-
-	public byte[] sendCommand(byte type, byte[] data) {
-		return sendCommand(buildCommand(type, data));
-	}
-
-	public boolean sendCommandReadBool(byte[] command) {
-		byte[] response = sendCommand(command);
-		if (response == null || response.length != 2 || response[0] != JWAOO_TOY_RSP_BOOL) {
-			return false;
-		}
-
-		return response[1] > 0;
-	}
-
-	public boolean sendCommandReadBool(byte type, byte[] data) {
-		return sendCommandReadBool(buildCommand(type, data));
-	}
-
-	public boolean sendEnableCommand16(byte type, boolean enable, short delay) {
-		CavanByteCache cache = new CavanByteCache(4);
-
-		cache.writeValue8(type);
-		cache.writeBool(enable);
-		cache.writeValue16(delay);
-
-		return sendCommandReadBool(cache.getBytes());
-	}
-
-	public boolean sendEnableCommand32(byte type, boolean enable, int delay) {
-		CavanByteCache cache = new CavanByteCache(6);
-
-		cache.writeValue8(type);
-		cache.writeBool(enable);
-		cache.writeValue32(delay);
-
-		return sendCommandReadBool(cache.getBytes());
-	}
-
-	public byte sendCommandReadByte(byte type, byte defValue) {
-		byte[] response = sendCommand(type, null);
-		if (response == null || response.length != 2 || response[0] != JWAOO_TOY_RSP_U8) {
-			return defValue;
-		}
-
-		return response[1];
-	}
-
-	public short sendCommandReadShort(byte type, short defValue) {
-		byte[] response = sendCommand(type, null);
-		if (response == null || response.length != 3 || response[0] != JWAOO_TOY_RSP_U16) {
-			return defValue;
-		}
-
-		return CavanJava.buildValue16(response, 1);
-	}
-
-	public int sendCommandReadInt(byte type, int defValue) {
-		byte[] response = sendCommand(type, null);
-		if (response == null || response.length != 5 || response[0] != JWAOO_TOY_RSP_U32) {
-			return defValue;
-		}
-
-		return CavanJava.buildValue32(response, 1);
-	}
-
-	public String sendCommandReadText(byte[] command) {
-		byte[] response = sendCommand(command);
-		if (response == null || response.length < 2 || response[0] != JWAOO_TOY_RSP_TEXT) {
-			return null;
-		}
-
-		return new String(response, 1, response.length - 1);
-	}
-
-	public byte[] sendCommandReadData(byte[] command) {
-		byte[] response = sendCommand(command);
-		if (response == null || response.length < 1 || response[0] != JWAOO_TOY_RSP_DATA) {
-			return null;
-		}
-
-		return CavanJava.ArrayCopy(response, 1, response.length - 1);
-	}
-
-	public String sendCommandReadText(byte type, byte[] data) {
-		return sendCommandReadText(buildCommand(type, data));
-	}
-
-	public boolean sendCommandBool(byte type, boolean value) {
-		return sendCommandReadBool(new byte[] { type, (byte) (value ? 1 : 0) });
-	}
-
-	public boolean sendCommandByte(byte type, byte value) {
-		return sendCommandReadBool(new byte[] { type, value });
-	}
-
-	public boolean sendCommandShort(byte type, short value) {
-		CavanByteCache cache = new CavanByteCache(3);
-
-		cache.writeValue8(type);
-		cache.writeValue16(value);
-
-		return sendCommandReadBool(cache.getBytes());
-	}
-
-	public boolean sendCommandInt(byte type, int value) {
-		CavanByteCache cache = new CavanByteCache(5);
-
-		cache.writeValue8(type);
-		cache.writeValue32(value);
-
-		return sendCommandReadBool(cache.getBytes());
-	}
-
 	public String doIdentify() {
-		return sendCommandReadText(JWAOO_TOY_CMD_IDENTIFY, null);
+		return mCommand.readText(JWAOO_TOY_CMD_IDENTIFY);
 	}
 
 	public String readBuildDate() {
-		return sendCommandReadText(JWAOO_TOY_CMD_BUILD_DATE, null);
+		return mCommand.readText(JWAOO_TOY_CMD_BUILD_DATE);
 	}
 
 	public int readVersion() {
-		return sendCommandReadInt(JWAOO_TOY_CMD_VERSION, 0);
+		return mCommand.readValue32(JWAOO_TOY_CMD_VERSION, -1);
 	}
 
 	synchronized public byte[] readFlash(int address) {
@@ -353,7 +212,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			return null;
 		}
 
-		if (!sendCommandInt(JWAOO_TOY_CMD_FLASH_READ, address)) {
+		if (!mCommand.readBool(JWAOO_TOY_CMD_FLASH_READ, address)) {
 			return null;
 		}
 
@@ -361,38 +220,38 @@ public class JwaooBleToy extends CavanBleGatt {
 	}
 
 	public int getFlashId() {
-		return sendCommandReadInt(JWAOO_TOY_CMD_FLASH_ID, 0);
+		return mCommand.readValue32(JWAOO_TOY_CMD_FLASH_ID, -1);
 	}
 
 	public int getFlashSize() {
-		return sendCommandReadInt(JWAOO_TOY_CMD_FLASH_SIZE, 0);
+		return mCommand.readValue32(JWAOO_TOY_CMD_FLASH_SIZE, -1);
 	}
 
 	public int getFlashPageSize() {
-		return sendCommandReadInt(JWAOO_TOY_CMD_FLASH_PAGE_SIZE, 0);
+		return mCommand.readValue32(JWAOO_TOY_CMD_FLASH_PAGE_SIZE, -1);
 	}
 
 	public boolean setFlashWriteEnable(boolean enable) {
-		return sendCommandBool(JWAOO_TOY_CMD_FLASH_WRITE_ENABLE, enable);
+		return mCommand.readBool(JWAOO_TOY_CMD_FLASH_WRITE_ENABLE, enable);
 	}
 
 	public boolean eraseFlash() {
-		return sendCommandReadBool(JWAOO_TOY_CMD_FLASH_ERASE, null);
+		return mCommand.readBool(JWAOO_TOY_CMD_FLASH_ERASE);
 	}
 
 	public boolean seekFlash(int address) {
-		return sendCommandInt(JWAOO_TOY_CMD_FLASH_SEEK, address);
+		return mCommand.readBool(JWAOO_TOY_CMD_FLASH_SEEK, address);
 	}
 
 	public boolean startFlashWrite() {
-		return sendCommandReadBool(JWAOO_TOY_CMD_FLASH_WRITE_START, null);
+		return mCommand.readBool(JWAOO_TOY_CMD_FLASH_WRITE_START);
 	}
 
 	synchronized public boolean finishWriteFlash(int length) {
 		byte[] command = { JWAOO_TOY_CMD_FLASH_WRITE_FINISH, mFlashCrc, (byte) (length & 0xFF), (byte) ((length >> 8) & 0xFF) };
 
 		for (int i = 0; i < 10; i++) {
-			if (sendCommandReadBool(command)) {
+			if (mCommand.readBool(command)) {
 				return true;
 			}
 
@@ -504,19 +363,24 @@ public class JwaooBleToy extends CavanBleGatt {
 	}
 
 	public boolean setSensorEnable(boolean enable) {
-		return sendCommandBool(JWAOO_TOY_CMD_SENSOR_ENABLE, enable);
+		return mCommand.readBool(JWAOO_TOY_CMD_SENSOR_ENABLE, enable);
 	}
 
 	public boolean setSensorEnable(boolean enable, int delay) {
-		return sendEnableCommand32(JWAOO_TOY_CMD_SENSOR_ENABLE, enable, delay);
+		return mCommand.readBool(JWAOO_TOY_CMD_SENSOR_ENABLE, enable, delay);
 	}
 
 	public boolean doReboot() {
-		return sendCommandReadBool(JWAOO_TOY_CMD_REBOOT, null);
+		return mCommand.readBool(JWAOO_TOY_CMD_REBOOT);
 	}
 
 	public byte[] readBdAddress() {
-		return sendCommandReadData(new byte[] { JWAOO_TOY_CMD_FLASH_READ_BD_ADDR });
+		byte[] bytes = mCommand.readData(JWAOO_TOY_CMD_FLASH_READ_BD_ADDR);
+		if (bytes != null && bytes.length == 6) {
+			return bytes;
+		}
+
+		return null;
 	}
 
 	public boolean writeBdAddress(byte[] bytes) {
@@ -525,8 +389,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			return false;
 		}
 
-		if (!sendCommandReadBool(JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR, bytes)) {
-			CavanAndroid.logE("Failed to sendCommandReadBool JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR");
+		if (!mCommand.readBool(JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR, bytes)) {
 			return false;
 		}
 
@@ -534,23 +397,23 @@ public class JwaooBleToy extends CavanBleGatt {
 	}
 
 	public boolean setClickEnable(boolean enable) {
-		return sendCommandBool(JWAOO_TOY_CMD_KEY_CLICK_ENABLE, enable);
+		return mCommand.readBool(JWAOO_TOY_CMD_KEY_CLICK_ENABLE, enable);
 	}
 
 	public boolean setMultiClickEnable(boolean enable) {
-		return sendCommandBool(JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE, enable);
+		return mCommand.readBool(JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE, enable);
 	}
 
-	public boolean setMultiClickEnable(boolean enable, int delay) {
-		return sendEnableCommand16(JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE, enable, (short) delay);
+	public boolean setMultiClickEnable(boolean enable, short delay) {
+		return mCommand.readBool(JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE, enable, delay);
 	}
 
 	public boolean setLongClickEnable(boolean enable) {
-		return sendCommandBool(JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE, enable);
+		return mCommand.readBool(JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE, enable);
 	}
 
-	public boolean setLongClickEnable(boolean enable, int delay) {
-		return sendEnableCommand16(JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE, enable, (short) delay);
+	public boolean setLongClickEnable(boolean enable, short delay) {
+		return mCommand.readBool(JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE, enable, delay);
 	}
 
 	@Override
@@ -605,5 +468,277 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		return true;
+	}
+
+	// ================================================================================
+
+	public static class JwaooToyResponse {
+
+		private byte[] mBytes;
+
+		public JwaooToyResponse(byte[] bytes) {
+			mBytes = bytes;
+		}
+
+		public byte getCommand() {
+			return mBytes[0];
+		}
+
+		public byte getType() {
+			return mBytes[1];
+		}
+
+		public boolean getBool() {
+			if (getType() != JWAOO_TOY_RSP_BOOL || mBytes.length != 3) {
+				return false;
+			}
+
+			return mBytes[2] != 0;
+		}
+
+		public byte getValue8(byte defValue) {
+			if (getType() != JWAOO_TOY_RSP_U8 || mBytes.length != 3) {
+				return defValue;
+			}
+
+			return mBytes[2];
+		}
+
+		public short getValue16(short defValue) {
+			if (getType() != JWAOO_TOY_RSP_U16 || mBytes.length != 4) {
+				return defValue;
+			}
+
+			return CavanJava.buildValue16(mBytes, 2);
+		}
+
+		public int getValue32(int defValue) {
+			if (getType() != JWAOO_TOY_RSP_U32 || mBytes.length != 6) {
+				return defValue;
+			}
+
+			return CavanJava.buildValue32(mBytes, 2);
+		}
+
+		public String getText() {
+			if (getType() != JWAOO_TOY_RSP_TEXT) {
+				return null;
+			}
+
+			return new String(mBytes, 2, mBytes.length - 2);
+		}
+
+		public byte[] getData() {
+			if (getType() != JWAOO_TOY_RSP_DATA) {
+				return null;
+			}
+
+			return CavanJava.ArrayCopySkip(mBytes, 2);
+		}
+
+		public static boolean getBool(JwaooToyResponse response) {
+			return response != null && response.getBool();
+		}
+
+		public static byte getValue8(JwaooToyResponse response, byte defValue) {
+			if (response == null) {
+				return defValue;
+			}
+
+			return response.getValue8(defValue);
+		}
+
+		public static short getValue16(JwaooToyResponse response, short defValue) {
+			if (response == null) {
+				return defValue;
+			}
+
+			return response.getValue16(defValue);
+		}
+
+		public static int getValue32(JwaooToyResponse response, int defValue) {
+			if (response == null) {
+				return defValue;
+			}
+
+			return response.getValue32(defValue);
+		}
+
+		public static String getText(JwaooToyResponse response) {
+			if (response == null) {
+				return null;
+			}
+
+			return response.getText();
+		}
+
+		public static byte[] getData(JwaooToyResponse response) {
+			if (response == null) {
+				return null;
+			}
+
+			return response.getData();
+		}
+	}
+
+	// ================================================================================
+
+	public class JwaooToyCommand {
+
+		synchronized public JwaooToyResponse send(byte[] command) {
+			for (int i = 0; i < 10; i++) {
+				if (mCharCommand == null) {
+					break;
+				}
+
+				byte[] response = mCharCommand.sendCommand(command);
+				if (response == null) {
+					CavanAndroid.logE("Failed to mCharCommand.send");
+					break;
+				}
+
+				if (response.length > 2 && response[0] == command[0]) {
+					CavanAndroid.logE("response: command = " + response[0] + ", type = " + response[1] + ", length = " + response.length);
+					return new JwaooToyResponse(response);
+				}
+
+				CavanAndroid.logE("Invalid response" + i + ": length = " + response.length);
+			}
+
+			return null;
+		}
+
+		public JwaooToyResponse send(byte type) {
+			return send(new byte[] { type });
+		}
+
+		public byte[] buildCommand(byte type, byte[] data) {
+			byte[] command = new byte[data.length + 1];
+
+			command[0] = type;
+			CavanJava.ArrayCopy(data, 0, command, 1, data.length);
+
+			return command;
+		}
+
+		public JwaooToyResponse send(byte type, byte[] data) {
+			return send(buildCommand(type, data));
+		}
+
+		public JwaooToyResponse send(byte type, String text) {
+			return send(type, text.getBytes());
+		}
+
+		public JwaooToyResponse send(byte type, byte value) {
+			byte[] command = { type, value };
+			return send(command);
+		}
+
+		public JwaooToyResponse send(byte type, short value) {
+			CavanByteCache cache = new CavanByteCache(3);
+
+			cache.writeValue8(type);
+			cache.writeValue16(value);
+
+			return send(cache.getBytes());
+		}
+
+		public JwaooToyResponse send(byte type, int value) {
+			CavanByteCache cache = new CavanByteCache(5);
+
+			cache.writeValue8(type);
+			cache.writeValue32(value);
+
+			return send(cache.getBytes());
+		}
+
+		public JwaooToyResponse send(byte type, boolean value) {
+			return send(type, CavanJava.getBoolValueByte(value));
+		}
+
+		public JwaooToyResponse send(byte type, boolean enable, byte value) {
+			byte[] command = { type, CavanJava.getBoolValueByte(enable) , value };
+			return send(command);
+		}
+
+		public JwaooToyResponse send(byte type, boolean enable, short value) {
+			CavanByteCache cache = new CavanByteCache(4);
+
+			cache.writeValue8(type);
+			cache.writeBool(enable);
+			cache.writeValue16(value);
+
+			return send(cache.getBytes());
+		}
+
+		public JwaooToyResponse send(byte type, boolean enable, int value) {
+			CavanByteCache cache = new CavanByteCache(6);
+
+			cache.writeValue8(type);
+			cache.writeBool(enable);
+			cache.writeValue32(value);
+
+			return send(cache.getBytes());
+		}
+
+		public boolean readBool(byte[] command) {
+			return JwaooToyResponse.getBool(send(command));
+		}
+
+		public boolean readBool(byte type) {
+			return JwaooToyResponse.getBool(send(type));
+		}
+
+		public boolean readBool(byte type, byte value) {
+			return JwaooToyResponse.getBool(send(type, value));
+		}
+
+		public boolean readBool(byte type, short value) {
+			return JwaooToyResponse.getBool(send(type, value));
+		}
+
+		public boolean readBool(byte type, int value) {
+			return JwaooToyResponse.getBool(send(type, value));
+		}
+
+		public boolean readBool(byte type, String text) {
+			return JwaooToyResponse.getBool(send(type, text));
+		}
+
+		public boolean readBool(byte type, byte[] data) {
+			return JwaooToyResponse.getBool(send(type, data));
+		}
+
+		public boolean readBool(byte type, boolean enable) {
+			return JwaooToyResponse.getBool(send(type, enable));
+		}
+
+		public boolean readBool(byte type, boolean enable, short delay) {
+			return JwaooToyResponse.getBool(send(type, enable, delay));
+		}
+
+		public boolean readBool(byte type, boolean enable, int delay) {
+			return JwaooToyResponse.getBool(send(type, enable, delay));
+		}
+
+		public byte readValue8(byte type, byte defValue) {
+			return JwaooToyResponse.getValue8(send(type), defValue);
+		}
+
+		public short readValue16(byte type, short defValue) {
+			return JwaooToyResponse.getValue16(send(type), defValue);
+		}
+
+		public int readValue32(byte type, int defValue) {
+			return JwaooToyResponse.getValue32(send(type), defValue);
+		}
+
+		public String readText(byte type) {
+			return JwaooToyResponse.getText(send(type));
+		}
+
+		public byte[] readData(byte type) {
+			return JwaooToyResponse.getData(send(type));
+		}
 	}
 }
