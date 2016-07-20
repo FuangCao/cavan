@@ -597,12 +597,17 @@ public class JwaooBleToy extends CavanBleGatt {
 					break;
 				}
 
-				if (response.length > 2 && response[0] == command[0]) {
+				if (response.length < 2) {
+					CavanAndroid.logE("Invalid response length: " + response.length);
+					continue;
+				}
+
+				if (response[0] == command[0]) {
 					CavanAndroid.logE("response: command = " + response[0] + ", type = " + response[1] + ", length = " + response.length);
 					return new JwaooToyResponse(response);
 				}
 
-				CavanAndroid.logE("Invalid response" + i + ": length = " + response.length);
+				CavanAndroid.logE("Invalid response command type: " + response[0] + ", expect = " + command[0]);
 			}
 
 			return null;
