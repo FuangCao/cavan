@@ -88,5 +88,12 @@
            withProgress:(nullable CavanProgressManager *)progress;
 - (nullable NSData *)readBdAddress;
 - (BOOL)writeBdAddress:(nonnull const uint8_t *)bd_addr;
+- (BOOL)setKeyClickEnable:(BOOL)enable;
+- (BOOL)setKeyLongClickEnable:(BOOL)enable;
+- (BOOL)setKeyLongClickEnable:(BOOL)enable
+                 withDelay:(uint16_t)delay;
+- (BOOL)setKeyMultiClickEnable:(BOOL)enable;
+- (BOOL)setKeyMultiClickEnable:(BOOL)enable
+                  withDelay:(uint16_t)delay;
 
 @end

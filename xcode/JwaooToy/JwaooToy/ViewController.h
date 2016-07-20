@@ -19,7 +19,6 @@
 
 @property (weak) IBOutlet NSProgressIndicator *mProgressBar;
 @property (weak) IBOutlet NSButton *mButtonSensCommand;
-@property (weak) IBOutlet NSButton *mButtonSensor;
 @property (weak) IBOutlet NSButton *mButtonDisconnect;
 @property (weak) IBOutlet NSButton *mButtonReboot;
 @property (weak) IBOutlet NSButton *mButtonUpgrade;
@@ -28,6 +27,10 @@
 @property (weak) IBOutlet NSTextField *mLabelFreq;
 @property (weak) IBOutlet NSTextField *mLabelDepth;
 @property (weak) IBOutlet NSTextField *mTextFieldBdAddr;
+@property (weak) IBOutlet NSButton *mButtonSensor;
+@property (weak) IBOutlet NSButton *mButtonLongClick;
+@property (weak) IBOutlet NSButton *mButtonMultiClick;
+@property (weak) IBOutlet NSButton *mButtonClick;
 
 @end
 

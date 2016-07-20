@@ -26,6 +26,27 @@
 
 - (BOOL)doInitialize:(JwaooBleToy *)bleToy {
     NSLog(@"doInitialize");
+
+    if (![bleToy setSensorEnable:_mButtonSensor.state withDelay:30]) {
+        NSLog(@"Failed to setSensorEnable");
+        return false;
+    }
+
+    if (![bleToy setKeyClickEnable:_mButtonClick.state]) {
+        NSLog(@"Failed to setKeyClickEnable");
+        return false;
+    }
+
+    if (![bleToy setKeyLongClickEnable:_mButtonLongClick.state]) {
+        NSLog(@"Failed to setKeyLongClickEnable");
+        return false;
+    }
+
+    if (![bleToy setKeyMultiClickEnable:_mButtonMultiClick.state]) {
+        NSLog(@"Failed to setKeyMultiClickEnable");
+        return false;
+    }
+
     return true;
 }
 
@@ -80,6 +101,9 @@
         _mButtonUpgrade.enabled = enable.boolValue;
         _mButtonDisconnect.enabled = enable.boolValue;
         _mButtonSensCommand.enabled = enable.boolValue;
+        _mButtonClick.enabled = enable.boolValue;
+        _mButtonLongClick.enabled = enable.boolValue;
+        _mButtonMultiClick.enabled = enable.boolValue;
     } else {
         [self performSelectorOnMainThread:@selector(updateUI:) withObject:enable waitUntilDone:NO];
     }
@@ -132,31 +156,23 @@
     NSLog(@"sendCommandButton");
 
     NSString *text = [mBleToy doIdentify];
-    if (text != nil) {
-        NSLog(@"doIdentify = %@", text);
+    if (text == nil) {
+        NSLog(@"Failed to doIdentify");
+        return;
     }
 
+    NSLog(@"doIdentify = %@", text);
+
     text = [mBleToy readBuildDate];
-    if  (text != nil) {
-        NSLog(@"BuildDate = %@", text);
+    if  (text == nil) {
+        NSLog(@"Failed to readBuildDate");
+        return;
     }
+
+    NSLog(@"BuildDate = %@", text);
 
     uint32_t version = [mBleToy readVersion];
     NSLog(@"version = 0x%08x", version);
-}
-
-- (IBAction)sensorEnableButton:(NSButton *)sender {
-    NSLog(@"sensorEnableButton");
-
-    if (mSensorEnable) {
-        if ([mBleToy setSensorEnable:FALSE]) {
-            mSensorEnable = FALSE;
-        }
-    } else if ([mBleToy setSensorEnable:TRUE withDelay:30]) {
-        mSensorEnable = TRUE;
-    }
-
-    NSLog(@"mSensorEnable = %d", mSensorEnable);
 }
 
 - (IBAction)rebootButton:(NSButton *)sender {
@@ -202,6 +218,22 @@
     } else {
         NSLog(@"Invalid format");
     }
+}
+
+- (IBAction)sensorEnableButton:(NSButton *)sender {
+    [mBleToy setSensorEnable:sender.state withDelay:30];
+}
+
+- (IBAction)buttonClick:(NSButton *)sender {
+    [mBleToy setKeyClickEnable:sender.state];
+}
+
+- (IBAction)buttonLongClick:(NSButton *)sender {
+    [mBleToy setKeyLongClickEnable:sender.state];
+}
+
+- (IBAction)buttonMultiClick:(NSButton *)sender {
+    [mBleToy setKeyMultiClickEnable:sender.state];
 }
 
 @end

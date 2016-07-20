@@ -675,11 +675,11 @@
             <objects>
                 <viewController id="XfG-lQ-9wD" customClass="ViewController" sceneMemberID="viewController">
                     <view key="view" wantsLayer="YES" id="m2S-Jp-Qdl">
-                        <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                        <rect key="frame" x="0.0" y="0.0" width="480" height="355"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="kRt-qw-1Q3">
-                                <rect key="frame" x="14" y="118" width="81" height="32"/>
+                                <rect key="frame" x="14" y="203" width="81" height="32"/>
                                 <buttonCell key="cell" type="push" title="发送命令" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Hed-Mc-0ne">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -689,7 +689,7 @@
                                 </connections>
                             </button>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="zuK-u1-yJh">
-                                <rect key="frame" x="385" y="153" width="81" height="32"/>
+                                <rect key="frame" x="385" y="238" width="81" height="32"/>
                                 <buttonCell key="cell" type="push" title="固件升级" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Shd-Ge-YEb">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -699,7 +699,7 @@
                                 </connections>
                             </button>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="WV1-yi-9oZ">
-                                <rect key="frame" x="385" y="118" width="81" height="32"/>
+                                <rect key="frame" x="385" y="203" width="81" height="32"/>
                                 <buttonCell key="cell" type="push" title="重启" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="lWW-0l-d4M">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -709,7 +709,7 @@
                                 </connections>
                             </button>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="TDE-jM-8Vb">
-                                <rect key="frame" x="290" y="118" width="81" height="32"/>
+                                <rect key="frame" x="290" y="203" width="81" height="32"/>
                                 <buttonCell key="cell" type="push" title="断开连接" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="5I4-Iq-t90">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -719,18 +719,8 @@
                                 </connections>
                             </button>
                             <progressIndicator wantsLayer="YES" fixedFrame="YES" maxValue="100" style="bar" translatesAutoresizingMaskIntoConstraints="NO" id="vY5-VD-re9">
-                                <rect key="frame" x="20" y="231" width="440" height="20"/>
+                                <rect key="frame" x="20" y="316" width="440" height="20"/>
                             </progressIndicator>
-                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5dN-a1-bB5">
-                                <rect key="frame" x="114" y="118" width="81" height="32"/>
-                                <buttonCell key="cell" type="push" title="传感器" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1R5-wx-jbO">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                                <connections>
-                                    <action selector="sensorEnableButton:" target="XfG-lQ-9wD" id="eJW-ZV-wn0"/>
-                                </connections>
-                            </button>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8Bc-Ss-zZv">
                                 <rect key="frame" x="18" y="85" width="154" height="17"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="每秒收到数据包个数：" id="DNM-03-qGM">
@@ -796,7 +786,7 @@
                                 </textFieldCell>
                             </textField>
                             <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5EP-Ja-uDq">
-                                <rect key="frame" x="87" y="199" width="373" height="22"/>
+                                <rect key="frame" x="87" y="284" width="373" height="22"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="jjs-CL-YdL">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
@@ -804,7 +794,7 @@
                                 </textFieldCell>
                             </textField>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YwY-La-VDQ">
-                                <rect key="frame" x="290" y="153" width="95" height="32"/>
+                                <rect key="frame" x="290" y="238" width="95" height="32"/>
                                 <buttonCell key="cell" type="push" title="写硬件地址" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="GXx-FW-VL0">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -814,7 +804,7 @@
                                 </connections>
                             </button>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IAp-4W-ETA">
-                                <rect key="frame" x="18" y="202" width="73" height="17"/>
+                                <rect key="frame" x="18" y="287" width="73" height="17"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="硬件地址：" id="oD4-ck-06L">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -822,7 +812,7 @@
                                 </textFieldCell>
                             </textField>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="74b-zQ-GoM">
-                                <rect key="frame" x="14" y="153" width="95" height="32"/>
+                                <rect key="frame" x="14" y="238" width="95" height="32"/>
                                 <buttonCell key="cell" type="push" title="读硬件地址" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="l6r-Rf-U1F">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -831,13 +821,56 @@
                                     <action selector="buttonReadBdAddr:" target="XfG-lQ-9wD" id="Vlx-68-OlH"/>
                                 </connections>
                             </button>
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="XOh-ST-Ym8">
+                                <rect key="frame" x="18" y="168" width="93" height="18"/>
+                                <buttonCell key="cell" type="check" title="打开传感器" bezelStyle="regularSquare" imagePosition="left" inset="2" id="Ggb-kt-pjr">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="sensorEnableButton:" target="XfG-lQ-9wD" id="DpY-5a-Tmx"/>
+                                </connections>
+                            </button>
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="hp0-Tm-8ts">
+                                <rect key="frame" x="382" y="168" width="74" height="18"/>
+                                <buttonCell key="cell" type="check" title="允许长按" bezelStyle="regularSquare" imagePosition="left" inset="2" id="HT7-ak-mEz">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="buttonLongClick:" target="XfG-lQ-9wD" id="z5W-8v-OfR"/>
+                                </connections>
+                            </button>
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="hxh-1X-er6">
+                                <rect key="frame" x="18" y="132" width="105" height="18"/>
+                                <buttonCell key="cell" type="check" title="允许多次点击" bezelStyle="regularSquare" imagePosition="left" inset="2" id="SdN-m6-pZ2">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="buttonMultiClick:" target="XfG-lQ-9wD" id="M6r-Y7-87f"/>
+                                </connections>
+                            </button>
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="REp-1e-pVy">
+                                <rect key="frame" x="382" y="132" width="74" height="18"/>
+                                <buttonCell key="cell" type="check" title="允许点击" bezelStyle="regularSquare" imagePosition="left" inset="2" id="btQ-5v-gFB">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="buttonClick:" target="XfG-lQ-9wD" id="c0n-rQ-8cq"/>
+                                </connections>
+                            </button>
                         </subviews>
                     </view>
                     <connections>
+                        <outlet property="mButtonClick" destination="REp-1e-pVy" id="LJH-7r-cc6"/>
                         <outlet property="mButtonDisconnect" destination="TDE-jM-8Vb" id="u3T-w6-Ape"/>
+                        <outlet property="mButtonLongClick" destination="hp0-Tm-8ts" id="xTa-wG-RYi"/>
+                        <outlet property="mButtonMultiClick" destination="hxh-1X-er6" id="n4z-ZY-8he"/>
                         <outlet property="mButtonReboot" destination="WV1-yi-9oZ" id="fYr-7j-Prq"/>
                         <outlet property="mButtonSensCommand" destination="kRt-qw-1Q3" id="cwL-bP-GuI"/>
-                        <outlet property="mButtonSensor" destination="5dN-a1-bB5" id="7iT-xc-hzG"/>
+                        <outlet property="mButtonSensor" destination="XOh-ST-Ym8" id="f2f-wM-25d"/>
                         <outlet property="mButtonUpgrade" destination="zuK-u1-yJh" id="qkW-Vn-yg5"/>
                         <outlet property="mLabelDataCount" destination="scV-vQ-wXh" id="2XR-M6-Jmg"/>
                         <outlet property="mLabelDataSpeed" destination="Cid-hb-tDB" id="7gC-2L-eaJ"/>
@@ -849,7 +882,7 @@
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="29" y="656"/>
+            <point key="canvasLocation" x="29" y="698.5"/>
         </scene>
     </scenes>
 </document>

@@ -372,4 +372,26 @@
     return [self setFlashWriteEnable:false];
 }
 
+- (BOOL)setKeyClickEnable:(BOOL)enable {
+    return [mCommand readBoolWithType:JWAOO_TOY_CMD_KEY_CLICK_ENABLE withBool:enable];
+}
+
+- (BOOL)setKeyLongClickEnable:(BOOL)enable {
+    return [mCommand readBoolWithType:JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE withBool:enable];
+}
+
+- (BOOL)setKeyLongClickEnable:(BOOL)enable
+                 withDelay:(uint16_t)delay {
+    return [mCommand readBoolWithType:JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE withBool:enable withDelay16:delay];
+}
+
+- (BOOL)setKeyMultiClickEnable:(BOOL)enable {
+    return [mCommand readBoolWithType:JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE withBool:enable];
+}
+
+- (BOOL)setKeyMultiClickEnable:(BOOL)enable
+                  withDelay:(uint16_t)delay {
+    return [mCommand readBoolWithType:JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE withBool:enable withDelay16:delay];
+}
+
 @end
