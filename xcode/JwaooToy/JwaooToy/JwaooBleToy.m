@@ -137,6 +137,8 @@
         return false;
     }
 
+    mCommand = [[JwaooToyCommand alloc] initWithBleChar:mCharCommand];
+
     NSString *identify = [self doIdentify];
     if (identify == nil) {
         NSLog(@"Failed to doIdentify");
@@ -155,267 +157,66 @@
 
 // ================================================================================
 
-+ (BOOL)parseResponseBool:(NSData *)response {
-    if (response == nil || response.length != 2) {
-        return FALSE;
-    }
 
-    struct jwaoo_toy_command *command = (struct jwaoo_toy_command *) response.bytes;
-
-    return command->type == JWAOO_TOY_RSP_BOOL && command->value8 > 0;
-}
-
-+ (uint8_t)parseResponseValue8:(NSData *)response {
-    if (response == nil || response.length != 2) {
-        return 0;
-    }
-
-    struct jwaoo_toy_command *command = (struct jwaoo_toy_command *) response.bytes;
-    if (command->type == JWAOO_TOY_RSP_U8) {
-        return command->value8;
-    }
-
-    NSLog(@"Invalid response type = %d", command->type);
-
-    return 0;
-}
-
-+ (uint16_t)parseResponseValue16:(NSData *)response {
-    if (response == nil || response.length != 3) {
-        return 0;
-    }
-
-    struct jwaoo_toy_command *command = (struct jwaoo_toy_command *) response.bytes;
-    if (command->type == JWAOO_TOY_RSP_U16) {
-        return command->value16;
-    }
-
-    NSLog(@"Invalid response type = %d", command->type);
-
-    return 0;
-}
-
-+ (uint32_t)parseResponseValue32:(NSData *)response {
-    if (response == nil || response.length != 5) {
-        return 0;
-    }
-
-    struct jwaoo_toy_command *command = (struct jwaoo_toy_command *) response.bytes;
-    if (command->type == JWAOO_TOY_RSP_U32) {
-        return command->value32;
-    }
-
-    NSLog(@"Invalid response type = %d", command->type);
-
-    return 0;
-}
-
-+ (NSString *)parseResponseText:(NSData *)response {
-    if (response == nil || response.length < 2) {
-        return nil;
-    }
-
-    struct jwaoo_toy_command *command = (struct jwaoo_toy_command *) response.bytes;
-    if (command->type == JWAOO_TOY_RSP_TEXT) {
-        return [[NSString alloc] initWithBytes:command->text length:response.length - 1 encoding:NSASCIIStringEncoding];
-    }
-
-    NSLog(@"Invalid response type = %d", command->type);
-
-    return nil;
-}
-
-+ (NSData *)parseResponseData:(NSData *)response {
-    if (response == nil || response.length < 1) {
-        return nil;
-    }
-
-    struct jwaoo_toy_command *command = (struct jwaoo_toy_command *) response.bytes;
-    if (command->type == JWAOO_TOY_RSP_DATA) {
-        return [NSData dataWithBytes:(response.bytes + 1) length:(response.length - 1)];
-    }
-
-    NSLog(@"Invalid response type = %d", command->type);
-
-    return nil;
-
-}
 
 // ================================================================================
 
-- (NSData *)sendCommand:(NSData *)command {
-    if (mCharCommand == nil) {
-        return nil;
-    }
 
-    return [mCharCommand sendCommand:command];
-}
-
-- (NSData *)sendCommand:(const void *)command
-                 length:(NSUInteger)length {
-    NSData *data = [[NSData alloc] initWithBytes:command length:length];
-
-    return [self sendCommand:data];
-}
-
-- (NSData *)sendCommand:(uint8_t)type
-               withData:(const void *)bytes
-                 length:(NSUInteger)length {
-    NSMutableData *data = [[NSMutableData alloc] initWithCapacity:(length + 1)];
-
-    [data appendBytes:&type length:1];
-    [data appendBytes:bytes length:length];
-
-    return [self sendCommand:data];
-}
-
-- (BOOL)sendCommandReadBool:(const void *)command
-                     length:(NSUInteger)length {
-    NSData *response = [self sendCommand:command length:length];
-    return [self.class parseResponseBool:response];
-}
-
-- (NSData *)sendEmptyCommand:(uint8_t) command {
-    NSData *data = [[NSData alloc] initWithBytes:&command length:1];
-
-    return [self sendCommand:data];
-}
-
-- (NSData *)sendCommand:(uint8_t)type
-               withBool:(BOOL)value {
-    return [self sendCommand:type withValue8:value];
-}
-
-- (NSData *)sendCommand:(uint8_t)type
-             withValue8:(uint8_t)value {
-    struct jwaoo_toy_command command = { type, value };
-
-    return [self sendCommand:&command length:2];
-}
-
-- (NSData *)sendCommand:(uint8_t)type
-            withValue16:(uint16_t)value {
-    struct jwaoo_toy_command command = { type, value };
-
-    return [self sendCommand:&command length:3];
-}
-
-- (NSData *)sendCommand:(uint8_t)type
-            withValue32:(uint32_t)value {
-    struct jwaoo_toy_command command = { type, value };
-
-    return [self sendCommand:&command length:5];
-}
-
-- (BOOL)sendEmptyCommandReadBool:(uint8_t)type {
-    NSData *response = [self sendEmptyCommand:type];
-    return [self.class parseResponseBool:response];
-}
-
-- (uint8_t)sendEmptyCommandReadValue8:(uint8_t)type {
-    NSData *response = [self sendEmptyCommand:type];
-    return [self.class parseResponseValue8:response];
-}
-
-- (uint16_t)sendEmptyCommandReadValue16:(uint8_t)type {
-    NSData *response = [self sendEmptyCommand:type];
-    return [self.class parseResponseValue16:response];
-}
-
-- (uint32_t)sendEmptyCommandReadValue32:(uint8_t)type {
-    NSData *response = [self sendEmptyCommand:type];
-    return [self.class parseResponseValue32:response];
-}
-
-- (NSString *)sendEmptyCommandReadText:(uint8_t)type {
-    NSData *response = [self sendEmptyCommand:type];
-    return [self.class parseResponseText:response];
-}
-
-- (BOOL)sendCommandReadBool:(uint8_t)type
-                        withBool:(BOOL)value {
-    NSData *response = [self sendCommand:type withBool:value];
-    return [self.class parseResponseBool:response];
-}
-
-- (BOOL)sendCommandReadBool:(uint8_t)type
-                      withValue8:(uint8_t)value {
-    NSData *response = [self sendCommand:type withValue8:value];
-    return [self.class parseResponseBool:response];
-}
-
-- (BOOL)sendCommandReadBool:(uint8_t)type
-                     withValue16:(uint16_t)value {
-    NSData *response = [self sendCommand:type withValue16:value];
-    return [self.class parseResponseBool:response];
-}
-
-- (BOOL)sendCommandReadBool:(uint8_t)type
-                     withValue32:(uint32_t)value {
-    NSData *response = [self sendCommand:type withValue32:value];
-    return [self.class parseResponseBool:response];
-}
-
-- (BOOL)sendCommandReadBool:(uint8_t)type
-                        withData:(const void *)bytes
-                           lenth:(NSUInteger)length {
-    NSData *response = [self sendCommand:type withData:bytes length:length];
-    return [self.class parseResponseBool:response];
-}
 
 // ================================================================================
 
 - (NSString *)doIdentify {
-    return [self sendEmptyCommandReadText:JWAOO_TOY_CMD_IDENTIFY];
+    return [mCommand readTextWithType:JWAOO_TOY_CMD_IDENTIFY];
 }
 
 - (NSString *)readBuildDate {
-    return [self sendEmptyCommandReadText:JWAOO_TOY_CMD_BUILD_DATE];
+    return [mCommand readTextWithType:JWAOO_TOY_CMD_BUILD_DATE];
 }
 
 - (uint32_t)readVersion {
-    return [self sendEmptyCommandReadValue32:JWAOO_TOY_CMD_VERSION];
+    return [mCommand readValueWithType32:JWAOO_TOY_CMD_VERSION];
 }
 
 - (BOOL)doReboot {
-    return [self sendEmptyCommandReadBool:JWAOO_TOY_CMD_REBOOT];
+    return [mCommand readBoolWithType:JWAOO_TOY_CMD_REBOOT];
 }
 
 - (BOOL)setSensorEnable:(BOOL)enable {
-    return [self sendCommandReadBool:JWAOO_TOY_CMD_SENSOR_ENABLE withBool:enable];
+    return [mCommand readBoolWithType:JWAOO_TOY_CMD_SENSOR_ENABLE withBool:enable];
 }
 
-- (BOOL)setSensorDelay:(uint32_t)delay {
-    return [self sendCommandReadBool:JWAOO_TOY_CMD_SENSOR_SET_DELAY withValue32:delay];
+- (BOOL)setSensorEnable:(BOOL)enable
+              withDelay:(uint32_t)delay {
+    return [mCommand readBoolWithType:JWAOO_TOY_CMD_SENSOR_ENABLE withBool:enable withDelay32:delay];
 }
 
 - (uint32_t)getFlashId {
-    return [self sendEmptyCommandReadValue32:JWAOO_TOY_CMD_FLASH_ID];
+    return [mCommand readValueWithType32:JWAOO_TOY_CMD_FLASH_ID];
 }
 
 - (uint32_t)getFlashSize {
-    return [self sendEmptyCommandReadValue32:JWAOO_TOY_CMD_FLASH_SIZE];
+    return [mCommand readValueWithType32:JWAOO_TOY_CMD_FLASH_SIZE];
 }
 
 - (uint32_t)getFlashPageSize {
-    return [self sendEmptyCommandReadValue32:JWAOO_TOY_CMD_FLASH_PAGE_SIZE];
+    return [mCommand readValueWithType32:JWAOO_TOY_CMD_FLASH_PAGE_SIZE];
 }
 
 - (BOOL)setFlashWriteEnable:(BOOL)enable {
-    return [self sendCommandReadBool:JWAOO_TOY_CMD_FLASH_WRITE_ENABLE withBool:enable];
+    return [mCommand readBoolWithType:JWAOO_TOY_CMD_FLASH_WRITE_ENABLE withBool:enable];
 }
 
 - (BOOL)eraseFlash {
-    return [self sendEmptyCommandReadBool:JWAOO_TOY_CMD_FLASH_ERASE];
+    return [mCommand readBoolWithType:JWAOO_TOY_CMD_FLASH_ERASE];
 }
 
 - (BOOL)startFlashUpgrade {
-    return [self sendEmptyCommandReadBool:JWAOO_TOY_CMD_FLASH_WRITE_START];
+    return [mCommand readBoolWithType:JWAOO_TOY_CMD_FLASH_WRITE_START];
 }
 
 - (BOOL)finishFlashUpgrade:(uint16_t)length {
     uint8_t command[] = { JWAOO_TOY_CMD_FLASH_WRITE_FINISH, mFlashCrc, length & 0xFF, length >> 8 };
-    return [self sendCommandReadBool:command length:sizeof(command)];
+    return [mCommand readBoolWithBytes:command length:sizeof(command)];
 }
 
 - (BOOL)writeFlash:(const void *)data
@@ -551,14 +352,12 @@
 }
 
 - (NSData *)readBdAddress {
-    NSData *response = [self sendEmptyCommand:JWAOO_TOY_CMD_FLASH_READ_BD_ADDR];
-
-    response = [self.class parseResponseData:response];
-    if (response == nil || response.length != 6) {
+    NSData *data = [mCommand readDataWithType:JWAOO_TOY_CMD_FLASH_READ_BD_ADDR];
+    if (data == nil || data.length != 6) {
         return nil;
     }
 
-    return response;
+    return data;
 }
 
 - (BOOL)writeBdAddress:(const uint8_t *)bd_addr {
@@ -566,7 +365,7 @@
         return false;
     }
 
-    if (![self sendCommandReadBool:JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR withData:bd_addr lenth:6]) {
+    if (![mCommand readBoolWithType:JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR withBytes:bd_addr length:6]) {
         return false;
     }
 

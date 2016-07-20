@@ -152,8 +152,7 @@
         if ([mBleToy setSensorEnable:FALSE]) {
             mSensorEnable = FALSE;
         }
-    } else if ([mBleToy setSensorEnable:TRUE]) {
-        [mBleToy setSensorDelay:30];
+    } else if ([mBleToy setSensorEnable:TRUE withDelay:30]) {
         mSensorEnable = TRUE;
     }
 

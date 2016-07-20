@@ -27,6 +27,8 @@
 		86E90B561D2E725200FB82B6 /* JwaooBleToy.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E90B551D2E725200FB82B6 /* JwaooBleToy.m */; };
 		86E90B581D2E726300FB82B6 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 86E90B571D2E726300FB82B6 /* CoreBluetooth.framework */; };
 		86F500DA1D30C09B00BADEB8 /* CavanHexFile.m in Sources */ = {isa = PBXBuildFile; fileRef = 86F500D91D30C09B00BADEB8 /* CavanHexFile.m */; };
+		86F711511D3F5716000D5802 /* JwaooToyCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = 86F711501D3F5716000D5802 /* JwaooToyCommand.m */; };
+		86F711541D3F572B000D5802 /* JwaooToyResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 86F711531D3F572B000D5802 /* JwaooToyResponse.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -87,6 +89,10 @@
 		86E90B571D2E726300FB82B6 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		86F500D81D30C09B00BADEB8 /* CavanHexFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CavanHexFile.h; sourceTree = "<group>"; };
 		86F500D91D30C09B00BADEB8 /* CavanHexFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CavanHexFile.m; sourceTree = "<group>"; };
+		86F7114F1D3F5716000D5802 /* JwaooToyCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JwaooToyCommand.h; sourceTree = "<group>"; };
+		86F711501D3F5716000D5802 /* JwaooToyCommand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JwaooToyCommand.m; sourceTree = "<group>"; };
+		86F711521D3F572B000D5802 /* JwaooToyResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JwaooToyResponse.h; sourceTree = "<group>"; };
+		86F711531D3F572B000D5802 /* JwaooToyResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JwaooToyResponse.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -157,6 +163,10 @@
 				86E90B4F1D2E724600FB82B6 /* CavanBleChar.m */,
 				86E90B501D2E724600FB82B6 /* CavanBleGatt.h */,
 				86E90B511D2E724600FB82B6 /* CavanBleGatt.m */,
+				86F7114F1D3F5716000D5802 /* JwaooToyCommand.h */,
+				86F711501D3F5716000D5802 /* JwaooToyCommand.m */,
+				86F711521D3F572B000D5802 /* JwaooToyResponse.h */,
+				86F711531D3F572B000D5802 /* JwaooToyResponse.m */,
 				86E90B541D2E725200FB82B6 /* JwaooBleToy.h */,
 				86E90B551D2E725200FB82B6 /* JwaooBleToy.m */,
 				86E90B221D2E71D400FB82B6 /* ViewController.h */,
@@ -337,11 +347,13 @@
 				86E90B1E1D2E71D400FB82B6 /* AppDelegate.m in Sources */,
 				86E90B561D2E725200FB82B6 /* JwaooBleToy.m in Sources */,
 				86677C131D3775860018A17B /* JwaooToySensor.m in Sources */,
+				86F711511D3F5716000D5802 /* JwaooToyCommand.m in Sources */,
 				86685CF01D31176300C1BD37 /* CavanProgressManager.m in Sources */,
 				86E4B1541D2FF99900F2B897 /* CavanAccelFreqParser.m in Sources */,
 				86E90B531D2E724600FB82B6 /* CavanBleGatt.m in Sources */,
 				86E90B521D2E724600FB82B6 /* CavanBleChar.m in Sources */,
 				86F500DA1D30C09B00BADEB8 /* CavanHexFile.m in Sources */,
+				86F711541D3F572B000D5802 /* JwaooToyResponse.m in Sources */,
 				86E4B14B1D2F9C6700F2B897 /* CavanPeakValleyValue.m in Sources */,
 				86D82B381D365E8200FD2D46 /* CavanAccelSensor.m in Sources */,
 				86E4B1511D2FE38A00F2B897 /* Mpu6050Sensor.m in Sources */,
