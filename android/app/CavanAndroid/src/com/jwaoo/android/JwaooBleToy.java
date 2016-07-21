@@ -454,6 +454,18 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mCommand.readBool(JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE, enable, delay);
 	}
 
+	public JwaooToyMpu6050 createMpu6050() {
+		return new JwaooToyMpu6050();
+	}
+
+	public JwaooToyBmi160 createBmi160() {
+		return new JwaooToyBmi160();
+	}
+
+	public JwaooToyFdc1004 createFdc1004() {
+		return new JwaooToyFdc1004();
+	}
+
 	@Override
 	protected boolean doInitialize() {
 		mCharCommand = openChar(UUID_COMMAND);
@@ -790,8 +802,504 @@ public class JwaooBleToy extends CavanBleGatt {
 			return JwaooToyResponse.getText(send(type));
 		}
 
+		public byte[] readData(byte[] command) {
+			return JwaooToyResponse.getData(send(command));
+		}
+
 		public byte[] readData(byte type) {
 			return JwaooToyResponse.getData(send(type));
+		}
+	}
+
+	// ================================================================================
+
+	public abstract class JwaooToyI2c {
+		private byte mSlave;
+
+		protected abstract int readRegister(int addr);
+		protected abstract boolean writeRegister(int addr, int value);
+
+		public JwaooToyI2c(byte slave) {
+			mSlave = slave;
+		}
+
+		public byte[] doReadWrite(int rdlen, byte[] data) {
+			byte[] command = new byte[data.length + 3];
+
+			command[0] = JWAOO_TOY_CMD_I2C_RW;
+			command[1] = mSlave;
+			command[2] = (byte) rdlen;
+			CavanJava.ArrayCopy(data, 0, command, 3, data.length);
+
+			return mCommand.readData(command);
+		}
+
+		public byte[] readData(byte addr, int rdlen) {
+			return doReadWrite(rdlen, CavanJava.getValueBytes(addr));
+		}
+
+		public byte[] readData(short addr, int rdlen) {
+			return doReadWrite(rdlen, CavanJava.getValueBytes(addr));
+		}
+
+		public byte[] readData(int addr, int rdlen) {
+			return doReadWrite(rdlen, CavanJava.getValueBytes(addr));
+		}
+
+		public byte readValue8(byte addr, byte defValue) {
+			byte[] data = readData(addr, 1);
+			if (data == null || data.length != 1) {
+				return defValue;
+			}
+
+			return data[0];
+		}
+
+		public byte readValue8(byte addr) {
+			return readValue8(addr, (byte) 0);
+		}
+
+		public short readValue16(byte addr, short defValue) {
+			byte[] data = readData(addr, 2);
+			if (data == null || data.length != 2) {
+				return defValue;
+			}
+
+			return CavanJava.buildValue16(data, 0);
+		}
+
+		public short readValue16(byte addr) {
+			return readValue16(addr, (short) 0);
+		}
+
+		public int readValue32(byte addr, int defValue) {
+			byte[] data = readData(addr, 4);
+			if (data == null || data.length != 4) {
+				return defValue;
+			}
+
+			return CavanJava.buildValue32(data, 0);
+		}
+
+		public int readValue32(byte addr) {
+			return readValue32(addr, 0);
+		}
+
+		public short readValueBe16(byte addr, short defValue) {
+			byte[] data = readData(addr, 2);
+			if (data == null || data.length != 2) {
+				return defValue;
+			}
+
+			return CavanJava.buildValueBe16(data, 0);
+		}
+
+		public short readValueBe16(byte addr) {
+			return readValueBe16(addr, (short) 0);
+		}
+
+		public int readValueBe32(byte addr, int defValue) {
+			byte[] data = readData(addr, 4);
+			if (data == null || data.length != 4) {
+				return defValue;
+			}
+
+			return CavanJava.buildValueBe32(data, 0);
+		}
+
+		public int readValueBe32(byte addr) {
+			return readValueBe32(addr, 0);
+		}
+
+		public boolean writeData(byte[] data) {
+			return doReadWrite(0, data) != null;
+		}
+
+		public boolean writeData(byte addr, byte[] data) {
+			CavanByteCache cache = new CavanByteCache(data.length + 1);
+			cache.writeValue8(addr);
+			cache.writeBytes(data);
+			return writeData(cache.getBytes());
+		}
+
+		public boolean writeData(short addr, byte[] data) {
+			CavanByteCache cache = new CavanByteCache(data.length + 2);
+			cache.writeValue16(addr);
+			cache.writeBytes(data);
+			return writeData(cache.getBytes());
+		}
+
+		public boolean writeData(int addr, byte[] data) {
+			CavanByteCache cache = new CavanByteCache(data.length + 4);
+			cache.writeValue32(addr);
+			cache.writeBytes(data);
+			return writeData(cache.getBytes());
+		}
+
+		public boolean writeValue8(byte addr, byte value) {
+			byte[] data = { addr, value };
+			return writeData(data);
+		}
+
+		public boolean writeValue16(byte addr, short value) {
+			CavanByteCache cache = new CavanByteCache(3);
+			cache.writeValue8(addr);
+			cache.writeValue16(value);
+			return writeData(cache.getBytes());
+		}
+
+		public boolean writeValue32(byte addr, int value) {
+			CavanByteCache cache = new CavanByteCache(5);
+			cache.writeValue8(addr);
+			cache.writeValue32(value);
+			return writeData(cache.getBytes());
+		}
+
+		public boolean writeValueBe16(byte addr, short value) {
+			CavanByteCache cache = new CavanByteCache(3);
+			cache.writeValue8(addr);
+			cache.writeValueBe16(value);
+			return writeData(cache.getBytes());
+		}
+
+		public boolean writeValueBe32(byte addr, int value) {
+			CavanByteCache cache = new CavanByteCache(5);
+			cache.writeValue8(addr);
+			cache.writeValueBe32(value);
+			return writeData(cache.getBytes());
+		}
+
+		public int readValue8(int addr) {
+			return readValue8((byte) addr) & 0xFF;
+		}
+
+		public int readValue16(int addr) {
+			return readValue16((byte) addr) & 0xFFFF;
+		}
+
+		public int readValue32(int addr) {
+			return readValue32((byte) addr);
+		}
+
+		public int readValueBe16(int addr) {
+			return readValueBe16((byte) addr) & 0xFFFF;
+		}
+
+		public int readValueBe32(int addr) {
+			return readValueBe32((byte) addr);
+		}
+
+		public boolean writeValue8(int addr, int value) {
+			return writeValue8((byte) addr, (byte) value);
+		}
+
+		public boolean writeValue16(int addr, int value) {
+			return writeValue16((byte) addr, (short) value);
+		}
+
+		public boolean writeValue32(int addr, int value) {
+			return writeValue32((byte) addr, value);
+		}
+
+		public boolean writeValueBe16(int addr, int value) {
+			return writeValueBe16((byte) addr, (short) value);
+		}
+
+		public boolean writeValueBe32(int addr, int value) {
+			return writeValueBe32((byte) addr, value);
+		}
+
+		public boolean updateBits8(int addr, int value, int mask) {
+			int valueOld = readValue8(addr);
+
+			value |= (valueOld & (~mask));
+
+			CavanAndroid.logE(String.format("updateBits8: addr = 0x%02x, value: 0x%02x => 0x%02x", addr, valueOld, value));
+
+			if (value == valueOld) {
+				return true;
+			}
+
+			return writeValue8(addr, value);
+		}
+
+		public boolean updateBits16(int addr, int value, int mask) {
+			int valueOld = readValue16(addr);
+
+			value |= (valueOld & (~mask));
+
+			CavanAndroid.logE(String.format("updateBits16: addr = 0x%02x, value: 0x%04x => 0x%04x", addr, valueOld, value));
+
+			if (value == valueOld) {
+				return true;
+			}
+
+			return writeValue16(addr, value);
+		}
+
+		public boolean updateBits32(int addr, int value, int mask) {
+			int valueOld = readValue32(addr);
+
+			value |= (valueOld & (~mask));
+
+			CavanAndroid.logE(String.format("updateBits32: addr = 0x%02x, value: 0x%08x => 0x%08x", addr, valueOld, value));
+
+			if (value == valueOld) {
+				return true;
+			}
+
+			return writeValue32(addr, value);
+		}
+
+		public boolean updateBitsBe16(int addr, int value, int mask) {
+			int valueOld = readValueBe16(addr);
+
+			value |= (valueOld & (~mask));
+
+			CavanAndroid.logE(String.format("updateBitsBe16: addr = 0x%02x, value: 0x%04x => 0x%04x", addr, valueOld, value));
+
+			if (value == valueOld) {
+				return true;
+			}
+
+			return writeValueBe16(addr, value);
+		}
+
+		public boolean updateBitsBe32(int addr, int value, int mask) {
+			int valueOld = readValueBe32(addr);
+
+			value |= (valueOld & (~mask));
+
+			CavanAndroid.logE(String.format("updateBits32: addr = 0x%02x, value: 0x%08x => 0x%08x", addr, valueOld, value));
+
+			if (value == valueOld) {
+				return true;
+			}
+
+			return writeValueBe32(addr, value);
+		}
+
+		public boolean updateRegister(int addr, int value, int mask) {
+			int valueOld = readRegister(addr);
+
+			value |= (valueOld & (~mask));
+
+			CavanAndroid.logE(String.format("updateRegister: addr = 0x%02x, value: 0x%08x => 0x%08x", addr, valueOld, value));
+
+			if (value == valueOld) {
+				return true;
+			}
+
+			return writeRegister(addr, value);
+		}
+	}
+
+	public abstract class JwaooToyAccelSensor extends JwaooToyI2c {
+
+		protected double mAccelX;
+		protected double mAccelY;
+		protected double mAccelZ;
+
+		public JwaooToyAccelSensor(byte slave) {
+			super(slave);
+		}
+
+		public double getAccelX() {
+			return mAccelX;
+		}
+
+		public double getAccelY() {
+			return mAccelY;
+		}
+
+		public double getAccelZ() {
+			return mAccelZ;
+		}
+
+		public void updateData8(byte[] data) {
+			mAccelX = data[0] * 9.8 / 64;
+			mAccelY = data[1] * 9.8 / 64;
+			mAccelZ = data[2] * 9.8 / 64;
+		}
+
+		public void updateData16(byte[] data) {
+			mAccelX = CavanJava.buildValue16(data, 0) * 9.8 / 16384;
+			mAccelY = CavanJava.buildValue16(data, 2) * 9.8 / 16384;
+			mAccelZ = CavanJava.buildValue16(data, 4) * 9.8 / 16384;
+		}
+
+		public void updateDataBe16(byte[] data) {
+			mAccelX = CavanJava.buildValueBe16(data, 0) * 9.8 / 16384;
+			mAccelY = CavanJava.buildValueBe16(data, 2) * 9.8 / 16384;
+			mAccelZ = CavanJava.buildValueBe16(data, 4) * 9.8 / 16384;
+		}
+
+		@Override
+		public String toString() {
+			return String.format("[%5.2f, %5.2f, %5.2f]", mAccelX, mAccelY, mAccelZ);
+		}
+	}
+
+	public class JwaooToyMpu6050 extends JwaooToyAccelSensor {
+
+		public JwaooToyMpu6050() {
+			super((byte) 0x69);
+		}
+
+		public int readChipId() {
+			return readRegister(0x75);
+		}
+
+		public boolean doInitialize() {
+			int id = readChipId();
+
+			CavanAndroid.logE(String.format("MPU6050: Chip ID = 0x%02x", id));
+
+			if (id != 0x68) {
+				CavanAndroid.logE("Invalid chip id");
+				return false;
+			}
+
+			return true;
+		}
+
+		public boolean setEnable(boolean enable) {
+			return updateRegister(0x6B, (enable ? 0 : 1) << 6, 1 << 6);
+		}
+
+		public byte[] readData() {
+			return readData((byte) 0x3B, 6);
+		}
+
+		public boolean updateData() {
+			byte[] data = readData();
+			if (data == null) {
+				return false;
+			}
+
+			updateDataBe16(data);
+
+			return true;
+		}
+
+		@Override
+		protected int readRegister(int addr) {
+			return readValue8(addr);
+		}
+
+		@Override
+		protected boolean writeRegister(int addr, int value) {
+			return writeValue8(addr, value);
+		}
+	}
+
+	public class JwaooToyBmi160 extends JwaooToyAccelSensor {
+
+		public JwaooToyBmi160() {
+			super((byte) 0x68);
+		}
+
+		public int readChipId() {
+			return readRegister(0x00);
+		}
+
+		public boolean doInitialize() {
+			int id = readChipId();
+
+			CavanAndroid.logE(String.format("BMI160: Chip ID = 0x%02x", id));
+
+			if (id != 0xd3) {
+				CavanAndroid.logE("Invalid chip id");
+				return false;
+			}
+
+			return true;
+		}
+
+		public boolean setEnable(boolean enable) {
+			return writeRegister(0x7E, enable ? 0x11 : 0x10);
+		}
+
+		public byte[] readData() {
+			return readData((byte) 0x12, 6);
+		}
+
+		public boolean updateData() {
+			byte[] data = readData();
+			if (data == null) {
+				return false;
+			}
+
+			updateData16(data);
+
+			return true;
+		}
+
+		@Override
+		protected int readRegister(int addr) {
+			return readValue8(addr);
+		}
+
+		@Override
+		protected boolean writeRegister(int addr, int value) {
+			return writeValue8(addr, value);
+		}
+	}
+
+	public class JwaooToyFdc1004 extends JwaooToyI2c {
+
+		protected int[] mCapacitys = new int[4];
+
+		public JwaooToyFdc1004() {
+			super((byte) 0x50);
+		}
+
+		public int getCapacity(int index) {
+			return mCapacitys[index];
+		}
+
+		public int readDeviceId() {
+			return readRegister(0xFF);
+		}
+
+		public int readManufacturerId() {
+			return readRegister(0xFE);
+		}
+
+		public boolean doInitialize() {
+			int id;
+
+			id = readDeviceId();
+			CavanAndroid.logE(String.format("FDC1004: Device ID = 0x%04x", id));
+
+			if (id != 0x1004) {
+				CavanAndroid.logE("Invalid device id");
+				return false;
+			}
+
+			id = readManufacturerId();
+			CavanAndroid.logE(String.format("FDC1004: Manufacturer ID = 0x%04x", id));
+
+			if (id != 0x5449) {
+				CavanAndroid.logE("Invalid manufacturer id");
+				return false;
+			}
+
+			return true;
+		}
+
+		public boolean setEnable(boolean enable) {
+			return true;
+		}
+
+		@Override
+		protected int readRegister(int addr) {
+			return readValueBe16(addr);
+		}
+
+		@Override
+		protected boolean writeRegister(int addr, int value) {
+			return writeValueBe16(addr, value);
 		}
 	}
 }

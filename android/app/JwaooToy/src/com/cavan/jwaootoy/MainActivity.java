@@ -23,21 +23,26 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanProgressListener;
 import com.cavan.resource.CavanBleScanner;
 import com.jwaoo.android.JwaooBleToy;
+import com.jwaoo.android.JwaooBleToy.JwaooToyBmi160;
+import com.jwaoo.android.JwaooBleToy.JwaooToyFdc1004;
+import com.jwaoo.android.JwaooBleToy.JwaooToyI2c;
+import com.jwaoo.android.JwaooBleToy.JwaooToyMpu6050;
 
 @SuppressLint("HandlerLeak")
 public class MainActivity extends Activity implements OnClickListener, OnCheckedChangeListener {
 
 	private static final int SENSOR_DELAY = 30;
 
-	private static final int EVENT_DATA_RECEIVED = 1;
-	private static final int EVENT_OTA_START = 2;
-	private static final int EVENT_OTA_FAILED = 3;
-	private static final int EVENT_OTA_SUCCESS = 4;
-	private static final int EVENT_PROGRESS_UPDATED = 5;
-	private static final int EVENT_FREQ_CHANGED = 6;
-	private static final int EVENT_DEPTH_CHANGED = 7;
-	private static final int EVENT_CONNECTED = 10;
-	private static final int EVENT_DISCONNECTED = 11;
+	private static final int EVENT_BMI160_POLL = 1;
+	private static final int EVENT_MPU6050_POLL = 2;
+	private static final int EVENT_OTA_START = 3;
+	private static final int EVENT_OTA_FAILED = 4;
+	private static final int EVENT_OTA_SUCCESS = 5;
+	private static final int EVENT_PROGRESS_UPDATED = 6;
+	private static final int EVENT_FREQ_CHANGED = 7;
+	private static final int EVENT_DEPTH_CHANGED = 8;
+	private static final int EVENT_CONNECTED = 9;
+	private static final int EVENT_DISCONNECTED = 10;
 
 	private int mFreq;
 	private int mDepth;
@@ -45,6 +50,9 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 	private BluetoothDevice mDevice;
 	private JwaooBleToy mBleToy;
 	private boolean mOtaBusy;
+	private JwaooToyBmi160 mBmi160;
+	private JwaooToyMpu6050 mMpu6050;
+	private JwaooToyFdc1004 mFdc1004;
 
 	private Button mButtonSend;
 	private Button mButtonUpgrade;
@@ -68,7 +76,18 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
-			case EVENT_DATA_RECEIVED:
+			case EVENT_BMI160_POLL:
+				if (mBmi160.updateData()) {
+					CavanAndroid.logE("bmi160: " + mBmi160);
+					sendEmptyMessageDelayed(msg.what, 100);
+				}
+				break;
+
+			case EVENT_MPU6050_POLL:
+				if (mMpu6050.updateData()) {
+					CavanAndroid.logE("mpu6050: " + mMpu6050);
+					sendEmptyMessageDelayed(msg.what, 100);
+				}
 				break;
 
 			case EVENT_OTA_START:
@@ -289,6 +308,27 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 						if (!mBleToy.setMultiClickEnable(mCheckBoxMultiClick.isChecked())) {
 							CavanAndroid.logE("Failed to setMultiClickEnable");
 							return false;
+						}
+
+						mBmi160 = mBleToy.createBmi160();
+						if (mBmi160.doInitialize() && mBmi160.setEnable(true)) {
+							CavanAndroid.logE("=> BMI160 found");
+						} else {
+							mBmi160 = null;
+						}
+
+						mMpu6050 = mBleToy.createMpu6050();
+						if (mMpu6050.doInitialize() && mMpu6050.setEnable(true)) {
+							CavanAndroid.logE("=> MPU6050 found");
+						} else {
+							mMpu6050 = null;
+						}
+
+						mFdc1004 = mBleToy.createFdc1004();
+						if (mFdc1004.doInitialize() && mFdc1004.setEnable(true)) {
+							CavanAndroid.logE("=> FDC1004 found");
+						} else {
+							mFdc1004 = null;
 						}
 
 						return super.onInitialize();

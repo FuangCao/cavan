@@ -255,6 +255,26 @@ public class CavanJava {
 		return (buildValue16(bytes, offset + 2) & 0xFFFF) | (buildValue16(bytes, offset) & 0xFFFF) << 16;
 	}
 
+	public static byte[] getValueBytes(byte value) {
+		return new byte[] { value };
+	}
+
+	public static byte[] getValueBytes(short value) {
+		return new byte[] { (byte) (value & 0xFF), (byte) ((value >> 8) & 0xFF) };
+	}
+
+	public static byte[] getValueBytes(int value) {
+		return new byte[] { (byte) (value & 0xFF), (byte) ((value >> 8) & 0xFF), (byte) ((value >> 16) & 0xFF), (byte) ((value >> 24) & 0xFF) };
+	}
+
+	public static byte[] getValueBytesBe(short value) {
+		return new byte[] { (byte) ((value >> 8) & 0xFF), (byte) (value & 0xFF) };
+	}
+
+	public static byte[] getValueBytesBe(int value) {
+		return new byte[] { (byte) ((value >> 24) & 0xFF), (byte) ((value >> 16) & 0xFF), (byte) ((value >> 8) & 0xFF), (byte) (value & 0xFF) };
+	}
+
 	public static int parseChar(byte c) {
 		if (c >= '0' && c <= '9') {
 			return c - '0';
