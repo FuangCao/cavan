@@ -25,6 +25,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final UUID UUID_EVENT = UUID.fromString("0000188a-0000-1000-8000-00805f9b34fb");
 	public static final UUID UUID_FLASH = UUID.fromString("0000188b-0000-1000-8000-00805f9b34fb");
 	public static final UUID UUID_SENSOR = UUID.fromString("0000188c-0000-1000-8000-00805f9b34fb");
+	public static final UUID UUID_DEBUG = UUID.fromString("0000188d-0000-1000-8000-00805f9b34fb");
 
 	public static final byte JWAOO_TOY_RSP_BOOL = 0;
 	public static final byte JWAOO_TOY_RSP_U8 = 1;
@@ -69,6 +70,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	protected CavanBleChar mCharEvent;
 	protected CavanBleChar mCharFlash;
 	protected CavanBleChar mCharSensor;
+	protected CavanBleChar mCharDebug;
 	protected JwaooToyCommand mCommand = new JwaooToyCommand();
 
 	protected JwaooToySensor mSensor;
@@ -98,6 +100,14 @@ public class JwaooBleToy extends CavanBleGatt {
 		@Override
 		public void onDataReceived(byte[] data) {
 			onSensorDataReceived(data);
+		}
+	};
+
+	private CavanBleDataListener mDebugListener = new CavanBleDataListener() {
+
+		@Override
+		public void onDataReceived(byte[] data) {
+			onDebugDataReceived(data);
 		}
 	};
 
@@ -154,6 +164,10 @@ public class JwaooBleToy extends CavanBleGatt {
 	protected void onSensorDataReceived(byte[] data) {
 		mSensor.putBytes(data);
 		mParser.putData(mSensor);
+	}
+
+	protected void onDebugDataReceived(byte[] data) {
+		CavanAndroid.logE("Debug: " + new String(data));
 	}
 
 	public JwaooBleToy(Context context, BluetoothDevice device, JwaooToySensor sensor, UUID uuid) {
@@ -467,6 +481,16 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		setAutoConnectAllow(true);
+
+		mCharDebug = openChar(UUID_DEBUG);
+		if (mCharDebug == null) {
+			CavanAndroid.logE("uuid not found: " + UUID_DEBUG);
+		} else {
+			if (!mCharDebug.setDataListener(mDebugListener)) {
+				CavanAndroid.logE("Failed to mCharDebug.setDataListener");
+				return false;
+			}
+		}
 
 		if (!mCharEvent.setDataListener(mEventListener)) {
 			CavanAndroid.logE("Failed to mCharEvent.setDataListener");
