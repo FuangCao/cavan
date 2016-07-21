@@ -45,8 +45,7 @@
     }
 }
 
-- (void)onEventReceived:(CavanBleChar *)bleChar {
-    NSData *event = bleChar.data;
+- (void)onEventReceived:(NSData *)event {
     NSUInteger length = event.length;
 
     if (length > 0) {
@@ -95,12 +94,20 @@
     }
 }
 
-- (void)onSensorDataReceived:(CavanBleChar *)bleChar {
-    [mSensor putBytes:bleChar.bytes];
+- (void)onSensorDataReceived:(NSData *)data {
+    [mSensor putBytes:data.bytes];
     [mParser putSensorData:mSensor];
 
     if ([mDelegate respondsToSelector:@selector(didSensorDataReceived:)]) {
-        [mDelegate didSensorDataReceived:bleChar];
+        [mDelegate didSensorDataReceived:data];
+    }
+}
+
+- (void)onDebugDataReceived:(NSData *)data {
+    if ([mDelegate respondsToSelector:@selector(didDebugDataReceived:)]) {
+        [mDelegate didDebugDataReceived:data];
+    } else {
+        NSLog(@"Debug: %@", [NSString stringWithCString:data.bytes encoding:NSASCIIStringEncoding]);
     }
 }
 
@@ -118,7 +125,10 @@
         return false;
     }
 
-    mCharCommand = mCharEvent = mCharFlash = mCharSensor = nil;
+    mCharCommand = nil;
+    mCharEvent = nil;
+    mCharFlash = nil;
+    mCharSensor = nil;
 
     for (CBCharacteristic *characteristic in mService.characteristics) {
         if ([characteristic.UUID isEqual:JWAOO_TOY_UUID_COMMAND]) {
@@ -134,6 +144,10 @@
         } else if ([characteristic.UUID isEqual:JWAOO_TOY_UUID_SENSOR]) {
             mCharSensor = [self createBleChar:characteristic];
             [mCharSensor enableNotifyWithSelector:@selector(onSensorDataReceived:) withTarget:self];
+            NSLog(@"mCharSensor = %@", characteristic.UUID);
+        } else if ([characteristic.UUID isEqual:JWAOO_TOY_UUID_DEBUG]) {
+            mCharDebug = [self createBleChar:characteristic];
+            [mCharDebug enableNotifyWithSelector:@selector(onDebugDataReceived:) withTarget:self];
             NSLog(@"mCharSensor = %@", characteristic.UUID);
         } else {
             NSLog(@"Unknown characteristic = %@", characteristic.UUID);
@@ -280,7 +294,7 @@
 
     [progress addProgress];
 
-    NSLog(@"readBinData");
+    NSLog(@"parse bin file: %s", pathname);
 
     NSData *data = [file readBinData];
     if (data == nil) {
@@ -291,7 +305,8 @@
     [progress addProgress];
 
     NSLog(@"length = %ld = 0x%08lx", data.length, data.length);
-    NSLog(@"setFlashWriteEnable true");
+
+    NSLog(@"write flash enable");
 
     if (![self setFlashWriteEnable:true]) {
         NSLog(@"Failed to setWriteEnable true");
@@ -300,7 +315,7 @@
 
     [progress addProgress];
 
-    NSLog(@"startFlashUpgrade");
+    NSLog(@"start upgrade");
 
     if (![self startFlashUpgrade]) {
         NSLog(@"Failed to startUpgrade");
@@ -309,7 +324,7 @@
 
     [progress addProgress];
 
-    NSLog(@"doFlashErase");
+    NSLog(@"erase flash");
 
     if (![self eraseFlash]) {
         NSLog(@"Failed to doErase");
@@ -320,7 +335,7 @@
 
     mFlashCrc = 0xFF;
 
-    NSLog(@"writeFlashHeader");
+    NSLog(@"write flash header");
 
     if (![self writeFlashHeader:data.length]) {
         NSLog(@"Failed to write flash header");
@@ -329,21 +344,21 @@
 
     [progress addProgress];
 
-    NSLog(@"writeFlash data");
+    NSLog(@"write flash data");
 
     if (![self writeFlash:data.bytes size:(int)data.length withProgress:progress]) {
         NSLog(@"Failed to write flash data");
         return false;
     }
 
-    NSLog(@"finishFlashUpgrade");
+    NSLog(@"finish flash upgrade");
 
     if (![self finishFlashUpgrade:(data.length + 8)]) {
         NSLog(@"Failed to finishUpgrade");
         return false;
     }
 
-    NSLog(@"setFlashWriteEnable false");
+    NSLog(@"write flash disable");
 
     [self setFlashWriteEnable:false];
 

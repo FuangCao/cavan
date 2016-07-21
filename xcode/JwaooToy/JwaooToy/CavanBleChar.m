@@ -61,7 +61,7 @@
     mReadError = error;
 
     if (error == nil && mChar.isNotifying) {
-        [mNotifyTarget performSelector:mNotifySelector withObject:self];
+        [mNotifyTarget performSelector:mNotifySelector withObject:mChar.value];
     }
 
     [mReadCond signal];

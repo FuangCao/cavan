@@ -54,7 +54,7 @@
     NSLog(@"didConnectStateChanged: connected = %d", connected);
 }
 
-- (void)didSensorDataReceived:(nonnull CavanBleChar *)bleChar {
+- (void)didSensorDataReceived:(nonnull NSData *)data {
     mCount++;
     mFreq = mBleToy.freq;
     mDepth = mBleToy.depth;

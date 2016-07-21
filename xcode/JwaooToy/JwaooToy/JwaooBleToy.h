@@ -23,6 +23,7 @@
 #define JWAOO_TOY_UUID_EVENT        [CBUUID UUIDWithString:@"188a"]
 #define JWAOO_TOY_UUID_FLASH        [CBUUID UUIDWithString:@"188b"]
 #define JWAOO_TOY_UUID_SENSOR       [CBUUID UUIDWithString:@"188c"]
+#define JWAOO_TOY_UUID_DEBUG        [CBUUID UUIDWithString:@"188d"]
 
 #define JWAOO_TOY_TIME_FUZZ         0.1
 #define JWAOO_TOY_VALUE_FUZZ        2.0
@@ -39,7 +40,8 @@
 - (void)didKeyClicked:(uint8_t)code
                 count:(uint8_t)count;
 - (void)didKeyLongClicked:(uint8_t)code;
-- (void)didSensorDataReceived:(nonnull CavanBleChar *)bleChar;
+- (void)didSensorDataReceived:(nonnull NSData *)data;
+- (void)didDebugDataReceived:(nonnull NSData *)data;
 - (void)didDepthChanged:(int)depth;
 - (void)didFreqChanged:(int)freq;
 - (void)didConnectStateChanged:(BOOL)connected;
@@ -51,6 +53,7 @@
     CavanBleChar *mCharEvent;
     CavanBleChar *mCharFlash;
     CavanBleChar *mCharSensor;
+    CavanBleChar *mCharDebug;
     JwaooToyCommand *mCommand;
 
     JwaooToySensor *mSensor;
@@ -66,8 +69,9 @@
 
 - (nonnull JwaooBleToy *)initWithDelegate:(nullable id<JwaooBleToyDelegate>)delegate;
 
-- (void)onEventReceived:(nonnull CavanBleChar *)bleChar;
-- (void)onSensorDataReceived:(nonnull CavanBleChar *)bleChar;
+- (void)onEventReceived:(nonnull NSData *)data;
+- (void)onSensorDataReceived:(nonnull NSData *)data;
+- (void)onDebugDataReceived:(nonnull NSData *)data;
 
 - (nullable NSString *)doIdentify;
 - (nullable NSString *)readBuildDate;
