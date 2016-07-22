@@ -120,7 +120,7 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 
 			case EVENT_DISCONNECTED:
 				updateUI(false);
-				CavanBleScanActivity.show(MainActivity.this);
+				showScanActivity();
 				break;
 			}
 		}
@@ -178,7 +178,7 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 		mListViews.add(mEditTextBdAddr);
 
 		updateUI(false);
-		CavanBleScanActivity.show(this);
+		showScanActivity();
 	}
 
 	private void updateUI(boolean enable) {
@@ -254,7 +254,7 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 			if (mBleToy != null && mBleToy.isConnected()) {
 				mBleToy.disconnect();
 			} else {
-				CavanBleScanActivity.show(MainActivity.this);
+				showScanActivity();
 			}
 			break;
 
@@ -275,6 +275,10 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 			}
 			break;
 		}
+	}
+
+	private void showScanActivity() {
+		CavanBleScanActivity.show(this, "JwaooToy");
 	}
 
 	@Override
@@ -339,7 +343,7 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 						if (connected) {
 							mHandler.sendEmptyMessage(EVENT_CONNECTED);
 						} else if (mDevice != null) {
-							CavanBleScanActivity.show(MainActivity.this);
+							showScanActivity();
 						}
 					}
 
@@ -353,7 +357,7 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 				};
 
 				if (!mBleToy.connect(true)) {
-					CavanBleScanActivity.show(MainActivity.this);
+					showScanActivity();
 				}
 			}
 		} else {
