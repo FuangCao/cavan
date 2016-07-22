@@ -8,7 +8,7 @@ import android.os.Handler;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanWaveView;
-import com.cavan.resource.CavanBleScanner;
+import com.cavan.resource.CavanBleScanActivity;
 import com.jwaoo.android.JwaooBleToy;
 import com.jwaoo.android.JwaooToySensor;
 
@@ -46,7 +46,7 @@ public class MainActivity extends Activity {
 		mWaveViewDepth.setValueRange(0, JwaooToySensor.MAX_DEPTH);
 		mWaveViewDepth.setZoom(3);
 
-		CavanBleScanner.show(this);
+		CavanBleScanActivity.show(this);
 	}
 
 	@Override
@@ -78,7 +78,7 @@ public class MainActivity extends Activity {
 							@Override
 							protected void onConnectionStateChange(boolean connected) {
 								if (!connected) {
-									CavanBleScanner.show(MainActivity.this);
+									CavanBleScanActivity.show(MainActivity.this);
 								}
 							}
 
@@ -103,7 +103,7 @@ public class MainActivity extends Activity {
 					}
 
 					if (!mBleToy.connect(true)) {
-						CavanBleScanner.show(MainActivity.this);
+						CavanBleScanActivity.show(MainActivity.this);
 					}
 				}
 			});

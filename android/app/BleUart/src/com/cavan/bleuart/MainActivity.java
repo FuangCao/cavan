@@ -17,7 +17,7 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleGatt.CavanBleDataListener;
 import com.cavan.android.CavanBleUart;
 import com.cavan.java.CavanHexFile;
-import com.cavan.resource.CavanBleScanner;
+import com.cavan.resource.CavanBleScanActivity;
 
 @SuppressLint("HandlerLeak")
 public class MainActivity extends Activity implements OnClickListener, OnLongClickListener {
@@ -59,7 +59,7 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 		mButtonUpgrade = (Button) findViewById(R.id.buttonUpgrade);
 		mButtonUpgrade.setOnClickListener(this);
 
-		CavanBleScanner.show(this, BLE_SCAN_RESULT);
+		CavanBleScanActivity.show(this, BLE_SCAN_RESULT);
 	}
 
 	public boolean sendText(String text) {
@@ -128,7 +128,7 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 					protected void onConnectionStateChange(boolean connected) {
 						if (connected) {
 						} else {
-							CavanBleScanner.show(MainActivity.this, BLE_SCAN_RESULT);
+							CavanBleScanActivity.show(MainActivity.this, BLE_SCAN_RESULT);
 						}
 					}
 				};

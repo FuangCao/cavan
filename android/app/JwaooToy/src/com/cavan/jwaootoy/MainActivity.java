@@ -21,11 +21,10 @@ import android.widget.ProgressBar;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanProgressListener;
-import com.cavan.resource.CavanBleScanner;
+import com.cavan.resource.CavanBleScanActivity;
 import com.jwaoo.android.JwaooBleToy;
 import com.jwaoo.android.JwaooBleToy.JwaooToyBmi160;
 import com.jwaoo.android.JwaooBleToy.JwaooToyFdc1004;
-import com.jwaoo.android.JwaooBleToy.JwaooToyI2c;
 import com.jwaoo.android.JwaooBleToy.JwaooToyMpu6050;
 
 @SuppressLint("HandlerLeak")
@@ -121,7 +120,7 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 
 			case EVENT_DISCONNECTED:
 				updateUI(false);
-				CavanBleScanner.show(MainActivity.this);
+				CavanBleScanActivity.show(MainActivity.this);
 				break;
 			}
 		}
@@ -179,7 +178,7 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 		mListViews.add(mEditTextBdAddr);
 
 		updateUI(false);
-		CavanBleScanner.show(this);
+		CavanBleScanActivity.show(this);
 	}
 
 	private void updateUI(boolean enable) {
@@ -255,7 +254,7 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 			if (mBleToy != null && mBleToy.isConnected()) {
 				mBleToy.disconnect();
 			} else {
-				CavanBleScanner.show(MainActivity.this);
+				CavanBleScanActivity.show(MainActivity.this);
 			}
 			break;
 
@@ -340,7 +339,7 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 						if (connected) {
 							mHandler.sendEmptyMessage(EVENT_CONNECTED);
 						} else if (mDevice != null) {
-							CavanBleScanner.show(MainActivity.this);
+							CavanBleScanActivity.show(MainActivity.this);
 						}
 					}
 
@@ -354,7 +353,7 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 				};
 
 				if (!mBleToy.connect(true)) {
-					CavanBleScanner.show(MainActivity.this);
+					CavanBleScanActivity.show(MainActivity.this);
 				}
 			}
 		} else {

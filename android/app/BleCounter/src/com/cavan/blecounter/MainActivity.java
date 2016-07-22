@@ -11,7 +11,7 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanWaveView;
 import com.cavan.java.CavanPeakValleyFinder;
 import com.cavan.java.CavanPeakValleyValue;
-import com.cavan.resource.CavanBleScanner;
+import com.cavan.resource.CavanBleScanActivity;
 import com.jwaoo.android.JwaooBleToy;
 
 public class MainActivity extends Activity {
@@ -75,7 +75,7 @@ public class MainActivity extends Activity {
 		mWaveView4.setZoom(3);
 
 		mHandler.sendEmptyMessage(MSG_SHOW_SPEED);
-		CavanBleScanner.show(this);
+		CavanBleScanActivity.show(this);
 	}
 
 	@Override
@@ -113,7 +113,7 @@ public class MainActivity extends Activity {
 							@Override
 							protected void onConnectionStateChange(boolean connected) {
 								if (!connected) {
-									CavanBleScanner.show(MainActivity.this);
+									CavanBleScanActivity.show(MainActivity.this);
 								}
 							}
 
@@ -156,7 +156,7 @@ public class MainActivity extends Activity {
 						};
 
 						if (!mBleToy.connect(true)) {
-							CavanBleScanner.show(MainActivity.this);
+							CavanBleScanActivity.show(MainActivity.this);
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
