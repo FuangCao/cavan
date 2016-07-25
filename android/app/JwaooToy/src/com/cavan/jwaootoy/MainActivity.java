@@ -1,12 +1,6 @@
 package com.cavan.jwaootoy;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.bluetooth.BluetoothDevice;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -21,19 +15,11 @@ import android.widget.ProgressBar;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanProgressListener;
-import com.cavan.resource.CavanBleScanActivity;
-import com.jwaoo.android.JwaooBleToy;
-import com.jwaoo.android.JwaooBleToy.JwaooToyBmi160;
-import com.jwaoo.android.JwaooBleToy.JwaooToyFdc1004;
-import com.jwaoo.android.JwaooBleToy.JwaooToyMpu6050;
+import com.cavan.resource.JwaooToyActivity;
 
 @SuppressLint("HandlerLeak")
-public class MainActivity extends Activity implements OnClickListener, OnCheckedChangeListener {
+public class MainActivity extends JwaooToyActivity implements OnClickListener, OnCheckedChangeListener {
 
-	private static final int SENSOR_DELAY = 30;
-
-	private static final int EVENT_BMI160_POLL = 1;
-	private static final int EVENT_MPU6050_POLL = 2;
 	private static final int EVENT_OTA_START = 3;
 	private static final int EVENT_OTA_FAILED = 4;
 	private static final int EVENT_OTA_SUCCESS = 5;
@@ -45,13 +31,7 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 
 	private int mFreq;
 	private int mDepth;
-
-	private BluetoothDevice mDevice;
-	private JwaooBleToy mBleToy;
 	private boolean mOtaBusy;
-	private JwaooToyBmi160 mBmi160;
-	private JwaooToyMpu6050 mMpu6050;
-	private JwaooToyFdc1004 mFdc1004;
 
 	private Button mButtonSend;
 	private Button mButtonUpgrade;
@@ -68,27 +48,11 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 	private ProgressBar mProgressBar;
 	private EditText mEditTextBdAddr;
 
-	private List<View> mListViews = new ArrayList<View>();
-
 	private Handler mHandler = new Handler() {
 
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
-			case EVENT_BMI160_POLL:
-				if (mBmi160.updateData()) {
-					CavanAndroid.logE("bmi160: " + mBmi160);
-					sendEmptyMessageDelayed(msg.what, 100);
-				}
-				break;
-
-			case EVENT_MPU6050_POLL:
-				if (mMpu6050.updateData()) {
-					CavanAndroid.logE("mpu6050: " + mMpu6050);
-					sendEmptyMessageDelayed(msg.what, 100);
-				}
-				break;
-
 			case EVENT_OTA_START:
 				updateUI(false);
 				CavanAndroid.showToast(getApplicationContext(), R.string.text_upgrade_start);
@@ -177,14 +141,7 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 		mEditTextBdAddr = (EditText) findViewById(R.id.editTextBdAddr);
 		mListViews.add(mEditTextBdAddr);
 
-		updateUI(false);
 		showScanActivity();
-	}
-
-	private void updateUI(boolean enable) {
-		for (View view : mListViews) {
-			view.setEnabled(enable);
-		}
 	}
 
 	private void setUpgradeProgress(int progress) {
@@ -277,103 +234,42 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 		}
 	}
 
-	private void showScanActivity() {
-		CavanBleScanActivity.show(this, "JwaooToy");
+	@Override
+	protected boolean onInitialize() {
+		CavanAndroid.logE("mBleToy = " + mBleToy);
+		if (!mBleToy.setSensorEnable(mCheckBoxSensor.isChecked(), SENSOR_DELAY)) {
+			CavanAndroid.logE("Failed to setSensorEnable");
+			return false;
+		}
+
+		if (!mBleToy.setClickEnable(mCheckBoxClick.isChecked())) {
+			CavanAndroid.logE("Failed to setClickEnable");
+			return false;
+		}
+
+		if (!mBleToy.setLongClickEnable(mCheckBoxLongClick.isChecked())) {
+			CavanAndroid.logE("Failed to setLongClickEnable");
+			return false;
+		}
+
+		if (!mBleToy.setMultiClickEnable(mCheckBoxMultiClick.isChecked())) {
+			CavanAndroid.logE("Failed to setMultiClickEnable");
+			return false;
+		}
+
+		return true;
 	}
 
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		CavanAndroid.logE("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
-		if (resultCode == RESULT_OK && data != null) {
-			mDevice = data.getParcelableExtra("device");
-			if (mDevice == null) {
-				finish();
-			} else {
-				mBleToy = new JwaooBleToy(getApplicationContext(), mDevice) {
-
-					@Override
-					protected boolean onInitialize() {
-						if (!mBleToy.setSensorEnable(mCheckBoxSensor.isChecked(), SENSOR_DELAY)) {
-							CavanAndroid.logE("Failed to setSensorEnable");
-							return false;
-						}
-
-						if (!mBleToy.setClickEnable(mCheckBoxClick.isChecked())) {
-							CavanAndroid.logE("Failed to setClickEnable");
-							return false;
-						}
-
-						if (!mBleToy.setLongClickEnable(mCheckBoxLongClick.isChecked())) {
-							CavanAndroid.logE("Failed to setLongClickEnable");
-							return false;
-						}
-
-						if (!mBleToy.setMultiClickEnable(mCheckBoxMultiClick.isChecked())) {
-							CavanAndroid.logE("Failed to setMultiClickEnable");
-							return false;
-						}
-
-						mBmi160 = mBleToy.createBmi160();
-						if (mBmi160.doInitialize() && mBmi160.setEnable(true)) {
-							CavanAndroid.logE("=> BMI160 found");
-						} else {
-							mBmi160 = null;
-						}
-
-						mMpu6050 = mBleToy.createMpu6050();
-						if (mMpu6050.doInitialize() && mMpu6050.setEnable(true)) {
-							CavanAndroid.logE("=> MPU6050 found");
-						} else {
-							mMpu6050 = null;
-						}
-
-						mFdc1004 = mBleToy.createFdc1004();
-						if (mFdc1004.doInitialize() && mFdc1004.setEnable(true)) {
-							CavanAndroid.logE("=> FDC1004 found");
-						} else {
-							mFdc1004 = null;
-						}
-
-						return super.onInitialize();
-					}
-
-					@Override
-					protected void onConnectionStateChange(boolean connected) {
-						CavanAndroid.logE("onConnectionStateChange: connected = " + connected);
-						if (connected) {
-							mHandler.sendEmptyMessage(EVENT_CONNECTED);
-						} else if (mDevice != null) {
-							showScanActivity();
-						}
-					}
-
-					@Override
-					protected void onSensorDataReceived(byte[] data) {
-						super.onSensorDataReceived(data);
-						mDepth = getDepth();
-						mFreq = getFreq();
-						mHandler.sendEmptyMessage(EVENT_FREQ_CHANGED);
-					}
-				};
-
-				if (!mBleToy.connect(true)) {
-					showScanActivity();
-				}
-			}
-		} else {
-			finish();
-		}
+	protected void onConnected() {
+		mHandler.sendEmptyMessage(EVENT_CONNECTED);
 	}
 
 	@Override
-	protected void onDestroy() {
-		mDevice = null;
-
-		if (mBleToy != null) {
-			mBleToy.disconnect();
-		}
-
-		super.onDestroy();
+	protected void onSensorDataReceived(byte[] data) {
+		mDepth = mBleToy.getDepth();
+		mFreq = mBleToy.getFreq();
+		mHandler.sendEmptyMessage(EVENT_FREQ_CHANGED);
 	}
 
 	@Override

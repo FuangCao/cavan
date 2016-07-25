@@ -94,6 +94,10 @@ public class CavanBleScanActivity extends Activity {
 	}
 
 	public static void show(Activity activity, int requestCode, UUID[] uuids, String name) {
+		if (activity.isDestroyed()) {
+			return;
+		}
+
 		Intent intent = getIntent(activity);
 
 		if (uuids != null) {

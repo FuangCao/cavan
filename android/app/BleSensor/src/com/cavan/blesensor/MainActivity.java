@@ -1,29 +1,19 @@
 package com.cavan.blesensor;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 
-import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanWaveView;
-import com.cavan.resource.CavanBleScanActivity;
+import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
 import com.jwaoo.android.JwaooToySensor;
 
-public class MainActivity extends Activity {
-
-	private static final int SENSOR_DELAY = 30;
+public class MainActivity extends JwaooToyActivity {
 
 	private CavanWaveView mWaveViewX;
 	private CavanWaveView mWaveViewY;
 	private CavanWaveView mWaveViewZ;
 	private CavanWaveView mWaveViewDepth;
-
-	private JwaooBleToy mBleToy;
-	private BluetoothDevice mDevice;
-	private Handler mHandler = new Handler();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -46,69 +36,34 @@ public class MainActivity extends Activity {
 		mWaveViewDepth.setValueRange(0, JwaooToySensor.MAX_DEPTH);
 		mWaveViewDepth.setZoom(3);
 
-		CavanBleScanActivity.show(this);
+		showScanActivity();
 	}
 
 	@Override
-	protected void onDestroy() {
-		if (mBleToy != null) {
-			mBleToy.disconnect();
-		}
+	protected JwaooBleToy createJwaooBleToy(BluetoothDevice device) {
+		return new JwaooBleToy(MainActivity.this, device) {
 
-		super.onDestroy();
-	}
-
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		CavanAndroid.logE("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
-		if (resultCode == RESULT_OK && data != null) {
-			mDevice = data.getParcelableExtra("device");
-			if (mDevice == null) {
-				finish();
+			@Override
+			protected void onConnectionStateChange(boolean connected) {
+				if (!connected) {
+					showScanActivity();
+				}
 			}
 
-			mHandler.post(new Runnable() {
+			@Override
+			protected boolean onInitialize() {
+				mBleToy.setSensorEnable(true, SENSOR_DELAY);
+				return super.onInitialize();
+			}
 
-				@Override
-				public void run() {
-
-					try {
-						mBleToy = new JwaooBleToy(MainActivity.this, mDevice) {
-
-							@Override
-							protected void onConnectionStateChange(boolean connected) {
-								if (!connected) {
-									CavanBleScanActivity.show(MainActivity.this);
-								}
-							}
-
-							@Override
-							protected boolean onInitialize() {
-								mBleToy.setSensorEnable(true, SENSOR_DELAY);
-								return super.onInitialize();
-							}
-
-							@Override
-							protected void onSensorDataReceived(byte[] arg0) {
-								mSensor.putBytes(arg0);
-								mWaveViewX.addValue(mSensor.getAxisX());
-								mWaveViewY.addValue(mSensor.getAxisY());
-								mWaveViewZ.addValue(mSensor.getAxisZ());
-								mWaveViewDepth.addValue(mSensor.getDepth());
-							}
-						};
-					} catch (Exception e) {
-						e.printStackTrace();
-						finish();
-					}
-
-					if (!mBleToy.connect(true)) {
-						CavanBleScanActivity.show(MainActivity.this);
-					}
-				}
-			});
-		} else {
-			finish();
-		}
+			@Override
+			protected void onSensorDataReceived(byte[] arg0) {
+				mSensor.putBytes(arg0);
+				mWaveViewX.addValue(mSensor.getAxisX());
+				mWaveViewY.addValue(mSensor.getAxisY());
+				mWaveViewZ.addValue(mSensor.getAxisZ());
+				mWaveViewDepth.addValue(mSensor.getDepth());
+			}
+		};
 	}
 }

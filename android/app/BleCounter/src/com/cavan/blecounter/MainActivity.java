@@ -1,22 +1,18 @@
 package com.cavan.blecounter;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 
-import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanWaveView;
 import com.cavan.java.CavanPeakValleyFinder;
 import com.cavan.java.CavanPeakValleyValue;
-import com.cavan.resource.CavanBleScanActivity;
+import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
 
-public class MainActivity extends Activity {
+public class MainActivity extends JwaooToyActivity {
 
-	private static final int SENSOR_DELAY = 30;
 	private static final int MSG_SHOW_SPEED = 1;
 
 	private CavanPeakValleyFinder mFinders[] = {
@@ -32,8 +28,6 @@ public class MainActivity extends Activity {
 	private CavanWaveView mWaveView4;
 
 	private int mCount;
-	private JwaooBleToy mBleToy;
-	private BluetoothDevice mDevice;
 	private Handler mHandler = new Handler() {
 
 		@Override
@@ -75,97 +69,47 @@ public class MainActivity extends Activity {
 		mWaveView4.setZoom(3);
 
 		mHandler.sendEmptyMessage(MSG_SHOW_SPEED);
-		CavanBleScanActivity.show(this);
+		showScanActivity();
 	}
 
 	@Override
-	protected void onDestroy() {
-		if (mBleToy != null) {
-			mBleToy.disconnect();
-		}
+	protected JwaooBleToy createJwaooBleToy(BluetoothDevice device) {
+		return new JwaooBleToy(MainActivity.this, device) {
 
-		super.onDestroy();
-	}
-
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		CavanAndroid.logE("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
-		if (resultCode == RESULT_OK && data != null) {
-			mDevice = data.getParcelableExtra("device");
-			if (mDevice == null) {
-				finish();
+			@Override
+			protected boolean onInitialize() {
+				setSensorEnable(true, SENSOR_DELAY);
+				return super.onInitialize();
 			}
 
-			mHandler.post(new Runnable() {
-
-				@Override
-				public void run() {
-
-					try {
-						mBleToy = new JwaooBleToy(MainActivity.this, mDevice) {
-
-							@Override
-							protected boolean onInitialize() {
-								setSensorEnable(true, SENSOR_DELAY);
-								return super.onInitialize();
-							}
-
-							@Override
-							protected void onConnectionStateChange(boolean connected) {
-								if (!connected) {
-									CavanBleScanActivity.show(MainActivity.this);
-								}
-							}
-
-							@Override
-							protected void onSensorDataReceived(byte[] arg0) {
-								mSensor.putBytes(arg0);
-
-								double value = mSensor.getAxisZ();
-								/* double x = accel.getCoorX();
-								double y = accel.getCoorY();
-								double z = accel.getCoorZ();
-								double value = Math.sqrt(x * x + y * y + z * z); */
-
-								mWaveView1.addValue(value);
-
-								CavanPeakValleyValue result = mFinders[0].putFreqValue(value);
-								if (result != null) {
-									mWaveView3.addValue(result.getDiff());
-								} else {
-									mWaveView3.addValue(0);
-								}
-
-								mWaveView2.addValue(mFinders[0].getAvgValue());
-
-								// int depth = accel.readValue8();
-								// mWaveViewDepth.addValue(depth);
-
-								// mWaveView4.addValue(value - mFinders[0].getValleyValue());
-								/* mFinders[1].putValue(accel.getCoorX());
-								mFinders[2].putValue(accel.getCoorY());
-								mFinders[3].putValue(accel.getCoorZ());
-								value = accel.getCoorX() - mFinders[1].getValleyValue();
-								value += accel.getCoorY() - mFinders[2].getValleyValue();
-								value += accel.getCoorZ() - mFinders[3].getValleyValue();
-								mWaveView4.addValue(value); */
-								mWaveView4.addValue(mFinders[0].getFreq());
-
-								mCount++;
-							}
-						};
-
-						if (!mBleToy.connect(true)) {
-							CavanBleScanActivity.show(MainActivity.this);
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-						finish();
-					}
+			@Override
+			protected void onConnectionStateChange(boolean connected) {
+				if (!connected) {
+					showScanActivity();
 				}
-			});
-		} else {
-			finish();
-		}
+			}
+
+			@Override
+			protected void onSensorDataReceived(byte[] arg0) {
+				mSensor.putBytes(arg0);
+
+				double value = mSensor.getAxisZ();
+
+				mWaveView1.addValue(value);
+
+				CavanPeakValleyValue result = mFinders[0].putFreqValue(value);
+				if (result != null) {
+					mWaveView3.addValue(result.getDiff());
+				} else {
+					mWaveView3.addValue(0);
+				}
+
+				mWaveView2.addValue(mFinders[0].getAvgValue());
+				mWaveView4.addValue(mFinders[0].getFreq());
+
+				mCount++;
+			}
+		};
+
 	}
 }
