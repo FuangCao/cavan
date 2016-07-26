@@ -39,6 +39,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private Button mButtonDisconnect;
 	private Button mButtonReadBdAddr;
 	private Button mButtonWriteBdAddr;
+	private Button mButtonMotoUp;
+	private Button mButtonMotoDown;
 
 	private CheckBox mCheckBoxSensor;
 	private CheckBox mCheckBoxClick;
@@ -47,6 +49,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 	private ProgressBar mProgressBar;
 	private EditText mEditTextBdAddr;
+
+	private int mMotoLevel;
 
 	private Handler mHandler = new Handler() {
 
@@ -119,6 +123,14 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		mButtonWriteBdAddr.setOnClickListener(this);
 		mListViews.add(mButtonWriteBdAddr);
 
+		mButtonMotoUp = (Button) findViewById(R.id.buttonMotoUp);
+		mButtonMotoUp.setOnClickListener(this);
+		mListViews.add(mButtonMotoUp);
+
+		mButtonMotoDown = (Button) findViewById(R.id.buttonMotoDown);
+		mButtonMotoDown.setOnClickListener(this);
+		mListViews.add(mButtonMotoDown);
+
 		mCheckBoxSensor = (CheckBox) findViewById(R.id.checkBoxSensor);
 		mCheckBoxSensor.setOnCheckedChangeListener(this);
 		mListViews.add(mCheckBoxSensor);
@@ -146,6 +158,22 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 	private void setUpgradeProgress(int progress) {
 		mHandler.obtainMessage(EVENT_PROGRESS_UPDATED, progress, 0).sendToTarget();
+	}
+
+	private void setMotoLevel(int level) {
+		if (level < 0) {
+			level = 0;
+		} else if (level > 100) {
+			level = 100;
+		}
+
+		if (mBleToy.setMotoLevel(level)) {
+			mMotoLevel = level;
+		} else {
+			CavanAndroid.logE("Failed to setMotoLevel");
+		}
+
+		CavanAndroid.logE("mMotoLevel = " + mMotoLevel);
 	}
 
 	@Override
@@ -229,6 +257,22 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 				CavanAndroid.logE("writeBdAddress successfull");
 			} else {
 				CavanAndroid.logE("Failed to writeBdAddress");
+			}
+			break;
+
+		case R.id.buttonMotoUp:
+			if (mMotoLevel < 100) {
+				setMotoLevel(mMotoLevel + 5);
+			} else {
+				CavanAndroid.logE("Nothing to be done");
+			}
+			break;
+
+		case R.id.buttonMotoDown:
+			if (mMotoLevel > 0) {
+				setMotoLevel(mMotoLevel - 5);
+			} else {
+				CavanAndroid.logE("Nothing to be done");
 			}
 			break;
 		}

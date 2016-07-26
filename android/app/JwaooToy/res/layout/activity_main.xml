@@ -107,4 +107,21 @@
         android:layout_below="@+id/checkBoxSensor"
         android:text="@string/text_multi_click" />
 
+    <Button
+        android:id="@+id/buttonMotoDown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/checkBoxClick"
+        android:layout_marginTop="30dp"
+        android:text="@string/text_moto_down" />
+
+    <Button
+        android:id="@+id/buttonMotoUp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/buttonMotoDown"
+        android:layout_alignParentRight="true"
+        android:text="@string/text_moto_up" />
+
 </RelativeLayout>

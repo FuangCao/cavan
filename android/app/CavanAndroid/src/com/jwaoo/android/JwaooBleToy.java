@@ -370,10 +370,27 @@ public class JwaooBleToy extends CavanBleGatt {
 			return false;
 		}
 
-		listener.setProgressMax(100);
-		listener.finishProgress();
+		for (int i = 0; i < 10; i++) {
+			CavanAndroid.logE("wait upgrade complete" + i);
 
-		return true;
+			if (setFlashWriteEnable(false)) {
+				listener.setProgressMax(100);
+				listener.finishProgress();
+				return true;
+			}
+
+			if (mCharCommand.getWriteStatus() == -110) {
+				return false;
+			}
+
+			try {
+				wait(500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return false;
 	}
 
 	public boolean setSensorEnable(boolean enable) {
@@ -382,6 +399,14 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public boolean setSensorEnable(boolean enable, int delay) {
 		return mCommand.readBool(JWAOO_TOY_CMD_SENSOR_ENABLE, enable, delay);
+	}
+
+	public boolean setMotoEnable(boolean enable, int level) {
+		return mCommand.readBool(JWAOO_TOY_CMD_MOTO_ENABLE, enable, (byte) level);
+	}
+
+	public boolean setMotoLevel(int level) {
+		return setMotoEnable(level > 0, level);
 	}
 
 	public boolean doReboot() {
@@ -778,12 +803,16 @@ public class JwaooBleToy extends CavanBleGatt {
 			return JwaooToyResponse.getBool(send(type, enable));
 		}
 
-		public boolean readBool(byte type, boolean enable, short delay) {
-			return JwaooToyResponse.getBool(send(type, enable, delay));
+		public boolean readBool(byte type, boolean enable, byte value) {
+			return JwaooToyResponse.getBool(send(type, enable, value));
 		}
 
-		public boolean readBool(byte type, boolean enable, int delay) {
-			return JwaooToyResponse.getBool(send(type, enable, delay));
+		public boolean readBool(byte type, boolean enable, short value) {
+			return JwaooToyResponse.getBool(send(type, enable, value));
+		}
+
+		public boolean readBool(byte type, boolean enable, int value) {
+			return JwaooToyResponse.getBool(send(type, enable, value));
 		}
 
 		public byte readValue8(byte type, byte defValue) {

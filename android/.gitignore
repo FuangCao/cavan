@@ -1,5 +1,10 @@
 bin
 gen
 obj
+out
+lib
+libs
+*.jar
+*/*/res/values-v*
 !.classpath
 !.project

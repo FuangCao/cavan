@@ -20,5 +20,7 @@
     <string name="text_multi_click">允许多次点击</string>
     <string name="text_sensor_enable">打开传感器</string>
     <string name="text_click_enable">允许点击</string>
+    <string name="text_moto_down">马达减弱</string>
+    <string name="text_moto_up">马达增强</string>
 
 </resources>
