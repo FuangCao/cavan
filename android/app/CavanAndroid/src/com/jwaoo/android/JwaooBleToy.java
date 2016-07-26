@@ -14,6 +14,7 @@ import com.cavan.java.CavanProgressListener;
 
 public class JwaooBleToy extends CavanBleGatt {
 
+	public static final int MOTO_LEVEL_MAX = 18;
 	public static final long DATA_TIMEOUT = 5000;
 	public static final long JWAOO_TOY_TIME_FUZZ = 100;
 	public static final double JWAOO_TOY_VALUE_FUZZ = 2.0;
@@ -54,7 +55,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_FLASH_READ_BD_ADDR = 59;
 	public static final byte JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR = 60;
 	public static final byte JWAOO_TOY_CMD_SENSOR_ENABLE = 70;
-	public static final byte JWAOO_TOY_CMD_MOTO_ENABLE = 80;
+	public static final byte JWAOO_TOY_CMD_MOTO_SET_LEVEL = 80;
 	public static final byte JWAOO_TOY_CMD_KEY_CLICK_ENABLE = 90;
 	public static final byte JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE = 91;
 	public static final byte JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE = 92;
@@ -401,12 +402,8 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mCommand.readBool(JWAOO_TOY_CMD_SENSOR_ENABLE, enable, delay);
 	}
 
-	public boolean setMotoEnable(boolean enable, int level) {
-		return mCommand.readBool(JWAOO_TOY_CMD_MOTO_ENABLE, enable, (byte) level);
-	}
-
 	public boolean setMotoLevel(int level) {
-		return setMotoEnable(level > 0, level);
+		return mCommand.readBool(JWAOO_TOY_CMD_MOTO_SET_LEVEL, (byte) level);
 	}
 
 	public boolean doReboot() {
@@ -1318,6 +1315,56 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		public boolean setEnable(boolean enable) {
+			int value;
+
+			if (enable) {
+				value = 3 << 10 | 1 << 8 | 0x0F << 4;
+			} else {
+				value = 0x0000;
+			}
+
+			return writeRegister(0x0C, value);
+		}
+
+		public boolean setOffset(int offset) {
+			CavanAndroid.logE("setOffset = " + offset);
+
+			int value = (offset & 0x1F) << 11;
+
+			for (int i = 0; i < 4; i++) {
+				if (!writeRegister(0x0D + i, value)) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		public boolean setGain(int gain) {
+			CavanAndroid.logE("setGain = " + gain);
+
+			int value = (gain & 0x03) << 14;
+
+			for (int i = 0; i < 4; i++) {
+				if (!writeRegister(0x11 + i, value)) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		public boolean setCapacityDac(int offset) {
+			CavanAndroid.logE("setCapacityDac = " + offset);
+
+			for (int i = 0; i < 4; i++) {
+				int value = i << 13 | 4 << 10 | offset;
+
+				if (!writeRegister(0x09 + i, value)) {
+					return false;
+				}
+			}
+
 			return true;
 		}
 

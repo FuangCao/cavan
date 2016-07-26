@@ -3,6 +3,7 @@ package com.cavan.android;
 import com.cavan.java.CavanJava;
 
 import android.content.Context;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -108,5 +109,13 @@ public class CavanAndroid extends CavanJava {
 
 	public static void showToastLong(Context context, int resId) {
 		showToast(context, resId, Toast.LENGTH_LONG);
+	}
+
+	public static boolean isMainThread() {
+		return Looper.myLooper() == Looper.getMainLooper();
+	}
+
+	public static boolean isSubThread() {
+		return Looper.myLooper() != Looper.getMainLooper();
 	}
 }

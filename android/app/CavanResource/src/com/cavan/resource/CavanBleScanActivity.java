@@ -73,7 +73,7 @@ public class CavanBleScanActivity extends Activity {
 		};
 
 		if (uuids != null || name != null) {
-			mScanner.setAutoSelect(5000);
+			mScanner.setAutoSelect(3000);
 		}
 
 		mScanner.startScan(uuids, name);

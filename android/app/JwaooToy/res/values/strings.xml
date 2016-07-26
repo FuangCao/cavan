@@ -22,5 +22,7 @@
     <string name="text_click_enable">允许点击</string>
     <string name="text_moto_down">马达减弱</string>
     <string name="text_moto_up">马达增强</string>
+    <string name="text_capacity_up">电容增加</string>
+    <string name="text_capacity_down">电容减小</string>
 
 </resources>

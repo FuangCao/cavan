@@ -24,6 +24,7 @@ public class JwaooToyActivity extends Activity {
 
 	private static final int EVENT_BMI160_POLL = 1;
 	private static final int EVENT_MPU6050_POLL = 2;
+	private static final int EVENT_UPDATE_UI = 10;
 
 	protected JwaooBleToy mBleToy;
 	protected JwaooToyBmi160 mBmi160;
@@ -49,6 +50,10 @@ public class JwaooToyActivity extends Activity {
 					mHandler.sendEmptyMessageDelayed(msg.what, 100);
 				}
 				break;
+
+			case EVENT_UPDATE_UI:
+				updateUI((boolean) msg.obj);
+				break;
 			}
 		}
 	};
@@ -65,11 +70,6 @@ public class JwaooToyActivity extends Activity {
 
 			@Override
 			protected boolean onInitialize() {
-				if (!JwaooToyActivity.this.onInitialize()) {
-					CavanAndroid.logE("Failed to JwaooToyActivity.this.onInitialize");
-					return false;
-				}
-
 				mBmi160 = mBleToy.createBmi160();
 				if (mBmi160.doInitialize() && mBmi160.setEnable(true)) {
 					CavanAndroid.logE("=> BMI160 found");
@@ -89,6 +89,11 @@ public class JwaooToyActivity extends Activity {
 					CavanAndroid.logE("=> FDC1004 found");
 				} else {
 					mFdc1004 = null;
+				}
+
+				if (!JwaooToyActivity.this.onInitialize()) {
+					CavanAndroid.logE("Failed to JwaooToyActivity.this.onInitialize");
+					return false;
 				}
 
 				return super.onInitialize();
@@ -114,8 +119,12 @@ public class JwaooToyActivity extends Activity {
 	}
 
 	public void updateUI(boolean enable) {
-		for (View view : mListViews) {
-			view.setEnabled(enable);
+		if (CavanAndroid.isMainThread()) {
+			for (View view : mListViews) {
+				view.setEnabled(enable);
+			}
+		} else {
+			mHandler.obtainMessage(EVENT_UPDATE_UI, enable).sendToTarget();
 		}
 	}
 

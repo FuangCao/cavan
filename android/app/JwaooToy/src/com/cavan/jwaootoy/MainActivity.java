@@ -16,6 +16,7 @@ import android.widget.ProgressBar;
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanProgressListener;
 import com.cavan.resource.JwaooToyActivity;
+import com.jwaoo.android.JwaooBleToy;
 
 @SuppressLint("HandlerLeak")
 public class MainActivity extends JwaooToyActivity implements OnClickListener, OnCheckedChangeListener {
@@ -41,6 +42,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private Button mButtonWriteBdAddr;
 	private Button mButtonMotoUp;
 	private Button mButtonMotoDown;
+	private Button mButtonCapacityUp;
+	private Button mButtonCapacityDown;
 
 	private CheckBox mCheckBoxSensor;
 	private CheckBox mCheckBoxClick;
@@ -51,6 +54,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private EditText mEditTextBdAddr;
 
 	private int mMotoLevel;
+	private int mCapacityOffset;
 
 	private Handler mHandler = new Handler() {
 
@@ -131,6 +135,14 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		mButtonMotoDown.setOnClickListener(this);
 		mListViews.add(mButtonMotoDown);
 
+		mButtonCapacityUp = (Button) findViewById(R.id.buttonCapacityUp);
+		mButtonCapacityUp.setOnClickListener(this);
+		mListViews.add(mButtonCapacityUp);
+
+		mButtonCapacityDown = (Button) findViewById(R.id.buttonCapacityDown);
+		mButtonCapacityDown.setOnClickListener(this);
+		mListViews.add(mButtonCapacityDown);
+
 		mCheckBoxSensor = (CheckBox) findViewById(R.id.checkBoxSensor);
 		mCheckBoxSensor.setOnCheckedChangeListener(this);
 		mListViews.add(mCheckBoxSensor);
@@ -161,12 +173,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	}
 
 	private void setMotoLevel(int level) {
-		if (level < 0) {
-			level = 0;
-		} else if (level > 100) {
-			level = 100;
-		}
-
 		if (mBleToy.setMotoLevel(level)) {
 			mMotoLevel = level;
 		} else {
@@ -174,6 +180,18 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		}
 
 		CavanAndroid.logE("mMotoLevel = " + mMotoLevel);
+	}
+
+	private void setCapacityValue(int value) {
+		if (mFdc1004 != null && mFdc1004.setCapacityDac(value)) {
+			mCapacityOffset = value;
+			mFdc1004.setEnable(false);
+			mFdc1004.setEnable(true);
+		} else {
+			CavanAndroid.logE("Failed to setOffset");
+		}
+
+		CavanAndroid.logE("mCapacityOffset = " + mCapacityOffset);
 	}
 
 	@Override
@@ -261,8 +279,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			break;
 
 		case R.id.buttonMotoUp:
-			if (mMotoLevel < 100) {
-				setMotoLevel(mMotoLevel + 5);
+			if (mMotoLevel < JwaooBleToy.MOTO_LEVEL_MAX) {
+				setMotoLevel(mMotoLevel + 1);
 			} else {
 				CavanAndroid.logE("Nothing to be done");
 			}
@@ -270,10 +288,18 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 		case R.id.buttonMotoDown:
 			if (mMotoLevel > 0) {
-				setMotoLevel(mMotoLevel - 5);
+				setMotoLevel(mMotoLevel - 1);
 			} else {
 				CavanAndroid.logE("Nothing to be done");
 			}
+			break;
+
+		case R.id.buttonCapacityUp:
+			setCapacityValue(mCapacityOffset + 1);
+			break;
+
+		case R.id.buttonCapacityDown:
+			setCapacityValue(mCapacityOffset - 1);
 			break;
 		}
 	}
