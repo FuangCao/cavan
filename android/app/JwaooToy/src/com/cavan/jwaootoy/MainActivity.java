@@ -5,13 +5,21 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.RadioButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanProgressListener;
@@ -19,7 +27,7 @@ import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
 
 @SuppressLint("HandlerLeak")
-public class MainActivity extends JwaooToyActivity implements OnClickListener, OnCheckedChangeListener {
+public class MainActivity extends JwaooToyActivity implements OnClickListener, OnCheckedChangeListener, OnItemSelectedListener {
 
 	private static final int EVENT_OTA_START = 3;
 	private static final int EVENT_OTA_FAILED = 4;
@@ -42,8 +50,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private Button mButtonWriteBdAddr;
 	private Button mButtonMotoUp;
 	private Button mButtonMotoDown;
-	private Button mButtonCapacityUp;
-	private Button mButtonCapacityDown;
 
 	private CheckBox mCheckBoxSensor;
 	private CheckBox mCheckBoxClick;
@@ -52,9 +58,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 	private ProgressBar mProgressBar;
 	private EditText mEditTextBdAddr;
+	private Spinner mSpinnerMotoMode;
 
+	private int mMotoMode;
 	private int mMotoLevel;
-	private int mCapacityOffset;
 
 	private Handler mHandler = new Handler() {
 
@@ -105,65 +112,48 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 		mButtonSend = (Button) findViewById(R.id.buttonSend);
 		mButtonSend.setOnClickListener(this);
-		mListViews.add(mButtonSend);
 
 		mButtonUpgrade = (Button) findViewById(R.id.buttonUpgrade);
 		mButtonUpgrade.setOnClickListener(this);
-		mListViews.add(mButtonUpgrade);
 
 		mButtonReboot = (Button) findViewById(R.id.buttonReboot);
 		mButtonReboot.setOnClickListener(this);
-		mListViews.add(mButtonReboot);
 
 		mButtonDisconnect = (Button) findViewById(R.id.buttonDisconnect);
 		mButtonDisconnect.setOnClickListener(this);
-		mListViews.add(mButtonDisconnect);
 
 		mButtonReadBdAddr = (Button) findViewById(R.id.buttonReadBdAddr);
 		mButtonReadBdAddr.setOnClickListener(this);
-		mListViews.add(mButtonReadBdAddr);
 
 		mButtonWriteBdAddr = (Button) findViewById(R.id.buttonWriteBdAddr);
 		mButtonWriteBdAddr.setOnClickListener(this);
-		mListViews.add(mButtonWriteBdAddr);
 
 		mButtonMotoUp = (Button) findViewById(R.id.buttonMotoUp);
 		mButtonMotoUp.setOnClickListener(this);
-		mListViews.add(mButtonMotoUp);
 
 		mButtonMotoDown = (Button) findViewById(R.id.buttonMotoDown);
 		mButtonMotoDown.setOnClickListener(this);
-		mListViews.add(mButtonMotoDown);
-
-		mButtonCapacityUp = (Button) findViewById(R.id.buttonCapacityUp);
-		mButtonCapacityUp.setOnClickListener(this);
-		mListViews.add(mButtonCapacityUp);
-
-		mButtonCapacityDown = (Button) findViewById(R.id.buttonCapacityDown);
-		mButtonCapacityDown.setOnClickListener(this);
-		mListViews.add(mButtonCapacityDown);
 
 		mCheckBoxSensor = (CheckBox) findViewById(R.id.checkBoxSensor);
 		mCheckBoxSensor.setOnCheckedChangeListener(this);
-		mListViews.add(mCheckBoxSensor);
 
 		mCheckBoxClick = (CheckBox) findViewById(R.id.checkBoxClick);
 		mCheckBoxClick.setOnCheckedChangeListener(this);
-		mListViews.add(mCheckBoxClick);
 
 		mCheckBoxLongClick = (CheckBox) findViewById(R.id.checkBoxLongClick);
 		mCheckBoxLongClick.setOnCheckedChangeListener(this);
-		mListViews.add(mCheckBoxLongClick);
 
 		mCheckBoxMultiClick = (CheckBox) findViewById(R.id.checkBoxMultiClick);
 		mCheckBoxMultiClick.setOnCheckedChangeListener(this);
-		mListViews.add(mCheckBoxMultiClick);
 
-		mProgressBar = (ProgressBar) findViewById(R.id.progressBar1);
-		mListViews.add(mProgressBar);
-
+		mProgressBar = (ProgressBar) findViewById(R.id.progressBarUpgrade);
 		mEditTextBdAddr = (EditText) findViewById(R.id.editTextBdAddr);
-		mListViews.add(mEditTextBdAddr);
+
+		mSpinnerMotoMode = (Spinner) findViewById(R.id.spinnerMotoMode);
+		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.text_moto_modes, android.R.layout.simple_spinner_item);
+		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		mSpinnerMotoMode.setAdapter(adapter);
+		mSpinnerMotoMode.setOnItemSelectedListener(this);
 
 		showScanActivity();
 	}
@@ -172,26 +162,15 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		mHandler.obtainMessage(EVENT_PROGRESS_UPDATED, progress, 0).sendToTarget();
 	}
 
-	private void setMotoLevel(int level) {
-		if (mBleToy.setMotoLevel(level)) {
+	private void setMotoMode(int mode, int level) {
+		if (mBleToy.setMotoMode(mode, level)) {
+			mMotoMode = mode;
 			mMotoLevel = level;
 		} else {
-			CavanAndroid.logE("Failed to setMotoLevel");
+			CavanAndroid.logE("Failed to setMotoMode");
 		}
 
-		CavanAndroid.logE("mMotoLevel = " + mMotoLevel);
-	}
-
-	private void setCapacityValue(int value) {
-		if (mFdc1004 != null && mFdc1004.setCapacityDac(value)) {
-			mCapacityOffset = value;
-			mFdc1004.setEnable(false);
-			mFdc1004.setEnable(true);
-		} else {
-			CavanAndroid.logE("Failed to setOffset");
-		}
-
-		CavanAndroid.logE("mCapacityOffset = " + mCapacityOffset);
+		CavanAndroid.logE("Moto: mode = " + mode + ", level = " + level);
 	}
 
 	@Override
@@ -280,7 +259,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 		case R.id.buttonMotoUp:
 			if (mMotoLevel < JwaooBleToy.MOTO_LEVEL_MAX) {
-				setMotoLevel(mMotoLevel + 1);
+				setMotoMode(mMotoMode, mMotoLevel + 1);
 			} else {
 				CavanAndroid.logE("Nothing to be done");
 			}
@@ -288,18 +267,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 		case R.id.buttonMotoDown:
 			if (mMotoLevel > 0) {
-				setMotoLevel(mMotoLevel - 1);
+				setMotoMode(mMotoMode, mMotoLevel - 1);
 			} else {
 				CavanAndroid.logE("Nothing to be done");
 			}
-			break;
-
-		case R.id.buttonCapacityUp:
-			setCapacityValue(mCapacityOffset + 1);
-			break;
-
-		case R.id.buttonCapacityDown:
-			setCapacityValue(mCapacityOffset - 1);
 			break;
 		}
 	}
@@ -361,5 +332,15 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			mBleToy.setMultiClickEnable(isChecked);
 			break;
 		}
+	}
+
+	@Override
+	public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+		setMotoMode(position + 1, mMotoLevel);
+	}
+
+	@Override
+	public void onNothingSelected(AdapterView<?> parent) {
+		setMotoMode(0, 0);
 	}
 }

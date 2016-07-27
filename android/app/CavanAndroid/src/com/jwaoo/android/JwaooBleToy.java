@@ -14,6 +14,7 @@ import com.cavan.java.CavanProgressListener;
 
 public class JwaooBleToy extends CavanBleGatt {
 
+	public static final int MOTO_MODE_MAX = 6;
 	public static final int MOTO_LEVEL_MAX = 18;
 	public static final long DATA_TIMEOUT = 5000;
 	public static final long JWAOO_TOY_TIME_FUZZ = 100;
@@ -55,7 +56,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_FLASH_READ_BD_ADDR = 59;
 	public static final byte JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR = 60;
 	public static final byte JWAOO_TOY_CMD_SENSOR_ENABLE = 70;
-	public static final byte JWAOO_TOY_CMD_MOTO_SET_LEVEL = 80;
+	public static final byte JWAOO_TOY_CMD_MOTO_SET_MODE = 80;
 	public static final byte JWAOO_TOY_CMD_KEY_CLICK_ENABLE = 90;
 	public static final byte JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE = 91;
 	public static final byte JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE = 92;
@@ -402,8 +403,9 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mCommand.readBool(JWAOO_TOY_CMD_SENSOR_ENABLE, enable, delay);
 	}
 
-	public boolean setMotoLevel(int level) {
-		return mCommand.readBool(JWAOO_TOY_CMD_MOTO_SET_LEVEL, (byte) level);
+	public boolean setMotoMode(int mode, int level) {
+		byte[] command = { JWAOO_TOY_CMD_MOTO_SET_MODE, (byte) mode, (byte) level };
+		return mCommand.readBool(command);
 	}
 
 	public boolean doReboot() {

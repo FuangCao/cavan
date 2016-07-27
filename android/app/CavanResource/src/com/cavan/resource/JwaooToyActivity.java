@@ -152,6 +152,16 @@ public class JwaooToyActivity extends Activity {
 	}
 
 	@Override
+	public View findViewById(int id) {
+		View view = super.findViewById(id);
+		if (view != null && mListViews.indexOf(view) < 0) {
+			mListViews.add(view);
+		}
+
+		return view;
+	}
+
+	@Override
 	protected void onDestroy() {
 		if (mBleToy != null) {
 			mBleToy.disconnect();

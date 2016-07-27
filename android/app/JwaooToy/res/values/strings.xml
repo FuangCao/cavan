@@ -20,9 +20,18 @@
     <string name="text_multi_click">允许多次点击</string>
     <string name="text_sensor_enable">打开传感器</string>
     <string name="text_click_enable">允许点击</string>
-    <string name="text_moto_down">马达减弱</string>
-    <string name="text_moto_up">马达增强</string>
+    <string name="text_moto_down">震动减弱</string>
+    <string name="text_moto_up">震动增强</string>
     <string name="text_capacity_up">电容增加</string>
     <string name="text_capacity_down">电容减小</string>
+    <string name="text_moto_mode">震动模式</string>
+    <string-array name="text_moto_modes">
+        <item >震动模式1</item>
+        <item >震动模式2</item>
+        <item >震动模式3</item>
+        <item >震动模式4</item>
+        <item >震动模式5</item>
+        <item >震动模式6</item>
+    </string-array>
 
 </resources>

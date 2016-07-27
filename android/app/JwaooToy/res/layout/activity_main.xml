@@ -11,13 +11,13 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        android:ems="10" >
+        android:ems="10"
+        android:inputType="number" >
 
-        <requestFocus />
     </EditText>
 
     <ProgressBar
-        android:id="@+id/progressBar1"
+        android:id="@+id/progressBarUpgrade"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -26,46 +26,91 @@
         android:layout_below="@+id/editTextBdAddr"
         android:max="100" />
 
+    <CheckBox
+        android:id="@+id/checkBoxClick"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/spinnerMotoMode"
+        android:text="@string/text_click_enable" />
+
+    <CheckBox
+        android:id="@+id/checkBoxMultiClick"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/checkBoxClick"
+        android:layout_alignBottom="@+id/checkBoxClick"
+        android:layout_alignParentRight="true"
+        android:text="@string/text_multi_click" />
+
+    <CheckBox
+        android:id="@+id/checkBoxLongClick"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/checkBoxClick"
+        android:text="@string/text_long_click" />
+
+    <CheckBox
+        android:id="@+id/checkBoxSensor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/checkBoxLongClick"
+        android:layout_alignBottom="@+id/checkBoxLongClick"
+        android:layout_alignLeft="@+id/checkBoxMultiClick"
+        android:text="@string/text_sensor_enable" />
+
+    <Spinner
+        android:id="@+id/spinnerMotoMode"
+        android:spinnerMode="dialog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/buttonMotoDown"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/progressBarUpgrade"
+        android:layout_toLeftOf="@+id/buttonMotoDown" />
+
     <Button
-        android:id="@+id/buttonUpgrade"
+        android:id="@+id/buttonMotoUp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/progressBar1"
-        android:text="@string/text_upgrade" />
+        android:layout_below="@+id/progressBarUpgrade"
+        android:text="@string/text_moto_up" />
 
     <Button
-        android:id="@+id/buttonReboot"
+        android:id="@+id/buttonMotoDown"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/buttonUpgrade"
-        android:text="@string/text_reboot" />
-
-    <Button
-        android:id="@+id/buttonDisconnect"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/buttonUpgrade"
-        android:layout_toLeftOf="@+id/buttonUpgrade"
-        android:text="@string/text_disconnect" />
-
-    <Button
-        android:id="@+id/buttonWriteBdAddr"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/buttonUpgrade"
-        android:layout_alignBottom="@+id/buttonUpgrade"
-        android:layout_toLeftOf="@+id/buttonUpgrade"
-        android:text="@string/text_write_bd_addr" />
+        android:layout_alignBaseline="@+id/buttonMotoUp"
+        android:layout_alignBottom="@+id/buttonMotoUp"
+        android:layout_toLeftOf="@+id/buttonMotoUp"
+        android:text="@string/text_moto_down" />
 
     <Button
         android:id="@+id/buttonReadBdAddr"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/buttonDisconnect"
         android:layout_alignParentLeft="true"
+        android:layout_below="@+id/checkBoxLongClick"
         android:text="@string/text_read_bd_addr" />
+
+    <Button
+        android:id="@+id/buttonWriteBdAddr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonReadBdAddr"
+        android:layout_alignBottom="@+id/buttonReadBdAddr"
+        android:layout_alignParentRight="true"
+        android:text="@string/text_write_bd_addr" />
+
+    <Button
+        android:id="@+id/buttonUpgrade"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/buttonWriteBdAddr"
+        android:text="@string/text_upgrade" />
 
     <Button
         android:id="@+id/buttonSend"
@@ -75,70 +120,21 @@
         android:layout_below="@+id/buttonReadBdAddr"
         android:text="@string/text_send" />
 
-    <CheckBox
-        android:id="@+id/checkBoxLongClick"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/buttonSend"
-        android:text="@string/text_long_click" />
-
-    <CheckBox
-        android:id="@+id/checkBoxClick"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/checkBoxLongClick"
-        android:text="@string/text_click_enable" />
-
-    <CheckBox
-        android:id="@+id/checkBoxSensor"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/buttonWriteBdAddr"
-        android:layout_below="@+id/buttonReboot"
-        android:text="@string/text_sensor_enable" />
-
-    <CheckBox
-        android:id="@+id/checkBoxMultiClick"
+    <Button
+        android:id="@+id/buttonDisconnect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/checkBoxSensor"
-        android:layout_below="@+id/checkBoxSensor"
-        android:text="@string/text_multi_click" />
+        android:layout_below="@+id/buttonWriteBdAddr"
+        android:text="@string/text_disconnect" />
 
     <Button
-        android:id="@+id/buttonMotoDown"
+        android:id="@+id/buttonReboot"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/checkBoxClick"
-        android:layout_marginTop="30dp"
-        android:text="@string/text_moto_down" />
-
-    <Button
-        android:id="@+id/buttonMotoUp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/buttonMotoDown"
-        android:layout_alignParentRight="true"
-        android:text="@string/text_moto_up" />
-
-    <Button
-        android:id="@+id/buttonCapacityUp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/buttonMotoUp"
-        android:text="@string/text_capacity_up" />
-
-    <Button
-        android:id="@+id/buttonCapacityDown"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/buttonCapacityUp"
-        android:layout_alignBottom="@+id/buttonCapacityUp"
-        android:layout_alignParentLeft="true"
-        android:text="@string/text_capacity_down" />
+        android:layout_alignBaseline="@+id/buttonSend"
+        android:layout_alignBottom="@+id/buttonSend"
+        android:layout_alignRight="@+id/checkBoxLongClick"
+        android:text="@string/text_reboot" />
 
 </RelativeLayout>
