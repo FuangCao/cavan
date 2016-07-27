@@ -211,6 +211,10 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mParser.getFreq();
 	}
 
+	public boolean isCommandTimeout() {
+		return mCharCommand == null || mCharCommand.isTimeout();
+	}
+
 	public String doIdentify() {
 		return mCommand.readText(JWAOO_TOY_CMD_IDENTIFY);
 	}

@@ -307,23 +307,23 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			return false;
 		}
 
-		if (!mBleToy.setClickEnable(mCheckBoxClick.isChecked())) {
+		if (mBleToy.setClickEnable(mCheckBoxClick.isChecked()) == false && mBleToy.isCommandTimeout()) {
 			CavanAndroid.logE("Failed to setClickEnable");
 			return false;
 		}
 
-		if (!mBleToy.setLongClickEnable(mCheckBoxLongClick.isChecked())) {
+		if (mBleToy.setLongClickEnable(mCheckBoxLongClick.isChecked()) == false && mBleToy.isCommandTimeout()) {
 			CavanAndroid.logE("Failed to setLongClickEnable");
 			return false;
 		}
 
-		if (!mBleToy.setMultiClickEnable(mCheckBoxMultiClick.isChecked())) {
+		if (mBleToy.setMultiClickEnable(mCheckBoxMultiClick.isChecked()) == false && mBleToy.isCommandTimeout()) {
 			CavanAndroid.logE("Failed to setMultiClickEnable");
 			return false;
 		}
 
 		if (mMotoMode > 0) {
-			if (!setMotoMode()) {
+			if (setMotoMode() == false && mBleToy.isCommandTimeout()) {
 				return false;
 			}
 		}
