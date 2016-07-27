@@ -197,12 +197,21 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		mHandler.obtainMessage(EVENT_PROGRESS_UPDATED, progress, 0).sendToTarget();
 	}
 
-	private void setMotoMode() {
-		if (mBleToy.setMotoMode(mMotoMode, mMotoLevel)) {
-			CavanAndroid.logE("Moto: mode = " + mMotoMode + ", level = " + mMotoLevel);
-		} else {
-			CavanAndroid.logE("Failed to setMotoMode");
+	private boolean setMotoMode() {
+		if (mBleToy != null && mBleToy.isConnected()) {
+			boolean success = mBleToy.setMotoMode(mMotoMode, mMotoLevel);
+
+			if (success) {
+				CavanAndroid.logE("Moto: mode = " + mMotoMode + ", level = " + mMotoLevel);
+			} else {
+				CavanAndroid.logE("Failed to setMotoMode");
+				CavanAndroid.dumpstack();
+			}
+
+			return success;
 		}
+
+		return false;
 	}
 
 	@Override
@@ -293,7 +302,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 	@Override
 	protected boolean onInitialize() {
-		CavanAndroid.logE("mBleToy = " + mBleToy);
 		if (!mBleToy.setSensorEnable(mCheckBoxSensor.isChecked(), SENSOR_DELAY)) {
 			CavanAndroid.logE("Failed to setSensorEnable");
 			return false;
@@ -312,6 +320,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		if (!mBleToy.setMultiClickEnable(mCheckBoxMultiClick.isChecked())) {
 			CavanAndroid.logE("Failed to setMultiClickEnable");
 			return false;
+		}
+
+		if (mMotoMode > 0) {
+			if (!setMotoMode()) {
+				return false;
+			}
 		}
 
 		return true;

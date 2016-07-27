@@ -32,6 +32,7 @@ public class CavanBleGatt extends BluetoothGattCallback {
 	public static final UUID DESC_UUID = UUID.fromString("00002901-0000-1000-8000-00805f9b34fb");
 
 	private int mGattState;
+	private boolean mReady;
 	private boolean mConnected;
 	private boolean mDisconnSend;
 	private BleConnectThread mConnThread;
@@ -49,6 +50,9 @@ public class CavanBleGatt extends BluetoothGattCallback {
 
 	protected boolean doInitialize() {
 		CavanAndroid.logE("doInitialize");
+
+		setReady(true);
+
 		return true;
 	}
 
@@ -87,16 +91,28 @@ public class CavanBleGatt extends BluetoothGattCallback {
 		mAutoConnAllow = allow;
 	}
 
+	synchronized public void setReady(boolean ready) {
+		mReady = ready;
+	}
+
+	synchronized public boolean isReady() {
+		return mReady;
+	}
+
 	synchronized private void setConnectStatus(boolean connected) {
 		if (connected) {
 			mAutoConnCount = 0;
-			mAutoConnAllow = true;
+			setAutoConnectAllow(true);
+
 			mDisconnSend = false;
+			setReady(true);
 
 			if (mConnected) {
 				return;
 			}
 		} else {
+			setReady(false);
+
 			if (mDisconnSend) {
 				return;
 			}
@@ -140,6 +156,8 @@ public class CavanBleGatt extends BluetoothGattCallback {
 			mGatt.close();
 			mGatt = null;
 		}
+
+		setReady(false);
 	}
 
 	synchronized private boolean autoConnect() {
@@ -271,6 +289,10 @@ public class CavanBleGatt extends BluetoothGattCallback {
 		case BluetoothProfile.STATE_DISCONNECTED:
 			autoConnect();
 			break;
+		}
+
+		if (newState != BluetoothProfile.STATE_CONNECTED) {
+			setReady(false);
 		}
 	}
 
@@ -412,8 +434,12 @@ public class CavanBleGatt extends BluetoothGattCallback {
 				mService = mGatt.getService(mUuid);
 				if (mService != null && doInitialize() && onInitialize()) {
 					setConnectStatus(true);
-				} else if (isGattConnected()) {
-					autoConnect();
+				} else {
+					setReady(false);
+
+					if (isGattConnected()) {
+						autoConnect();
+					}
 				}
 			}
 
@@ -472,7 +498,7 @@ public class CavanBleGatt extends BluetoothGattCallback {
 			if (sync) {
 				mWriteStatus = -110;
 
-				for (int i = 0; i < 3 && isGattConnected(); i++) {
+				for (int i = 0; i < 3 && isReady(); i++) {
 					if (mGatt.writeCharacteristic(mChar)) {
 						try {
 							wait(WRITE_TIMEOUT);
@@ -488,7 +514,7 @@ public class CavanBleGatt extends BluetoothGattCallback {
 					} else {
 						CavanAndroid.logE("Failed to writeCharacteristic" + i);
 
-						if (isGattConnected()) {
+						if (isReady()) {
 							try {
 								wait(WRITE_TIMEOUT);
 							} catch (InterruptedException e) {

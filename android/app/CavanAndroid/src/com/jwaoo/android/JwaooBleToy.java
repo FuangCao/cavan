@@ -538,6 +538,8 @@ public class JwaooBleToy extends CavanBleGatt {
 			return false;
 		}
 
+		setReady(true);
+
 		String identify = doIdentify();
 		if (identify == null) {
 			CavanAndroid.logE("Failed to doIdentify");

@@ -60,6 +60,8 @@ public class CavanBleUart extends CavanBleGatt {
 
 		mCharacteristicOta = openChar(UUID_OTA);
 
+		setReady(true);
+
 		return true;
 	}
 }
