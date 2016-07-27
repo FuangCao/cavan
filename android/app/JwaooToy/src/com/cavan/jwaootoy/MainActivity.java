@@ -1,33 +1,31 @@
 package com.cavan.jwaootoy;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.RadioButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
-import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanProgressListener;
 import com.cavan.resource.JwaooToyActivity;
-import com.jwaoo.android.JwaooBleToy;
 
 @SuppressLint("HandlerLeak")
-public class MainActivity extends JwaooToyActivity implements OnClickListener, OnCheckedChangeListener, OnItemSelectedListener {
+public class MainActivity extends JwaooToyActivity implements OnClickListener, OnCheckedChangeListener {
 
 	private static final int EVENT_OTA_START = 3;
 	private static final int EVENT_OTA_FAILED = 4;
@@ -48,8 +46,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private Button mButtonDisconnect;
 	private Button mButtonReadBdAddr;
 	private Button mButtonWriteBdAddr;
-	private Button mButtonMotoUp;
-	private Button mButtonMotoDown;
 
 	private CheckBox mCheckBoxSensor;
 	private CheckBox mCheckBoxClick;
@@ -59,9 +55,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private ProgressBar mProgressBar;
 	private EditText mEditTextBdAddr;
 	private Spinner mSpinnerMotoMode;
+	private Spinner mSpinnerMotoLevel;
 
 	private int mMotoMode;
-	private int mMotoLevel;
+	private int mMotoLevel = 1;
 
 	private Handler mHandler = new Handler() {
 
@@ -128,12 +125,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		mButtonWriteBdAddr = (Button) findViewById(R.id.buttonWriteBdAddr);
 		mButtonWriteBdAddr.setOnClickListener(this);
 
-		mButtonMotoUp = (Button) findViewById(R.id.buttonMotoUp);
-		mButtonMotoUp.setOnClickListener(this);
-
-		mButtonMotoDown = (Button) findViewById(R.id.buttonMotoDown);
-		mButtonMotoDown.setOnClickListener(this);
-
 		mCheckBoxSensor = (CheckBox) findViewById(R.id.checkBoxSensor);
 		mCheckBoxSensor.setOnCheckedChangeListener(this);
 
@@ -149,11 +140,55 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		mProgressBar = (ProgressBar) findViewById(R.id.progressBarUpgrade);
 		mEditTextBdAddr = (EditText) findViewById(R.id.editTextBdAddr);
 
-		mSpinnerMotoMode = (Spinner) findViewById(R.id.spinnerMotoMode);
-		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.text_moto_modes, android.R.layout.simple_spinner_item);
+		List<CharSequence> list = new ArrayList<CharSequence>();
+		String text = getResources().getString(R.string.text_moto_close);
+		list.add(text);
+
+		text = getResources().getString(R.string.text_moto_mode);
+
+		for (int i = 1; i <= 6; i++) {
+			list.add(text + i);
+		}
+
+		ArrayAdapter<CharSequence> adapter = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item, list);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		mSpinnerMotoMode = (Spinner) findViewById(R.id.spinnerMotoMode);
 		mSpinnerMotoMode.setAdapter(adapter);
-		mSpinnerMotoMode.setOnItemSelectedListener(this);
+		mSpinnerMotoMode.setOnItemSelectedListener(new OnItemSelectedListener() {
+
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+				mMotoMode = position;
+				setMotoMode();
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> parent) {}
+		});
+
+		list = new ArrayList<CharSequence>();
+		text = getResources().getString(R.string.text_moto_level);
+		for (int i = 1; i <= 18; i++) {
+			list.add(text + i);
+		}
+
+		adapter = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item, list);
+		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		mSpinnerMotoLevel = (Spinner) findViewById(R.id.spinnerMotoLevel);
+		mSpinnerMotoLevel.setAdapter(adapter);
+		mSpinnerMotoLevel.setOnItemSelectedListener(new OnItemSelectedListener() {
+
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+				mMotoLevel = position + 1;
+				if (mMotoMode == 1) {
+					setMotoMode();
+				}
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> parent) {}
+		});
 
 		showScanActivity();
 	}
@@ -162,15 +197,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		mHandler.obtainMessage(EVENT_PROGRESS_UPDATED, progress, 0).sendToTarget();
 	}
 
-	private void setMotoMode(int mode, int level) {
-		if (mBleToy.setMotoMode(mode, level)) {
-			mMotoMode = mode;
-			mMotoLevel = level;
+	private void setMotoMode() {
+		if (mBleToy.setMotoMode(mMotoMode, mMotoLevel)) {
+			CavanAndroid.logE("Moto: mode = " + mMotoMode + ", level = " + mMotoLevel);
 		} else {
 			CavanAndroid.logE("Failed to setMotoMode");
 		}
-
-		CavanAndroid.logE("Moto: mode = " + mode + ", level = " + level);
 	}
 
 	@Override
@@ -256,22 +288,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 				CavanAndroid.logE("Failed to writeBdAddress");
 			}
 			break;
-
-		case R.id.buttonMotoUp:
-			if (mMotoLevel < JwaooBleToy.MOTO_LEVEL_MAX) {
-				setMotoMode(mMotoMode, mMotoLevel + 1);
-			} else {
-				CavanAndroid.logE("Nothing to be done");
-			}
-			break;
-
-		case R.id.buttonMotoDown:
-			if (mMotoLevel > 0) {
-				setMotoMode(mMotoMode, mMotoLevel - 1);
-			} else {
-				CavanAndroid.logE("Nothing to be done");
-			}
-			break;
 		}
 	}
 
@@ -332,15 +348,5 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			mBleToy.setMultiClickEnable(isChecked);
 			break;
 		}
-	}
-
-	@Override
-	public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-		setMotoMode(position + 1, mMotoLevel);
-	}
-
-	@Override
-	public void onNothingSelected(AdapterView<?> parent) {
-		setMotoMode(0, 0);
 	}
 }

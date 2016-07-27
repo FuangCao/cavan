@@ -25,13 +25,7 @@
     <string name="text_capacity_up">电容增加</string>
     <string name="text_capacity_down">电容减小</string>
     <string name="text_moto_mode">震动模式</string>
-    <string-array name="text_moto_modes">
-        <item >震动模式1</item>
-        <item >震动模式2</item>
-        <item >震动模式3</item>
-        <item >震动模式4</item>
-        <item >震动模式5</item>
-        <item >震动模式6</item>
-    </string-array>
+    <string name="text_moto_level">震动强度</string>
+    <string name="text_moto_close">震动关闭</string>
 
 </resources>

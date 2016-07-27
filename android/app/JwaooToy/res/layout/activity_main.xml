@@ -62,30 +62,11 @@
 
     <Spinner
         android:id="@+id/spinnerMotoMode"
-        android:spinnerMode="dialog"
-        android:layout_width="wrap_content"
+        android:layout_width="150dp"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/buttonMotoDown"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/progressBarUpgrade"
-        android:layout_toLeftOf="@+id/buttonMotoDown" />
-
-    <Button
-        android:id="@+id/buttonMotoUp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/progressBarUpgrade"
-        android:text="@string/text_moto_up" />
-
-    <Button
-        android:id="@+id/buttonMotoDown"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/buttonMotoUp"
-        android:layout_alignBottom="@+id/buttonMotoUp"
-        android:layout_toLeftOf="@+id/buttonMotoUp"
-        android:text="@string/text_moto_down" />
+        android:spinnerMode="dialog" />
 
     <Button
         android:id="@+id/buttonReadBdAddr"
@@ -136,5 +117,12 @@
         android:layout_alignBottom="@+id/buttonSend"
         android:layout_alignRight="@+id/checkBoxLongClick"
         android:text="@string/text_reboot" />
+
+    <Spinner
+        android:id="@+id/spinnerMotoLevel"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@+id/spinnerMotoMode" />
 
 </RelativeLayout>
