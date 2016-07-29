@@ -36,25 +36,28 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_RSP_DATA = 4;
 	public static final byte JWAOO_TOY_RSP_TEXT = 5;
 
-	public static final byte JWAOO_TOY_CMD_NOOP = 20;
-	public static final byte JWAOO_TOY_CMD_IDENTIFY = 21;
-	public static final byte JWAOO_TOY_CMD_VERSION = 22;
-	public static final byte JWAOO_TOY_CMD_BUILD_DATE = 23;
-	public static final byte JWAOO_TOY_CMD_REBOOT = 24;
-	public static final byte JWAOO_TOY_CMD_SHUTDOWN = 25;
-	public static final byte JWAOO_TOY_CMD_BATT_INFO = 26;
-	public static final byte JWAOO_TOY_CMD_I2C_RW = 27;
-	public static final byte JWAOO_TOY_CMD_FLASH_ID = 50;
-	public static final byte JWAOO_TOY_CMD_FLASH_SIZE = 51;
-	public static final byte JWAOO_TOY_CMD_FLASH_PAGE_SIZE = 52;
-	public static final byte JWAOO_TOY_CMD_FLASH_READ = 53;
-	public static final byte JWAOO_TOY_CMD_FLASH_SEEK = 54;
-	public static final byte JWAOO_TOY_CMD_FLASH_ERASE = 55;
-	public static final byte JWAOO_TOY_CMD_FLASH_WRITE_ENABLE = 56;
-	public static final byte JWAOO_TOY_CMD_FLASH_WRITE_START = 57;
-	public static final byte JWAOO_TOY_CMD_FLASH_WRITE_FINISH = 58;
-	public static final byte JWAOO_TOY_CMD_FLASH_READ_BD_ADDR = 59;
-	public static final byte JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR = 60;
+	public static final byte JWAOO_TOY_CMD_NOOP = 0;
+	public static final byte JWAOO_TOY_CMD_IDENTIFY = 1;
+	public static final byte JWAOO_TOY_CMD_VERSION = 2;
+	public static final byte JWAOO_TOY_CMD_BUILD_DATE = 3;
+	public static final byte JWAOO_TOY_CMD_REBOOT = 4;
+	public static final byte JWAOO_TOY_CMD_SHUTDOWN = 5;
+	public static final byte JWAOO_TOY_CMD_I2C_RW = 6;
+	public static final byte JWAOO_TOY_CMD_FLASH_ID = 30;
+	public static final byte JWAOO_TOY_CMD_FLASH_SIZE = 31;
+	public static final byte JWAOO_TOY_CMD_FLASH_PAGE_SIZE = 32;
+	public static final byte JWAOO_TOY_CMD_FLASH_READ = 33;
+	public static final byte JWAOO_TOY_CMD_FLASH_SEEK = 34;
+	public static final byte JWAOO_TOY_CMD_FLASH_ERASE = 35;
+	public static final byte JWAOO_TOY_CMD_FLASH_STATE = 36;
+	public static final byte JWAOO_TOY_CMD_FLASH_WRITE_ENABLE = 37;
+	public static final byte JWAOO_TOY_CMD_FLASH_WRITE_START = 38;
+	public static final byte JWAOO_TOY_CMD_FLASH_WRITE_FINISH = 39;
+	public static final byte JWAOO_TOY_CMD_FLASH_READ_BD_ADDR = 40;
+	public static final byte JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR = 41;
+	public static final byte JWAOO_TOY_CMD_FACTORY_ENABLE = 50;
+	public static final byte JWAOO_TOY_CMD_BATT_INFO = 60;
+	public static final byte JWAOO_TOY_CMD_BATT_EVENT_ENABLE = 61;
 	public static final byte JWAOO_TOY_CMD_SENSOR_ENABLE = 70;
 	public static final byte JWAOO_TOY_CMD_MOTO_SET_MODE = 80;
 	public static final byte JWAOO_TOY_CMD_KEY_CLICK_ENABLE = 90;
@@ -116,6 +119,10 @@ public class JwaooBleToy extends CavanBleGatt {
 	protected void onDepthChanged(int depth) {}
 	protected void onFreqChanged(int freq) {}
 
+	protected void onBatteryStateChanged(int state, int level, double voltage) {
+		CavanAndroid.logE("state = " + state + ", level = " + level + ", voltage = " + voltage);
+	}
+
 	protected void onKeyStateChanged(int code, int state) {
 		CavanAndroid.logE("onKeyStateChanged: code = " + code + ", state = " + state);
 	}
@@ -131,6 +138,14 @@ public class JwaooBleToy extends CavanBleGatt {
 	protected void onEventReceived(byte[] event) {
 		if (event.length > 0) {
 			switch (event[0]) {
+			case JWAOO_TOY_EVT_BATT_INFO:
+				if (event.length == 5) {
+					CavanByteCache cache = new CavanByteCache(event);
+					cache.setOffset(1);
+					onBatteryStateChanged(cache.readValue8(), cache.readValue8(), ((double) cache.readValue16()) / 1000);
+				}
+				break;
+
 			case JWAOO_TOY_EVT_KEY_STATE:
 				if (event.length > 2) {
 					onKeyStateChanged(event[1], event[2]);
@@ -410,6 +425,14 @@ public class JwaooBleToy extends CavanBleGatt {
 	public boolean setMotoMode(int mode, int level) {
 		byte[] command = { JWAOO_TOY_CMD_MOTO_SET_MODE, (byte) mode, (byte) level };
 		return mCommand.readBool(command);
+	}
+
+	public boolean setFactoryModeEnable(boolean enable) {
+		return mCommand.readBool(JWAOO_TOY_CMD_FACTORY_ENABLE, enable);
+	}
+
+	public boolean setBatteryEventEnable(boolean enable) {
+		return mCommand.readBool(JWAOO_TOY_CMD_BATT_EVENT_ENABLE, enable);
 	}
 
 	public boolean doReboot() {

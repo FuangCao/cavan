@@ -27,5 +27,7 @@
     <string name="text_moto_mode">震动模式</string>
     <string name="text_moto_level">震动强度</string>
     <string name="text_moto_close">震动关闭</string>
+    <string name="text_batt_event_enable">允许电池事件</string>
+    <string name="text_factory_mode">工厂模式</string>
 
 </resources>

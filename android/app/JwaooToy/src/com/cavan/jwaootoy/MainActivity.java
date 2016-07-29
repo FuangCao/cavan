@@ -51,6 +51,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private CheckBox mCheckBoxClick;
 	private CheckBox mCheckBoxLongClick;
 	private CheckBox mCheckBoxMultiClick;
+	private CheckBox mCheckBoxBatteryEvent;
+	private CheckBox mCheckBoxFactoryMode;
 
 	private ProgressBar mProgressBar;
 	private EditText mEditTextBdAddr;
@@ -136,6 +138,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 		mCheckBoxMultiClick = (CheckBox) findViewById(R.id.checkBoxMultiClick);
 		mCheckBoxMultiClick.setOnCheckedChangeListener(this);
+
+		mCheckBoxBatteryEvent = (CheckBox) findViewById(R.id.checkBoxBattEvent);
+		mCheckBoxBatteryEvent.setOnCheckedChangeListener(this);
+
+		mCheckBoxFactoryMode = (CheckBox) findViewById(R.id.checkBoxFactoryMode);
+		mCheckBoxFactoryMode.setOnCheckedChangeListener(this);
 
 		mProgressBar = (ProgressBar) findViewById(R.id.progressBarUpgrade);
 		mEditTextBdAddr = (EditText) findViewById(R.id.editTextBdAddr);
@@ -322,6 +330,16 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			return false;
 		}
 
+		if (mBleToy.setBatteryEventEnable(mCheckBoxBatteryEvent.isChecked()) == false && mBleToy.isCommandTimeout()) {
+			CavanAndroid.logE("Failed to setBatteryEventEnable");
+			return false;
+		}
+
+		if (mBleToy.setFactoryModeEnable(mCheckBoxFactoryMode.isChecked()) == false && mBleToy.isCommandTimeout()) {
+			CavanAndroid.logE("Failed to setFactoryModeEnable");
+			return false;
+		}
+
 		if (mMotoMode > 0) {
 			if (setMotoMode() == false && mBleToy.isCommandTimeout()) {
 				return false;
@@ -360,6 +378,14 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 		case R.id.checkBoxMultiClick:
 			mBleToy.setMultiClickEnable(isChecked);
+			break;
+
+		case R.id.checkBoxBattEvent:
+			mBleToy.setBatteryEventEnable(isChecked);
+			break;
+
+		case R.id.checkBoxFactoryMode:
+			mBleToy.setFactoryModeEnable(isChecked);
 			break;
 		}
 	}

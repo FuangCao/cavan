@@ -69,14 +69,6 @@
         android:spinnerMode="dialog" />
 
     <Button
-        android:id="@+id/buttonReadBdAddr"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/checkBoxLongClick"
-        android:text="@string/text_read_bd_addr" />
-
-    <Button
         android:id="@+id/buttonWriteBdAddr"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -124,5 +116,29 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignTop="@+id/spinnerMotoMode" />
+
+    <CheckBox
+        android:id="@+id/checkBoxBattEvent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/checkBoxLongClick"
+        android:text="@string/text_batt_event_enable" />
+
+    <Button
+        android:id="@+id/buttonReadBdAddr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/checkBoxBattEvent"
+        android:text="@string/text_read_bd_addr" />
+
+    <CheckBox
+        android:id="@+id/checkBoxFactoryMode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonWriteBdAddr"
+        android:layout_alignLeft="@+id/checkBoxSensor"
+        android:text="@string/text_factory_mode" />
 
 </RelativeLayout>
