@@ -52,7 +52,7 @@ public class JwaooToyActivity extends Activity {
 				break;
 
 			case EVENT_UPDATE_UI:
-				updateUI((boolean) msg.obj);
+				updateUI((Boolean) msg.obj);
 				break;
 			}
 		}
