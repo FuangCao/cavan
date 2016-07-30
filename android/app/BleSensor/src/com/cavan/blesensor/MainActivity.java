@@ -3,6 +3,7 @@ package com.cavan.blesensor;
 import android.bluetooth.BluetoothDevice;
 import android.os.Bundle;
 
+import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanWaveView;
 import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
@@ -63,6 +64,9 @@ public class MainActivity extends JwaooToyActivity {
 				mWaveViewY.addValue(mSensor.getAxisY());
 				mWaveViewZ.addValue(mSensor.getAxisZ());
 				mWaveViewDepth.addValue(mSensor.getDepth());
+
+				int capacitys[] = mSensor.getCapacitys();
+				CavanAndroid.logE(String.format("capacity: [%6d, %6d, %6d, %6d]", capacitys[0], capacitys[1], capacitys[2], capacitys[3]));
 			}
 		};
 	}

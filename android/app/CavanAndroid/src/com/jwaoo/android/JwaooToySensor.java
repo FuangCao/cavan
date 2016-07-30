@@ -24,15 +24,13 @@ public abstract class JwaooToySensor extends CavanAccelSensor {
 	protected void updateDepth() {
 		double depth = 0;
 
-		// CavanAndroid.logE(String.format("capacity: [%4d, %4d, %4d, %4d]", mCapacitys[0], mCapacitys[1], mCapacitys[2], mCapacitys[3]));
-
 		for (int capacity : mCapacitys) {
 			if (capacity > 0) {
 				depth += capacity;
 			}
 		}
 
-		mDepth = (mDepth + (depth / 4)) / 2;
+		mDepth = (mDepth + (depth / 3)) / 2;
 	}
 
 	public void setCapacity(int index, int capacity) {
