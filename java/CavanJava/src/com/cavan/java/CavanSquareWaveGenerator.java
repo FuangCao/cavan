@@ -49,11 +49,14 @@ public class CavanSquareWaveGenerator {
 		double max = mNodeMax.getValue();
 
 		mValueDiff = max - min;
+		if (mValueDiff < mFuzz) {
+			mValueMin = max + mFuzz;
+		} else {
+			double threshold = mValueDiff * mThreshold;
 
-		double threshold = mValueDiff * mThreshold;
-
-		mValueMax = max - threshold;
-		mValueMin = min + threshold;
+			mValueMax = max - threshold;
+			mValueMin = min + threshold;
+		}
 	}
 
 	public void setMinNode(CavanWaveValue node) {
@@ -68,6 +71,10 @@ public class CavanSquareWaveGenerator {
 
 	public boolean getValue() {
 		return mValue;
+	}
+
+	public double getDiff() {
+		return mValueDiff;
 	}
 
 	public boolean putValue(double value) {
@@ -119,7 +126,7 @@ public class CavanSquareWaveGenerator {
 			return false;
 		}
 
-		if (mValueDiff < mFuzz || value < mValueMin) {
+		if (value < mValueMin) {
 			mValue = false;
 		} else if (value > mValueMax) {
 			mValue = true;

@@ -9,12 +9,14 @@ import android.os.Bundle;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanWaveView;
+import com.cavan.java.CavanAccelCounter;
 import com.cavan.java.CavanSquareWaveCounter;
 
 public class MainActivity extends Activity implements SensorEventListener {
 
 	private long mCount;
-	private CavanSquareWaveCounter mCounter = new CavanSquareWaveCounter(1, 1000, 3000);
+	private double mFreq;
+	private CavanAccelCounter mCounter = new CavanAccelCounter(2.0, 1000, 3000);
 
 	private CavanWaveView mWaveView1;
 	private CavanWaveView mWaveView2;
@@ -25,7 +27,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
 		@Override
 		public void run() {
-			String text = String.format("freq = %2.2f, count = %d", mCounter.getFreq(), mCount);
+			String text = String.format("freq = %2.2f, count = %d", mFreq, mCount);
 
 			setTitle(text);
 			CavanAndroid.logE(text);
@@ -71,9 +73,9 @@ public class MainActivity extends Activity implements SensorEventListener {
 		mWaveView2.addValue(values[1]);
 		mWaveView3.addValue(values[2]);
 
-		mCounter.putFreqValue(values[2]);
+		CavanSquareWaveCounter counter = mCounter.putValue(values);
 
-		if (mCounter.getValue()) {
+		if (counter.getValue()) {
 			mWaveView4.addValue(1);
 		} else {
 			mWaveView4.addValue(0);
@@ -81,7 +83,9 @@ public class MainActivity extends Activity implements SensorEventListener {
 
 		long count = mCounter.getCount();
 		if (count != mCount) {
+			CavanAndroid.logE("diff = " + counter.getDiff());
 			mCount = count;
+			mFreq = counter.getFreq();
 			runOnUiThread(mRunnableUpdateTitle);
 		}
 	}
