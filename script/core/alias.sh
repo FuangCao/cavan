@@ -67,22 +67,6 @@ EOF
 	return 0
 }
 
-function cavan-adb-push-directory()
-{
-	local fn
-
-	cd $1 || return 1
-
-	for fn in *
-	do
-		[ -f "${fn}" ] || continue
-		echo "Push ${fn} => $2"
-		adb push ${fn} $2 || return 1
-	done
-
-	return 0
-}
-
 function cavan-server-run()
 {
 	[ "$(id -u)" = "0" ] ||
@@ -123,42 +107,6 @@ function cavan-ssh()
 	cavan-tcp_exec --port ${1-8888} --ip ${2-${CAVAN_SERVER_IP}} bash
 }
 
-function cavan-adb-loop_run()
-{
-	cavan-loop_run -wd2 "adb root && adb wait-for-device && adb remount; adb shell $*" || return 1
-}
-
-function cavan-adb-cavan-main()
-{
-	adb push ${CMD_ARM_CAVAN_MAIN} ${CMD_DATA_CAVAN_MAIN} || return 1
-	adb shell "chmod 777 ${CMD_DATA_CAVAN_MAIN} && ${CMD_DATA_CAVAN_MAIN} \"$*\"" || return 1
-}
-
-function cavan-adb-tcp_dd_server()
-{
-	cavan-loop_run -wd2 "adb remount; adb shell cavan-main tcp_dd_server"
-}
-
-function cavan-adb-logcat()
-{
-	cavan-loop_run -wd2 "adb logcat -v threadtime $*" || return 1
-}
-
-function cavan-adb-kmsg()
-{
-	cavan-adb-loop_run "cat /proc/kmsg" || return 1
-}
-
-function cavan-adb-build-env()
-{
-	adb remount || return 1
-	adb push ${CMD_ARM_CAVAN_MAIN} ${CMD_SYSTEM_CAVAN_MAIN} || return 1
-	adb shell chmod 06777 ${CMD_SYSTEM_CAVAN_MAIN} || return 1
-
-	adb shell chmod 777 /data/bin/bash || return 1
-	adb shell cp /data/bin/bash /system/bin/sh || return 1
-}
-
 function cavan-svn-cleanup()
 {
 	cavan-mkdir .svn/tmp
@@ -171,52 +119,6 @@ function cavan-svn-cleanup()
 function cavan-format-code()
 {
 	sed -i 's/\s\+$//g' $*
-}
-
-function cavan-make-apk()
-{
-	[ -f Makefile ] ||
-	{
-		ln -sf ${CAVAN_HOME}/build/core/apk_main.mk Makefile
-	}
-
-	make
-}
-
-function cavan-mm-apk()
-{
-	local pkg_name apk_name
-
-	[ -f "AndroidManifest.xml" ] || return 1
-
-	pkg_name=$(cat AndroidManifest.xml | grep "package=" | sed 's/.*package="\([^"]\+\)"/\1/g')
-	apk_name=$(basename ${PWD})
-
-	echo "pkg_name = ${pkg_name}"
-
-	[ -e "Android.mk" ] || cat > Android.mk << EOF
-LOCAL_PATH := \$(call my-dir)
-
-include \$(CLEAR_VARS)
-
-LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES := \$(call all-java-files-under, src)
-
-LOCAL_PACKAGE_NAME := ${apk_name}
-LOCAL_CERTIFICATE := platform
-
-include \$(BUILD_PACKAGE)
-EOF
-
-	[ -e "Makefile" ] || cat > Makefile << EOF
-install: uninstall
-	adb install \$(ANDROID_PRODUCT_OUT)/system/app/${apk_name}.apk
-
-uninstall:
-	adb uninstall ${pkg_name}
-
-.PHONE: uninstall
-EOF
 }
 
 function cavan-git-config()

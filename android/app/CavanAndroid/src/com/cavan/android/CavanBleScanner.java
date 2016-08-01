@@ -7,15 +7,16 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothAdapter.LeScanCallback;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 
-public class CavanBleScanner implements LeScanCallback {
+public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCallback {
 
 	private String mName;
+	private UUID[] mUuids;
+	private boolean mScanEnable;
 	private long mAutoSelectDelay;
-	private BluetoothAdapter mAdapter;
 	private Timer mTimerAutoSelect;
 	private TimerTask mTaskAutoSelect;
 	private CavanBleDevice mDeviceBest;
@@ -24,9 +25,8 @@ public class CavanBleScanner implements LeScanCallback {
 	protected void onScanResult(CavanBleDevice[] devices, CavanBleDevice device) {}
 	protected void onAutoSelected(CavanBleDevice device) {}
 
-	public CavanBleScanner(BluetoothAdapter adapter) {
-		adapter.enable();
-		mAdapter = adapter;
+	public CavanBleScanner(Context context) {
+		super(context);
 	}
 
 	@Override
@@ -58,9 +58,16 @@ public class CavanBleScanner implements LeScanCallback {
 	}
 
 	@SuppressWarnings("deprecation")
+	private boolean startScanInternal() {
+		return mAdapter.startLeScan(mUuids, this);
+	}
+
 	public boolean startScan(UUID[] uuids, String name) {
+		mScanEnable = true;
 		mName = name;
-		return mAdapter.startLeScan(uuids, this);
+		mUuids = uuids;
+
+		return startScanInternal();
 	}
 
 	public boolean startScan(UUID[] uuids) {
@@ -77,11 +84,15 @@ public class CavanBleScanner implements LeScanCallback {
 
 	@SuppressWarnings("deprecation")
 	public void stopScan() {
+		mScanEnable = false;
+
 		mAdapter.stopLeScan(this);
 		if (mTaskAutoSelect != null) {
 			mTaskAutoSelect.cancel();
 			mTaskAutoSelect = null;
 		}
+
+		cleaup();
 	}
 
 	@Override
@@ -124,6 +135,13 @@ public class CavanBleScanner implements LeScanCallback {
 			};
 
 			mTimerAutoSelect.schedule(mTaskAutoSelect, mAutoSelectDelay);
+		}
+	}
+
+	@Override
+	protected void onBluetoothAdapterStateChanged(boolean enabled) {
+		if (enabled && mScanEnable) {
+			startScanInternal();
 		}
 	}
 }

@@ -3,7 +3,6 @@ package com.cavan.resource;
 import java.util.UUID;
 
 import android.app.Activity;
-import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -58,12 +57,11 @@ public class CavanBleScanActivity extends Activity {
 			}
 		};
 
-		BluetoothManager manager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-		mScanner = new CavanBleScanner(manager.getAdapter()) {
+		mScanner = new CavanBleScanner(this) {
 
 			@Override
 			protected void onScanResult(CavanBleDevice[] devices, CavanBleDevice device) {
-				mAdapter.setDevices(devices, device);
+				CavanBleScanActivity.this.mAdapter.setDevices(devices, device);
 			}
 
 			@Override
