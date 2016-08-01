@@ -80,7 +80,11 @@ public class CavanWaveView extends View {
 			mPoints.add(height - point - 1);
 		}
 
-		postInvalidate();
+		if (CavanAndroid.isMainThread()) {
+			invalidate();
+		} else {
+			postInvalidate();
+		}
 
 		return true;
 	}

@@ -6,21 +6,15 @@ import android.os.Handler;
 import android.os.Message;
 
 import com.cavan.android.CavanWaveView;
-import com.cavan.java.CavanPeakValleyFinder;
-import com.cavan.java.CavanPeakValleyValue;
+import com.cavan.java.CavanSquareWaveCounter;
 import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
+import com.jwaoo.android.JwaooToySensor;
 
 public class MainActivity extends JwaooToyActivity {
 
 	private static final int MSG_SHOW_SPEED = 1;
-
-	private CavanPeakValleyFinder mFinders[] = {
-			new CavanPeakValleyFinder(100, 1),
-			new CavanPeakValleyFinder(100, 1),
-			new CavanPeakValleyFinder(100, 1),
-			new CavanPeakValleyFinder(100, 1),
-	};
+	private static final int MSG_PUT_DATA = 2;
 
 	private CavanWaveView mWaveView1;
 	private CavanWaveView mWaveView2;
@@ -28,6 +22,9 @@ public class MainActivity extends JwaooToyActivity {
 	private CavanWaveView mWaveView4;
 
 	private int mCount;
+	private double mFreq;
+	private CavanSquareWaveCounter mCounterCapacity = new CavanSquareWaveCounter(5, 1000, 3000);
+	private CavanSquareWaveCounter mCounterAccel = new CavanSquareWaveCounter(2.0, 1000, 3000);
 	private Handler mHandler = new Handler() {
 
 		@Override
@@ -38,10 +35,23 @@ public class MainActivity extends JwaooToyActivity {
 				mCount = 0;
 
 				if (count > 0) {
-					setTitle("freq = " + mFinders[0].getFreq() + ", count = " + count + ", speed = " + (1000.0 / count));
+					setTitle(String.format("freq = %2.2f, count = %2d, speed = %2.2f", mFreq, count, 1000.0 / count));
 				}
 
 				mHandler.sendEmptyMessageDelayed(MSG_SHOW_SPEED, 1000);
+				break;
+
+			case MSG_PUT_DATA:
+				JwaooToySensor sensor = (JwaooToySensor) msg.obj;
+				double value = sensor.getAxisX();
+				mFreq = mCounterAccel.putFreqValue(value);
+				mWaveView1.addValue(value);
+				mWaveView2.addValue(mCounterAccel.getValue() ? 1 : 0);
+
+				int capacity = sensor.getCapacitySum();
+				mCounterCapacity.putFreqValue(capacity);
+				mWaveView3.addValue(capacity);
+				mWaveView4.addValue(mCounterCapacity.getValue() ? 1 : 0);
 				break;
 			}
 		}
@@ -52,20 +62,20 @@ public class MainActivity extends JwaooToyActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		mWaveView1 = (CavanWaveView) findViewById(R.id.waveViewX);
+		mWaveView1 = (CavanWaveView) findViewById(R.id.waveView1);
 		mWaveView1.setValueRange(-19.6, 19.6);
 		mWaveView1.setZoom(3);
 
-		mWaveView2 = (CavanWaveView) findViewById(R.id.waveViewY);
-		mWaveView2.setValueRange(-19.6, 19.6);
+		mWaveView2 = (CavanWaveView) findViewById(R.id.waveView2);
+		mWaveView2.setValueRange(0, 1);
 		mWaveView2.setZoom(3);
 
-		mWaveView3 = (CavanWaveView) findViewById(R.id.waveViewZ);
-		mWaveView3.setValueRange(0, 19.6);
+		mWaveView3 = (CavanWaveView) findViewById(R.id.waveView3);
+		mWaveView3.setValueRange(-512, 508);
 		mWaveView3.setZoom(3);
 
-		mWaveView4 = (CavanWaveView) findViewById(R.id.waveViewDepth);
-		mWaveView4.setValueRange(0, 500);
+		mWaveView4 = (CavanWaveView) findViewById(R.id.waveView4);
+		mWaveView4.setValueRange(0, 1);
 		mWaveView4.setZoom(3);
 
 		mHandler.sendEmptyMessage(MSG_SHOW_SPEED);
@@ -91,23 +101,9 @@ public class MainActivity extends JwaooToyActivity {
 
 			@Override
 			protected void onSensorDataReceived(byte[] arg0) {
-				mSensor.putBytes(arg0);
-
-				double value = mSensor.getAxisZ();
-
-				mWaveView1.addValue(value);
-
-				CavanPeakValleyValue result = mFinders[0].putFreqValue(value);
-				if (result != null) {
-					mWaveView3.addValue(result.getDiff());
-				} else {
-					mWaveView3.addValue(0);
-				}
-
-				mWaveView2.addValue(mFinders[0].getAvgValue());
-				mWaveView4.addValue(mFinders[0].getFreq());
-
 				mCount++;
+				mSensor.putBytes(arg0);
+				mHandler.obtainMessage(MSG_PUT_DATA, mSensor).sendToTarget();
 			}
 		};
 

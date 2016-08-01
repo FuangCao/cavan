@@ -13,23 +13,15 @@ import android.view.View;
 
 import com.cavan.android.CavanAndroid;
 import com.jwaoo.android.JwaooBleToy;
-import com.jwaoo.android.JwaooBleToy.JwaooToyBmi160;
-import com.jwaoo.android.JwaooBleToy.JwaooToyFdc1004;
-import com.jwaoo.android.JwaooBleToy.JwaooToyMpu6050;
 
 @SuppressLint("HandlerLeak")
 public class JwaooToyActivity extends Activity {
 
 	public static final int SENSOR_DELAY = 30;
 
-	private static final int EVENT_BMI160_POLL = 1;
-	private static final int EVENT_MPU6050_POLL = 2;
-	private static final int EVENT_UPDATE_UI = 10;
+	private static final int EVENT_UPDATE_UI = 1;
 
 	protected JwaooBleToy mBleToy;
-	protected JwaooToyBmi160 mBmi160;
-	protected JwaooToyMpu6050 mMpu6050;
-	protected JwaooToyFdc1004 mFdc1004;
 	protected List<View> mListViews = new ArrayList<View>();
 
 	protected Handler mHandler = new Handler() {
@@ -37,20 +29,6 @@ public class JwaooToyActivity extends Activity {
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
-			case EVENT_BMI160_POLL:
-				if (mBmi160.updateData()) {
-					CavanAndroid.logE("bmi160: " + mBmi160);
-					mHandler.sendEmptyMessageDelayed(msg.what, 100);
-				}
-				break;
-
-			case EVENT_MPU6050_POLL:
-				if (mMpu6050.updateData()) {
-					CavanAndroid.logE("mpu6050: " + mMpu6050);
-					mHandler.sendEmptyMessageDelayed(msg.what, 100);
-				}
-				break;
-
 			case EVENT_UPDATE_UI:
 				updateUI((Boolean) msg.obj);
 				break;
@@ -70,27 +48,6 @@ public class JwaooToyActivity extends Activity {
 
 			@Override
 			protected boolean onInitialize() {
-				mBmi160 = mBleToy.createBmi160();
-				if (mBmi160.doInitialize() && mBmi160.setEnable(true)) {
-					CavanAndroid.logE("=> BMI160 found");
-				} else {
-					mBmi160 = null;
-				}
-
-				mMpu6050 = mBleToy.createMpu6050();
-				if (mMpu6050.doInitialize() && mMpu6050.setEnable(true)) {
-					CavanAndroid.logE("=> MPU6050 found");
-				} else {
-					mMpu6050 = null;
-				}
-
-				mFdc1004 = mBleToy.createFdc1004();
-				if (mFdc1004.doInitialize() && mFdc1004.setEnable(true)) {
-					CavanAndroid.logE("=> FDC1004 found");
-				} else {
-					mFdc1004 = null;
-				}
-
 				if (!JwaooToyActivity.this.onInitialize()) {
 					CavanAndroid.logE("Failed to JwaooToyActivity.this.onInitialize");
 					return false;

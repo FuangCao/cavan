@@ -34,7 +34,7 @@ public class MainActivity extends JwaooToyActivity {
 		mWaveViewZ.setZoom(3);
 
 		mWaveViewDepth = (CavanWaveView) findViewById(R.id.waveViewDepth);
-		mWaveViewDepth.setValueRange(0, JwaooToySensor.MAX_DEPTH);
+		mWaveViewDepth.setValueRange(0, JwaooToySensor.DEPTH_MAX);
 		mWaveViewDepth.setZoom(3);
 
 		showScanActivity();

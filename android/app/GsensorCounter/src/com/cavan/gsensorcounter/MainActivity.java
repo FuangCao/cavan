@@ -76,6 +76,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 		CavanSquareWaveCounter counter = mCounter.putValue(values);
 
 		if (counter.getValue()) {
+		// if (mCounter.getCounterZ().getValue()) {
 			mWaveView4.addValue(1);
 		} else {
 			mWaveView4.addValue(0);

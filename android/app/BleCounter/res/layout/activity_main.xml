@@ -6,25 +6,25 @@
     tools:context="${relativePackage}.${activityClass}" >
 
     <com.cavan.android.CavanWaveView
-        android:id="@+id/waveViewX"
+        android:id="@+id/waveView1"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="0.25" />
 
     <com.cavan.android.CavanWaveView
-        android:id="@+id/waveViewY"
+        android:id="@+id/waveView2"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="0.25" />
 
     <com.cavan.android.CavanWaveView
-        android:id="@+id/waveViewZ"
+        android:id="@+id/waveView3"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="0.25" />
 
     <com.cavan.android.CavanWaveView
-        android:id="@+id/waveViewDepth"
+        android:id="@+id/waveView4"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="0.25" />

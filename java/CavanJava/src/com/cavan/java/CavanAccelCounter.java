@@ -16,8 +16,38 @@ public class CavanAccelCounter {
 		mCounterBest = mCounterX;
 	}
 
+	public void setValueFuzz(double fuzz) {
+		mCounterX.setValueFuzz(fuzz);
+		mCounterY.setValueFuzz(fuzz);
+		mCounterZ.setValueFuzz(fuzz);
+	}
+
+	public void setTimeMin(long time) {
+		mCounterX.setTimeMin(time);
+		mCounterY.setTimeMin(time);
+		mCounterZ.setTimeMin(time);
+	}
+
+	public void setTimeMax(long time) {
+		mCounterX.setTimeMax(time);
+		mCounterY.setTimeMax(time);
+		mCounterZ.setTimeMax(time);
+	}
+
 	public CavanSquareWaveCounter getCounter() {
 		return mCounterBest;
+	}
+
+	public CavanSquareWaveCounter getCounterX() {
+		return mCounterX;
+	}
+
+	public CavanSquareWaveCounter getCounterY() {
+		return mCounterY;
+	}
+
+	public CavanSquareWaveCounter getCounterZ() {
+		return mCounterZ;
 	}
 
 	public double getFreq() {

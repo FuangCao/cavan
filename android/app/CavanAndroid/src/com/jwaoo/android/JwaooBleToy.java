@@ -16,8 +16,10 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final int MOTO_MODE_MAX = 6;
 	public static final int MOTO_LEVEL_MAX = 18;
 	public static final long DATA_TIMEOUT = 5000;
-	public static final long JWAOO_TOY_TIME_FUZZ = 100;
-	public static final double JWAOO_TOY_VALUE_FUZZ = 2.0;
+	public static final long JWAOO_TOY_TIME_MIN = 1000;
+	public static final long JWAOO_TOY_TIME_MAX = 5000;
+	public static final double JWAOO_TOY_ACCEL_VALUE_FUZZ = 2.0;
+	public static final double JWAOO_TOY_DEPTH_VALUE_FUZZ = 5.0;
 
 	public static final String IDENTIFY = "JwaooToy";
 
@@ -78,18 +80,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	protected JwaooToyCommand mCommand = new JwaooToyCommand();
 
 	protected JwaooToySensor mSensor;
-	protected JwaooToyParser mParser = new JwaooToyParser(JWAOO_TOY_TIME_FUZZ, JWAOO_TOY_VALUE_FUZZ) {
-
-		@Override
-		protected void onDepthChanged(int depth) {
-			JwaooBleToy.this.onDepthChanged(depth);
-		}
-
-		@Override
-		protected void onFreqChanged(int freq) {
-			JwaooBleToy.this.onFreqChanged(freq);
-		}
-	};
+	protected JwaooToyParser mParser = new JwaooToyParser(JWAOO_TOY_ACCEL_VALUE_FUZZ, JWAOO_TOY_DEPTH_VALUE_FUZZ, JWAOO_TOY_TIME_MIN, JWAOO_TOY_TIME_MAX);
 
 	private CavanBleDataListener mEventListener = new CavanBleDataListener() {
 
@@ -114,9 +105,6 @@ public class JwaooBleToy extends CavanBleGatt {
 			onDebugDataReceived(data);
 		}
 	};
-
-	protected void onDepthChanged(int depth) {}
-	protected void onFreqChanged(int freq) {}
 
 	protected void onBatteryStateChanged(int state, int level, double voltage) {
 		CavanAndroid.logE("state = " + state + ", level = " + level + ", voltage = " + voltage);
@@ -209,12 +197,20 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 	}
 
-	public void setValueFuzz(double fuzz) {
-		mParser.setValueFuzz(fuzz);
+	public void setAccelFuzz(double fuzz) {
+		mParser.setAccelFuzz(fuzz);
 	}
 
-	public void setTimeFuzz(long fuzz) {
-		mParser.setTimeFuzz(fuzz);
+	public void setDepthFuzz(double fuzz) {
+		mParser.setDepthFuzz(fuzz);
+	}
+
+	public void setTimeMin(long time) {
+		mParser.setTimeMin(time);
+	}
+
+	public void setTimeMax(long time) {
+		mParser.setTimeMax(time);
 	}
 
 	public int getDepth() {
@@ -222,7 +218,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	}
 
 	public int getFreq() {
-		return mParser.getFreq();
+		return (int) (mParser.getFreq() * 60);
 	}
 
 	public boolean isCommandTimeout() {

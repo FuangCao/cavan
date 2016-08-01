@@ -1,30 +1,61 @@
 package com.jwaoo.android;
 
-import com.cavan.java.CavanAccelFreqParser;
+import com.cavan.java.CavanSquareWaveCounter;
 
-public class JwaooToyParser extends CavanAccelFreqParser {
+public class JwaooToyParser {
 
-	private int mDepth;
+	private double mFreq;
+	private double mDepth;
 
-	public JwaooToyParser(long timeFuzz, double valueFuzz) {
-		super(timeFuzz, valueFuzz);
+	private CavanSquareWaveCounter mCounterAccel;
+	private CavanSquareWaveCounter mCounterDepth;
+	private JwaooDepthDecoder mDecoder;
+
+	public JwaooToyParser(double accelFuzz, double depthFuzz, long timeMin, long timeMax) {
+		mCounterAccel = new CavanSquareWaveCounter(accelFuzz, timeMin, timeMax);
+		mCounterDepth = new CavanSquareWaveCounter(depthFuzz, timeMin, timeMax);
+		mDecoder = new JwaooDepthDecoder(depthFuzz, timeMin, timeMax);
 	}
 
-	protected void onDepthChanged(int depth) {}
-
-	private void updateDepth(int depth) {
-		if (mDepth != depth) {
-			mDepth = depth;
-			onDepthChanged(depth);
-		}
+	public double getFreq() {
+		return mFreq;
 	}
 
 	public int getDepth() {
-		return mDepth;
+		return (int) (mDepth * JwaooToySensor.DEPTH_MAX);
 	}
 
 	public void putData(JwaooToySensor sensor) {
-		super.putData(sensor);
-		updateDepth(sensor.getDepth());
+		mCounterAccel.putFreqValue(sensor.getAxisX());
+		mCounterDepth.putFreqValue(sensor.getCapacitySum());
+
+		if (mCounterAccel.getAvgDiff() > 2.0) {
+			mFreq = mCounterAccel.getFreq();
+		} else {
+			mFreq = mCounterDepth.getFreq();
+		}
+
+		mDepth = mDecoder.putValue(sensor.getCapacitys());
+	}
+
+	public void setAccelFuzz(double fuzz) {
+		mCounterAccel.setValueFuzz(fuzz);
+	}
+
+	public void setDepthFuzz(double fuzz) {
+		mCounterDepth.setValueFuzz(fuzz);
+		mDecoder.setValueFuzz(fuzz);
+	}
+
+	public void setTimeMin(long time) {
+		mCounterAccel.setTimeMin(time);
+		mCounterDepth.setTimeMin(time);
+		mDecoder.setTimeMin(time);
+	}
+
+	public void setTimeMax(long time) {
+		mCounterAccel.setTimeMax(time);
+		mCounterDepth.setTimeMax(time);
+		mDecoder.setTimeMax(time);
 	}
 }

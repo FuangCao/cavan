@@ -17,18 +17,8 @@ public class JwaooToySensorMpu6050 extends JwaooToySensor {
 		setAxisY(readAxis());
 		setAxisZ(readAxis());
 
-		if (bytes.length < 11) {
-			setCapacity(0, mCache.readValue8());
-			setCapacity(1, mCache.readValue8());
-			setCapacity(2, mCache.readValue8());
-			setCapacity(3, mCache.readValue8());
-		} else {
-			setCapacity(0, mCache.readValueBe16());
-			setCapacity(1, mCache.readValueBe16());
-			setCapacity(2, mCache.readValueBe16());
-			setCapacity(3, mCache.readValueBe16());
-		}
-
-		updateDepth();
+		setCapacity(2, mCache.readValue8());
+		setCapacity(1, mCache.readValue8());
+		setCapacity(0, mCache.readValue8());
 	}
 }

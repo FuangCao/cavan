@@ -7,13 +7,14 @@ public class CavanSquareWaveGenerator {
 
 	public final double DEFAULT_THRESHOLD = 0.35;
 
-	protected double mFuzz;
+	protected double mValueFuzz;
 	protected long mTimeMin;
 	protected long mTimeMax;
 
 	protected double mValueMin;
 	protected double mValueMax;
 	protected double mValueDiff;
+	protected double mValueAvgDiff;
 
 	private double mThreshold;
 	private CavanWaveValue mNodeMin;
@@ -25,11 +26,23 @@ public class CavanSquareWaveGenerator {
 	private List<CavanWaveValue> mValues = new ArrayList<CavanWaveValue>();
 
 	public CavanSquareWaveGenerator(double fuzz, long timeMin, long timeMax) {
-		mFuzz = fuzz;
+		mValueFuzz = fuzz;
 		mTimeMin = timeMin;
 		mTimeMax = timeMax;
 
 		setThreshold(DEFAULT_THRESHOLD);
+	}
+
+	public void setValueFuzz(double fuzz) {
+		mValueFuzz = fuzz;
+	}
+
+	public void setTimeMin(long time) {
+		mTimeMin = time;
+	}
+
+	public void setTimeMax(long time) {
+		mTimeMax = time;
 	}
 
 	public void setThreshold(double threshold) {
@@ -49,13 +62,16 @@ public class CavanSquareWaveGenerator {
 		double max = mNodeMax.getValue();
 
 		mValueDiff = max - min;
-		if (mValueDiff < mFuzz) {
-			mValueMin = max + mFuzz;
-		} else {
+		mValueAvgDiff = (mValueDiff + mValueAvgDiff * 3) / 4;
+
+		if (mValueDiff > mValueFuzz) {
 			double threshold = mValueDiff * mThreshold;
 
 			mValueMax = max - threshold;
 			mValueMin = min + threshold;
+		} else {
+			mValueMax = min + mValueFuzz;
+			mValueMin = max - mValueFuzz;
 		}
 	}
 
@@ -73,8 +89,16 @@ public class CavanSquareWaveGenerator {
 		return mValue;
 	}
 
+	public void setValue(boolean value) {
+		mValue = value;
+	}
+
 	public double getDiff() {
 		return mValueDiff;
+	}
+
+	public double getAvgDiff() {
+		return mValueAvgDiff;
 	}
 
 	public boolean putValue(double value) {
@@ -123,10 +147,8 @@ public class CavanSquareWaveGenerator {
 		}
 
 		if (time - mValues.get(0).getTime() < mTimeMin) {
-			return false;
-		}
-
-		if (value < mValueMin) {
+			mValue = false;
+		} else if (value < mValueMin) {
 			mValue = false;
 		} else if (value > mValueMax) {
 			mValue = true;
