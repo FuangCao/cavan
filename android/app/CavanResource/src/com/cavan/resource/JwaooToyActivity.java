@@ -66,7 +66,7 @@ public class JwaooToyActivity extends Activity {
 	protected void onSensorDataReceived(byte[] data) {}
 
 	protected JwaooBleToy createJwaooBleToy(BluetoothDevice device) {
-		return new JwaooBleToy(this, device) {
+		return new JwaooBleToy(device) {
 
 			@Override
 			protected boolean onInitialize() {

@@ -3,7 +3,6 @@ package com.cavan.android;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 
 public class CavanBleUart extends CavanBleGatt {
 
@@ -17,12 +16,12 @@ public class CavanBleUart extends CavanBleGatt {
 	private CavanBleChar mCharacteristicOta;
 	private CavanBleDataListener mTxDataLinstener;
 
-	public CavanBleUart(Context context, BluetoothDevice device, UUID uuid) throws Exception {
-		super(context, device, uuid);
+	public CavanBleUart(BluetoothDevice device, UUID uuid) throws Exception {
+		super(device, uuid);
 	}
 
-	public CavanBleUart(Context context, BluetoothDevice device) throws Exception {
-		this(context, device, UUID_SERVICE);
+	public CavanBleUart(BluetoothDevice device) throws Exception {
+		this(device, UUID_SERVICE);
 	}
 
 	public boolean sendData(byte[] data) {

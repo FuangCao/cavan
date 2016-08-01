@@ -93,23 +93,6 @@
         android:layout_below="@+id/buttonReadBdAddr"
         android:text="@string/text_send" />
 
-    <Button
-        android:id="@+id/buttonDisconnect"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/checkBoxSensor"
-        android:layout_below="@+id/buttonWriteBdAddr"
-        android:text="@string/text_disconnect" />
-
-    <Button
-        android:id="@+id/buttonReboot"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/buttonSend"
-        android:layout_alignBottom="@+id/buttonSend"
-        android:layout_alignRight="@+id/checkBoxLongClick"
-        android:text="@string/text_reboot" />
-
     <Spinner
         android:id="@+id/spinnerMotoLevel"
         android:layout_width="150dp"
@@ -140,5 +123,23 @@
         android:layout_above="@+id/buttonWriteBdAddr"
         android:layout_alignLeft="@+id/checkBoxSensor"
         android:text="@string/text_factory_mode" />
+
+    <Button
+        android:id="@+id/buttonReboot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonUpgrade"
+        android:layout_alignBottom="@+id/buttonUpgrade"
+        android:layout_toLeftOf="@+id/buttonUpgrade"
+        android:text="@string/text_reboot" />
+
+    <Button
+        android:id="@+id/buttonDisconnect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonSend"
+        android:layout_alignBottom="@+id/buttonSend"
+        android:layout_toRightOf="@+id/buttonSend"
+        android:text="@string/text_disconnect" />
 
 </RelativeLayout>

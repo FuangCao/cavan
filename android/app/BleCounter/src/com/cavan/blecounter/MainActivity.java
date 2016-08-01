@@ -74,7 +74,7 @@ public class MainActivity extends JwaooToyActivity {
 
 	@Override
 	protected JwaooBleToy createJwaooBleToy(BluetoothDevice device) {
-		return new JwaooBleToy(MainActivity.this, device) {
+		return new JwaooBleToy(device) {
 
 			@Override
 			protected boolean onInitialize() {

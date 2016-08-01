@@ -11,6 +11,15 @@ public class CavanBluetoothAdapter {
 	protected Context mContext;
 	protected BluetoothAdapter mAdapter;
 
+	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+			onBluetoothAdapterStateChanged(state);
+		}
+	};
+
 	protected void onBluetoothAdapterStateChanged(boolean enabled) {
 		CavanAndroid.logE("onBluetoothAdapterStateChanged: enabled = " + enabled);
 	}
@@ -29,14 +38,6 @@ public class CavanBluetoothAdapter {
 		}
 	}
 
-	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
-
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
-			onBluetoothAdapterStateChanged(state);
-		}
-	};
 
 	public CavanBluetoothAdapter(Context context) {
 		mContext = context;

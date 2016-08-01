@@ -122,7 +122,7 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 			}
 
 			try {
-				mBleUart = new CavanBleUart(this, device) {
+				mBleUart = new CavanBleUart(device) {
 
 					@Override
 					protected void onConnectionStateChange(boolean connected) {

@@ -3,7 +3,6 @@ package com.jwaoo.android;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleGatt;
@@ -187,17 +186,17 @@ public class JwaooBleToy extends CavanBleGatt {
 		CavanAndroid.logE("Debug: " + new String(data));
 	}
 
-	public JwaooBleToy(Context context, BluetoothDevice device, JwaooToySensor sensor, UUID uuid) {
-		super(context, device, uuid);
+	public JwaooBleToy(BluetoothDevice device, JwaooToySensor sensor, UUID uuid) {
+		super(device, uuid);
 		mSensor = sensor;
 	}
 
-	public JwaooBleToy(Context context, BluetoothDevice device, JwaooToySensor sensor) {
-		this(context, device, sensor, UUID_SERVICE);
+	public JwaooBleToy(BluetoothDevice device, JwaooToySensor sensor) {
+		this(device, sensor, UUID_SERVICE);
 	}
 
-	public JwaooBleToy(Context context, BluetoothDevice device) {
-		this(context, device, new JwaooToySensorMpu6050(), UUID_SERVICE);
+	public JwaooBleToy(BluetoothDevice device) {
+		this(device, new JwaooToySensorMpu6050(), UUID_SERVICE);
 	}
 
 	public JwaooToySensor getSensor() {
