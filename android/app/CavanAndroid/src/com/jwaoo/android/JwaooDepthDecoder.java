@@ -56,11 +56,8 @@ public class JwaooDepthDecoder {
 		return DEPTH_STEP;
 	}
 
-	public double putValue(int[] capacitys) {
+	public double putValue(double[] capacitys) {
 		int count;
-
-		CavanAndroid.logE(String.format("capacity: [%4d, %4d, %4d]", capacitys[0], capacitys[1], capacitys[2]));
-
 		for (count = 0; count < JwaooToySensor.SENSOR_COUNT && mGenerators[count].putValue(capacitys[count]); count++);
 
 		for (int i = count + 1; i < JwaooToySensor.SENSOR_COUNT; i++) {

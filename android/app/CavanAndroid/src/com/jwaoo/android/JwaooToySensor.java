@@ -5,20 +5,22 @@ import com.cavan.java.CavanAccelSensor;
 public abstract class JwaooToySensor extends CavanAccelSensor {
 
 	public static final int SENSOR_COUNT = 3;
-	public static final int DEPTH_MAX = 127;
+	public static final double DEPTH_MAX = 100;
+	public static final double CAPACITY_MAX = 127;
+	public static final double CAPACITY_MIN = -128;
 
-	private int[] mCapacitys = new int[4];
+	private double[] mCapacitys = new double[4];
 
-	public int[] getCapacitys() {
+	public double[] getCapacitys() {
 		return mCapacitys;
 	}
 
-	public int getCapacity(int index) {
+	public double getCapacity(int index) {
 		return mCapacitys[index];
 	}
 
-	public int getCapacitySum() {
-		int capacity = 0;
+	public double getCapacitySum() {
+		double capacity = 0;
 
 		for (int i = mCapacitys.length - 1; i >= 0; i--) {
 			capacity += mCapacitys[i];
@@ -27,8 +29,8 @@ public abstract class JwaooToySensor extends CavanAccelSensor {
 		return capacity;
 	}
 
-	public  int getDepth() {
-		int capacity = 0;
+	public  double getDepth() {
+		double capacity = 0;
 
 		for (int i = mCapacitys.length - 1; i >= 0; i--) {
 			if (mCapacitys[i] > 0) {
@@ -39,7 +41,7 @@ public abstract class JwaooToySensor extends CavanAccelSensor {
 		return capacity / SENSOR_COUNT;
 	}
 
-	public void setCapacity(int index, int capacity) {
+	public void setCapacity(int index, double capacity) {
 		mCapacitys[index] = capacity;
 	}
 }

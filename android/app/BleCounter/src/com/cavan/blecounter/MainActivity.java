@@ -49,7 +49,7 @@ public class MainActivity extends JwaooToyActivity {
 				mWaveView1.addValue(value);
 				mWaveView2.addValue(mCounterAccel.getValue() ? 1 : 0);
 
-				int capacity = sensor.getCapacitySum();
+				double capacity = sensor.getCapacitySum();
 				mCounterCapacity.putFreqValue(capacity);
 				mWaveView3.addValue(capacity);
 				mWaveView4.addValue(mCounterCapacity.getValue() ? 1 : 0);

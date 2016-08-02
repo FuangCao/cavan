@@ -284,6 +284,12 @@ public class CavanBleGatt {
 
 			mAutoConnCount++;
 
+			try {
+				wait(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
 			if (connect()) {
 				return true;
 			}

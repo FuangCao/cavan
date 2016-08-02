@@ -21,6 +21,8 @@ public class MainActivity extends JwaooToyActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		CavanAndroid.setSuspendEnable(this, false);
+
 		mWaveViewX = (CavanWaveView) findViewById(R.id.waveViewX);
 		mWaveViewX.setValueRange(-19.6, 19.6);
 		mWaveViewX.setZoom(3);
@@ -38,6 +40,12 @@ public class MainActivity extends JwaooToyActivity {
 		mWaveViewDepth.setZoom(3);
 
 		showScanActivity();
+	}
+
+	@Override
+	protected void onDestroy() {
+		CavanAndroid.setSuspendEnable(this, true);
+		super.onDestroy();
 	}
 
 	@Override
@@ -65,8 +73,8 @@ public class MainActivity extends JwaooToyActivity {
 				mWaveViewZ.addValue(mSensor.getAxisZ());
 				mWaveViewDepth.addValue(mSensor.getDepth());
 
-				int capacitys[] = mSensor.getCapacitys();
-				CavanAndroid.logE(String.format("capacity: [%6d, %6d, %6d, %6d]", capacitys[0], capacitys[1], capacitys[2], capacitys[3]));
+				double capacitys[] = mSensor.getCapacitys();
+				CavanAndroid.logE(String.format("capacity: [%7.2f, %7.2f, %7.2f, %7.2f]", capacitys[0], capacitys[1], capacitys[2], capacitys[3]));
 			}
 		};
 	}

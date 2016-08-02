@@ -10,6 +10,8 @@ public class JwaooDepthSquareWaveGenerator extends CavanSquareWaveGenerator {
 
 	public JwaooDepthSquareWaveGenerator(double fuzz, long timeMin, long timeMax) {
 		super(fuzz, timeMin, timeMax);
+		mValueMax = JwaooToySensor.CAPACITY_MAX;
+		mValueMin = JwaooToySensor.CAPACITY_MIN;
 	}
 
 	public double getMaxValue() {

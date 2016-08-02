@@ -16,8 +16,8 @@ public class MainActivity extends JwaooToyActivity {
 	private CavanWaveView mWaveView3;
 	private CavanWaveView mWaveView4;
 
-	private JwaooDepthSquareWaveGenerator mGenerator1 = new JwaooDepthSquareWaveGenerator(6, 1000, 5000);
-	private JwaooDepthSquareWaveGenerator mGenerator2 = new JwaooDepthSquareWaveGenerator(6, 1000, 5000);
+	private JwaooDepthSquareWaveGenerator mGenerator1 = new JwaooDepthSquareWaveGenerator(6, 1000, 3000);
+	private JwaooDepthSquareWaveGenerator mGenerator2 = new JwaooDepthSquareWaveGenerator(6, 1000, 3000);
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -72,8 +72,8 @@ public class MainActivity extends JwaooToyActivity {
 			protected void onSensorDataReceived(byte[] arg0) {
 				mSensor.putBytes(arg0);
 
-				int capacitys[] = mSensor.getCapacitys();
-				CavanAndroid.logE(String.format("capacity: [%6d, %6d, %6d, %6d]", capacitys[0], capacitys[1], capacitys[2], capacitys[3]));
+				double capacitys[] = mSensor.getCapacitys();
+				CavanAndroid.logE(String.format("capacity: [%7.2f, %7.2f, %7.2f, %7.2f]", capacitys[0], capacitys[1], capacitys[2], capacitys[3]));
 
 				mWaveView1.addValue(capacitys[0]);
 				mWaveView2.addValue(mGenerator1.putValue(capacitys[0]) ? 1 : 0);

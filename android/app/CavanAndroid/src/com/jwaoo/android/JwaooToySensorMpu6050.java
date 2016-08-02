@@ -10,6 +10,14 @@ public class JwaooToySensorMpu6050 extends JwaooToySensor {
 		return mCache.readValue8() * 9.8 / 64;
 	}
 
+	private double readCapacity8() {
+		return mCache.readValue8();
+	}
+
+	private double readCapacity16() {
+		return ((double) mCache.readValueBe16()) / 256;
+	}
+
 	@Override
 	public void putBytes(byte[] bytes) {
 		mCache.setBytes(bytes);
@@ -17,8 +25,14 @@ public class JwaooToySensorMpu6050 extends JwaooToySensor {
 		setAxisY(readAxis());
 		setAxisZ(readAxis());
 
-		setCapacity(2, mCache.readValue8());
-		setCapacity(1, mCache.readValue8());
-		setCapacity(0, mCache.readValue8());
+		if (bytes.length < 11) {
+			setCapacity(2, readCapacity8());
+			setCapacity(1, readCapacity8());
+			setCapacity(0, readCapacity8());
+		} else {
+			setCapacity(2, readCapacity16());
+			setCapacity(1, readCapacity16());
+			setCapacity(0, readCapacity16());
+		}
 	}
 }
