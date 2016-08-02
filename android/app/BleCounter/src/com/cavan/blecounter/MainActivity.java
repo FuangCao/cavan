@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 
+import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanWaveView;
 import com.cavan.java.CavanSquareWaveCounter;
 import com.cavan.resource.JwaooToyActivity;
@@ -62,6 +63,8 @@ public class MainActivity extends JwaooToyActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		CavanAndroid.setSuspendEnable(this, false);
+
 		mWaveView1 = (CavanWaveView) findViewById(R.id.waveView1);
 		mWaveView1.setValueRange(-19.6, 19.6);
 		mWaveView1.setZoom(3);
@@ -80,6 +83,12 @@ public class MainActivity extends JwaooToyActivity {
 
 		mHandler.sendEmptyMessage(MSG_SHOW_SPEED);
 		showScanActivity();
+	}
+
+	@Override
+	protected void onDestroy() {
+		CavanAndroid.setSuspendEnable(this, true);
+		super.onDestroy();
 	}
 
 	@Override

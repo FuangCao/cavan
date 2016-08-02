@@ -1,12 +1,17 @@
 package com.cavan.android;
 
-import com.cavan.java.CavanJava;
-
+import android.app.KeyguardManager;
+import android.app.KeyguardManager.KeyguardLock;
 import android.content.Context;
 import android.os.Looper;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.cavan.java.CavanJava;
+
+@SuppressWarnings("deprecation")
 public class CavanAndroid extends CavanJava {
 	public static final String TAG = "Cavan";
 
@@ -14,6 +19,9 @@ public class CavanAndroid extends CavanJava {
 
 	private static Toast sToast;
 	private static final Object sToastLock = new Object();
+
+	private static WakeLock sWakeLock;
+	private static KeyguardLock sKeyguardLock;
 
 	public static void logE(String message) {
 		Log.e(TAG, message);
@@ -117,5 +125,53 @@ public class CavanAndroid extends CavanJava {
 
 	public static boolean isSubThread() {
 		return Looper.myLooper() != Looper.getMainLooper();
+	}
+
+	public static boolean setLockScreenEnable(Context context, boolean enable) {
+		if (enable) {
+			if (sKeyguardLock != null) {
+				sKeyguardLock.reenableKeyguard();
+			}
+		} else {
+			if (sKeyguardLock == null) {
+				KeyguardManager manager = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+				if (manager == null) {
+					return false;
+				}
+
+				sKeyguardLock = manager.newKeyguardLock(CavanAndroid.class.getName());
+				if (sKeyguardLock == null) {
+					return false;
+				}
+			}
+
+			sKeyguardLock.disableKeyguard();
+		}
+
+		return true;
+	}
+
+	public static boolean setSuspendEnable(Context context, boolean enable) {
+		if (enable) {
+			if (sWakeLock != null) {
+				sWakeLock.release();
+			}
+		} else {
+			if (sWakeLock == null) {
+				PowerManager manager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+				if (manager == null) {
+					return false;
+				}
+
+				sWakeLock = manager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_BRIGHT_WAKE_LOCK, CavanAndroid.class.getName());
+				if (sWakeLock == null) {
+					return false;
+				}
+			}
+
+			sWakeLock.acquire();
+		}
+
+		return true;
 	}
 }

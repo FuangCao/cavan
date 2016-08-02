@@ -7,7 +7,7 @@ public abstract class JwaooToySensor extends CavanAccelSensor {
 	public static final int SENSOR_COUNT = 3;
 	public static final int DEPTH_MAX = 127;
 
-	private int[] mCapacitys = new int[SENSOR_COUNT];
+	private int[] mCapacitys = new int[4];
 
 	public int[] getCapacitys() {
 		return mCapacitys;

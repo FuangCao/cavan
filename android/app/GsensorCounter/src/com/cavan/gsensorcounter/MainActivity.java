@@ -39,6 +39,8 @@ public class MainActivity extends Activity implements SensorEventListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        CavanAndroid.setSuspendEnable(this, false);
+
         mWaveView1 = (CavanWaveView) findViewById(R.id.waveView1);
         mWaveView1.setValueRange(-19.6, 19.6);
         mWaveView1.setZoom(3);
@@ -59,6 +61,12 @@ public class MainActivity extends Activity implements SensorEventListener {
         Sensor sensor = manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         manager.registerListener(this, sensor, 30);
     }
+
+	@Override
+	protected void onDestroy() {
+		CavanAndroid.setSuspendEnable(this, true);
+		super.onDestroy();
+	}
 
 	@Override
 	public void onAccuracyChanged(Sensor sensor, int arg1) {
