@@ -3,8 +3,6 @@ package com.cavan.java;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.cavan.android.CavanAndroid;
-
 public class CavanSquareWaveGenerator {
 
 	public final double DEFAULT_THRESHOLD = 0.35;
@@ -163,7 +161,7 @@ public class CavanSquareWaveGenerator {
 
 		addNode(value);
 
-		CavanAndroid.logE(String.format("threshold: [%4.2f, %4.2f]", mThresholdLow, mThresholdHigh));
+		// CavanAndroid.logE(String.format("threshold: [%4.2f, %4.2f]", mThresholdLow, mThresholdHigh));
 
 		if (value < mThresholdLow) {
 			mValue = false;

@@ -55,6 +55,10 @@ public class CavanPeakValleyValue {
 		mType = type;
 	}
 
+	public void setTime(long time) {
+		mTime = time;
+	}
+
 	public long getTime() {
 		return mTime;
 	}
@@ -67,7 +71,7 @@ public class CavanPeakValleyValue {
 		return mType == TYPE_RISING;
 	}
 
-	public double getDiff() {
+	public double getRange() {
 		return mPeakValue - mValleyValue;
 	}
 
@@ -82,6 +86,19 @@ public class CavanPeakValleyValue {
 
 		if (value.getValleyValue() < mValleyValue) {
 			mValleyValue = value.getValleyValue();
+		}
+	}
+
+	public CavanPeakValleyValue copyPeakValley() {
+		return new CavanPeakValleyValue(mPeakValue, mValleyValue, mType, mTime);
+	}
+
+	@Override
+	public String toString() {
+		if (isRising()) {
+			return String.format("[%6.2f, %6.2f]", mValleyValue, mPeakValue);
+		} else {
+			return String.format("[%6.2f, %6.2f]", mPeakValue, mValleyValue);
 		}
 	}
 }
