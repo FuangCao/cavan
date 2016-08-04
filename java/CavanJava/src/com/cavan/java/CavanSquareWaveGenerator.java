@@ -1,14 +1,13 @@
 package com.cavan.java;
 
-import java.util.ArrayList;
-import java.util.List;
 
-public class CavanSquareWaveGenerator {
+
+@SuppressWarnings("serial")
+public class CavanSquareWaveGenerator extends CavanWaveList {
 
 	public final double DEFAULT_THRESHOLD = 0.35;
 
 	protected long mTimeMin;
-	protected long mTimeMax;
 	protected double mValueFuzz;
 
 	protected double mThresholdLow;
@@ -18,19 +17,13 @@ public class CavanSquareWaveGenerator {
 	protected double mValueAvgDiff;
 
 	protected double mThreshold;
-	protected CavanWaveValue mNodeMin;
-	protected CavanWaveValue mNodeMax;
-
-	protected long mTime;
 	protected boolean mValue;
-	protected boolean mNeedFind = true;
-
-	private List<CavanWaveValue> mValues = new ArrayList<CavanWaveValue>();
 
 	public CavanSquareWaveGenerator(double fuzz, long timeMin, long timeMax) {
+		super(timeMax);
+
 		mValueFuzz = fuzz;
 		mTimeMin = timeMin;
-		mTimeMax = timeMax;
 
 		setThreshold(DEFAULT_THRESHOLD);
 	}
@@ -44,7 +37,7 @@ public class CavanSquareWaveGenerator {
 	}
 
 	public void setTimeMax(long time) {
-		mTimeMax = time;
+		setOverTime(time);
 	}
 
 	public void setThreshold(double threshold) {
@@ -54,19 +47,19 @@ public class CavanSquareWaveGenerator {
 
 		mThreshold = (1.0 - threshold) / 2;
 
-		if (mNodeMin != null && mNodeMax != null) {
+		if (mMinNode != null && mMaxNode != null) {
 			updateThreshold();
 		}
 	}
 
 	private void updateThreshold() {
-		double min = mNodeMin.getValue();
-		double max = mNodeMax.getValue();
+		double min = mMinNode.getValue();
+		double max = mMaxNode.getValue();
 
 		mValueDiff = max - min;
 		mValueAvgDiff = (mValueDiff + mValueAvgDiff * 3) / 4;
 
-		if (mTime - mValues.get(0).getTime() > mTimeMin) {
+		if (mTime - get(0).getTime() > mTimeMin) {
 			updateThreshold(min, max);
 		} else {
 			mThresholdHigh = min + mValueFuzz;
@@ -86,13 +79,21 @@ public class CavanSquareWaveGenerator {
 		}
 	}
 
-	public void setMinNode(CavanWaveValue node) {
-		mNodeMin = node;
+	@Override
+	protected void updateExtremeNode() {
+		super.updateExtremeNode();
 		updateThreshold();
 	}
 
-	public void setMaxNode(CavanWaveValue node) {
-		mNodeMax = node;
+	@Override
+	protected void setMaxNode(CavanTimedNode<Double> node) {
+		super.setMaxNode(node);
+		updateThreshold();
+	}
+
+	@Override
+	protected void setMinNode(CavanTimedNode<Double> node) {
+		super.setMinNode(node);
 		updateThreshold();
 	}
 
@@ -112,56 +113,8 @@ public class CavanSquareWaveGenerator {
 		return mValueAvgDiff;
 	}
 
-	protected void addNode(double value) {
-		while (true) {
-			CavanWaveValue node;
-
-			try {
-				node = mValues.get(0);
-			} catch (Exception e) {
-				break;
-			}
-
-			if (mTime - node.getTime() < mTimeMax) {
-				break;
-			}
-
-			if (node == mNodeMin || node == mNodeMax) {
-				mNeedFind = true;
-			}
-
-			mValues.remove(0);
-		}
-
-		CavanWaveValue newNode = new CavanWaveValue(value, mTime);
-		mValues.add(newNode);
-
-		if (mNeedFind) {
-			mNodeMin = mNodeMax = mValues.get(0);
-
-			for (int i = mValues.size() - 1; i > 0; i--) {
-				CavanWaveValue node = mValues.get(i);
-				if (node.getValue() < mNodeMin.getValue()) {
-					mNodeMin = node;
-				} else if (node.getValue() > mNodeMax.getValue()) {
-					mNodeMax = node;
-				}
-			}
-
-			updateThreshold();
-		} else if (value < mNodeMin.getValue()) {
-			setMinNode(newNode);
-		} else if (value > mNodeMax.getValue()) {
-			setMaxNode(newNode);
-		}
-	}
-
 	public boolean putValue(double value) {
-		mTime = System.currentTimeMillis();
-
-		addNode(value);
-
-		// CavanAndroid.logE(String.format("threshold: [%4.2f, %4.2f]", mThresholdLow, mThresholdHigh));
+		addWaveValue(value);
 
 		if (value < mThresholdLow) {
 			mValue = false;
