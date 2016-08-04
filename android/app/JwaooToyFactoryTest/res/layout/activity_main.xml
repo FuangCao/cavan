@@ -1,0 +1,45 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="${relativePackage}.${activityClass}" >
+
+    <GridView
+        android:id="@+id/gridViewResult"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:horizontalSpacing="1dp"
+        android:numColumns="5" >
+    </GridView>
+
+    <GridView
+        android:id="@+id/gridViewKey"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/gridViewResult"
+        android:horizontalSpacing="1dp"
+        android:numColumns="3" >
+    </GridView>
+
+    <GridView
+        android:id="@+id/gridViewDepth"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/gridViewKey"
+        android:horizontalSpacing="1dp"
+        android:numColumns="3" >
+    </GridView>
+
+    <CheckBox
+        android:id="@+id/checkBoxMoto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/gridViewDepth"
+        android:text="@string/text_moto" />
+
+</RelativeLayout>

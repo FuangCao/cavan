@@ -19,20 +19,25 @@ public class JwaooToyActivity extends Activity {
 
 	public static final int SENSOR_DELAY = 30;
 
-	private static final int EVENT_UPDATE_UI = 1;
-
 	protected JwaooBleToy mBleToy;
 	protected List<View> mListViews = new ArrayList<View>();
+
+	private boolean mUiEnable;
+	private Runnable mRunnableUpdateUi = new Runnable() {
+
+		@Override
+		public void run() {
+			updateUI(mUiEnable);
+		}
+	};
+
+	protected void handleMessage(Message msg) {}
 
 	protected Handler mHandler = new Handler() {
 
 		@Override
 		public void handleMessage(Message msg) {
-			switch (msg.what) {
-			case EVENT_UPDATE_UI:
-				updateUI((Boolean) msg.obj);
-				break;
-			}
+			JwaooToyActivity.this.handleMessage(msg);
 		}
 	};
 
@@ -81,7 +86,8 @@ public class JwaooToyActivity extends Activity {
 				view.setEnabled(enable);
 			}
 		} else {
-			mHandler.obtainMessage(EVENT_UPDATE_UI, enable).sendToTarget();
+			mUiEnable = enable;
+			mHandler.post(mRunnableUpdateUi);
 		}
 	}
 

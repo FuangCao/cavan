@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">井蛙工厂测试</string>
+
+    <string name="text_moto">震动开关</string>
+    <string name="test_item_key">按键测试</string>
+    <string name="test_item_moto">马达测试</string>
+    <string name="text_item_capacity_sensor">电容传感器测试</string>
+    <string name="text_item_accel_sensor">加速度传感器测试</string>
+    <string name="text_item_led">灯测试</string>
+    <string name="test_item_charge">充电测试</string>
+    <string-array name="text_keys">
+        <item >按键1</item>
+        <item >按键2</item>
+        <item >按键3</item>
+        <item >按键4</item>
+    </string-array>
+    <string-array name="text_items">
+        <item >按键</item>
+        <item >马达</item>
+        <item >充电</item>
+        <item >LED灯</item>
+        <item >电容传感器</item>
+        <item >重力传感器</item>
+    </string-array>
+    <string-array name="text_depths">
+        <item >深度1</item>
+        <item >深度2</item>
+        <item >深度3</item>
+        <item >深度4</item>
+    </string-array>
+
+</resources>
