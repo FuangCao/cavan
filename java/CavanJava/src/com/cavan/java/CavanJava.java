@@ -2,25 +2,30 @@ package com.cavan.java;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
 public class CavanJava {
 
-	public static void printE(String message) {
-		System.err.println(message);
+	public static void printE(String format, Object... args) {
+		System.err.println(String.format(format, args));
 	}
 
 	public static void printE(Throwable throwable) {
 		throwable.printStackTrace();
 	}
 
-	public static void printE(String message, Throwable throwable) {
-		printE(message);
+	public static void printE(Throwable throwable, String format, Object... args) {
+		printE(format, args);
 		printE(throwable);
 	}
 
-	public static void printD(String message) {
-		System.out.println(message);
+	public static void printD(String format, Object... args) {
+		System.out.println(String.format(format, args));
 	}
 
 	protected static String buildPrintSep() {
@@ -169,7 +174,7 @@ public class CavanJava {
 		return builder.toString();
 	}
 
-	protected static String buildPosMessage(String message) {
+	protected static String buildPosMessage(String format, Object... args) {
 		StackTraceElement trace = getCurrentStackTrace(4);
 		if (trace == null) {
 			return "unknown";
@@ -181,7 +186,7 @@ public class CavanJava {
 		builder.append("[");
 		builder.append(trace.getLineNumber());
 		builder.append("]: ");
-		builder.append(message);
+		builder.append(String.format(format, args));
 
 		return builder.toString();
 	}
@@ -190,8 +195,8 @@ public class CavanJava {
 		printE(buildPosMessage());
 	}
 
-	public static void logP(String message) {
-		printE(buildPosMessage(message));
+	public static void printP(String format, Object... args) {
+		printE(buildPosMessage(format, args));
 	}
 
 	public static void dumpstack(Throwable throwable) {
@@ -366,5 +371,47 @@ public class CavanJava {
 
 	public static long getBoolValueLong(boolean value) {
 		return getBoolValueInt(value);
+	}
+
+	public static List<InetAddress> getIpAddressList() {
+		List<InetAddress> addresses = new ArrayList<InetAddress>();
+
+		Enumeration<NetworkInterface> enNetIf;
+		try {
+			enNetIf = NetworkInterface.getNetworkInterfaces();
+			if (enNetIf == null) {
+				return addresses;
+			}
+		} catch (SocketException e) {
+			e.printStackTrace();
+			return addresses;
+		}
+
+		while (enNetIf.hasMoreElements()) {
+			Enumeration<InetAddress> enAddr = enNetIf.nextElement().getInetAddresses();
+			while (enAddr.hasMoreElements()) {
+				InetAddress addr = enAddr.nextElement();
+				if (addr.isLoopbackAddress()) {
+					continue;
+				}
+
+				if (addr.isLinkLocalAddress()) {
+					continue;
+				}
+
+				addresses.add(addr);
+			}
+		}
+
+		return addresses;
+	}
+
+	public static InetAddress getIpAddress() {
+		List<InetAddress> addresses = getIpAddressList();
+		if (addresses.size() > 0) {
+			return addresses.get(0);
+		}
+
+		return null;
 	}
 }

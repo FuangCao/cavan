@@ -14,8 +14,8 @@ public class CavanCountedNode<E> {
 		return mValue;
 	}
 
-	public void setValue(Object value) {
-		mValue = (E) value;
+	public void setValue(E value) {
+		mValue = value;
 		mCount = 1;
 	}
 
@@ -62,11 +62,11 @@ public class CavanCountedNode<E> {
 		return 0;
 	}
 
-	public boolean isLessThen(CavanCountedNode<?> node) {
+	public boolean isLessThen(CavanCountedNode<E> node) {
 		return mCount == 0 || mCount < node.getCount();
 	}
 
-	public boolean isGreaterThen(CavanCountedNode<?> node) {
+	public boolean isGreaterThen(CavanCountedNode<E> node) {
 		return mCount > node.getCount();
 	}
 }

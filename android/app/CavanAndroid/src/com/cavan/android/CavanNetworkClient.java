@@ -262,46 +262,4 @@ public class CavanNetworkClient extends CavanAndroid {
 
 		return -1;
 	}
-
-	public static List<InetAddress> getIpAddressList() {
-		List<InetAddress> addresses = new ArrayList<InetAddress>();
-
-		Enumeration<NetworkInterface> enNetIf;
-		try {
-			enNetIf = NetworkInterface.getNetworkInterfaces();
-			if (enNetIf == null) {
-				return addresses;
-			}
-		} catch (SocketException e) {
-			e.printStackTrace();
-			return addresses;
-		}
-
-		while (enNetIf.hasMoreElements()) {
-			Enumeration<InetAddress> enAddr = enNetIf.nextElement().getInetAddresses();
-			while (enAddr.hasMoreElements()) {
-				InetAddress addr = enAddr.nextElement();
-				if (addr.isLoopbackAddress()) {
-					continue;
-				}
-
-				if (addr.isLinkLocalAddress()) {
-					continue;
-				}
-
-				addresses.add(addr);
-			}
-		}
-
-		return addresses;
-	}
-
-	public static InetAddress getIpAddress() {
-		List<InetAddress> addresses = getIpAddressList();
-		if (addresses.size() > 0) {
-			return addresses.get(0);
-		}
-
-		return null;
-	}
 }

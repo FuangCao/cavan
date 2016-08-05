@@ -4,11 +4,12 @@ package com.cavan.java;
 public class CavanCountedArray<E> {
 
 	private int mMaxCount;
-	private CavanCountedNode<?>[] mNodes;
+	private CavanCountedNode<E>[] mNodes;
 
+	@SuppressWarnings("unchecked")
 	public CavanCountedArray(int size, int maxCount) {
 		mMaxCount = maxCount;
-		mNodes = new CavanCountedNode<?>[size];
+		mNodes = (CavanCountedNode<E>[]) new CavanCountedNode<?>[size];
 
 		for (int i = mNodes.length - 1; i >= 0; i--) {
 			mNodes[i] = new CavanCountedNode<E>(null);
@@ -19,8 +20,8 @@ public class CavanCountedArray<E> {
 		this(size, size);
 	}
 
-	public CavanCountedNode<?> addCountedValue(E value) {
-		CavanCountedNode<?> node;
+	public CavanCountedNode<E> addCountedValue(E value) {
+		CavanCountedNode<E> node;
 
 		for (int i = mNodes.length - 1; i >= 0; i--) {
 			node = mNodes[i];
@@ -53,8 +54,8 @@ public class CavanCountedArray<E> {
 		return node;
 	}
 
-	public CavanCountedNode<?> getBestNode() {
-		CavanCountedNode<?> node = mNodes[0];
+	public CavanCountedNode<E> getBestNode() {
+		CavanCountedNode<E> node = mNodes[0];
 
 		for (int i = mNodes.length - 1; i > 0; i--) {
 			if (mNodes[i].isGreaterThen(node)) {
@@ -65,9 +66,8 @@ public class CavanCountedArray<E> {
 		return node;
 	}
 
-	@SuppressWarnings("unchecked")
 	public E getBestValue() {
-		CavanCountedNode<E> node = (CavanCountedNode<E>) getBestNode();
+		CavanCountedNode<E> node = getBestNode();
 		return node.getValue();
 	}
 
