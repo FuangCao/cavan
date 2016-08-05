@@ -54,8 +54,8 @@ public class CavanAccelCounter {
 		return mCounterBest.getFreq();
 	}
 
-	public double getDiff() {
-		return mCounterBest.getDiff();
+	public double getValueRange() {
+		return mCounterBest.getValueRange();
 	}
 
 	public boolean getValue() {
@@ -77,13 +77,13 @@ public class CavanAccelCounter {
 		mCounterY.putFreqValue(y);
 		mCounterZ.putFreqValue(z);
 
-		if (mCounterX.getDiff() > mCounterY.getDiff()) {
-			if (mCounterX.getDiff() > mCounterZ.getDiff()) {
+		if (mCounterX.getValueRange() > mCounterY.getValueRange()) {
+			if (mCounterX.getValueRange() > mCounterZ.getValueRange()) {
 				setBestCounter(mCounterX);
 			} else {
 				setBestCounter(mCounterZ);
 			}
-		} else if (mCounterY.getDiff() > mCounterZ.getDiff()) {
+		} else if (mCounterY.getValueRange() > mCounterZ.getValueRange()) {
 			setBestCounter(mCounterY);
 		} else {
 			setBestCounter(mCounterZ);

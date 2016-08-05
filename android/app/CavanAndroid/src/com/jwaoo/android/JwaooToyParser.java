@@ -29,7 +29,7 @@ public class JwaooToyParser {
 		mCounterAccel.putFreqValue(sensor.getAxisX());
 		mCounterDepth.putFreqValue(sensor.getCapacitySum());
 
-		if (mCounterAccel.getAvgDiff() > 2.0) {
+		if (mCounterAccel.getValueRangeAvg() > 2.0) {
 			mFreq = mCounterAccel.getFreq();
 		} else {
 			mFreq = mCounterDepth.getFreq();

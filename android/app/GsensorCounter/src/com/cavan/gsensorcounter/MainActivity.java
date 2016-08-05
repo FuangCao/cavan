@@ -91,7 +91,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
 		long count = mCounter.getCount();
 		if (count != mCount) {
-			CavanAndroid.logE("diff = " + counter.getDiff());
+			CavanAndroid.logE("range = " + counter.getValueRange());
 			mCount = count;
 			mFreq = counter.getFreq();
 			runOnUiThread(mRunnableUpdateTitle);

@@ -15,9 +15,12 @@ public class MainActivity extends JwaooToyActivity {
 	private CavanWaveView mWaveView2;
 	private CavanWaveView mWaveView3;
 	private CavanWaveView mWaveView4;
+	private CavanWaveView mWaveView5;
+	private CavanWaveView mWaveView6;
 
-	private JwaooDepthSquareWaveGenerator mGenerator1 = new JwaooDepthSquareWaveGenerator(6, 1000, 3000);
-	private JwaooDepthSquareWaveGenerator mGenerator2 = new JwaooDepthSquareWaveGenerator(6, 1000, 3000);
+	private JwaooDepthSquareWaveGenerator mGenerator1 = new JwaooDepthSquareWaveGenerator(10, 1000, 10000);
+	private JwaooDepthSquareWaveGenerator mGenerator2 = new JwaooDepthSquareWaveGenerator(10, 1000, 10000);
+	private JwaooDepthSquareWaveGenerator mGenerator3 = new JwaooDepthSquareWaveGenerator(10, 1000, 10000);
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -27,7 +30,7 @@ public class MainActivity extends JwaooToyActivity {
 		CavanAndroid.setSuspendEnable(this, false);
 
 		mWaveView1 = (CavanWaveView) findViewById(R.id.waveView1);
-		mWaveView1.setValueRange(0, 60);
+		mWaveView1.setValueRange(40, 60);
 		mWaveView1.setZoom(3);
 
 		mWaveView2 = (CavanWaveView) findViewById(R.id.waveView2);
@@ -35,12 +38,20 @@ public class MainActivity extends JwaooToyActivity {
 		mWaveView2.setZoom(3);
 
 		mWaveView3 = (CavanWaveView) findViewById(R.id.waveView3);
-		mWaveView3.setValueRange(0, 60);
+		mWaveView3.setValueRange(20, 40);
 		mWaveView3.setZoom(3);
 
 		mWaveView4 = (CavanWaveView) findViewById(R.id.waveView4);
 		mWaveView4.setValueRange(0, 1);
 		mWaveView4.setZoom(3);
+
+		mWaveView5 = (CavanWaveView) findViewById(R.id.waveView5);
+		mWaveView5.setValueRange(10, 35);
+		mWaveView5.setZoom(3);
+
+		mWaveView6 = (CavanWaveView) findViewById(R.id.waveView6);
+		mWaveView6.setValueRange(0, 1);
+		mWaveView6.setZoom(3);
 
 		showScanActivity();
 	}
@@ -83,6 +94,10 @@ public class MainActivity extends JwaooToyActivity {
 				value = capacitys[1];
 				mWaveView3.addValue(value);
 				mWaveView4.addValue(mGenerator2.putValue(value) ? 1 : 0);
+
+				value = capacitys[2];
+				mWaveView5.addValue(value);
+				mWaveView6.addValue(mGenerator3.putValue(value) ? 1 : 0);
 			}
 		};
 	}

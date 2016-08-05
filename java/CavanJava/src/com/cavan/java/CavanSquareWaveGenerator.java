@@ -13,8 +13,8 @@ public class CavanSquareWaveGenerator extends CavanWaveList {
 	protected double mThresholdLow;
 	protected double mThresholdHigh;
 
-	protected double mValueDiff;
-	protected double mValueAvgDiff;
+	protected double mValueRange;
+	protected double mValueRangeAvg;
 
 	protected double mThreshold;
 	protected boolean mValue;
@@ -56,8 +56,8 @@ public class CavanSquareWaveGenerator extends CavanWaveList {
 		double min = mMinNode.getValue();
 		double max = mMaxNode.getValue();
 
-		mValueDiff = max - min;
-		mValueAvgDiff = (mValueDiff + mValueAvgDiff * 3) / 4;
+		mValueRange = max - min;
+		mValueRangeAvg = (mValueRange + mValueRangeAvg * 3) / 4;
 
 		if (mTime - get(0).getTime() > mTimeMin) {
 			updateThreshold(min, max);
@@ -68,8 +68,8 @@ public class CavanSquareWaveGenerator extends CavanWaveList {
 	}
 
 	protected void updateThreshold(double min, double max) {
-		if (mValueDiff > mValueFuzz) {
-			double threshold = mValueDiff * mThreshold;
+		if (mValueRange > mValueFuzz) {
+			double threshold = mValueRange * mThreshold;
 
 			mThresholdHigh = max - threshold;
 			mThresholdLow = min + threshold;
@@ -105,12 +105,12 @@ public class CavanSquareWaveGenerator extends CavanWaveList {
 		mValue = value;
 	}
 
-	public double getDiff() {
-		return mValueDiff;
+	public double getValueRange() {
+		return mValueRange;
 	}
 
-	public double getAvgDiff() {
-		return mValueAvgDiff;
+	public double getValueRangeAvg() {
+		return mValueRangeAvg;
 	}
 
 	public boolean putValue(double value) {

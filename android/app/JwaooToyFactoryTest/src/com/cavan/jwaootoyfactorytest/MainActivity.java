@@ -3,7 +3,6 @@ package com.cavan.jwaootoyfactorytest;
 import android.bluetooth.BluetoothDevice;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Message;
 import android.view.Gravity;
 import android.view.View;
