@@ -4,8 +4,7 @@ import com.cavan.java.CavanAccelSensor;
 
 public abstract class JwaooToySensor extends CavanAccelSensor {
 
-	public static final int SENSOR_COUNT = 3;
-	public static final double DEPTH_MAX = 100;
+	public static final int SENSOR_COUNT = 4;
 	public static final double CAPACITY_MAX = 128;
 	public static final double CAPACITY_MIN = -128;
 

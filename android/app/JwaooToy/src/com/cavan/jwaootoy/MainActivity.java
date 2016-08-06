@@ -37,7 +37,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private static final int EVENT_DISCONNECTED = 10;
 
 	private int mFreq;
-	private int mDepth;
+	private double mDepth;
 	private boolean mOtaBusy;
 
 	private Button mButtonSend;

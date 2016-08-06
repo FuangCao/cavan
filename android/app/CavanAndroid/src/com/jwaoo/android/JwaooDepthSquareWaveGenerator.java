@@ -7,8 +7,10 @@ import com.cavan.java.CavanSquareWaveGenerator;
 @SuppressWarnings("serial")
 public class JwaooDepthSquareWaveGenerator extends CavanSquareWaveGenerator {
 
-	private double mMinValue = JwaooToySensor.CAPACITY_MIN;
-	private double mMaxValue = JwaooToySensor.CAPACITY_MAX;
+	private double mDepth;
+	private double mCapacityRange;
+	private double mCapacityMin = JwaooToySensor.CAPACITY_MIN;
+	private double mCapacityMax = JwaooToySensor.CAPACITY_MAX;
 	private CavanCountedArray<Integer> mCountedArrayMin = new CavanCountedArray<Integer>(10, 500);
 	private CavanCountedArray<Integer> mCountedArrayMax = new CavanCountedArray<Integer>(10, 500);
 
@@ -16,22 +18,26 @@ public class JwaooDepthSquareWaveGenerator extends CavanSquareWaveGenerator {
 		super(fuzz, timeMin, timeMax);
 	}
 
+	public double getDepth() {
+		return mDepth;
+	}
+
 	@Override
 	protected void updateThreshold(double min, double max) {
 		if (mValueRange > mValueFuzz) {
-			mMinValue = mCountedArrayMin.putCountedValue((int) min);
-			mMaxValue = mCountedArrayMax.putCountedValue((int) max);
-		} else if (min < mMinValue) {
-			mMinValue = min;
-		} else if (max > mMaxValue) {
-			mMaxValue = max;
+			mCapacityMin = mCountedArrayMin.putCountedValue((int) min);
+			mCapacityMax = mCountedArrayMax.putCountedValue((int) max);
+		} else if (min < mCapacityMin) {
+			mCapacityMin = min;
+		} else if (max > mCapacityMax) {
+			mCapacityMax = max;
 		} else {
 			return;
 		}
 
-		double range = mMaxValue - mMinValue;
-		mThresholdLow = mMinValue + range / 4;
-		mThresholdHigh = mMaxValue - range / 4;
+		mCapacityRange = mCapacityMax - mCapacityMin;
+		mThresholdLow = mCapacityMin + mCapacityRange / 4;
+		mThresholdHigh = mCapacityMax - mCapacityRange / 4;
 	}
 
 	@Override
@@ -42,9 +48,20 @@ public class JwaooDepthSquareWaveGenerator extends CavanSquareWaveGenerator {
 		double max = getMaxValue();
 
 		if (max - min > mValueFuzz) {
-			// CavanAndroid.logE("min = " + min + ", max = " + max);
 			mCountedArrayMin.addCountedValue((int) min);
 			mCountedArrayMax.addCountedValue((int) max);
+		}
+
+		if (value < mCapacityMin) {
+			mDepth = 0;
+		} else if (value > mCapacityMax) {
+			mDepth = 1;
+		} else {
+			try {
+				mDepth = (value - mCapacityMin) / mCapacityRange;
+			} catch (Exception e) {
+				mDepth = 0;
+			}
 		}
 
 		return result;

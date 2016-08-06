@@ -33,13 +33,15 @@ public class CavanSquareWaveCounter extends CavanSquareWaveGenerator {
 	}
 
 	public double putFreqValue(double value) {
-		if (putValue(value) && mLastValue == false) {
+		boolean result = putValue(value);
+
+		if (result && mLastValue == false) {
 			mTimedList.addTimedNode(mLastNode);
 			mFreq = mTimedList.calculateFreq();
 			mCount++;
 		}
 
-		mLastValue = getValue();
+		mLastValue = result;
 
 		return mFreq;
 	}

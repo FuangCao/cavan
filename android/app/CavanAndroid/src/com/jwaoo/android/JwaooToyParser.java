@@ -8,12 +8,10 @@ public class JwaooToyParser {
 	private double mDepth;
 
 	private CavanSquareWaveCounter mCounterAccel;
-	private CavanSquareWaveCounter mCounterDepth;
 	private JwaooDepthDecoder mDecoder;
 
 	public JwaooToyParser(double accelFuzz, double depthFuzz, long timeMin, long timeMax) {
 		mCounterAccel = new CavanSquareWaveCounter(accelFuzz, timeMin, timeMax);
-		mCounterDepth = new CavanSquareWaveCounter(depthFuzz, timeMin, timeMax);
 		mDecoder = new JwaooDepthDecoder(depthFuzz, timeMin, timeMax);
 	}
 
@@ -21,21 +19,19 @@ public class JwaooToyParser {
 		return mFreq;
 	}
 
-	public int getDepth() {
-		return (int) (mDepth * JwaooToySensor.DEPTH_MAX);
+	public double getDepth() {
+		return mDepth;
 	}
 
 	public void putData(JwaooToySensor sensor) {
-		mCounterAccel.putFreqValue(sensor.getAxisX());
-		mCounterDepth.putFreqValue(sensor.getCapacitySum());
+		mDepth = mDecoder.putCapacityValue(sensor.getCapacitys());
 
+		mCounterAccel.putFreqValue(sensor.getAxisX());
 		if (mCounterAccel.getValueRangeAvg() > 2.0) {
 			mFreq = mCounterAccel.getFreq();
 		} else {
-			mFreq = mCounterDepth.getFreq();
+			mFreq = mDecoder.getFreq();
 		}
-
-		mDepth = mDecoder.putValue(sensor.getCapacitys());
 	}
 
 	public void setAccelFuzz(double fuzz) {
@@ -43,19 +39,16 @@ public class JwaooToyParser {
 	}
 
 	public void setDepthFuzz(double fuzz) {
-		mCounterDepth.setValueFuzz(fuzz);
 		mDecoder.setValueFuzz(fuzz);
 	}
 
 	public void setTimeMin(long time) {
 		mCounterAccel.setTimeMin(time);
-		mCounterDepth.setTimeMin(time);
 		mDecoder.setTimeMin(time);
 	}
 
 	public void setTimeMax(long time) {
 		mCounterAccel.setTimeMax(time);
-		mCounterDepth.setTimeMax(time);
 		mDecoder.setTimeMax(time);
 	}
 }

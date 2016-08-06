@@ -213,7 +213,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		mParser.setTimeMax(time);
 	}
 
-	public int getDepth() {
+	public double getDepth() {
 		return mParser.getDepth();
 	}
 
