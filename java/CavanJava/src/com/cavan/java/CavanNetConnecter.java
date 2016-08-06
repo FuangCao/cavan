@@ -39,7 +39,7 @@ public class CavanNetConnecter {
 
 		byte[] addrBytes = localAddr.getAddress();
 
-		CavanJava.printD("ip = %d.%d.%d.%d", addrBytes[0], addrBytes[1], addrBytes[2], addrBytes[3]);
+		CavanJava.printD("ip = %d.%d.%d.%d", addrBytes[0] & 0xFF, addrBytes[1] & 0xFF, addrBytes[2], addrBytes[3]);
 
 		for (int i = 2; i < 255; i++) {
 			addrBytes[3] = (byte) i;
@@ -66,6 +66,44 @@ public class CavanNetConnecter {
 		return mSockets;
 	}
 
+	protected boolean doIdentify(Socket socket) {
+		if (mMessage == null) {
+			return true;
+		}
+
+		InputStream stream = null;
+
+		try {
+			stream = socket.getInputStream();
+		} catch (IOException e) {
+			return false;
+		}
+
+		if (stream == null) {
+			return false;
+		}
+
+		byte[] bytes = new byte[mMessage.length()];
+		int length;
+
+		try {
+			length = stream.read(bytes);
+		} catch (IOException e) {
+			return false;
+		}
+
+		if (length < bytes.length) {
+			return false;
+		}
+
+		String message = new String(bytes, 0, length);
+		if (message.equals(mMessage)) {
+			return true;
+		}
+
+		return false;
+	}
+
 	public class ConnectThread extends Thread {
 
 		private Socket mSocket;
@@ -78,45 +116,32 @@ public class CavanNetConnecter {
 
 		public void close() {
 			if (mSocket != null) {
-
 				try {
 					mSocket.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+
+				mSocket = null;
 			}
 		}
 
 		@Override
 		public void run() {
-			InputStream stream = null;
-
 			try {
 				mSocket = new Socket(mAddress, mPort);
-				stream = mSocket.getInputStream();
-
-				byte[] bytes = new byte[1024];
-				int length = stream.read(bytes);
-				if (length > 0) {
-					String message = new String(bytes, 0, length);
-					if (message.equals(mMessage)) {
+				if (doIdentify(mSocket)) {
+					synchronized (mSockets) {
 						mSockets.add(mSocket);
-						mSocket = null;
 					}
+
+					mSocket = null;
 				}
 			} catch (Exception e) {
 				// e.printStackTrace();
 			}
 
 			if (mSocket != null) {
-				if (stream != null) {
-					try {
-						stream.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-
 				try {
 					mSocket.close();
 				} catch (IOException e) {

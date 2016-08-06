@@ -7,36 +7,48 @@
         android:id="@+id/waveView1"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:layout_weight="0.3" />
+        android:layout_weight="0.2" />
 
     <com.cavan.android.CavanWaveView
         android:id="@+id/waveView2"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:layout_weight="0.033" />
+        android:layout_weight="0.05" />
 
     <com.cavan.android.CavanWaveView
         android:id="@+id/waveView3"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:layout_weight="0.3" />
+        android:layout_weight="0.2" />
 
     <com.cavan.android.CavanWaveView
         android:id="@+id/waveView4"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:layout_weight="0.033" />
+        android:layout_weight="0.05" />
 
     <com.cavan.android.CavanWaveView
         android:id="@+id/waveView5"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:layout_weight="0.3" />
+        android:layout_weight="0.2" />
 
     <com.cavan.android.CavanWaveView
         android:id="@+id/waveView6"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:layout_weight="0.033" />
+        android:layout_weight="0.05" />
+
+    <com.cavan.android.CavanWaveView
+        android:id="@+id/waveView7"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="0.2" />
+
+    <com.cavan.android.CavanWaveView
+        android:id="@+id/waveView8"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="0.05" />
 
 </LinearLayout>

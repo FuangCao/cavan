@@ -1,6 +1,7 @@
 package com.cavan.jwaoodepthsensor;
 
 import android.bluetooth.BluetoothDevice;
+import android.graphics.Color;
 import android.os.Bundle;
 
 import com.cavan.android.CavanAndroid;
@@ -8,6 +9,7 @@ import com.cavan.android.CavanWaveView;
 import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
 import com.jwaoo.android.JwaooDepthSquareWaveGenerator;
+import com.jwaoo.android.JwaooToySensor;
 
 public class MainActivity extends JwaooToyActivity {
 
@@ -17,10 +19,13 @@ public class MainActivity extends JwaooToyActivity {
 	private CavanWaveView mWaveView4;
 	private CavanWaveView mWaveView5;
 	private CavanWaveView mWaveView6;
+	private CavanWaveView mWaveView7;
+	private CavanWaveView mWaveView8;
 
 	private JwaooDepthSquareWaveGenerator mGenerator1 = new JwaooDepthSquareWaveGenerator(10, 1000, 10000);
 	private JwaooDepthSquareWaveGenerator mGenerator2 = new JwaooDepthSquareWaveGenerator(10, 1000, 10000);
 	private JwaooDepthSquareWaveGenerator mGenerator3 = new JwaooDepthSquareWaveGenerator(10, 1000, 10000);
+	private JwaooDepthSquareWaveGenerator mGenerator4 = new JwaooDepthSquareWaveGenerator(10, 1000, 10000);
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -30,28 +35,40 @@ public class MainActivity extends JwaooToyActivity {
 		CavanAndroid.setSuspendEnable(this, false);
 
 		mWaveView1 = (CavanWaveView) findViewById(R.id.waveView1);
-		mWaveView1.setValueRange(40, 60);
+		mWaveView1.setValueRange(JwaooToySensor.CAPACITY_MIN, JwaooToySensor.CAPACITY_MAX);
 		mWaveView1.setZoom(3);
 
 		mWaveView2 = (CavanWaveView) findViewById(R.id.waveView2);
+		mWaveView2.setLineColor(Color.WHITE);
 		mWaveView2.setValueRange(0, 1);
 		mWaveView2.setZoom(3);
 
 		mWaveView3 = (CavanWaveView) findViewById(R.id.waveView3);
-		mWaveView3.setValueRange(20, 40);
+		mWaveView3.setValueRange(JwaooToySensor.CAPACITY_MIN, JwaooToySensor.CAPACITY_MAX);
 		mWaveView3.setZoom(3);
 
 		mWaveView4 = (CavanWaveView) findViewById(R.id.waveView4);
+		mWaveView4.setLineColor(Color.WHITE);
 		mWaveView4.setValueRange(0, 1);
 		mWaveView4.setZoom(3);
 
 		mWaveView5 = (CavanWaveView) findViewById(R.id.waveView5);
-		mWaveView5.setValueRange(10, 35);
+		mWaveView5.setValueRange(JwaooToySensor.CAPACITY_MIN, JwaooToySensor.CAPACITY_MAX);
 		mWaveView5.setZoom(3);
 
 		mWaveView6 = (CavanWaveView) findViewById(R.id.waveView6);
+		mWaveView6.setLineColor(Color.WHITE);
 		mWaveView6.setValueRange(0, 1);
 		mWaveView6.setZoom(3);
+
+		mWaveView7 = (CavanWaveView) findViewById(R.id.waveView7);
+		mWaveView7.setValueRange(JwaooToySensor.CAPACITY_MIN, JwaooToySensor.CAPACITY_MAX);
+		mWaveView7.setZoom(3);
+
+		mWaveView8 = (CavanWaveView) findViewById(R.id.waveView8);
+		mWaveView8.setLineColor(Color.WHITE);
+		mWaveView8.setValueRange(0, 1);
+		mWaveView8.setZoom(3);
 
 		showScanActivity();
 	}
@@ -98,6 +115,10 @@ public class MainActivity extends JwaooToyActivity {
 				value = capacitys[2];
 				mWaveView5.addValue(value);
 				mWaveView6.addValue(mGenerator3.putValue(value) ? 1 : 0);
+
+				value = capacitys[3];
+				mWaveView7.addValue(value);
+				mWaveView8.addValue(mGenerator4.putValue(value) ? 1 : 0);
 			}
 		};
 	}
