@@ -6,27 +6,54 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
+import java.util.Calendar;
 
+import android.graphics.Color;
+import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.preference.CheckBoxPreference;
 import android.preference.Preference;
+import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
+import android.view.Gravity;
+import android.view.WindowManager;
+import android.view.WindowManager.LayoutParams;
+import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanNetworkClient;
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.cavanjni.CavanServicePreference;
 
-public class MainActivity extends PreferenceActivity {
+public class MainActivity extends PreferenceActivity implements OnPreferenceChangeListener {
 
 	private static final String KEY_IP_ADDRESS = "ip_address";
+	private static final String KEY_FLOAT_TIMER = "float_timer";
 	private static final String KEY_TCP_DD = "tcp_dd";
 	private static final String KEY_FTP = "ftp";
 	private static final String KEY_WEB_PROXY = "web_proxy";
 
+	private static TextView sTimeView;
+	private static Handler sHandler = new Handler();
+	private static Runnable mRunnableTime = new Runnable() {
+
+		@Override
+		public void run() {
+			if (sTimeView != null) {
+				Calendar calendar = Calendar.getInstance();
+				sTimeView.setText(String.format("%02d:%02d:%02d",
+						calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), calendar.get(Calendar.SECOND)));
+				sHandler.postDelayed(this, 1000);
+			}
+		}
+	};
+
 	private File mFileBin;
 	private Preference mPreferenceIpAddress;
+	private CheckBoxPreference mPreferenceFloatTime;
 	private CavanServicePreference mPreferenceTcpDd;
 	private CavanServicePreference mPreferenceFtp;
 	private CavanServicePreference mPreferenceWebProxy;
@@ -38,9 +65,13 @@ public class MainActivity extends PreferenceActivity {
 		addPreferencesFromResource(R.xml.cavan_service);
 
 		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
+		mPreferenceFloatTime = (CheckBoxPreference) findPreference(KEY_FLOAT_TIMER);
 		mPreferenceTcpDd = (CavanServicePreference) findPreference(KEY_TCP_DD);
 		mPreferenceFtp = (CavanServicePreference) findPreference(KEY_FTP);
 		mPreferenceWebProxy = (CavanServicePreference) findPreference(KEY_WEB_PROXY);
+
+		mPreferenceFloatTime.setChecked(sTimeView != null);
+		mPreferenceFloatTime.setOnPreferenceChangeListener(this);
 
 		updateIpAddressStatus();
 
@@ -150,6 +181,37 @@ public class MainActivity extends PreferenceActivity {
 		}
 	}
 
+	private boolean setDesktopFloatTimerEnable(boolean enable) {
+		WindowManager manager = (WindowManager) getApplication().getSystemService(WINDOW_SERVICE);
+
+		if (enable) {
+			LayoutParams params = new LayoutParams();
+
+			params.type = LayoutParams.TYPE_PHONE;
+			params.format = PixelFormat.RGBA_8888;
+			params.flags = LayoutParams.FLAG_NOT_FOCUSABLE;
+			params.gravity = Gravity.RIGHT | Gravity.TOP;
+			params.x = 0;
+			params.y = 0;
+			params.width = WindowManager.LayoutParams.WRAP_CONTENT;
+			params.height = WindowManager.LayoutParams.WRAP_CONTENT;
+
+			TextView view = new TextView(getApplicationContext());
+			view.setTextColor(Color.WHITE);
+			view.setBackgroundColor(Color.BLACK);
+
+			manager.addView(view, params);
+
+			sTimeView = view;
+			sHandler.post(mRunnableTime);
+		} else if (sTimeView != null) {
+			manager.removeView(sTimeView);
+			sTimeView = null;
+		}
+
+		return true;
+	}
+
 	@SuppressWarnings("deprecation")
 	@Override
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
@@ -158,5 +220,14 @@ public class MainActivity extends PreferenceActivity {
 		}
 
 		return super.onPreferenceTreeClick(preferenceScreen, preference);
+	}
+
+	@Override
+	public boolean onPreferenceChange(Preference preference, Object object) {
+		if (preference == mPreferenceFloatTime) {
+			return setDesktopFloatTimerEnable((boolean) object);
+		}
+
+		return false;
 	}
 }

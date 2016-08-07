@@ -4,24 +4,24 @@
     xmlns:settings="http://schemas.android.com/apk/res/com.android.settings"
     android:key="parent">
 
-	<Preference
-	    android:key="ip_address"
+	<Preference android:key="ip_address"
 	    android:title="@string/text_ip_address"
-	    android:summary="@string/text_unknown"/>
-
-	<com.cavan.cavanjni.TcpDdServicePreference
-	    android:key="tcp_dd"
+	    android:summary="@string/text_unknown" />
+	
+	<CheckBoxPreference android:key="float_timer"
 	    android:persistent="true"
-	    android:title="@string/tcp_dd_service"/>
+	    android:title="@string/desktop_float_timer" />
 
-	<com.cavan.cavanjni.FtpServicePreference
-	    android:key="ftp"
+	<com.cavan.cavanjni.TcpDdServicePreference android:key="tcp_dd"
 	    android:persistent="true"
-	    android:title="@string/ftp_service"/>
+	    android:title="@string/tcp_dd_service" />
 
-	<com.cavan.cavanjni.WebProxyServicePreference
-	    android:key="web_proxy"
+	<com.cavan.cavanjni.FtpServicePreference android:key="ftp"
 	    android:persistent="true"
-	    android:title="@string/web_proxy_service"/>
+	    android:title="@string/ftp_service" />
+
+	<com.cavan.cavanjni.WebProxyServicePreference android:key="web_proxy"
+	    android:persistent="true"
+	    android:title="@string/web_proxy_service" />
 
 </PreferenceScreen>

@@ -17,5 +17,6 @@
     <string name="text_service_disconnected">已断开服务</string>
     <string name="text_ip_address">本机IP地址</string>
     <string name="text_unknown">未知</string>
+    <string name="desktop_float_timer">桌面悬浮时钟</string>
 
 </resources>
