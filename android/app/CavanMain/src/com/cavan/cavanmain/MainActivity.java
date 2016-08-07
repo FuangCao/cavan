@@ -12,7 +12,6 @@ import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
@@ -36,17 +35,31 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private static final String KEY_FTP = "ftp";
 	private static final String KEY_WEB_PROXY = "web_proxy";
 
+	private static int mSecond;
 	private static TextView sTimeView;
-	private static Handler sHandler = new Handler();
 	private static Runnable mRunnableTime = new Runnable() {
 
 		@Override
 		public void run() {
 			if (sTimeView != null) {
 				Calendar calendar = Calendar.getInstance();
-				sTimeView.setText(String.format("%02d:%02d:%02d",
-						calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), calendar.get(Calendar.SECOND)));
-				sHandler.postDelayed(this, 1000);
+				int second = calendar.get(Calendar.SECOND);
+				if (mSecond == second) {
+					sTimeView.postDelayed(this, 100);
+				} else {
+					mSecond = second;
+
+					if (second == 0) {
+						sTimeView.post(this);
+					} else {
+						sTimeView.postDelayed(this, 1000);
+					}
+
+					int hour = calendar.get(Calendar.HOUR_OF_DAY);
+					int minute = calendar.get(Calendar.MINUTE);
+
+					sTimeView.setText(String.format("%02d:%02d:%02d", hour, minute, second));
+				}
 			}
 		}
 	};
@@ -198,12 +211,12 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 			TextView view = new TextView(getApplicationContext());
 			view.setTextColor(Color.WHITE);
-			view.setBackgroundColor(Color.BLACK);
+			view.setBackgroundColor(Color.GRAY);
 
 			manager.addView(view, params);
 
 			sTimeView = view;
-			sHandler.post(mRunnableTime);
+			sTimeView.post(mRunnableTime);
 		} else if (sTimeView != null) {
 			manager.removeView(sTimeView);
 			sTimeView = null;
