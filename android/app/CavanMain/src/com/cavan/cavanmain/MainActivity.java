@@ -35,7 +35,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private static final String KEY_FTP = "ftp";
 	private static final String KEY_WEB_PROXY = "web_proxy";
 
-	private static int mSecond;
+	private static int sLastSecond;
 	private static TextView sTimeView;
 	private static Runnable mRunnableTime = new Runnable() {
 
@@ -44,16 +44,11 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			if (sTimeView != null) {
 				Calendar calendar = Calendar.getInstance();
 				int second = calendar.get(Calendar.SECOND);
-				if (mSecond == second) {
+				if (second == sLastSecond) {
 					sTimeView.postDelayed(this, 100);
 				} else {
-					mSecond = second;
-
-					if (second == 0) {
-						sTimeView.post(this);
-					} else {
-						sTimeView.postDelayed(this, 1000);
-					}
+					sLastSecond = second;
+					sTimeView.postDelayed(this, 1000);
 
 					int hour = calendar.get(Calendar.HOUR_OF_DAY);
 					int minute = calendar.get(Calendar.MINUTE);
@@ -214,8 +209,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			view.setBackgroundColor(Color.GRAY);
 
 			manager.addView(view, params);
-
 			sTimeView = view;
+
+			sLastSecond = -1;
 			sTimeView.post(mRunnableTime);
 		} else if (sTimeView != null) {
 			manager.removeView(sTimeView);
