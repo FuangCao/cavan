@@ -18,6 +18,7 @@
     <uses-permission android:name="android.permission.INTERACT_ACROSS_USERS"/>
     <uses-permission android:name="android.permission.INTERACT_ACROSS_USERS_FULL"/>
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"/>
 
     <application
         android:allowBackup="true"
@@ -43,6 +44,14 @@
         <service
             android:name="com.cavan.cavanjni.WebProxyService"
             android:persistent="true" />
+        <service android:name="CavanRedPacketListenerService"
+            android:label="@string/text_red_packet_notify"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:persistent="true">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService"/>
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

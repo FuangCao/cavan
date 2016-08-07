@@ -4,6 +4,7 @@ obj
 out
 lib
 libs
+assets
 *.jar
 */*/res/values-v*
 !.classpath
