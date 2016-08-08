@@ -24,7 +24,10 @@ public class CavanRedPacketListenerService extends NotificationListenerService {
 		"m4a", "ogg", "wav", "mp3", "ac3", "wma"
 	};
 
-	public static final Pattern mPatternZFB = Pattern.compile("支付宝.*口令\\D*(\\d{8})\\D*");
+	public static final Pattern[] mPatterns = {
+		Pattern.compile("支付宝.*口令\\D*(\\d{8})\\D*"),
+		Pattern.compile(".*:\\s*(\\d{8})\\D*"),
+	};
 
 	private Uri mUriSound;
 	private ClipboardManager mClipboardManager;
@@ -88,6 +91,20 @@ public class CavanRedPacketListenerService extends NotificationListenerService {
 		}
 	}
 
+	private boolean isRedPacketCode(String code) {
+		if (code.length() != 8) {
+			return false;
+		}
+
+		for (char c : code.toCharArray()) {
+			if (c < '0' || c > '9') {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	@Override
 	public void onCreate() {
 		mUriSound = getNotifySoundUri();
@@ -118,9 +135,17 @@ public class CavanRedPacketListenerService extends NotificationListenerService {
 
 		// CavanAndroid.logE(content.toString());
 
-		Matcher matcher = mPatternZFB.matcher(content);
-		if (matcher.find()) {
-			String code = matcher.group(1);
+		String code = content.toString().trim();
+
+		for (Pattern pattern : mPatterns) {
+			Matcher matcher = pattern.matcher(code);
+			if (matcher.find()) {
+				code = matcher.group(1);
+				break;
+			}
+		}
+
+		if (isRedPacketCode(code)) {
 			sendRedPacketNotify(code);
 		}
 	}
