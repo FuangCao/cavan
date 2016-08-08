@@ -25,8 +25,9 @@ public class CavanRedPacketListenerService extends NotificationListenerService {
 	};
 
 	public static final Pattern[] mPatterns = {
-		Pattern.compile("支付宝.*口令\\D*(\\d{8})\\D*"),
-		Pattern.compile(".*:\\s*(\\d{8})\\D*"),
+		Pattern.compile("支付宝.*\\D*(\\d{8})\\D*"),
+		Pattern.compile("红包.*\\D*(\\d{8})\\D*"),
+		Pattern.compile("口令.*\\D*(\\d{8})\\D*"),
 	};
 
 	private Uri mUriSound;
