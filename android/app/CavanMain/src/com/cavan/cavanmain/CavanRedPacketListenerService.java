@@ -14,7 +14,6 @@ import android.net.Uri;
 import android.os.Environment;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
-import android.support.v4.app.NotificationCompat;
 
 import com.cavan.android.CavanAndroid;
 
@@ -30,7 +29,6 @@ public class CavanRedPacketListenerService extends NotificationListenerService {
 		Pattern.compile("口令.*\\D*(\\d{8})\\D*"),
 	};
 
-	private Uri mUriSound;
 	private ClipboardManager mClipboardManager;
 	private NotificationManager mNotificationManager;
 
@@ -43,12 +41,12 @@ public class CavanRedPacketListenerService extends NotificationListenerService {
 		}
 	}
 
-	public Uri getNotifySoundUri() {
+	public File getNotifySoundFile() {
 		File dir = Environment.getExternalStorageDirectory();
 		for (String extension : mSoundExtensions) {
 			File file = new File(dir, "CavanRedPacket." + extension);
 			if (file.isFile()) {
-				return Uri.fromFile(file);
+				return file;
 			}
 		}
 
@@ -68,25 +66,27 @@ public class CavanRedPacketListenerService extends NotificationListenerService {
 		}
 
 		if (mNotificationManager != null) {
-			NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+			Notification.Builder builder = new Notification.Builder(this)
 				.setSmallIcon(R.drawable.ic_launcher)
 				.setTicker("支付宝红包口令: " + code)
 				.setContentTitle("支付宝红包口令")
 				.setContentText(code)
+				.setWhen(System.currentTimeMillis() + 1000)
 				.setAutoCancel(true);
 
 			if (intent != null) {
 				builder.setContentIntent(PendingIntent.getActivity(this, 0, intent, 0));
 			}
 
-			if (mUriSound == null) {
+			File sound = getNotifySoundFile();
+			if (sound == null) {
 				builder.setDefaults(Notification.DEFAULT_ALL);
 			} else {
-				builder.setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE);
-				builder.setSound(mUriSound);
-			}
+				CavanAndroid.logE("sound = " + sound);
 
-			CavanAndroid.logE("builder = " + builder);
+				builder.setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE);
+				builder.setSound(Uri.fromFile(sound));
+			}
 
 			mNotificationManager.notify(0, builder.build());
 		}
@@ -108,9 +108,6 @@ public class CavanRedPacketListenerService extends NotificationListenerService {
 
 	@Override
 	public void onCreate() {
-		mUriSound = getNotifySoundUri();
-		CavanAndroid.logE("mUriSound = " + mUriSound);
-
 		mClipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 		mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
