@@ -4,6 +4,7 @@ obj
 out
 lib
 libs
+raw
 assets
 *.jar
 */*/res/values-v*

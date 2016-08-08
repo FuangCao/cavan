@@ -30,10 +30,10 @@ public class JwaooToySensorMpu6050 extends JwaooToySensor {
 			setCapacity(1, readCapacity8());
 			setCapacity(0, readCapacity8());
 		} else {
-			setCapacity(3, readCapacity16());
-			setCapacity(2, readCapacity16());
-			setCapacity(1, readCapacity16());
 			setCapacity(0, readCapacity16());
+			setCapacity(1, readCapacity16());
+			setCapacity(2, readCapacity16());
+			setCapacity(3, readCapacity16());
 		}
 	}
 }
