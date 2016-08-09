@@ -1,6 +1,7 @@
 package com.cavan.cavanmain;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,13 +25,15 @@ public class CavanRedPacketListenerService extends NotificationListenerService {
 	};
 
 	public static final Pattern[] mPatterns = {
-		Pattern.compile("支付宝.*\\D*(\\d{8})\\D*"),
-		Pattern.compile("红包.*\\D*(\\d{8})\\D*"),
-		Pattern.compile("口令.*\\D*(\\d{8})\\D*"),
+		Pattern.compile("支付宝.*红包.*\\D*(\\d{8})\\D*"),
+		Pattern.compile("支付宝.*口令.*\\D*(\\d{8})\\D*"),
+		Pattern.compile("红包\\s*[:：]?\\s*(\\d{8})\\D*"),
+		Pattern.compile("口令\\s*[:：]?\\s*(\\d{8})\\D*"),
 	};
 
 	private ClipboardManager mClipboardManager;
 	private NotificationManager mNotificationManager;
+	private HashMap<CharSequence, Long> mCodeMap = new HashMap<CharSequence, Long>();
 
 	public void postRedPacketCode(CharSequence code) {
 		if (mClipboardManager != null) {
@@ -53,8 +56,22 @@ public class CavanRedPacketListenerService extends NotificationListenerService {
 		return null;
 	}
 
-	public void sendRedPacketNotify(CharSequence code) {
-		CavanAndroid.logD("支付宝红包口令: " + code);
+	public void sendRedPacketNotify(String name, String code) {
+		CavanAndroid.logE("支付宝红包口令: " + code);
+
+		long timeNow = System.currentTimeMillis();
+		for (CharSequence key : mCodeMap.keySet()) {
+			if (timeNow - mCodeMap.get(key) > 86400000) {
+				mCodeMap.remove(key);
+			}
+		}
+
+		Long time = mCodeMap.get(code);
+		if (time != null) {
+			return;
+		}
+
+		mCodeMap.put(code, timeNow);
 
 		postRedPacketCode(code);
 
@@ -69,9 +86,8 @@ public class CavanRedPacketListenerService extends NotificationListenerService {
 			Notification.Builder builder = new Notification.Builder(this)
 				.setSmallIcon(R.drawable.ic_launcher)
 				.setTicker("支付宝红包口令: " + code)
-				.setContentTitle("支付宝红包口令")
+				.setContentTitle(name)
 				.setContentText(code)
-				.setWhen(System.currentTimeMillis() + 1000)
 				.setAutoCancel(true);
 
 			if (intent != null) {
@@ -88,7 +104,7 @@ public class CavanRedPacketListenerService extends NotificationListenerService {
 				builder.setSound(Uri.fromFile(sound));
 			}
 
-			mNotificationManager.notify(0, builder.build());
+			mNotificationManager.notify((int) (timeNow / 1000), builder.build());
 		}
 	}
 
@@ -133,7 +149,17 @@ public class CavanRedPacketListenerService extends NotificationListenerService {
 
 		// CavanAndroid.logE(content.toString());
 
-		String code = content.toString().trim();
+		String name;
+		String code;
+		String[] contents = content.toString().split("\\s*:\\s*", 2);
+
+		if (contents.length < 2) {
+			name = "支付宝红包口令";
+			code = contents[0].trim();
+		} else {
+			name = contents[0].trim();
+			code = contents[1].trim();
+		}
 
 		for (Pattern pattern : mPatterns) {
 			Matcher matcher = pattern.matcher(code);
@@ -144,7 +170,7 @@ public class CavanRedPacketListenerService extends NotificationListenerService {
 		}
 
 		if (isRedPacketCode(code)) {
-			sendRedPacketNotify(code);
+			sendRedPacketNotify(name, code);
 		}
 	}
 
