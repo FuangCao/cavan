@@ -1,7 +1,5 @@
 package com.cavan.java;
 
-
-
 @SuppressWarnings("serial")
 public class CavanWaveList extends CavanTimedList<Double> {
 

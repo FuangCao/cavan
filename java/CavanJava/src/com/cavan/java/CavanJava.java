@@ -11,21 +11,29 @@ import java.util.List;
 
 public class CavanJava {
 
-	public static void printE(String format, Object... args) {
-		System.err.println(String.format(format, args));
+	public static void printE(String message) {
+		System.err.println(message);
 	}
 
 	public static void printE(Throwable throwable) {
 		throwable.printStackTrace();
 	}
 
-	public static void printE(Throwable throwable, String format, Object... args) {
-		printE(format, args);
+	public static void printE(Throwable throwable, String message) {
+		printE(message);
 		printE(throwable);
 	}
 
-	public static void printD(String format, Object... args) {
-		System.out.println(String.format(format, args));
+	public static void printD(String message) {
+		System.out.println(message);
+	}
+
+	public static void printfE(String format, Object... args) {
+		printE(String.format(format, args));
+	}
+
+	public static void printfD(String format, Object... args) {
+		printD(String.format(format, args));
 	}
 
 	protected static String buildPrintSep() {

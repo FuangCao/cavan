@@ -1,11 +1,9 @@
 package com.cavan.java;
 
-
 @SuppressWarnings("serial")
 public class CavanSquareWaveCounter extends CavanSquareWaveGenerator {
 
 	private long mCount;
-	private double mFreq;
 	private boolean mLastValue;
 	private CavanTimedList<Double> mTimedList;
 
@@ -22,14 +20,16 @@ public class CavanSquareWaveCounter extends CavanSquareWaveGenerator {
 		mCount = count;
 	}
 
-	public double getFreq() {
-		return mFreq;
-	}
-
 	@Override
 	public void setOverTime(long time) {
 		mTimedList.setOverTime(time);
 		super.setOverTime(time);
+	}
+
+	@Override
+	protected double updateFreq() {
+		mFreq = mTimedList.updateFreq();
+		return mFreq;
 	}
 
 	public double putFreqValue(double value) {
@@ -37,8 +37,10 @@ public class CavanSquareWaveCounter extends CavanSquareWaveGenerator {
 
 		if (result && mLastValue == false) {
 			mTimedList.addTimedNode(mLastNode);
-			mFreq = mTimedList.calculateFreq();
+			updateFreq();
 			mCount++;
+		} else if (mTimedList.removeOvertimeNodes() > 0) {
+			updateFreq();
 		}
 
 		mLastValue = result;

@@ -1,11 +1,9 @@
 package com.cavan.java;
 
-
-
 @SuppressWarnings("serial")
 public class CavanSquareWaveGenerator extends CavanWaveList {
 
-	public final double DEFAULT_THRESHOLD = 0.35;
+	public final double DEFAULT_THRESHOLD = 0.25;
 
 	protected long mTimeMin;
 	protected double mValueFuzz;
@@ -36,16 +34,10 @@ public class CavanSquareWaveGenerator extends CavanWaveList {
 		mTimeMin = time;
 	}
 
-	public void setTimeMax(long time) {
-		setOverTime(time);
-	}
-
 	public void setThreshold(double threshold) {
-		if (threshold > 1.0) {
-			threshold = 1.0;
+		if (threshold > 1) {
+			threshold = 1;
 		}
-
-		mThreshold = (1.0 - threshold) / 2;
 
 		if (mMinNode != null && mMaxNode != null) {
 			updateThreshold();
@@ -59,7 +51,7 @@ public class CavanSquareWaveGenerator extends CavanWaveList {
 		mValueRange = max - min;
 		mValueRangeAvg = (mValueRange + mValueRangeAvg * 3) / 4;
 
-		if (mTime - get(0).getTime() > mTimeMin) {
+		if (mLastNode.getTime() - get(0).getTime() > mTimeMin) {
 			updateThreshold(min, max);
 		} else {
 			mThresholdHigh = min + mValueFuzz;
@@ -68,15 +60,13 @@ public class CavanSquareWaveGenerator extends CavanWaveList {
 	}
 
 	protected void updateThreshold(double min, double max) {
-		if (mValueRange > mValueFuzz) {
-			double threshold = mValueRange * mThreshold;
-
-			mThresholdHigh = max - threshold;
-			mThresholdLow = min + threshold;
-		} else {
-			mThresholdHigh = min + mValueFuzz;
-			mThresholdLow = max - mValueFuzz;
+		double fuzz = mValueRange * mThreshold;
+		if (fuzz < mValueFuzz) {
+			fuzz = mValueFuzz;
 		}
+
+		mThresholdHigh = (min + max + fuzz) / 2;
+		mThresholdLow = mThresholdHigh - fuzz;
 	}
 
 	@Override

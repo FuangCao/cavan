@@ -64,6 +64,9 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_KEY_CLICK_ENABLE = 90;
 	public static final byte JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE = 91;
 	public static final byte JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE = 92;
+	public static final byte JWAOO_TOY_CMD_GPIO_GET = 100;
+	public static final byte JWAOO_TOY_CMD_GPIO_SET = 101;
+	public static final byte JWAOO_TOY_CMD_GPIO_CFG = 102;
 
 	public static final byte JWAOO_TOY_EVT_BATT_INFO = 1;
 	public static final byte JWAOO_TOY_EVT_KEY_STATE = 2;
@@ -328,6 +331,8 @@ public class JwaooBleToy extends CavanBleGatt {
 			return false;
 		}
 
+		CavanAndroid.logE("Firmware size = " + bytes.length);
+
 		CavanAndroid.logE("Flash id = " + Integer.toHexString(getFlashId()));
 		CavanAndroid.logE("Flash size = " + getFlashSize());
 		CavanAndroid.logE("Flash page size = " + getFlashPageSize());
@@ -510,6 +515,21 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public JwaooToyFdc1004 createFdc1004() {
 		return new JwaooToyFdc1004();
+	}
+
+	public boolean getGpioValue(int port, int pin) {
+		byte[] command = { JWAOO_TOY_CMD_GPIO_GET, (byte) port, (byte) pin };
+		return mCommand.readValue8(command, (byte) -1) > 0;
+	}
+
+	public boolean setGpioValue(int port, int pin, boolean value) {
+		byte[] command = { JWAOO_TOY_CMD_GPIO_GET, (byte) port, (byte) pin, CavanJava.getBoolValueByte(value) };
+		return mCommand.readBool(command);
+	}
+
+	public boolean doConfigGpio(int port, int pin, int mode, int function, boolean high) {
+		byte[] command = { JWAOO_TOY_CMD_GPIO_CFG, (byte) port, (byte) pin, (byte) mode, (byte) function, CavanJava.getBoolValueByte(high) };
+		return mCommand.readBool(command);
 	}
 
 	@Override
@@ -836,6 +856,10 @@ public class JwaooBleToy extends CavanBleGatt {
 
 		public boolean readBool(byte type, boolean enable, int value) {
 			return JwaooToyResponse.getBool(send(type, enable, value));
+		}
+
+		public byte readValue8(byte[] command, byte defValue) {
+			return JwaooToyResponse.getValue8(send(command), defValue);
 		}
 
 		public byte readValue8(byte type, byte defValue) {

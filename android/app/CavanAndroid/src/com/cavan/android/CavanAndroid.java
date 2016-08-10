@@ -59,6 +59,22 @@ public class CavanAndroid extends CavanJava {
 		logE(buildPosMessage(message));
 	}
 
+	public static void logfE(String format, Object... args) {
+		logE(String.format(format, args));
+	}
+
+	public static void logfW(String format, Object... args) {
+		logW(String.format(format, args));
+	}
+
+	public static void logfD(String format, Object... args) {
+		logD(String.format(format, args));
+	}
+
+	public static void logfP(String format, Object... args) {
+		logP(String.format(format, args));
+	}
+
 	public static void dumpstack(Throwable throwable) {
 		logW(throwable);
 	}

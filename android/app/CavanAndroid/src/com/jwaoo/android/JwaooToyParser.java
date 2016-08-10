@@ -12,7 +12,7 @@ public class JwaooToyParser {
 
 	public JwaooToyParser(double accelFuzz, double depthFuzz, long timeMin, long timeMax) {
 		mCounterAccel = new CavanSquareWaveCounter(accelFuzz, timeMin, timeMax);
-		mDecoder = new JwaooDepthDecoder(depthFuzz, timeMin, timeMax);
+		mDecoder = new JwaooDepthDecoder(depthFuzz);
 	}
 
 	public double getFreq() {
@@ -48,7 +48,7 @@ public class JwaooToyParser {
 	}
 
 	public void setTimeMax(long time) {
-		mCounterAccel.setTimeMax(time);
+		mCounterAccel.setOverTime(time);
 		mDecoder.setTimeMax(time);
 	}
 }

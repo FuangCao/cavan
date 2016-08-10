@@ -1,27 +1,25 @@
 package com.jwaoo.android;
 
-import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanSquareWaveCounter;
 
 @SuppressWarnings("serial")
 public class JwaooDepthDecoder extends CavanSquareWaveCounter {
 
-	public static final double DEPTH_STEP = 1.0 / JwaooToySensor.SENSOR_COUNT;
-	public static final double DEPTH_STEP_HALF = DEPTH_STEP / 2;
+	public static final long TIME_MIN = 800;
+	public static final long TIME_MAX = 2000;
 
 	private int mCount;
 	private double mDepth;
 	private double mDepthAlign;
-
-	private boolean mPullOut;
+	private boolean mPlugIn = true;
 
 	private JwaooDepthSquareWaveGenerator mGenerators[] = new JwaooDepthSquareWaveGenerator[JwaooToySensor.SENSOR_COUNT];
 
-	public JwaooDepthDecoder(double fuzz, long timeMin, long timeMax) {
-		super(fuzz, timeMin, timeMax);
+	public JwaooDepthDecoder(double fuzz) {
+		super(fuzz, TIME_MIN, TIME_MAX);
 
 		for (int i = 0; i < JwaooToySensor.SENSOR_COUNT; i++) {
-			mGenerators[i] = new JwaooDepthSquareWaveGenerator(fuzz, timeMin, timeMax);
+			mGenerators[i] = new JwaooDepthSquareWaveGenerator(fuzz, TIME_MIN, TIME_MAX);
 		}
 	}
 
@@ -43,17 +41,62 @@ public class JwaooDepthDecoder extends CavanSquareWaveCounter {
 		}
 	}
 
-	@Override
 	public void setTimeMax(long time) {
-		super.setTimeMax(time);
+		if (time < TIME_MIN) {
+			time = TIME_MIN;
+		}
+
+		super.setOverTime(time);
 
 		for (int i = 0; i < JwaooToySensor.SENSOR_COUNT; i++) {
-			mGenerators[i].setTimeMax(time);
+			mGenerators[i].setOverTime(time);
+		}
+	}
+
+	@Override
+	protected void updateThreshold(double min, double max) {
+		if (mValueRange > mValueFuzz) {
+			mThresholdHigh = (min + max + mValueFuzz) / 2;
+			mThresholdLow = mThresholdHigh - mValueFuzz;
 		}
 	}
 
 	public double getDepth() {
 		return mDepth;
+	}
+
+	public JwaooDepthSquareWaveGenerator[] getGenerators() {
+		return mGenerators;
+	}
+
+	public JwaooDepthSquareWaveGenerator getGenerator(int index) {
+		return mGenerators[index];
+	}
+
+	public double calculateDepth(int count) {
+		if (count < JwaooToySensor.SENSOR_COUNT) {
+			if (count > 0) {
+				return 0.5 + count - 1;
+			} else {
+				return 0;
+			}
+		} else {
+			return JwaooToySensor.SENSOR_COUNT;
+		}
+	}
+
+	public double calculatePredictedDepth(int count) {
+		double depth = mGenerators[count - 1].getPredictedValue() + mGenerators[count].getPredictedValue() - 0.5;
+
+		if (depth > 1) {
+			return 1;
+		}
+
+		if (depth < 0) {
+			return 0;
+		}
+
+		return depth;
 	}
 
 	public double putCapacityValue(double[] capacitys) {
@@ -63,61 +106,54 @@ public class JwaooDepthDecoder extends CavanSquareWaveCounter {
 			sum += capacitys[i];
 		}
 
-		putFreqValue(sum);
-
-		int count;
-
-		for (count = 0; count < JwaooToySensor.SENSOR_COUNT && mGenerators[count].putValue(capacitys[count]); count++);
-
-		for (int i = count + 1; i < JwaooToySensor.SENSOR_COUNT; i++) {
-			mGenerators[i].putValue(capacitys[i]);
-			mGenerators[i].setValue(false);
+		double freq = putFreqValue(sum);
+		if (freq > 0) {
+			setTimeMax((long) (2000 / freq));
+		} else {
+			setTimeMax(TIME_MAX);
 		}
 
-		CavanAndroid.logE("count = " + count);
+		int count = 0;
 
-		if (count < JwaooToySensor.SENSOR_COUNT) {
-			if (count > 0) {
-				if (count > mCount) {
-					mPullOut = false;
-					mDepth = mDepthAlign = count * DEPTH_STEP - DEPTH_STEP_HALF;
-				} else if (count < mCount) {
-					mPullOut = true;
-					mDepth = mDepthAlign = count * DEPTH_STEP - DEPTH_STEP_HALF;
-				} else if (mPullOut) {
-					if (count > 1) {
-						double depth = mGenerators[count - 1].getDepth() + mGenerators[count - 2].getDepth();
-						if (depth < 1.5 && depth > 0.5) {
-							mDepth = mDepthAlign - DEPTH_STEP * (1.5 - depth);
-						}
-					} else {
-						double depth = mGenerators[0].getDepth();
-						if (depth < 0.5) {
-							mDepth = mDepthAlign - DEPTH_STEP * (0.5 - depth);
-						}
-					}
+		for (int i = 0; i < JwaooToySensor.SENSOR_COUNT; i++) {
+			if (mGenerators[i].putValue(capacitys[i])) {
+				count = i + 1;
+			}
+		}
+
+		// CavanAndroid.logE("count = " + count);
+
+		if (count > mCount || count <= 0) {
+			mPlugIn = true;
+			mDepth = mDepthAlign = calculateDepth(count);
+		} else if (count < mCount) {
+			mPlugIn = false;
+			mDepth = mDepthAlign = calculateDepth(count);
+		} else {
+			if (mPlugIn) {
+				for (int i = count + 1; i < JwaooToySensor.SENSOR_COUNT; i++) {
+					mGenerators[i].savePredictedMin();
+				}
+
+				for (int i = count - 2; i >= 0; i--) {
+					mGenerators[i].savePredictMax();
+				}
+			}
+
+			if (count < JwaooToySensor.SENSOR_COUNT) {
+				if (count > 0) {
+					mDepth = calculatePredictedDepth(count) + mDepthAlign;
 				} else {
-					double depth = mGenerators[count].getDepth() + mGenerators[count - 1].getDepth();
-					if (depth > 0.5) {
-						if (depth < 1.5) {
-							depth -= 0.5;
-						} else {
-							depth = 1;
-						}
-
-						mDepth = mDepthAlign + DEPTH_STEP * depth;
-					}
+					mDepth = 0.0;
 				}
 			} else {
-				mDepth = mDepthAlign = 0;
+				mDepth = 1.0;
 			}
-		} else {
-			mDepth = mDepthAlign = 1;
 		}
 
 		mCount = count;
 
-		CavanAndroid.logE("depth = " + mDepth);
+		// CavanAndroid.logE("depth = " + mDepth);
 
 		return mDepth;
 	}

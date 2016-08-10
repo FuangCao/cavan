@@ -1,74 +1,57 @@
 package com.cavan.java;
 
+import java.util.HashMap;
+import java.util.Iterator;
 
-public class CavanCountedArray<E> {
+@SuppressWarnings("serial")
+public class CavanCountedArray<E> extends HashMap<E, Integer> {
 
-	private int mMaxCount;
-	private CavanCountedNode<E>[] mNodes;
+	private int mCountMax;
 
-	@SuppressWarnings("unchecked")
-	public CavanCountedArray(int size, int maxCount) {
-		mMaxCount = maxCount;
-		mNodes = (CavanCountedNode<E>[]) new CavanCountedNode<?>[size];
-
-		for (int i = mNodes.length - 1; i >= 0; i--) {
-			mNodes[i] = new CavanCountedNode<E>(null);
-		}
+	public CavanCountedArray(int max) {
+		super();
+		mCountMax = max;
 	}
 
-	public CavanCountedArray(int size) {
-		this(size, size);
-	}
+	public void addCountedValue(E value) {
+		Integer count = get(value);
+		if (count == null) {
+			count = 2;
+		} else {
+			count += 2;
 
-	public CavanCountedNode<E> addCountedValue(E value) {
-		CavanCountedNode<E> node;
-
-		for (int i = mNodes.length - 1; i >= 0; i--) {
-			node = mNodes[i];
-
-			if (value.equals(node.getValue())) {
-				while (--i >= 0) {
-					mNodes[i].decrement();
-				}
-
-				node.increment(mMaxCount);
-
-				return node;
-			}
-
-			node.decrement();
-		}
-
-		node = mNodes[0];
-
-		if (node.getCount() > 0) {
-			for (int i = mNodes.length - 1; i > 0; i--) {
-				if (mNodes[i].isLessThen(node)) {
-					node = mNodes[i];
-				}
+			if (count > mCountMax) {
+				count = mCountMax;
 			}
 		}
 
-		node.setValue(value);
+		put(value, count);
 
-		return node;
-	}
+		Iterator<java.util.Map.Entry<E, Integer>> iterator = entrySet().iterator();
 
-	public CavanCountedNode<E> getBestNode() {
-		CavanCountedNode<E> node = mNodes[0];
+		while (iterator.hasNext()) {
+			java.util.Map.Entry<E, Integer> entry = iterator.next();
 
-		for (int i = mNodes.length - 1; i > 0; i--) {
-			if (mNodes[i].isGreaterThen(node)) {
-				node = mNodes[i];
+			if (entry.getValue() > 1) {
+				entry.setValue(entry.getValue() - 1);
+			} else {
+				iterator.remove();
 			}
 		}
-
-		return node;
 	}
 
 	public E getBestValue() {
-		CavanCountedNode<E> node = getBestNode();
-		return node.getValue();
+		E value = null;
+		int count = 0;
+
+		for (java.util.Map.Entry<E, Integer> entry : entrySet()) {
+			if (entry.getValue() > count) {
+				count = entry.getValue();
+				value = entry.getKey();
+			}
+		}
+
+		return value;
 	}
 
 	public E putCountedValue(E value) {

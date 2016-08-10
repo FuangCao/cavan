@@ -27,6 +27,7 @@ import com.cavan.resource.JwaooToyActivity;
 @SuppressLint("HandlerLeak")
 public class MainActivity extends JwaooToyActivity implements OnClickListener, OnCheckedChangeListener {
 
+	private static final int EVENT_GPIO_POLL = 2;
 	private static final int EVENT_OTA_START = 3;
 	private static final int EVENT_OTA_FAILED = 4;
 	private static final int EVENT_OTA_SUCCESS = 5;
@@ -100,6 +101,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 				updateUI(false);
 				showScanActivity();
 				break;
+
+			case EVENT_GPIO_POLL:
+				if (mBleToy != null) {
+					CavanAndroid.logE("P11 = " + mBleToy.getGpioValue(1, 1));
+					// sendEmptyMessageDelayed(EVENT_GPIO_POLL, 500);
+				}
 			}
 		}
 	};
@@ -345,6 +352,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 				return false;
 			}
 		}
+
+		mHandler.sendEmptyMessage(EVENT_GPIO_POLL);
 
 		return true;
 	}

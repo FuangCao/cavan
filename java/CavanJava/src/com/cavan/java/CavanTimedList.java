@@ -5,7 +5,7 @@ import java.util.ArrayList;
 @SuppressWarnings("serial")
 public class CavanTimedList<E> extends ArrayList<CavanTimedNode<E>> {
 
-	protected long mTime;
+	protected double mFreq;
 	protected CavanTimedNode<E> mLastNode;
 
 	private long mOverTime;
@@ -18,13 +18,16 @@ public class CavanTimedList<E> extends ArrayList<CavanTimedNode<E>> {
 		mOverTime = time;
 	}
 
+	public double getFreq() {
+		return mFreq;
+	}
+
 	protected CavanTimedNode<E> removeTimedNode(int index) {
 		return remove(index);
 	}
 
-	protected void addTimedNode(CavanTimedNode<E> node) {
-		mLastNode = node;
-		mTime = node.getTime();
+	protected int removeTimedNodes(long timeNow, long overtime) {
+		int count = 0;
 
 		while (true) {
 			CavanTimedNode<E> first;
@@ -35,29 +38,47 @@ public class CavanTimedList<E> extends ArrayList<CavanTimedNode<E>> {
 				break;
 			}
 
-			if (mTime - first.getTime() < mOverTime) {
+			if (timeNow - first.getTime() < overtime) {
 				break;
 			}
 
 			removeTimedNode(0);
+			count++;
 		}
 
+		return count;
+	}
+
+	protected int removeOvertimeNodes(long timeNow) {
+		return removeTimedNodes(timeNow, mOverTime);
+	}
+
+	protected int removeOvertimeNodes() {
+		return removeTimedNodes(System.currentTimeMillis(), mOverTime);
+	}
+
+	protected void addTimedNode(CavanTimedNode<E> node) {
+		mLastNode = node;
+
+		removeOvertimeNodes(node.getTime());
 		add(node);
 	}
 
-	protected double calculateFreq() {
-		int last = size() - 1;
-
-		if (last > 0) {
+	protected double updateFreq() {
+		int size = size();
+		if (size > 1) {
+			int last = size - 1;
 			long time = get(last).getTime() - get(0).getTime();
 
 			try {
-				return 1000.0 * last / time;
+				mFreq = 1000.0 * last / time;
 			} catch (Exception e) {
-				return 0;
+				mFreq = 0;
 			}
+		} else if (size < 1) {
+			mFreq = 0;
 		}
 
-		return 0;
+		return mFreq;
 	}
 }

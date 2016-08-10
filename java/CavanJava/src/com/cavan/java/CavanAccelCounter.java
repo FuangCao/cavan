@@ -29,9 +29,9 @@ public class CavanAccelCounter {
 	}
 
 	public void setTimeMax(long time) {
-		mCounterX.setTimeMax(time);
-		mCounterY.setTimeMax(time);
-		mCounterZ.setTimeMax(time);
+		mCounterX.setOverTime(time);
+		mCounterY.setOverTime(time);
+		mCounterZ.setOverTime(time);
 	}
 
 	public CavanSquareWaveCounter getCounter() {

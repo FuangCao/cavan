@@ -8,6 +8,7 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanWaveView;
 import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
+import com.jwaoo.android.JwaooDepthDecoder;
 import com.jwaoo.android.JwaooDepthSquareWaveGenerator;
 import com.jwaoo.android.JwaooToySensor;
 
@@ -22,10 +23,16 @@ public class MainActivity extends JwaooToyActivity {
 	private CavanWaveView mWaveView7;
 	private CavanWaveView mWaveView8;
 
-	private JwaooDepthSquareWaveGenerator mGenerator1 = new JwaooDepthSquareWaveGenerator(10, 1000, 10000);
-	private JwaooDepthSquareWaveGenerator mGenerator2 = new JwaooDepthSquareWaveGenerator(10, 1000, 10000);
-	private JwaooDepthSquareWaveGenerator mGenerator3 = new JwaooDepthSquareWaveGenerator(10, 1000, 10000);
-	private JwaooDepthSquareWaveGenerator mGenerator4 = new JwaooDepthSquareWaveGenerator(10, 1000, 10000);
+	private JwaooDepthDecoder mDecoder = new JwaooDepthDecoder(10);
+	private Runnable mRunnableUpdateTitle = new Runnable() {
+
+		@Override
+		public void run() {
+			String text = String.format("depth = %4.2f, freq = %4.2f", mDecoder.getDepth(), mDecoder.getFreq());
+			// CavanAndroid.logE("freq = " + mDecoder.getFreq());
+			setTitle(text);
+		}
+	};
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -101,24 +108,30 @@ public class MainActivity extends JwaooToyActivity {
 				mSensor.putBytes(arg0);
 
 				double capacitys[] = mSensor.getCapacitys();
-				CavanAndroid.logE(String.format("capacity: [%7.2f, %7.2f, %7.2f, %7.2f]", capacitys[0], capacitys[1], capacitys[2], capacitys[3]));
+				// CavanAndroid.logE(String.format("capacity: [%7.2f, %7.2f, %7.2f, %7.2f]", capacitys[0], capacitys[1], capacitys[2], capacitys[3]));
+
+				mDecoder.putCapacityValue(capacitys);
+				JwaooDepthSquareWaveGenerator[] generators = mDecoder.getGenerators();
 
 				double value = capacitys[0];
 
 				mWaveView1.addValue(value);
-				mWaveView2.addValue(mGenerator1.putValue(value) ? 1 : 0);
+				mWaveView2.addValue(generators[0].getValue() ? 1 : 0);
 
 				value = capacitys[1];
 				mWaveView3.addValue(value);
-				mWaveView4.addValue(mGenerator2.putValue(value) ? 1 : 0);
+				mWaveView4.addValue(generators[0].getValue() ? 1 : 0);
 
 				value = capacitys[2];
 				mWaveView5.addValue(value);
-				mWaveView6.addValue(mGenerator3.putValue(value) ? 1 : 0);
+				mWaveView6.addValue(generators[0].getValue() ? 1 : 0);
 
 				value = capacitys[3];
 				mWaveView7.addValue(value);
-				mWaveView8.addValue(mGenerator4.putValue(value) ? 1 : 0);
+				mWaveView8.addValue(generators[0].getValue() ? 1 : 0);
+				// mWaveView8.addValue(mDecoder.getValue() ? 1 : 0);
+
+				runOnUiThread(mRunnableUpdateTitle);
 			}
 		};
 	}
