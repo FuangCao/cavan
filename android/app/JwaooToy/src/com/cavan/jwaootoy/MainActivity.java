@@ -23,11 +23,11 @@ import android.widget.Spinner;
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanProgressListener;
 import com.cavan.resource.JwaooToyActivity;
+import com.jwaoo.android.JwaooToySensor;
 
 @SuppressLint("HandlerLeak")
 public class MainActivity extends JwaooToyActivity implements OnClickListener, OnCheckedChangeListener {
 
-	private static final int EVENT_GPIO_POLL = 2;
 	private static final int EVENT_OTA_START = 3;
 	private static final int EVENT_OTA_FAILED = 4;
 	private static final int EVENT_OTA_SUCCESS = 5;
@@ -37,7 +37,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private static final int EVENT_CONNECTED = 9;
 	private static final int EVENT_DISCONNECTED = 10;
 
-	private int mFreq;
+	private double mFreq;
 	private double mDepth;
 	private boolean mOtaBusy;
 
@@ -90,7 +90,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 			case EVENT_FREQ_CHANGED:
 			case EVENT_DEPTH_CHANGED:
-				setTitle("Depth = " + mDepth + ", Freq = " + mFreq);
+				setTitle(String.format("depth = %3.2f, freq = %3.2f", mDepth, mFreq));
+				mProgressBar.setProgress((int) (mBleToy.getDepth() * 100 / JwaooToySensor.SENSOR_COUNT));
 				break;
 
 			case EVENT_CONNECTED:
@@ -101,12 +102,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 				updateUI(false);
 				showScanActivity();
 				break;
-
-			case EVENT_GPIO_POLL:
-				if (mBleToy != null) {
-					CavanAndroid.logE("P11 = " + mBleToy.getGpioValue(1, 1));
-					// sendEmptyMessageDelayed(EVENT_GPIO_POLL, 500);
-				}
 			}
 		}
 	};
@@ -352,8 +347,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 				return false;
 			}
 		}
-
-		mHandler.sendEmptyMessage(EVENT_GPIO_POLL);
 
 		return true;
 	}
