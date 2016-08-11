@@ -43,10 +43,6 @@ public class JwaooDepthDecoder extends CavanSquareWaveCounter {
 	}
 
 	public void setTimeMax(long time) {
-		if (time < TIME_MIN) {
-			time = TIME_MIN;
-		}
-
 		super.setOverTime(time);
 
 		for (int i = 0; i < JwaooToySensor.SENSOR_COUNT; i++) {
@@ -107,22 +103,19 @@ public class JwaooDepthDecoder extends CavanSquareWaveCounter {
 			sum += capacitys[i];
 		}
 
-		double freq = putFreqValue(sum);
-		if (freq > 0) {
-			setTimeMax((long) (2000 / freq));
+		if (putFreqValue(sum) > 0) {
+			setTimeMax(getCycle() * 2);
 		} else {
 			setTimeMax(TIME_MAX_VALUE);
 		}
 
-		int count = 0;
+		int count = 4;
 
-		for (int i = 0; i < JwaooToySensor.SENSOR_COUNT; i++) {
-			if (mGenerators[i].putValue(capacitys[i])) {
-				count = i + 1;
+		for (int i = JwaooToySensor.SENSOR_COUNT - 1; i >= 0; i--) {
+			if (!mGenerators[i].putValue(capacitys[i])) {
+				count = i;
 			}
 		}
-
-		// CavanAndroid.logE("count = " + count);
 
 		if (count > mCount || count <= 0) {
 			mPlugIn = true;
@@ -148,13 +141,11 @@ public class JwaooDepthDecoder extends CavanSquareWaveCounter {
 					mDepth = 0.0;
 				}
 			} else {
-				mDepth = 1.0;
+				mDepth = JwaooToySensor.SENSOR_COUNT;
 			}
 		}
 
 		mCount = count;
-
-		// CavanAndroid.logE("depth = " + mDepth);
 
 		return mDepth;
 	}

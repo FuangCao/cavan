@@ -14,6 +14,8 @@ import com.jwaoo.android.JwaooToySensor;
 
 public class MainActivity extends JwaooToyActivity {
 
+	private static int WAVE_ZOOM = 3;
+
 	private CavanWaveView mWaveView1;
 	private CavanWaveView mWaveView2;
 	private CavanWaveView mWaveView3;
@@ -22,6 +24,7 @@ public class MainActivity extends JwaooToyActivity {
 	private CavanWaveView mWaveView6;
 	private CavanWaveView mWaveView7;
 	private CavanWaveView mWaveView8;
+	private CavanWaveView mWaveView9;
 
 	private JwaooDepthDecoder mDecoder = new JwaooDepthDecoder(10);
 	private Runnable mRunnableUpdateTitle = new Runnable() {
@@ -43,39 +46,44 @@ public class MainActivity extends JwaooToyActivity {
 
 		mWaveView1 = (CavanWaveView) findViewById(R.id.waveView1);
 		mWaveView1.setValueRange(JwaooToySensor.CAPACITY_MIN, JwaooToySensor.CAPACITY_MAX);
-		mWaveView1.setZoom(3);
+		mWaveView1.setZoom(WAVE_ZOOM);
 
 		mWaveView2 = (CavanWaveView) findViewById(R.id.waveView2);
 		mWaveView2.setLineColor(Color.WHITE);
 		mWaveView2.setValueRange(0, 1);
-		mWaveView2.setZoom(3);
+		mWaveView2.setZoom(WAVE_ZOOM);
 
 		mWaveView3 = (CavanWaveView) findViewById(R.id.waveView3);
 		mWaveView3.setValueRange(JwaooToySensor.CAPACITY_MIN, JwaooToySensor.CAPACITY_MAX);
-		mWaveView3.setZoom(3);
+		mWaveView3.setZoom(WAVE_ZOOM);
 
 		mWaveView4 = (CavanWaveView) findViewById(R.id.waveView4);
 		mWaveView4.setLineColor(Color.WHITE);
 		mWaveView4.setValueRange(0, 1);
-		mWaveView4.setZoom(3);
+		mWaveView4.setZoom(WAVE_ZOOM);
 
 		mWaveView5 = (CavanWaveView) findViewById(R.id.waveView5);
 		mWaveView5.setValueRange(JwaooToySensor.CAPACITY_MIN, JwaooToySensor.CAPACITY_MAX);
-		mWaveView5.setZoom(3);
+		mWaveView5.setZoom(WAVE_ZOOM);
 
 		mWaveView6 = (CavanWaveView) findViewById(R.id.waveView6);
 		mWaveView6.setLineColor(Color.WHITE);
 		mWaveView6.setValueRange(0, 1);
-		mWaveView6.setZoom(3);
+		mWaveView6.setZoom(WAVE_ZOOM);
 
 		mWaveView7 = (CavanWaveView) findViewById(R.id.waveView7);
 		mWaveView7.setValueRange(JwaooToySensor.CAPACITY_MIN, JwaooToySensor.CAPACITY_MAX);
-		mWaveView7.setZoom(3);
+		mWaveView7.setZoom(WAVE_ZOOM);
 
 		mWaveView8 = (CavanWaveView) findViewById(R.id.waveView8);
 		mWaveView8.setLineColor(Color.WHITE);
 		mWaveView8.setValueRange(0, 1);
-		mWaveView8.setZoom(3);
+		mWaveView8.setZoom(WAVE_ZOOM);
+
+		mWaveView9 = (CavanWaveView) findViewById(R.id.waveView9);
+		mWaveView9.setLineColor(Color.GREEN);
+		mWaveView9.setValueRange(0, JwaooToySensor.SENSOR_COUNT);
+		mWaveView9.setZoom(WAVE_ZOOM);
 
 		showScanActivity();
 	}
@@ -120,16 +128,17 @@ public class MainActivity extends JwaooToyActivity {
 
 				value = capacitys[1];
 				mWaveView3.addValue(value);
-				mWaveView4.addValue(generators[0].getValue() ? 1 : 0);
+				mWaveView4.addValue(generators[1].getValue() ? 1 : 0);
 
 				value = capacitys[2];
 				mWaveView5.addValue(value);
-				mWaveView6.addValue(generators[0].getValue() ? 1 : 0);
+				mWaveView6.addValue(generators[2].getValue() ? 1 : 0);
 
 				value = capacitys[3];
 				mWaveView7.addValue(value);
-				mWaveView8.addValue(generators[0].getValue() ? 1 : 0);
-				// mWaveView8.addValue(mDecoder.getValue() ? 1 : 0);
+				mWaveView8.addValue(generators[3].getValue() ? 1 : 0);
+
+				mWaveView9.addValue(mDecoder.getDepth());
 
 				runOnUiThread(mRunnableUpdateTitle);
 			}

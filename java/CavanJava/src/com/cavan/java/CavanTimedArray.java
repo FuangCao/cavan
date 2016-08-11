@@ -6,7 +6,7 @@ import java.util.ArrayList;
 public class CavanTimedArray<E> extends ArrayList<CavanTimedNode<E>> {
 
 	protected double mFreq;
-	protected double mCycle;
+	protected long mCycle;
 	protected CavanTimedNode<E> mLastNode;
 
 	private long mOverTime;
@@ -23,7 +23,7 @@ public class CavanTimedArray<E> extends ArrayList<CavanTimedNode<E>> {
 		return mFreq;
 	}
 
-	public double getCycle() {
+	public long getCycle() {
 		return mCycle;
 	}
 
@@ -77,7 +77,7 @@ public class CavanTimedArray<E> extends ArrayList<CavanTimedNode<E>> {
 			long timeLast = get(count).getTime();
 			long timeNow = System.currentTimeMillis();
 
-			mCycle = ((double) (timeLast - timeFirst)) / count;
+			mCycle = (timeLast - timeFirst) / count;
 
 			if (timeNow - timeLast > mCycle) {
 				mFreq = 1000.0 * size / (timeNow - timeFirst);

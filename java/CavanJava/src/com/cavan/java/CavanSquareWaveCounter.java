@@ -25,6 +25,16 @@ public class CavanSquareWaveCounter extends CavanSquareWaveGenerator {
 	}
 
 	@Override
+	public double getFreq() {
+		return mFreqNodes.getFreq();
+	}
+
+	@Override
+	public long getCycle() {
+		return mFreqNodes.getCycle();
+	}
+
+	@Override
 	protected double updateFreq() {
 		mFreq = mFreqNodes.updateFreq();
 		return mFreq;

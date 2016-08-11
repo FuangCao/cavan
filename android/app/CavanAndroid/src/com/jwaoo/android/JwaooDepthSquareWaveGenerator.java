@@ -13,7 +13,7 @@ public class JwaooDepthSquareWaveGenerator extends CavanSquareWaveGenerator {
 	private double mPredictedMax = JwaooToySensor.CAPACITY_MIN;
 
 	private double mCapacity;
-	private double mCapacityRange;
+	private double mCapacityFuzz;
 	private double mCapacityMin = JwaooToySensor.CAPACITY_MIN;
 	private double mCapacityMax = JwaooToySensor.CAPACITY_MAX;
 	private CavanCountedArray<Integer> mCountedArrayMin = new CavanCountedArray<Integer>(500);
@@ -21,6 +21,11 @@ public class JwaooDepthSquareWaveGenerator extends CavanSquareWaveGenerator {
 
 	public JwaooDepthSquareWaveGenerator(double fuzz, long timeMin, long timeMax) {
 		super(fuzz, timeMin, timeMax);
+		mCapacityFuzz = fuzz / 2;
+	}
+
+	public void setCapacityFuzz(double fuzz) {
+		mCapacityFuzz = fuzz;
 	}
 
 	public void savePredictedMin() {
@@ -84,17 +89,8 @@ public class JwaooDepthSquareWaveGenerator extends CavanSquareWaveGenerator {
 			return;
 		}
 
-		if (mCapacityMin > mPredictedMin) {
-			mCapacityMin = mPredictedMin;
-		}
-
-		if (mCapacityMax < mPredictedMax) {
-			mCapacityMax = mPredictedMax;
-		}
-
-		mCapacityRange = mCapacityMax - mCapacityMin;
-		mThresholdLow = mCapacityMin + mCapacityRange / 4;
-		mThresholdHigh = (mCapacityMax + mCapacityMin) / 2; // mCapacityMax - mCapacityRange / 4;
+		mThresholdHigh = (mCapacityMax + mCapacityMin + mCapacityFuzz) / 2;
+		mThresholdLow = mThresholdHigh - mCapacityFuzz;
 	}
 
 	@Override
