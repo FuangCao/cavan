@@ -11,8 +11,12 @@ import android.app.PendingIntent;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 
@@ -46,13 +50,35 @@ public class RedPacketListenerService extends NotificationListenerService {
 		}
 	}
 
-	public File getNotifySoundFile() {
+	public File getRingtoneFile() {
 		File dir = Environment.getExternalStorageDirectory();
 		for (String extension : mSoundExtensions) {
 			File file = new File(dir, "CavanRedPacket." + extension);
 			if (file.isFile()) {
 				return file;
 			}
+		}
+
+		return null;
+	}
+
+	public Uri getRingtoneUri() {
+		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+		if (preferences != null) {
+			String value = preferences.getString(MainActivity.KEY_RED_PACKET_NOTIFY_RINGTONE, null);
+			if (value != null) {
+				Uri uri = Uri.parse(value);
+				Ringtone ringtone = RingtoneManager.getRingtone(this, uri);
+				if (ringtone != null) {
+					CavanAndroid.logE("ringtone: title = " + ringtone.getTitle(this));
+					return uri;
+				}
+			}
+		}
+
+		File file = getRingtoneFile();
+		if (file != null) {
+			return Uri.fromFile(file);
 		}
 
 		return null;
@@ -97,14 +123,14 @@ public class RedPacketListenerService extends NotificationListenerService {
 				builder.setContentIntent(PendingIntent.getActivity(this, 0, intent, 0));
 			}
 
-			File sound = getNotifySoundFile();
-			if (sound == null) {
+			Uri ringtone = getRingtoneUri();
+			if (ringtone == null) {
 				builder.setDefaults(Notification.DEFAULT_ALL);
 			} else {
-				CavanAndroid.logE("sound = " + sound);
+				CavanAndroid.logE("ringtone: uri = " + ringtone);
 
 				builder.setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE);
-				builder.setSound(Uri.fromFile(sound));
+				builder.setSound(ringtone);
 			}
 
 			mNotificationManager.notify((int) (timeNow / 1000), builder.build());

@@ -21,6 +21,7 @@
     <string name="cavan_red_packet_notify">曹福昂红包提醒</string>
     <string name="red_packet_notify">红包提醒</string>
     <string name="red_packet_notify_test">红包提醒测试</string>
+    <string name="red_packet_notify_ringtone">红包提示音</string>
     <string name="text_test">测试</string>
 
 </resources>

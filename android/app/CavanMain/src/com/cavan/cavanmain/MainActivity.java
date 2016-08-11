@@ -11,9 +11,11 @@ import java.util.Calendar;
 import android.app.Notification;
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
@@ -22,6 +24,7 @@ import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
+import android.preference.RingtonePreference;
 import android.view.Gravity;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
@@ -34,12 +37,13 @@ import com.cavan.cavanjni.CavanServicePreference;
 
 public class MainActivity extends PreferenceActivity implements OnPreferenceChangeListener {
 
-	private static final String KEY_IP_ADDRESS = "ip_address";
-	private static final String KEY_FLOAT_TIMER = "float_timer";
-	private static final String KEY_RED_PACKET_NOTIFY_TEST = "red_packet_notify_test";
-	private static final String KEY_TCP_DD = "tcp_dd";
-	private static final String KEY_FTP = "ftp";
-	private static final String KEY_WEB_PROXY = "web_proxy";
+	public static final String KEY_IP_ADDRESS = "ip_address";
+	public static final String KEY_FLOAT_TIMER = "float_timer";
+	public static final String KEY_RED_PACKET_NOTIFY_TEST = "red_packet_notify_test";
+	public static final String KEY_RED_PACKET_NOTIFY_RINGTONE = "red_packet_notify_ringtone";
+	public static final String KEY_TCP_DD = "tcp_dd";
+	public static final String KEY_FTP = "ftp";
+	public static final String KEY_WEB_PROXY = "web_proxy";
 
 	private static int sLastSecond;
 	private static TextView sTimeView;
@@ -69,6 +73,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private Preference mPreferenceIpAddress;
 	private CheckBoxPreference mPreferenceFloatTime;
 	private EditTextPreference mPreferenceRedPacketNotifyTest;
+	private RingtonePreference mPreferenceRedPacketNotifyRingtone;
 	private CavanServicePreference mPreferenceTcpDd;
 	private CavanServicePreference mPreferenceFtp;
 	private CavanServicePreference mPreferenceWebProxy;
@@ -80,12 +85,12 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		addPreferencesFromResource(R.xml.cavan_service);
 
 		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
-		mPreferenceFloatTime = (CheckBoxPreference) findPreference(KEY_FLOAT_TIMER);
-		mPreferenceRedPacketNotifyTest = (EditTextPreference) findPreference(KEY_RED_PACKET_NOTIFY_TEST);
-		mPreferenceTcpDd = (CavanServicePreference) findPreference(KEY_TCP_DD);
-		mPreferenceFtp = (CavanServicePreference) findPreference(KEY_FTP);
-		mPreferenceWebProxy = (CavanServicePreference) findPreference(KEY_WEB_PROXY);
 
+		mPreferenceFloatTime = (CheckBoxPreference) findPreference(KEY_FLOAT_TIMER);
+		setDesktopFloatTimerEnable(mPreferenceFloatTime.isChecked());
+		mPreferenceFloatTime.setOnPreferenceChangeListener(this);
+
+		mPreferenceRedPacketNotifyTest = (EditTextPreference) findPreference(KEY_RED_PACKET_NOTIFY_TEST);
 		String text = mPreferenceRedPacketNotifyTest.getText();
 		if (text == null || text.isEmpty()) {
 			mPreferenceRedPacketNotifyTest.setText("支付宝红包口令: 11223344");
@@ -94,8 +99,18 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceRedPacketNotifyTest.setPositiveButtonText(R.string.text_test);
 		mPreferenceRedPacketNotifyTest.setOnPreferenceChangeListener(this);
 
-		setDesktopFloatTimerEnable(mPreferenceFloatTime.isChecked());
-		mPreferenceFloatTime.setOnPreferenceChangeListener(this);
+		mPreferenceRedPacketNotifyRingtone = (RingtonePreference) findPreference(KEY_RED_PACKET_NOTIFY_RINGTONE);
+		text = mPreferenceRedPacketNotifyRingtone.getPreferenceManager().getSharedPreferences().getString(KEY_RED_PACKET_NOTIFY_RINGTONE, null);
+		if (text != null) {
+			updateRingtoneSummary(text);
+		}
+
+		mPreferenceRedPacketNotifyRingtone.setRingtoneType(RingtoneManager.TYPE_NOTIFICATION);
+		mPreferenceRedPacketNotifyRingtone.setOnPreferenceChangeListener(this);
+
+		mPreferenceTcpDd = (CavanServicePreference) findPreference(KEY_TCP_DD);
+		mPreferenceFtp = (CavanServicePreference) findPreference(KEY_FTP);
+		mPreferenceWebProxy = (CavanServicePreference) findPreference(KEY_WEB_PROXY);
 
 		updateIpAddressStatus();
 
@@ -238,6 +253,24 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	}
 
 	@SuppressWarnings("deprecation")
+	public void updateRingtoneSummary(String uri) {
+		String summary;
+
+		Ringtone ringtone = RingtoneManager.getRingtone(this, Uri.parse(uri));
+		if (ringtone == null) {
+			getPreferenceManager().getSharedPreferences().edit().remove(KEY_RED_PACKET_NOTIFY_RINGTONE);
+			summary = null;
+		} else {
+			summary = ringtone.getTitle(this);
+			if (summary == null) {
+				summary = uri;
+			}
+		}
+
+		mPreferenceRedPacketNotifyRingtone.setSummary(summary);
+	}
+
+	@SuppressWarnings("deprecation")
 	@Override
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
 		if (preference == mPreferenceIpAddress) {
@@ -264,9 +297,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 				manager.notify(RedPacketListenerService.NOTIFY_TEST, builder.build());
 			}
-			return true;
+		} else if (preference == mPreferenceRedPacketNotifyRingtone) {
+			updateRingtoneSummary((String) object);
 		}
 
-		return false;
+		return true;
 	}
 }
