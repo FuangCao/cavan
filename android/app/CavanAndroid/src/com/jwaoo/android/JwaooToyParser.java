@@ -10,8 +10,8 @@ public class JwaooToyParser {
 	private CavanSquareWaveCounter mCounterAccel;
 	private JwaooDepthDecoder mDecoder;
 
-	public JwaooToyParser(double accelFuzz, double depthFuzz, long timeMin, long timeMax) {
-		mCounterAccel = new CavanSquareWaveCounter(accelFuzz, timeMin, timeMax);
+	public JwaooToyParser(double accelFuzz, double depthFuzz, long timeMin, long overtimeValue, long overtimeFreq) {
+		mCounterAccel = new CavanSquareWaveCounter(accelFuzz, timeMin, overtimeValue, overtimeFreq);
 		mDecoder = new JwaooDepthDecoder(depthFuzz);
 	}
 

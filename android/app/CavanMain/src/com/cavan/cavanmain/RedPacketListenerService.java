@@ -161,33 +161,41 @@ public class RedPacketListenerService extends NotificationListenerService {
 
 	@Override
 	public void onNotificationPosted(StatusBarNotification sbn) {
-		String pkgName = sbn.getPackageName();
-		if (getPackageName().equals(pkgName) && sbn.getId() != NOTIFY_TEST) {
-			return;
-		}
-
-		Notification notification = sbn.getNotification();
-		CharSequence content = notification.tickerText;
-
-		if (content == null) {
-			content = notification.extras.getCharSequence(Notification.EXTRA_TEXT);
-			if (content == null) {
-				return;
-			}
-		}
-
-		// CavanAndroid.logE(content.toString());
-
 		String name;
 		String code;
-		String[] contents = content.toString().split("\\s*:\\s*", 2);
 
-		if (contents.length < 2) {
-			name = "支付宝红包口令";
-			code = contents[0].trim();
+		String pkgName = sbn.getPackageName();
+		if (getPackageName().equals(pkgName)) {
+			if (sbn.getId() != NOTIFY_TEST) {
+				return;
+			}
+
+			mCodeMap.clear();
+
+			name = null;
+			code = sbn.getNotification().tickerText.toString();
 		} else {
-			name = contents[0].trim();
-			code = contents[1].trim();
+			Notification notification = sbn.getNotification();
+			CharSequence content = notification.tickerText;
+
+			if (content == null) {
+				content = notification.extras.getCharSequence(Notification.EXTRA_TEXT);
+				if (content == null) {
+					return;
+				}
+			}
+
+			// CavanAndroid.logE(content.toString());
+
+			String[] contents = content.toString().split("\\s*:\\s*", 2);
+
+			if (contents.length < 2) {
+				name = "支付宝红包口令";
+				code = contents[0].trim();
+			} else {
+				name = contents[0].trim();
+				code = contents[1].trim();
+			}
 		}
 
 		for (Pattern pattern : mPatterns) {

@@ -5,11 +5,11 @@ public class CavanSquareWaveCounter extends CavanSquareWaveGenerator {
 
 	private long mCount;
 	private boolean mLastValue;
-	private CavanTimedList<Double> mTimedList;
+	private CavanTimedArray<Double> mFreqNodes;
 
-	public CavanSquareWaveCounter(double fuzz, long timeMin, long timeMax) {
-		super(fuzz, timeMin, timeMax);
-		mTimedList = new CavanTimedList<Double>(timeMax);
+	public CavanSquareWaveCounter(double fuzz, long timeMin, long overtimeValue, long overtimeFreq) {
+		super(fuzz, timeMin, overtimeValue);
+		mFreqNodes = new CavanTimedArray<Double>(overtimeFreq);
 	}
 
 	public long getCount() {
@@ -20,15 +20,13 @@ public class CavanSquareWaveCounter extends CavanSquareWaveGenerator {
 		mCount = count;
 	}
 
-	@Override
-	public void setOverTime(long time) {
-		mTimedList.setOverTime(time);
-		super.setOverTime(time);
+	public void setFreqOverTime(long time) {
+		mFreqNodes.setOverTime(time);
 	}
 
 	@Override
 	protected double updateFreq() {
-		mFreq = mTimedList.updateFreq();
+		mFreq = mFreqNodes.updateFreq();
 		return mFreq;
 	}
 
@@ -36,10 +34,10 @@ public class CavanSquareWaveCounter extends CavanSquareWaveGenerator {
 		boolean result = putValue(value);
 
 		if (result && mLastValue == false) {
-			mTimedList.addTimedNode(mLastNode);
+			mFreqNodes.addTimedNode(mLastNode);
 			updateFreq();
 			mCount++;
-		} else if (mTimedList.removeOvertimeNodes() > 0) {
+		} else if (mFreqNodes.removeOvertimeNodes() > 0) {
 			updateFreq();
 		}
 

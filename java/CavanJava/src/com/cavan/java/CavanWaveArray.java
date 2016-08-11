@@ -1,13 +1,13 @@
 package com.cavan.java;
 
 @SuppressWarnings("serial")
-public class CavanWaveList extends CavanTimedList<Double> {
+public class CavanWaveArray extends CavanTimedArray<Double> {
 
 	private boolean mNeedFind = true;
 	protected CavanTimedNode<Double> mMinNode;
 	protected CavanTimedNode<Double> mMaxNode;
 
-	public CavanWaveList(long overtime) {
+	public CavanWaveArray(long overtime) {
 		super(overtime);
 	}
 

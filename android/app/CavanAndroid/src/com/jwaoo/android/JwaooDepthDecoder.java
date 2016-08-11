@@ -6,7 +6,8 @@ import com.cavan.java.CavanSquareWaveCounter;
 public class JwaooDepthDecoder extends CavanSquareWaveCounter {
 
 	public static final long TIME_MIN = 800;
-	public static final long TIME_MAX = 2000;
+	public static final long TIME_MAX_VALUE = 2000;
+	public static final long TIME_MAX_FREQ = 5000;
 
 	private int mCount;
 	private double mDepth;
@@ -16,10 +17,10 @@ public class JwaooDepthDecoder extends CavanSquareWaveCounter {
 	private JwaooDepthSquareWaveGenerator mGenerators[] = new JwaooDepthSquareWaveGenerator[JwaooToySensor.SENSOR_COUNT];
 
 	public JwaooDepthDecoder(double fuzz) {
-		super(fuzz, TIME_MIN, TIME_MAX);
+		super(fuzz, TIME_MIN, TIME_MAX_VALUE, TIME_MAX_FREQ);
 
 		for (int i = 0; i < JwaooToySensor.SENSOR_COUNT; i++) {
-			mGenerators[i] = new JwaooDepthSquareWaveGenerator(fuzz, TIME_MIN, TIME_MAX);
+			mGenerators[i] = new JwaooDepthSquareWaveGenerator(fuzz, TIME_MIN, TIME_MAX_VALUE);
 		}
 	}
 
@@ -110,7 +111,7 @@ public class JwaooDepthDecoder extends CavanSquareWaveCounter {
 		if (freq > 0) {
 			setTimeMax((long) (2000 / freq));
 		} else {
-			setTimeMax(TIME_MAX);
+			setTimeMax(TIME_MAX_VALUE);
 		}
 
 		int count = 0;

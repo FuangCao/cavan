@@ -8,10 +8,10 @@ public class CavanAccelCounter {
 	private CavanSquareWaveCounter mCounterZ;
 	private CavanSquareWaveCounter mCounterBest;
 
-	public CavanAccelCounter(double fuzz, long timeMin, long timeMax) {
-		mCounterX = new CavanSquareWaveCounter(fuzz, timeMin, timeMax);
-		mCounterY = new CavanSquareWaveCounter(fuzz, timeMin, timeMax);
-		mCounterZ = new CavanSquareWaveCounter(fuzz, timeMin, timeMax);
+	public CavanAccelCounter(double fuzz, long timeMin, long overtimeValue, long overtimeFreq) {
+		mCounterX = new CavanSquareWaveCounter(fuzz, timeMin, overtimeValue, overtimeFreq);
+		mCounterY = new CavanSquareWaveCounter(fuzz, timeMin, overtimeValue, overtimeFreq);
+		mCounterZ = new CavanSquareWaveCounter(fuzz, timeMin, overtimeValue, overtimeFreq);
 
 		mCounterBest = mCounterX;
 	}

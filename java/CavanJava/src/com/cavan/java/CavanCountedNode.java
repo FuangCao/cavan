@@ -6,8 +6,7 @@ public class CavanCountedNode<E> {
 	private int mCount;
 
 	public CavanCountedNode(E value) {
-		mCount = 0;
-		mValue = value;
+		setValue(value);
 	}
 
 	public E getValue() {
@@ -68,5 +67,13 @@ public class CavanCountedNode<E> {
 
 	public boolean isGreaterThen(CavanCountedNode<E> node) {
 		return mCount > node.getCount();
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder(64);
+		builder.append("count = " + mCount);
+		builder.append(", value = " + mValue);
+		return builder.toString();
 	}
 }

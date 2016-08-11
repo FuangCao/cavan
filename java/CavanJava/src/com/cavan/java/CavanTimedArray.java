@@ -3,14 +3,15 @@ package com.cavan.java;
 import java.util.ArrayList;
 
 @SuppressWarnings("serial")
-public class CavanTimedList<E> extends ArrayList<CavanTimedNode<E>> {
+public class CavanTimedArray<E> extends ArrayList<CavanTimedNode<E>> {
 
 	protected double mFreq;
+	protected double mCycle;
 	protected CavanTimedNode<E> mLastNode;
 
 	private long mOverTime;
 
-	public CavanTimedList(long overtime) {
+	public CavanTimedArray(long overtime) {
 		mOverTime = overtime;
 	}
 
@@ -20,6 +21,10 @@ public class CavanTimedList<E> extends ArrayList<CavanTimedNode<E>> {
 
 	public double getFreq() {
 		return mFreq;
+	}
+
+	public double getCycle() {
+		return mCycle;
 	}
 
 	protected CavanTimedNode<E> removeTimedNode(int index) {
@@ -67,13 +72,17 @@ public class CavanTimedList<E> extends ArrayList<CavanTimedNode<E>> {
 	protected double updateFreq() {
 		int size = size();
 		if (size > 1) {
-			int last = size - 1;
-			long time = get(last).getTime() - get(0).getTime();
+			int count = size - 1;
+			long timeFirst = get(0).getTime();
+			long timeLast = get(count).getTime();
+			long timeNow = System.currentTimeMillis();
 
-			try {
-				mFreq = 1000.0 * last / time;
-			} catch (Exception e) {
-				mFreq = 0;
+			mCycle = ((double) (timeLast - timeFirst)) / count;
+
+			if (timeNow - timeLast > mCycle) {
+				mFreq = 1000.0 * size / (timeNow - timeFirst);
+			} else {
+				mFreq = 1000.0 / mCycle;
 			}
 		} else if (size < 1) {
 			mFreq = 0;

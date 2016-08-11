@@ -1,7 +1,7 @@
 package com.cavan.java;
 
 @SuppressWarnings("serial")
-public class CavanSquareWaveGenerator extends CavanWaveList {
+public class CavanSquareWaveGenerator extends CavanWaveArray {
 
 	public final double DEFAULT_THRESHOLD = 0.25;
 

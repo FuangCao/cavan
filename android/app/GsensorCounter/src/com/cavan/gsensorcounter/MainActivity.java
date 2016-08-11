@@ -16,7 +16,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
 	private long mCount;
 	private double mFreq;
-	private CavanAccelCounter mCounter = new CavanAccelCounter(2.0, 1000, 3000);
+	private CavanAccelCounter mCounter = new CavanAccelCounter(2.0, 1000, 2000, 5000);
 
 	private CavanWaveView mWaveView1;
 	private CavanWaveView mWaveView2;

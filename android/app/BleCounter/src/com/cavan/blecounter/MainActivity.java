@@ -24,8 +24,8 @@ public class MainActivity extends JwaooToyActivity {
 
 	private int mCount;
 	private double mFreq;
-	private CavanSquareWaveCounter mCounterCapacity = new CavanSquareWaveCounter(5, 1000, 3000);
-	private CavanSquareWaveCounter mCounterAccel = new CavanSquareWaveCounter(2.0, 1000, 3000);
+	private CavanSquareWaveCounter mCounterCapacity = new CavanSquareWaveCounter(5, 1000, 2000, 5000);
+	private CavanSquareWaveCounter mCounterAccel = new CavanSquareWaveCounter(2.0, 1000, 2000, 5000);
 	private Handler mHandler = new Handler() {
 
 		@Override
