@@ -31,10 +31,10 @@ public class RedPacketListenerService extends NotificationListenerService {
 	};
 
 	public static final Pattern[] mPatterns = {
-		Pattern.compile("支付宝.*红包.*\\D*(\\d{8})\\D*"),
-		Pattern.compile("支付宝.*口令.*\\D*(\\d{8})\\D*"),
-		Pattern.compile("红包\\s*[:：]?\\s*(\\d{8})\\D*"),
-		Pattern.compile("口令\\s*[:：]?\\s*(\\d{8})\\D*"),
+		Pattern.compile("支付宝.*红包\\D*(\\d+)"),
+		Pattern.compile("支付宝.*口令\\D*(\\d+)"),
+		Pattern.compile("红包\\s*[:：]?\\s*(\\d+)"),
+		Pattern.compile("口令\\s*[:：]?\\s*(\\d+)"),
 	};
 
 	private ClipboardManager mClipboardManager;
