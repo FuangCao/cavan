@@ -8,11 +8,16 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.util.Calendar;
 
+import android.app.Notification;
+import android.app.Notification.Builder;
+import android.app.NotificationManager;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
+import android.preference.EditTextPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
@@ -31,6 +36,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 	private static final String KEY_IP_ADDRESS = "ip_address";
 	private static final String KEY_FLOAT_TIMER = "float_timer";
+	private static final String KEY_RED_PACKET_NOTIFY_TEST = "red_packet_notify_test";
 	private static final String KEY_TCP_DD = "tcp_dd";
 	private static final String KEY_FTP = "ftp";
 	private static final String KEY_WEB_PROXY = "web_proxy";
@@ -62,6 +68,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private File mFileBin;
 	private Preference mPreferenceIpAddress;
 	private CheckBoxPreference mPreferenceFloatTime;
+	private EditTextPreference mPreferenceRedPacketNotifyTest;
 	private CavanServicePreference mPreferenceTcpDd;
 	private CavanServicePreference mPreferenceFtp;
 	private CavanServicePreference mPreferenceWebProxy;
@@ -74,11 +81,20 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
 		mPreferenceFloatTime = (CheckBoxPreference) findPreference(KEY_FLOAT_TIMER);
+		mPreferenceRedPacketNotifyTest = (EditTextPreference) findPreference(KEY_RED_PACKET_NOTIFY_TEST);
 		mPreferenceTcpDd = (CavanServicePreference) findPreference(KEY_TCP_DD);
 		mPreferenceFtp = (CavanServicePreference) findPreference(KEY_FTP);
 		mPreferenceWebProxy = (CavanServicePreference) findPreference(KEY_WEB_PROXY);
 
-		mPreferenceFloatTime.setChecked(sTimeView != null);
+		String text = mPreferenceRedPacketNotifyTest.getText();
+		if (text == null || text.isEmpty()) {
+			mPreferenceRedPacketNotifyTest.setText("支付宝红包口令: 11223344");
+		}
+
+		mPreferenceRedPacketNotifyTest.setPositiveButtonText(R.string.text_test);
+		mPreferenceRedPacketNotifyTest.setOnPreferenceChangeListener(this);
+
+		setDesktopFloatTimerEnable(mPreferenceFloatTime.isChecked());
 		mPreferenceFloatTime.setOnPreferenceChangeListener(this);
 
 		updateIpAddressStatus();
@@ -235,6 +251,20 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public boolean onPreferenceChange(Preference preference, Object object) {
 		if (preference == mPreferenceFloatTime) {
 			return setDesktopFloatTimerEnable((boolean) object);
+		} else if (preference == mPreferenceRedPacketNotifyTest) {
+			NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+			if (manager != null) {
+				Builder builder = new Builder(this)
+					.setSmallIcon(R.drawable.ic_launcher)
+					.setDefaults(Notification.DEFAULT_SOUND)
+					.setAutoCancel(true)
+					.setTicker((CharSequence) object)
+					.setContentTitle("红包提醒测试")
+					.setContentText((CharSequence) object);
+
+				manager.notify(RedPacketListenerService.NOTIFY_TEST, builder.build());
+			}
+			return true;
 		}
 
 		return false;

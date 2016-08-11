@@ -18,7 +18,9 @@ import android.service.notification.StatusBarNotification;
 
 import com.cavan.android.CavanAndroid;
 
-public class CavanRedPacketListenerService extends NotificationListenerService {
+public class RedPacketListenerService extends NotificationListenerService {
+
+	public static final int NOTIFY_TEST = 0;
 
 	public static String[] mSoundExtensions = {
 		"m4a", "ogg", "wav", "mp3", "ac3", "wma"
@@ -61,13 +63,14 @@ public class CavanRedPacketListenerService extends NotificationListenerService {
 
 		long timeNow = System.currentTimeMillis();
 		for (CharSequence key : mCodeMap.keySet()) {
-			if (timeNow - mCodeMap.get(key) > 86400000) {
+			if (timeNow - mCodeMap.get(key) > 3600000) {
 				mCodeMap.remove(key);
 			}
 		}
 
 		Long time = mCodeMap.get(code);
 		if (time != null) {
+			CavanAndroid.logE("skip time = " + time);
 			return;
 		}
 
@@ -133,7 +136,7 @@ public class CavanRedPacketListenerService extends NotificationListenerService {
 	@Override
 	public void onNotificationPosted(StatusBarNotification sbn) {
 		String pkgName = sbn.getPackageName();
-		if (getPackageName().equals(pkgName)) {
+		if (getPackageName().equals(pkgName) && sbn.getId() != NOTIFY_TEST) {
 			return;
 		}
 
