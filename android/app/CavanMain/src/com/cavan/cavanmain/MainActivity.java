@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.util.Calendar;
 
-import android.app.Notification;
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
 import android.graphics.Color;
@@ -289,7 +288,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			if (manager != null) {
 				Builder builder = new Builder(this)
 					.setSmallIcon(R.drawable.ic_launcher)
-					.setDefaults(Notification.DEFAULT_SOUND)
 					.setAutoCancel(true)
 					.setTicker((CharSequence) object)
 					.setContentTitle("红包提醒测试")
