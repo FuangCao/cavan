@@ -1,7 +1,11 @@
 package com.cavan.android;
 
 import android.app.KeyguardManager;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.KeyguardManager.KeyguardLock;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.os.Looper;
 import android.os.PowerManager;
@@ -21,7 +25,13 @@ public class CavanAndroid extends CavanJava {
 	private static final Object sToastLock = new Object();
 
 	private static WakeLock sWakeLock;
+	private static PowerManager sPowerManager;
+
 	private static KeyguardLock sKeyguardLock;
+	private static KeyguardManager sKeyguardManager;
+
+	private static ClipboardManager sClipboardManager;
+	private static NotificationManager sNotificationManager;
 
 	public static void logE(String message) {
 		Log.e(TAG, message);
@@ -143,18 +153,13 @@ public class CavanAndroid extends CavanJava {
 		return Looper.myLooper() != Looper.getMainLooper();
 	}
 
-	public static boolean setLockScreenEnable(Context context, boolean enable) {
+	public static boolean setLockScreenEnable(KeyguardManager manager, boolean enable) {
 		if (enable) {
 			if (sKeyguardLock != null) {
 				sKeyguardLock.reenableKeyguard();
 			}
 		} else {
 			if (sKeyguardLock == null) {
-				KeyguardManager manager = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
-				if (manager == null) {
-					return false;
-				}
-
 				sKeyguardLock = manager.newKeyguardLock(CavanAndroid.class.getName());
 				if (sKeyguardLock == null) {
 					return false;
@@ -167,26 +172,93 @@ public class CavanAndroid extends CavanJava {
 		return true;
 	}
 
-	public static boolean setSuspendEnable(Context context, boolean enable) {
+	public static boolean setLockScreenEnable(Context context, boolean enable) {
+		if (sKeyguardManager == null) {
+			sKeyguardManager = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+			if (sKeyguardManager == null) {
+				return false;
+			}
+		}
+
+		return setLockScreenEnable(sKeyguardManager, enable);
+	}
+
+	public static boolean setSuspendEnable(PowerManager manager, boolean enable, long timeout) {
 		if (enable) {
-			if (sWakeLock != null) {
+			if (sWakeLock != null && sWakeLock.isHeld()) {
 				sWakeLock.release();
 			}
 		} else {
 			if (sWakeLock == null) {
-				PowerManager manager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-				if (manager == null) {
-					return false;
-				}
-
-				sWakeLock = manager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_BRIGHT_WAKE_LOCK, CavanAndroid.class.getName());
+				sWakeLock = manager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.FULL_WAKE_LOCK, CavanAndroid.class.getName());
 				if (sWakeLock == null) {
 					return false;
 				}
 			}
 
-			sWakeLock.acquire();
+			if (timeout > 0) {
+				sWakeLock.acquire(timeout);
+			} else {
+				sWakeLock.acquire();
+			}
 		}
+
+		return true;
+	}
+
+	public static boolean setSuspendEnable(PowerManager manager, boolean enable) {
+		return setSuspendEnable(manager, enable, 0);
+	}
+
+	public static boolean setSuspendEnable(Context context, boolean enable, long timeout) {
+		if (sPowerManager == null) {
+			sPowerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+			if (sPowerManager == null) {
+				return false;
+			}
+		}
+
+		return setSuspendEnable(sPowerManager, enable, timeout);
+	}
+
+	public static boolean setSuspendEnable(Context context, boolean enable) {
+		return setSuspendEnable(context, enable, 0);
+	}
+
+	public static void postClipboardText(ClipboardManager manager, CharSequence label, CharSequence text) {
+		manager.setPrimaryClip(ClipData.newPlainText(label, text));
+	}
+
+	public static void postClipboardText(ClipboardManager manager, CharSequence text) {
+		postClipboardText(manager, "cavan", text);
+	}
+
+	public static boolean postClipboardText(Context context, CharSequence label, CharSequence text) {
+		if (sClipboardManager == null) {
+			sClipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+			if (sClipboardManager == null) {
+				return false;
+			}
+		}
+
+		postClipboardText(sClipboardManager, label, text);
+
+		return true;
+	}
+
+	public static boolean postClipboardText(Context context, CharSequence text) {
+		return postClipboardText(context, "cavan", text);
+	}
+
+	public static boolean sendNotification(Context context, int id, Notification notification) {
+		if (sNotificationManager == null) {
+			sNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+			if (sNotificationManager == null) {
+				return false;
+			}
+		}
+
+		sNotificationManager.notify(id, notification);
 
 		return true;
 	}

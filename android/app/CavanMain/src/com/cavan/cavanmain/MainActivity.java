@@ -286,12 +286,14 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
 			NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 			if (manager != null) {
+				String content = "CFA8888" + ": " + object;
+
 				Builder builder = new Builder(this)
 					.setSmallIcon(R.drawable.ic_launcher)
 					.setAutoCancel(true)
-					.setTicker((CharSequence) object)
 					.setContentTitle("红包提醒测试")
-					.setContentText((CharSequence) object);
+					.setTicker(content)
+					.setContentText(content);
 
 				manager.notify(RedPacketListenerService.NOTIFY_TEST, builder.build());
 			}

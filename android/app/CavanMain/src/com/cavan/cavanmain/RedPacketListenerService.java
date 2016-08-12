@@ -19,6 +19,8 @@ import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
@@ -53,6 +55,51 @@ public class RedPacketListenerService extends NotificationListenerService {
 	private ClipboardManager mClipboardManager;
 	private NotificationManager mNotificationManager;
 	private HashMap<CharSequence, Long> mCodeMap = new HashMap<CharSequence, Long>();
+	private Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			StatusBarNotification sbn = (StatusBarNotification) msg.obj;
+
+			String pkgName = sbn.getPackageName();
+			if (getPackageName().equals(pkgName)) {
+				if (sbn.getId() != NOTIFY_TEST) {
+					return;
+				}
+			}
+
+			Notification notification = sbn.getNotification();
+			CharSequence text = notification.tickerText;
+
+			if (text == null) {
+				text = notification.extras.getCharSequence(Notification.EXTRA_TEXT);
+				if (text == null) {
+					return;
+				}
+			}
+
+			String content = text.toString();
+
+			CavanAndroid.logE("================================================================================");
+			CavanAndroid.logE(content);
+
+			String name;
+			String message;
+			String[] contents = content.split(":", 2);
+
+			if (contents.length < 2) {
+				name = "支付宝红包口令";
+				message = content.trim();
+			} else {
+				name = contents[0].trim();
+				message = contents[1].trim();
+			}
+
+			for (String code : getRedPacketCode(message)) {
+				sendRedPacketNotify(name, code);
+			}
+		}
+	};
 
 	// ================================================================================
 
@@ -174,11 +221,13 @@ public class RedPacketListenerService extends NotificationListenerService {
 	}
 
 	public void sendRedPacketNotify(String name, String code) {
+		CavanAndroid.setSuspendEnable(this, false, 5000);
+
 		CavanAndroid.logE("支付宝红包口令: " + code);
 
 		long timeNow = System.currentTimeMillis();
 		for (CharSequence key : mCodeMap.keySet()) {
-			if (timeNow - mCodeMap.get(key) > 600000) {
+			if (timeNow - mCodeMap.get(key) > 3600000) {
 				mCodeMap.remove(key);
 			}
 		}
@@ -195,8 +244,6 @@ public class RedPacketListenerService extends NotificationListenerService {
 		startAlipayActivity(this);
 
 		if (mNotificationManager != null) {
-			int id = (int) (timeNow & 0x7FFFFFFF);
-
 			Notification.Builder builder = new Notification.Builder(this)
 				.setSmallIcon(R.drawable.ic_launcher)
 				.setTicker("支付宝红包口令: " + code)
@@ -205,7 +252,7 @@ public class RedPacketListenerService extends NotificationListenerService {
 
 			Intent intent = new Intent(this, RedPacketBroadcastReceiver.class);
 			intent.putExtra("code", code);
-			builder.setContentIntent(PendingIntent.getBroadcast(this, id, intent, PendingIntent.FLAG_UPDATE_CURRENT));
+			builder.setContentIntent(PendingIntent.getBroadcast(this, (int) (timeNow & 0x7FFFFFFF), intent, PendingIntent.FLAG_UPDATE_CURRENT));
 
 			Uri ringtone = getRingtoneUri();
 			if (ringtone == null) {
@@ -217,7 +264,7 @@ public class RedPacketListenerService extends NotificationListenerService {
 				builder.setSound(ringtone);
 			}
 
-			mNotificationManager.notify(id, builder.build());
+			mNotificationManager.notify(code, 0, builder.build());
 		}
 	}
 
@@ -233,53 +280,16 @@ public class RedPacketListenerService extends NotificationListenerService {
 
 	@Override
 	public void onNotificationPosted(StatusBarNotification sbn) {
-		String name;
-		String content;
-
-		String pkgName = sbn.getPackageName();
-		if (getPackageName().equals(pkgName)) {
-			if (sbn.getId() != NOTIFY_TEST) {
-				return;
-			}
-
-			mCodeMap.clear();
-
-			name = "支付宝测试口令";
-			content = sbn.getNotification().tickerText.toString();
-		} else {
-			Notification notification = sbn.getNotification();
-			CharSequence text = notification.tickerText;
-
-			if (text == null) {
-				text = notification.extras.getCharSequence(Notification.EXTRA_TEXT);
-				if (text == null) {
-					return;
-				}
-			}
-
-			// CavanAndroid.logE(content.toString());
-
-			String[] contents = text.toString().split("\\s*:\\s*", 2);
-
-			if (contents.length < 2) {
-				name = "支付宝红包口令";
-				content = contents[0].trim();
-			} else {
-				name = contents[0].trim();
-				content = contents[1].trim();
-			}
-		}
-
-		for (String code : getRedPacketCode(content)) {
-			sendRedPacketNotify(name, code);
-		}
+		mHandler.obtainMessage(0, sbn).sendToTarget();
 	}
 
 	@Override
 	public void onNotificationRemoved(StatusBarNotification sbn) {
 		if (getPackageName().equals(sbn.getPackageName())) {
 			CharSequence code = sbn.getNotification().extras.getCharSequence(Notification.EXTRA_TEXT);
-			CavanAndroid.logE("onNotificationRemoved: " + code);
+			if (code != null) {
+				mCodeMap.remove(code);
+			}
 		}
 	}
 }
