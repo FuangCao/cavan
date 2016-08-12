@@ -40,12 +40,13 @@ public class RedPacketListenerService extends NotificationListenerService {
 		Pattern.compile("支付宝.*口令\\D*(\\d+)"),
 		Pattern.compile("红包\\s*[:：]?\\s*(\\d+)"),
 		Pattern.compile("口令\\s*[:：]?\\s*(\\d+)"),
+		Pattern.compile("[:：]\\s*(\\d+)"),
 		Pattern.compile("(\\d+)\\s*$"),
 	};
 
 	public static final Pattern[] mWordPatterns = {
-		Pattern.compile("红包\\s*[:：]\\s*(\\S+)\\s*$"),
-		Pattern.compile("口令\\s*[:：]\\s*(\\S+)\\s*$"),
+		Pattern.compile("红包\\s*[:：]\\s*(\\w+)\\s*$"),
+		Pattern.compile("口令\\s*[:：]\\s*(\\w+)\\s*$"),
 		Pattern.compile("(\\b华美\\S{2})\\b"),
 		Pattern.compile("口令.*(华美\\S{2})"),
 	};
@@ -246,7 +247,6 @@ public class RedPacketListenerService extends NotificationListenerService {
 		if (mNotificationManager != null) {
 			Notification.Builder builder = new Notification.Builder(this)
 				.setSmallIcon(R.drawable.ic_launcher)
-				.setTicker("支付宝红包口令: " + code)
 				.setContentTitle(name)
 				.setContentText(code);
 
