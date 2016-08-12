@@ -26,16 +26,18 @@ import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.java.CavanJava;
 
 public class RedPacketListenerService extends NotificationListenerService {
 
 	public static final int NOTIFY_TEST = -1;
+	public static final long OVER_TIME = 3600000;
 
 	public static String[] mSoundExtensions = {
 		"m4a", "ogg", "wav", "mp3", "ac3", "wma"
 	};
 
-	public static final Pattern[] mNumberPatterns = {
+	public static final Pattern[] mDigitPatterns = {
 		Pattern.compile("支付宝.*红包\\D*(\\d+)"),
 		Pattern.compile("支付宝.*口令\\D*(\\d+)"),
 		Pattern.compile("红包\\s*[:：]?\\s*(\\d+)"),
@@ -45,8 +47,13 @@ public class RedPacketListenerService extends NotificationListenerService {
 	};
 
 	public static final Pattern[] mWordPatterns = {
+		Pattern.compile("支付宝.*红包\\s*[:：]\\s*(\\w+)"),
+		Pattern.compile("支付宝.*口令\\s*[:：]\\s*(\\w+)"),
 		Pattern.compile("红包\\s*[:：]\\s*(\\w+)\\s*$"),
 		Pattern.compile("口令\\s*[:：]\\s*(\\w+)\\s*$"),
+	};
+
+	public static final Pattern[] mOtherPatterns = {
 		Pattern.compile("(\\b华美\\S{2})\\b"),
 		Pattern.compile("口令.*(华美\\S{2})"),
 	};
@@ -104,7 +111,7 @@ public class RedPacketListenerService extends NotificationListenerService {
 
 	// ================================================================================
 
-	public static boolean isRedPacketNumberCode(String code) {
+	public static boolean isRedPacketDigitCode(String code) {
 		if (code.length() != 8) {
 			return false;
 		}
@@ -118,35 +125,57 @@ public class RedPacketListenerService extends NotificationListenerService {
 		return true;
 	}
 
-	public static List<String> getRedPacketCode(Pattern[] patterns, String text, List<String> codes) {
-		if (codes == null) {
-			codes = new ArrayList<String>();
+	public static boolean isRedPacketWordCode(String code) {
+		int length = code.length();
+		if (length < 6 || length > 20) {
+			return false;
 		}
 
-		for (Pattern pattern : patterns) {
-			Matcher matcher = pattern.matcher(text);
-			if (matcher.find()) {
-				do {
-					codes.add(matcher.group(1));
-				} while (matcher.find());
+		for (char c : code.toCharArray()) {
+			if (CavanJava.isChineseChar(c)) {
+				return true;
+			}
+		}
 
-				break;
+		return false;
+	}
+
+	public static List<String> getRedPacketCode(Pattern[] patterns, String[] lines, List<String> codes) {
+		for (String line : lines) {
+			for (Pattern pattern : patterns) {
+				Matcher matcher = pattern.matcher(line);
+
+				while (matcher.find()) {
+					codes.add(matcher.group(1));
+				}
 			}
 		}
 
 		return codes;
 	}
 
+	public static List<String> getRedPacketCode(Pattern[] patterns, String[] lines) {
+		return getRedPacketCode(patterns, lines, new ArrayList<String>());
+	}
+
 	public static List<String> getRedPacketCode(String text) {
 		List<String> codes = new ArrayList<String>();
 
-		for (String code : getRedPacketCode(mNumberPatterns, text, null)) {
-			if (isRedPacketNumberCode(code)) {
+		String[] lines = text.split("\n");
+
+		for (String code : getRedPacketCode(mDigitPatterns, lines)) {
+			if (isRedPacketDigitCode(code)) {
 				codes.add(code);
 			}
 		}
 
-		return getRedPacketCode(mWordPatterns, text, codes);
+		for (String code : getRedPacketCode(mWordPatterns, lines)) {
+			if (isRedPacketWordCode(code)) {
+				codes.add(code);
+			}
+		}
+
+		return getRedPacketCode(mOtherPatterns, lines, codes);
 	}
 
 	public static boolean startAlipayActivity(Context context) {
@@ -163,8 +192,8 @@ public class RedPacketListenerService extends NotificationListenerService {
 
 	public static void postRedPacketCode(ClipboardManager clipboard, CharSequence code) {
 		ClipData data = ClipData.newPlainText("支付宝红包口令", code);
-		CavanAndroid.logE("ClipData = " + data);
 
+		CavanAndroid.logE("ClipData = " + data);
 		clipboard.setPrimaryClip(data);
 	}
 
@@ -224,21 +253,15 @@ public class RedPacketListenerService extends NotificationListenerService {
 	public void sendRedPacketNotify(String name, String code) {
 		CavanAndroid.setSuspendEnable(this, false, 5000);
 
-		CavanAndroid.logE("支付宝红包口令: " + code);
-
 		long timeNow = System.currentTimeMillis();
-		for (CharSequence key : mCodeMap.keySet()) {
-			if (timeNow - mCodeMap.get(key) > 3600000) {
-				mCodeMap.remove(key);
-			}
-		}
-
 		Long time = mCodeMap.get(code);
-		if (time != null) {
+
+		if (time != null && timeNow - time < OVER_TIME) {
 			CavanAndroid.logE("skip time = " + time);
 			return;
 		}
 
+		CavanAndroid.showToastLong(this, "支付宝红包口令: " + code);
 		mCodeMap.put(code, timeNow);
 
 		postRedPacketCode(code);
