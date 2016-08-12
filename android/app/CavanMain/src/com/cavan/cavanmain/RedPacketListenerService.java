@@ -80,8 +80,8 @@ public class RedPacketListenerService extends NotificationListenerService {
 
 			String content = text.toString();
 
-			CavanAndroid.logE("================================================================================");
-			CavanAndroid.logE(content);
+			CavanAndroid.logD("================================================================================");
+			CavanAndroid.logD(content);
 
 			String name;
 			String message;

@@ -61,7 +61,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private Spinner mSpinnerMotoLevel;
 
 	private int mMotoMode;
-	private int mMotoLevel = 1;
+	private int mMotoLevel;
 
 	private Handler mHandler = new Handler() {
 
@@ -150,17 +150,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		mProgressBar = (ProgressBar) findViewById(R.id.progressBarUpgrade);
 		mEditTextBdAddr = (EditText) findViewById(R.id.editTextBdAddr);
 
-		List<CharSequence> list = new ArrayList<CharSequence>();
-		String text = getResources().getString(R.string.text_moto_close);
-		list.add(text);
-
-		text = getResources().getString(R.string.text_moto_mode);
-
-		for (int i = 1; i <= 6; i++) {
-			list.add(text + i);
-		}
-
-		ArrayAdapter<CharSequence> adapter = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item, list);
+		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.text_moto_modes, android.R.layout.simple_spinner_item);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		mSpinnerMotoMode = (Spinner) findViewById(R.id.spinnerMotoMode);
 		mSpinnerMotoMode.setAdapter(adapter);
@@ -176,9 +166,9 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			public void onNothingSelected(AdapterView<?> parent) {}
 		});
 
-		list = new ArrayList<CharSequence>();
-		text = getResources().getString(R.string.text_moto_level);
-		for (int i = 1; i <= 18; i++) {
+		List<CharSequence> list = new ArrayList<CharSequence>();
+		String text = getResources().getString(R.string.text_moto_level);
+		for (int i = 0; i <= 18; i++) {
 			list.add(text + i);
 		}
 
@@ -190,8 +180,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-				mMotoLevel = position + 1;
-				if (mMotoMode == 1) {
+				mMotoLevel = position;
+				if (mMotoMode == 0) {
 					setMotoMode();
 				}
 			}
@@ -342,7 +332,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			return false;
 		}
 
-		if (mMotoMode > 0) {
+		if (mMotoMode > 0 || mMotoLevel > 0) {
 			if (setMotoMode() == false && mBleToy.isCommandTimeout()) {
 				return false;
 			}

@@ -235,8 +235,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			params.height = WindowManager.LayoutParams.WRAP_CONTENT;
 
 			TextView view = new TextView(getApplicationContext());
-			view.setTextColor(Color.WHITE);
-			view.setBackgroundColor(Color.GRAY);
+			view.setBackgroundColor(Color.BLUE);
+			view.setTextColor(Color.YELLOW);
 
 			manager.addView(view, params);
 			sTimeView = view;
