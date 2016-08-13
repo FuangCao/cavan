@@ -55,6 +55,10 @@ public class RedPacketNotification {
 		Pattern.compile("口令.*(华美\\S{2})"),
 	};
 
+	public static final Pattern[] sExcludePatterns = {
+		Pattern.compile("https?://\\S*\\d+\\s*$"),
+	};
+
 	public static HashMap<CharSequence, Long> sCodeMap = new HashMap<CharSequence, Long>();
 	public static HashMap<String, Boolean> sExcludeCodeMap = new HashMap<String, Boolean>();
 
@@ -151,6 +155,17 @@ public class RedPacketNotification {
 		sCodeMap.remove(code);
 	}
 
+	public static boolean isValidLine(String line) {
+		for (Pattern pattern : sExcludePatterns) {
+			Matcher matcher = pattern.matcher(line);
+			if (matcher.find()) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	public static boolean isRedPacketDigitCode(String code) {
 		if (code.length() != 8) {
 			return false;
@@ -188,7 +203,7 @@ public class RedPacketNotification {
 		return true;
 	}
 
-	public static List<String> getRedPacketCodes(Pattern[] patterns, String[] lines, List<String> codes) {
+	public static List<String> getRedPacketCodes(Pattern[] patterns, List<String> lines, List<String> codes) {
 		for (String line : lines) {
 			for (Pattern pattern : patterns) {
 				Matcher matcher = pattern.matcher(line);
@@ -202,14 +217,20 @@ public class RedPacketNotification {
 		return codes;
 	}
 
-	public static List<String> getRedPacketCodes(Pattern[] patterns, String[] lines) {
+	public static List<String> getRedPacketCodes(Pattern[] patterns, List<String> lines) {
 		return getRedPacketCodes(patterns, lines, new ArrayList<String>());
 	}
 
 	public List<String> getRedPacketCodes() {
-		List<String> codes = new ArrayList<String>();
+		List<String> lines = new ArrayList<String>();
 
-		String[] lines = mMessage.split("\n");
+		for (String line : mMessage.split("\n")) {
+			if (isValidLine(line)) {
+				lines.add(line);
+			}
+		}
+
+		List<String> codes = new ArrayList<String>();
 
 		for (String code : getRedPacketCodes(sDigitPatterns, lines)) {
 			if (isRedPacketDigitCode(code)) {
