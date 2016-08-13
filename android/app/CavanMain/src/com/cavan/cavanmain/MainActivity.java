@@ -37,6 +37,11 @@ import com.cavan.java.CavanString;
 
 public class MainActivity extends PreferenceActivity implements OnPreferenceChangeListener {
 
+	public static final float TIME_TEXT_SIZE = 16;
+	public static final boolean TIME_TEXT_BOLD = false;
+	public static final boolean SHOW_SECOND_ONLY = false;
+	public static final int TIME_TEXT_COLOR = Color.WHITE;
+
 	public static final String KEY_IP_ADDRESS = "ip_address";
 	public static final String KEY_FLOAT_TIMER = "float_timer";
 	public static final String KEY_RED_PACKET_NOTIFY_TEST = "red_packet_notify_test";
@@ -60,10 +65,14 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 					sLastSecond = second;
 					sTimeView.postDelayed(this, 1000);
 
-					int hour = calendar.get(Calendar.HOUR_OF_DAY);
-					int minute = calendar.get(Calendar.MINUTE);
+					if (SHOW_SECOND_ONLY) {
+						sTimeView.setText(String.format(" %02d ", second));
+					} else {
+						int hour = calendar.get(Calendar.HOUR_OF_DAY);
+						int minute = calendar.get(Calendar.MINUTE);
 
-					sTimeView.setText(String.format("%02d:%02d:%02d", hour, minute, second));
+						sTimeView.setText(String.format(" %02d:%02d:%02d ", hour, minute, second));
+					}
 				}
 			}
 		}
@@ -226,18 +235,25 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		if (enable) {
 			LayoutParams params = new LayoutParams();
 
+			params.x = params.y = 0;
 			params.type = LayoutParams.TYPE_PHONE;
 			params.format = PixelFormat.RGBA_8888;
-			params.flags = LayoutParams.FLAG_NOT_FOCUSABLE;
 			params.gravity = Gravity.RIGHT | Gravity.TOP;
-			params.x = 0;
-			params.y = 0;
 			params.width = WindowManager.LayoutParams.WRAP_CONTENT;
 			params.height = WindowManager.LayoutParams.WRAP_CONTENT;
+			params.flags = LayoutParams.FLAG_NOT_FOCUSABLE | LayoutParams.FLAG_NOT_TOUCHABLE;
 
 			TextView view = new TextView(getApplicationContext());
-			view.setBackgroundColor(Color.argb(0x7f, 0, 0, 0));
-			view.setTextColor(Color.WHITE);
+			view.setBackgroundResource(R.drawable.desktop_timer_bg);
+			view.setTextColor(TIME_TEXT_COLOR);
+
+			if (TIME_TEXT_BOLD) {
+				view.getPaint().setFakeBoldText(true);
+			}
+
+			if (TIME_TEXT_SIZE > 0) {
+				view.setTextSize(TIME_TEXT_SIZE);
+			}
 
 			manager.addView(view, params);
 			sTimeView = view;
