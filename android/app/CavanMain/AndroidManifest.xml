@@ -54,6 +54,7 @@
             </intent-filter>
         </service>
         <receiver android:name="RedPacketBroadcastReceiver"></receiver>
+        <service android:name="FloatTimerService"></service>
     </application>
 
 </manifest>

@@ -6,17 +6,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
-import java.util.Calendar;
 
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
-import android.graphics.Color;
-import android.graphics.PixelFormat;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.Preference;
@@ -24,10 +26,6 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.preference.RingtonePreference;
-import android.view.Gravity;
-import android.view.WindowManager;
-import android.view.WindowManager.LayoutParams;
-import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanNetworkClient;
@@ -37,11 +35,6 @@ import com.cavan.java.CavanString;
 
 public class MainActivity extends PreferenceActivity implements OnPreferenceChangeListener {
 
-	public static final float TIME_TEXT_SIZE = 16;
-	public static final boolean TIME_TEXT_BOLD = false;
-	public static final boolean SHOW_SECOND_ONLY = false;
-	public static final int TIME_TEXT_COLOR = Color.WHITE;
-
 	public static final String KEY_IP_ADDRESS = "ip_address";
 	public static final String KEY_FLOAT_TIMER = "float_timer";
 	public static final String KEY_RED_PACKET_NOTIFY_TEST = "red_packet_notify_test";
@@ -49,34 +42,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_TCP_DD = "tcp_dd";
 	public static final String KEY_FTP = "ftp";
 	public static final String KEY_WEB_PROXY = "web_proxy";
-
-	private static int sLastSecond;
-	private static TextView sTimeView;
-	private static Runnable mRunnableTime = new Runnable() {
-
-		@Override
-		public void run() {
-			if (sTimeView != null) {
-				Calendar calendar = Calendar.getInstance();
-				int second = calendar.get(Calendar.SECOND);
-				if (second == sLastSecond) {
-					sTimeView.postDelayed(this, 100);
-				} else {
-					sLastSecond = second;
-					sTimeView.postDelayed(this, 1000);
-
-					if (SHOW_SECOND_ONLY) {
-						sTimeView.setText(String.format(" %02d ", second));
-					} else {
-						int hour = calendar.get(Calendar.HOUR_OF_DAY);
-						int minute = calendar.get(Calendar.MINUTE);
-
-						sTimeView.setText(String.format(" %02d:%02d:%02d ", hour, minute, second));
-					}
-				}
-			}
-		}
-	};
 
 	private File mFileBin;
 	private Preference mPreferenceIpAddress;
@@ -87,6 +52,21 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private CavanServicePreference mPreferenceFtp;
 	private CavanServicePreference mPreferenceWebProxy;
 
+	private IFloatTimerService mFloatTimerService;
+	private ServiceConnection mFloatTimerConnection = new ServiceConnection() {
+
+		@Override
+		public void onServiceDisconnected(ComponentName arg0) {
+			mFloatTimerService = null;
+		}
+
+		@Override
+		public void onServiceConnected(ComponentName component, IBinder binder) {
+			mFloatTimerService = IFloatTimerService.Stub.asInterface(binder);
+			setDesktopFloatTimerEnable(mPreferenceFloatTime.isChecked());
+		}
+	};
+
 	@SuppressWarnings("deprecation")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -96,7 +76,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
 
 		mPreferenceFloatTime = (CheckBoxPreference) findPreference(KEY_FLOAT_TIMER);
-		setDesktopFloatTimerEnable(mPreferenceFloatTime.isChecked());
 		mPreferenceFloatTime.setOnPreferenceChangeListener(this);
 
 		mPreferenceRedPacketNotifyTest = (EditTextPreference) findPreference(KEY_RED_PACKET_NOTIFY_TEST);
@@ -137,10 +116,17 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 				}
 			}.start();
 		}
+
+		Intent service = new Intent(this, FloatTimerService.class);
+
+		startService(service);
+		bindService(service, mFloatTimerConnection, 0);
 	}
 
 	@Override
 	protected void onDestroy() {
+		unbindService(mFloatTimerConnection);
+
 		mPreferenceTcpDd.unbindService(this);
 		mPreferenceFtp.unbindService(this);
 		mPreferenceWebProxy.unbindService(this);
@@ -230,42 +216,17 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	}
 
 	private boolean setDesktopFloatTimerEnable(boolean enable) {
-		WindowManager manager = (WindowManager) getApplication().getSystemService(WINDOW_SERVICE);
-
-		if (enable) {
-			LayoutParams params = new LayoutParams();
-
-			params.x = params.y = 0;
-			params.type = LayoutParams.TYPE_PHONE;
-			params.format = PixelFormat.RGBA_8888;
-			params.gravity = Gravity.RIGHT | Gravity.TOP;
-			params.width = WindowManager.LayoutParams.WRAP_CONTENT;
-			params.height = WindowManager.LayoutParams.WRAP_CONTENT;
-			params.flags = LayoutParams.FLAG_NOT_FOCUSABLE | LayoutParams.FLAG_NOT_TOUCHABLE;
-
-			TextView view = new TextView(getApplicationContext());
-			view.setBackgroundResource(R.drawable.desktop_timer_bg);
-			view.setTextColor(TIME_TEXT_COLOR);
-
-			if (TIME_TEXT_BOLD) {
-				view.getPaint().setFakeBoldText(true);
-			}
-
-			if (TIME_TEXT_SIZE > 0) {
-				view.setTextSize(TIME_TEXT_SIZE);
-			}
-
-			manager.addView(view, params);
-			sTimeView = view;
-
-			sLastSecond = -1;
-			sTimeView.post(mRunnableTime);
-		} else if (sTimeView != null) {
-			manager.removeView(sTimeView);
-			sTimeView = null;
+		if (mFloatTimerService == null) {
+			return false;
 		}
 
-		return true;
+		try {
+			return mFloatTimerService.setEnable(enable);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+
+		return false;
 	}
 
 	@SuppressWarnings("deprecation")
