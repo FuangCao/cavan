@@ -324,47 +324,6 @@ public class CavanJava {
 		return parseHexText(text, 0, text.length);
 	}
 
-	public static boolean isChineseChar(char c) {
-		return c >= 0x4E00 && c <= 0x9FA5;
-	}
-
-	public static boolean hasChineseChar(String text) {
-		for (int i = text.length() - 1; i >= 0; i--) {
-			if (isChineseChar(text.charAt(i))) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	public static String strFixupSpace(String text) {
-		return text.replace((char) 0xA0, (char) 0x20);
-	}
-
-	public static String strStrip(String text) {
-		return strFixupSpace(text).trim();
-	}
-
-	public static String listToString(List<?> list) {
-		if (list.size() <= 0) {
-			return null;
-		}
-
-		StringBuilder builder = new StringBuilder("[ ");
-
-		builder.append(list.get(0));
-
-		for (int i = 1; i < list.size(); i++) {
-			builder.append(" | ");
-			builder.append(list.get(i));
-		}
-
-		builder.append(" ]");
-
-		return builder.toString();
-	}
-
 	public static int getBoolValueInt(boolean value) {
 		return value ? 1 : 0;
 	}

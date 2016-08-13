@@ -26,37 +26,43 @@ import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 
 import com.cavan.android.CavanAndroid;
-import com.cavan.java.CavanJava;
+import com.cavan.java.CavanString;
 
 public class RedPacketListenerService extends NotificationListenerService {
 
 	public static final int NOTIFY_TEST = -1;
 	public static final long OVER_TIME = 3600000;
 
-	public static String[] mSoundExtensions = {
+	public static String[] sSoundExtensions = {
 		"m4a", "ogg", "wav", "mp3", "ac3", "wma"
 	};
 
-	public static final Pattern[] mDigitPatterns = {
+	public static final Pattern[] sDigitPatterns = {
 		Pattern.compile("支付宝.*红包\\D*(\\d+)"),
 		Pattern.compile("支付宝.*口令\\D*(\\d+)"),
 		Pattern.compile("红包\\s*[:：]?\\s*(\\d+)"),
 		Pattern.compile("口令\\s*[:：]?\\s*(\\d+)"),
 		Pattern.compile("[:：]\\s*(\\d+)"),
-		Pattern.compile("(\\d+)\\s*$"),
+		Pattern.compile("\\b(\\d+)\\s*$"),
 	};
 
-	public static final Pattern[] mWordPatterns = {
+	public static final Pattern[] sWordPatterns = {
 		Pattern.compile("支付宝.*红包\\s*[:：]\\s*(\\w+)"),
 		Pattern.compile("支付宝.*口令\\s*[:：]\\s*(\\w+)"),
 		Pattern.compile("红包\\s*[:：]\\s*(\\w+)\\s*$"),
 		Pattern.compile("口令\\s*[:：]\\s*(\\w+)\\s*$"),
 	};
 
-	public static final Pattern[] mOtherPatterns = {
+	public static final Pattern[] sOtherPatterns = {
 		Pattern.compile("(\\b华美\\S{2})\\b"),
 		Pattern.compile("口令.*(华美\\S{2})"),
 	};
+
+	public static HashMap<String, Boolean> sExcludeCodeMap = new HashMap<String, Boolean>();
+
+	static {
+		sExcludeCodeMap.put("华美月饼", true);
+	}
 
 	// ================================================================================
 
@@ -126,18 +132,26 @@ public class RedPacketListenerService extends NotificationListenerService {
 	}
 
 	public static boolean isRedPacketWordCode(String code) {
+		int found = 0;
 		int length = code.length();
+
+		for (int i = 0; i < length; i++) {
+			if (CavanString.isChineseChar(code.charAt(i))) {
+				found++;
+			}
+		}
+
+		if (found == 0) {
+			return false;
+		}
+
+		length += found;
+
 		if (length < 6 || length > 20) {
 			return false;
 		}
 
-		for (char c : code.toCharArray()) {
-			if (CavanJava.isChineseChar(c)) {
-				return true;
-			}
-		}
-
-		return false;
+		return true;
 	}
 
 	public static List<String> getRedPacketCode(Pattern[] patterns, String[] lines, List<String> codes) {
@@ -163,19 +177,19 @@ public class RedPacketListenerService extends NotificationListenerService {
 
 		String[] lines = text.split("\n");
 
-		for (String code : getRedPacketCode(mDigitPatterns, lines)) {
+		for (String code : getRedPacketCode(sDigitPatterns, lines)) {
 			if (isRedPacketDigitCode(code)) {
 				codes.add(code);
 			}
 		}
 
-		for (String code : getRedPacketCode(mWordPatterns, lines)) {
+		for (String code : getRedPacketCode(sWordPatterns, lines)) {
 			if (isRedPacketWordCode(code)) {
 				codes.add(code);
 			}
 		}
 
-		return getRedPacketCode(mOtherPatterns, lines, codes);
+		return getRedPacketCode(sOtherPatterns, lines, codes);
 	}
 
 	public static boolean startAlipayActivity(Context context) {
@@ -218,7 +232,7 @@ public class RedPacketListenerService extends NotificationListenerService {
 
 	public File getRingtoneFile() {
 		File dir = Environment.getExternalStorageDirectory();
-		for (String extension : mSoundExtensions) {
+		for (String extension : sSoundExtensions) {
 			File file = new File(dir, "CavanRedPacket." + extension);
 			if (file.isFile()) {
 				return file;
@@ -252,6 +266,11 @@ public class RedPacketListenerService extends NotificationListenerService {
 
 	public void sendRedPacketNotify(String name, String code) {
 		CavanAndroid.setSuspendEnable(this, false, 5000);
+
+		if (sExcludeCodeMap.containsKey(code)) {
+			CavanAndroid.logE("exclude code = " + code);
+			return;
+		}
 
 		long timeNow = System.currentTimeMillis();
 		Long time = mCodeMap.get(code);

@@ -102,7 +102,7 @@ public class AndroidManifest extends CavanXml {
 			}
 		}
 
-		return CavanJava.strStrip(name);
+		return CavanString.strip(name);
 	}
 
 	public void setAppName(String name) {

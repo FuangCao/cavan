@@ -14,8 +14,8 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 
-import com.cavan.java.CavanJava;
 import com.cavan.java.CavanProgressListener;
+import com.cavan.java.CavanString;
 
 public class CavanBleGatt {
 
@@ -351,7 +351,7 @@ public class CavanBleGatt {
 			}
 		}
 
-		return CavanJava.listToString(lines);
+		return CavanString.fromList(lines);
 	}
 
 	public static String getPermissionName(int permission) {
@@ -386,7 +386,7 @@ public class CavanBleGatt {
 			}
 		}
 
-		return CavanJava.listToString(lines);
+		return CavanString.fromList(lines);
 	}
 
 	public void dumpServices() {

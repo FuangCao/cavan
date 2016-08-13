@@ -33,6 +33,7 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanNetworkClient;
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.cavanjni.CavanServicePreference;
+import com.cavan.java.CavanString;
 
 public class MainActivity extends PreferenceActivity implements OnPreferenceChangeListener {
 
@@ -235,8 +236,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			params.height = WindowManager.LayoutParams.WRAP_CONTENT;
 
 			TextView view = new TextView(getApplicationContext());
-			view.setBackgroundColor(Color.BLUE);
-			view.setTextColor(Color.YELLOW);
+			view.setBackgroundColor(Color.argb(0x7f, 0, 0, 0));
+			view.setTextColor(Color.WHITE);
 
 			manager.addView(view, params);
 			sTimeView = view;
@@ -286,14 +287,17 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
 			NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 			if (manager != null) {
-				String content = "CFA8888" + ": " + object;
+				String text = (String) object;
+				if (CavanString.hasChineseChar(text) && text.matches("[::]") == false) {
+					text = "支付宝红包口令: " + text;
+				}
 
 				Builder builder = new Builder(this)
 					.setSmallIcon(R.drawable.ic_launcher)
 					.setAutoCancel(true)
 					.setContentTitle("红包提醒测试")
-					.setTicker(content)
-					.setContentText(content);
+					.setTicker("CFA8888: " + text)
+					.setContentText(text);
 
 				manager.notify(RedPacketListenerService.NOTIFY_TEST, builder.build());
 			}
