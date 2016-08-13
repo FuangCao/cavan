@@ -11,8 +11,7 @@ public class RedPacketBroadcastReceiver extends BroadcastReceiver {
 		String code = intent.getStringExtra("code");
 		if (code != null) {
 			RedPacketListenerService.postRedPacketCode(context, code);
+			RedPacketListenerService.startAlipayActivity(context);
 		}
-
-		RedPacketListenerService.startAlipayActivity(context);
 	}
 }

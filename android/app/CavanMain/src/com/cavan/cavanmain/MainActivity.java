@@ -262,21 +262,28 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		if (preference == mPreferenceFloatTime) {
 			return setDesktopFloatTimerEnable((boolean) object);
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
-			NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-			if (manager != null) {
-				String text = (String) object;
-				if (CavanString.hasChineseChar(text) && text.matches("[::]") == false) {
-					text = "支付宝红包口令: " + text;
+			if (CavanAndroid.isNotificationListenerEnabled(this, RedPacketListenerService.class)) {
+				NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+				if (manager != null) {
+					String text = (String) object;
+					if (CavanString.hasChineseChar(text) && text.matches("[::]") == false) {
+						text = "支付宝红包口令: " + text;
+					}
+
+					Builder builder = new Builder(this)
+						.setSmallIcon(R.drawable.ic_launcher)
+						.setAutoCancel(true)
+						.setContentTitle("红包提醒测试")
+						.setTicker("CFA8888: " + text)
+						.setContentText(text);
+
+					manager.notify(RedPacketListenerService.NOTIFY_TEST, builder.build());
 				}
+			} else {
+				Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+				startActivity(intent);
 
-				Builder builder = new Builder(this)
-					.setSmallIcon(R.drawable.ic_launcher)
-					.setAutoCancel(true)
-					.setContentTitle("红包提醒测试")
-					.setTicker("CFA8888: " + text)
-					.setContentText(text);
-
-				manager.notify(RedPacketListenerService.NOTIFY_TEST, builder.build());
+				CavanAndroid.showToastLong(this, "请打开通知读取权限");
 			}
 		} else if (preference == mPreferenceRedPacketNotifyRingtone) {
 			updateRingtoneSummary((String) object);

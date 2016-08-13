@@ -10,6 +10,7 @@ import android.content.Context;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -17,7 +18,10 @@ import com.cavan.java.CavanJava;
 
 @SuppressWarnings("deprecation")
 public class CavanAndroid extends CavanJava {
+
 	public static final String TAG = "Cavan";
+
+	public static final String ENABLED_NOTIFICATION_LISTENERS = "enabled_notification_listeners";
 
 	public static final int EVENT_CLEAR_TOAST = 1;
 
@@ -261,5 +265,35 @@ public class CavanAndroid extends CavanJava {
 		sNotificationManager.notify(id, notification);
 
 		return true;
+	}
+
+	public static String[] getEnabledNotificationListeners(Context context) {
+		String text = Settings.Secure.getString(context.getContentResolver(), ENABLED_NOTIFICATION_LISTENERS);
+		if (text == null) {
+			return null;
+		}
+
+		return text.split(":");
+	}
+
+	public static boolean isNotificationListenerEnabled(Context context, String service) {
+		String[] listeners = getEnabledNotificationListeners(context);
+		if (listeners == null) {
+			return false;
+		}
+
+		for (String listener : listeners) {
+			if (listener.equals(service)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public static boolean isNotificationListenerEnabled(Context context, Class<?> cls) {
+		String service = context.getPackageName() + "/" + cls.getName();
+
+		return isNotificationListenerEnabled(context, service);
 	}
 }

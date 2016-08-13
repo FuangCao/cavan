@@ -32,6 +32,8 @@ public class RedPacketNotification {
 		"m4a", "ogg", "wav", "mp3", "ac3", "wma"
 	};
 
+	public static final Pattern sNormalPattern = Pattern.compile("^\\[(\\w+红包)\\]");
+
 	public static final Pattern[] sDigitPatterns = {
 		Pattern.compile("支付宝.*红包\\D*(\\d+)"),
 		Pattern.compile("支付宝.*口令\\D*(\\d+)"),
@@ -264,7 +266,7 @@ public class RedPacketNotification {
 
 		Intent intent = new Intent(mService, RedPacketBroadcastReceiver.class).putExtra("code", code);
 
-		return buildNotification(code, PendingIntent.getBroadcast(mService, (int) (timeNow & 0x7FFFFFFF), intent, PendingIntent.FLAG_UPDATE_CURRENT));
+		return buildNotification(code, PendingIntent.getBroadcast(mService, mService.createRequestCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	// ================================================================================
@@ -273,11 +275,11 @@ public class RedPacketNotification {
 		for (String code : getRedPacketCodes()) {
 			Notification notification = buildRedPacketNotifyAlipay(code);
 			if (notification != null) {
-				CavanAndroid.showToastLong(mService, "支付宝红包口令: " + code);
+				CavanAndroid.showToastLong(mService, "支付宝红包口令[" + code + "]: " + mName);
 
 				mService.startAlipayActivity();
 				mService.postRedPacketCode(code);
-				mService.sendNotification(code, notification);
+				mService.sendNotification(notification);
 			}
 		}
 	}
@@ -294,17 +296,16 @@ public class RedPacketNotification {
 			}
 		}
 
-		mService.sendNotification(mName, notification);
+		CavanAndroid.showToastLong(mService, content + ": " + mName);
+
+		mService.sendNotification(notification);
 	}
 
 	public void sendRedPacketNotifyAuto() {
 		if (parse()) {
-			String pkgName = mNotification.getPackageName();
-
-			if (PACKAGE_QQ.equals(pkgName) && mMessage.startsWith("[QQ红包]")) {
-				sendRedPacketNotifyNormal("QQ红包");
-			} else if (PACKAGE_MICRO_MSG.equals(pkgName) && mMessage.startsWith("[微信红包]")) {
-				sendRedPacketNotifyNormal("微信红包");
+			Matcher matcher = sNormalPattern.matcher(mMessage);
+			if (matcher.find()) {
+				sendRedPacketNotifyNormal(matcher.group(1));
 			} else {
 				sendRedPacketNotifyAlipay();
 			}

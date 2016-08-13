@@ -17,6 +17,8 @@ public class RedPacketListenerService extends NotificationListenerService {
 
 	public static final int NOTIFY_TEST = -1;
 
+	private int mRequestCode;
+	private int mNotificationId;
 	private ClipboardManager mClipboardManager;
 	private NotificationManager mNotificationManager;
 	private Handler mHandler = new Handler() {
@@ -37,12 +39,28 @@ public class RedPacketListenerService extends NotificationListenerService {
 		}
 	};
 
-	public boolean sendNotification(String tag, Notification notification) {
+	public int createRequestCode() {
+		if (++mRequestCode < 0) {
+			mRequestCode = 1;
+		}
+
+		return mRequestCode;
+	}
+
+	public int createNotificationId() {
+		if (++mNotificationId < 0) {
+			mNotificationId = 1;
+		}
+
+		return mNotificationId;
+	}
+
+	public boolean sendNotification(Notification notification) {
 		if (mNotificationManager == null) {
 			return false;
 		}
 
-		mNotificationManager.notify(tag, 0, notification);
+		mNotificationManager.notify(createNotificationId(), notification);
 
 		return true;
 	}
