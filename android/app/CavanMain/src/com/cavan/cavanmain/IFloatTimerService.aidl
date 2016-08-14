@@ -1,6 +1,9 @@
 package com.cavan.cavanmain;
 
 interface IFloatTimerService {
-	boolean getState();
-	boolean setEnable(boolean enable);
+	boolean getTimerState();
+	boolean setTimerEnable(boolean enable);
+	int addMessage(CharSequence message);
+	boolean hasMessage(CharSequence message);
+	void removeMessage(CharSequence message);
 }

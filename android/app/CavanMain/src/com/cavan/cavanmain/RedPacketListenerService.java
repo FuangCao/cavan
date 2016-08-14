@@ -4,63 +4,118 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
+import android.os.RemoteException;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.java.CavanIndexGenerator;
 
 public class RedPacketListenerService extends NotificationListenerService {
 
 	public static final int NOTIFY_TEST = -1;
+	public static final String EXTRA_CODE = "cavan.code";
+	public static final String EXTRA_MESSAGE = "cavan.message";
 
-	private int mRequestCode;
-	private int mNotificationId;
+	private static final int MSG_POST_NOTIFICATION = 1;
+	private static final int MSG_REMOVE_NOTIFICATION = 2;
+
 	private ClipboardManager mClipboardManager;
 	private NotificationManager mNotificationManager;
+	private CavanIndexGenerator mGeneratorRequestCode = new CavanIndexGenerator();
+	private CavanIndexGenerator mGeneratorNotificationId = new CavanIndexGenerator();
 	private Handler mHandler = new Handler() {
 
 		@Override
 		public void handleMessage(Message msg) {
 			StatusBarNotification sbn = (StatusBarNotification) msg.obj;
-
 			String pkgName = sbn.getPackageName();
-			if (getPackageName().equals(pkgName)) {
-				if (sbn.getId() != NOTIFY_TEST) {
-					return;
-				}
-			}
 
-			RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, sbn);
-			notification.sendRedPacketNotifyAuto();
+			switch (msg.what) {
+			case MSG_POST_NOTIFICATION:
+				if (getPackageName().equals(pkgName)) {
+					if (sbn.getId() != NOTIFY_TEST) {
+						break;
+					}
+				}
+
+				RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, sbn);
+				notification.sendRedPacketNotifyAuto();
+				break;
+
+			case MSG_REMOVE_NOTIFICATION:
+				if (getPackageName().equals(pkgName)) {
+					Bundle extras = sbn.getNotification().extras;
+					CharSequence code = extras.getCharSequence(EXTRA_CODE);
+					CharSequence message = extras.getCharSequence(EXTRA_MESSAGE);
+
+					if (code != null) {
+						RedPacketNotification.removeCode(code);
+					}
+
+					if (message != null && mFloatTimerService != null) {
+						try {
+							mFloatTimerService.removeMessage(message);
+						} catch (RemoteException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+				break;
+			}
+		}
+	};
+
+	private IFloatTimerService mFloatTimerService;
+	private ServiceConnection mFloatTimerConnection = new ServiceConnection() {
+
+		@Override
+		public void onServiceDisconnected(ComponentName arg0) {
+			mFloatTimerService = null;
+		}
+
+		@Override
+		public void onServiceConnected(ComponentName arg0, IBinder arg1) {
+			mFloatTimerService = IFloatTimerService.Stub.asInterface(arg1);
 		}
 	};
 
 	public int createRequestCode() {
-		if (++mRequestCode < 0) {
-			mRequestCode = 1;
-		}
-
-		return mRequestCode;
+		return mGeneratorRequestCode.genIndex();
 	}
 
 	public int createNotificationId() {
-		if (++mNotificationId < 0) {
-			mNotificationId = 1;
-		}
-
-		return mNotificationId;
+		return mGeneratorNotificationId.genIndex();
 	}
 
-	public boolean sendNotification(Notification notification) {
+	public boolean sendNotification(Notification notification, CharSequence code, CharSequence message) {
 		if (mNotificationManager == null) {
 			return false;
 		}
 
+		if (code != null) {
+			notification.extras.putCharSequence(EXTRA_CODE, code);
+		}
+
+		notification.extras.putCharSequence(EXTRA_MESSAGE, message);
+
 		mNotificationManager.notify(createNotificationId(), notification);
+
+		if (mFloatTimerService != null) {
+			try {
+				mFloatTimerService.addMessage(message);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		}
 
 		return true;
 	}
@@ -108,21 +163,26 @@ public class RedPacketListenerService extends NotificationListenerService {
 		mClipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 		mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
+		Intent service = new Intent(this, FloatTimerService.class);
+		startService(service);
+		bindService(service, mFloatTimerConnection, 0);
+
 		super.onCreate();
 	}
 
 	@Override
+	public void onDestroy() {
+		unbindService(mFloatTimerConnection);
+		super.onDestroy();
+	}
+
+	@Override
 	public void onNotificationPosted(StatusBarNotification sbn) {
-		mHandler.obtainMessage(0, sbn).sendToTarget();
+		mHandler.obtainMessage(MSG_POST_NOTIFICATION, sbn).sendToTarget();
 	}
 
 	@Override
 	public void onNotificationRemoved(StatusBarNotification sbn) {
-		if (getPackageName().equals(sbn.getPackageName())) {
-			CharSequence code = sbn.getNotification().extras.getCharSequence(Notification.EXTRA_TEXT);
-			if (code != null) {
-				RedPacketNotification.remove(code);
-			}
-		}
+		mHandler.obtainMessage(MSG_REMOVE_NOTIFICATION, sbn).sendToTarget();
 	}
 }

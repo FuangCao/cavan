@@ -82,7 +82,9 @@ public class RedPacketNotification {
 	}
 
 	private String mName;
-	private String mMessage;
+	private String mContent;
+	private List<String> mLines = new ArrayList<String>();
+
 	private RedPacketListenerService mService;
 	private StatusBarNotification mNotification;
 
@@ -97,8 +99,19 @@ public class RedPacketNotification {
 		return mName;
 	}
 
-	public String getMessage() {
-		return mMessage;
+	public String getContent() {
+		return mContent;
+	}
+
+	public static boolean isValidLine(String line) {
+		for (Pattern pattern : sExcludePatterns) {
+			Matcher matcher = pattern.matcher(line);
+			if (matcher.find()) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	public boolean parse() {
@@ -121,10 +134,18 @@ public class RedPacketNotification {
 
 		if (contents.length < 2) {
 			mName = "红包";
-			mMessage = content.trim();
+			content = content.trim();
 		} else {
 			mName = contents[0].trim();
-			mMessage = contents[1].trim();
+			content = contents[1].trim();
+		}
+
+		mContent = content.replaceAll("\\s*\n\\s*", " ");
+
+		for (String line : content.split("\n")) {
+			if (isValidLine(line)) {
+				mLines.add(line.trim());
+			}
 		}
 
 		return true;
@@ -166,19 +187,8 @@ public class RedPacketNotification {
 
 	// ================================================================================
 
-	public static void remove(CharSequence code) {
+	public static void removeCode(CharSequence code) {
 		sCodeMap.remove(code);
-	}
-
-	public static boolean isValidLine(String line) {
-		for (Pattern pattern : sExcludePatterns) {
-			Matcher matcher = pattern.matcher(line);
-			if (matcher.find()) {
-				return false;
-			}
-		}
-
-		return true;
 	}
 
 	public static boolean isRedPacketDigitCode(String code) {
@@ -218,8 +228,8 @@ public class RedPacketNotification {
 		return true;
 	}
 
-	public static List<String> getRedPacketCodes(Pattern[] patterns, List<String> lines, List<String> codes) {
-		for (String line : lines) {
+	public List<String> getRedPacketCodes(Pattern[] patterns, List<String> codes) {
+		for (String line : mLines) {
 			for (Pattern pattern : patterns) {
 				Matcher matcher = pattern.matcher(line);
 
@@ -232,34 +242,26 @@ public class RedPacketNotification {
 		return codes;
 	}
 
-	public static List<String> getRedPacketCodes(Pattern[] patterns, List<String> lines) {
-		return getRedPacketCodes(patterns, lines, new ArrayList<String>());
+	public List<String> getRedPacketCodes(Pattern[] patterns) {
+		return getRedPacketCodes(patterns, new ArrayList<String>());
 	}
 
 	public List<String> getRedPacketCodes() {
-		List<String> lines = new ArrayList<String>();
-
-		for (String line : mMessage.split("\n")) {
-			if (isValidLine(line)) {
-				lines.add(line);
-			}
-		}
-
 		List<String> codes = new ArrayList<String>();
 
-		for (String code : getRedPacketCodes(sDigitPatterns, lines)) {
+		for (String code : getRedPacketCodes(sDigitPatterns)) {
 			if (isRedPacketDigitCode(code)) {
 				codes.add(code);
 			}
 		}
 
-		for (String code : getRedPacketCodes(sWordPatterns, lines)) {
+		for (String code : getRedPacketCodes(sWordPatterns)) {
 			if (isRedPacketWordCode(code)) {
 				codes.add(code);
 			}
 		}
 
-		return getRedPacketCodes(sOtherPatterns, lines, codes);
+		return getRedPacketCodes(sOtherPatterns, codes);
 	}
 
 	public Notification buildNotification(CharSequence content, PendingIntent intent) {
@@ -313,18 +315,16 @@ public class RedPacketNotification {
 		for (String code : codes) {
 			Notification notification = buildRedPacketNotifyAlipay(code);
 			if (notification != null) {
-				CavanAndroid.showToastLong(mService, mName + "@支付宝红包口令: " + code);
-
 				mService.startAlipayActivity();
 				mService.postRedPacketCode(code);
-				mService.sendNotification(notification);
+				mService.sendNotification(notification, code, mName + "@支付宝口令: " + code);
 			}
 		}
 
 		return codes.size();
 	}
 
-	public boolean sendRedPacketNotifyNormal(String content) {
+	public boolean sendRedPacketNotifyNormal(String content, String message) {
 		PendingIntent intent = mNotification.getNotification().contentIntent;
 		Notification notification = buildNotification(content, intent);
 
@@ -336,18 +336,16 @@ public class RedPacketNotification {
 			}
 		}
 
-		CavanAndroid.showToastLong(mService, mName + ": " + content);
-
-		mService.sendNotification(notification);
+		mService.sendNotification(notification, null, message);
 
 		return true;
 	}
 
 	public boolean sendRedPacketNotifyAlipayPicture() {
 		for (Pattern pattern : sPicturePatterns) {
-			Matcher matcher = pattern.matcher(mMessage);
+			Matcher matcher = pattern.matcher(mContent);
 			if (matcher.find()) {
-				return sendRedPacketNotifyNormal("支付宝红包口令图片");
+				return sendRedPacketNotifyNormal("支付宝口令图片", mName + "@支付宝口令图片");
 			}
 		}
 
@@ -355,9 +353,10 @@ public class RedPacketNotification {
 	}
 
 	public boolean sendRedPacketNotifyNormal() {
-		Matcher matcher = sNormalPattern.matcher(mMessage);
+		Matcher matcher = sNormalPattern.matcher(mContent);
 		if (matcher.find()) {
-			return sendRedPacketNotifyNormal(matcher.group(1));
+			String content = matcher.group(1);
+			return sendRedPacketNotifyNormal(content, mName + "@" + content);
 		}
 
 		return false;

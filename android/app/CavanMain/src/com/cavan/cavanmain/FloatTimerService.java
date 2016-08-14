@@ -1,25 +1,84 @@
 package com.cavan.cavanmain;
 
 import java.util.Calendar;
+import java.util.HashMap;
 
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.cavan.android.CavanAndroid;
 import com.cavan.android.FloatWidowService;
 
 public class FloatTimerService extends FloatWidowService {
 
+	public static final int TEXT_PADDING = 10;
+
 	public static final float TIME_TEXT_SIZE = 16;
-	public static final boolean TIME_TEXT_BOLD = false;
-	public static final boolean SHOW_SECOND_ONLY = false;
 	public static final int TIME_TEXT_COLOR = Color.WHITE;
+	public static final boolean TIME_TEXT_BOLD = false;
+	public static final boolean TIME_SHOW_SECOND_ONLY = false;
+
+	public static final float MESSAGE_TEXT_SIZE = 12;
+	public static final int MESSAGE_TEXT_COLOR = Color.YELLOW;
 
 	private int mLastSecond;
 	private TextView mTimeView;
+	private HashMap<CharSequence, TextView> mMessageMap = new HashMap<CharSequence, TextView>();
+
+	private IFloatTimerService.Stub mBinder = new IFloatTimerService.Stub() {
+
+		@Override
+		public boolean setTimerEnable(boolean enable) throws RemoteException {
+			return FloatTimerService.this.setTimerEnable(enable);
+		}
+
+		@Override
+		public boolean getTimerState() throws RemoteException {
+			return mTimeView != null;
+		}
+
+		@Override
+		public int addMessage(CharSequence message) throws RemoteException {
+			if (hasMessage(message)) {
+				CavanAndroid.logE("skip exists message: " + message);
+				return -1;
+			}
+
+			TextView view = (TextView) FloatTimerService.this.addText(message, -1);
+			if (view == null) {
+				return -1;
+			}
+
+			view.setTextSize(MESSAGE_TEXT_SIZE);
+			view.setTextColor(MESSAGE_TEXT_COLOR);
+			view.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+
+			mMessageMap.put(message, view);
+
+			return view.getId();
+		}
+
+		@Override
+		public boolean hasMessage(CharSequence message) throws RemoteException {
+			return mMessageMap.containsKey(message);
+		}
+
+		@Override
+		public void removeMessage(CharSequence message) throws RemoteException {
+			TextView view = (TextView) mMessageMap.get(message);
+			if (view != null) {
+				FloatTimerService.this.removeView(view);
+				mMessageMap.remove(message);
+			}
+		}
+	};
 
 	private Runnable mRunnableTime = new Runnable() {
 
@@ -33,55 +92,71 @@ public class FloatTimerService extends FloatWidowService {
 				} else {
 					mLastSecond = second;
 					mTimeView.postDelayed(this, 1000);
-
-					if (SHOW_SECOND_ONLY) {
-						mTimeView.setText(String.format(" %02d ", second));
-					} else {
-						int hour = calendar.get(Calendar.HOUR_OF_DAY);
-						int minute = calendar.get(Calendar.MINUTE);
-
-						mTimeView.setText(String.format(" %02d:%02d:%02d ", hour, minute, second));
-					}
+					mTimeView.setText(getTimeText(calendar, second));
 				}
 			}
 		}
 	};
 
-	private IFloatTimerService.Stub mBinder = new IFloatTimerService.Stub() {
+	public String getTimeText(Calendar calendar, int second) {
+		if (TIME_SHOW_SECOND_ONLY) {
+			return String.format("%02d", second);
+		} else {
+			int hour = calendar.get(Calendar.HOUR_OF_DAY);
+			int minute = calendar.get(Calendar.MINUTE);
 
-		@Override
-		public boolean setEnable(boolean enable) throws RemoteException {
-			if (enable) {
+			return String.format("%02d:%02d:%02d", hour, minute, second);
+		}
+	}
+
+	public String getTimeText(Calendar calendar) {
+		return getTimeText(calendar, calendar.get(Calendar.SECOND));
+	}
+
+	public String getTimeText() {
+		return getTimeText(Calendar.getInstance());
+	}
+
+	public boolean setTimerEnable(boolean enable) {
+		if (enable) {
+			if (mTimeView == null) {
+				mTimeView = (TextView) addText(getTimeText(), 0);
 				if (mTimeView == null) {
-					mTimeView = (TextView) addText(null, -1);
-					if (mTimeView == null) {
-						return false;
-					}
-
-					mTimeView.post(mRunnableTime);
+					return false;
 				}
-			} else if (mTimeView != null) {
-				removeView(mTimeView);
-				mTimeView = null;
+
+				mTimeView.setTextColor(TIME_TEXT_COLOR);
+				mTimeView.setTextSize(TIME_TEXT_SIZE);
+				mTimeView.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+
+				if (TIME_TEXT_BOLD) {
+					mTimeView.getPaint().setFakeBoldText(true);
+				}
+
+				mLastSecond = -1;
+				mTimeView.post(mRunnableTime);
 			}
-
-			return true;
+		} else if (mTimeView != null) {
+			mTimeView.removeCallbacks(mRunnableTime);
+			removeView(mTimeView);
+			mTimeView = null;
 		}
 
-		@Override
-		public boolean getState() throws RemoteException {
-			return mTimeView != null;
-		}
-	};
+		return true;
+	}
+
+	@Override
+	protected ViewGroup createLayout() {
+		LinearLayout layout = new LinearLayout(getApplicationContext());
+
+		layout.setOrientation(LinearLayout.VERTICAL);
+
+		return layout;
+	}
 
 	@Override
 	public void onDestroy() {
-		try {
-			mBinder.setEnable(false);
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		}
-
+		setTimerEnable(false);
 		super.onDestroy();
 	}
 
@@ -94,29 +169,18 @@ public class FloatTimerService extends FloatWidowService {
 	protected View createView(CharSequence text) {
 		TextView view = new TextView(getApplicationContext());
 		view.setBackgroundResource(R.drawable.desktop_timer_bg);
-		view.setTextColor(TIME_TEXT_COLOR);
+		view.setPadding(TEXT_PADDING, 0, TEXT_PADDING, 0);
 
-		if (TIME_TEXT_BOLD) {
-			view.getPaint().setFakeBoldText(true);
+		if (text != null) {
+			view.setText(text);
 		}
-
-		if (TIME_TEXT_SIZE > 0) {
-			view.setTextSize(TIME_TEXT_SIZE);
-		}
-
-		view.setText(text);
 
 		return view;
 	}
 
 	@Override
-	protected View findView(CharSequence text) {
-		for (View view : mViewMap.values()) {
-			if (text.equals(((TextView) view).getText())) {
-				return view;
-			}
-		}
-
-		return null;
+	protected CharSequence getViewText(View arg0) {
+		TextView view = (TextView) arg0;
+		return view.getText();
 	}
 }

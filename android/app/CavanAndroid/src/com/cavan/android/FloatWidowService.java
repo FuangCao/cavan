@@ -9,16 +9,18 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.LinearLayout;
 
 public abstract class FloatWidowService extends Service {
 
-	protected LinearLayout mLayout;
+	protected ViewGroup mLayout;
 	protected WindowManager mManager;
 	protected HashMap<Integer, View> mViewMap = new HashMap<Integer, View>();
-	protected IFloatWindowService.Stub mBinder = new IFloatWindowService.Stub() {
+
+	private IFloatWindowService.Stub mBinder = new IFloatWindowService.Stub() {
 
 		@Override
 		public int addText(CharSequence text, int index) throws RemoteException {
@@ -52,7 +54,7 @@ public abstract class FloatWidowService extends Service {
 		}
 	};
 
-	protected abstract View findView(CharSequence text);
+	protected abstract CharSequence getViewText(View view);
 	protected abstract View createView(CharSequence text);
 
 	synchronized public int addView(View view, int index) {
@@ -85,6 +87,16 @@ public abstract class FloatWidowService extends Service {
 
 	synchronized public View findView(int id) {
 		return mViewMap.get(id);
+	}
+
+	synchronized public View findView(CharSequence text) {
+		for (View view : mViewMap.values()) {
+			if (text.equals(getViewText(view))) {
+				return view;
+			}
+		}
+
+		return null;
 	}
 
 	synchronized public View getViewAt(int index) {
@@ -126,11 +138,7 @@ public abstract class FloatWidowService extends Service {
 		mViewMap.clear();
 	}
 
-	@Override
-	public void onCreate() {
-		mManager = (WindowManager) getApplicationContext().getSystemService(WINDOW_SERVICE);
-		mLayout = new LinearLayout(getApplicationContext());
-
+	protected LayoutParams createLayoutParams() {
 		LayoutParams params = new LayoutParams();
 
 		params.x = params.y = 0;
@@ -141,7 +149,22 @@ public abstract class FloatWidowService extends Service {
 		params.height = WindowManager.LayoutParams.WRAP_CONTENT;
 		params.flags = LayoutParams.FLAG_NOT_FOCUSABLE | LayoutParams.FLAG_NOT_TOUCHABLE;
 
-		mManager.addView(mLayout, params);
+		return params;
+	}
+
+	protected ViewGroup createLayout() {
+		return new LinearLayout(getApplicationContext());
+	}
+
+	@Override
+	public void onCreate() {
+		mManager = (WindowManager) getApplicationContext().getSystemService(WINDOW_SERVICE);
+		if (mManager != null) {
+			mLayout = createLayout();
+			if (mLayout != null) {
+				mManager.addView(mLayout, createLayoutParams());
+			}
+		}
 
 		super.onCreate();
 	}

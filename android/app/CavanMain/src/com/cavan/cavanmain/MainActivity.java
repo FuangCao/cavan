@@ -221,7 +221,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		}
 
 		try {
-			return mFloatTimerService.setEnable(enable);
+			return mFloatTimerService.setTimerEnable(enable);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
