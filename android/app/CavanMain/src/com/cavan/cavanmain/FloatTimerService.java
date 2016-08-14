@@ -168,12 +168,11 @@ public class FloatTimerService extends FloatWidowService {
 	@Override
 	protected View createView(CharSequence text) {
 		TextView view = new TextView(getApplicationContext());
-		view.setBackgroundResource(R.drawable.desktop_timer_bg);
-		view.setPadding(TEXT_PADDING, 0, TEXT_PADDING, 0);
 
-		if (text != null) {
-			view.setText(text);
-		}
+		view.setText(text);
+		view.setSingleLine();
+		view.setPadding(TEXT_PADDING, 0, TEXT_PADDING, 0);
+		view.setBackgroundResource(R.drawable.desktop_timer_bg);
 
 		return view;
 	}
