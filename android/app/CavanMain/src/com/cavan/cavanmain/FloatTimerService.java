@@ -2,18 +2,16 @@ package com.cavan.cavanmain;
 
 import java.util.Calendar;
 
-import android.app.Service;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.PixelFormat;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.view.Gravity;
-import android.view.WindowManager;
-import android.view.WindowManager.LayoutParams;
+import android.view.View;
 import android.widget.TextView;
 
-public class FloatTimerService extends Service {
+import com.cavan.android.FloatWidowService;
+
+public class FloatTimerService extends FloatWidowService {
 
 	public static final float TIME_TEXT_SIZE = 16;
 	public static final boolean TIME_TEXT_BOLD = false;
@@ -22,7 +20,6 @@ public class FloatTimerService extends Service {
 
 	private int mLastSecond;
 	private TextView mTimeView;
-	private WindowManager mManager;
 
 	private Runnable mRunnableTime = new Runnable() {
 
@@ -54,44 +51,17 @@ public class FloatTimerService extends Service {
 
 		@Override
 		public boolean setEnable(boolean enable) throws RemoteException {
-			if (mManager == null) {
-				return false;
-			}
-
 			if (enable) {
-				if (mTimeView != null) {
-					return true;
+				if (mTimeView == null) {
+					mTimeView = (TextView) addText(null, -1);
+					if (mTimeView == null) {
+						return false;
+					}
+
+					mTimeView.post(mRunnableTime);
 				}
-
-				LayoutParams params = new LayoutParams();
-
-				params.x = params.y = 0;
-				params.type = LayoutParams.TYPE_PHONE;
-				params.format = PixelFormat.RGBA_8888;
-				params.gravity = Gravity.RIGHT | Gravity.TOP;
-				params.width = WindowManager.LayoutParams.WRAP_CONTENT;
-				params.height = WindowManager.LayoutParams.WRAP_CONTENT;
-				params.flags = LayoutParams.FLAG_NOT_FOCUSABLE | LayoutParams.FLAG_NOT_TOUCHABLE;
-
-				TextView view = new TextView(getApplicationContext());
-				view.setBackgroundResource(R.drawable.desktop_timer_bg);
-				view.setTextColor(TIME_TEXT_COLOR);
-
-				if (TIME_TEXT_BOLD) {
-					view.getPaint().setFakeBoldText(true);
-				}
-
-				if (TIME_TEXT_SIZE > 0) {
-					view.setTextSize(TIME_TEXT_SIZE);
-				}
-
-				mManager.addView(view, params);
-				mTimeView = view;
-
-				mLastSecond = -1;
-				mTimeView.post(mRunnableTime);
 			} else if (mTimeView != null) {
-				mManager.removeView(mTimeView);
+				removeView(mTimeView);
 				mTimeView = null;
 			}
 
@@ -103,13 +73,6 @@ public class FloatTimerService extends Service {
 			return mTimeView != null;
 		}
 	};
-
-	@Override
-	public void onCreate() {
-		mManager = (WindowManager) getApplicationContext().getSystemService(WINDOW_SERVICE);
-
-		super.onCreate();
-	}
 
 	@Override
 	public void onDestroy() {
@@ -125,5 +88,35 @@ public class FloatTimerService extends Service {
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBinder;
+	}
+
+	@Override
+	protected View createView(CharSequence text) {
+		TextView view = new TextView(getApplicationContext());
+		view.setBackgroundResource(R.drawable.desktop_timer_bg);
+		view.setTextColor(TIME_TEXT_COLOR);
+
+		if (TIME_TEXT_BOLD) {
+			view.getPaint().setFakeBoldText(true);
+		}
+
+		if (TIME_TEXT_SIZE > 0) {
+			view.setTextSize(TIME_TEXT_SIZE);
+		}
+
+		view.setText(text);
+
+		return view;
+	}
+
+	@Override
+	protected View findView(CharSequence text) {
+		for (View view : mViewMap.values()) {
+			if (text.equals(((TextView) view).getText())) {
+				return view;
+			}
+		}
+
+		return null;
 	}
 }

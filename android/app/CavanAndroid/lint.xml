@@ -3,5 +3,6 @@
     <issue id="DefaultLocale" severity="ignore" />
     <issue id="InlinedApi" severity="ignore" />
     <issue id="NewApi" severity="ignore" />
+    <issue id="UseSparseArrays" severity="ignore" />
     <issue id="Wakelock" severity="ignore" />
 </lint>
