@@ -37,6 +37,8 @@ public class RedPacketNotification {
 	public static final Pattern[] sDigitPatterns = {
 		Pattern.compile("支付宝.*红包\\D*(\\d+)"),
 		Pattern.compile("支付宝.*口令\\D*(\\d+)"),
+		Pattern.compile("红包口令\\D*(\\d+)"),
+		Pattern.compile("口令红包\\D*(\\d+)"),
 		Pattern.compile("红包\\s*[:：]?\\s*(\\d+)"),
 		Pattern.compile("口令\\s*[:：]?\\s*(\\d+)"),
 		Pattern.compile("[:：]\\s*(\\d+)"),
@@ -46,8 +48,21 @@ public class RedPacketNotification {
 	public static final Pattern[] sWordPatterns = {
 		Pattern.compile("支付宝.*红包\\s*[:：]\\s*(\\w+)"),
 		Pattern.compile("支付宝.*口令\\s*[:：]\\s*(\\w+)"),
+		Pattern.compile("红包口令\\s*[:：]\\s*(\\w+)"),
+		Pattern.compile("口令红包\\s*[:：]\\s*(\\w+)"),
 		Pattern.compile("红包\\s*[:：]\\s*(\\w+)\\s*$"),
 		Pattern.compile("口令\\s*[:：]\\s*(\\w+)\\s*$"),
+	};
+
+	public static final Pattern[] sPicturePatterns = {
+		Pattern.compile("支付宝红包.*\\[图片\\]"),
+		Pattern.compile("支付宝口令.*\\[图片\\]"),
+		Pattern.compile("口令红包.*\\[图片\\]"),
+		Pattern.compile("红包口令.*\\[图片\\]"),
+		Pattern.compile("\\[图片\\].*支付宝红包"),
+		Pattern.compile("\\[图片\\].*支付宝口令"),
+		Pattern.compile("\\[图片\\].*红包口令"),
+		Pattern.compile("\\[图片\\].*口令红包"),
 	};
 
 	public static final Pattern[] sOtherPatterns = {
@@ -292,20 +307,24 @@ public class RedPacketNotification {
 
 	// ================================================================================
 
-	public void sendRedPacketNotifyAlipay() {
-		for (String code : getRedPacketCodes()) {
+	public int sendRedPacketNotifyAlipay() {
+		List<String> codes = getRedPacketCodes();
+
+		for (String code : codes) {
 			Notification notification = buildRedPacketNotifyAlipay(code);
 			if (notification != null) {
-				CavanAndroid.showToastLong(mService, "支付宝红包口令[" + code + "]: " + mName);
+				CavanAndroid.showToastLong(mService, mName + "@支付宝红包口令: " + code);
 
 				mService.startAlipayActivity();
 				mService.postRedPacketCode(code);
 				mService.sendNotification(notification);
 			}
 		}
+
+		return codes.size();
 	}
 
-	public void sendRedPacketNotifyNormal(String content) {
+	public boolean sendRedPacketNotifyNormal(String content) {
 		PendingIntent intent = mNotification.getNotification().contentIntent;
 		Notification notification = buildNotification(content, intent);
 
@@ -317,19 +336,48 @@ public class RedPacketNotification {
 			}
 		}
 
-		CavanAndroid.showToastLong(mService, content + ": " + mName);
+		CavanAndroid.showToastLong(mService, mName + ": " + content);
 
 		mService.sendNotification(notification);
+
+		return true;
 	}
 
-	public void sendRedPacketNotifyAuto() {
-		if (parse()) {
-			Matcher matcher = sNormalPattern.matcher(mMessage);
+	public boolean sendRedPacketNotifyAlipayPicture() {
+		for (Pattern pattern : sPicturePatterns) {
+			Matcher matcher = pattern.matcher(mMessage);
 			if (matcher.find()) {
-				sendRedPacketNotifyNormal(matcher.group(1));
-			} else {
-				sendRedPacketNotifyAlipay();
+				return sendRedPacketNotifyNormal("支付宝红包口令图片");
 			}
 		}
+
+		return false;
+	}
+
+	public boolean sendRedPacketNotifyNormal() {
+		Matcher matcher = sNormalPattern.matcher(mMessage);
+		if (matcher.find()) {
+			return sendRedPacketNotifyNormal(matcher.group(1));
+		}
+
+		return false;
+	}
+
+	public boolean sendRedPacketNotifyAuto() {
+		if (parse()) {
+			if (sendRedPacketNotifyNormal()) {
+				return true;
+			}
+
+			if (sendRedPacketNotifyAlipay() > 0) {
+				return true;
+			}
+
+			if (sendRedPacketNotifyAlipayPicture()) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
