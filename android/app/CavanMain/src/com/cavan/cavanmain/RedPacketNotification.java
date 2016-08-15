@@ -65,8 +65,8 @@ public class RedPacketNotification {
 	};
 
 	public static final Pattern[] sOtherPatterns = {
-		Pattern.compile("(\\b华美\\S{2})\\b"),
-		Pattern.compile("口令.*(华美\\S{2})"),
+		/* Pattern.compile("(\\b华美\\S{2})\\b"),
+		Pattern.compile("口令.*(华美\\S{2})"), */
 	};
 
 	public static final Pattern[] sExcludePatterns = {
@@ -76,9 +76,9 @@ public class RedPacketNotification {
 	public static HashMap<CharSequence, Long> sCodeMap = new HashMap<CharSequence, Long>();
 	public static HashMap<String, Boolean> sExcludeCodeMap = new HashMap<String, Boolean>();
 
-	static {
+	/* static {
 		sExcludeCodeMap.put("华美月饼", true);
-	}
+	} */
 
 	private String mUser;
 	private String mGroup;
