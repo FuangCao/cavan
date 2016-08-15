@@ -32,6 +32,7 @@ public class RedPacketNotification {
 		"m4a", "ogg", "wav", "mp3", "ac3", "wma"
 	};
 
+	public static final Pattern sGroupPattern = Pattern.compile("([^\\(]+)\\((.+)\\)\\s*$");
 	public static final Pattern sNormalPattern = Pattern.compile("^\\[(\\w+红包)\\]");
 
 	public static final Pattern[] sDigitPatterns = {
@@ -55,12 +56,10 @@ public class RedPacketNotification {
 	};
 
 	public static final Pattern[] sPicturePatterns = {
-		Pattern.compile("支付宝红包.*\\[图片\\]"),
-		Pattern.compile("支付宝口令.*\\[图片\\]"),
-		Pattern.compile("口令红包.*\\[图片\\]"),
-		Pattern.compile("红包口令.*\\[图片\\]"),
 		Pattern.compile("\\[图片\\].*支付宝红包"),
 		Pattern.compile("\\[图片\\].*支付宝口令"),
+		Pattern.compile("\\[图片\\].*支付宝.*红包.*口令"),
+		Pattern.compile("\\[图片\\].*支付宝.*口令.*红包"),
 		Pattern.compile("\\[图片\\].*红包口令"),
 		Pattern.compile("\\[图片\\].*口令红包"),
 	};
@@ -81,7 +80,8 @@ public class RedPacketNotification {
 		sExcludeCodeMap.put("华美月饼", true);
 	}
 
-	private String mName;
+	private String mUser;
+	private String mGroup;
 	private String mContent;
 	private List<String> mLines = new ArrayList<String>();
 
@@ -95,8 +95,24 @@ public class RedPacketNotification {
 		mNotification = sbn;
 	}
 
-	public String getName() {
-		return mName;
+	public String getUser() {
+		return mUser;
+	}
+
+	public String getGroup() {
+		return mGroup;
+	}
+
+	public String getUserDescription() {
+		if (mGroup != null) {
+			return mGroup;
+		}
+
+		if (mUser != null) {
+			return mUser;
+		}
+
+		return "未知用户";
 	}
 
 	public String getContent() {
@@ -133,20 +149,27 @@ public class RedPacketNotification {
 		String[] contents = content.split(":", 2);
 
 		if (contents.length < 2) {
-			mName = "红包";
 			content = content.trim();
 		} else {
-			mName = contents[0].trim();
+			String name = contents[0].trim();
+			Matcher matcher = sGroupPattern.matcher(name);
+			if (matcher.find()) {
+				mUser = matcher.group(1);
+				mGroup = matcher.group(2);
+			} else {
+				mUser = name;
+			}
+
 			content = contents[1].trim();
 		}
 
-		mContent = content.replaceAll("\\s*\n\\s*", " ");
-
-		for (String line : content.split("\n")) {
+		for (String line : content.split("\\s*\n\\s*")) {
 			if (isValidLine(line)) {
 				mLines.add(line.trim());
 			}
 		}
+
+		mContent = CavanString.join(mLines, " ");
 
 		return true;
 	}
@@ -269,7 +292,7 @@ public class RedPacketNotification {
 
 		Notification.Builder builder = new Notification.Builder(mService)
 			.setSmallIcon(R.drawable.ic_launcher)
-			.setContentTitle(mName)
+			.setContentTitle(mUser)
 			.setContentText(content)
 			.setContentIntent(intent);
 
@@ -317,7 +340,7 @@ public class RedPacketNotification {
 			if (notification != null) {
 				mService.startAlipayActivity();
 				mService.postRedPacketCode(code);
-				mService.sendNotification(notification, code, mName + "@支付宝口令: " + code);
+				mService.sendNotification(notification, code, "支付宝口令@" + getUserDescription() + ": " + code);
 			}
 		}
 
@@ -345,7 +368,7 @@ public class RedPacketNotification {
 		for (Pattern pattern : sPicturePatterns) {
 			Matcher matcher = pattern.matcher(mContent);
 			if (matcher.find()) {
-				return sendRedPacketNotifyNormal("支付宝口令图片", mName + "@支付宝口令图片");
+				return sendRedPacketNotifyNormal("支付宝口令图片", "支付宝口令图片@" + getUserDescription());
 			}
 		}
 
@@ -356,7 +379,7 @@ public class RedPacketNotification {
 		Matcher matcher = sNormalPattern.matcher(mContent);
 		if (matcher.find()) {
 			String content = matcher.group(1);
-			return sendRedPacketNotifyNormal(content, mName + "@" + content);
+			return sendRedPacketNotifyNormal(content, content + "@" + getUserDescription());
 		}
 
 		return false;

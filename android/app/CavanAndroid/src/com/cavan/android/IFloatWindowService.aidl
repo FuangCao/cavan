@@ -5,5 +5,5 @@ interface IFloatWindowService {
 	void removeText(CharSequence text);
 	void removeTextAt(int index);
 	void removeTextById(int id);
-	void removeAll();
+	void removeTextAll();
 }

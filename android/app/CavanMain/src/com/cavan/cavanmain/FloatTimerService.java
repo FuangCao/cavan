@@ -1,7 +1,6 @@
 package com.cavan.cavanmain;
 
 import java.util.Calendar;
-import java.util.HashMap;
 
 import android.content.Intent;
 import android.graphics.Color;
@@ -9,11 +8,8 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.cavan.android.CavanAndroid;
 import com.cavan.android.FloatWidowService;
 
 public class FloatTimerService extends FloatWidowService {
@@ -30,7 +26,6 @@ public class FloatTimerService extends FloatWidowService {
 
 	private int mLastSecond;
 	private TextView mTimeView;
-	private HashMap<CharSequence, TextView> mMessageMap = new HashMap<CharSequence, TextView>();
 
 	private IFloatTimerService.Stub mBinder = new IFloatTimerService.Stub() {
 
@@ -46,11 +41,6 @@ public class FloatTimerService extends FloatWidowService {
 
 		@Override
 		public int addMessage(CharSequence message) throws RemoteException {
-			if (hasMessage(message)) {
-				CavanAndroid.logE("skip exists message: " + message);
-				return -1;
-			}
-
 			TextView view = (TextView) FloatTimerService.this.addText(message, -1);
 			if (view == null) {
 				return -1;
@@ -60,23 +50,17 @@ public class FloatTimerService extends FloatWidowService {
 			view.setTextColor(MESSAGE_TEXT_COLOR);
 			view.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
 
-			mMessageMap.put(message, view);
-
 			return view.getId();
 		}
 
 		@Override
 		public boolean hasMessage(CharSequence message) throws RemoteException {
-			return mMessageMap.containsKey(message);
+			return FloatTimerService.this.hasText(message);
 		}
 
 		@Override
 		public void removeMessage(CharSequence message) throws RemoteException {
-			TextView view = (TextView) mMessageMap.get(message);
-			if (view != null) {
-				FloatTimerService.this.removeView(view);
-				mMessageMap.remove(message);
-			}
+			FloatTimerService.this.removeText(message);
 		}
 	};
 
@@ -143,15 +127,6 @@ public class FloatTimerService extends FloatWidowService {
 		}
 
 		return true;
-	}
-
-	@Override
-	protected ViewGroup createLayout() {
-		LinearLayout layout = new LinearLayout(getApplicationContext());
-
-		layout.setOrientation(LinearLayout.VERTICAL);
-
-		return layout;
 	}
 
 	@Override

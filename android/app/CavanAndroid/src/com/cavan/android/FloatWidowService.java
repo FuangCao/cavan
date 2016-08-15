@@ -16,9 +16,11 @@ import android.widget.LinearLayout;
 
 public abstract class FloatWidowService extends Service {
 
-	protected ViewGroup mLayout;
+	protected View mRootView;
+	protected ViewGroup mViewGroup;
 	protected WindowManager mManager;
-	protected HashMap<Integer, View> mViewMap = new HashMap<Integer, View>();
+	protected HashMap<Integer, View> mViewMapId = new HashMap<Integer, View>();
+	protected HashMap<CharSequence, View> mViewMapText = new HashMap<CharSequence, View>();
 
 	private IFloatWindowService.Stub mBinder = new IFloatWindowService.Stub() {
 
@@ -34,41 +36,71 @@ public abstract class FloatWidowService extends Service {
 
 		@Override
 		public void removeText(CharSequence text) throws RemoteException {
-			FloatWidowService.this.removeView(text);
+			FloatWidowService.this.removeText(text);
 		}
 
 		@Override
 		public void removeTextAt(int index) throws RemoteException {
-			FloatWidowService.this.removeView(index);
+			FloatWidowService.this.removeTextAt(index);
 		}
 
 		@Override
 		public void removeTextById(int id) throws RemoteException {
-			FloatWidowService.this.removeView(id);
+			FloatWidowService.this.removeText(id);
 
 		}
 
 		@Override
-		public void removeAll() throws RemoteException {
-			FloatWidowService.this.removeAll();
+		public void removeTextAll() throws RemoteException {
+			FloatWidowService.this.removeTextAll();
 		}
 	};
+
+	// ================================================================================
 
 	protected abstract CharSequence getViewText(View view);
 	protected abstract View createView(CharSequence text);
 
+	synchronized public void setViewGroup(ViewGroup group) {
+		if (mViewGroup == group) {
+			return;
+		}
+
+		if (mViewGroup != null) {
+			mViewGroup.removeAllViews();
+		}
+
+		if (group != null) {
+			for (View view : mViewMapId.values()) {
+				group.addView(view);
+			}
+		}
+
+		mViewGroup = group;
+	}
+
+	synchronized public ViewGroup getViewGroup() {
+		return mViewGroup;
+	}
+
+	synchronized protected void addView(View view, int id, int index) {
+		view.setId(id);
+
+		if (mViewGroup != null) {
+			if (index < 0) {
+				mViewGroup.addView(view);
+			} else {
+				mViewGroup.addView(view, index);
+			}
+		}
+
+		mViewMapId.put(id, view);
+	}
+
 	synchronized public int addView(View view, int index) {
 		for (int id = 1; id > 0; id++) {
-			if (mViewMap.get(id) == null) {
-				mViewMap.put(id, view);
-				view.setId(id);
-
-				if (index < 0) {
-					mLayout.addView(view);
-				} else {
-					mLayout.addView(view, index);
-				}
-
+			if (mViewMapId.get(id) == null) {
+				addView(view, id, index);
 				return id;
 			}
 		}
@@ -76,21 +108,12 @@ public abstract class FloatWidowService extends Service {
 		return -1;
 	}
 
-	public View addText(CharSequence text, int index) {
-		View view = createView(text);
-		if (view != null && addView(view, index) < 0) {
-			view = null;
-		}
-
-		return view;
-	}
-
 	synchronized public View findView(int id) {
-		return mViewMap.get(id);
+		return mViewMapId.get(id);
 	}
 
 	synchronized public View findView(CharSequence text) {
-		for (View view : mViewMap.values()) {
+		for (View view : mViewMapId.values()) {
 			if (text.equals(getViewText(view))) {
 				return view;
 			}
@@ -100,45 +123,135 @@ public abstract class FloatWidowService extends Service {
 	}
 
 	synchronized public View getViewAt(int index) {
+		if (mViewGroup == null) {
+			return null;
+		}
+
 		try {
-			return mLayout.getChildAt(index);
+			return mViewGroup.getChildAt(index);
 		} catch (Exception e) {
 			return null;
 		}
 	}
 
 	synchronized public void removeView(View view) {
-		mLayout.removeView(view);
-		mViewMap.remove(view.getId());
+		if (mViewGroup != null) {
+			mViewGroup.removeView(view);
+		}
+
+		mViewMapId.remove(view.getId());
 	}
 
-	synchronized public void removeView(int id) {
+	synchronized public View removeView(int id) {
 		View view = findView(id);
 		if (view != null) {
 			removeView(view);
 		}
+
+		return view;
 	}
 
-	synchronized public void removeView(CharSequence text) {
+	synchronized public View removeView(CharSequence text) {
 		View view = findView(text);
 		if (view != null) {
 			removeView(view);
 		}
+
+		return view;
 	}
 
-	synchronized public void removeViewAt(int index) {
+	synchronized public View removeViewAt(int index) {
 		View view = getViewAt(index);
 		if (view != null) {
 			removeView(view);
 		}
+
+		return view;
 	}
 
-	synchronized public void removeAll() {
-		mLayout.removeAllViews();
-		mViewMap.clear();
+	synchronized public void removeViewAll() {
+		if (mViewGroup != null) {
+			mViewGroup.removeAllViews();
+		}
+
+		mViewMapId.clear();
 	}
 
-	protected LayoutParams createLayoutParams() {
+	// ================================================================================
+
+	synchronized public boolean hasText(CharSequence text) {
+		return mViewMapText.containsKey(text);
+	}
+
+	synchronized public View addText(CharSequence text, int index) {
+		if (hasText(text)) {
+			return null;
+		}
+
+		View view = createView(text);
+		if (view == null || addView(view, index) < 0) {
+			return null;
+		}
+
+		mViewMapText.put(text, view);
+
+		return view;
+	}
+
+	synchronized public void removeText(View view, CharSequence text) {
+		removeView(view);
+		mViewMapText.remove(text);
+	}
+
+	synchronized public View removeText(CharSequence text) {
+		View view = mViewMapText.get(text);
+		if (view != null) {
+			removeText(view, text);
+		}
+
+		return view;
+	}
+
+	synchronized public void removeText(View view) {
+		removeText(view, getViewText(view));
+	}
+
+	synchronized public View removeText(int id) {
+		View view = findView(id);
+		if (view != null) {
+			removeText(view);
+		}
+
+		return view;
+	}
+
+	synchronized public View removeTextAt(int index) {
+		View view = getViewAt(index);
+		if (view != null) {
+			removeText(view);
+		}
+
+		return view;
+	}
+
+	synchronized public void removeTextAll() {
+		removeViewAll();
+		mViewMapText.clear();
+	}
+
+	// ================================================================================
+
+	public boolean addTopView(View view, LayoutParams params) {
+		if (mManager == null) {
+			return false;
+		}
+
+		mManager.addView(view, params);
+
+		return true;
+	}
+
+	protected LayoutParams createRootViewLayoutParams() {
 		LayoutParams params = new LayoutParams();
 
 		params.x = params.y = 0;
@@ -152,27 +265,48 @@ public abstract class FloatWidowService extends Service {
 		return params;
 	}
 
-	protected ViewGroup createLayout() {
-		return new LinearLayout(getApplicationContext());
+	protected View createRootView() {
+		LinearLayout layout = new LinearLayout(getApplicationContext());
+
+		layout.setOrientation(LinearLayout.VERTICAL);
+
+		return layout;
+	}
+
+	protected View addRootView() {
+		View view = createRootView();
+		if (view != null && addTopView(view, createRootViewLayoutParams())) {
+			if (view instanceof ViewGroup) {
+				mViewGroup = (ViewGroup) view;
+			}
+
+			return view;
+		}
+
+		return null;
 	}
 
 	@Override
 	public void onCreate() {
 		mManager = (WindowManager) getApplicationContext().getSystemService(WINDOW_SERVICE);
-		if (mManager != null) {
-			mLayout = createLayout();
-			if (mLayout != null) {
-				mManager.addView(mLayout, createLayoutParams());
-			}
-		}
+		mRootView = addRootView();
 
 		super.onCreate();
 	}
 
 	@Override
 	public void onDestroy() {
-		removeAll();
-		mManager.removeView(mLayout);
+		removeTextAll();
+
+		if (mRootView != null) {
+			mManager.removeView(mRootView);
+		}
+
+		mRootView = null;
+		mViewGroup = null;
+
+		mViewMapId.clear();
+		mViewMapText.clear();
 
 		super.onDestroy();
 	}

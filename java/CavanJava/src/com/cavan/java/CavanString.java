@@ -45,6 +45,27 @@ public class CavanString {
 		return fixupSpace(text).trim();
 	}
 
+	public static String join(Object[] array, String sep) {
+		if (array.length > 1) {
+			StringBuilder builder = new StringBuilder(array[0].toString());
+
+			for (int i = 1; i < array.length; i++) {
+				builder.append(sep);
+				builder.append(array[i].toString());
+			}
+
+			return builder.toString();
+		} else if (array.length > 0) {
+			return array[0].toString();
+		} else {
+			return "";
+		}
+	}
+
+	public static String join(List<?> list, String sep) {
+		return join(list.toArray(), sep);
+	}
+
 	public static String fromList(List<?> list) {
 		StringBuilder builder = new StringBuilder("[ ");
 

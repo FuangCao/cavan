@@ -266,7 +266,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 				NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 				if (manager != null) {
 					String text = (String) object;
-					if (CavanString.hasChineseChar(text) && text.matches("[::]") == false) {
+					if (CavanString.hasChineseChar(text) && text.matches(".*[:：].*") == false) {
 						text = "支付宝红包口令: " + text;
 					}
 
