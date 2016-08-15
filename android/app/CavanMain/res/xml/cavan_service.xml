@@ -8,6 +8,9 @@
 	    android:title="@string/text_ip_address"
 	    android:summary="@string/text_unknown" />
 
+	<Preference android:key="notification_permission"
+	    android:title="@string/text_notification_permission" />
+
 	<RingtonePreference android:key="red_packet_notify_ringtone"
 	    android:persistent="true"
 	    android:title="@string/red_packet_notify_ringtone" />

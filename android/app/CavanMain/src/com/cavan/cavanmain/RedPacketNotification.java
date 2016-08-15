@@ -143,8 +143,8 @@ public class RedPacketNotification {
 
 		String content = text.toString();
 
-		CavanAndroid.logD("================================================================================");
-		CavanAndroid.logD(content);
+		CavanAndroid.logE("================================================================================");
+		CavanAndroid.logE(content);
 
 		String[] contents = content.split(":", 2);
 

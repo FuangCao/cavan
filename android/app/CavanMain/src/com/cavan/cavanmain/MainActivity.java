@@ -37,6 +37,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 	public static final String KEY_IP_ADDRESS = "ip_address";
 	public static final String KEY_FLOAT_TIMER = "float_timer";
+	public static final String KEY_NOTIFICATION_PERMISSION = "notification_permission";
 	public static final String KEY_RED_PACKET_NOTIFY_TEST = "red_packet_notify_test";
 	public static final String KEY_RED_PACKET_NOTIFY_RINGTONE = "red_packet_notify_ringtone";
 	public static final String KEY_TCP_DD = "tcp_dd";
@@ -46,23 +47,24 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private File mFileBin;
 	private Preference mPreferenceIpAddress;
 	private CheckBoxPreference mPreferenceFloatTime;
+	private Preference mPreferenceNotificationPermission;
 	private EditTextPreference mPreferenceRedPacketNotifyTest;
 	private RingtonePreference mPreferenceRedPacketNotifyRingtone;
 	private CavanServicePreference mPreferenceTcpDd;
 	private CavanServicePreference mPreferenceFtp;
 	private CavanServicePreference mPreferenceWebProxy;
 
-	private IFloatTimerService mFloatTimerService;
-	private ServiceConnection mFloatTimerConnection = new ServiceConnection() {
+	private IFloatMessageService mFloatMessageService;
+	private ServiceConnection mFloatMessageConnection = new ServiceConnection() {
 
 		@Override
 		public void onServiceDisconnected(ComponentName arg0) {
-			mFloatTimerService = null;
+			mFloatMessageService = null;
 		}
 
 		@Override
 		public void onServiceConnected(ComponentName component, IBinder binder) {
-			mFloatTimerService = IFloatTimerService.Stub.asInterface(binder);
+			mFloatMessageService = IFloatMessageService.Stub.asInterface(binder);
 			setDesktopFloatTimerEnable(mPreferenceFloatTime.isChecked());
 		}
 	};
@@ -74,6 +76,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		addPreferencesFromResource(R.xml.cavan_service);
 
 		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
+		mPreferenceNotificationPermission = findPreference(KEY_NOTIFICATION_PERMISSION);
 
 		mPreferenceFloatTime = (CheckBoxPreference) findPreference(KEY_FLOAT_TIMER);
 		mPreferenceFloatTime.setOnPreferenceChangeListener(this);
@@ -117,15 +120,15 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			}.start();
 		}
 
-		Intent service = new Intent(this, FloatTimerService.class);
+		Intent service = new Intent(this, FloatMessageService.class);
 
 		startService(service);
-		bindService(service, mFloatTimerConnection, 0);
+		bindService(service, mFloatMessageConnection, 0);
 	}
 
 	@Override
 	protected void onDestroy() {
-		unbindService(mFloatTimerConnection);
+		unbindService(mFloatMessageConnection);
 
 		mPreferenceTcpDd.unbindService(this);
 		mPreferenceFtp.unbindService(this);
@@ -216,17 +219,22 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	}
 
 	private boolean setDesktopFloatTimerEnable(boolean enable) {
-		if (mFloatTimerService == null) {
+		if (mFloatMessageService == null) {
 			return false;
 		}
 
 		try {
-			return mFloatTimerService.setTimerEnable(enable);
+			return mFloatMessageService.setTimerEnable(enable);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
 
 		return false;
+	}
+
+	private void startNotificationListenerSettingsActivity() {
+		Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+		startActivity(intent);
 	}
 
 	@SuppressWarnings("deprecation")
@@ -252,6 +260,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
 		if (preference == mPreferenceIpAddress) {
 			updateIpAddressStatus();
+		} else if (preference == mPreferenceNotificationPermission) {
+			startNotificationListenerSettingsActivity();
 		}
 
 		return super.onPreferenceTreeClick(preferenceScreen, preference);
@@ -280,9 +290,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 					manager.notify(RedPacketListenerService.NOTIFY_TEST, builder.build());
 				}
 			} else {
-				Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
-				startActivity(intent);
-
+				startNotificationListenerSettingsActivity();
 				CavanAndroid.showToastLong(this, "请打开通知读取权限");
 			}
 		} else if (preference == mPreferenceRedPacketNotifyRingtone) {

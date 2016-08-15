@@ -1,6 +1,6 @@
 package com.cavan.cavanmain;
 
-interface IFloatTimerService {
+interface IFloatMessageService {
 	boolean getTimerState();
 	boolean setTimerEnable(boolean enable);
 	int addMessage(CharSequence message);

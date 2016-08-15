@@ -61,9 +61,9 @@ public class RedPacketListenerService extends NotificationListenerService {
 						RedPacketNotification.removeCode(code);
 					}
 
-					if (message != null && mFloatTimerService != null) {
+					if (message != null && mFloatMessageService != null) {
 						try {
-							mFloatTimerService.removeMessage(message);
+							mFloatMessageService.removeMessage(message);
 						} catch (RemoteException e) {
 							e.printStackTrace();
 						}
@@ -74,17 +74,17 @@ public class RedPacketListenerService extends NotificationListenerService {
 		}
 	};
 
-	private IFloatTimerService mFloatTimerService;
-	private ServiceConnection mFloatTimerConnection = new ServiceConnection() {
+	private IFloatMessageService mFloatMessageService;
+	private ServiceConnection mFloatMessageConnection = new ServiceConnection() {
 
 		@Override
 		public void onServiceDisconnected(ComponentName arg0) {
-			mFloatTimerService = null;
+			mFloatMessageService = null;
 		}
 
 		@Override
 		public void onServiceConnected(ComponentName arg0, IBinder arg1) {
-			mFloatTimerService = IFloatTimerService.Stub.asInterface(arg1);
+			mFloatMessageService = IFloatMessageService.Stub.asInterface(arg1);
 		}
 	};
 
@@ -109,9 +109,9 @@ public class RedPacketListenerService extends NotificationListenerService {
 
 		mNotificationManager.notify(createNotificationId(), notification);
 
-		if (mFloatTimerService != null) {
+		if (mFloatMessageService != null) {
 			try {
-				mFloatTimerService.addMessage(message);
+				mFloatMessageService.addMessage(message);
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
@@ -163,16 +163,16 @@ public class RedPacketListenerService extends NotificationListenerService {
 		mClipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 		mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
-		Intent service = new Intent(this, FloatTimerService.class);
+		Intent service = new Intent(this, FloatMessageService.class);
 		startService(service);
-		bindService(service, mFloatTimerConnection, 0);
+		bindService(service, mFloatMessageConnection, 0);
 
 		super.onCreate();
 	}
 
 	@Override
 	public void onDestroy() {
-		unbindService(mFloatTimerConnection);
+		unbindService(mFloatMessageConnection);
 		super.onDestroy();
 	}
 

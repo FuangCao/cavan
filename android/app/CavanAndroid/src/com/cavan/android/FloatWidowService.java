@@ -61,6 +61,28 @@ public abstract class FloatWidowService extends Service {
 	protected abstract CharSequence getViewText(View view);
 	protected abstract View createView(CharSequence text);
 
+	protected ViewGroup findViewGroup() {
+		if (mRootView instanceof ViewGroup) {
+			return (ViewGroup) mRootView;
+		}
+
+		return null;
+	}
+
+	protected boolean doInitialize() {
+		return true;
+	}
+
+	// ================================================================================
+
+	public ViewGroup getViewGroup() {
+		return mViewGroup;
+	}
+
+	public View getRootView() {
+		return mRootView;
+	}
+
 	synchronized public void setViewGroup(ViewGroup group) {
 		if (mViewGroup == group) {
 			return;
@@ -77,10 +99,6 @@ public abstract class FloatWidowService extends Service {
 		}
 
 		mViewGroup = group;
-	}
-
-	synchronized public ViewGroup getViewGroup() {
-		return mViewGroup;
 	}
 
 	synchronized protected void addView(View view, int id, int index) {
@@ -273,23 +291,37 @@ public abstract class FloatWidowService extends Service {
 		return layout;
 	}
 
+	protected boolean addRootView(View view, LayoutParams params) {
+		return addTopView(view, params);
+	}
+
+	protected boolean addRootView(View view) {
+		return addRootView(view, createRootViewLayoutParams());
+	}
+
 	protected View addRootView() {
 		View view = createRootView();
-		if (view != null && addTopView(view, createRootViewLayoutParams())) {
-			if (view instanceof ViewGroup) {
-				mViewGroup = (ViewGroup) view;
-			}
-
+		if (view != null && addRootView(view)) {
 			return view;
 		}
 
 		return null;
 	}
 
+	public View findViewById(int id) {
+		return mRootView.findViewById(id);
+	}
+
+	// ================================================================================
+
 	@Override
 	public void onCreate() {
 		mManager = (WindowManager) getApplicationContext().getSystemService(WINDOW_SERVICE);
+
 		mRootView = addRootView();
+		mViewGroup = findViewGroup();
+
+		doInitialize();
 
 		super.onCreate();
 	}
