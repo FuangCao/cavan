@@ -23,7 +23,9 @@
     <string name="red_packet_notify_test">红包提醒测试</string>
     <string name="red_packet_notify_ringtone">红包提示音</string>
     <string name="text_test">测试</string>
-    <string name="text_notification_permission">通知读取权限设置</string>
-    <string name="text_notification_database_clean">清除通知数据库</string>
+    <string name="text_message_count">消息总数： </string>
+    <string name="text_notification_permission">通知权限设置</string>
+    <string name="text_notification_database_clean">清除数据库</string>
+    <string name="text_notification_database_show">查看数据库</string>
 
 </resources>

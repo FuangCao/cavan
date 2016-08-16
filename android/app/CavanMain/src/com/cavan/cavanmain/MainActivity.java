@@ -38,6 +38,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_IP_ADDRESS = "ip_address";
 	public static final String KEY_FLOAT_TIMER = "float_timer";
 	public static final String KEY_NOTIFICATION_DATABASE_CLEAN = "notification_database_clean";
+	public static final String KEY_NOTIFICATION_DATABASE_SHOW = "notification_database_show";
 	public static final String KEY_NOTIFICATION_PERMISSION = "notification_permission";
 	public static final String KEY_RED_PACKET_NOTIFY_TEST = "red_packet_notify_test";
 	public static final String KEY_RED_PACKET_NOTIFY_RINGTONE = "red_packet_notify_ringtone";
@@ -50,6 +51,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private CheckBoxPreference mPreferenceFloatTime;
 	private Preference mPreferenceNotificationPermission;
 	private Preference mPreferenceNotificationDatabaseClean;
+	private Preference mPreferenceNotificationDatabaseShow;
 	private EditTextPreference mPreferenceRedPacketNotifyTest;
 	private RingtonePreference mPreferenceRedPacketNotifyRingtone;
 	private CavanServicePreference mPreferenceTcpDd;
@@ -80,6 +82,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
 		mPreferenceNotificationPermission = findPreference(KEY_NOTIFICATION_PERMISSION);
 		mPreferenceNotificationDatabaseClean = findPreference(KEY_NOTIFICATION_DATABASE_CLEAN);
+		mPreferenceNotificationDatabaseShow = findPreference(KEY_NOTIFICATION_DATABASE_SHOW);
 
 		mPreferenceFloatTime = (CheckBoxPreference) findPreference(KEY_FLOAT_TIMER);
 		mPreferenceFloatTime.setOnPreferenceChangeListener(this);
@@ -268,6 +271,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		} else if (preference == mPreferenceNotificationDatabaseClean) {
 			int count = CavanNotification.deleteAll(getContentResolver());
 			CavanAndroid.showToast(this, String.format("成功清除 %d 条通知", count));
+		} else if (preference == mPreferenceNotificationDatabaseShow) {
+			Intent intent = new Intent(this, CavanNotificationActivity.class);
+			startActivity(intent);
 		}
 
 		return super.onPreferenceTreeClick(preferenceScreen, preference);

@@ -245,25 +245,33 @@ public class CavanNotification {
 		return delete(resolver, KEY_GROUP_NAME + "=?", new String[] { group } );
 	}
 
-	public static ArrayList<CavanNotification> query(ContentResolver resolver, String[] projection, String selection, String[] selectionArgs) {
-		Cursor cursor = resolver.query(CONTENT_URI, projection, selection, selectionArgs, null);
+	public static Cursor query(ContentResolver resolver, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+		return resolver.query(CONTENT_URI, projection, selection, selectionArgs, sortOrder);
+	}
+
+	public static Cursor queryAll(ContentResolver resolver, String[] projection, String sortOrder) {
+		return query(resolver, projection, null, null, sortOrder);
+	}
+
+	public static ArrayList<CavanNotification> queryNotification(ContentResolver resolver, String selection, String[] selectionArgs, String sortOrder) {
+		Cursor cursor = query(resolver, PROJECTION, selection, selectionArgs, sortOrder);
 		return parseCursor(cursor);
 	}
 
-	public static ArrayList<CavanNotification> queryAll(ContentResolver resolver) {
-		return query(resolver, PROJECTION, null, null);
+	public static ArrayList<CavanNotification> queryNotificationAll(ContentResolver resolver, String sortOrder) {
+		return queryNotification(resolver, null, null, sortOrder);
 	}
 
-	public static ArrayList<CavanNotification> queryByPackage(ContentResolver resolver, String pkgName) {
-		return query(resolver, PROJECTION, KEY_PACKAGE + "=?", new String[] { pkgName });
+	public static ArrayList<CavanNotification> queryNotificationByPackage(ContentResolver resolver, String pkgName, String sortOrder) {
+		return queryNotification(resolver, KEY_PACKAGE + "=?", new String[] { pkgName }, sortOrder);
 	}
 
-	public static ArrayList<CavanNotification> queryByUser(ContentResolver resolver, String user) {
-		return query(resolver, PROJECTION, KEY_USER_NAME + "=?", new String[] { user });
+	public static ArrayList<CavanNotification> queryByUser(ContentResolver resolver, String user, String sortOrder) {
+		return queryNotification(resolver, KEY_USER_NAME + "=?", new String[] { user }, sortOrder);
 	}
 
-	public static ArrayList<CavanNotification> queryByGroup(ContentResolver resolver, String group) {
-		return query(resolver, PROJECTION, KEY_GROUP_NAME + "=?", new String[] { group });
+	public static ArrayList<CavanNotification> queryNotificationByGroup(ContentResolver resolver, String group, String sortOrder) {
+		return queryNotification(resolver, KEY_GROUP_NAME + "=?", new String[] { group }, sortOrder);
 	}
 
 	@Override

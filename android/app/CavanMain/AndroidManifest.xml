@@ -56,6 +56,7 @@
         <receiver android:name="RedPacketBroadcastReceiver"></receiver>
         <service android:name="FloatMessageService"></service>
         <provider android:name="CavanNotificationProvider" android:authorities="com.cavan.notification.provider" android:exported="false"></provider>
+        <activity android:name="CavanNotificationActivity"></activity>
     </application>
 
 </manifest>

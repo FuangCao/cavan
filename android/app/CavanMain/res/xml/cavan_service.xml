@@ -11,6 +11,9 @@
 	<Preference android:key="notification_database_clean"
 	    android:title="@string/text_notification_database_clean" />
 
+	<Preference android:key="notification_database_show"
+	    android:title="@string/text_notification_database_show" />
+
 	<Preference android:key="notification_permission"
 	    android:title="@string/text_notification_permission" />
 
