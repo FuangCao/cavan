@@ -47,8 +47,13 @@ public class RedPacketListenerService extends NotificationListenerService {
 					}
 				}
 
-				RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, sbn);
-				notification.sendRedPacketNotifyAuto();
+				try {
+					RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, sbn);
+					notification.sendRedPacketNotifyAuto();
+					notification.insert(getContentResolver());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 				break;
 
 			case MSG_REMOVE_NOTIFICATION:

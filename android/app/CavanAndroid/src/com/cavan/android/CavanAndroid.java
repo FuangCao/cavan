@@ -7,6 +7,9 @@ import android.app.KeyguardManager.KeyguardLock;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
@@ -295,5 +298,23 @@ public class CavanAndroid extends CavanJava {
 		String service = context.getPackageName() + "/" + cls.getName();
 
 		return isNotificationListenerEnabled(context, service);
+	}
+
+	public static ApplicationInfo getApplicationInfo(Context context, String packageName) {
+		try {
+			return context.getPackageManager().getApplicationInfo(packageName, 0);
+		} catch (NameNotFoundException e) {
+			return null;
+		}
+	}
+
+	public static CharSequence getApplicationLabel(Context context, String packageName) {
+		PackageManager manager = context.getPackageManager();
+
+		try {
+			return manager.getApplicationLabel(manager.getApplicationInfo(packageName, 0));
+		} catch (NameNotFoundException e) {
+			return null;
+		}
 	}
 }

@@ -10,11 +10,13 @@ import java.util.regex.Pattern;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.PendingIntent.CanceledException;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.service.notification.StatusBarNotification;
@@ -22,11 +24,9 @@ import android.service.notification.StatusBarNotification;
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanString;
 
-public class RedPacketNotification {
+public class RedPacketNotification extends CavanNotification {
 
 	public static final long OVER_TIME = 3600000;
-	public static String PACKAGE_QQ = "com.tencent.mobileqq";
-	public static String PACKAGE_MICRO_MSG = "com.tencent.mm";
 
 	public static String[] sSoundExtensions = {
 		"m4a", "ogg", "wav", "mp3", "ac3", "wma"
@@ -77,50 +77,87 @@ public class RedPacketNotification {
 		Pattern.compile("https?://\\S*\\d+\\s*$"),
 	};
 
-	public static HashMap<CharSequence, Long> sCodeMap = new HashMap<CharSequence, Long>();
-	public static HashMap<String, Boolean> sExcludeCodeMap = new HashMap<String, Boolean>();
+	public static HashMap<CharSequence, Long> sCodeTimeMap = new HashMap<CharSequence, Long>();
+	public static List<String> sExcludeCodes = new ArrayList<String>();
+	public static List<String> sSavePackages = new ArrayList<String>();
 
-	/* static {
-		sExcludeCodeMap.put("华美月饼", true);
-	} */
+	static {
+		sSavePackages.add("com.tencent.mobileqq");
+		sSavePackages.add("com.tencent.mm");
+		sSavePackages.add("com.tmall.wireless");
+		sSavePackages.add("com.taobao.taobao");
+		sSavePackages.add("com.eg.android.AlipayGphone");
+	}
 
-	private String mUser;
-	private String mGroup;
-	private String mContent;
+	private String mJoinedLines;
 	private List<String> mLines = new ArrayList<String>();
 
 	private RedPacketListenerService mService;
 	private StatusBarNotification mNotification;
 
-	public RedPacketNotification(RedPacketListenerService service, StatusBarNotification sbn) {
-		super();
+	public RedPacketNotification(RedPacketListenerService service, StatusBarNotification sbn) throws Exception {
+		super(sbn);
+
+		for (String line : mContent.split("\\s*\n\\s*")) {
+			if (isValidLine(line)) {
+				mLines.add(line.trim());
+			}
+		}
+
+		mJoinedLines = CavanString.join(mLines, " ");
 
 		mService = service;
 		mNotification = sbn;
 	}
 
-	public String getUser() {
-		return mUser;
+	public Notification getNotification() {
+		return mNotification.getNotification();
 	}
 
-	public String getGroup() {
-		return mGroup;
+	public Bundle getExtras() {
+		return getNotification().extras;
 	}
 
-	public String getUserDescription() {
-		if (mGroup != null) {
-			return mGroup;
+	public CharSequence getExtra(String key) {
+		return getExtras().getCharSequence(key);
+	}
+
+	public CharSequence getExtraTitle() {
+		return getExtra(Notification.EXTRA_TITLE);
+	}
+
+	public CharSequence getExtraText() {
+		return getExtra(Notification.EXTRA_TEXT);
+	}
+
+	public String getPackageName() {
+		return mNotification.getPackageName();
+	}
+
+	public CharSequence getApplicationName() {
+		String pkgName = getPackageName();
+		if (pkgName == null) {
+			return null;
 		}
 
-		if (mUser != null) {
-			return mUser;
+		return CavanAndroid.getApplicationLabel(mService, pkgName);
+	}
+
+	public CharSequence getUserDescription() {
+		if (mGroupName != null) {
+			return mGroupName;
+		}
+
+		if (mUserName != null) {
+			return mUserName;
+		}
+
+		CharSequence name = getApplicationName();
+		if (name != null) {
+			return name;
 		}
 
 		return "未知用户";
-	}
-
-	public String getContent() {
-		return mContent;
 	}
 
 	public static boolean isValidLine(String line) {
@@ -130,50 +167,6 @@ public class RedPacketNotification {
 				return false;
 			}
 		}
-
-		return true;
-	}
-
-	public boolean parse() {
-		Notification notification = mNotification.getNotification();
-		CharSequence text = notification.tickerText;
-
-		if (text == null) {
-			text = notification.extras.getCharSequence(Notification.EXTRA_TEXT);
-			if (text == null) {
-				return false;
-			}
-		}
-
-		String content = text.toString();
-
-		CavanAndroid.logE("================================================================================");
-		CavanAndroid.logE(content);
-
-		String[] contents = content.split(":", 2);
-
-		if (contents.length < 2) {
-			content = content.trim();
-		} else {
-			String name = contents[0].trim();
-			Matcher matcher = sGroupPattern.matcher(name);
-			if (matcher.find()) {
-				mUser = matcher.group(1);
-				mGroup = matcher.group(2);
-			} else {
-				mUser = name;
-			}
-
-			content = contents[1].trim();
-		}
-
-		for (String line : content.split("\\s*\n\\s*")) {
-			if (isValidLine(line)) {
-				mLines.add(line.trim());
-			}
-		}
-
-		mContent = CavanString.join(mLines, " ");
 
 		return true;
 	}
@@ -215,7 +208,7 @@ public class RedPacketNotification {
 	// ================================================================================
 
 	public static void removeCode(CharSequence code) {
-		sCodeMap.remove(code);
+		sCodeTimeMap.remove(code);
 	}
 
 	public static boolean isRedPacketDigitCode(String code) {
@@ -314,20 +307,20 @@ public class RedPacketNotification {
 	}
 
 	public Notification buildRedPacketNotifyAlipay(String code) {
-		if (sExcludeCodeMap.containsKey(code)) {
+		if (sExcludeCodes.indexOf(code) >= 0) {
 			CavanAndroid.logE("exclude code = " + code);
 			return null;
 		}
 
 		long timeNow = System.currentTimeMillis();
-		Long time = sCodeMap.get(code);
+		Long time = sCodeTimeMap.get(code);
 
 		if (time != null && timeNow - time < OVER_TIME) {
 			CavanAndroid.logE("skip time = " + time);
 			return null;
 		}
 
-		sCodeMap.put(code, timeNow);
+		sCodeTimeMap.put(code, timeNow);
 
 		Intent intent = new Intent(mService, RedPacketBroadcastReceiver.class).putExtra("code", code);
 
@@ -370,7 +363,7 @@ public class RedPacketNotification {
 
 	public boolean sendRedPacketNotifyAlipayPicture() {
 		for (Pattern pattern : sPicturePatterns) {
-			Matcher matcher = pattern.matcher(mContent);
+			Matcher matcher = pattern.matcher(mJoinedLines);
 			if (matcher.find()) {
 				return sendRedPacketNotifyNormal("支付宝口令图片", "支付宝口令图片@" + getUserDescription());
 			}
@@ -381,7 +374,7 @@ public class RedPacketNotification {
 
 	public boolean sendRedPacketNotifyNormal() {
 		for (Pattern pattern : sNormalPatterns) {
-			Matcher matcher = pattern.matcher(mContent);
+			Matcher matcher = pattern.matcher(mJoinedLines);
 			if (matcher.find()) {
 				String content = matcher.group(1);
 				return sendRedPacketNotifyNormal(content, content + "@" + getUserDescription());
@@ -392,20 +385,27 @@ public class RedPacketNotification {
 	}
 
 	public boolean sendRedPacketNotifyAuto() {
-		if (parse()) {
-			if (sendRedPacketNotifyNormal()) {
-				return true;
-			}
+		if (sendRedPacketNotifyNormal()) {
+			return true;
+		}
 
-			if (sendRedPacketNotifyAlipay() > 0) {
-				return true;
-			}
+		if (sendRedPacketNotifyAlipay() > 0) {
+			return true;
+		}
 
-			if (sendRedPacketNotifyAlipayPicture()) {
-				return true;
-			}
+		if (sendRedPacketNotifyAlipayPicture()) {
+			return true;
 		}
 
 		return false;
+	}
+
+	@Override
+	public Uri insert(ContentResolver resolver) {
+		if (mPackageName == null || sSavePackages.indexOf(mPackageName) < 0) {
+			return null;
+		}
+
+		return super.insert(resolver);
 	}
 }
