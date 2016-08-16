@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager.LayoutParams;
 import android.widget.TextView;
 
+import com.cavan.android.CavanAndroid;
 import com.cavan.android.FloatWidowService;
 
 public class FloatMessageService extends FloatWidowService {
@@ -46,6 +47,8 @@ public class FloatMessageService extends FloatWidowService {
 				return -1;
 			}
 
+			CavanAndroid.setLockScreenEnable(FloatMessageService.this, false);
+
 			return view.getId();
 		}
 
@@ -57,6 +60,10 @@ public class FloatMessageService extends FloatWidowService {
 		@Override
 		public void removeMessage(CharSequence message) throws RemoteException {
 			FloatMessageService.this.removeText(message);
+
+			if (mViewMapId.isEmpty()) {
+				CavanAndroid.setLockScreenEnable(FloatMessageService.this, true);
+			}
 		}
 	};
 
