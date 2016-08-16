@@ -33,7 +33,11 @@ public class RedPacketNotification {
 	};
 
 	public static final Pattern sGroupPattern = Pattern.compile("([^\\(]+)\\((.+)\\)\\s*$");
-	public static final Pattern sNormalPattern = Pattern.compile("^\\[(\\w+红包)\\]");
+
+	public static final Pattern[] sNormalPatterns = {
+		Pattern.compile("^\\[(\\w+红包)\\]"),
+		Pattern.compile("^【(\\w+红包)】"),
+	};
 
 	public static final Pattern[] sDigitPatterns = {
 		Pattern.compile("支付宝.*红包\\D*(\\d+)"),
@@ -292,7 +296,7 @@ public class RedPacketNotification {
 
 		Notification.Builder builder = new Notification.Builder(mService)
 			.setSmallIcon(R.drawable.ic_launcher)
-			.setContentTitle(mUser)
+			.setContentTitle(getUserDescription())
 			.setContentText(content)
 			.setContentIntent(intent);
 
@@ -376,10 +380,12 @@ public class RedPacketNotification {
 	}
 
 	public boolean sendRedPacketNotifyNormal() {
-		Matcher matcher = sNormalPattern.matcher(mContent);
-		if (matcher.find()) {
-			String content = matcher.group(1);
-			return sendRedPacketNotifyNormal(content, content + "@" + getUserDescription());
+		for (Pattern pattern : sNormalPatterns) {
+			Matcher matcher = pattern.matcher(mContent);
+			if (matcher.find()) {
+				String content = matcher.group(1);
+				return sendRedPacketNotifyNormal(content, content + "@" + getUserDescription());
+			}
 		}
 
 		return false;
