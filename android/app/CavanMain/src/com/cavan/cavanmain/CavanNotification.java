@@ -4,16 +4,15 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.cavan.android.CavanAndroid;
-
 import android.app.Notification;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
-import android.provider.BaseColumns;
 import android.service.notification.StatusBarNotification;
+
+import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanDatabaseProvider.CavanDatabaseTable;
 
 public class CavanNotification {
 
@@ -187,30 +186,13 @@ public class CavanNotification {
 		return resolver.insert(CONTENT_URI, getContentValues());
 	}
 
-	public static void createTable(SQLiteDatabase db) {
-		db.execSQL("drop table if exists " + TABLE_NAME);
-
-		StringBuilder builder = new StringBuilder(64);
-
-		builder.append("create table ");
-		builder.append(TABLE_NAME);
-		builder.append("(");
-		builder.append(BaseColumns._ID);
-		builder.append(" integer primary key autoincrement, ");
-		builder.append(KEY_TIMESTAMP);
-		builder.append(" date not null, ");
-		builder.append(KEY_PACKAGE);
-		builder.append(" text, ");
-		builder.append(KEY_TITLE);
-		builder.append(" text, ");
-		builder.append(KEY_USER_NAME);
-		builder.append(" text, ");
-		builder.append(KEY_GROUP_NAME);
-		builder.append(" text, ");
-		builder.append(KEY_CONTENT);
-		builder.append(" text)");
-
-		db.execSQL(builder.toString());
+	public static void initTableColumns(CavanDatabaseTable table) {
+		table.addColumn(KEY_TIMESTAMP, "date");
+		table.addColumn(KEY_PACKAGE, "text");
+		table.addColumn(KEY_TITLE, "text");
+		table.addColumn(KEY_USER_NAME, "text");
+		table.addColumn(KEY_GROUP_NAME, "text");
+		table.addColumn(KEY_CONTENT, "text");
 	}
 
 	public static ArrayList<CavanNotification> parseCursor(Cursor cursor) {
