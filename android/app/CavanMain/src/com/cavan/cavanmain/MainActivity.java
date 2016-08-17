@@ -270,7 +270,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			startNotificationListenerSettingsActivity();
 		} else if (preference == mPreferenceNotificationDatabaseClean) {
 			int count = CavanNotification.deleteAll(getContentResolver());
-			CavanAndroid.showToast(this, String.format("成功清除 %d 条通知", count));
+			CavanAndroid.showToast(this, String.format("成功清除 %d 条消息", count));
 		} else if (preference == mPreferenceNotificationDatabaseShow) {
 			Intent intent = new Intent(this, CavanNotificationActivity.class);
 			startActivity(intent);

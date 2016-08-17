@@ -1,22 +1,53 @@
 package com.cavan.cavanmain;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.util.Linkify;
+import android.text.util.Linkify.TransformFilter;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.cavan.android.CavanAndroid;
+
 public class CavanNotificationActivity extends Activity {
 
 	private static final int MAX_MESSAGE_COUNT = 1000;
+
+	public static final String SCHEME = "cavan";
+
+	public static final String AUTHORITY_RED_PACKET = "red_packet";
+	public static final String SCHEME_RED_PACKET = SCHEME + "://" + AUTHORITY_RED_PACKET + "/";
+
+	public static final String AUTHORITY_ALIPAY = "alipay";
+	public static final String SCHEME_ALIPAY = SCHEME + "://" + AUTHORITY_ALIPAY + "/";
+
+	public static final HashMap<String, String> sRedPacketAppMap = new HashMap<String, String>();
+
+	public static final Pattern[] sAlipayPatterns = {
+		Pattern.compile("\\b(\\d{8})\\b"),
+		Pattern.compile("(红包|口令)\\s*[:：]\\s*(\\w+)"),
+		Pattern.compile("(红包|口令)\\s+(\\w+)"),
+	};
+
+	public static final Pattern[] sRedPacketPatterns = {
+		Pattern.compile("\\[(\\w+)红包\\]"),
+		Pattern.compile("【(\\w+)红包】"),
+	};
 
 	private static final String[] PROJECTION = {
 		CavanNotification.KEY_TIMESTAMP,
@@ -26,26 +57,67 @@ public class CavanNotificationActivity extends Activity {
 		CavanNotification.KEY_CONTENT,
 	};
 
+	static {
+		sRedPacketAppMap.put("QQ", "com.tencent.mobileqq");
+		sRedPacketAppMap.put("微信", "com.tencent.mm");
+	}
+
 	private ListView mMessageView;
 	private ContentObserver mContentObserver;
 	private MessageAdapter mAdapter = new MessageAdapter();
 
+	private TransformFilter mTransformFilter = new TransformFilter() {
+
+		@Override
+		public String transformUrl(Matcher match, String url) {
+			return match.group(match.groupCount());
+		}
+	};
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.notification_activity);
 
-		mMessageView = (ListView) findViewById(R.id.listViewMessage);
-		mMessageView.setAdapter(mAdapter);
-		mAdapter.updateCursor();
+		Uri uri = getIntent().getData();
+		CavanAndroid.logE("uri = " + uri);
+		if (uri == null) {
+			setContentView(R.layout.notification_activity);
 
-		mContentObserver = new MessageObserver(new Handler());
-		getContentResolver().registerContentObserver(CavanNotification.CONTENT_URI, true, mContentObserver);
+			mMessageView = (ListView) findViewById(R.id.listViewMessage);
+			mMessageView.setAdapter(mAdapter);
+			mAdapter.updateCursor();
+
+			mContentObserver = new MessageObserver(new Handler());
+			getContentResolver().registerContentObserver(CavanNotification.CONTENT_URI, true, mContentObserver);
+		} else {
+			List<String> paths = uri.getPathSegments();
+			if (paths.size() > 0) {
+				String authority = uri.getAuthority();
+				if (AUTHORITY_ALIPAY.equals(authority)) {
+					RedPacketListenerService.postRedPacketCode(this, paths.get(0));
+					RedPacketListenerService.startAlipayActivity(this);
+				} else if (AUTHORITY_RED_PACKET.equals(authority)) {
+					String pkgName = sRedPacketAppMap.get(paths.get(0));
+					if (pkgName != null) {
+						Intent intent = getPackageManager().getLaunchIntentForPackage(pkgName);
+						if (intent != null) {
+							intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+							startActivity(intent);
+						}
+					}
+				}
+			}
+
+			finish();
+		}
 	}
 
 	@Override
 	protected void onDestroy() {
-		getContentResolver().unregisterContentObserver(mContentObserver);
+		if (mContentObserver != null) {
+			getContentResolver().unregisterContentObserver(mContentObserver);
+		}
+
 		super.onDestroy();
 	}
 
@@ -157,6 +229,16 @@ public class CavanNotificationActivity extends Activity {
 
 			viewContent.setText(content);
 			viewContent.setTextColor(Color.BLACK);
+
+			Linkify.addLinks(viewContent, Linkify.WEB_URLS);
+
+			for (Pattern pattern : sAlipayPatterns) {
+				Linkify.addLinks(viewContent, pattern, SCHEME_ALIPAY, null, mTransformFilter);
+			}
+
+			for (Pattern pattern : sRedPacketPatterns) {
+				Linkify.addLinks(viewContent, pattern, SCHEME_RED_PACKET, null, mTransformFilter);
+			}
 
 			return view;
 		}
