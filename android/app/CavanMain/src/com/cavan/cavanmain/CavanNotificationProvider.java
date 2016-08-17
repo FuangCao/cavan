@@ -12,13 +12,9 @@ public class CavanNotificationProvider extends CavanDatabaseProvider {
 	private static final String DB_NAME = "notification.db";
 	private static final int DB_VERSION = 1;
 
-	private CavanDatabaseTable mTableNotitication = new CavanDatabaseTable("notification", 0x1000);
-
 	@Override
-	protected boolean doInitialize() {
-		CavanNotification.initTableColumns(mTableNotitication);
-		mTableNotitication.attachToProvider();
-		return false;
+	protected void initTables() {
+		CavanNotification.initDatabaseTable(this);
 	}
 
 	@Override

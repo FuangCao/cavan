@@ -39,6 +39,17 @@ public class CavanNotification {
 	protected String mTitle;
 	protected String mContent;
 
+	public static void initDatabaseTable(CavanNotificationProvider provider) {
+		CavanDatabaseTable table = provider.getTable(TABLE_NAME);
+
+		table.setColumn(KEY_TIMESTAMP, "date");
+		table.setColumn(KEY_PACKAGE, "text");
+		table.setColumn(KEY_TITLE, "text");
+		table.setColumn(KEY_USER_NAME, "text");
+		table.setColumn(KEY_GROUP_NAME, "text");
+		table.setColumn(KEY_CONTENT, "text");
+	}
+
 	public CavanNotification(String packageName, String user, String group, String title, String content) {
 		mTimestamp = System.currentTimeMillis();
 		mPackageName = packageName;
@@ -184,15 +195,6 @@ public class CavanNotification {
 
 	public Uri insert(ContentResolver resolver) {
 		return resolver.insert(CONTENT_URI, getContentValues());
-	}
-
-	public static void initTableColumns(CavanDatabaseTable table) {
-		table.addColumn(KEY_TIMESTAMP, "date");
-		table.addColumn(KEY_PACKAGE, "text");
-		table.addColumn(KEY_TITLE, "text");
-		table.addColumn(KEY_USER_NAME, "text");
-		table.addColumn(KEY_GROUP_NAME, "text");
-		table.addColumn(KEY_CONTENT, "text");
 	}
 
 	public static ArrayList<CavanNotification> parseCursor(Cursor cursor) {

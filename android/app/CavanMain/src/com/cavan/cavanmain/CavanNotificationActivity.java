@@ -16,7 +16,7 @@ import android.widget.TextView;
 
 public class CavanNotificationActivity extends Activity {
 
-	private static final int MAX_MESSAGE_COUNT = 200;
+	private static final int MAX_MESSAGE_COUNT = 1000;
 
 	private static final String[] PROJECTION = {
 		CavanNotification.KEY_TIMESTAMP,

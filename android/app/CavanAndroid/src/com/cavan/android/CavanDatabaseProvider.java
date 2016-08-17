@@ -1,8 +1,6 @@
 package com.cavan.android;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -20,19 +18,19 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 	protected abstract String getDatabaseName();
 	protected abstract int getDatabaseVersion();
 	protected abstract String getAuthority();
-	protected abstract boolean doInitialize();
+	protected abstract void initTables();
 
 	private CavanDatabaseHelper mDatabaseHelper;
 	private UriMatcher mUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-	protected HashMap<Integer, CavanDatabaseTable> mUriMap = new HashMap<Integer, CavanDatabaseTable>();
-	protected List<CavanDatabaseTable> mDatabaseTables = new ArrayList<CavanDatabaseTable>();
+	private HashMap<String, CavanDatabaseTable> mTableNameMap = new HashMap<String, CavanDatabaseTable>();
+	private HashMap<Integer, CavanDatabaseTable> mTableCodeMap = new HashMap<Integer, CavanDatabaseTable>();
 
 	public class CavanDatabaseColumn {
 
 		private String mName;
 		private String mType;
 
-		public CavanDatabaseColumn(String name, String type) {
+		private CavanDatabaseColumn(String name, String type) {
 			super();
 
 			mName = name;
@@ -43,8 +41,16 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 			return mName;
 		}
 
+		public void setName(String name) {
+			mName = name;
+		}
+
 		public String getType() {
 			return mType;
+		}
+
+		public void setType(String type) {
+			mType = type;
 		}
 
 		public String buildSql() {
@@ -62,12 +68,15 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 
 		private String mName;
 		private int mBaseCode;
-		private List<CavanDatabaseColumn> mColumns = new ArrayList<CavanDatabaseColumn>();
+		private HashMap<String, CavanDatabaseColumn> mColumnNameMap = new HashMap<String, CavanDatabaseColumn>();
 
-		public CavanDatabaseTable(String name, int code) {
+		private CavanDatabaseTable(String name, int code) {
 			mName = name;
 			mBaseCode = code;
-			mColumns.add(new CavanDatabaseColumn(BaseColumns._ID, "integer primary key autoincrement"));
+
+			addURI(null, 0);
+			addURI("#", 1);
+			setColumn(BaseColumns._ID, "integer primary key autoincrement");
 		}
 
 		public String getName() {
@@ -90,8 +99,20 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 			return mName + "/" + path;
 		}
 
-		public void addColumn(String name, String type) {
-			mColumns.add(new CavanDatabaseColumn(name, type));
+		public CavanDatabaseColumn getColumn(String name) {
+			return mColumnNameMap.get(name);
+		}
+
+		public CavanDatabaseColumn setColumn(String name, String type) {
+			CavanDatabaseColumn column = getColumn(name);
+			if (column == null) {
+				column = new CavanDatabaseColumn(name, type);
+				mColumnNameMap.put(name, column);
+			} else {
+				column.setType(type);
+			}
+
+			return column;
 		}
 
 		public String buildDropTableSql() {
@@ -105,7 +126,7 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 
 			int index = 0;
 
-			for (CavanDatabaseColumn column : mColumns) {
+			for (CavanDatabaseColumn column : mColumnNameMap.values()) {
 				if (index > 0) {
 					builder.append(",");
 				}
@@ -129,13 +150,7 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 			}
 
 			mUriMatcher.addURI(getAuthority(), path, code);
-			mUriMap.put(code, this);
-		}
-
-		public void attachToProvider() {
-			mDatabaseTables.add(this);
-			addURI(null, 0);
-			addURI("#", 1);
+			mTableCodeMap.put(code, this);
 		}
 
 		public String getType(Uri uri, int code) {
@@ -205,14 +220,14 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 
 		@Override
 		public void onCreate(SQLiteDatabase db) {
-			for (CavanDatabaseTable table : mDatabaseTables) {
+			for (CavanDatabaseTable table : mTableNameMap.values()) {
 				db.execSQL(table.buildCreateTableSql());
 			}
 		}
 
 		@Override
 		public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-			for (CavanDatabaseTable table : mDatabaseTables) {
+			for (CavanDatabaseTable table : mTableNameMap.values()) {
 				db.execSQL(table.buildDropTableSql());
 				db.execSQL(table.buildCreateTableSql());
 			}
@@ -222,6 +237,23 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 			onDowngrade(db, oldVersion, newVersion);
 		}
+	}
+
+	public CavanDatabaseProvider() {
+		super();
+		initTables();
+	}
+
+	public CavanDatabaseTable getTable(String name) {
+		CavanDatabaseTable table = mTableNameMap.get(name);
+		if (table != null) {
+			return table;
+		}
+
+		table = new CavanDatabaseTable(name, mTableNameMap.size() << 10);
+		mTableNameMap.put(name, table);
+
+		return table;
 	}
 
 	public SQLiteDatabase getReadableDatabase() {
@@ -235,13 +267,13 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 		mDatabaseHelper = new CavanDatabaseHelper();
-		return doInitialize();
+		return true;
 	}
 
 	@Override
 	public String getType(Uri uri) {
 		int code = mUriMatcher.match(uri);
-		CavanDatabaseTable table = mUriMap.get(code);
+		CavanDatabaseTable table = mTableCodeMap.get(code);
 		if (table == null) {
 			return null;
 		}
@@ -252,7 +284,7 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 		int code = mUriMatcher.match(uri);
-		CavanDatabaseTable table = mUriMap.get(code);
+		CavanDatabaseTable table = mTableCodeMap.get(code);
 		if (table == null) {
 			return null;
 		}
@@ -263,7 +295,7 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
 		int code = mUriMatcher.match(uri);
-		CavanDatabaseTable table = mUriMap.get(code);
+		CavanDatabaseTable table = mTableCodeMap.get(code);
 		if (table == null) {
 			return null;
 		}
@@ -274,7 +306,7 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
 		int code = mUriMatcher.match(uri);
-		CavanDatabaseTable table = mUriMap.get(code);
+		CavanDatabaseTable table = mTableCodeMap.get(code);
 		if (table == null) {
 			return 0;
 		}
@@ -285,7 +317,7 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 	@Override
 	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 		int code = mUriMatcher.match(uri);
-		CavanDatabaseTable table = mUriMap.get(code);
+		CavanDatabaseTable table = mTableCodeMap.get(code);
 		if (table == null) {
 			return 0;
 		}
