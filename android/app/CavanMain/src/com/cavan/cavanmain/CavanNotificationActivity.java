@@ -10,7 +10,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,11 +21,7 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.cavan.android.CavanAndroid;
-
 public class CavanNotificationActivity extends Activity {
-
-	private static final int MAX_MESSAGE_COUNT = 1000;
 
 	public static final String SCHEME = "cavan";
 
@@ -79,7 +74,6 @@ public class CavanNotificationActivity extends Activity {
 		super.onCreate(savedInstanceState);
 
 		Uri uri = getIntent().getData();
-		CavanAndroid.logE("uri = " + uri);
 		if (uri == null) {
 			setContentView(R.layout.notification_activity);
 
@@ -149,12 +143,18 @@ public class CavanNotificationActivity extends Activity {
 			String title = getResources().getString(R.string.text_message_count);
 			setTitle(title + count);
 
+			boolean atLast = mMessageView.getLastVisiblePosition() + 1 >= mMessageView.getCount();
+
 			mCursor = cursor;
 			notifyDataSetChanged();
+
+			if (atLast) {
+				mMessageView.setSelection(count - 1);
+			}
 		}
 
 		public void updateCursor() {
-			Cursor cursor = CavanNotification.queryAll(getContentResolver(), PROJECTION, CavanNotification.KEY_TIMESTAMP + " desc");
+			Cursor cursor = CavanNotification.queryAll(getContentResolver(), PROJECTION, CavanNotification.KEY_TIMESTAMP);
 			setCursor(cursor);
 		}
 
@@ -164,28 +164,23 @@ public class CavanNotificationActivity extends Activity {
 				return 0;
 			}
 
-			int count = mCursor.getCount();
-			if (count > MAX_MESSAGE_COUNT) {
-				return MAX_MESSAGE_COUNT;
-			}
-
-			return count;
+			return mCursor.getCount();
 		}
 
 		@Override
-		public Object getItem(int arg0) {
-			return mCursor.moveToPosition(arg0);
+		public Object getItem(int position) {
+			return null;
 		}
 
 		@Override
-		public long getItemId(int arg0) {
-			return arg0;
+		public long getItemId(int position) {
+			return position;
 		}
 
 		@SuppressWarnings("deprecation")
 		@Override
-		public View getView(int arg0, View arg1, ViewGroup arg2) {
-			if (!mCursor.moveToPosition(arg0)) {
+		public View getView(int position, View convertView, ViewGroup viewGroup) {
+			if (!mCursor.moveToPosition(position)) {
 				return null;
 			}
 
@@ -197,38 +192,35 @@ public class CavanNotificationActivity extends Activity {
 
 			View view;
 
-			if (arg1 != null) {
-				view = arg1;
+			if (convertView != null) {
+				view = convertView;
 			} else {
 				view = View.inflate(CavanNotificationActivity.this, R.layout.message_item, null);
 			}
 
-			TextView viewDate = (TextView) view.findViewById(R.id.textViewDate);
-			TextView viewUser = (TextView) view.findViewById(R.id.textViewUser);
+			TextView viewTitle = (TextView) view.findViewById(R.id.textViewTitle);
 			TextView viewContent = (TextView) view.findViewById(R.id.textViewContent);
 
+			StringBuilder builder = new StringBuilder(new Date(time).toLocaleString());
+
 			if (user != null) {
+				builder.append("\n");
+				builder.append(user);
+
 				if (group != null) {
-					user += "@" + group;
+					builder.append("@");
+					builder.append(group);
 				}
 			} else if (group != null) {
-				user = group;
+				builder.append("\n");
+				builder.append(group);
 			} else if (title != null) {
-				user = title;
-			} else {
-				user = "未知";
+				builder.append("\n");
+				builder.append(title);
 			}
 
-			viewDate.setText(new Date(time).toLocaleString());
-			viewDate.setBackgroundColor(Color.WHITE);
-			viewDate.setTextColor(Color.BLACK);
-
-			viewUser.setText(user);
-			viewUser.setBackgroundColor(Color.WHITE);
-			viewUser.setTextColor(Color.BLACK);
-
+			viewTitle.setText(builder.toString());
 			viewContent.setText(content);
-			viewContent.setTextColor(Color.BLACK);
 
 			Linkify.addLinks(viewContent, Linkify.WEB_URLS);
 

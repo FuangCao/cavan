@@ -7,7 +7,11 @@
     <ListView
         android:id="@+id/listViewMessage"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content"
+        android:background="#ffffffff"
+        android:divider="#ffffffff"
+        android:dividerHeight="20dp" >
+
     </ListView>
 
 </LinearLayout>
