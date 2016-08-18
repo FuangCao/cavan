@@ -58,6 +58,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_FLASH_READ_BD_ADDR = 40;
 	public static final byte JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR = 41;
 	public static final byte JWAOO_TOY_CMD_FACTORY_ENABLE = 50;
+	public static final byte JWAOO_TOY_CMD_LED_ENABLE = 51;
 	public static final byte JWAOO_TOY_CMD_BATT_INFO = 60;
 	public static final byte JWAOO_TOY_CMD_BATT_EVENT_ENABLE = 61;
 	public static final byte JWAOO_TOY_CMD_SENSOR_ENABLE = 70;
@@ -526,6 +527,11 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public boolean doConfigGpio(int port, int pin, int mode, int function, boolean high) {
 		byte[] command = { JWAOO_TOY_CMD_GPIO_CFG, (byte) port, (byte) pin, (byte) mode, (byte) function, CavanJava.getBoolValueByte(high) };
+		return mCommand.readBool(command);
+	}
+
+	public boolean setLedEnable(int index, boolean enable) {
+		byte[] command = { JWAOO_TOY_CMD_LED_ENABLE, (byte) index, CavanJava.getBoolValueByte(enable) };
 		return mCommand.readBool(command);
 	}
 

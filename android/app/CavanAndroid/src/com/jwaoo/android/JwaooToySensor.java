@@ -28,6 +28,10 @@ public abstract class JwaooToySensor extends CavanAccelSensor {
 		return capacity;
 	}
 
+	public String getCapacityText() {
+		return String.format("[%7.2f, %7.2f, %7.2f, %7.2f]", mCapacitys[0], mCapacitys[1], mCapacitys[2], mCapacitys[3]);
+	}
+
 	public  double getDepth() {
 		double capacity = 0;
 

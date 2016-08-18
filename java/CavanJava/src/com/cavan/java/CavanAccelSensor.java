@@ -39,4 +39,8 @@ public abstract class CavanAccelSensor {
 	public void setAxisZ(double z) {
 		mAxisZ = z;
 	}
+
+	public String getAccelText() {
+		return String.format("[%5.2f, %5.2f, %5.2f]", mAxisX, mAxisY, mAxisZ);
+	}
 }
