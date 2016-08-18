@@ -32,17 +32,17 @@ class TcpDdExecReq extends TcpDdPackage {
 	@Override
 	protected boolean encodeBody(CavanByteCache cache) {
 		if (!cache.writeValue16(mLines)) {
-			CavanAndroid.logE("Failed to writeValue16(mLines)");
+			CavanAndroid.eLog("Failed to writeValue16(mLines)");
 			return false;
 		}
 
 		if (!cache.writeValue16(mColumns)) {
-			CavanAndroid.logE("Failed to writeValue16(mColumns)");
+			CavanAndroid.eLog("Failed to writeValue16(mColumns)");
 			return false;
 		}
 
 		if (!cache.writeBytes(mCommand.getBytes())) {
-			CavanAndroid.logE("Failed to writeBytes(mCommand)");
+			CavanAndroid.eLog("Failed to writeBytes(mCommand)");
 			return false;
 		}
 

@@ -22,7 +22,7 @@ public class CavanBleScanActivity extends Activity {
 
 	protected void onScanComplete(CavanBleDevice device) {
 		mScanner.stopScan();
-		CavanAndroid.logE("onScanComplete: " + device);
+		CavanAndroid.eLog("onScanComplete: " + device);
 
 		Intent intent = new Intent();
 		intent.putExtra("device", device.getDevice());

@@ -54,7 +54,7 @@ public class JwaooToyActivity extends Activity {
 			@Override
 			protected boolean onInitialize() {
 				if (!JwaooToyActivity.this.onInitialize()) {
-					CavanAndroid.logE("Failed to JwaooToyActivity.this.onInitialize");
+					CavanAndroid.eLog("Failed to JwaooToyActivity.this.onInitialize");
 					return false;
 				}
 
@@ -63,7 +63,7 @@ public class JwaooToyActivity extends Activity {
 
 			@Override
 			protected void onConnectionStateChange(boolean connected) {
-				CavanAndroid.logE("onConnectionStateChange: connected = " + connected);
+				CavanAndroid.eLog("onConnectionStateChange: connected = " + connected);
 
 				if (connected) {
 					JwaooToyActivity.this.onConnected();
@@ -98,7 +98,7 @@ public class JwaooToyActivity extends Activity {
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		CavanAndroid.logE("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
+		CavanAndroid.eLog("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
 		if (resultCode == RESULT_OK && data != null) {
 			BluetoothDevice device = data.getParcelableExtra("device");
 			if (device == null) {

@@ -49,7 +49,7 @@ import android.net.LocalSocketAddress;
 				break;
 			}
 
-			logD(new String(data, 0, length));
+			dLog(new String(data, 0, length));
 		}
 
 		disconnect();

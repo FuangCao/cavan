@@ -21,11 +21,11 @@ public class CavanBluetoothAdapter {
 	};
 
 	protected void onBluetoothAdapterStateChanged(boolean enabled) {
-		CavanAndroid.logE("onBluetoothAdapterStateChanged: enabled = " + enabled);
+		CavanAndroid.eLog("onBluetoothAdapterStateChanged: enabled = " + enabled);
 	}
 
 	protected void onBluetoothAdapterStateChanged(int state) {
-		CavanAndroid.logE("onBluetoothAdapterStateChanged: state = " + state);
+		CavanAndroid.eLog("onBluetoothAdapterStateChanged: state = " + state);
 
 		switch (state) {
 		case BluetoothAdapter.STATE_ON:

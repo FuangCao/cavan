@@ -28,9 +28,9 @@ import android.preference.PreferenceScreen;
 import android.preference.RingtonePreference;
 
 import com.cavan.android.CavanAndroid;
-import com.cavan.android.CavanNetworkClient;
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.cavanjni.CavanServicePreference;
+import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
 
 public class MainActivity extends PreferenceActivity implements OnPreferenceChangeListener {
@@ -113,7 +113,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 		mFileBin = getDir("bin", 0777);
 		if (mFileBin == null) {
-			CavanAndroid.logE("Failed to getDir bin");
+			CavanAndroid.eLog("Failed to getDir bin");
 		} else {
 			CavanJni.appendPathEnv(mFileBin.getPath());
 
@@ -121,7 +121,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 				@Override
 				public void run() {
-					CavanAndroid.logD("releaseCavanMain " + (releaseCavanMain() ? "OK" : "Failed"));
+					CavanAndroid.dLog("releaseCavanMain " + (releaseCavanMain() ? "OK" : "Failed"));
 				}
 			}.start();
 		}
@@ -183,7 +183,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	}
 
 	private boolean releaseAsset(String filename, File outFile) {
-		CavanAndroid.logD("releaseAsset: " + filename + " => " + outFile.getPath());
+		CavanAndroid.dLog("releaseAsset: " + filename + " => " + outFile.getPath());
 
 		InputStream inStream = null;
 		OutputStream outStream = null;
@@ -216,7 +216,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	}
 
 	private void updateIpAddressStatus() {
-		InetAddress address = CavanNetworkClient.getIpAddress();
+		InetAddress address = CavanJava.getIpAddress();
 		if (address != null) {
 			mPreferenceIpAddress.setSummary(address.getHostAddress());
 		} else {

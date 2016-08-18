@@ -106,12 +106,12 @@ public class MainActivity extends JwaooToyActivity implements OnCheckedChangeLis
 			@Override
 			protected boolean onInitialize() {
 				if (!mBleToy.setFactoryModeEnable(true)) {
-					CavanAndroid.logE("Failed to setFactoryModeEnable");
+					CavanAndroid.eLog("Failed to setFactoryModeEnable");
 					return false;
 				}
 
 				if (!mBleToy.setSensorEnable(true, 200)) {
-					CavanAndroid.logE("Failed to setSensorEnable");
+					CavanAndroid.eLog("Failed to setSensorEnable");
 					return false;
 				}
 
@@ -180,6 +180,6 @@ public class MainActivity extends JwaooToyActivity implements OnCheckedChangeLis
 
 	@Override
 	public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-		mBleToy.setMotoMode(isChecked ? 1 : 0, 5);
+		mBleToy.setMotoMode(0, isChecked ? 10 : 0);
 	}
 }

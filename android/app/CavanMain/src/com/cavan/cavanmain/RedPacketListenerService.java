@@ -132,7 +132,7 @@ public class RedPacketListenerService extends NotificationListenerService {
 
 		ClipData data = ClipData.newPlainText("支付宝红包口令", code);
 
-		CavanAndroid.logE("ClipData = " + data);
+		CavanAndroid.eLog("ClipData = " + data);
 		manager.setPrimaryClip(data);
 
 		return true;

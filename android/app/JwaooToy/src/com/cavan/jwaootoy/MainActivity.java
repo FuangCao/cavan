@@ -202,9 +202,9 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			boolean success = mBleToy.setMotoMode(mMotoMode, mMotoLevel);
 
 			if (success) {
-				CavanAndroid.logE("Moto: mode = " + mMotoMode + ", level = " + mMotoLevel);
+				CavanAndroid.eLog("Moto: mode = " + mMotoMode + ", level = " + mMotoLevel);
 			} else {
-				CavanAndroid.logE("Failed to setMotoMode");
+				CavanAndroid.eLog("Failed to setMotoMode");
 				CavanAndroid.dumpstack();
 			}
 
@@ -223,21 +223,21 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 				break;
 			}
 
-			CavanAndroid.logE("identify = " + identify);
+			CavanAndroid.eLog("identify = " + identify);
 
 			String buildDate = mBleToy.readBuildDate();
 			if (buildDate == null) {
 				break;
 			}
 
-			CavanAndroid.logE("buildDate = " + buildDate);
+			CavanAndroid.eLog("buildDate = " + buildDate);
 
 			int version = mBleToy.readVersion();
 			if (version == 0) {
 				break;
 			}
 
-			CavanAndroid.logE("version = " + Integer.toHexString(version));
+			CavanAndroid.eLog("version = " + Integer.toHexString(version));
 			break;
 
 		case R.id.buttonUpgrade:
@@ -286,15 +286,15 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			if (addr != null) {
 				mEditTextBdAddr.setText(addr);
 			} else {
-				CavanAndroid.logE("Failed to readBdAddress");
+				CavanAndroid.eLog("Failed to readBdAddress");
 			}
 			break;
 
 		case R.id.buttonWriteBdAddr:
 			if (mBleToy.writeBdAddress(mEditTextBdAddr.getText().toString())) {
-				CavanAndroid.logE("writeBdAddress successfull");
+				CavanAndroid.eLog("writeBdAddress successfull");
 			} else {
-				CavanAndroid.logE("Failed to writeBdAddress");
+				CavanAndroid.eLog("Failed to writeBdAddress");
 			}
 			break;
 		}
@@ -303,32 +303,32 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	@Override
 	protected boolean onInitialize() {
 		if (!mBleToy.setSensorEnable(mCheckBoxSensor.isChecked(), SENSOR_DELAY)) {
-			CavanAndroid.logE("Failed to setSensorEnable");
+			CavanAndroid.eLog("Failed to setSensorEnable");
 			return false;
 		}
 
 		if (mBleToy.setClickEnable(mCheckBoxClick.isChecked()) == false && mBleToy.isCommandTimeout()) {
-			CavanAndroid.logE("Failed to setClickEnable");
+			CavanAndroid.eLog("Failed to setClickEnable");
 			return false;
 		}
 
 		if (mBleToy.setLongClickEnable(mCheckBoxLongClick.isChecked()) == false && mBleToy.isCommandTimeout()) {
-			CavanAndroid.logE("Failed to setLongClickEnable");
+			CavanAndroid.eLog("Failed to setLongClickEnable");
 			return false;
 		}
 
 		if (mBleToy.setMultiClickEnable(mCheckBoxMultiClick.isChecked()) == false && mBleToy.isCommandTimeout()) {
-			CavanAndroid.logE("Failed to setMultiClickEnable");
+			CavanAndroid.eLog("Failed to setMultiClickEnable");
 			return false;
 		}
 
 		if (mBleToy.setBatteryEventEnable(mCheckBoxBatteryEvent.isChecked()) == false && mBleToy.isCommandTimeout()) {
-			CavanAndroid.logE("Failed to setBatteryEventEnable");
+			CavanAndroid.eLog("Failed to setBatteryEventEnable");
 			return false;
 		}
 
 		if (mBleToy.setFactoryModeEnable(mCheckBoxFactoryMode.isChecked()) == false && mBleToy.isCommandTimeout()) {
-			CavanAndroid.logE("Failed to setFactoryModeEnable");
+			CavanAndroid.eLog("Failed to setFactoryModeEnable");
 			return false;
 		}
 

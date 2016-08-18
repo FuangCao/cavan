@@ -3,13 +3,15 @@ package com.cavan.android;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import com.cavan.java.CavanJava;
+
 public class TcpDiscoveryService extends DiscoveryService {
 
 	private DiscoveryThread[] mThreads = new DiscoveryThread[255];
 
 	@Override
 	protected boolean startScan(int port) {
-		InetAddress address = CavanNetworkClient.getIpAddress();
+		InetAddress address = CavanJava.getIpAddress();
 		if (address == null) {
 			return false;
 		}

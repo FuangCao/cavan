@@ -32,7 +32,7 @@ public class MainActivity extends JwaooToyActivity {
 		@Override
 		public void run() {
 			String text = String.format("depth = %4.2f, freq = %4.2f", mDecoder.getDepth(), mDecoder.getFreq());
-			// CavanAndroid.logE("freq = " + mDecoder.getFreq());
+			// CavanAndroid.eLog("freq = " + mDecoder.getFreq());
 			setTitle(text);
 		}
 	};
@@ -116,7 +116,7 @@ public class MainActivity extends JwaooToyActivity {
 				mSensor.putBytes(arg0);
 
 				double capacitys[] = mSensor.getCapacitys();
-				// CavanAndroid.logE(String.format("capacity: [%7.2f, %7.2f, %7.2f, %7.2f]", capacitys[0], capacitys[1], capacitys[2], capacitys[3]));
+				// CavanAndroid.eLog(String.format("capacity: [%7.2f, %7.2f, %7.2f, %7.2f]", capacitys[0], capacitys[1], capacitys[2], capacitys[3]));
 
 				mDecoder.putCapacityValue(capacitys);
 				JwaooDepthSquareWaveGenerator[] generators = mDecoder.getGenerators();

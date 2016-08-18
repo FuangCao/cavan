@@ -20,7 +20,7 @@ import android.widget.Toast;
 import com.cavan.java.CavanJava;
 
 @SuppressWarnings("deprecation")
-public class CavanAndroid extends CavanJava {
+public class CavanAndroid {
 
 	public static final String TAG = "Cavan";
 
@@ -40,68 +40,64 @@ public class CavanAndroid extends CavanJava {
 	private static ClipboardManager sClipboardManager;
 	private static NotificationManager sNotificationManager;
 
-	public static void logE(String message) {
+	public static void eLog(String message) {
 		Log.e(TAG, message);
 	}
 
-	public static void logE(String message, Throwable throwable) {
+	public static void eLog(String message, Throwable throwable) {
 		Log.e(TAG, message, throwable);
 	}
 
-	public static void logW(String message) {
+	public static void wLog(String message) {
 		Log.w(TAG, message);
 	}
 
-	public static void logW(Throwable throwable) {
+	public static void wLog(Throwable throwable) {
 		Log.w(TAG, throwable);
 	}
 
-	public static void logW(String message, Throwable throwable) {
+	public static void wLog(String message, Throwable throwable) {
 		Log.w(TAG, message, throwable);
 	}
 
-	public static void logD(String message) {
+	public static void dLog(String message) {
 		Log.d(TAG, message);
 	}
 
-	public static int logD(String message, Throwable throwable) {
+	public static int dLog(String message, Throwable throwable) {
 		return Log.d(TAG, message, throwable);
 	}
 
-	public static void logP() {
-		logE(buildPosMessage());
+	public static void pLog() {
+		eLog(CavanJava.buildPosMessage());
 	}
 
-	public static void logP(String message) {
-		logE(buildPosMessage(message));
+	public static void pLog(String message) {
+		eLog(CavanJava.buildPosMessage(message));
 	}
 
-	public static void logfE(String format, Object... args) {
-		logE(String.format(format, args));
+	public static void efLog(String format, Object... args) {
+		eLog(String.format(format, args));
 	}
 
-	public static void logfW(String format, Object... args) {
-		logW(String.format(format, args));
+	public static void wfLog(String format, Object... args) {
+		wLog(String.format(format, args));
 	}
 
-	public static void logfD(String format, Object... args) {
-		logD(String.format(format, args));
+	public static void dfLog(String format, Object... args) {
+		dLog(String.format(format, args));
 	}
 
-	public static void logfP(String format, Object... args) {
-		logP(String.format(format, args));
+	public static void pfLog(String format, Object... args) {
+		pLog(String.format(format, args));
 	}
 
 	public static void dumpstack(Throwable throwable) {
-		logW(throwable);
+		wLog(throwable);
 	}
 
 	public static void dumpstack() {
-		logW(new Throwable());
-	}
-
-	public static void printSep() {
-		logD(buildPrintSep());
+		wLog(new Throwable());
 	}
 
 	public static void cancelToastLocked() {
@@ -118,7 +114,7 @@ public class CavanAndroid extends CavanJava {
 	}
 
 	public static void showToast(Context context, String text, int duration) {
-		logD(text);
+		dLog(text);
 
 		Toast toast = Toast.makeText(context, text, duration);
 		synchronized (sToastLock) {

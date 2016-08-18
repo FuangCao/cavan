@@ -11,29 +11,29 @@ import java.util.List;
 
 public class CavanJava {
 
-	public static void printE(String message) {
+	public static void eLog(String message) {
 		System.err.println(message);
 	}
 
-	public static void printE(Throwable throwable) {
+	public static void eLog(Throwable throwable) {
 		throwable.printStackTrace();
 	}
 
-	public static void printE(Throwable throwable, String message) {
-		printE(message);
-		printE(throwable);
+	public static void eLog(Throwable throwable, String message) {
+		eLog(message);
+		eLog(throwable);
 	}
 
-	public static void printD(String message) {
+	public static void dLog(String message) {
 		System.out.println(message);
 	}
 
-	public static void printfE(String format, Object... args) {
-		printE(String.format(format, args));
+	public static void efLog(String format, Object... args) {
+		eLog(String.format(format, args));
 	}
 
-	public static void printfD(String format, Object... args) {
-		printD(String.format(format, args));
+	public static void dfLog(String format, Object... args) {
+		dLog(String.format(format, args));
 	}
 
 	protected static String buildPrintSep() {
@@ -50,8 +50,61 @@ public class CavanJava {
 		}
 	}
 
-	public static void printSep() {
-		printD(buildPrintSep());
+	public static void sepLog() {
+		dLog(buildPrintSep());
+	}
+
+	public static String buildPosMessage() {
+		StackTraceElement trace = getCurrentStackTrace(4);
+		if (trace == null) {
+			return "unknown";
+		}
+
+		StringBuilder builder = new StringBuilder();
+
+		builder.append(trace.getClassName());
+		builder.append(".");
+		builder.append(trace.getMethodName());
+		builder.append("(");
+		builder.append(trace.getFileName());
+		builder.append(":");
+		builder.append(trace.getLineNumber());
+		builder.append(")");
+
+		return builder.toString();
+	}
+
+	public static String buildPosMessage(String format, Object... args) {
+		StackTraceElement trace = getCurrentStackTrace(4);
+		if (trace == null) {
+			return "unknown";
+		}
+
+		StringBuilder builder = new StringBuilder();
+
+		builder.append(trace.getMethodName());
+		builder.append("[");
+		builder.append(trace.getLineNumber());
+		builder.append("]: ");
+		builder.append(String.format(format, args));
+
+		return builder.toString();
+	}
+
+	public static void pLog() {
+		eLog(buildPosMessage());
+	}
+
+	public static void pfLog(String format, Object... args) {
+		eLog(buildPosMessage(format, args));
+	}
+
+	public static void dumpstack(Throwable throwable) {
+		eLog(throwable);
+	}
+
+	public static void dumpstack() {
+		eLog(new Throwable());
 	}
 
 	public static String getEnv(String name) {
@@ -160,59 +213,6 @@ public class CavanJava {
 
 	public static final StackTraceElement getCurrentStackTrace() {
 		return getCurrentStackTrace(3);
-	}
-
-	protected static String buildPosMessage() {
-		StackTraceElement trace = getCurrentStackTrace(4);
-		if (trace == null) {
-			return "unknown";
-		}
-
-		StringBuilder builder = new StringBuilder();
-
-		builder.append(trace.getClassName());
-		builder.append(".");
-		builder.append(trace.getMethodName());
-		builder.append("(");
-		builder.append(trace.getFileName());
-		builder.append(":");
-		builder.append(trace.getLineNumber());
-		builder.append(")");
-
-		return builder.toString();
-	}
-
-	protected static String buildPosMessage(String format, Object... args) {
-		StackTraceElement trace = getCurrentStackTrace(4);
-		if (trace == null) {
-			return "unknown";
-		}
-
-		StringBuilder builder = new StringBuilder();
-
-		builder.append(trace.getMethodName());
-		builder.append("[");
-		builder.append(trace.getLineNumber());
-		builder.append("]: ");
-		builder.append(String.format(format, args));
-
-		return builder.toString();
-	}
-
-	public static void printP() {
-		printE(buildPosMessage());
-	}
-
-	public static void printP(String format, Object... args) {
-		printE(buildPosMessage(format, args));
-	}
-
-	public static void dumpstack(Throwable throwable) {
-		printE(throwable);
-	}
-
-	public static void dumpstack() {
-		printE(new Throwable());
 	}
 
 	public static int ArrayCopy(byte[] src, int srcOff, byte[] dest, int destOff, int count) {

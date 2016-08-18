@@ -41,18 +41,18 @@ class TcpDdResponse extends TcpDdPackage {
 	@Override
 	protected boolean encodeBody(CavanByteCache cache) {
 		if (!cache.writeValue32(mCode)) {
-			CavanAndroid.logE("Failed to writeValue32(mCode)");
+			CavanAndroid.eLog("Failed to writeValue32(mCode)");
 			return false;
 		}
 
 		if (!cache.writeValue32(mErrno)) {
-			CavanAndroid.logE("Failed to writeValue32(mErrno)");
+			CavanAndroid.eLog("Failed to writeValue32(mErrno)");
 			return false;
 		}
 
 		if (mMessage != null) {
 			if (!cache.writeBytes(mMessage.getBytes())) {
-				CavanAndroid.logE("Failed to writeBytes(mMessage)");
+				CavanAndroid.eLog("Failed to writeBytes(mMessage)");
 				return false;
 			}
 		}
@@ -72,7 +72,7 @@ class TcpDdResponse extends TcpDdPackage {
 	@Override
 	protected boolean decodeBody(CavanByteCache cache) {
 		if (mType != TcpDdClient.TCP_DD_RESPONSE) {
-			CavanAndroid.logE("Not a response type = " + mType);
+			CavanAndroid.eLog("Not a response type = " + mType);
 			return false;
 		}
 

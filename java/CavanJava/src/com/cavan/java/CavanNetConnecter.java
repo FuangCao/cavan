@@ -39,7 +39,7 @@ public class CavanNetConnecter {
 
 		byte[] addrBytes = localAddr.getAddress();
 
-		CavanJava.printfD("ip = %d.%d.%d.%d", addrBytes[0] & 0xFF, addrBytes[1] & 0xFF, addrBytes[2], addrBytes[3]);
+		CavanJava.dfLog("ip = %d.%d.%d.%d", addrBytes[0] & 0xFF, addrBytes[1] & 0xFF, addrBytes[2], addrBytes[3]);
 
 		for (int i = 2; i < 255; i++) {
 			addrBytes[3] = (byte) i;

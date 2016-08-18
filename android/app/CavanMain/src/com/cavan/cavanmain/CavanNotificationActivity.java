@@ -102,7 +102,7 @@ public class CavanNotificationActivity extends Activity {
 			mContentObserver = new MessageObserver(new Handler());
 			getContentResolver().registerContentObserver(CavanNotification.CONTENT_URI, true, mContentObserver);
 		} else {
-			CavanAndroid.logE("uri = " + uri);
+			CavanAndroid.eLog("uri = " + uri);
 
 			try {
 				List<String> paths = uri.getPathSegments();

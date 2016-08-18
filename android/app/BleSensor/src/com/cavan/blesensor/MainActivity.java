@@ -74,7 +74,7 @@ public class MainActivity extends JwaooToyActivity {
 				mWaveViewDepth.addValue(mSensor.getDepth());
 
 				double capacitys[] = mSensor.getCapacitys();
-				CavanAndroid.logE(String.format("capacity: [%7.2f, %7.2f, %7.2f, %7.2f]", capacitys[0], capacitys[1], capacitys[2], capacitys[3]));
+				CavanAndroid.efLog("capacity: [%7.2f, %7.2f, %7.2f, %7.2f]", capacitys[0], capacitys[1], capacitys[2], capacitys[3]);
 			}
 		};
 	}

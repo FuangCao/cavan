@@ -33,7 +33,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 
 		@Override
 		public void handleMessage(Message msg) {
-			CavanAndroid.logD("message = " + msg);
+			CavanAndroid.dLog("message = " + msg);
 
 			switch (msg.what) {
 			case EVENT_START_SERVICE:
@@ -60,7 +60,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 
 		@Override
 		public void onServiceDisconnected(ComponentName arg0) {
-			CavanAndroid.logD("onServiceDisconnected: " + arg0);
+			CavanAndroid.dLog("onServiceDisconnected: " + arg0);
 
 			mService = null;
 
@@ -72,7 +72,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 
 		@Override
 		public void onServiceConnected(ComponentName arg0, IBinder arg1) {
-			CavanAndroid.logD("onServiceConnected: " + arg0);
+			CavanAndroid.dLog("onServiceConnected: " + arg0);
 
 			mService = ICavanService.Stub.asInterface(arg1);
 

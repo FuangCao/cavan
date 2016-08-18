@@ -99,8 +99,8 @@ public class CavanNotification {
 
 		String content = text.toString();
 
-		CavanAndroid.logE("[" + mTitle + "] ================================================================================");
-		CavanAndroid.logE(content);
+		CavanAndroid.eLog("[" + mTitle + "] ================================================================================");
+		CavanAndroid.eLog(content);
 
 		String[] contents = content.split(":", 2);
 

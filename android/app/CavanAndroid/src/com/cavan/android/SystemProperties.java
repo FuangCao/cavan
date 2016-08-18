@@ -1,14 +1,16 @@
 package com.cavan.android;
 
+import com.cavan.java.CavanJava;
+
 public class SystemProperties {
 	public static String TARGET_CLASS_NAME = "android.os.SystemProperties";
 
 	public static Object invokeMethodTyped(String name, Class<?>[] types, Object[] values) {
-		return CavanAndroid.invokeStaticMethodTyped(TARGET_CLASS_NAME, name, types, values);
+		return CavanJava.invokeStaticMethodTyped(TARGET_CLASS_NAME, name, types, values);
 	}
 
 	public static Object invokeMethod(String name, Object... parameters) {
-		return CavanAndroid.invokeStaticMethod(TARGET_CLASS_NAME, name, parameters);
+		return CavanJava.invokeStaticMethod(TARGET_CLASS_NAME, name, parameters);
 	}
 
 	public static String get(String key) {

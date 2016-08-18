@@ -44,7 +44,7 @@ import android.net.LocalSocketAddress;
 	public boolean sendPackage(TcpDdPackage pkg) {
 		byte[] bytes = pkg.encode();
 		if (bytes == null) {
-			logE("sendPackage: bytes is null");
+			eLog("sendPackage: bytes is null");
 			return false;
 		}
 
@@ -55,7 +55,7 @@ import android.net.LocalSocketAddress;
 		byte[] bytes = new byte[2048];
 		int length = recvData(bytes);
 		if (length < 0) {
-			logE("recvData length = " + length);
+			eLog("recvData length = " + length);
 			return false;
 		}
 
