@@ -1,6 +1,8 @@
 package com.cavan.cavanmain;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,6 +52,10 @@ public class CavanNotification {
 		table.setColumn(KEY_CONTENT, "text");
 	}
 
+	public CavanNotification() {
+		super();
+	}
+
 	public CavanNotification(String packageName, String user, String group, String title, String content) {
 		mTimestamp = System.currentTimeMillis();
 		mPackageName = packageName;
@@ -60,6 +66,18 @@ public class CavanNotification {
 	}
 
 	public CavanNotification(StatusBarNotification sbn) throws Exception {
+		if (!parse(sbn)) {
+			throw new Exception("Failed to parse StatusBarNotification");
+		}
+	}
+
+	public CavanNotification(Cursor cursor) throws Exception {
+		if (!parse(cursor)) {
+			throw new Exception("Failed to parse Cursor");
+		}
+	}
+
+	public boolean parse(StatusBarNotification sbn) {
 		mTimestamp = System.currentTimeMillis();
 		mPackageName = sbn.getPackageName();
 
@@ -76,7 +94,7 @@ public class CavanNotification {
 		}
 
 		if (text == null) {
-			throw new Exception("content is empty");
+			return false;
 		}
 
 		String content = text.toString();
@@ -100,17 +118,25 @@ public class CavanNotification {
 
 			mContent = contents[1].trim();
 		}
+
+		return true;
 	}
 
-	public CavanNotification(Cursor cursor) {
-		int column = 0;
+	public boolean parse(Cursor cursor) {
+		try {
+			int column = 0;
 
-		mTimestamp = cursor.getLong(column++);
-		mPackageName = cursor.getString(column++);
-		mTitle = cursor.getString(column++);
-		mUserName = cursor.getString(column++);
-		mGroupName = cursor.getString(column++);
-		mContent = cursor.getString(column++);
+			mTimestamp = cursor.getLong(column++);
+			mPackageName = cursor.getString(column++);
+			mTitle = cursor.getString(column++);
+			mUserName = cursor.getString(column++);
+			mGroupName = cursor.getString(column++);
+			mContent = cursor.getString(column++);
+
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
 	}
 
 	// ================================================================================
@@ -163,6 +189,29 @@ public class CavanNotification {
 		mContent = content;
 	}
 
+	public String buildTitle() {
+		DateFormat format = DateFormat.getDateTimeInstance();
+		StringBuilder builder = new StringBuilder(format.format(new Date(mTimestamp)));
+
+		if (mUserName != null) {
+			builder.append("\n");
+			builder.append(mUserName);
+
+			if (mGroupName != null) {
+				builder.append("@");
+				builder.append(mGroupName);
+			}
+		} else if (mGroupName != null) {
+			builder.append("\n");
+			builder.append(mGroupName);
+		} else if (mTitle != null) {
+			builder.append("\n");
+			builder.append(mTitle);
+		}
+
+		return builder.toString();
+	}
+
 	// ================================================================================
 
 	public ContentValues getContentValues() {
@@ -202,7 +251,11 @@ public class CavanNotification {
 
 		if (cursor != null && cursor.moveToFirst()) {
 			do {
-				notifications.add(new CavanNotification(cursor));
+				try {
+					notifications.add(new CavanNotification(cursor));
+				} catch (Exception e) {
+					break;
+				}
 			} while (cursor.moveToNext());
 		}
 
@@ -235,6 +288,10 @@ public class CavanNotification {
 
 	public static Cursor queryAll(ContentResolver resolver, String[] projection, String sortOrder) {
 		return query(resolver, projection, null, null, sortOrder);
+	}
+
+	public static Cursor queryAll(ContentResolver resolver, String sortOrder) {
+		return query(resolver, PROJECTION, null, null, sortOrder);
 	}
 
 	public static ArrayList<CavanNotification> queryNotification(ContentResolver resolver, String selection, String[] selectionArgs, String sortOrder) {

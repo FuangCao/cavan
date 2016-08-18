@@ -1,6 +1,5 @@
 package com.cavan.cavanmain;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -13,6 +12,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
 import android.text.util.Linkify.TransformFilter;
 import android.view.View;
@@ -21,17 +21,13 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.cavan.android.CavanAndroid;
+
 public class CavanNotificationActivity extends Activity {
 
-	public static final String SCHEME = "cavan";
-
-	public static final String AUTHORITY_RED_PACKET = "red_packet";
-	public static final String SCHEME_RED_PACKET = SCHEME + "://" + AUTHORITY_RED_PACKET + "/";
-
-	public static final String AUTHORITY_ALIPAY = "alipay";
-	public static final String SCHEME_ALIPAY = SCHEME + "://" + AUTHORITY_ALIPAY + "/";
-
-	public static final HashMap<String, String> sRedPacketAppMap = new HashMap<String, String>();
+	public static final String SCHEME = "cavan://";
+	public static final String ACTION_ALIPAY = "alipay";
+	public static final String ACTION_OPEN = "open";
 
 	public static final Pattern[] sAlipayPatterns = {
 		Pattern.compile("\\b(\\d{8})\\b"),
@@ -40,26 +36,15 @@ public class CavanNotificationActivity extends Activity {
 	};
 
 	public static final Pattern[] sRedPacketPatterns = {
-		Pattern.compile("\\[(\\w+)红包\\]"),
-		Pattern.compile("【(\\w+)红包】"),
+		Pattern.compile("\\[(\\w+红包)\\]"),
+		Pattern.compile("【(\\w+红包)】"),
 	};
-
-	private static final String[] PROJECTION = {
-		CavanNotification.KEY_TIMESTAMP,
-		CavanNotification.KEY_TITLE,
-		CavanNotification.KEY_USER_NAME,
-		CavanNotification.KEY_GROUP_NAME,
-		CavanNotification.KEY_CONTENT,
-	};
-
-	static {
-		sRedPacketAppMap.put("QQ", "com.tencent.mobileqq");
-		sRedPacketAppMap.put("微信", "com.tencent.mm");
-	}
 
 	private ListView mMessageView;
 	private ContentObserver mContentObserver;
 	private MessageAdapter mAdapter = new MessageAdapter();
+	private CavanNotification mNotification = new CavanNotification();
+	private HashMap<String, HashMap<String, String>> mSchemeMap = new HashMap<String, HashMap<String,String>>();
 
 	private TransformFilter mTransformFilter = new TransformFilter() {
 
@@ -68,6 +53,22 @@ public class CavanNotificationActivity extends Activity {
 			return match.group(match.groupCount());
 		}
 	};
+
+	public String buildScheme(String pkgName, String action) {
+		HashMap<String, String> map = mSchemeMap.get(action);
+		if (map == null) {
+			map = new HashMap<String, String>();
+			mSchemeMap.put(action, map);
+		}
+
+		String scheme = map.get(pkgName);
+		if (scheme == null) {
+			scheme = SCHEME + pkgName + "/" + action + "/";
+			map.put(pkgName, scheme);
+		}
+
+		return scheme;
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -84,22 +85,28 @@ public class CavanNotificationActivity extends Activity {
 			mContentObserver = new MessageObserver(new Handler());
 			getContentResolver().registerContentObserver(CavanNotification.CONTENT_URI, true, mContentObserver);
 		} else {
-			List<String> paths = uri.getPathSegments();
-			if (paths.size() > 0) {
-				String authority = uri.getAuthority();
-				if (AUTHORITY_ALIPAY.equals(authority)) {
-					RedPacketListenerService.postRedPacketCode(this, paths.get(0));
+			CavanAndroid.logE("uri = " + uri);
+
+			try {
+				List<String> paths = uri.getPathSegments();
+				String action = paths.get(0);
+
+				if (ACTION_ALIPAY.equals(action)) {
+					String code = paths.get(1);
+
+					RedPacketListenerService.postRedPacketCode(this, paths.get(1));
 					RedPacketListenerService.startAlipayActivity(this);
-				} else if (AUTHORITY_RED_PACKET.equals(authority)) {
-					String pkgName = sRedPacketAppMap.get(paths.get(0));
-					if (pkgName != null) {
-						Intent intent = getPackageManager().getLaunchIntentForPackage(pkgName);
-						if (intent != null) {
-							intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-							startActivity(intent);
-						}
+
+					CavanAndroid.showToastLong(this, "支付宝口令: " + code);
+				} else if (ACTION_OPEN.equals(action)) {
+					Intent intent = getPackageManager().getLaunchIntentForPackage(uri.getHost());
+					if (intent != null) {
+						intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+						startActivity(intent);
 					}
 				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 
 			finish();
@@ -154,7 +161,7 @@ public class CavanNotificationActivity extends Activity {
 		}
 
 		public void updateCursor() {
-			Cursor cursor = CavanNotification.queryAll(getContentResolver(), PROJECTION, CavanNotification.KEY_TIMESTAMP);
+			Cursor cursor = CavanNotification.queryAll(getContentResolver(), CavanNotification.KEY_TIMESTAMP);
 			setCursor(cursor);
 		}
 
@@ -177,60 +184,42 @@ public class CavanNotificationActivity extends Activity {
 			return position;
 		}
 
-		@SuppressWarnings("deprecation")
 		@Override
-		public View getView(int position, View convertView, ViewGroup viewGroup) {
+		public View getView(int position, View view, ViewGroup viewGroup) {
 			if (!mCursor.moveToPosition(position)) {
 				return null;
 			}
 
-			long time = mCursor.getLong(0);
-			String title = mCursor.getString(1);
-			String user = mCursor.getString(2);
-			String group = mCursor.getString(3);
-			String content = mCursor.getString(4);
+			if (!mNotification.parse(mCursor)) {
+				return null;
+			}
 
-			View view;
-
-			if (convertView != null) {
-				view = convertView;
-			} else {
+			if (view == null) {
 				view = View.inflate(CavanNotificationActivity.this, R.layout.message_item, null);
 			}
 
 			TextView viewTitle = (TextView) view.findViewById(R.id.textViewTitle);
+			viewTitle.setText(mNotification.buildTitle());
+
 			TextView viewContent = (TextView) view.findViewById(R.id.textViewContent);
-
-			StringBuilder builder = new StringBuilder(new Date(time).toLocaleString());
-
-			if (user != null) {
-				builder.append("\n");
-				builder.append(user);
-
-				if (group != null) {
-					builder.append("@");
-					builder.append(group);
-				}
-			} else if (group != null) {
-				builder.append("\n");
-				builder.append(group);
-			} else if (title != null) {
-				builder.append("\n");
-				builder.append(title);
-			}
-
-			viewTitle.setText(builder.toString());
-			viewContent.setText(content);
+			viewContent.setText(mNotification.getContent());
 
 			Linkify.addLinks(viewContent, Linkify.WEB_URLS);
 
+			String pkgName = mNotification.getPackageName();
+			String scheme = buildScheme(pkgName, ACTION_ALIPAY);
+
 			for (Pattern pattern : sAlipayPatterns) {
-				Linkify.addLinks(viewContent, pattern, SCHEME_ALIPAY, null, mTransformFilter);
+				Linkify.addLinks(viewContent, pattern, scheme, null, mTransformFilter);
 			}
 
+			scheme = buildScheme(pkgName, ACTION_OPEN);
+
 			for (Pattern pattern : sRedPacketPatterns) {
-				Linkify.addLinks(viewContent, pattern, SCHEME_RED_PACKET, null, mTransformFilter);
+				Linkify.addLinks(viewContent, pattern, scheme, null, mTransformFilter);
 			}
+
+			viewContent.setMovementMethod(LinkMovementMethod.getInstance());
 
 			return view;
 		}
