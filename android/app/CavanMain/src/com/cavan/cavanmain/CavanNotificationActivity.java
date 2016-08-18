@@ -70,6 +70,23 @@ public class CavanNotificationActivity extends Activity {
 		return scheme;
 	}
 
+	public boolean isSelectionBottom() {
+		int childs = mMessageView.getChildCount();
+		if (childs > 0) {
+			int position = mMessageView.getLastVisiblePosition();
+			if (position + 1 < mMessageView.getCount()) {
+				return false;
+			} else {
+				View last = mMessageView.getChildAt(childs - 1);
+				if (last.getBottom() > mMessageView.getBottom()) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -150,12 +167,12 @@ public class CavanNotificationActivity extends Activity {
 			String title = getResources().getString(R.string.text_message_count);
 			setTitle(title + count);
 
-			boolean atLast = mMessageView.getLastVisiblePosition() + 1 >= mMessageView.getCount();
+			boolean isBottom = isSelectionBottom();
 
 			mCursor = cursor;
 			notifyDataSetChanged();
 
-			if (atLast) {
+			if (isBottom) {
 				mMessageView.setSelection(count - 1);
 			}
 		}
