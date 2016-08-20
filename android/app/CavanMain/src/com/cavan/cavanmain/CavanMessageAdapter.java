@@ -98,13 +98,17 @@ public class CavanMessageAdapter extends BaseAdapter {
 	}
 
 	public void setFilter(String filter) {
-		mFilterText = filter;
-
-		if (filter == null) {
+		if (filter == null || filter.isEmpty()) {
+			mFilterText = null;
 			mFilterPattern = null;
 		} else {
+			mFilterText = filter;
 			mFilterPattern = Pattern.compile(filter, Pattern.CASE_INSENSITIVE);
 		}
+	}
+
+	public String getFilter() {
+		return mFilterText;
 	}
 
 	@Override

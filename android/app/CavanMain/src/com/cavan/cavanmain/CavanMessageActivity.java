@@ -26,6 +26,7 @@ import com.cavan.android.CavanAndroid;
 public class CavanMessageActivity extends Activity {
 
 	private ListView mMessageView;
+	private CharSequence mFilterText;
 	private CavanMessageAdapter mAdapter;
 	private ContentObserver mContentObserver = new ContentObserver(new Handler()) {
 
@@ -129,21 +130,33 @@ public class CavanMessageActivity extends Activity {
 
 		@Override
 		public Dialog onCreateDialog(Bundle savedInstanceState) {
-			AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 			View view = getLayoutInflater().inflate(R.layout.message_filter, null);
 			mEditTextFilter = (EditText) view.findViewById(R.id.editTextFilter);
+			mEditTextFilter.setText(mFilterText);
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(CavanMessageActivity.this);
+
 			builder.setView(view);
-			builder.setPositiveButton(android.R.string.ok, this);
+			builder.setCancelable(false);
+			builder.setPositiveButton(R.string.text_filter, this);
+			builder.setNeutralButton(R.string.text_filter_none, this);
+			builder.setNegativeButton(android.R.string.cancel, null);
+
 			return builder.create();
 		}
 
 		@Override
 		public void onClick(DialogInterface dialog, int which) {
-			String text = mEditTextFilter.getText().toString();
-			if (text.isEmpty()) {
+			mFilterText = mEditTextFilter.getText();
+
+			switch (which) {
+			case DialogInterface.BUTTON_POSITIVE:
+				mAdapter.setFilter(mFilterText.toString());
+				break;
+
+			case DialogInterface.BUTTON_NEUTRAL:
 				mAdapter.setFilter(null);
-			} else {
-				mAdapter.setFilter(text);
+				break;
 			}
 
 			updateData();
