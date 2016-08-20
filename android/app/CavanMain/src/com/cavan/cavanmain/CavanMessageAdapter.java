@@ -13,8 +13,8 @@ public class CavanMessageAdapter extends BaseAdapter {
 	private ListView mView;
 	private CavanMessageActivity mActivity;
 
-	private String mFilterText;
-	private Pattern mFilterPattern;
+	private String[] mFilterLines;
+	private Pattern[] mFilterPatterns;
 
 	private Cursor mCursor;
 	private Cursor mCursorPending;
@@ -83,12 +83,24 @@ public class CavanMessageAdapter extends BaseAdapter {
 	public Cursor updateData() {
 		Cursor cursor;
 
-		if (mFilterText == null) {
+		if (mFilterLines == null) {
 			cursor = CavanNotification.queryAll(mActivity.getContentResolver(), CavanNotification.KEY_TIMESTAMP);
 		} else {
-			String selection = CavanNotification.KEY_CONTENT + " like ? collate nocase";
-			String[] selectionArgs = { "%" + mFilterText + "%" };
-			cursor = CavanNotification.query(mActivity.getContentResolver(), selection, selectionArgs, CavanNotification.KEY_TIMESTAMP);
+			String[] selectionArgs = new String[mFilterLines.length];
+			StringBuilder selection = new StringBuilder();
+
+			for (int i = 0; i < mFilterLines.length; i++) {
+				if (i > 0) {
+					selection.append(" or ");
+				}
+
+				selection.append(CavanNotification.KEY_CONTENT + " like ?");
+				selectionArgs[i] = "%" + mFilterLines[i] + "%";
+			}
+
+			selection.append(" collate nocase");
+
+			cursor = CavanNotification.query(mActivity.getContentResolver(), selection.toString(), selectionArgs, CavanNotification.KEY_TIMESTAMP);
 		}
 
 		setCursor(cursor);
@@ -98,16 +110,19 @@ public class CavanMessageAdapter extends BaseAdapter {
 
 	public void setFilter(String filter) {
 		if (filter == null || filter.isEmpty()) {
-			mFilterText = null;
-			mFilterPattern = null;
+			mFilterLines = null;
+			mFilterPatterns = null;
 		} else {
-			mFilterText = filter;
-			mFilterPattern = Pattern.compile(filter, Pattern.CASE_INSENSITIVE);
-		}
-	}
+			mFilterLines = filter.split("\n");
+			mFilterPatterns = new Pattern[mFilterLines.length];
 
-	public String getFilter() {
-		return mFilterText;
+			for (int i = mFilterLines.length - 1; i >= 0; i--) {
+				String line = mFilterLines[i].trim();
+
+				mFilterLines[i] = line;
+				mFilterPatterns[i] = Pattern.compile(line, Pattern.CASE_INSENSITIVE);
+			}
+		}
 	}
 
 	@Override
@@ -148,7 +163,7 @@ public class CavanMessageAdapter extends BaseAdapter {
 		}
 
 		view.setTitle(mNotification.buildTitle());
-		view.setContent(mNotification.getContent(), mNotification.getPackageName(), mFilterPattern);
+		view.setContent(mNotification.getContent(), mNotification.getPackageName(), mFilterPatterns);
 
 		return view;
 	}
