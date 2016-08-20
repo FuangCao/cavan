@@ -19,15 +19,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ListView;
 
 import com.cavan.android.CavanAndroid;
 
 public class CavanMessageActivity extends Activity {
 
-	private ListView mMessageView;
 	private CharSequence mFilterText;
 	private CavanMessageAdapter mAdapter;
+	private CavanMessageFinder mMessageFinder = new CavanMessageFinder();
 	private ContentObserver mContentObserver = new ContentObserver(new Handler()) {
 
 		@Override
@@ -35,8 +34,6 @@ public class CavanMessageActivity extends Activity {
 			updateData();
 		}
 	};
-
-	CavanMessageFinder mFinder = new CavanMessageFinder();
 
 	private void updateData() {
 		Cursor cursor = mAdapter.updateData();
@@ -80,8 +77,7 @@ public class CavanMessageActivity extends Activity {
 		} else {
 			setContentView(R.layout.notification_activity);
 
-			mMessageView = (ListView) findViewById(R.id.listViewMessage);
-			mAdapter = new CavanMessageAdapter(mMessageView);
+			mAdapter = new CavanMessageAdapter(this);
 			updateData();
 
 			getContentResolver().registerContentObserver(CavanNotification.CONTENT_URI, true, mContentObserver);
@@ -113,7 +109,7 @@ public class CavanMessageActivity extends Activity {
 			break;
 
 		case R.id.action_message_finder:
-			mFinder.show(getFragmentManager());
+			mMessageFinder.show(getFragmentManager());
 			break;
 		}
 

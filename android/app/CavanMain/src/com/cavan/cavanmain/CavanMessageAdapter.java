@@ -2,7 +2,6 @@ package com.cavan.cavanmain;
 
 import java.util.regex.Pattern;
 
-import android.content.Context;
 import android.database.Cursor;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +11,7 @@ import android.widget.ListView;
 public class CavanMessageAdapter extends BaseAdapter {
 
 	private ListView mView;
-	private Context mContext;
+	private CavanMessageActivity mActivity;
 
 	private String mFilterText;
 	private Pattern mFilterPattern;
@@ -50,13 +49,13 @@ public class CavanMessageAdapter extends BaseAdapter {
 		}
 	};
 
-	public CavanMessageAdapter(ListView view) {
+	public CavanMessageAdapter(CavanMessageActivity activity) {
 		super();
 
-		mView = view;
-		mContext = view.getContext();
+		mActivity = activity;
 
-		view.setAdapter(this);
+		mView = (ListView) activity.findViewById(R.id.listViewMessage);
+		mView.setAdapter(this);
 	}
 
 	public boolean isSelectionBottom() {
@@ -85,11 +84,11 @@ public class CavanMessageAdapter extends BaseAdapter {
 		Cursor cursor;
 
 		if (mFilterText == null) {
-			cursor = CavanNotification.queryAll(mContext.getContentResolver(), CavanNotification.KEY_TIMESTAMP);
+			cursor = CavanNotification.queryAll(mActivity.getContentResolver(), CavanNotification.KEY_TIMESTAMP);
 		} else {
 			String selection = CavanNotification.KEY_CONTENT + " like ? collate nocase";
 			String[] selectionArgs = { "%" + mFilterText + "%" };
-			cursor = CavanNotification.query(mContext.getContentResolver(), selection, selectionArgs, CavanNotification.KEY_TIMESTAMP);
+			cursor = CavanNotification.query(mActivity.getContentResolver(), selection, selectionArgs, CavanNotification.KEY_TIMESTAMP);
 		}
 
 		setCursor(cursor);
@@ -143,7 +142,7 @@ public class CavanMessageAdapter extends BaseAdapter {
 		CavanMessageView view;
 
 		if (convertView == null) {
-			view = CavanMessageView.getInstance(mContext);
+			view = CavanMessageView.getInstance(mActivity);
 		} else {
 			view = (CavanMessageView) convertView;
 		}
