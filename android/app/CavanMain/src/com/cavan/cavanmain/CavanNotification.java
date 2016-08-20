@@ -181,7 +181,7 @@ public class CavanNotification {
 		mTitle = title;
 	}
 
-	public CharSequence getContent() {
+	public String getContent() {
 		return mContent;
 	}
 
@@ -286,12 +286,16 @@ public class CavanNotification {
 		return resolver.query(CONTENT_URI, projection, selection, selectionArgs, sortOrder);
 	}
 
+	public static Cursor query(ContentResolver resolver, String selection, String[] selectionArgs, String sortOrder) {
+		return resolver.query(CONTENT_URI, PROJECTION, selection, selectionArgs, sortOrder);
+	}
+
 	public static Cursor queryAll(ContentResolver resolver, String[] projection, String sortOrder) {
 		return query(resolver, projection, null, null, sortOrder);
 	}
 
 	public static Cursor queryAll(ContentResolver resolver, String sortOrder) {
-		return query(resolver, PROJECTION, null, null, sortOrder);
+		return query(resolver, null, null, sortOrder);
 	}
 
 	public static ArrayList<CavanNotification> queryNotification(ContentResolver resolver, String selection, String[] selectionArgs, String sortOrder) {

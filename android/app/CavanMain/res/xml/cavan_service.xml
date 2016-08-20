@@ -8,11 +8,8 @@
 	    android:title="@string/text_ip_address"
 	    android:summary="@string/text_unknown" />
 
-	<Preference android:key="notification_database_clean"
-	    android:title="@string/text_notification_database_clean" />
-
-	<Preference android:key="notification_database_show"
-	    android:title="@string/text_notification_database_show" />
+	<Preference android:key="message_show"
+	    android:title="@string/text_message_show" />
 
 	<RingtonePreference android:key="red_packet_notify_ringtone"
 	    android:persistent="true"

@@ -1,5 +1,7 @@
 package com.cavan.cavanmain;
 
+import java.util.regex.Pattern;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.view.View;
@@ -11,6 +13,9 @@ public class CavanMessageAdapter extends BaseAdapter {
 
 	private ListView mView;
 	private Context mContext;
+
+	private String mFilterText;
+	private Pattern mFilterPattern;
 
 	private Cursor mCursor;
 	private Cursor mCursorPending;
@@ -76,12 +81,30 @@ public class CavanMessageAdapter extends BaseAdapter {
 		mView.post(mRunnableUpdate);
 	}
 
-	public Cursor updateAll() {
-		Cursor cursor = CavanNotification.queryAll(mContext.getContentResolver(), CavanNotification.KEY_TIMESTAMP);
+	public Cursor updateData() {
+		Cursor cursor;
+
+		if (mFilterText == null) {
+			cursor = CavanNotification.queryAll(mContext.getContentResolver(), CavanNotification.KEY_TIMESTAMP);
+		} else {
+			String selection = CavanNotification.KEY_CONTENT + " like ? collate nocase";
+			String[] selectionArgs = { "%" + mFilterText + "%" };
+			cursor = CavanNotification.query(mContext.getContentResolver(), selection, selectionArgs, CavanNotification.KEY_TIMESTAMP);
+		}
 
 		setCursor(cursor);
 
 		return cursor;
+	}
+
+	public void setFilter(String filter) {
+		mFilterText = filter;
+
+		if (filter == null) {
+			mFilterPattern = null;
+		} else {
+			mFilterPattern = Pattern.compile(filter, Pattern.CASE_INSENSITIVE);
+		}
 	}
 
 	@Override
@@ -122,7 +145,7 @@ public class CavanMessageAdapter extends BaseAdapter {
 		}
 
 		view.setTitle(mNotification.buildTitle());
-		view.setContent(mNotification.getContent(), mNotification.getPackageName());
+		view.setContent(mNotification.getContent(), mNotification.getPackageName(), mFilterPattern);
 
 		return view;
 	}

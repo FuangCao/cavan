@@ -3,12 +3,22 @@ package com.cavan.cavanmain;
 import java.util.List;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.app.FragmentManager;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.ListView;
 
 import com.cavan.android.CavanAndroid;
@@ -25,8 +35,10 @@ public class CavanMessageActivity extends Activity {
 		}
 	};
 
+	CavanMessageFinder mFinder = new CavanMessageFinder();
+
 	private void updateData() {
-		Cursor cursor = mAdapter.updateAll();
+		Cursor cursor = mAdapter.updateData();
 		if (cursor != null) {
 			String title = getResources().getString(R.string.text_message_count);
 			setTitle(title + cursor.getCount());
@@ -38,15 +50,7 @@ public class CavanMessageActivity extends Activity {
 		super.onCreate(savedInstanceState);
 
 		Uri uri = getIntent().getData();
-		if (uri == null) {
-			setContentView(R.layout.notification_activity);
-
-			mMessageView = (ListView) findViewById(R.id.listViewMessage);
-			mAdapter = new CavanMessageAdapter(mMessageView);
-			updateData();
-
-			getContentResolver().registerContentObserver(CavanNotification.CONTENT_URI, true, mContentObserver);
-		} else {
+		if (uri != null) {
 			CavanAndroid.eLog("uri = " + uri);
 
 			try {
@@ -72,6 +76,14 @@ public class CavanMessageActivity extends Activity {
 			}
 
 			finish();
+		} else {
+			setContentView(R.layout.notification_activity);
+
+			mMessageView = (ListView) findViewById(R.id.listViewMessage);
+			mAdapter = new CavanMessageAdapter(mMessageView);
+			updateData();
+
+			getContentResolver().registerContentObserver(CavanNotification.CONTENT_URI, true, mContentObserver);
 		}
 	}
 
@@ -82,5 +94,59 @@ public class CavanMessageActivity extends Activity {
 		}
 
 		super.onDestroy();
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.message_activity, menu);
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.action_message_clean:
+			int count = CavanNotification.deleteAll(getContentResolver());
+			CavanAndroid.showToast(this, String.format("成功清除 %d 条消息", count));
+			updateData();
+			break;
+
+		case R.id.action_message_finder:
+			mFinder.show(getFragmentManager());
+			break;
+		}
+
+		return super.onOptionsItemSelected(item);
+	}
+
+	public class CavanMessageFinder extends DialogFragment implements OnClickListener {
+
+		private EditText mEditTextFilter;
+
+		public void show(FragmentManager manager) {
+			super.show(manager, CavanAndroid.TAG);
+		}
+
+		@Override
+		public Dialog onCreateDialog(Bundle savedInstanceState) {
+			AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+			View view = getLayoutInflater().inflate(R.layout.message_filter, null);
+			mEditTextFilter = (EditText) view.findViewById(R.id.editTextFilter);
+			builder.setView(view);
+			builder.setPositiveButton(android.R.string.ok, this);
+			return builder.create();
+		}
+
+		@Override
+		public void onClick(DialogInterface dialog, int which) {
+			String text = mEditTextFilter.getText().toString();
+			if (text.isEmpty()) {
+				mAdapter.setFilter(null);
+			} else {
+				mAdapter.setFilter(text);
+			}
+
+			updateData();
+		}
 	}
 }
