@@ -239,11 +239,11 @@ public class RedPacketNotification extends CavanNotification {
 			return false;
 		}
 
-		length += found;
+		/* length += found;
 
 		if (length < 6 || length > 20) {
 			return false;
-		}
+		} */
 
 		return true;
 	}
