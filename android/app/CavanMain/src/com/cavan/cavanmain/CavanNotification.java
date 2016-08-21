@@ -44,7 +44,7 @@ public class CavanNotification {
 	public static void initDatabaseTable(CavanNotificationProvider provider) {
 		CavanDatabaseTable table = provider.getTable(TABLE_NAME);
 
-		table.setColumn(KEY_TIMESTAMP, "date");
+		table.setColumn(KEY_TIMESTAMP, "long");
 		table.setColumn(KEY_PACKAGE, "text");
 		table.setColumn(KEY_TITLE, "text");
 		table.setColumn(KEY_USER_NAME, "text");

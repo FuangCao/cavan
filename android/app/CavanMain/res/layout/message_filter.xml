@@ -1,19 +1,48 @@
-<?xml version="1.0" encoding="utf-8"?><RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content" >
+
+    <ListView
+        android:id="@+id/listViewFilter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true" >
+    </ListView>
+
+    <CheckBox
+        android:id="@+id/checkBoxSelectAll"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/listViewFilter"
+        android:text="@string/text_select_all" />
+
+    <Button
+        android:id="@+id/buttonDelete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignBaseline="@+id/checkBoxSelectAll"
+        android:text="@string/text_delete" />
 
     <EditText
         android:id="@+id/editTextFilter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@+id/buttonAdd"
+        android:layout_below="@+id/checkBoxSelectAll"
         android:ems="10"
-        android:inputType="textMultiLine" >
+        android:inputType="text" />
 
-        <requestFocus />
-    </EditText>
-
+    <Button
+        android:id="@+id/buttonAdd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignBaseline="@+id/editTextFilter"
+        android:text="@string/text_add" />
 
 </RelativeLayout>

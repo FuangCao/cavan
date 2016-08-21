@@ -10,11 +10,13 @@ public class CavanNotificationProvider extends CavanDatabaseProvider {
 	public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORIT);
 
 	private static final String DB_NAME = "notification.db";
-	private static final int DB_VERSION = 1;
+	private static final int DB_VERSION = 3;
 
 	@Override
 	protected void initTables() {
+		CavanSettings.initDatabaseTable(this);
 		CavanNotification.initDatabaseTable(this);
+		CavanFilter.initDatabaseTable(this);
 	}
 
 	@Override

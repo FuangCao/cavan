@@ -31,5 +31,8 @@
     <string name="text_message_show">查看消息</string>
     <string name="text_message_clean">清空消息</string>
     <string name="text_message_find">筛选消息</string>
+    <string name="text_add">添加</string>
+    <string name="text_delete">删除</string>
+    <string name="text_select_all">全选</string>
 
 </resources>

@@ -15,6 +15,8 @@ import android.provider.BaseColumns;
 
 public abstract class CavanDatabaseProvider extends ContentProvider {
 
+	public static final String KEY_ID = BaseColumns._ID;
+
 	protected abstract String getDatabaseName();
 	protected abstract int getDatabaseVersion();
 	protected abstract String getAuthority();
@@ -76,7 +78,7 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 
 			addURI(null, 0);
 			addURI("#", 1);
-			setColumn(BaseColumns._ID, "integer primary key autoincrement");
+			setColumn(KEY_ID, "integer primary key autoincrement");
 		}
 
 		public String getName() {
@@ -88,7 +90,7 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 		}
 
 		public int getRelCode(int code) {
-			return mBaseCode - code;
+			return code - mBaseCode;
 		}
 
 		public int getAbsCode(int code) {
@@ -163,7 +165,7 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 			builder.setTables(mName);
 
 			if (code == 1) {
-				builder.appendWhere(BaseColumns._ID + "=");
+				builder.appendWhere(KEY_ID + "=");
 				builder.appendWhere(uri.getPathSegments().get(1));
 			}
 
@@ -193,7 +195,7 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 			SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
 
 			if (code == 1) {
-				selection = BaseColumns._ID + "=" + uri.getPathSegments().get(1);
+				selection = KEY_ID + "=" + uri.getPathSegments().get(1);
 				selectionArgs = null;
 			}
 
@@ -204,11 +206,11 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 			SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
 
 			if (code == 1) {
-				selection = BaseColumns._ID + "=" + uri.getPathSegments().get(1);
+				selection = KEY_ID + "=" + uri.getPathSegments().get(1);
 				selectionArgs = null;
 			}
 
-			return db.delete(mName, selection, selectionArgs);
+			return db.update(mName, values, selection, selectionArgs);
 		}
 	}
 

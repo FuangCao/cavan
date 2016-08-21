@@ -7,18 +7,29 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.FragmentManager;
+import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Editable;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
+import android.widget.ListView;
 
 import com.cavan.android.CavanAndroid;
 
@@ -26,9 +37,8 @@ public class CavanMessageActivity extends Activity {
 
 	public static final int FLAG_NEEDS_MENU_KEY = 0x40000000;
 
-	private CharSequence mFilterText;
 	private CavanMessageAdapter mAdapter;
-	private CavanMessageFinder mMessageFinder = new CavanMessageFinder();
+	private CavanMessageFilter mMessageFinder = new CavanMessageFilter();
 	private ContentObserver mContentObserver = new ContentObserver(new Handler()) {
 
 		@Override
@@ -119,9 +129,55 @@ public class CavanMessageActivity extends Activity {
 		return super.onOptionsItemSelected(item);
 	}
 
-	public class CavanMessageFinder extends DialogFragment implements OnClickListener {
+	public class CavanMessageFilter extends DialogFragment implements OnCheckedChangeListener, OnClickListener {
 
+		private CavanFilter[] mFilters;
+
+		private Button mButtonAdd;
+		private Button mButtonDelete;
+		private ListView mListViewFilter;
 		private EditText mEditTextFilter;
+		private CheckBox mCheckBoxSelectAll;
+
+		private BaseAdapter mFilterAdapter = new BaseAdapter() {
+
+			@Override
+			public void notifyDataSetChanged() {
+				mFilters = CavanFilter.queryFilter(getContentResolver());
+				super.notifyDataSetChanged();
+			}
+
+			@Override
+			public View getView(int position, View convertView, ViewGroup parent) {
+				CavanFilterView view = (CavanFilterView) convertView;
+				if (view == null) {
+					view = new CavanFilterView(CavanMessageActivity.this, mFilters[position]);
+				} else {
+					view.setFilter(mFilters[position]);
+				}
+
+				return view;
+			}
+
+			@Override
+			public long getItemId(int position) {
+				return 0;
+			}
+
+			@Override
+			public Object getItem(int position) {
+				return null;
+			}
+
+			@Override
+			public int getCount() {
+				if (mFilters != null) {
+					return mFilters.length;
+				}
+
+				return 0;
+			}
+		};
 
 		public void show(FragmentManager manager) {
 			super.show(manager, CavanAndroid.TAG);
@@ -130,35 +186,100 @@ public class CavanMessageActivity extends Activity {
 		@Override
 		public Dialog onCreateDialog(Bundle savedInstanceState) {
 			View view = getLayoutInflater().inflate(R.layout.message_filter, null);
+
+			mCheckBoxSelectAll = (CheckBox) view.findViewById(R.id.checkBoxSelectAll);
+			mCheckBoxSelectAll.setTextColor(Color.WHITE);
+			mCheckBoxSelectAll.setOnCheckedChangeListener(this);
+
+			mButtonAdd = (Button) view.findViewById(R.id.buttonAdd);
+			mButtonAdd.setOnClickListener(this);
+
+			mButtonDelete = (Button) view.findViewById(R.id.buttonDelete);
+			mButtonDelete.setOnClickListener(this);
+
 			mEditTextFilter = (EditText) view.findViewById(R.id.editTextFilter);
-			mEditTextFilter.setText(mFilterText);
+
+			mListViewFilter = (ListView) view.findViewById(R.id.listViewFilter);
+			mListViewFilter.setAdapter(mFilterAdapter);
+			mFilterAdapter.notifyDataSetChanged();
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(CavanMessageActivity.this);
 
 			builder.setView(view);
 			builder.setCancelable(false);
-			builder.setPositiveButton(R.string.text_filter, this);
-			builder.setNeutralButton(R.string.text_filter_none, this);
-			builder.setNegativeButton(android.R.string.cancel, null);
+			builder.setPositiveButton(R.string.text_filter, null);
 
 			return builder.create();
 		}
 
 		@Override
-		public void onClick(DialogInterface dialog, int which) {
-			mFilterText = mEditTextFilter.getText();
+		public void onDismiss(DialogInterface dialog) {
+			mAdapter.setFilter(mFilters);
+			super.onDismiss(dialog);
+		}
 
-			switch (which) {
-			case DialogInterface.BUTTON_POSITIVE:
-				mAdapter.setFilter(mFilterText.toString());
+		@Override
+		public void onClick(View v) {
+			switch (v.getId()) {
+			case R.id.buttonAdd:
+				Editable editable = mEditTextFilter.getText();
+				CavanFilter filter = new CavanFilter(editable.toString(), true);
+				filter.update(getContentResolver());
+				mFilterAdapter.notifyDataSetChanged();
+				editable.clear();
 				break;
 
-			case DialogInterface.BUTTON_NEUTRAL:
-				mAdapter.setFilter(null);
+			case R.id.buttonDelete:
+				CavanFilter.deleteEnabled(getContentResolver());
+				mFilterAdapter.notifyDataSetChanged();
 				break;
 			}
+		}
 
+		@Override
+		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+			if (mFilters == null) {
+				return;
+			}
+
+			for (int i = mFilters.length - 1; i >= 0; i--) {
+				mFilters[i].setEnable(getContentResolver(), isChecked);
+			}
+
+			mFilterAdapter.notifyDataSetChanged();
+		}
+	}
+
+	public class CavanFilterView extends CheckBox implements OnCheckedChangeListener {
+
+		private CavanFilter mFilter;
+
+		public CavanFilterView(Context context, CavanFilter filter) {
+			super(context);
+
+			setTextColor(Color.WHITE);
+			setFilter(filter);
+
+			setOnCheckedChangeListener(this);
+		}
+
+		public void updateData() {
+			setText(mFilter.getContent());
+			setChecked(mFilter.isEnabled());
+		}
+
+		public void setFilter(CavanFilter filter) {
+			mFilter = filter;
 			updateData();
+		}
+
+		public void delete(ContentResolver resolver) {
+			mFilter.delete(resolver);
+		}
+
+		@Override
+		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+			mFilter.setEnable(getContentResolver(), isChecked);
 		}
 	}
 }
