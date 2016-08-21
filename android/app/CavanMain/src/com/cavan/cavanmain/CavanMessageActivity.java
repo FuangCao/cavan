@@ -7,7 +7,6 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.FragmentManager;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -39,7 +38,7 @@ public class CavanMessageActivity extends Activity {
 
 	private CavanMessageAdapter mAdapter;
 	private CavanMessageFilter mMessageFinder = new CavanMessageFilter();
-	private ContentObserver mContentObserver = new ContentObserver(new Handler()) {
+	private ContentObserver mContentObserverMessage = new ContentObserver(new Handler()) {
 
 		@Override
 		public void onChange(boolean selfChange) {
@@ -93,14 +92,14 @@ public class CavanMessageActivity extends Activity {
 			mAdapter = new CavanMessageAdapter(this);
 			updateData();
 
-			getContentResolver().registerContentObserver(CavanNotification.CONTENT_URI, true, mContentObserver);
+			getContentResolver().registerContentObserver(CavanNotification.CONTENT_URI, true, mContentObserverMessage);
 		}
 	}
 
 	@Override
 	protected void onDestroy() {
-		if (mContentObserver != null) {
-			getContentResolver().unregisterContentObserver(mContentObserver);
+		if (mContentObserverMessage != null) {
+			getContentResolver().unregisterContentObserver(mContentObserverMessage);
 		}
 
 		super.onDestroy();
@@ -129,7 +128,7 @@ public class CavanMessageActivity extends Activity {
 		return super.onOptionsItemSelected(item);
 	}
 
-	public class CavanMessageFilter extends DialogFragment implements OnCheckedChangeListener, OnClickListener {
+	public class CavanMessageFilter extends DialogFragment implements OnCheckedChangeListener, OnClickListener, DialogInterface.OnClickListener {
 
 		private CavanFilter[] mFilters;
 
@@ -142,18 +141,13 @@ public class CavanMessageActivity extends Activity {
 		private BaseAdapter mFilterAdapter = new BaseAdapter() {
 
 			@Override
-			public void notifyDataSetChanged() {
-				mFilters = CavanFilter.queryFilter(getContentResolver());
-				super.notifyDataSetChanged();
-			}
-
-			@Override
 			public View getView(int position, View convertView, ViewGroup parent) {
 				CavanFilterView view = (CavanFilterView) convertView;
+				CavanFilter filter = mFilters[position];
 				if (view == null) {
-					view = new CavanFilterView(CavanMessageActivity.this, mFilters[position]);
+					view = new CavanFilterView(CavanMessageActivity.this, filter);
 				} else {
-					view.setFilter(mFilters[position]);
+					view.setFilter(filter);
 				}
 
 				return view;
@@ -177,10 +171,23 @@ public class CavanMessageActivity extends Activity {
 
 				return 0;
 			}
+
+			@Override
+			synchronized public void notifyDataSetChanged() {
+				mFilters = CavanFilter.queryFilter(getContentResolver());
+				super.notifyDataSetChanged();
+			}
 		};
 
 		public void show(FragmentManager manager) {
 			super.show(manager, CavanAndroid.TAG);
+		}
+
+		public void addFilter(String text) {
+			if (!text.isEmpty()) {
+				CavanFilter filter = new CavanFilter(text, true);
+				filter.update(getContentResolver());
+			}
 		}
 
 		@Override
@@ -207,14 +214,30 @@ public class CavanMessageActivity extends Activity {
 
 			builder.setView(view);
 			builder.setCancelable(false);
-			builder.setPositiveButton(R.string.text_filter, null);
+			builder.setPositiveButton(R.string.text_filter, this);
+			builder.setNegativeButton(R.string.text_filter_none, this);
 
 			return builder.create();
 		}
 
 		@Override
+		public void onClick(DialogInterface dialog, int which) {
+			switch (which) {
+			case DialogInterface.BUTTON_POSITIVE:
+				mAdapter.setFilterEnable(true);
+				break;
+
+			case DialogInterface.BUTTON_NEGATIVE:
+				mAdapter.setFilterEnable(false);
+				break;
+			}
+		}
+
+		@Override
 		public void onDismiss(DialogInterface dialog) {
-			mAdapter.setFilter(mFilters);
+			addFilter(mEditTextFilter.getText().toString());
+			updateData();
+
 			super.onDismiss(dialog);
 		}
 
@@ -223,8 +246,7 @@ public class CavanMessageActivity extends Activity {
 			switch (v.getId()) {
 			case R.id.buttonAdd:
 				Editable editable = mEditTextFilter.getText();
-				CavanFilter filter = new CavanFilter(editable.toString(), true);
-				filter.update(getContentResolver());
+				addFilter(editable.toString());
 				mFilterAdapter.notifyDataSetChanged();
 				editable.clear();
 				break;
@@ -238,15 +260,13 @@ public class CavanMessageActivity extends Activity {
 
 		@Override
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-			if (mFilters == null) {
-				return;
-			}
+			if (mFilters != null) {
+				for (int i = mFilters.length - 1; i >= 0; i--) {
+					mFilters[i].setEnable(getContentResolver(), isChecked);
+				}
 
-			for (int i = mFilters.length - 1; i >= 0; i--) {
-				mFilters[i].setEnable(getContentResolver(), isChecked);
+				mFilterAdapter.notifyDataSetChanged();
 			}
-
-			mFilterAdapter.notifyDataSetChanged();
 		}
 	}
 
@@ -263,18 +283,11 @@ public class CavanMessageActivity extends Activity {
 			setOnCheckedChangeListener(this);
 		}
 
-		public void updateData() {
-			setText(mFilter.getContent());
-			setChecked(mFilter.isEnabled());
-		}
-
 		public void setFilter(CavanFilter filter) {
 			mFilter = filter;
-			updateData();
-		}
 
-		public void delete(ContentResolver resolver) {
-			mFilter.delete(resolver);
+			setText(mFilter.getContent());
+			setChecked(mFilter.isEnabled());
 		}
 
 		@Override

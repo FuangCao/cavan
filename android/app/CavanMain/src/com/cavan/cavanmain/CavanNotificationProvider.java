@@ -14,8 +14,8 @@ public class CavanNotificationProvider extends CavanDatabaseProvider {
 
 	@Override
 	protected void initTables() {
-		CavanSettings.initDatabaseTable(this);
 		CavanNotification.initDatabaseTable(this);
+		CavanSetting.initDatabaseTable(this);
 		CavanFilter.initDatabaseTable(this);
 	}
 

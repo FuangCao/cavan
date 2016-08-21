@@ -103,9 +103,8 @@ public class CavanFilter {
 		return mContent;
 	}
 
-	public void setContent(ContentResolver resolver, String content) {
+	public void setContent(String content) {
 		mContent = content;
-		update(resolver);
 	}
 
 	public boolean isEnabled() {
@@ -113,8 +112,10 @@ public class CavanFilter {
 	}
 
 	public void setEnable(ContentResolver resolver, boolean enable) {
-		mEnable = enable;
-		update(resolver);
+		if (mEnable != enable) {
+			mEnable = enable;
+			update(resolver);
+		}
 	}
 
 	public Uri getIdentifyUri() {

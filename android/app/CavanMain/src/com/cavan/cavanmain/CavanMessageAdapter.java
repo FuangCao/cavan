@@ -1,7 +1,5 @@
 package com.cavan.cavanmain;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Pattern;
 
 import android.database.Cursor;
@@ -15,7 +13,7 @@ public class CavanMessageAdapter extends BaseAdapter {
 	private ListView mView;
 	private CavanMessageActivity mActivity;
 
-	private String[] mFilterLines;
+	private boolean mFilterEnable;
 	private Pattern[] mFilterPatterns;
 
 	private Cursor mCursor;
@@ -58,8 +56,6 @@ public class CavanMessageAdapter extends BaseAdapter {
 
 		mView = (ListView) activity.findViewById(R.id.listViewMessage);
 		mView.setAdapter(this);
-
-		updateFilter();
 	}
 
 	public boolean isSelectionBottom() {
@@ -84,76 +80,51 @@ public class CavanMessageAdapter extends BaseAdapter {
 		mView.post(mRunnableUpdate);
 	}
 
+	public void setFilterEnable(boolean enable) {
+		mFilterEnable = enable;
+	}
+
+	public boolean isFilterEnabled() {
+		return mFilterEnable;
+	}
+
 	public Cursor updateData() {
-		Cursor cursor;
+		String[] selectionArgs = null;
+		String selection = null;
 
-		if (mFilterLines != null && mFilterLines.length > 0) {
-			String[] selectionArgs = new String[mFilterLines.length];
-			StringBuilder selection = new StringBuilder();
+		mFilterPatterns = null;
 
-			for (int i = 0; i < mFilterLines.length; i++) {
-				if (i > 0) {
-					selection.append(" or ");
+		if (mFilterEnable) {
+			CavanFilter[] filters = CavanFilter.queryFilterEnabled(mActivity.getContentResolver());
+			if (filters != null && filters.length > 0) {
+				mFilterPatterns = new Pattern[filters.length];
+				StringBuilder builder = new StringBuilder();
+
+				selectionArgs = new String[filters.length];
+
+				for (int i = 0; i < filters.length; i++) {
+					String text = filters[i].getContent();
+
+					mFilterPatterns[i] = Pattern.compile(text, Pattern.CASE_INSENSITIVE);
+
+					if (i > 0) {
+						builder.append(" or ");
+					}
+
+					builder.append(CavanNotification.KEY_CONTENT + " like ?");
+					selectionArgs[i] = "%" + text + "%";
 				}
 
-				selection.append(CavanNotification.KEY_CONTENT + " like ?");
-				selectionArgs[i] = "%" + mFilterLines[i] + "%";
+				builder.append(" collate nocase");
+
+				selection = builder.toString();
 			}
-
-			selection.append(" collate nocase");
-
-			cursor = CavanNotification.query(mActivity.getContentResolver(), selection.toString(), selectionArgs, CavanNotification.KEY_TIMESTAMP);
-		} else {
-			cursor = CavanNotification.queryAll(mActivity.getContentResolver(), CavanNotification.KEY_TIMESTAMP);
 		}
 
+		Cursor cursor = CavanNotification.query(mActivity.getContentResolver(), selection, selectionArgs, CavanNotification.KEY_TIMESTAMP);
 		setCursor(cursor);
 
 		return cursor;
-	}
-
-	public void setFilter(List<String> lines) {
-		if (lines == null) {
-			mFilterLines = null;
-			mFilterPatterns = null;
-		} else {
-			int size = lines.size();
-
-			mFilterLines = new String[size];
-			mFilterPatterns = new Pattern[size];
-
-			for (int i = size - 1; i >= 0; i--) {
-				String line = lines.get(i).trim();
-
-				mFilterLines[i] = line;
-				mFilterPatterns[i] = Pattern.compile(line, Pattern.CASE_INSENSITIVE);
-			}
-		}
-
-		updateData();
-	}
-
-	public void setFilter(CavanFilter[] filters) {
-		List<String> lines;
-
-		if (filters == null) {
-			lines = null;
-		} else {
-			lines = new ArrayList<String>();
-
-			for (int i = filters.length - 1; i >= 0; i--) {
-				if (filters[i].isEnabled()) {
-					lines.add(filters[i].getContent());
-				}
-			}
-		}
-
-		setFilter(lines);
-	}
-
-	public void updateFilter() {
-		CavanFilter[] filters = CavanFilter.queryFilterEnabled(mActivity.getContentResolver());
-		setFilter(filters);
 	}
 
 	@Override
