@@ -220,22 +220,17 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 
 		@Override
 		public void onCreate(SQLiteDatabase db) {
-			for (CavanDatabaseTable table : mTableNameMap.values()) {
-				db.execSQL(table.buildCreateTableSql());
-			}
+			onDatabaseCreate(db);
 		}
 
 		@Override
 		public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-			for (CavanDatabaseTable table : mTableNameMap.values()) {
-				db.execSQL(table.buildDropTableSql());
-				db.execSQL(table.buildCreateTableSql());
-			}
+			onDatabaseDowngrade(db, oldVersion, newVersion);
 		}
 
 		@Override
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-			onDowngrade(db, oldVersion, newVersion);
+			onDatabaseUpgrade(db, oldVersion, newVersion);
 		}
 	}
 
@@ -262,6 +257,23 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 
 	public SQLiteDatabase getWritableDatabase() {
 		return mDatabaseHelper.getWritableDatabase();
+	}
+
+	protected void onDatabaseCreate(SQLiteDatabase db) {
+		for (CavanDatabaseTable table : mTableNameMap.values()) {
+			db.execSQL(table.buildCreateTableSql());
+		}
+	}
+
+	protected void onDatabaseDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+		for (CavanDatabaseTable table : mTableNameMap.values()) {
+			db.execSQL(table.buildDropTableSql());
+			db.execSQL(table.buildCreateTableSql());
+		}
+	}
+
+	protected void onDatabaseUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+		onDatabaseDowngrade(db, oldVersion, newVersion);
 	}
 
 	@Override

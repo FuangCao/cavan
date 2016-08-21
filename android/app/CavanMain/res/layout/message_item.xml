@@ -19,7 +19,6 @@
         android:layout_height="wrap_content"
         android:layout_margin="1dp"
         android:background="@drawable/message_bg"
-        android:textIsSelectable="true"
         android:paddingLeft="2dp"
         android:paddingRight="2dp"
         android:textColor="#ff000000"
