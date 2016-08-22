@@ -44,6 +44,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private Button mButtonSend;
 	private Button mButtonUpgrade;
 	private Button mButtonReboot;
+	private Button mButtonShutdown;
 	private Button mButtonDisconnect;
 	private Button mButtonReadBdAddr;
 	private Button mButtonWriteBdAddr;
@@ -119,6 +120,9 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 		mButtonReboot = (Button) findViewById(R.id.buttonReboot);
 		mButtonReboot.setOnClickListener(this);
+
+		mButtonShutdown = (Button) findViewById(R.id.buttonShutdown);
+		mButtonShutdown.setOnClickListener(this);
 
 		mButtonDisconnect = (Button) findViewById(R.id.buttonDisconnect);
 		mButtonDisconnect.setOnClickListener(this);
@@ -271,6 +275,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 		case R.id.buttonReboot:
 			mBleToy.doReboot();
+			break;
+
+		case R.id.buttonShutdown:
+			mBleToy.doShutdown();
 			break;
 
 		case R.id.buttonDisconnect:

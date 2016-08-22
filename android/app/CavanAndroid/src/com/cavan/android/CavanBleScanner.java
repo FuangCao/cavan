@@ -59,6 +59,7 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 
 	@SuppressWarnings("deprecation")
 	private boolean startScanInternal() {
+		CavanAndroid.eLog("startLeScan");
 		return mAdapter.startLeScan(mUuids, this);
 	}
 

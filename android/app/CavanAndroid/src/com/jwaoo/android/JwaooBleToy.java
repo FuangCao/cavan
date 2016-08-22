@@ -437,6 +437,10 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mCommand.readBool(JWAOO_TOY_CMD_REBOOT);
 	}
 
+	public boolean doShutdown() {
+		return mCommand.readBool(JWAOO_TOY_CMD_SHUTDOWN);
+	}
+
 	public byte[] readBdAddress() {
 		byte[] bytes = mCommand.readData(JWAOO_TOY_CMD_FLASH_READ_BD_ADDR);
 		if (bytes != null && bytes.length == 6) {

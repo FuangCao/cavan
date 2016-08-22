@@ -460,3 +460,17 @@ function cavan-adb-push-directory()
 
 	return 0
 }
+
+function cavan-android-keystore-create()
+{
+	local keystore=${1-"debug.keystore"}
+
+	keytool -v -genkey -dname "CN=Fuang Cao, OU=Cavan, O=Cavan, L=Shanghai, ST=Shanghai, C=CN" -alias androiddebugkey -storepass android -keypass android -keyalg RSA -validity 80000 -keystore "${keystore}"
+}
+
+function cavan-android-keystore-show()
+{
+	[ "$1" ] || return 1
+
+	keytool -v -list -storepass android -keystore "$1"
+}

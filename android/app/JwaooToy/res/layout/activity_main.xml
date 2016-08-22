@@ -141,4 +141,13 @@
         android:layout_toRightOf="@+id/buttonSend"
         android:text="@string/text_disconnect" />
 
+    <Button
+        android:id="@+id/buttonShutdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonDisconnect"
+        android:layout_alignBottom="@+id/buttonDisconnect"
+        android:layout_toRightOf="@+id/buttonDisconnect"
+        android:text="@string/text_shutdown" />
+
 </RelativeLayout>

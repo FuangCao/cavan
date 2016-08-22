@@ -3,6 +3,7 @@ package com.cavan.android;
 import java.util.HashMap;
 
 import android.content.ContentProvider;
+import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.UriMatcher;
@@ -22,6 +23,7 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 	protected abstract String getAuthority();
 	protected abstract void initTables();
 
+	private ContentResolver mContentResolver;
 	private CavanDatabaseHelper mDatabaseHelper;
 	private UriMatcher mUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 	private HashMap<String, CavanDatabaseTable> mTableNameMap = new HashMap<String, CavanDatabaseTable>();
@@ -174,41 +176,34 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 			return builder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
 		}
 
-		public Uri insert(Uri uri, int code, ContentValues values) {
+		public long insert(Uri uri, int code, ContentValues values) {
 			if (code != 0) {
-				return null;
+				return -1;
 			}
 
-			SQLiteDatabase database = mDatabaseHelper.getWritableDatabase();
-			long id = database.insert(mName, null, values);
-			if (id < 0) {
-				return null;
-			}
+			SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
 
-			uri = ContentUris.withAppendedId(uri, id);
-			getContext().getContentResolver().notifyChange(uri, null);
-
-			return uri;
+			return db.insert(mName, null, values);
 		}
 
 		public int delete(Uri uri, int code, String selection, String[] selectionArgs) {
-			SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
-
 			if (code == 1) {
 				selection = KEY_ID + "=" + uri.getPathSegments().get(1);
 				selectionArgs = null;
 			}
+
+			SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
 
 			return db.delete(mName, selection, selectionArgs);
 		}
 
 		public int update(Uri uri, int code, ContentValues values, String selection, String[] selectionArgs) {
-			SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
-
 			if (code == 1) {
 				selection = KEY_ID + "=" + uri.getPathSegments().get(1);
 				selectionArgs = null;
 			}
+
+			SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
 
 			return db.update(mName, values, selection, selectionArgs);
 		}
@@ -280,6 +275,7 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
+		mContentResolver = getContext().getContentResolver();
 		mDatabaseHelper = new CavanDatabaseHelper();
 		return true;
 	}
@@ -314,7 +310,15 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 			return null;
 		}
 
-		return table.insert(uri, table.getRelCode(code), values);
+		long id = table.insert(uri, table.getRelCode(code), values);
+		if (id < 0) {
+			return null;
+		}
+
+		uri = ContentUris.withAppendedId(uri, id);
+		mContentResolver.notifyChange(uri, null);
+
+		return uri;
 	}
 
 	@Override
@@ -325,7 +329,12 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 			return 0;
 		}
 
-		return table.delete(uri, table.getRelCode(code), selection, selectionArgs);
+		int count = table.delete(uri, table.getRelCode(code), selection, selectionArgs);
+		if (count > 0) {
+			mContentResolver.notifyChange(uri, null);
+		}
+
+		return count;
 	}
 
 	@Override
@@ -336,6 +345,11 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 			return 0;
 		}
 
-		return table.update(uri, table.getRelCode(code), values, selection, selectionArgs);
+		int count = table.update(uri, table.getRelCode(code), values, selection, selectionArgs);
+		if (count > 0) {
+			mContentResolver.notifyChange(uri, null);
+		}
+
+		return count;
 	}
 }

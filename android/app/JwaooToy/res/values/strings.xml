@@ -38,5 +38,6 @@
         <item >间歇交替（快速）</item>
         <item >无序</item>
     </string-array>
+        <string name="text_shutdown">关机</string>
 
 </resources>
