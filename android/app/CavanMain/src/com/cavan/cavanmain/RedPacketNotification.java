@@ -265,16 +265,16 @@ public class RedPacketNotification extends CavanNotification {
 	public List<String> getRedPacketCodes() {
 		List<String> codes = new ArrayList<String>();
 
-		for (String code : getRedPacketCodes(sDigitPatterns)) {
-			code = CavanString.deleteSpace(code);
-			if (isRedPacketDigitCode(code)) {
+		for (String code : getRedPacketCodes(sWordPatterns)) {
+			code = CavanString.strip(code);
+			if (isRedPacketWordCode(code)) {
 				codes.add(code);
 			}
 		}
 
-		for (String code : getRedPacketCodes(sWordPatterns)) {
-			code = CavanString.strip(code);
-			if (isRedPacketWordCode(code)) {
+		for (String code : getRedPacketCodes(sDigitPatterns)) {
+			code = CavanString.deleteSpace(code);
+			if (isRedPacketDigitCode(code)) {
 				codes.add(code);
 			}
 		}
