@@ -38,7 +38,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_IP_ADDRESS = "ip_address";
 	public static final String KEY_FLOAT_TIMER = "float_timer";
 	public static final String KEY_MESSAGE_SHOW = "message_show";
-	public static final String KEY_NOTIFICATION_PERMISSION = "notification_permission";
+	public static final String KEY_PERMISSION_SETTINGS = "permission_settings";
 	public static final String KEY_RED_PACKET_NOTIFY_TEST = "red_packet_notify_test";
 	public static final String KEY_RED_PACKET_NOTIFY_RINGTONE = "red_packet_notify_ringtone";
 	public static final String KEY_TCP_DD = "tcp_dd";
@@ -48,7 +48,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private File mFileBin;
 	private Preference mPreferenceIpAddress;
 	private CheckBoxPreference mPreferenceFloatTime;
-	private Preference mPreferenceNotificationPermission;
+	private Preference mPreferencePermissionSettings;
 	private Preference mPreferenceMessageShow;
 	private EditTextPreference mPreferenceRedPacketNotifyTest;
 	private RingtonePreference mPreferenceRedPacketNotifyRingtone;
@@ -79,7 +79,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
 		mPreferenceMessageShow = findPreference(KEY_MESSAGE_SHOW);
-		mPreferenceNotificationPermission = findPreference(KEY_NOTIFICATION_PERMISSION);
+
+		mPreferencePermissionSettings = findPreference(KEY_PERMISSION_SETTINGS);
+		mPreferencePermissionSettings.setIntent(PermissionSettingsActivity.getIntent(this));
 
 		mPreferenceFloatTime = (CheckBoxPreference) findPreference(KEY_FLOAT_TIMER);
 		mPreferenceFloatTime.setOnPreferenceChangeListener(this);
@@ -235,11 +237,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		return false;
 	}
 
-	private void startNotificationListenerSettingsActivity() {
-		Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
-		startActivity(intent);
-	}
-
 	@SuppressWarnings("deprecation")
 	public void updateRingtoneSummary(String uri) {
 		String summary;
@@ -263,8 +260,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
 		if (preference == mPreferenceIpAddress) {
 			updateIpAddressStatus();
-		} else if (preference == mPreferenceNotificationPermission) {
-			startNotificationListenerSettingsActivity();
 		} else if (preference == mPreferenceMessageShow) {
 			Intent intent = new Intent(this, CavanMessageActivity.class);
 			startActivity(intent);
@@ -296,7 +291,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 					manager.notify(RedPacketListenerService.NOTIFY_TEST, builder.build());
 				}
 			} else {
-				startNotificationListenerSettingsActivity();
+				PermissionSettingsActivity.startNotificationListenerSettingsActivity(this);
 				CavanAndroid.showToastLong(this, "请打开通知读取权限");
 			}
 		} else if (preference == mPreferenceRedPacketNotifyRingtone) {

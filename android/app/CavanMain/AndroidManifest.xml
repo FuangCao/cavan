@@ -76,6 +76,7 @@
                 <data android:scheme="cavan"/>
             </intent-filter>
         </activity>
+        <activity android:name="PermissionSettingsActivity"></activity>
     </application>
 
 </manifest>

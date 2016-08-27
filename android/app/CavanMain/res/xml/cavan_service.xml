@@ -19,8 +19,8 @@
 	    android:persistent="true"
 	    android:title="@string/red_packet_notify_test" />
 
-	<Preference android:key="notification_permission"
-	    android:title="@string/text_notification_permission" />
+	<Preference android:key="permission_settings"
+	    android:title="@string/text_permission_settings" />
 
 	<CheckBoxPreference android:key="float_timer"
 	    android:persistent="true"

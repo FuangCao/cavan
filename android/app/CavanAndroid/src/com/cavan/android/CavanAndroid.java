@@ -313,4 +313,9 @@ public class CavanAndroid {
 			return null;
 		}
 	}
+
+	public static boolean isHuaweiPhone() {
+		String id = SystemProperties.getClientIdBase();
+		return (id != null && id.equals("android-huawei"));
+	}
 }

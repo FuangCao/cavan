@@ -3,6 +3,7 @@ package com.cavan.android;
 import com.cavan.java.CavanJava;
 
 public class SystemProperties {
+
 	public static String TARGET_CLASS_NAME = "android.os.SystemProperties";
 
 	public static Object invokeMethodTyped(String name, Class<?>[] types, Object[] values) {
@@ -114,5 +115,9 @@ public class SystemProperties {
 		Class<?> types[] = { Runnable.class };
 		Object values[] = { callback };
 		invokeMethodTyped("addChangeCallback", types, values);
+	}
+
+	public static String getClientIdBase() {
+		return get("ro.com.google.clientidbase");
 	}
 }
