@@ -46,6 +46,10 @@ public class CavanMessageActivity extends Activity {
 		}
 	};
 
+	public static Intent getIntent(Context context) {
+		return new Intent(context, CavanMessageActivity.class);
+	}
+
 	private void updateData() {
 		Cursor cursor = mAdapter.updateData();
 		if (cursor != null) {

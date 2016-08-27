@@ -78,7 +78,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		addPreferencesFromResource(R.xml.cavan_service);
 
 		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
+
 		mPreferenceMessageShow = findPreference(KEY_MESSAGE_SHOW);
+		mPreferenceMessageShow.setIntent(CavanMessageActivity.getIntent(this));
 
 		mPreferencePermissionSettings = findPreference(KEY_PERMISSION_SETTINGS);
 		mPreferencePermissionSettings.setIntent(PermissionSettingsActivity.getIntent(this));
@@ -260,9 +262,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
 		if (preference == mPreferenceIpAddress) {
 			updateIpAddressStatus();
-		} else if (preference == mPreferenceMessageShow) {
-			Intent intent = new Intent(this, CavanMessageActivity.class);
-			startActivity(intent);
 		}
 
 		return super.onPreferenceTreeClick(preferenceScreen, preference);
