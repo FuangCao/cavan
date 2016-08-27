@@ -27,6 +27,9 @@ import com.cavan.java.CavanString;
 public class RedPacketNotification extends CavanNotification {
 
 	public static final long OVER_TIME = 3600000;
+	public static final String NORMAL_PATTERN = "(\\w+红包)";
+	public static final String DIGIT_PATTERN = "([\\d\\s]+)";
+	public static final String WORD_PATTERN = "([\\w\\s]+)";
 
 	public static String[] sSoundExtensions = {
 		"m4a", "ogg", "wav", "mp3", "ac3", "wma"
@@ -35,28 +38,28 @@ public class RedPacketNotification extends CavanNotification {
 	public static final Pattern sGroupPattern = Pattern.compile("([^\\(]+)\\((.+)\\)\\s*$");
 
 	public static final Pattern[] sNormalPatterns = {
-		Pattern.compile("^\\[(\\w+红包)\\]"),
-		Pattern.compile("^【(\\w+红包)】"),
+		Pattern.compile("^\\[" + NORMAL_PATTERN + "\\]"),
+		Pattern.compile("^【" + NORMAL_PATTERN + "】"),
 	};
 
 	public static final Pattern[] sDigitPatterns = {
-		Pattern.compile("支付宝.*红包\\D*(\\d+)"),
-		Pattern.compile("支付宝.*口令\\D*(\\d+)"),
-		Pattern.compile("红包口令\\D*(\\d+)"),
-		Pattern.compile("口令红包\\D*(\\d+)"),
-		Pattern.compile("红包\\s*[:：]?\\s*(\\d+)"),
-		Pattern.compile("口令\\s*[:：]?\\s*(\\d+)"),
-		Pattern.compile("[:：]\\s*(\\d+)"),
-		Pattern.compile("\\b(\\d+)\\s*$"),
+		Pattern.compile("支付宝.*红包\\D*" + DIGIT_PATTERN),
+		Pattern.compile("支付宝.*口令\\D*" + DIGIT_PATTERN),
+		Pattern.compile("红包口令\\D*" + DIGIT_PATTERN),
+		Pattern.compile("口令红包\\D*" + DIGIT_PATTERN),
+		Pattern.compile("红包\\s*[:：]?\\s*" + DIGIT_PATTERN),
+		Pattern.compile("口令\\s*[:：]?\\s*" + DIGIT_PATTERN),
+		Pattern.compile("[:：]\\s*" + DIGIT_PATTERN),
+		Pattern.compile("\\b" + DIGIT_PATTERN + "\\s*$"),
 	};
 
 	public static final Pattern[] sWordPatterns = {
-		Pattern.compile("支付宝.*红包\\s*[:：]\\s*(\\w+)"),
-		Pattern.compile("支付宝.*口令\\s*[:：]\\s*(\\w+)"),
-		Pattern.compile("红包口令\\s*[:：]\\s*(\\w+)"),
-		Pattern.compile("口令红包\\s*[:：]\\s*(\\w+)"),
-		Pattern.compile("红包\\s*[:：]\\s*(\\w+)\\s*$"),
-		Pattern.compile("口令\\s*[:：]\\s*(\\w+)\\s*$"),
+		Pattern.compile("支付宝.*红包\\s*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("支付宝.*口令\\s*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("红包口令\\s*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("口令红包\\s*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("红包\\s*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
+		Pattern.compile("口令\\s*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
 	};
 
 	public static final Pattern[] sPicturePatterns = {
@@ -74,7 +77,7 @@ public class RedPacketNotification extends CavanNotification {
 	};
 
 	public static final Pattern[] sExcludePatterns = {
-		Pattern.compile("https?://\\S*\\d+\\s*$"),
+		Pattern.compile("[a-z]+://\\S+", Pattern.CASE_INSENSITIVE),
 	};
 
 	public static HashMap<CharSequence, Long> sCodeTimeMap = new HashMap<CharSequence, Long>();
@@ -98,10 +101,14 @@ public class RedPacketNotification extends CavanNotification {
 	public RedPacketNotification(RedPacketListenerService service, StatusBarNotification sbn) throws Exception {
 		super(sbn);
 
-		for (String line : mContent.split("\\s*\n\\s*")) {
-			if (isValidLine(line)) {
-				mLines.add(line.trim());
+		for (String line : mContent.split("\n")) {
+			line = CavanString.strip(line);
+			for (Pattern pattern : sExcludePatterns) {
+				Matcher matcher = pattern.matcher(line);
+				line = matcher.replaceAll(CavanString.EMPTY_STRING);
 			}
+
+			mLines.add(line);
 		}
 
 		mJoinedLines = CavanString.join(mLines, " ");
@@ -158,17 +165,6 @@ public class RedPacketNotification extends CavanNotification {
 		}
 
 		return "未知用户";
-	}
-
-	public static boolean isValidLine(String line) {
-		for (Pattern pattern : sExcludePatterns) {
-			Matcher matcher = pattern.matcher(line);
-			if (matcher.find()) {
-				return false;
-			}
-		}
-
-		return true;
 	}
 
 	public File getRingtoneFile() {
@@ -270,12 +266,14 @@ public class RedPacketNotification extends CavanNotification {
 		List<String> codes = new ArrayList<String>();
 
 		for (String code : getRedPacketCodes(sDigitPatterns)) {
+			code = CavanString.deleteSpace(code);
 			if (isRedPacketDigitCode(code)) {
 				codes.add(code);
 			}
 		}
 
 		for (String code : getRedPacketCodes(sWordPatterns)) {
+			code = CavanString.strip(code);
 			if (isRedPacketWordCode(code)) {
 				codes.add(code);
 			}

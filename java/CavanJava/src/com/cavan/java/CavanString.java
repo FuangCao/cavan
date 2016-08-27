@@ -1,8 +1,13 @@
 package com.cavan.java;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CavanString {
+
+	public static final String EMPTY_STRING = new String();
+	public static final Pattern PATTERN_SPACE = Pattern.compile("\\s+");
 
 	private String mContent;
 
@@ -81,6 +86,12 @@ public class CavanString {
 		builder.append(" ]");
 
 		return builder.toString();
+	}
+
+	public static String deleteSpace(String text) {
+		Matcher matcher = PATTERN_SPACE.matcher(text);
+
+		return matcher.replaceAll(EMPTY_STRING);
 	}
 
 	public boolean hasChineseChar() {
