@@ -81,6 +81,7 @@ public class RedPacketNotification extends CavanNotification {
 	};
 
 	public static HashMap<CharSequence, Long> sCodeTimeMap = new HashMap<CharSequence, Long>();
+	public static HashMap<String, String> sPackageCodeMap = new HashMap<String, String>();
 	public static List<String> sExcludeCodes = new ArrayList<String>();
 	public static List<String> sSavePackages = new ArrayList<String>();
 
@@ -90,6 +91,9 @@ public class RedPacketNotification extends CavanNotification {
 		sSavePackages.add("com.tmall.wireless");
 		sSavePackages.add("com.taobao.taobao");
 		sSavePackages.add("com.eg.android.AlipayGphone");
+
+		sPackageCodeMap.put("com.tencent.mobileqq", "QQ红包");
+		sPackageCodeMap.put("com.tencent.mm", "微信红包");
 	}
 
 	private String mJoinedLines;
@@ -250,7 +254,8 @@ public class RedPacketNotification extends CavanNotification {
 				Matcher matcher = pattern.matcher(line);
 
 				while (matcher.find()) {
-					codes.add(matcher.group(1));
+					String code = CavanString.deleteSpace(matcher.group(1));
+					codes.add(code);
 				}
 			}
 		}
@@ -262,20 +267,30 @@ public class RedPacketNotification extends CavanNotification {
 		return getRedPacketCodes(patterns, new ArrayList<String>());
 	}
 
-	public List<String> getRedPacketCodes() {
-		List<String> codes = new ArrayList<String>();
-
-		for (String code : getRedPacketCodes(sWordPatterns)) {
-			code = CavanString.strip(code);
-			if (isRedPacketWordCode(code)) {
-				codes.add(code);
+	public boolean addRedPacketCode(List<String> codes, String code) {
+		for (String a : codes) {
+			if (code.indexOf(a) >= 0) {
+				return false;
 			}
 		}
 
+		codes.add(code);
+
+		return true;
+	}
+
+	public List<String> getRedPacketCodes() {
+		List<String> codes = new ArrayList<String>();
+
 		for (String code : getRedPacketCodes(sDigitPatterns)) {
-			code = CavanString.deleteSpace(code);
 			if (isRedPacketDigitCode(code)) {
-				codes.add(code);
+				addRedPacketCode(codes, code);
+			}
+		}
+
+		for (String code : getRedPacketCodes(sWordPatterns)) {
+			if (isRedPacketWordCode(code)) {
+				addRedPacketCode(codes, code);
 			}
 		}
 
@@ -370,16 +385,34 @@ public class RedPacketNotification extends CavanNotification {
 		return false;
 	}
 
-	public boolean sendRedPacketNotifyNormal() {
+	public String getRedPacketCodeNormal() {
+		String code = sPackageCodeMap.get(getPackageName());
+		if (code != null) {
+			if (getContent().startsWith("[" + code + "]")) {
+				return code;
+			}
+
+			return null;
+		}
+
 		for (Pattern pattern : sNormalPatterns) {
 			Matcher matcher = pattern.matcher(mJoinedLines);
 			if (matcher.find()) {
 				String content = matcher.group(1);
-				return sendRedPacketNotifyNormal(content, content + "@" + getUserDescription());
+				return content;
 			}
 		}
 
-		return false;
+		return null;
+	}
+
+	public boolean sendRedPacketNotifyNormal() {
+		String code = getRedPacketCodeNormal();
+		if (code == null) {
+			return false;
+		}
+
+		return sendRedPacketNotifyNormal(code, code + "@" + getUserDescription());
 	}
 
 	public boolean sendRedPacketNotifyAuto() {
