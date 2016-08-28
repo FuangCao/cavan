@@ -2,7 +2,10 @@ package com.cavan.cavanmain;
 
 import java.util.Calendar;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.IBinder;
@@ -14,6 +17,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager.LayoutParams;
 import android.widget.TextView;
 
+import com.cavan.android.CavanAndroid;
 import com.cavan.android.FloatWidowService;
 
 public class FloatMessageService extends FloatWidowService {
@@ -26,6 +30,16 @@ public class FloatMessageService extends FloatWidowService {
 
 	private int mLastSecond;
 	private TextView mTimeView;
+	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String action = intent.getAction();
+			if (Intent.ACTION_SCREEN_OFF.equals(action)) {
+				CavanAndroid.setLockScreenEnable(FloatMessageService.this, true);
+			}
+		}
+	};
 
 	private IFloatMessageService.Stub mBinder = new IFloatMessageService.Stub() {
 
@@ -41,6 +55,8 @@ public class FloatMessageService extends FloatWidowService {
 
 		@Override
 		public int addMessage(CharSequence message) throws RemoteException {
+			CavanAndroid.setLockScreenEnable(FloatMessageService.this, false);
+
 			TextView view = (TextView) FloatMessageService.this.addText(message, -1);
 			if (view == null) {
 				return -1;
@@ -133,7 +149,15 @@ public class FloatMessageService extends FloatWidowService {
 	}
 
 	@Override
+	public void onCreate() {
+		IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
+		registerReceiver(mReceiver, filter );
+		super.onCreate();
+	}
+
+	@Override
 	public void onDestroy() {
+		unregisterReceiver(mReceiver);
 		setTimerEnable(false);
 		super.onDestroy();
 	}

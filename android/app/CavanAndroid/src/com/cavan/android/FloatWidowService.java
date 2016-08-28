@@ -83,6 +83,10 @@ public abstract class FloatWidowService extends Service {
 		return mRootView;
 	}
 
+	synchronized public int size() {
+		return mViewMapId.size();
+	}
+
 	synchronized public void setViewGroup(ViewGroup group) {
 		if (mViewGroup == group) {
 			return;
