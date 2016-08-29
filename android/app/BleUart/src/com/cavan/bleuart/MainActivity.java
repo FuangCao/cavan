@@ -133,6 +133,10 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 					}
 				};
 
+				if (!mBleUart.connect()) {
+					finish();
+				}
+
 				mBleUart.setDataListener(new CavanBleDataListener() {
 
 					@Override

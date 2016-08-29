@@ -88,9 +88,16 @@ public class CavanNotification {
 			mTitle = title.toString();
 		}
 
+		boolean needSplit = true;
+
 		CharSequence text = notification.tickerText;
 		if (text == null) {
 			text = notification.extras.getCharSequence(Notification.EXTRA_TEXT);
+		}
+
+		if (text == null) {
+			text = mTitle;
+			needSplit = false;
 		}
 
 		if (text == null) {
@@ -102,21 +109,25 @@ public class CavanNotification {
 		CavanAndroid.eLog("[" + mTitle + "] ================================================================================");
 		CavanAndroid.eLog(content);
 
-		String[] contents = content.split(":", 2);
-
-		if (contents.length < 2) {
+		if (needSplit) {
 			mContent = content.trim();
 		} else {
-			String name = contents[0].trim();
-			Matcher matcher = sGroupPattern.matcher(name);
-			if (matcher.find()) {
-				mUserName = matcher.group(1);
-				mGroupName = matcher.group(2);
-			} else {
-				mUserName = name;
-			}
+			String[] contents = content.split(":", 2);
 
-			mContent = contents[1].trim();
+			if (contents.length < 2) {
+				mContent = content.trim();
+			} else {
+				String name = contents[0].trim();
+				Matcher matcher = sGroupPattern.matcher(name);
+				if (matcher.find()) {
+					mUserName = matcher.group(1);
+					mGroupName = matcher.group(2);
+				} else {
+					mUserName = name;
+				}
+
+				mContent = contents[1].trim();
+			}
 		}
 
 		return true;
