@@ -110,8 +110,6 @@ public class CavanNotification {
 		CavanAndroid.eLog(content);
 
 		if (needSplit) {
-			mContent = content.trim();
-		} else {
 			String[] contents = content.split(":", 2);
 
 			if (contents.length < 2) {
@@ -128,6 +126,8 @@ public class CavanNotification {
 
 				mContent = contents[1].trim();
 			}
+		} else {
+			mContent = content.trim();
 		}
 
 		return true;

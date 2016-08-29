@@ -71,9 +71,9 @@ public class JwaooDepthSquareWaveGenerator extends CavanSquareWaveGenerator {
 			return false;
 		}
 
-		if (mCapacityMax - min < mValueFuzz) {
+		/* if (mCapacityMax - min < mValueFuzz) {
 			return false;
-		}
+		} */
 
 		return true;
 	}
@@ -91,6 +91,10 @@ public class JwaooDepthSquareWaveGenerator extends CavanSquareWaveGenerator {
 
 		mThresholdHigh = (mCapacityMax + mCapacityMin + mCapacityFuzz) / 2;
 		mThresholdLow = mThresholdHigh - mCapacityFuzz;
+		double low = mCapacityMin + mCapacityFuzz;
+		if (mThresholdLow < low) {
+			mThresholdLow = low;
+		}
 	}
 
 	@Override

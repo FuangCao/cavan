@@ -15,6 +15,7 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public static final int MOTO_MODE_MAX = 6;
 	public static final int MOTO_LEVEL_MAX = 18;
+	public static final int SENSOR_DATA_SKIP = 20;
 	public static final long DATA_TIMEOUT = 5000;
 	public static final long JWAOO_TOY_TIME_MIN = 1000;
 	public static final long JWAOO_TOY_TIME_MAX_VALUE = 3000;
@@ -84,6 +85,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	protected CavanBleChar mCharDebug;
 	protected JwaooToyCommand mCommand = new JwaooToyCommand();
 
+	protected int mSensorDataSkip;
 	protected JwaooToySensor mSensor;
 	protected JwaooToyParser mParser = new JwaooToyParser(JWAOO_TOY_DEPTH_VALUE_FUZZ);
 
@@ -99,7 +101,11 @@ public class JwaooBleToy extends CavanBleGatt {
 
 		@Override
 		public void onDataReceived(byte[] data) {
-			onSensorDataReceived(data);
+			if (mSensorDataSkip > 0) {
+				mSensorDataSkip--;
+			} else {
+				onSensorDataReceived(data);
+			}
 		}
 	};
 
@@ -413,10 +419,14 @@ public class JwaooBleToy extends CavanBleGatt {
 	}
 
 	public boolean setSensorEnable(boolean enable) {
+		mSensorDataSkip = SENSOR_DATA_SKIP;
+
 		return mCommand.readBool(JWAOO_TOY_CMD_SENSOR_ENABLE, enable);
 	}
 
 	public boolean setSensorEnable(boolean enable, int delay) {
+		mSensorDataSkip = SENSOR_DATA_SKIP;
+
 		return mCommand.readBool(JWAOO_TOY_CMD_SENSOR_ENABLE, enable, delay);
 	}
 

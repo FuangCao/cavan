@@ -117,12 +117,14 @@ public class JwaooDepthDecoder extends CavanSquareWaveCounter {
 			}
 		}
 
+		double depth;
+
 		if (count > mCount || count <= 0) {
 			mPlugIn = true;
-			mDepth = mDepthAlign = calculateDepth(count);
+			depth = mDepthAlign = calculateDepth(count);
 		} else if (count < mCount) {
 			mPlugIn = false;
-			mDepth = mDepthAlign = calculateDepth(count);
+			depth = mDepthAlign = calculateDepth(count);
 		} else {
 			if (mPlugIn) {
 				for (int i = count + 1; i < JwaooToySensor.SENSOR_COUNT; i++) {
@@ -136,16 +138,17 @@ public class JwaooDepthDecoder extends CavanSquareWaveCounter {
 
 			if (count < JwaooToySensor.SENSOR_COUNT) {
 				if (count > 0) {
-					mDepth = calculatePredictedDepth(count) + mDepthAlign;
+					depth = calculatePredictedDepth(count) + mDepthAlign;
 				} else {
-					mDepth = 0.0;
+					depth = 0.0;
 				}
 			} else {
-				mDepth = JwaooToySensor.SENSOR_COUNT;
+				depth = JwaooToySensor.SENSOR_COUNT;
 			}
 		}
 
 		mCount = count;
+		mDepth = depth / JwaooToySensor.SENSOR_COUNT;
 
 		return mDepth;
 	}

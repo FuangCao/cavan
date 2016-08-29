@@ -67,6 +67,9 @@ public class CavanSquareWaveGenerator extends CavanWaveArray {
 
 		mThresholdHigh = (min + max + fuzz) / 2;
 		mThresholdLow = mThresholdHigh - fuzz;
+		if (mThresholdLow <= min) {
+			mThresholdLow = min + mValueFuzz / 2;
+		}
 	}
 
 	@Override

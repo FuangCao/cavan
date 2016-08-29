@@ -37,6 +37,16 @@ public class MainActivity extends JwaooToyActivity {
 		}
 	};
 
+	public void addSquareWave(CavanWaveView view, boolean value) {
+		if (value) {
+			view.addValue(1);
+			view.setLineColor(Color.GREEN);
+		} else {
+			view.addValue(0);
+			view.setLineColor(Color.WHITE);
+		}
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -82,7 +92,7 @@ public class MainActivity extends JwaooToyActivity {
 
 		mWaveView9 = (CavanWaveView) findViewById(R.id.waveView9);
 		mWaveView9.setLineColor(Color.GREEN);
-		mWaveView9.setValueRange(0, JwaooToySensor.SENSOR_COUNT);
+		mWaveView9.setValueRange(0, 1);
 		mWaveView9.setZoom(WAVE_ZOOM);
 
 		showScanActivity();
@@ -116,7 +126,7 @@ public class MainActivity extends JwaooToyActivity {
 				mSensor.putBytes(arg0);
 
 				double capacitys[] = mSensor.getCapacitys();
-				// CavanAndroid.eLog(String.format("capacity: [%7.2f, %7.2f, %7.2f, %7.2f]", capacitys[0], capacitys[1], capacitys[2], capacitys[3]));
+				CavanAndroid.eLog("capacity: " + mSensor.getCapacityText());
 
 				mDecoder.putCapacityValue(capacitys);
 				JwaooDepthSquareWaveGenerator[] generators = mDecoder.getGenerators();
@@ -124,19 +134,19 @@ public class MainActivity extends JwaooToyActivity {
 				double value = capacitys[0];
 
 				mWaveView1.addValue(value);
-				mWaveView2.addValue(generators[0].getValue() ? 1 : 0);
+				addSquareWave(mWaveView2, generators[0].getValue());
 
 				value = capacitys[1];
 				mWaveView3.addValue(value);
-				mWaveView4.addValue(generators[1].getValue() ? 1 : 0);
+				addSquareWave(mWaveView4, generators[1].getValue());
 
 				value = capacitys[2];
 				mWaveView5.addValue(value);
-				mWaveView6.addValue(generators[2].getValue() ? 1 : 0);
+				addSquareWave(mWaveView6, generators[2].getValue());
 
 				value = capacitys[3];
 				mWaveView7.addValue(value);
-				mWaveView8.addValue(generators[3].getValue() ? 1 : 0);
+				addSquareWave(mWaveView8, generators[3].getValue());
 
 				mWaveView9.addValue(mDecoder.getDepth());
 
