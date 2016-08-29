@@ -102,17 +102,23 @@ public class RedPacketNotification extends CavanNotification {
 	private RedPacketListenerService mService;
 	private StatusBarNotification mNotification;
 
-	public RedPacketNotification(RedPacketListenerService service, StatusBarNotification sbn) throws Exception {
+	public RedPacketNotification(RedPacketListenerService service, StatusBarNotification sbn) {
 		super(sbn);
 
-		for (String line : mContent.split("\n")) {
-			line = CavanString.strip(line);
-			for (Pattern pattern : sExcludePatterns) {
-				Matcher matcher = pattern.matcher(line);
-				line = matcher.replaceAll(CavanString.EMPTY_STRING);
-			}
+		if (mTitle != null) {
+			mLines.add(mTitle);
+		}
 
-			mLines.add(line);
+		if (mContent != null) {
+			for (String line : mContent.split("\n")) {
+				line = CavanString.strip(line);
+				for (Pattern pattern : sExcludePatterns) {
+					Matcher matcher = pattern.matcher(line);
+					line = matcher.replaceAll(CavanString.EMPTY_STRING);
+				}
+
+				mLines.add(line);
+			}
 		}
 
 		mJoinedLines = CavanString.join(mLines, " ");

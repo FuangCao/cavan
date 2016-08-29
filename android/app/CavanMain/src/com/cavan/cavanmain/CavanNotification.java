@@ -29,6 +29,9 @@ public class CavanNotification {
 	public static final String KEY_CONTENT = "content";
 
 	public static final Pattern sGroupPattern = Pattern.compile("([^\\(]+)\\((.+)\\)\\s*$");
+	public static final String[] sSplitPackages = {
+		"com.tencent.mobileqq", "com.tencent.mm"
+	};
 
 	public static final String[] PROJECTION = {
 		KEY_TIMESTAMP, KEY_PACKAGE, KEY_TITLE, KEY_USER_NAME, KEY_GROUP_NAME, KEY_CONTENT
@@ -65,10 +68,8 @@ public class CavanNotification {
 		mContent = content;
 	}
 
-	public CavanNotification(StatusBarNotification sbn) throws Exception {
-		if (!parse(sbn)) {
-			throw new Exception("Failed to parse StatusBarNotification");
-		}
+	public CavanNotification(StatusBarNotification sbn) {
+		parse(sbn);
 	}
 
 	public CavanNotification(Cursor cursor) throws Exception {
@@ -77,7 +78,17 @@ public class CavanNotification {
 		}
 	}
 
-	public boolean parse(StatusBarNotification sbn) {
+	public boolean isNeedSplit() {
+		for (String pkgName : sSplitPackages) {
+			if (pkgName.equals(mPackageName)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public void parse(StatusBarNotification sbn) {
 		mTimestamp = System.currentTimeMillis();
 		mPackageName = sbn.getPackageName();
 
@@ -88,49 +99,39 @@ public class CavanNotification {
 			mTitle = title.toString();
 		}
 
-		boolean needSplit = true;
+		CavanAndroid.eLog("[" + mTitle + "] ================================================================================");
 
 		CharSequence text = notification.tickerText;
 		if (text == null) {
 			text = notification.extras.getCharSequence(Notification.EXTRA_TEXT);
 		}
 
-		if (text == null) {
-			text = mTitle;
-			needSplit = false;
-		}
+		if (text != null) {
+			String content = text.toString();
 
-		if (text == null) {
-			return false;
-		}
+			CavanAndroid.eLog(content);
 
-		String content = text.toString();
+			if (isNeedSplit()) {
+				String[] contents = content.split(":", 2);
 
-		CavanAndroid.eLog("[" + mTitle + "] ================================================================================");
-		CavanAndroid.eLog(content);
-
-		if (needSplit) {
-			String[] contents = content.split(":", 2);
-
-			if (contents.length < 2) {
-				mContent = content.trim();
-			} else {
-				String name = contents[0].trim();
-				Matcher matcher = sGroupPattern.matcher(name);
-				if (matcher.find()) {
-					mUserName = matcher.group(1);
-					mGroupName = matcher.group(2);
+				if (contents.length < 2) {
+					mContent = content.trim();
 				} else {
-					mUserName = name;
+					String name = contents[0].trim();
+					Matcher matcher = sGroupPattern.matcher(name);
+					if (matcher.find()) {
+						mUserName = matcher.group(1);
+						mGroupName = matcher.group(2);
+					} else {
+						mUserName = name;
+					}
+
+					mContent = contents[1].trim();
 				}
-
-				mContent = contents[1].trim();
+			} else {
+				mContent = content.trim();
 			}
-		} else {
-			mContent = content.trim();
 		}
-
-		return true;
 	}
 
 	public boolean parse(Cursor cursor) {
