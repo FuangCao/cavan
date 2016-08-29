@@ -92,7 +92,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			case EVENT_FREQ_CHANGED:
 			case EVENT_DEPTH_CHANGED:
 				setTitle(String.format("depth = %3.2f, freq = %3.2f", mDepth, mFreq));
-				mProgressBar.setProgress((int) (mBleToy.getDepth() * 100 / JwaooToySensor.SENSOR_COUNT));
+				mProgressBar.setProgress((int) (mBleToy.getDepth() * 100));
 				break;
 
 			case EVENT_CONNECTED:
