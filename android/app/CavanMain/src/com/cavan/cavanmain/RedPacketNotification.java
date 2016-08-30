@@ -22,6 +22,7 @@ import android.preference.PreferenceManager;
 import android.service.notification.StatusBarNotification;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
 
 public class RedPacketNotification extends CavanNotification {
@@ -80,18 +81,19 @@ public class RedPacketNotification extends CavanNotification {
 		Pattern.compile("[a-z]+://\\S+", Pattern.CASE_INSENSITIVE),
 	};
 
+	public static final String[] sFindTitlePackages = {
+		"com.android.deskclock", "com.android.calendar"
+	};
+
+	public static String[] sSavePackages = {
+		"com.tencent.mobileqq", "com.tencent.mm", "com.tmall.wireless", "com.taobao.taobao", "com.eg.android.AlipayGphone"
+	};
+
 	public static HashMap<CharSequence, Long> sCodeTimeMap = new HashMap<CharSequence, Long>();
 	public static HashMap<String, String> sPackageCodeMap = new HashMap<String, String>();
 	public static List<String> sExcludeCodes = new ArrayList<String>();
-	public static List<String> sSavePackages = new ArrayList<String>();
 
 	static {
-		sSavePackages.add("com.tencent.mobileqq");
-		sSavePackages.add("com.tencent.mm");
-		sSavePackages.add("com.tmall.wireless");
-		sSavePackages.add("com.taobao.taobao");
-		sSavePackages.add("com.eg.android.AlipayGphone");
-
 		sPackageCodeMap.put("com.tencent.mobileqq", "QQ红包");
 		sPackageCodeMap.put("com.tencent.mm", "微信红包");
 	}
@@ -105,7 +107,7 @@ public class RedPacketNotification extends CavanNotification {
 	public RedPacketNotification(RedPacketListenerService service, StatusBarNotification sbn) {
 		super(sbn);
 
-		if (mTitle != null) {
+		if (mTitle != null && CavanJava.ArrayContains(sFindTitlePackages, mPackageName)) {
 			mLines.add(mTitle);
 		}
 
@@ -439,10 +441,10 @@ public class RedPacketNotification extends CavanNotification {
 
 	@Override
 	public Uri insert(ContentResolver resolver) {
-		if (mPackageName == null || sSavePackages.indexOf(mPackageName) < 0) {
-			return null;
+		if (mPackageName != null && CavanJava.ArrayContains(sSavePackages, mPackageName)) {
+			return super.insert(resolver);
 		}
 
-		return super.insert(resolver);
+		return null;
 	}
 }

@@ -252,6 +252,34 @@ public class CavanJava {
 		return ArrayCopy(bytes, skip, bytes.length - skip);
 	}
 
+	public static int ArrayIndexOf(Object[] objects, Object object) {
+		if (objects == null) {
+			return -1;
+		}
+
+		for (int i = objects.length - 1; i >= 0; i--) {
+			if (objects[i].equals(object)) {
+				return i;
+			}
+		}
+
+		return -1;
+	}
+
+	public static boolean ArrayContains(Object[] objects, Object object) {
+		if (objects == null) {
+			return false;
+		}
+
+		for (Object o : objects) {
+			if (o.equals(object)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public static short buildValue16(byte[] bytes, int offset) {
 		return (short) ((bytes[offset] & 0xFF) | (bytes[offset + 1] & 0xFF) << 8);
 	}

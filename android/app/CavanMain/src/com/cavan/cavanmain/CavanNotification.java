@@ -99,7 +99,7 @@ public class CavanNotification {
 			mTitle = title.toString();
 		}
 
-		CavanAndroid.eLog("[" + mTitle + "] ================================================================================");
+		CavanAndroid.eLog("[" + mTitle + "@" + mPackageName + "] ================================================================================");
 
 		CharSequence text = notification.tickerText;
 		if (text == null) {
