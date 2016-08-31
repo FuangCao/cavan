@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/labelBatteryVoltage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:text="@string/battery_voltage" />
+
+    <TextView
+        android:id="@+id/labelBatteryCapacity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/labelBatteryVoltage"
+        android:text="@string/battery_capacity" />
+
+    <TextView
+        android:id="@+id/labelBatteryState"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/labelBatteryCapacity"
+        android:text="@string/battery_state" />
+
+    <TextView
+        android:id="@+id/textViewBatteryState"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/labelBatteryState"
+        android:layout_alignBottom="@+id/labelBatteryState"
+        android:layout_alignLeft="@+id/textViewBatteryVoltage"
+        android:text="-" />
+
+    <TextView
+        android:id="@+id/textViewBatteryVoltage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/labelBatteryCapacity"
+        android:layout_marginLeft="5dp"
+        android:layout_toRightOf="@+id/labelBatteryVoltage"
+        android:text="-" />
+
+    <TextView
+        android:id="@+id/textViewBatteryCapacity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/labelBatteryCapacity"
+        android:layout_alignBottom="@+id/labelBatteryCapacity"
+        android:layout_alignLeft="@+id/textViewBatteryVoltage"
+        android:text="-" />
+
+</RelativeLayout>

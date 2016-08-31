@@ -4,42 +4,46 @@
     android:layout_height="match_parent"
     tools:context="${relativePackage}.${activityClass}" >
 
-    <GridView
-        android:id="@+id/gridViewResult"
+    <FrameLayout
+        android:id="@+id/frame_content"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:horizontalSpacing="1dp"
-        android:numColumns="5" >
-    </GridView>
+        android:layout_alignParentTop="true" >
 
-    <GridView
-        android:id="@+id/gridViewKey"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/gridViewResult"
-        android:horizontalSpacing="1dp"
-        android:numColumns="3" >
-    </GridView>
+    </FrameLayout>
 
-    <GridView
-        android:id="@+id/gridViewDepth"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/gridViewKey"
-        android:horizontalSpacing="1dp"
-        android:numColumns="3" >
-    </GridView>
-
-    <CheckBox
-        android:id="@+id/checkBoxMoto"
+    <Button
+        android:id="@+id/buttonPass"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/gridViewDepth"
-        android:text="@string/text_moto" />
+        android:background="#00ff00"
+        android:text="@string/text_pass"
+        android:textColor="#000000"
+        android:textSize="30sp" />
+
+    <Button
+        android:id="@+id/buttonFail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:background="#ff0000"
+        android:text="@string/text_fail"
+        android:textColor="#000000"
+        android:textSize="30sp" />
+
+    <Button
+        android:id="@+id/buttonStart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:text="@string/text_start"
+        android:textColor="#000000"
+        android:textSize="30sp" />
+
 
 </RelativeLayout>
