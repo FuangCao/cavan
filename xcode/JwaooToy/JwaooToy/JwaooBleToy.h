@@ -26,7 +26,8 @@
 #define JWAOO_TOY_UUID_DEBUG        [CBUUID UUIDWithString:@"188d"]
 
 #define JWAOO_TOY_TIME_FUZZ         0.1
-#define JWAOO_TOY_VALUE_FUZZ        2.0
+#define JWAOO_TOY_ACCEL_FUZZ        2.0
+#define JWAOO_TOY_CAPACITY_FUZZ     8.0
 
 @class JwaooBleToy;
 
@@ -42,8 +43,6 @@
 - (void)didKeyLongClicked:(uint8_t)code;
 - (void)didSensorDataReceived:(nonnull NSData *)data;
 - (void)didDebugDataReceived:(nonnull NSData *)data;
-- (void)didDepthChanged:(int)depth;
-- (void)didFreqChanged:(int)freq;
 - (void)didConnectStateChanged:(BOOL)connected;
 
 @end
@@ -64,8 +63,8 @@
     uint8_t mFlashCrc;
 }
 
-@property (readonly) int freq;
-@property (readonly) int depth;
+@property (readonly) double freq;
+@property (readonly) double depth;
 
 - (nonnull JwaooBleToy *)initWithDelegate:(nullable id<JwaooBleToyDelegate>)delegate;
 

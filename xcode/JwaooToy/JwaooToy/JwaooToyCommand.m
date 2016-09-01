@@ -79,8 +79,8 @@
     struct jwaoo_toy_command command;
 
     command.type = type;
-    command.enable = enable;
-    command.delay16 = delay;
+    command.enable.value = enable;
+    command.enable.delay16 = delay;
 
     return [self sendWithBytes:&command length:4];
 }
@@ -91,8 +91,8 @@
     struct jwaoo_toy_command command;
 
     command.type = type;
-    command.enable = enable;
-    command.delay32 = delay;
+    command.enable.value = enable;
+    command.enable.delay32 = delay;
 
     return [self sendWithBytes:&command length:6];
 }

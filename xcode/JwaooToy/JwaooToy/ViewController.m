@@ -7,6 +7,8 @@
 //
 
 #import "ViewController.h"
+#import "CavanCountedArray.h"
+#import "CavanWaveArray.h"
 
 @implementation ViewController
 
@@ -59,14 +61,6 @@
     mFreq = mBleToy.freq;
     mDepth = mBleToy.depth;
     [self performSelectorOnMainThread:@selector(updateFreqDepth) withObject:nil waitUntilDone:NO];
-}
-
-- (void)didDepthChanged:(int)depth {
-    // NSLog(@"didDepthChanged: depth = %d", depth);
-}
-
-- (void)didFreqChanged:(int)freq {
-    // NSLog(@"didFreqChanged: freq = %d", freq);
 }
 
 - (void)dataSpeedTimer {
@@ -122,8 +116,8 @@
 }
 
 - (void)updateFreqDepth {
-    _mLabelFreq.intValue = mFreq;
-    _mLabelDepth.intValue = mDepth;
+    _mLabelFreq.doubleValue = mFreq;
+    _mLabelDepth.doubleValue = mDepth;
 }
 
 - (void)onProgressUpdated:(NSNumber *)progress {

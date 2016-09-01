@@ -12,11 +12,11 @@
 
 @implementation JwaooBleToy
 
-- (int) freq {
+- (double) freq {
     return mParser.freq;
 }
 
-- (int) depth {
+- (double) depth {
     return mParser.depth;
 }
 
@@ -25,24 +25,10 @@
         mDelegate = delegate;
         mSensor = [Mpu6050Sensor new];
 
-        mParser = [[JwaooToyParser alloc] initWithValueFuzz:JWAOO_TOY_VALUE_FUZZ withTimeFuzz:JWAOO_TOY_TIME_FUZZ];
-        [mParser setDepthSelector:@selector(onDepthChanged:) withTarget:self];
-        [mParser setFreqSelector:@selector(onFreqChanged:) withTarget:self];
+        mParser = [[JwaooToyParser alloc] initWithFuzz:JWAOO_TOY_CAPACITY_FUZZ];
     }
 
     return self;
-}
-
-- (void)onFreqChanged:(NSNumber *)freq {
-    if ([mDelegate respondsToSelector:@selector(didFreqChanged:)]) {
-        [mDelegate didFreqChanged:freq.intValue];
-    }
-}
-
-- (void)onDepthChanged:(NSNumber *)depth {
-    if ([mDelegate respondsToSelector:@selector(didDepthChanged:)]) {
-        [mDelegate didDepthChanged:depth.intValue];
-    }
 }
 
 - (void)onEventReceived:(NSData *)event {

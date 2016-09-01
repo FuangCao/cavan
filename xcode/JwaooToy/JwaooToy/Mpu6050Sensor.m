@@ -31,7 +31,7 @@
     mAxisX = [self.class buildAxisWithValue8:values[0]];
     mAxisY = [self.class buildAxisWithValue8:values[1]];
     mAxisZ = [self.class buildAxisWithValue8:values[2]];
-    [self setCapacityWithBytes:(bytes + 3)];
+    [self setCapacitysWithBytes16:(values + 3)];
 #endif
 }
 

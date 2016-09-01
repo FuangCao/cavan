@@ -8,32 +8,10 @@
 
 #import "JwaooToyParser.h"
 
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-
 @implementation JwaooToyParser
 
-@synthesize depth = mDepth;
-
-- (void)setDepthSelector:(SEL)selector
-              withTarget:(NSObject *)target {
-    mDepthSelector = selector;
-    mDepthTarget = target;
-}
-
-- (void)onDepthChanged:(int)depth {
-    [mDepthTarget performSelector:mDepthSelector withObject:[NSNumber numberWithInt:depth]];
-}
-
-- (void)updateDepth:(int)depth {
-    if (depth != mDepth) {
-        mDepth = depth;
-        [self onDepthChanged:depth];
-    }
-}
-
-- (void)putSensorData:(nonnull JwaooToySensor *)sensor {
-    [super putSensorData:sensor];
-    [self updateDepth:sensor.depth];
+-(void)putSensorData:(JwaooToySensor *)sensor {
+    [super putCapacityValue:sensor.getCapacitys];
 }
 
 @end

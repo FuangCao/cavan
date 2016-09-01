@@ -12,8 +12,8 @@
 @interface ViewController : NSViewController <JwaooBleToyDelegate> {
     BOOL mSensorEnable;
     JwaooBleToy *mBleToy;
-    int mFreq;
-    int mDepth;
+    double mFreq;
+    double mDepth;
     int mCount;
 }
 

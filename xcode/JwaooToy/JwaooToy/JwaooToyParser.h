@@ -7,19 +7,11 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CavanAccelFreqParser.h"
 #import "JwaooToySensor.h"
+#import "JwaooDepthDecoder.h"
 
-@interface JwaooToyParser : CavanAccelFreqParser {
-    int mDepth;
-    SEL mDepthSelector;
-    NSObject *mDepthTarget;
-}
+@interface JwaooToyParser : JwaooDepthDecoder
 
-@property int depth;
-
-- (void)setDepthSelector:(nonnull SEL)selector
-              withTarget:(nullable NSObject *)target;
-- (void)putSensorData:(nonnull JwaooToySensor *)sensor;
+-(void)putSensorData:(JwaooToySensor *)sensor;
 
 @end

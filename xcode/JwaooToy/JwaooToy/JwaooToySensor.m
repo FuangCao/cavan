@@ -10,33 +10,30 @@
 
 @implementation JwaooToySensor
 
-- (int)depth {
-    return mDepth;
-}
-
 - (void)setCapacity:(int)index
-              value:(int)value {
+              value:(double)value {
     mCapacitys[index] = value;
 }
 
-- (void)setCapacityWithBytes:(const int8_t *)bytes {
-    for (int i = 0; i < 4; i++) {
-        mCapacitys[i] = bytes[i];
-    }
-
-    [self updateDepth];
+-(double *)getCapacitys {
+    return mCapacitys;
 }
 
-- (void)updateDepth {
-    double depth = 0;
+-(double)getCapacityAtIndex:(int)index {
+    return mCapacitys[index];
+}
 
-    for (int i = 0; i < 4; i++) {
-        if (mCapacitys[i] > 0) {
-            depth += mCapacitys[i];
-        }
+-(void)setCapacitysWithBytes8:(const int8_t *)values {
+    for (int i = 0; i < JWAOO_TOY_CAPACITY_SENSOR_COUNT; i++) {
+        mCapacitys[i] = values[i];
     }
+}
 
-    mDepth = (mDepth + (depth / 4)) / 2;
+-(void)setCapacitysWithBytes16:(const uint8_t *)values {
+    for (int i = 0, j = 0; i < JWAOO_TOY_CAPACITY_SENSOR_COUNT; i++, j += 2) {
+        int16_t value = (((int16_t) values[j] << 8) | values[j + 1]);
+        mCapacitys[i] = ((double) value) / 256;
+    }
 }
 
 @end

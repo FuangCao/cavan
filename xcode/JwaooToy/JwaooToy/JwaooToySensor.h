@@ -9,16 +9,19 @@
 #import <Foundation/Foundation.h>
 #import "CavanAccelSensor.h"
 
+#define JWAOO_TOY_CAPACITY_MIN              (-128)
+#define JWAOO_TOY_CAPACITY_MAX              (128)
+#define JWAOO_TOY_CAPACITY_SENSOR_COUNT     4
+
 @interface JwaooToySensor : CavanAccelSensor {
-    double mDepth;
-    int mCapacitys[4];
+    double mCapacitys[JWAOO_TOY_CAPACITY_SENSOR_COUNT];
 }
 
-@property (readonly) int depth;
-
 - (void)setCapacity:(int)index
-              value:(int)value;
-- (void)setCapacityWithBytes:(const int8_t *)bytes;
-- (void)updateDepth;
+              value:(double)value;
+-(double *)getCapacitys;
+-(double)getCapacityAtIndex:(int)index;
+-(void)setCapacitysWithBytes8:(const int8_t *)values;
+-(void)setCapacitysWithBytes16:(const uint8_t *)values;
 
 @end
