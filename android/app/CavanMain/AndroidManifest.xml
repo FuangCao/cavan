@@ -77,6 +77,13 @@
             </intent-filter>
         </activity>
         <activity android:name="PermissionSettingsActivity"></activity>
+        <service android:name="CavanInputMethod" android:permission="android.permission.BIND_INPUT_METHOD" android:label="@string/cavan_input_method">
+            <intent-filter>
+                <action android:name="android.view.InputMethod"/>
+            </intent-filter>
+
+            <meta-data android:resource="@xml/inputmethod" android:name="android.view.im"/>
+        </service>
     </application>
 
 </manifest>

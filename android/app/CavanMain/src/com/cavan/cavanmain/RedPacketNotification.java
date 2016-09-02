@@ -85,7 +85,7 @@ public class RedPacketNotification extends CavanNotification {
 		"com.android.deskclock", "com.android.calendar"
 	};
 
-	public static String[] sSavePackages = {
+	public static final String[] sSavePackages = {
 		"com.tencent.mobileqq", "com.tencent.mm", "com.tmall.wireless", "com.taobao.taobao", "com.eg.android.AlipayGphone"
 	};
 
@@ -98,6 +98,7 @@ public class RedPacketNotification extends CavanNotification {
 		sPackageCodeMap.put("com.tencent.mm", "微信红包");
 	}
 
+	private boolean mNeedSave;
 	private String mJoinedLines;
 	private List<String> mLines = new ArrayList<String>();
 
@@ -107,11 +108,13 @@ public class RedPacketNotification extends CavanNotification {
 	public RedPacketNotification(RedPacketListenerService service, StatusBarNotification sbn) {
 		super(sbn);
 
-		if (mTitle != null && CavanJava.ArrayContains(sFindTitlePackages, mPackageName)) {
+		boolean needFindTitle = CavanJava.ArrayContains(sFindTitlePackages, mPackageName);
+		if (mTitle != null && needFindTitle) {
 			mLines.add(mTitle);
 		}
 
-		if (mContent != null) {
+		mNeedSave = CavanJava.ArrayContains(sSavePackages, mPackageName);
+		if (mContent != null && (mNeedSave || needFindTitle)) {
 			for (String line : mContent.split("\n")) {
 				line = CavanString.strip(line);
 				for (Pattern pattern : sExcludePatterns) {
@@ -220,7 +223,7 @@ public class RedPacketNotification extends CavanNotification {
 	}
 
 	public static boolean isRedPacketDigitCode(String code) {
-		if (code.length() != 8) {
+		if (code.length() % 8 != 0) {
 			return false;
 		}
 
@@ -292,7 +295,9 @@ public class RedPacketNotification extends CavanNotification {
 
 		for (String code : getRedPacketCodes(sDigitPatterns)) {
 			if (isRedPacketDigitCode(code)) {
-				addRedPacketCode(codes, code);
+				for (int end = code.length(); end >= 8; end -= 8) {
+					addRedPacketCode(codes, code.substring(end - 8, end));
+				}
 			}
 		}
 
@@ -441,7 +446,11 @@ public class RedPacketNotification extends CavanNotification {
 
 	@Override
 	public Uri insert(ContentResolver resolver) {
-		if (mPackageName != null && CavanJava.ArrayContains(sSavePackages, mPackageName)) {
+		if (mPackageName == null || mContent == null) {
+			return null;
+		}
+
+		if (mNeedSave) {
 			return super.insert(resolver);
 		}
 
