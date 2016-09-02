@@ -21,7 +21,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final long JWAOO_TOY_TIME_MAX_VALUE = 3000;
 	public static final long JWAOO_TOY_TIME_MAX_FREQ = 5000;
 	public static final double JWAOO_TOY_ACCEL_VALUE_FUZZ = 2.0;
-	public static final double JWAOO_TOY_DEPTH_VALUE_FUZZ = 8.0;
+	public static final double JWAOO_TOY_DEPTH_VALUE_FUZZ = 6.0;
 
 	public static final String IDENTIFY = "JwaooToy";
 

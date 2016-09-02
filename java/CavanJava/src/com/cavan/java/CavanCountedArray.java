@@ -30,7 +30,11 @@ public class CavanCountedArray<E> extends ArrayList<CavanCountedNode<E>> {
 
 				return node;
 			} else if (node.decrement() == 0) {
-				freeNode = node;
+				if (freeNode == null) {
+					freeNode = node;
+				} else {
+					iterator.remove();
+				}
 			}
 		}
 

@@ -108,6 +108,10 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 	}
 
 	public void setContent(String text, String pkgName, Pattern[] patterns) {
+		if (text == null) {
+			return;
+		}
+
 		SpannableStringBuilder builder = new SpannableStringBuilder(text);
 
 		Linkify.addLinks(builder, Linkify.WEB_URLS);
