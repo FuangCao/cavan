@@ -18,7 +18,9 @@
 
 - (CavanBleGatt *)initWithName:(NSString *)name
                           uuid:(CBUUID *)uuid {
-    if (self = [super initWithDelegate:self queue:dispatch_queue_create("com.cavan.bluetooth.gatt", DISPATCH_QUEUE_SERIAL)]) {
+    mQueue = dispatch_queue_create("com.cavan.bluetooth.gatt", DISPATCH_QUEUE_SERIAL);
+
+    if (self = [super initWithDelegate:self queue:mQueue]) {
         mName = name;
         mUUID = uuid;
         mDictChars = [NSMutableDictionary new];
@@ -39,7 +41,6 @@
     NSLog(@"services = %@", services);
 
     mPeripheral = nil;
-    mTime = [NSDate timeIntervalSinceReferenceDate];
     [self scanForPeripheralsWithServices:services options:nil];
 }
 
@@ -79,13 +80,17 @@
     }
 }
 
-- (void)connectThread:(CBService *)service {
-    NSLog(@"connectThread");
+- (void)initThread:(CBService *)service {
+    NSLog(@"Enter: initThread");
 
-    mConnRunning = true;
+    if (mInitRunning) {
+        return;
+    }
 
-    while (mConnPending) {
-        mConnPending = false;
+    mInitRunning = true;
+
+    while (mInitPending) {
+        mInitPending = false;
 
         mService = service;
 
@@ -96,7 +101,49 @@
         }
     };
 
+    mInitRunning = false;
+
+    NSLog(@"Exit: initThread");
+}
+
+- (void)connThread:(NSNumber *)needSleep {
+    NSLog(@"Enter: connThread");
+
+    if (mConnRunning) {
+        return;
+    }
+
+    mConnRunning = true;
+
+    if (needSleep.boolValue) {
+        [NSThread sleepForTimeInterval:CAVAN_BLE_SCAN_TIME];
+    }
+
+    while (mConnPending && mPeripheral) {
+        NSLog(@"stopScan");
+        [self stopScan];
+
+        NSLog(@"cancelPeripheralConnection");
+        [self cancelPeripheralConnection:mPeripheral];
+
+        NSLog(@"connectPeripheral");
+        [self connectPeripheral:mPeripheral options:nil];
+
+        [NSThread sleepForTimeInterval:CAVAN_BLE_CONN_TIME];
+    }
+
     mConnRunning = false;
+
+    NSLog(@"Exit: connThread");
+}
+
+- (void)startConnThread:(BOOL)needSleep {
+    mConnPending = true;
+
+    if (!mConnRunning) {
+        [NSThread detachNewThreadSelector:@selector(connThread:) toTarget:self withObject:[NSNumber numberWithBool:needSleep]];
+    }
+
 }
 
 // ================================================================================
@@ -158,10 +205,7 @@
             mRssi = RSSI;
         }
 
-        if ([NSDate timeIntervalSinceReferenceDate] - mTime > CAVAN_BLE_SCAN_TIME) {
-            [self stopScan];
-            [self connectPeripheral:mPeripheral options:nil];
-        }
+        [self startConnThread:true];
     }
 }
 
@@ -179,7 +223,7 @@
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error {
     NSLog(@"didDisconnectPeripheral: %@", peripheral);
     if (mPeripheral != nil) {
-        [self connectPeripheral:peripheral options:nil];
+        [self startConnThread:false];
     } else {
         [self setConnectState:false];
         [self startScan];
@@ -206,6 +250,9 @@
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(nullable NSError *)error {
     NSLog(@"didDiscoverServices: %@, error = %@", peripheral, error);
+
+    mConnPending = false;
+
     for (CBService *service in peripheral.services) {
         NSLog(@"service = %@", service.UUID);
         if (mUUID == nil || [service.UUID isEqualTo:mUUID]) {
@@ -221,10 +268,10 @@
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(nullable NSError *)error {
     NSLog(@"didDiscoverCharacteristicsForService: %@, service = %@, error = %@", peripheral, service, error);
     if (error == nil) {
-        mConnPending = true;
+        mInitPending = true;
 
-        if (!mConnRunning) {
-            [NSThread detachNewThreadSelector:@selector(connectThread:) toTarget:self withObject:service];
+        if (!mInitRunning) {
+            [NSThread detachNewThreadSelector:@selector(initThread:) toTarget:self withObject:service];
         }
     }
 }

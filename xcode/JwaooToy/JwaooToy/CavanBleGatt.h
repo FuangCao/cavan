@@ -11,20 +11,24 @@
 #import "CavanBleChar.h"
 
 #define CAVAN_BLE_SCAN_TIME     3.0
+#define CAVAN_BLE_CONN_TIME     2.0
 
 @interface CavanBleGatt : CBCentralManager <CBCentralManagerDelegate, CBPeripheralDelegate> {
     CBUUID *mUUID;
     NSString *mName;
     CBService *mService;
     CBPeripheral *mPeripheral;
+    dispatch_queue_t mQueue;
 
     NSNumber *mRssi;
-    NSTimeInterval mTime;
     NSMutableDictionary *mDictChars;
 
     BOOL mConnected;
     BOOL mConnPending;
     BOOL mConnRunning;
+
+    BOOL mInitPending;
+    BOOL mInitRunning;
 }
 
 @property (nullable) NSNumber *rssi;
