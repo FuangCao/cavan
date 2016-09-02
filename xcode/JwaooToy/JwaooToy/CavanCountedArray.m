@@ -54,14 +54,13 @@
 }
 
 - (CavanCountedNode *)addCountedValue:(NSInteger)value {
-    CavanCountedNode *freeNode = nil;
+    CavanCountedNode *foundNode = nil;
 
     for (NSInteger index = mNodes.count - 1; index >= 0; index--) {
         CavanCountedNode *node = [mNodes objectAtIndex:index];
 
         if (node.value == value) {
-            CavanCountedNode *foundNode = node;
-
+            foundNode = node;
             [foundNode increment:mMaxCount];
 
             while (--index >= 0) {
@@ -73,23 +72,23 @@
 
             return foundNode;
         } else if (node.decrement == 0) {
-            if (freeNode == nil) {
-                freeNode = node;
+            if (foundNode == nil) {
+                foundNode = node;
             } else {
                 [mNodes removeObjectAtIndex:index];
             }
         }
     }
 
-    if (freeNode == nil) {
-        freeNode = [[CavanCountedNode alloc] initByValue:value];
-        [mNodes addObject:freeNode];
+    if (foundNode == nil) {
+        foundNode = [[CavanCountedNode alloc] initByValue:value];
+        [mNodes addObject:foundNode];
     } else {
-        freeNode.count = 1;
-        freeNode.value = value;
+        foundNode.count = 1;
+        foundNode.value = value;
     }
 
-    return freeNode;
+    return foundNode;
 }
 
 - (CavanCountedNode *)getBestNode {

@@ -66,9 +66,9 @@
         mNeedFind = false;
         [self updateExtremeNode];
     } else if (value > mMaxNode.value) {
-        mMinNode = node;
-    } else if (value < mMinNode.value) {
         mMaxNode = node;
+    } else if (value < mMinNode.value) {
+        mMinNode = node;
     } else {
         return;
     }

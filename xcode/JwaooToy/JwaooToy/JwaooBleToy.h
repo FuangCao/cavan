@@ -27,7 +27,7 @@
 
 #define JWAOO_TOY_TIME_FUZZ         0.1
 #define JWAOO_TOY_ACCEL_FUZZ        2.0
-#define JWAOO_TOY_CAPACITY_FUZZ     8.0
+#define JWAOO_TOY_CAPACITY_FUZZ     6.0
 
 @class JwaooBleToy;
 
