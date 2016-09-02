@@ -1,6 +1,9 @@
 package com.cavan.android;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 import android.app.Service;
 import android.content.Intent;
@@ -203,6 +206,25 @@ public abstract class FloatWidowService extends Service {
 
 	synchronized public boolean hasText(CharSequence text) {
 		return mViewMapText.containsKey(text);
+	}
+
+	synchronized public Set<CharSequence> getTextSet() {
+		return mViewMapText.keySet();
+	}
+
+	public CharSequence[] getTextArray() {
+		Set<CharSequence> set = getTextSet();
+		CharSequence[] array = new CharSequence[set.size()];
+		return set.toArray(array);
+	}
+
+	public List<CharSequence> getTextList() {
+		List<CharSequence> list = new ArrayList<CharSequence>();
+		for (CharSequence text : getTextSet()) {
+			list.add(text);
+		}
+
+		return list;
 	}
 
 	synchronized public View addText(CharSequence text, int index) {

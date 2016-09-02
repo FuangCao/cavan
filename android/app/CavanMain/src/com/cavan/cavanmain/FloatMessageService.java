@@ -1,6 +1,9 @@
 package com.cavan.cavanmain;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -30,6 +33,7 @@ public class FloatMessageService extends FloatWidowService {
 
 	private int mLastSecond;
 	private TextView mTimeView;
+	private HashMap<CharSequence, CharSequence> mMessageCodeMap = new HashMap<CharSequence, CharSequence>();
 	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
 
 		@Override
@@ -54,12 +58,16 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		@Override
-		public int addMessage(CharSequence message) throws RemoteException {
+		public int addMessage(CharSequence message, CharSequence code) throws RemoteException {
 			CavanAndroid.setLockScreenEnable(FloatMessageService.this, false);
 
 			TextView view = (TextView) FloatMessageService.this.addText(message, -1);
 			if (view == null) {
 				return -1;
+			}
+
+			if (code != null) {
+				mMessageCodeMap.put(message, code);
 			}
 
 			return view.getId();
@@ -73,6 +81,27 @@ public class FloatMessageService extends FloatWidowService {
 		@Override
 		public void removeMessage(CharSequence message) throws RemoteException {
 			FloatMessageService.this.removeText(message);
+			mMessageCodeMap.remove(message);
+		}
+
+		@Override
+		public List<String> getMessages() throws RemoteException {
+			List<String> list = new ArrayList<String>();
+			for (CharSequence text : getTextSet()) {
+				list.add(text.toString());
+			}
+
+			return list;
+		}
+
+		@Override
+		public List<String> getCodes() throws RemoteException {
+			List<String> list = new ArrayList<String>();
+			for (CharSequence code : mMessageCodeMap.values()) {
+				list.add(code.toString());
+			}
+
+			return list;
 		}
 	};
 
@@ -91,6 +120,12 @@ public class FloatMessageService extends FloatWidowService {
 			}
 		}
 	};
+
+	public static Intent startService(Context context) {
+		Intent intent = new Intent(context, FloatMessageService.class);
+		context.startService(intent);
+		return intent;
+	}
 
 	public String getTimeText(Calendar calendar, int second) {
 		int hour = calendar.get(Calendar.HOUR_OF_DAY);

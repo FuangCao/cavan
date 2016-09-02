@@ -112,7 +112,7 @@ public class RedPacketListenerService extends NotificationListenerService {
 
 		if (mFloatMessageService != null) {
 			try {
-				mFloatMessageService.addMessage(message);
+				mFloatMessageService.addMessage(message, code);
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
@@ -163,8 +163,7 @@ public class RedPacketListenerService extends NotificationListenerService {
 		mClipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 		mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
-		Intent service = new Intent(this, FloatMessageService.class);
-		startService(service);
+		Intent service = FloatMessageService.startService(this);
 		bindService(service, mFloatMessageConnection, 0);
 
 		super.onCreate();

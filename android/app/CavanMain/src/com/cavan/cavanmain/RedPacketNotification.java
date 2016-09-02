@@ -108,13 +108,16 @@ public class RedPacketNotification extends CavanNotification {
 	public RedPacketNotification(RedPacketListenerService service, StatusBarNotification sbn) {
 		super(sbn);
 
+		mService = service;
+		mNotification = sbn;
+
 		boolean needFindTitle = CavanJava.ArrayContains(sFindTitlePackages, mPackageName);
 		if (mTitle != null && needFindTitle) {
 			mLines.add(mTitle);
 		}
 
 		mNeedSave = CavanJava.ArrayContains(sSavePackages, mPackageName);
-		if (mContent != null && (mNeedSave || needFindTitle)) {
+		if (mContent != null && (mNeedSave || needFindTitle || mService.getPackageName().equals(getPackageName()))) {
 			for (String line : mContent.split("\n")) {
 				line = CavanString.strip(line);
 				for (Pattern pattern : sExcludePatterns) {
@@ -127,9 +130,6 @@ public class RedPacketNotification extends CavanNotification {
 		}
 
 		mJoinedLines = CavanString.join(mLines, " ");
-
-		mService = service;
-		mNotification = sbn;
 	}
 
 	public Notification getNotification() {
