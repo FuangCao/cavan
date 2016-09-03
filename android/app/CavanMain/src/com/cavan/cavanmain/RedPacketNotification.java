@@ -130,6 +130,7 @@ public class RedPacketNotification extends CavanNotification {
 		}
 
 		mJoinedLines = CavanString.join(mLines, " ");
+		mLines.add(mJoinedLines);
 	}
 
 	public Notification getNotification() {
@@ -222,14 +223,21 @@ public class RedPacketNotification extends CavanNotification {
 		sCodeTimeMap.remove(code);
 	}
 
-	public static boolean isRedPacketDigitCode(String code) {
+	public static boolean isRedPacketDigitCode(String text, String code) {
 		if (code.length() % 8 != 0) {
 			return false;
 		}
 
-		for (char c : code.toCharArray()) {
-			if (c < '0' || c > '9') {
-				return false;
+		int count = 0;
+		char[] array = text.toCharArray();
+
+		for (int i = array.length - 1; i > 0; i--) {
+			if (CavanJava.isDigit(array[i])) {
+				if (++count % 8 == 0) {
+					if (CavanJava.isDigit(array[--i])) {
+						return false;
+					}
+				}
 			}
 		}
 
@@ -259,13 +267,17 @@ public class RedPacketNotification extends CavanNotification {
 		return true;
 	}
 
-	public List<String> getRedPacketCodes(Pattern[] patterns, List<String> codes) {
+	public List<String> getRedPacketCodes(Pattern[] patterns, List<String> codes, boolean strip) {
 		for (String line : mLines) {
 			for (Pattern pattern : patterns) {
 				Matcher matcher = pattern.matcher(line);
 
 				while (matcher.find()) {
-					String code = CavanString.deleteSpace(matcher.group(1));
+					String code = matcher.group(1);
+					if (strip) {
+						code = CavanString.deleteSpace(code);
+					}
+
 					codes.add(code);
 				}
 			}
@@ -274,8 +286,8 @@ public class RedPacketNotification extends CavanNotification {
 		return codes;
 	}
 
-	public List<String> getRedPacketCodes(Pattern[] patterns) {
-		return getRedPacketCodes(patterns, new ArrayList<String>());
+	public List<String> getRedPacketCodes(Pattern[] patterns, boolean strip) {
+		return getRedPacketCodes(patterns, new ArrayList<String>(), strip);
 	}
 
 	public boolean addRedPacketCode(List<String> codes, String code) {
@@ -293,21 +305,23 @@ public class RedPacketNotification extends CavanNotification {
 	public List<String> getRedPacketCodes() {
 		List<String> codes = new ArrayList<String>();
 
-		for (String code : getRedPacketCodes(sDigitPatterns)) {
-			if (isRedPacketDigitCode(code)) {
+		for (String text : getRedPacketCodes(sDigitPatterns, false)) {
+			String code = CavanString.deleteSpace(text);
+
+			if (isRedPacketDigitCode(text, code)) {
 				for (int end = code.length(); end >= 8; end -= 8) {
 					addRedPacketCode(codes, code.substring(end - 8, end));
 				}
 			}
 		}
 
-		for (String code : getRedPacketCodes(sWordPatterns)) {
+		for (String code : getRedPacketCodes(sWordPatterns, true)) {
 			if (isRedPacketWordCode(code)) {
 				addRedPacketCode(codes, code);
 			}
 		}
 
-		return getRedPacketCodes(sOtherPatterns, codes);
+		return getRedPacketCodes(sOtherPatterns, codes, true);
 	}
 
 	public Notification buildNotification(CharSequence content, PendingIntent intent) {

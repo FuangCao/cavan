@@ -31,7 +31,6 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.cavanjni.CavanServicePreference;
 import com.cavan.java.CavanJava;
-import com.cavan.java.CavanString;
 
 public class MainActivity extends PreferenceActivity implements OnPreferenceChangeListener {
 
@@ -276,15 +275,12 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 				NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 				if (manager != null) {
 					String text = (String) object;
-					if (CavanString.hasChineseChar(text) && text.matches(".*[:：].*") == false) {
-						text = "支付宝红包口令: " + text;
-					}
 
 					Builder builder = new Builder(this)
 						.setSmallIcon(R.drawable.ic_launcher)
 						.setAutoCancel(true)
 						.setContentTitle("红包提醒测试")
-						.setTicker("CFA8888: " + text)
+						.setTicker(text)
 						.setContentText(text);
 
 					manager.notify(RedPacketListenerService.NOTIFY_TEST, builder.build());

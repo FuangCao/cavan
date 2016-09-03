@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+    android:keyHeight="8%p"
+    android:keyWidth="25%p" >
+
+    <Row>
+        <Key
+            android:keyOutputText="1"
+            android:keyLabel="1" />
+        <Key
+            android:keyOutputText="2"
+            android:keyLabel="2" />
+        <Key
+            android:keyOutputText="3"
+            android:keyLabel="3" />
+        <Key
+            android:codes="-5"
+            android:keyLabel="删除"
+            android:isRepeatable="true" />
+        <Key
+            android:codes="-4"
+            android:keyLabel="前往" />
+    </Row>
+
+    <Row>
+        <Key
+            android:keyOutputText="4"
+            android:keyLabel="4" />
+        <Key
+            android:keyOutputText="5"
+            android:keyLabel="5" />
+        <Key
+            android:keyOutputText="6"
+            android:keyLabel="6" />
+        <Key
+            android:codes="1"
+            android:keyLabel="复制" />
+        <Key
+            android:codes="2"
+            android:keyLabel="粘贴" />
+    </Row>
+
+    <Row>
+        <Key
+            android:keyOutputText="7"
+            android:keyLabel="7" />
+        <Key
+            android:keyOutputText="8"
+            android:keyLabel="8" />
+        <Key
+            android:keyOutputText="9"
+            android:keyLabel="9" />
+        <Key
+            android:codes="3"
+            android:keyLabel="剪切" />
+        <Key
+            android:codes="5"
+            android:keyLabel="全选" />
+    </Row>
+
+	<Row>
+	    <Key
+            android:codes="8"
+            android:keyLabel="输入法" />
+	    <Key
+            android:keyOutputText="0"
+            android:keyLabel="0" />
+        <Key
+            android:codes="6"
+            android:keyLabel="&lt;" />
+        <Key
+            android:codes="4"
+            android:keyLabel="选择" />
+        <Key
+            android:codes="7"
+            android:keyLabel="&gt;" />
+    </Row>
+</Keyboard>
