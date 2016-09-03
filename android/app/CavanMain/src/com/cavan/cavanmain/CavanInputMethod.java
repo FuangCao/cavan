@@ -84,7 +84,17 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		InputConnection conn = getCurrentInputConnection();
 		conn.performContextMenuAction(android.R.id.selectAll);
 		conn.commitText(text, 0);
-		conn.performEditorAction(EditorInfo.IME_ACTION_GO);
+
+		int action;
+		EditorInfo info = getCurrentInputEditorInfo();
+
+		if (info.actionLabel == null) {
+			action = EditorInfo.IME_ACTION_GO;
+		} else {
+			action = info.actionId;
+		}
+
+		conn.performEditorAction(action);
 	}
 
 	@Override
@@ -107,13 +117,16 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	@Override
 	public void onStartInput(EditorInfo attribute, boolean restarting) {
 		updateData();
+		super.onStartInput(attribute, restarting);
+	}
 
-		if (mCodes == null || mCodes.size() == 0) {
-			InputConnection conn = getCurrentInputConnection();
-			conn.performContextMenuAction(android.R.id.switchInputMethod);
+	@Override
+	public void onViewClicked(boolean focusChanged) {
+		if (mCodes != null && mCodes.size() == 1) {
+			sendRedPacketCode(mCodes.get(0));
 		}
 
-		super.onStartInput(attribute, restarting);
+		super.onViewClicked(focusChanged);
 	}
 
 	@Override
