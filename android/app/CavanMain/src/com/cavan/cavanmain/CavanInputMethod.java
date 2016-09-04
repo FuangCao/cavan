@@ -19,12 +19,14 @@ import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.ListView;
+import android.widget.GridView;
 
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
 
 public class CavanInputMethod extends InputMethodService implements OnClickListener, OnKeyboardActionListener {
+
+	public static final int CODE_MAX_COLUMNS = 4;
 
 	public static final int KEYCODE_COPY = 1;
 	public static final int KEYCODE_PASTE = 2;
@@ -41,7 +43,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	public static final int KEYCODE_SPACE = 13;
 
 	private List<String> mCodes;
-	private ListView mListViewCodes;
+	private GridView mCodeGridView;
 
 	private Keyboard mKeyboard;
 	private KeyboardView mKeyboardView;
@@ -99,9 +101,32 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	};
 
 	public void updateData() {
-		if (mService != null) {
+		if (mService != null && mCodeGridView != null) {
 			try {
 				mCodes = mService.getCodes();
+				if (mCodes != null) {
+					int columns = mCodes.size();
+					if (columns > CODE_MAX_COLUMNS) {
+						int max = 0;
+						int size = columns;
+
+						for (int i = CODE_MAX_COLUMNS; i > 1; i--) {
+							int remain = size % i;
+							if (remain == 0) {
+								columns = i;
+								break;
+							}
+
+							if (remain >= max) {
+								columns = i;
+								max = remain;
+							}
+						}
+					}
+
+					mCodeGridView.setNumColumns(columns);
+				}
+
 				mAdapter.notifyDataSetChanged();
 			} catch (RemoteException e) {
 				e.printStackTrace();
@@ -186,8 +211,8 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	public View onCreateInputView() {
 		View view = View.inflate(this, R.layout.keyboard, null);
 
-		mListViewCodes = (ListView) view.findViewById(R.id.listViewCodes);
-		mListViewCodes.setAdapter(mAdapter);
+		mCodeGridView = (GridView) view.findViewById(R.id.gridViewCodes);
+		mCodeGridView.setAdapter(mAdapter);
 
 		mKeyboardView = (KeyboardView) view.findViewById(R.id.keyboardView);
 		mKeyboard = new Keyboard(this, R.xml.keyboard);
