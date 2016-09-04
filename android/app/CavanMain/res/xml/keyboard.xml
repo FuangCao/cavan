@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
-    android:keyHeight="8%p"
-    android:keyWidth="25%p" >
+    android:keyHeight="%8p"
+    android:keyWidth="%100p" >
 
     <Row>
         <Key
@@ -14,11 +14,14 @@
             android:keyOutputText="3"
             android:keyLabel="3" />
         <Key
-            android:codes="-5"
-            android:keyLabel="删除"
+            android:codes="9"
+            android:keyIcon="@drawable/key_del"
             android:isRepeatable="true" />
         <Key
-            android:codes="-4"
+            android:codes="10"
+            android:keyLabel="清空" />
+        <Key
+            android:codes="11"
             android:keyLabel="前往" />
     </Row>
 
@@ -36,6 +39,9 @@
             android:codes="1"
             android:keyLabel="复制" />
         <Key
+            android:codes="3"
+            android:keyLabel="剪切" />
+        <Key
             android:codes="2"
             android:keyLabel="粘贴" />
     </Row>
@@ -51,11 +57,15 @@
             android:keyOutputText="9"
             android:keyLabel="9" />
         <Key
-            android:codes="3"
-            android:keyLabel="剪切" />
+	        android:codes="13"
+            android:keyOutputText=" "
+            android:keyIcon="@drawable/key_space" />
         <Key
             android:codes="5"
             android:keyLabel="全选" />
+        <Key
+            android:codes="4"
+            android:keyLabel="选择" />
     </Row>
 
 	<Row>
@@ -65,14 +75,18 @@
 	    <Key
             android:keyOutputText="0"
             android:keyLabel="0" />
+	    <Key
+            android:keyOutputText=":"
+            android:keyLabel=":" />
+	    <Key
+	        android:codes="12"
+            android:keyOutputText="\n"
+            android:keyIcon="@drawable/key_enter" />
         <Key
             android:codes="6"
-            android:keyLabel="&lt;" />
-        <Key
-            android:codes="4"
-            android:keyLabel="选择" />
+            android:keyIcon="@drawable/key_qwerty_left" />
         <Key
             android:codes="7"
-            android:keyLabel="&gt;" />
+            android:keyIcon="@drawable/key_qwerty_right" />
     </Row>
 </Keyboard>

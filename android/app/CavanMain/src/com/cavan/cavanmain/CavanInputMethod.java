@@ -34,6 +34,11 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	public static final int KEYCODE_LEFT = 6;
 	public static final int KEYCODE_RIGHT = 7;
 	public static final int KEYCODE_INPUT_METHOD = 8;
+	public static final int KEYCODE_DELETE = 9;
+	public static final int KEYCODE_CLEAR = 10;
+	public static final int KEYCODE_DONE = 11;
+	public static final int KEYCODE_ENTER = 12;
+	public static final int KEYCODE_SPACE = 13;
 
 	private List<String> mCodes;
 	private ListView mListViewCodes;
@@ -213,7 +218,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		InputConnection conn = getCurrentInputConnection();
 
 		switch (primaryCode) {
-		case Keyboard.KEYCODE_DELETE:
+		case KEYCODE_DELETE:
 			CharSequence text = conn.getSelectedText(0);
 			if (text != null && text.length() > 0) {
 				conn.commitText(CavanString.EMPTY_STRING, 1);
@@ -224,7 +229,12 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 			mSelectioActive = false;
 			break;
 
-		case Keyboard.KEYCODE_DONE:
+		case KEYCODE_CLEAR:
+			conn.performContextMenuAction(android.R.id.selectAll);
+			conn.commitText(CavanString.EMPTY_STRING, 0);
+			break;
+
+		case KEYCODE_DONE:
 			sendFinishAction(conn);
 			break;
 

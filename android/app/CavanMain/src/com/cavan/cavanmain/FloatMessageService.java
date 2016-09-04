@@ -2,7 +2,6 @@ package com.cavan.cavanmain;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.List;
 
 import android.content.BroadcastReceiver;
@@ -33,7 +32,7 @@ public class FloatMessageService extends FloatWidowService {
 
 	private int mLastSecond;
 	private TextView mTimeView;
-	private HashMap<CharSequence, CharSequence> mMessageCodeMap = new HashMap<CharSequence, CharSequence>();
+	private List<String> mCodeList = new ArrayList<String>();
 	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
 
 		@Override
@@ -67,7 +66,7 @@ public class FloatMessageService extends FloatWidowService {
 			}
 
 			if (code != null) {
-				mMessageCodeMap.put(message, code);
+				mCodeList.add(code.toString());
 			}
 
 			return view.getId();
@@ -81,7 +80,10 @@ public class FloatMessageService extends FloatWidowService {
 		@Override
 		public void removeMessage(CharSequence message) throws RemoteException {
 			FloatMessageService.this.removeText(message);
-			mMessageCodeMap.remove(message);
+
+			if (getTextCount() == 0) {
+				mCodeList.clear();
+			}
 		}
 
 		@Override
@@ -96,12 +98,7 @@ public class FloatMessageService extends FloatWidowService {
 
 		@Override
 		public List<String> getCodes() throws RemoteException {
-			List<String> list = new ArrayList<String>();
-			for (CharSequence code : mMessageCodeMap.values()) {
-				list.add(code.toString());
-			}
-
-			return list;
+			return mCodeList;
 		}
 	};
 

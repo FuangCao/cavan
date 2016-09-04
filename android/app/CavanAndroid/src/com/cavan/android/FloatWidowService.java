@@ -86,7 +86,7 @@ public abstract class FloatWidowService extends Service {
 		return mRootView;
 	}
 
-	synchronized public int size() {
+	synchronized public int getViewCount() {
 		return mViewMapId.size();
 	}
 
@@ -240,6 +240,10 @@ public abstract class FloatWidowService extends Service {
 		mViewMapText.put(text, view);
 
 		return view;
+	}
+
+	synchronized public int getTextCount() {
+		return mViewMapText.size();
 	}
 
 	synchronized public void removeText(View view, CharSequence text) {
