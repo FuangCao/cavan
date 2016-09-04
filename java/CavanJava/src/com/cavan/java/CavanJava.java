@@ -414,7 +414,27 @@ public class CavanJava {
 		return c >= '0' && c <= '9';
 	}
 
-	public static boolean isNotDigit(char c) {
+	public static boolean notDigit(char c) {
 		return c < '0' || c > '9';
+	}
+
+	public static boolean isDigit(char[] array) {
+		for (char c : array) {
+			if (notDigit(c)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public static boolean isDigit(CharSequence text) {
+		for (int i = text.length() - 1; i >= 0; i--) {
+			if (notDigit(text.charAt(i))) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 }

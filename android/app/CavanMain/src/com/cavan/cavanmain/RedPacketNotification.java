@@ -27,6 +27,14 @@ import com.cavan.java.CavanString;
 
 public class RedPacketNotification extends CavanNotification {
 
+	public static final String PACKAGE_NAME_DESKCLOCK = "com.android.deskclock";
+	public static final String PACKAGE_NAME_CALENDAR = "com.android.calendar";
+	public static final String PACKAGE_NAME_QQ = "com.tencent.mobileqq";
+	public static final String PACKAGE_NAME_MM = "com.tencent.mm";
+	public static final String PACKAGE_NAME_TMALL = "com.tmall.wireless";
+	public static final String PACKAGE_NAME_TAOBAO = "com.taobao.taobao";
+	public static final String PACKAGE_NAME_ALIPAY = "com.eg.android.AlipayGphone";
+
 	public static final long OVER_TIME = 3600000;
 	public static final String NORMAL_PATTERN = "(\\w+红包)";
 	public static final String DIGIT_PATTERN = "([\\d\\s]+)";
@@ -82,11 +90,16 @@ public class RedPacketNotification extends CavanNotification {
 	};
 
 	public static final String[] sFindTitlePackages = {
-		"com.android.deskclock", "com.android.calendar"
+		PACKAGE_NAME_CALENDAR,
+		PACKAGE_NAME_DESKCLOCK,
 	};
 
 	public static final String[] sSavePackages = {
-		"com.tencent.mobileqq", "com.tencent.mm", "com.tmall.wireless", "com.taobao.taobao", "com.eg.android.AlipayGphone"
+		PACKAGE_NAME_QQ,
+		PACKAGE_NAME_MM,
+		PACKAGE_NAME_TMALL,
+		PACKAGE_NAME_TAOBAO,
+		PACKAGE_NAME_ALIPAY,
 	};
 
 	public static HashMap<CharSequence, Long> sCodeTimeMap = new HashMap<CharSequence, Long>();

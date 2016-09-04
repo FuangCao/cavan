@@ -16,10 +16,12 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 
+import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
 
 public class CavanInputMethod extends InputMethodService implements OnClickListener, OnKeyboardActionListener {
@@ -38,7 +40,9 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 	private Keyboard mKeyboard;
 	private KeyboardView mKeyboardView;
+	private InputMethodManager mManager;
 
+	private boolean mIsAlipay;
 	private boolean mSelectioActive;
 	private int mSelection;
 	private int mSelectionStart;
@@ -100,7 +104,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		}
 	}
 
-	public void performEditorAction(InputConnection conn) {
+	public void sendFinishAction(InputConnection conn) {
 		int action;
 		EditorInfo info = getCurrentInputEditorInfo();
 
@@ -117,11 +121,13 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		InputConnection conn = getCurrentInputConnection();
 		conn.performContextMenuAction(android.R.id.selectAll);
 		conn.commitText(text, 0);
-		performEditorAction(conn);
+		sendFinishAction(conn);
 	}
 
 	@Override
 	public void onCreate() {
+		mManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+
 		Intent service = FloatMessageService.startService(this);
 		bindService(service, mConnection, 0);
 
@@ -141,6 +147,13 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 			mSelectioActive = true;
 		} else {
 			mSelection = newSelStart;
+
+			if (newSelStart == 8 && mIsAlipay) {
+				CharSequence text = getCurrentInputConnection().getTextBeforeCursor(8, 0);
+				if (text != null && text.length() == 8 && CavanJava.isDigit(text)) {
+					sendFinishAction(getCurrentInputConnection());
+				}
+			}
 		}
 
 		mSelectionStart = newSelStart;
@@ -151,18 +164,17 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	}
 
 	@Override
-	public void onStartInput(EditorInfo attribute, boolean restarting) {
-		updateData();
-		super.onStartInput(attribute, restarting);
-	}
+	public void onStartInputView(EditorInfo info, boolean restarting) {
+		String pkgName = getCurrentInputEditorInfo().packageName;
+		mIsAlipay = RedPacketNotification.PACKAGE_NAME_ALIPAY.equals(pkgName);
 
-	@Override
-	public void onViewClicked(boolean focusChanged) {
-		if (mCodes != null && mCodes.size() == 1) {
+		updateData();
+
+		if (mIsAlipay && mCodes != null && mCodes.size() == 1) {
 			sendRedPacketCode(mCodes.get(0));
 		}
 
-		super.onViewClicked(focusChanged);
+		super.onStartInputView(info, restarting);
 	}
 
 	@Override
@@ -213,7 +225,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 			break;
 
 		case Keyboard.KEYCODE_DONE:
-			performEditorAction(conn);
+			sendFinishAction(conn);
 			break;
 
 		case KEYCODE_COPY:
@@ -236,7 +248,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 			break;
 
 		case KEYCODE_INPUT_METHOD:
-			conn.performContextMenuAction(android.R.id.switchInputMethod);
+			mManager.showInputMethodPicker();
 			break;
 
 		case KEYCODE_SELECT:
