@@ -62,6 +62,10 @@ public class JwaooDepthDecoder extends CavanSquareWaveCounter {
 		return mDepth;
 	}
 
+	public int getDepthRaw() {
+		return mCount;
+	}
+
 	public JwaooDepthSquareWaveGenerator[] getGenerators() {
 		return mGenerators;
 	}

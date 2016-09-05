@@ -224,6 +224,10 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mParser.getDepth();
 	}
 
+	public int getDepthRaw() {
+		return mParser.getDepthRaw();
+	}
+
 	public double getFreq() {
 		return mParser.getFreq();
 	}
