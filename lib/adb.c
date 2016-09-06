@@ -75,6 +75,10 @@ int adb_send_text(int sockfd, const char *text)
 	sprintf(buff, "%04x", length);
 #endif
 
+#if CAVAN_ADB_DEBUG
+	println("text = %s%s", buff, text);
+#endif
+
 	sendlen = inet_send(sockfd, buff, 4);
 	if (sendlen < 0) {
 		pr_red_info("inet_send");
@@ -93,6 +97,10 @@ int adb_send_text(int sockfd, const char *text)
 #endif
 		return ret;
 	}
+
+#if CAVAN_ADB_DEBUG
+	println("status = %s", status);
+#endif
 
 	return 0;
 }
@@ -188,7 +196,7 @@ out_close_sockfd:
 
 bool adb_wait_for_device_once(const char *ip, u16 port)
 {
-	int sockfd = adb_connect_service(ip, port, "host:wait-for-any");
+	int sockfd = adb_connect_service(ip, port, "host:wait-for-any-device");
 	if (sockfd < 0) {
 		return false;
 	}
