@@ -8,7 +8,6 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanWaveView;
 import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
-import com.jwaoo.android.JwaooDepthDecoder;
 import com.jwaoo.android.JwaooDepthSquareWaveGenerator;
 import com.jwaoo.android.JwaooToySensor;
 
@@ -26,14 +25,14 @@ public class MainActivity extends JwaooToyActivity {
 	private CavanWaveView mWaveView8;
 	private CavanWaveView mWaveView9;
 
-	private JwaooDepthDecoder mDecoder = new JwaooDepthDecoder(10);
 	private Runnable mRunnableUpdateTitle = new Runnable() {
 
 		@Override
 		public void run() {
-			String text = String.format("depth = %4.2f, freq = %4.2f", mDecoder.getDepth(), mDecoder.getFreq());
-			// CavanAndroid.eLog("freq = " + mDecoder.getFreq());
-			setTitle(text);
+			if (mBleToy != null) {
+				String text = String.format("depth = %4.2f, freq = %4.2f", mBleToy.getDepth(), mBleToy.getFreq());
+				setTitle(text);
+			}
 		}
 	};
 
@@ -117,19 +116,21 @@ public class MainActivity extends JwaooToyActivity {
 
 			@Override
 			protected boolean onInitialize() {
-				mBleToy.setSensorEnable(true, SENSOR_DELAY);
+				setFreqFuzz(10);
+				setDepthFuzz(100);
+				setSensorEnable(true, SENSOR_DELAY);
 				return super.onInitialize();
 			}
 
 			@Override
 			protected void onSensorDataReceived(byte[] arg0) {
-				mSensor.putBytes(arg0);
+				super.onSensorDataReceived(arg0);
 
 				double capacitys[] = mSensor.getCapacitys();
 				CavanAndroid.eLog("capacity: " + mSensor.getCapacityText());
 
-				mDecoder.putCapacityValue(capacitys);
-				JwaooDepthSquareWaveGenerator[] generators = mDecoder.getGenerators();
+				mParser.putCapacityValue(capacitys);
+				JwaooDepthSquareWaveGenerator[] generators = mParser.getGenerators();
 
 				double value = capacitys[0];
 
@@ -148,7 +149,7 @@ public class MainActivity extends JwaooToyActivity {
 				mWaveView7.addValue(value);
 				addSquareWave(mWaveView8, generators[3].getValue());
 
-				mWaveView9.addValue(mDecoder.getDepth());
+				mWaveView9.addValue(mParser.getDepth());
 
 				runOnUiThread(mRunnableUpdateTitle);
 			}

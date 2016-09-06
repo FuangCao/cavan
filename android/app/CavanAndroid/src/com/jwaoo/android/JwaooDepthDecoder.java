@@ -24,13 +24,20 @@ public class JwaooDepthDecoder extends CavanSquareWaveCounter {
 		}
 	}
 
-	@Override
-	public void setValueFuzz(double fuzz) {
+	public void setFreqFuzz(double fuzz) {
 		super.setValueFuzz(fuzz);
+	}
 
+	public void setDepthFuzz(double fuzz) {
 		for (int i = 0; i < JwaooToySensor.SENSOR_COUNT; i++) {
 			mGenerators[i].setValueFuzz(fuzz);
 		}
+	}
+
+	@Override
+	public void setValueFuzz(double fuzz) {
+		setFreqFuzz(fuzz);
+		setDepthFuzz(fuzz);
 	}
 
 	@Override

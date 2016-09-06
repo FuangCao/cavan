@@ -208,8 +208,12 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 	}
 
+	public void setFreqFuzz(double fuzz) {
+		mParser.setFreqFuzz(fuzz);
+	}
+
 	public void setDepthFuzz(double fuzz) {
-		mParser.setValueFuzz(fuzz);
+		mParser.setDepthFuzz(fuzz);
 	}
 
 	public void setTimeMin(long time) {
