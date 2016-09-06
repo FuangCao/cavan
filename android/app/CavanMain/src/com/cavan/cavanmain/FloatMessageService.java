@@ -10,13 +10,16 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager.LayoutParams;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
@@ -30,9 +33,25 @@ public class FloatMessageService extends FloatWidowService {
 	public static final int TEXT_COLOR_TIME = Color.WHITE;
 	public static final int TEXT_COLOR_MESSAGE = Color.YELLOW;
 
+	private static final int MSG_SHOW_INPUT_METHOD_PICKER = 1;
+
 	private int mLastSecond;
 	private TextView mTimeView;
 	private List<String> mCodeList = new ArrayList<String>();
+
+	private Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case MSG_SHOW_INPUT_METHOD_PICKER:
+				InputMethodManager manager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+				manager.showInputMethodPicker();
+				break;
+			}
+		}
+	};
+
 	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
 
 		@Override
@@ -67,6 +86,11 @@ public class FloatMessageService extends FloatWidowService {
 
 			if (code != null) {
 				mCodeList.add(code.toString());
+
+				String method = CavanAndroid.getDefaultInputMethod(getApplicationContext());
+				if ("com.cavan.cavanmain/.CavanInputMethod".equals(method) == false) {
+					mHandler.sendEmptyMessageDelayed(MSG_SHOW_INPUT_METHOD_PICKER, 500);
+				}
 			}
 
 			return view.getId();

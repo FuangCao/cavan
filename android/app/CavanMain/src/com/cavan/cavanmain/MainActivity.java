@@ -26,6 +26,7 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.preference.RingtonePreference;
+import android.view.inputmethod.InputMethodManager;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.cavanjni.CavanJni;
@@ -37,6 +38,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_IP_ADDRESS = "ip_address";
 	public static final String KEY_FLOAT_TIMER = "float_timer";
 	public static final String KEY_MESSAGE_SHOW = "message_show";
+	public static final String KEY_INPUT_METHOD = "input_method";
 	public static final String KEY_PERMISSION_SETTINGS = "permission_settings";
 	public static final String KEY_RED_PACKET_NOTIFY_TEST = "red_packet_notify_test";
 	public static final String KEY_RED_PACKET_NOTIFY_RINGTONE = "red_packet_notify_ringtone";
@@ -46,6 +48,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 	private File mFileBin;
 	private Preference mPreferenceIpAddress;
+	private Preference mPreferenceInputMethod;
 	private CheckBoxPreference mPreferenceFloatTime;
 	private Preference mPreferencePermissionSettings;
 	private Preference mPreferenceMessageShow;
@@ -77,6 +80,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		addPreferencesFromResource(R.xml.cavan_service);
 
 		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
+		mPreferenceInputMethod = findPreference(KEY_INPUT_METHOD);
 
 		mPreferenceMessageShow = findPreference(KEY_MESSAGE_SHOW);
 		mPreferenceMessageShow.setIntent(CavanMessageActivity.getIntent(this));
@@ -261,6 +265,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
 		if (preference == mPreferenceIpAddress) {
 			updateIpAddressStatus();
+		} else if (preference == mPreferenceInputMethod) {
+			InputMethodManager manager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+			manager.showInputMethodPicker();
 		}
 
 		return super.onPreferenceTreeClick(preferenceScreen, preference);

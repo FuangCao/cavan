@@ -318,4 +318,8 @@ public class CavanAndroid {
 		String id = SystemProperties.getClientIdBase();
 		return (id != null && id.equals("android-huawei"));
 	}
+
+	public static String getDefaultInputMethod(Context context) {
+		return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD);
+	}
 }
