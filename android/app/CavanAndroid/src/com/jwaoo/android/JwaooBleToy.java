@@ -491,15 +491,28 @@ public class JwaooBleToy extends CavanBleGatt {
 	}
 
 	public boolean writeBdAddress(String addr) {
-		String[] addresses = addr.split("\\s*:\\s*");
+		String[] addresses = addr.split("\\s*[:\\-\\.]\\s*");
 		if (addresses.length != 6) {
-			CavanAndroid.eLog("Invalid format");
+			if (addresses.length == 1 && addr.length() == 12) {
+				addresses = new String[6];
+				for (int i = 0; i < 12; i += 2) {
+					addresses[i / 2] = addr.substring(i, i + 2);
+				}
+			} else {
+				CavanAndroid.eLog("Invalid format");
+				return false;
+			}
 		}
 
 		byte[] bytes = new byte[6];
 
-		for (int i = 0; i < 6; i++) {
-			bytes[i] = (byte) Integer.parseInt(addresses[i], 16);
+		try {
+			for (int i = 0; i < 6; i++) {
+				bytes[i] = (byte) Integer.parseInt(addresses[i], 16);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
 		}
 
 		return writeBdAddress(bytes);
