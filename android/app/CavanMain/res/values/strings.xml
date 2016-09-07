@@ -38,6 +38,6 @@
     <string name="text_notification_manager">通知管理中心</string>
     <string name="text_notification_access">通知读取权限</string>
     <string name="cavan_input_method">曹福昂输入法</string>
-    <string name="text_input_method">输入法设置</string>
+    <string name="text_input_method_select">输入法选择</string>
 
 </resources>

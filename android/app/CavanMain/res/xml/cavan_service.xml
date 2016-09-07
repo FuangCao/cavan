@@ -15,8 +15,8 @@
 	    android:persistent="true"
 	    android:title="@string/red_packet_notify_ringtone" />
 
-	<Preference android:key="input_method"
-	    android:title="@string/text_input_method" />
+	<Preference android:key="input_method_select"
+	    android:title="@string/text_input_method_select" />
 
 	<EditTextPreference android:key="red_packet_notify_test"
 	    android:persistent="true"

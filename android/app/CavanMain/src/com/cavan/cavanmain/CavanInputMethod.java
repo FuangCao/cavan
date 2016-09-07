@@ -199,12 +199,14 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		if (pkgName.equals("com.eg.android.AlipayGphone")) {
 			CavanAndroid.eLog("mActivityRepeat = " + mActivityRepeat);
 
-			if (mActivityRepeat < 3) {
+			if (mActivityRepeat < 5) {
 				if (clsName.equals("com.alipay.android.phone.discovery.envelope.HomeActivity")) {
-					CavanAndroid.pfLog("index = %d, code = %s", mCodeIndex, code);
+					if (mActivityRepeat < 3) {
+						CavanAndroid.pfLog("index = %d, code = %s", mCodeIndex, code);
 
-					mCodePending = true;
-					sendRedPacketCode(code);
+						mCodePending = true;
+						sendRedPacketCode(code);
+					}
 				} else if ((mActivityRepeat & 1) == 0) {
 					if (clsName.equals("com.alipay.mobile.nebulacore.ui.H5Activity")) {
 						sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
