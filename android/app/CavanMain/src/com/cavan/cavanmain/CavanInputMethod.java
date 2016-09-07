@@ -207,8 +207,16 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 						mCodePending = true;
 						sendRedPacketCode(code);
 					}
+				} else if (clsName.equals("com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity")) {
+					if (mCodePending) {
+						sendDownUpKeyEvents(KeyEvent.KEYCODE_DPAD_DOWN);
+						sendDownUpKeyEvents(KeyEvent.KEYCODE_ENTER);
+					} else {
+						sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
+					}
 				} else if ((mActivityRepeat & 1) == 0) {
-					if (clsName.equals("com.alipay.mobile.nebulacore.ui.H5Activity")) {
+					if (clsName.equals("com.alipay.mobile.nebulacore.ui.H5Activity") ||
+							clsName.equals("com.alipay.android.phone.discovery.envelope.mine.AllCouponList")) {
 						sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
 					} else if (clsName.equals("com.alipay.android.phone.discovery.envelope.crowd.CrowdHostActivity")) {
 						if (mCodePending) {
@@ -230,6 +238,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 	public void setCodeIndex(int index) {
 		mCodeIndex = index;
+		mCodePending = false;
 		mActivityClassName = null;
 	}
 
