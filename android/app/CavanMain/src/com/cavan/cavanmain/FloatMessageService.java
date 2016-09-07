@@ -27,6 +27,8 @@ import com.cavan.android.FloatWidowService;
 
 public class FloatMessageService extends FloatWidowService {
 
+	public static final String ACTION_CODE_UPDATED = "cavan.intent.action.ACTION_CODE_UPDATED";
+
 	public static final int TEXT_PADDING = 8;
 	public static final float TEXT_SIZE_TIME = 16;
 	public static final float TEXT_SIZE_MESSAGE = 12;
@@ -65,6 +67,10 @@ public class FloatMessageService extends FloatWidowService {
 
 	private IFloatMessageService.Stub mBinder = new IFloatMessageService.Stub() {
 
+		private void sendCodeUpdateBroadcast() {
+			sendBroadcast(new Intent(ACTION_CODE_UPDATED));
+		}
+
 		@Override
 		public boolean setTimerEnable(boolean enable) throws RemoteException {
 			return FloatMessageService.this.setTimerEnable(enable);
@@ -91,6 +97,8 @@ public class FloatMessageService extends FloatWidowService {
 				if ("com.cavan.cavanmain/.CavanInputMethod".equals(method) == false) {
 					mHandler.sendEmptyMessageDelayed(MSG_SHOW_INPUT_METHOD_PICKER, 500);
 				}
+
+				sendCodeUpdateBroadcast();
 			}
 
 			return view.getId();
@@ -107,6 +115,7 @@ public class FloatMessageService extends FloatWidowService {
 
 			if (getTextCount() == 0) {
 				mCodeList.clear();
+				sendCodeUpdateBroadcast();
 			}
 		}
 

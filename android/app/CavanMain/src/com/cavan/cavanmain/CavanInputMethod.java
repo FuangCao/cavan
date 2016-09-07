@@ -2,15 +2,22 @@ package com.cavan.cavanmain;
 
 import java.util.List;
 
+import android.app.ActivityManager;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.inputmethodservice.KeyboardView.OnKeyboardActionListener;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.RemoteException;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -21,6 +28,7 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.GridView;
 
+import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
 
@@ -42,6 +50,13 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	public static final int KEYCODE_ENTER = 12;
 	public static final int KEYCODE_SPACE = 13;
 
+	private static final int MSG_POST_CODE = 1;
+
+	private int mCodeIndex;
+	private boolean mCodePending;
+	private int mActivityRepeat;
+	private String mActivityClassName;
+
 	private List<String> mCodes;
 	private GridView mCodeGridView;
 
@@ -54,6 +69,32 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	private int mSelection;
 	private int mSelectionStart;
 	private int mSelectionEnd;
+
+	private Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case MSG_POST_CODE:
+				autoSendRedPacketCode();
+				break;
+			}
+		}
+	};
+
+	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String action = intent.getAction();
+
+			CavanAndroid.eLog("action = " + action);
+
+			if (action.equals(FloatMessageService.ACTION_CODE_UPDATED)) {
+				updateData();
+			}
+		}
+	};
 
 	private BaseAdapter mAdapter = new BaseAdapter() {
 
@@ -101,11 +142,15 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	};
 
 	public void updateData() {
-		if (mService != null && mCodeGridView != null) {
+		if (mService != null) {
 			try {
+				int columns;
+
 				mCodes = mService.getCodes();
-				if (mCodes != null) {
-					int columns = mCodes.size();
+				if (mCodes == null) {
+					columns = 0;
+				} else {
+					columns = mCodes.size();
 					if (columns > CODE_MAX_COLUMNS) {
 						int max = 0;
 						int size = columns;
@@ -123,35 +168,101 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 							}
 						}
 					}
-
-					mCodeGridView.setNumColumns(columns);
 				}
 
-				mAdapter.notifyDataSetChanged();
+				if (mCodeGridView != null) {
+					mCodeGridView.setNumColumns(columns);
+					mAdapter.notifyDataSetChanged();
+				}
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
 		}
+
+		autoSendRedPacketCode();
+	}
+
+	@SuppressWarnings("deprecation")
+	public void autoSendRedPacketCode(String code) {
+		ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+		ComponentName info = manager.getRunningTasks(1).get(0).topActivity;
+		String pkgName = info.getPackageName();
+		String clsName = info.getClassName();
+
+		CavanAndroid.efLog("package = %s, activity = %s", pkgName, clsName);
+
+		if (!clsName.equals(mActivityClassName)) {
+			mActivityClassName = clsName;
+			mActivityRepeat = 0;
+		}
+
+		if (pkgName.equals("com.eg.android.AlipayGphone")) {
+			CavanAndroid.eLog("mActivityRepeat = " + mActivityRepeat);
+
+			if (mActivityRepeat < 3) {
+				if (clsName.equals("com.alipay.android.phone.discovery.envelope.HomeActivity")) {
+					CavanAndroid.pfLog("index = %d, code = %s", mCodeIndex, code);
+
+					mCodePending = true;
+					sendRedPacketCode(code);
+				} else if ((mActivityRepeat & 1) == 0) {
+					if (clsName.equals("com.alipay.mobile.nebulacore.ui.H5Activity")) {
+						sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
+					} else if (clsName.equals("com.alipay.android.phone.discovery.envelope.crowd.CrowdHostActivity")) {
+						if (mCodePending) {
+							mCodePending = false;
+							mCodeIndex++;
+						}
+
+						sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
+					}
+				}
+
+				mActivityRepeat++;
+			}
+		}
+
+		mHandler.removeMessages(MSG_POST_CODE);
+		mHandler.sendEmptyMessageDelayed(MSG_POST_CODE, 500);
+	}
+
+	public void setCodeIndex(int index) {
+		mCodeIndex = index;
+		mActivityClassName = null;
+	}
+
+	public void autoSendRedPacketCode() {
+		if (mCodes == null) {
+			setCodeIndex(0);
+		} else if (mCodeIndex < mCodes.size()) {
+			autoSendRedPacketCode(mCodes.get(mCodeIndex));
+		} else {
+			setCodeIndex(mCodes.size());
+		}
 	}
 
 	public void sendFinishAction(InputConnection conn) {
-		int action;
+		int action = EditorInfo.IME_ACTION_GO;
 		EditorInfo info = getCurrentInputEditorInfo();
 
-		if (info.actionLabel == null) {
-			action = EditorInfo.IME_ACTION_GO;
-		} else {
+		if (info != null && info.actionLabel != null) {
 			action = info.actionId;
 		}
 
 		conn.performEditorAction(action);
 	}
 
-	public void sendRedPacketCode(CharSequence text) {
+	public boolean sendRedPacketCode(CharSequence code) {
 		InputConnection conn = getCurrentInputConnection();
+		if (conn == null) {
+			return false;
+		}
+
 		conn.performContextMenuAction(android.R.id.selectAll);
-		conn.commitText(text, 0);
+		conn.commitText(code, 0);
 		sendFinishAction(conn);
+
+		return true;
 	}
 
 	@Override
@@ -161,11 +272,14 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		Intent service = FloatMessageService.startService(this);
 		bindService(service, mConnection, 0);
 
+		registerReceiver(mReceiver, new IntentFilter(FloatMessageService.ACTION_CODE_UPDATED));
+
 		super.onCreate();
 	}
 
 	@Override
 	public void onDestroy() {
+		unregisterReceiver(mReceiver);
 		unbindService(mConnection);
 		super.onDestroy();
 	}
@@ -179,9 +293,12 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 			mSelection = newSelStart;
 
 			if (newSelStart == 8 && mIsAlipay) {
-				CharSequence text = getCurrentInputConnection().getTextBeforeCursor(8, 0);
-				if (text != null && text.length() == 8 && CavanJava.isDigit(text)) {
-					sendFinishAction(getCurrentInputConnection());
+				InputConnection conn = getCurrentInputConnection();
+				if (conn != null) {
+					CharSequence text = conn.getTextBeforeCursor(8, 0);
+					if (text != null && text.length() == 8 && CavanJava.isDigit(text)) {
+						sendFinishAction(conn);
+					}
 				}
 			}
 		}
@@ -197,8 +314,6 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	public void onStartInputView(EditorInfo info, boolean restarting) {
 		String pkgName = getCurrentInputEditorInfo().packageName;
 		mIsAlipay = RedPacketNotification.PACKAGE_NAME_ALIPAY.equals(pkgName);
-
-		updateData();
 
 		if (mIsAlipay && mCodes != null && mCodes.size() == 1) {
 			sendRedPacketCode(mCodes.get(0));
@@ -241,6 +356,9 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	@Override
 	public void onKey(int primaryCode, int[] keyCodes) {
 		InputConnection conn = getCurrentInputConnection();
+		if (conn == null) {
+			return;
+		}
 
 		switch (primaryCode) {
 		case KEYCODE_DELETE:
