@@ -277,6 +277,91 @@ static int do_test_route(int argc, char *argv[])
 	return 0;
 }
 
+static int do_test_read_write(int argc, char *argv[])
+{
+	int i;
+	int ret;
+	char buff[1024];
+	const char *url;
+	struct network_client client;
+
+	assert(argc > 2);
+
+	url = argv[1];
+
+	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	if (ret < 0) {
+		pr_red_info("network_client_open");
+		return -EFAULT;
+	}
+
+	ret = client.recv(&client, buff, sizeof(buff));
+	if (ret <= 0) {
+		pr_red_info("client->recv");
+		goto out_network_client_close;
+	}
+
+	buff[ret] = 0;
+
+	println("buff[%d] = %s", ret, buff);
+
+	for (i = 2; i < argc; i++) {
+		ret = network_client_send_text(&client, argv[i]);
+		if (ret < 0) {
+			pr_red_info("network_client_send_text");
+			goto out_network_client_close;
+		}
+	}
+
+out_network_client_close:
+	network_client_close(&client);
+	return ret;
+}
+
+
+static int do_test_write_read(int argc, char *argv[])
+{
+	int i;
+	int ret;
+	char buff[1024];
+	const char *url;
+	struct network_client client;
+
+	assert(argc > 2);
+
+	url = argv[1];
+
+	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	if (ret < 0) {
+		pr_red_info("network_client_open");
+		return -EFAULT;
+	}
+
+	for (i = 2; i < argc; i++) {
+		ret = network_client_send_text(&client, argv[i]);
+		if (ret < 0) {
+			pr_red_info("network_client_send_text");
+			goto out_network_client_close;
+		}
+	}
+
+	ret = client.recv(&client, buff, sizeof(buff));
+	if (ret <= 0) {
+		pr_red_info("client->recv");
+		goto out_network_client_close;
+	}
+
+	buff[ret] = 0;
+
+	println("buff[%d] = %s", ret, buff);
+
+out_network_client_close:
+	network_client_close(&client);
+	return ret;
+}
+
+
+
 CAVAN_COMMAND_MAP_START {
 	{ "client", do_test_client },
 	{ "service", do_test_service },
@@ -285,4 +370,6 @@ CAVAN_COMMAND_MAP_START {
 	{ "send", do_test_send },
 	{ "ifconfig", do_test_ifconfig },
 	{ "route", do_test_route },
+	{ "read_write", do_test_read_write },
+	{ "write_read", do_test_write_read },
 } CAVAN_COMMAND_MAP_END;

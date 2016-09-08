@@ -60,6 +60,8 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR = 41;
 	public static final byte JWAOO_TOY_CMD_FACTORY_ENABLE = 50;
 	public static final byte JWAOO_TOY_CMD_LED_ENABLE = 51;
+	public static final byte JWAOO_TOY_CMD_READ_TEST_RESULT = 52;
+	public static final byte JWAOO_TOY_CMD_WRITE_TEST_RESULT = 53;
 	public static final byte JWAOO_TOY_CMD_BATT_INFO = 60;
 	public static final byte JWAOO_TOY_CMD_BATT_EVENT_ENABLE = 61;
 	public static final byte JWAOO_TOY_CMD_SENSOR_ENABLE = 70;
@@ -570,6 +572,19 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mCommand.readBool(command);
 	}
 
+	public JwaooToyTestResult readTestResult() {
+		JwaooToyResponse response = mCommand.send(JWAOO_TOY_CMD_READ_TEST_RESULT);
+		if (response == null) {
+			return null;
+		}
+
+		return response.getTestResult();
+	}
+
+	public boolean writeTestResult(JwaooToyTestResult result) {
+		return mCommand.readBool(result.buildCommand());
+	}
+
 	@Override
 	protected boolean doInitialize() {
 		mCharCommand = openChar(UUID_COMMAND);
@@ -638,6 +653,61 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	// ================================================================================
 
+	public static class JwaooToyTestResult {
+
+		private int mTestValid;
+		private int mTestResult;
+
+		public JwaooToyTestResult(byte[] response) {
+			mTestValid = CavanJava.buildValue16(response, 2);
+			mTestResult = CavanJava.buildValue16(response, 4);
+		}
+
+		public byte[] buildCommand() {
+			CavanByteCache cache = new CavanByteCache(5);
+			cache.writeValue8(JWAOO_TOY_CMD_WRITE_TEST_RESULT);
+			cache.writeValue16((short) mTestValid);
+			cache.writeValue16((short) mTestResult);
+			return cache.getBytes();
+		}
+
+		public int getResult(int index) {
+			int mask = 1 << index;
+
+			if ((mTestValid & mask) == 0) {
+				return -1;
+			}
+
+			if ((mTestResult & mask) == 0) {
+				return 0;
+			}
+
+			return 1;
+		}
+
+		public void setResult(int index, int result) {
+			int mask = 1 << index;
+
+			if (result < 0) {
+				mTestValid &= ~mask;
+			} else {
+				mTestValid |= mask;
+
+				if (result > 0) {
+					mTestResult |= mask;
+				} else {
+					mTestResult &= ~mask;
+
+				}
+			}
+		}
+
+		@Override
+		public String toString() {
+			return String.format("valid = 0x%08x, result = 0x%08x", mTestValid, mTestResult);
+		}
+	}
+
 	public static class JwaooToyResponse {
 
 		private byte[] mBytes;
@@ -654,8 +724,12 @@ public class JwaooBleToy extends CavanBleGatt {
 			return mBytes[1];
 		}
 
+		public int length() {
+			return mBytes.length;
+		}
+
 		public boolean getBool() {
-			if (getType() != JWAOO_TOY_RSP_BOOL || mBytes.length != 3) {
+			if (getType() != JWAOO_TOY_RSP_BOOL || length() != 3) {
 				return false;
 			}
 
@@ -663,7 +737,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		public byte getValue8(byte defValue) {
-			if (getType() != JWAOO_TOY_RSP_U8 || mBytes.length != 3) {
+			if (getType() != JWAOO_TOY_RSP_U8 || length() != 3) {
 				return defValue;
 			}
 
@@ -671,7 +745,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		public short getValue16(short defValue) {
-			if (getType() != JWAOO_TOY_RSP_U16 || mBytes.length != 4) {
+			if (getType() != JWAOO_TOY_RSP_U16 || length() != 4) {
 				return defValue;
 			}
 
@@ -679,7 +753,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		public int getValue32(int defValue) {
-			if (getType() != JWAOO_TOY_RSP_U32 || mBytes.length != 6) {
+			if (getType() != JWAOO_TOY_RSP_U32 || length() != 6) {
 				return defValue;
 			}
 
@@ -691,7 +765,7 @@ public class JwaooBleToy extends CavanBleGatt {
 				return null;
 			}
 
-			return new String(mBytes, 2, mBytes.length - 2);
+			return new String(mBytes, 2, length() - 2);
 		}
 
 		public byte[] getData() {
@@ -700,6 +774,14 @@ public class JwaooBleToy extends CavanBleGatt {
 			}
 
 			return CavanJava.ArrayCopySkip(mBytes, 2);
+		}
+
+		public JwaooToyTestResult getTestResult() {
+			if (getType() != JWAOO_TOY_RSP_DATA || length() != 6) {
+				return null;
+			}
+
+			return new JwaooToyTestResult(mBytes);
 		}
 
 		public static boolean getBool(JwaooToyResponse response) {

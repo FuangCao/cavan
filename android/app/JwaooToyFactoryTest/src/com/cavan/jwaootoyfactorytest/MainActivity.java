@@ -30,12 +30,14 @@ import com.cavan.java.CavanJava;
 import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
 import com.jwaoo.android.JwaooToySensor;
+import com.jwaoo.android.JwaooBleToy.JwaooToyTestResult;
 
 public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
-	private static final int MSG_SENSOR_DATA = 10;
-	private static final int MSG_KEY_STATE = 11;
-	private static final int MSG_BATTERY_STATE = 12;
+	private static final int MSG_SET_TEST_ITEM = 10;
+	private static final int MSG_SENSOR_DATA = 11;
+	private static final int MSG_KEY_STATE = 12;
+	private static final int MSG_BATTERY_STATE = 13;
 
 	private Button mButtonPass;
 	private Button mButtonFail;
@@ -48,35 +50,39 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	private int mTestItem;
 	private boolean mAutoTestEnable;
 
-	private BaseTestFragment[] mTestFragmanets = {
-		new TestResultFragment(),
-		new ButtonTestFragment(),
-		new CapacityTestFragment(),
-		new ChargeTestFragment(),
-		new LedTestFragment(),
-		new MotoTestFragment(),
+	private JwaooToyTestResult mTestResult;
+	private TestResultFragment mTestResultFragment = new TestResultFragment();
+
+	private TestItemFragment[] mTestItemFragmanets = {
+		new ButtonTestFragment(0),
+		new CapacityTestFragment(1),
+		new ChargeTestFragment(2),
+		new LedTestFragment(3),
+		new MotoTestFragment(4),
 	};
 
 	public void setTestItem(int item) {
-		if (item < 0 || item >= mTestFragmanets.length) {
-			item = 0;
-		}
+		BaseTestFragment fragment;
 
-		if (item > 0) {
+		mButtonPass.setVisibility(View.INVISIBLE);
+
+		if (item < 0 || item >= mTestItemFragmanets.length) {
+			item = -1;
+			fragment = mTestResultFragment;
+
+			mButtonFail.setVisibility(View.INVISIBLE);
+			mButtonStart.setVisibility(View.VISIBLE);
+
+		} else {
 			if (mBleToy == null || mBleToy.isConnected() == false) {
 				return;
 			}
 
-			mButtonFail.setVisibility(View.VISIBLE);
-			mButtonPass.setVisibility(View.VISIBLE);
-			mButtonStart.setVisibility(View.INVISIBLE);
-		} else {
-			mButtonFail.setVisibility(View.INVISIBLE);
-			mButtonPass.setVisibility(View.INVISIBLE);
-			mButtonStart.setVisibility(View.VISIBLE);
-		}
+			fragment = mTestItemFragmanets[item];
 
-		BaseTestFragment fragment = mTestFragmanets[item];
+			mButtonFail.setVisibility(View.VISIBLE);
+			mButtonStart.setVisibility(View.INVISIBLE);
+		}
 
 		FragmentTransaction transaction = getFragmentManager().beginTransaction();
 		transaction.replace(R.id.frame_content, fragment);
@@ -84,17 +90,15 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		setTitle(fragment.getTestName());
 
-
-
 		mTestItem = item;
 	}
 
 	public void gotoNextTest(boolean pass) {
-		if (mTestItem > 0) {
-			((TestItemFragment) mTestFragmanets[mTestItem]).setTestResult(CavanJava.getBoolValueInt(pass));
+		if (mTestItem >= 0) {
+			mTestItemFragmanets[mTestItem].setTestResult(CavanJava.getBoolValueInt(pass));
 		}
 
-		setTestItem(mAutoTestEnable ? (mTestItem + 1) : 0);
+		setTestItem(mAutoTestEnable ? (mTestItem + 1) : -1);
 	}
 
 	@SuppressWarnings("deprecation")
@@ -113,17 +117,18 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		mDrawableFail.setBounds(0, 0, mDrawableFail.getMinimumWidth(), mDrawableFail.getMinimumHeight());
 
 		mButtonPass = (Button) findViewById(R.id.buttonPass);
+		mButtonPass.setVisibility(View.INVISIBLE);
 		mButtonPass.setOnClickListener(this);
 
 		mButtonFail = (Button) findViewById(R.id.buttonFail);
+		mButtonFail.setVisibility(View.INVISIBLE);
 		mButtonFail.setOnClickListener(this);
 
 		mButtonStart = (Button) findViewById(R.id.buttonStart);
+		mButtonStart.setVisibility(View.INVISIBLE);
 		mButtonStart.setOnClickListener(this);
 
 		showScanActivity();
-
-		setTestItem(0);
 	}
 
 	@Override
@@ -139,9 +144,20 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 	@Override
 	protected void handleMessage(Message msg) {
-		BaseTestFragment fragment = mTestFragmanets[mTestItem];
-		if (fragment.isInitialized()) {
-			fragment.handleMessage(msg);
+		switch (msg.what) {
+		case MSG_SET_TEST_ITEM:
+			setTestItem(msg.arg1);
+			break;
+
+		default:
+			if (mTestItem < 0) {
+				break;
+			}
+
+			TestItemFragment fragment = mTestItemFragmanets[mTestItem];
+			if (fragment.isInitialized()) {
+				fragment.handleMessage(msg);
+			}
 		}
 	}
 
@@ -164,6 +180,14 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 					CavanAndroid.eLog("Failed to setFactoryModeEnable");
 					return false;
 				}
+
+				mTestResult = mBleToy.readTestResult();
+				if (mTestResult == null) {
+					CavanAndroid.eLog("Failed to readTestResult");
+					return false;
+				}
+
+				mHandler.obtainMessage(MSG_SET_TEST_ITEM, -1, 0).sendToTarget();
 
 				return super.onInitialize();
 			}
@@ -246,7 +270,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		case R.id.buttonStart:
 			mAutoTestEnable = true;
-			setTestItem(1);
+			setTestItem(0);
 			break;
 		}
 	}
@@ -299,7 +323,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 					view = new TextView(MainActivity.this);
 				}
 
-				TestItemFragment fragment = (TestItemFragment) mTestFragmanets[position + 1];
+				TestItemFragment fragment = mTestItemFragmanets[position];
 
 				view.setTextColor(Color.BLACK);
 				view.setBackgroundColor(Color.WHITE);
@@ -324,9 +348,15 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 			@Override
 			public int getCount() {
-				return mTestFragmanets.length - 1;
+				return mTestItemFragmanets.length;
 			}
 		};
+
+		public void updateData() {
+			if (mListView != null) {
+				mListView.postInvalidate();
+			}
+		}
 
 		@Override
 		protected int getNameResource() {
@@ -350,28 +380,48 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		@Override
 		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 			mAutoTestEnable = false;
-			setTestItem(position + 1);
+			setTestItem(position);
 		}
 	}
 
 	public abstract class TestItemFragment extends BaseTestFragment {
 
-		private int mTestResult = -1;
+		private int mIndex;
 
 		public void finishTest() {}
 
-		public int getTestResult() {
-			return mTestResult;
+		public TestItemFragment(int index) {
+			mIndex = index;
 		}
 
-		public void setTestResult(int result) {
-			mTestResult = result;
+		public int getTestResult() {
+			if (mTestResult == null) {
+				return -1;
+			}
+
+			return mTestResult.getResult(mIndex);
+		}
+
+		public boolean setTestResult(int result) {
+			if (mTestResult == null) {
+				return false;
+			}
+
+			mTestResult.setResult(mIndex, result);
+
+			if (mBleToy == null) {
+				return false;
+			}
+
+			return mBleToy.writeTestResult(mTestResult);
 		}
 
 		public Drawable getIcon() {
-			if (mTestResult < 0) {
+			int result = getTestResult();
+
+			if (result < 0) {
 				return mDrawableNoTest;
-			} else if (mTestResult > 0) {
+			} else if (result > 0) {
 				return mDrawablePass;
 			} else {
 				return mDrawableFail;
@@ -381,17 +431,15 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		public void setPassEnable() {
 			mButtonPass.setVisibility(View.VISIBLE);
 		}
-
-		@Override
-		public void onStart() {
-			mButtonPass.setVisibility(View.INVISIBLE);
-			super.onStart();
-		}
 	}
 
 	public class ButtonTestFragment extends TestItemFragment {
 
 		private JwaooTestButton[] mButtons;
+
+		public ButtonTestFragment(int index) {
+			super(index);
+		}
 
 		@Override
 		protected int getNameResource() {
@@ -454,6 +502,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		private TextView[] mCapacityViews;
 
+		public CapacityTestFragment(int index) {
+			super(index);
+		}
+
 		@Override
 		protected int getNameResource() {
 			return R.string.test_item_capacity_sensor;
@@ -512,6 +564,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		private TextView mTextViewBatteryVoltage;
 		private TextView mTextViewBatteryCapacity;
 
+		public ChargeTestFragment(int index) {
+			super(index);
+		}
+
 		@Override
 		protected int getNameResource() {
 			return R.string.test_item_charge;
@@ -566,6 +622,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		private int mLedCountBatt;
 		private CheckBox mCheckBoxLedBt;
 		private CheckBox mCheckBoxLedBatt;
+
+		public LedTestFragment(int index) {
+			super(index);
+		}
 
 		@Override
 		protected int getNameResource() {
@@ -640,6 +700,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				}
 			}
 		};
+
+		public MotoTestFragment(int index) {
+			super(index);
+		}
 
 		@Override
 		protected int getNameResource() {
