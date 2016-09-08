@@ -3,39 +3,34 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <Button
-        android:id="@+id/buttonKeyDown"
+	<com.cavan.jwaootoyfactorytest.JwaooTestButton
+        android:id="@+id/buttonKey0"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonKey1"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="20dp" />
+
+	<com.cavan.jwaootoyfactorytest.JwaooTestButton
+        android:id="@+id/buttonKey1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonKey2"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="20dp" />
+
+    <com.cavan.jwaootoyfactorytest.JwaooTestButton
+        android:id="@+id/buttonKey2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:text="@string/text_key_down" />
+        android:layout_centerVertical="true" />
 
-    <Button
-        android:id="@+id/buttonKeyMax"
+    <com.cavan.jwaootoyfactorytest.JwaooTestButton
+        android:id="@+id/buttonKey3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/buttonKeyDown"
+        android:layout_below="@+id/buttonKey2"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="20dp"
-        android:text="@string/text_key_max" />
-
-    <Button
-        android:id="@+id/buttonKeyO"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/buttonKeyDown"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="20dp"
-        android:text="@string/text_key_o" />
-
-    <Button
-        android:id="@+id/buttonKeyUp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/buttonKeyO"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="20dp"
-        android:text="@string/text_key_up" />
-
+        android:layout_marginTop="20dp" />
 </RelativeLayout>

@@ -38,6 +38,18 @@ public class CavanRangeValue {
 		return (mMaxValue + mMinValue) / 2;
 	}
 
+	public boolean putValue(double value) {
+		if (value > mMaxValue) {
+			mMaxValue = value;
+		} else if (value < mMinValue) {
+			mMinValue = value;
+		} else {
+			return false;
+		}
+
+		return true;
+	}
+
 	@Override
 	public String toString() {
 		return String.format("[%4.2f, %4.2f]", mMinValue, mMaxValue);

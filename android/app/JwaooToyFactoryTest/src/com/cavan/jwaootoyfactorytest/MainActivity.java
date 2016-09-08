@@ -377,11 +377,21 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				return mDrawableFail;
 			}
 		}
+
+		public void setPassEnable() {
+			mButtonPass.setVisibility(View.VISIBLE);
+		}
+
+		@Override
+		public void onStart() {
+			mButtonPass.setVisibility(View.INVISIBLE);
+			super.onStart();
+		}
 	}
 
 	public class ButtonTestFragment extends TestItemFragment {
 
-		private Button[] mKeyViews;
+		private JwaooTestButton[] mButtons;
 
 		@Override
 		protected int getNameResource() {
@@ -395,12 +405,28 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		@Override
 		protected boolean doInitialize() {
-			mKeyViews = new Button[] {
-				(Button) findViewById(R.id.buttonKeyUp),
-				(Button) findViewById(R.id.buttonKeyO),
-				(Button) findViewById(R.id.buttonKeyDown),
-				(Button) findViewById(R.id.buttonKeyMax),
+			mButtons = new JwaooTestButton[] {
+				(JwaooTestButton) findViewById(R.id.buttonKey0),
+				(JwaooTestButton) findViewById(R.id.buttonKey1),
+				(JwaooTestButton) findViewById(R.id.buttonKey2),
+				(JwaooTestButton) findViewById(R.id.buttonKey3),
 			};
+
+			CharSequence[] texts = getResources().getTextArray(R.array.text_keys);
+
+			for (int i = 0; i < mButtons.length && i < texts.length; i++) {
+				mButtons[i].setTextRaw(texts[i].toString());
+			}
+
+			return true;
+		}
+
+		private boolean isTestPass() {
+			for (JwaooTestButton button : mButtons) {
+				if (button.isTestFail()) {
+					return false;
+				}
+			}
 
 			return true;
 		}
@@ -413,8 +439,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 				CavanAndroid.eLog("code = " + code + ", value = " + value);
 
-				if (code >= 0 && code < mKeyViews.length) {
-					mKeyViews[code].setBackgroundColor(value > 0 ? Color.GREEN : Color.GRAY);
+				if (code >= 0 && code < mButtons.length) {
+					mButtons[code].setPressState(value > 0);
+
+					if (isTestPass()) {
+						gotoNextTest(true);
+					}
 				}
 			}
 		}
@@ -520,6 +550,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 					mTextViewBatteryState.setText(Integer.toString(msg.arg1));
 				}
 
+				if ((state & 2) != 0) {
+					setPassEnable();
+				}
+
 				mTextViewBatteryVoltage.setText(msg.obj + " (v)");
 				mTextViewBatteryCapacity.setText(msg.arg2 + "%");
 			}
@@ -528,8 +562,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 	public class LedTestFragment extends TestItemFragment implements OnCheckedChangeListener {
 
-		private CheckBox mCheckBoxLedBattery;
-		private CheckBox mCheckBoxLedBluetooth;
+		private int mLedCountBt;
+		private int mLedCountBatt;
+		private CheckBox mCheckBoxLedBt;
+		private CheckBox mCheckBoxLedBatt;
 
 		@Override
 		protected int getNameResource() {
@@ -543,25 +579,40 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		@Override
 		protected boolean doInitialize() {
-			mCheckBoxLedBattery = (CheckBox) findViewById(R.id.checkBoxLedBattery);
-			mCheckBoxLedBattery.setOnCheckedChangeListener(this);
+			mCheckBoxLedBatt = (CheckBox) findViewById(R.id.checkBoxLedBattery);
+			mCheckBoxLedBatt.setOnCheckedChangeListener(this);
 
-			mCheckBoxLedBluetooth = (CheckBox) findViewById(R.id.checkBoxLedBluetooth);
-			mCheckBoxLedBluetooth.setOnCheckedChangeListener(this);
+			mCheckBoxLedBt = (CheckBox) findViewById(R.id.checkBoxLedBluetooth);
+			mCheckBoxLedBt.setOnCheckedChangeListener(this);
 
 			return true;
+		}
+
+		@Override
+		public void onStart() {
+			mLedCountBt = 0;
+			mLedCountBatt = 0;
+			super.onStart();
 		}
 
 		@Override
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 			switch (buttonView.getId()) {
 			case R.id.checkBoxLedBattery:
-				mBleToy.setLedEnable(1, isChecked);
+				if (mBleToy.setLedEnable(1, isChecked)) {
+					mLedCountBatt++;
+				}
 				break;
 
 			case R.id.checkBoxLedBluetooth:
-				mBleToy.setLedEnable(2, isChecked);
+				if (mBleToy.setLedEnable(2, isChecked)) {
+					mLedCountBt++;
+				}
 				break;
+			}
+
+			if (mLedCountBatt > 1 && mLedCountBt > 1) {
+				setPassEnable();
 			}
 		}
 
@@ -582,7 +633,11 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 			@Override
 			public void run() {
-				mBleToy.setMotoMode(0, mLevel);
+				if (mBleToy.setMotoMode(0, mLevel)) {
+					if (mLevel > mSeekBar.getMax() / 2) {
+						setPassEnable();
+					}
+				}
 			}
 		};
 

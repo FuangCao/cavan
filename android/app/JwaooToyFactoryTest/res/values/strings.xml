@@ -11,10 +11,10 @@
     <string name="test_item_led">LED灯测试</string>
     <string name="test_item_charge">充电测试</string>
     <string-array name="text_keys">
-        <item >按键1</item>
-        <item >按键2</item>
-        <item >按键3</item>
-        <item >按键4</item>
+        <item >震动增强键</item>
+        <item >震动模式键</item>
+        <item >震动减弱键</item>
+        <item >高潮键</item>
     </string-array>
     <string-array name="text_items">
         <item >按键</item>
@@ -32,10 +32,6 @@
     </string-array>
         <string name="text_pass">通过</string>
         <string name="text_fail">失败</string>
-        <string name="text_key_up">震动增强键</string>
-        <string name="text_key_o">震动模式键</string>
-        <string name="text_key_down">震动减弱键</string>
-        <string name="text_key_max">高潮键</string>
         <string name="battery_voltage">电池电压：</string>
         <string name="battery_capacity">电池电量：</string>
         <string name="battery_state">电池状态：</string>
