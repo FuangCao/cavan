@@ -36,6 +36,7 @@ import com.cavan.java.CavanJava;
 public class MainActivity extends PreferenceActivity implements OnPreferenceChangeListener {
 
 	public static final String KEY_IP_ADDRESS = "ip_address";
+	public static final String KEY_AUTO_UNLOCK = "auto_unlock";
 	public static final String KEY_FLOAT_TIMER = "float_timer";
 	public static final String KEY_MESSAGE_SHOW = "message_show";
 	public static final String KEY_INPUT_METHOD_SELECT = "input_method_select";

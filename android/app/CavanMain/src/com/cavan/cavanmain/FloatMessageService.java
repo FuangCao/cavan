@@ -38,7 +38,8 @@ public class FloatMessageService extends FloatWidowService {
 	private static final int MSG_SHOW_INPUT_METHOD_PICKER = 1;
 
 	private int mLastSecond;
-	private TextView mTimeView;
+	private TextView mTextViewTime;
+	private TextView mTextViewAutoUnlock;
 	private List<String> mCodeList = new ArrayList<String>();
 
 	private Handler mHandler = new Handler() {
@@ -59,8 +60,24 @@ public class FloatMessageService extends FloatWidowService {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
-			if (Intent.ACTION_SCREEN_OFF.equals(action)) {
+
+			CavanAndroid.eLog("action = " + action);
+
+			switch (action) {
+			case Intent.ACTION_SCREEN_OFF:
 				CavanAndroid.setLockScreenEnable(FloatMessageService.this, true);
+				break;
+
+			case Intent.ACTION_SCREEN_ON:
+				SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(FloatMessageService.this);
+				if (preferences != null && preferences.getBoolean(MainActivity.KEY_AUTO_UNLOCK, false)) {
+					unlockScreen();
+				}
+				break;
+
+			case Intent.ACTION_USER_PRESENT:
+				mTextViewAutoUnlock.setVisibility(View.INVISIBLE);
+				break;
 			}
 		}
 	};
@@ -78,17 +95,17 @@ public class FloatMessageService extends FloatWidowService {
 
 		@Override
 		public boolean getTimerState() throws RemoteException {
-			return mTimeView != null && mTimeView.getVisibility() != View.INVISIBLE;
+			return mTextViewTime != null && mTextViewTime.getVisibility() != View.INVISIBLE;
 		}
 
 		@Override
 		public int addMessage(CharSequence message, CharSequence code) throws RemoteException {
-			CavanAndroid.setLockScreenEnable(FloatMessageService.this, false);
-
 			TextView view = (TextView) FloatMessageService.this.addText(message, -1);
 			if (view == null) {
 				return -1;
 			}
+
+			unlockScreen();
 
 			if (code != null) {
 				mCodeList.add(code.toString());
@@ -142,11 +159,11 @@ public class FloatMessageService extends FloatWidowService {
 			Calendar calendar = Calendar.getInstance();
 			int second = calendar.get(Calendar.SECOND);
 			if (second == mLastSecond) {
-				mTimeView.postDelayed(this, 100);
+				mTextViewTime.postDelayed(this, 100);
 			} else {
 				mLastSecond = second;
-				mTimeView.postDelayed(this, 1000);
-				mTimeView.setText(getTimeText(calendar, second));
+				mTextViewTime.postDelayed(this, 1000);
+				mTextViewTime.setText(getTimeText(calendar, second));
 			}
 		}
 	};
@@ -155,6 +172,11 @@ public class FloatMessageService extends FloatWidowService {
 		Intent intent = new Intent(context, FloatMessageService.class);
 		context.startService(intent);
 		return intent;
+	}
+
+	public void unlockScreen() {
+		mTextViewAutoUnlock.setVisibility(View.VISIBLE);
+		CavanAndroid.setLockScreenEnable(FloatMessageService.this, false);
 	}
 
 	public String getTimeText(Calendar calendar, int second) {
@@ -173,24 +195,27 @@ public class FloatMessageService extends FloatWidowService {
 	}
 
 	public boolean setTimerEnable(boolean enable) {
-		if (mTimeView == null) {
+		if (mTextViewTime == null) {
 			return false;
 		}
 
 		if (enable) {
 			mLastSecond = -1;
-			mTimeView.setVisibility(View.VISIBLE);
-			mTimeView.post(mRunnableTime);
+			mTextViewTime.setVisibility(View.VISIBLE);
+			mTextViewTime.post(mRunnableTime);
 		} else {
-			mTimeView.removeCallbacks(mRunnableTime);
-			mTimeView.setVisibility(View.INVISIBLE);
+			mTextViewTime.removeCallbacks(mRunnableTime);
+			mTextViewTime.setVisibility(View.INVISIBLE);
 		}
 
 		return true;
 	}
 
 	public void initTextView(TextView view, CharSequence text) {
-		view.setText(text);
+		if (text != null) {
+			view.setText(text);
+		}
+
 		view.setMaxLines(1);
 		view.setPadding(TEXT_PADDING, 0, TEXT_PADDING, 0);
 		view.setBackgroundResource(R.drawable.desktop_timer_bg);
@@ -215,7 +240,10 @@ public class FloatMessageService extends FloatWidowService {
 
 	@Override
 	public void onCreate() {
-		IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(Intent.ACTION_SCREEN_OFF);
+		filter.addAction(Intent.ACTION_SCREEN_ON);
+		filter.addAction(Intent.ACTION_USER_PRESENT);
 		registerReceiver(mReceiver, filter );
 		super.onCreate();
 	}
@@ -258,12 +286,11 @@ public class FloatMessageService extends FloatWidowService {
 
 	@Override
 	protected boolean doInitialize() {
-		mTimeView = (TextView) findViewById(R.id.textViewTime);
+		mTextViewTime = (TextView) findViewById(R.id.textViewTime);
 
-		initTextView(mTimeView, getTimeText());
-
-		mTimeView.setTextSize(TEXT_SIZE_TIME);
-		mTimeView.setTextColor(TEXT_COLOR_TIME);
+		initTextView(mTextViewTime, getTimeText());
+		mTextViewTime.setTextSize(TEXT_SIZE_TIME);
+		mTextViewTime.setTextColor(TEXT_COLOR_TIME);
 
 		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 		if (preferences != null && preferences.getBoolean(MainActivity.KEY_FLOAT_TIMER, false)) {
@@ -271,6 +298,12 @@ public class FloatMessageService extends FloatWidowService {
 		} else {
 			setTimerEnable(false);
 		}
+
+		mTextViewAutoUnlock = (TextView) findViewById(R.id.textViewAutoUnlock);
+
+		initTextView(mTextViewAutoUnlock, null);
+		mTextViewAutoUnlock.setTextSize(TEXT_SIZE_TIME);
+		mTextViewAutoUnlock.setTextColor(TEXT_COLOR_TIME);
 
 		return super.doInitialize();
 	}

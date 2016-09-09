@@ -39,5 +39,6 @@
     <string name="text_notification_access">通知读取权限</string>
     <string name="cavan_input_method">曹福昂输入法</string>
     <string name="text_input_method_select">输入法选择</string>
+    <string name="text_auto_unlock">自动解锁</string>
 
 </resources>
