@@ -38,6 +38,7 @@ public class FloatMessageService extends FloatWidowService {
 	private static final int MSG_SHOW_INPUT_METHOD_PICKER = 1;
 
 	private int mLastSecond;
+	private boolean mUserPresent;
 	private TextView mTextViewTime;
 	private TextView mTextViewAutoUnlock;
 	private List<String> mCodeList = new ArrayList<String>();
@@ -66,17 +67,27 @@ public class FloatMessageService extends FloatWidowService {
 			switch (action) {
 			case Intent.ACTION_SCREEN_OFF:
 				CavanAndroid.setLockScreenEnable(FloatMessageService.this, true);
+				mUserPresent = false;
 				break;
 
 			case Intent.ACTION_SCREEN_ON:
-				SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(FloatMessageService.this);
-				if (preferences != null && preferences.getBoolean(MainActivity.KEY_AUTO_UNLOCK, false)) {
-					unlockScreen();
+				if (getTextCount() <= 0) {
+					SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(FloatMessageService.this);
+					if (preferences == null) {
+						break;
+					}
+
+					if (!preferences.getBoolean(MainActivity.KEY_AUTO_UNLOCK, false)) {
+						break;
+					}
 				}
+
+				unlockScreen();
 				break;
 
 			case Intent.ACTION_USER_PRESENT:
 				mTextViewAutoUnlock.setVisibility(View.INVISIBLE);
+				mUserPresent = true;
 				break;
 			}
 		}
@@ -174,9 +185,15 @@ public class FloatMessageService extends FloatWidowService {
 		return intent;
 	}
 
-	public void unlockScreen() {
+	public boolean unlockScreen() {
+		if (mUserPresent) {
+			return false;
+		}
+
 		mTextViewAutoUnlock.setVisibility(View.VISIBLE);
 		CavanAndroid.setLockScreenEnable(FloatMessageService.this, false);
+
+		return true;
 	}
 
 	public String getTimeText(Calendar calendar, int second) {
