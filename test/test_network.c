@@ -318,7 +318,6 @@ out_network_client_close:
 	return ret;
 }
 
-
 static int do_test_write_read(int argc, char *argv[])
 {
 	int i;
@@ -360,7 +359,75 @@ out_network_client_close:
 	return ret;
 }
 
+static int do_test_keypad(int argc, char *argv[])
+{
+	int ret;
+	const char *url;
+	struct network_client client;
 
+	assert(argc > 1);
+
+	url = argv[1];
+	pr_pos_info();
+
+	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	if (ret < 0) {
+		pr_red_info("network_client_open");
+		return -EFAULT;
+	}
+	pr_pos_info();
+
+	while (1) {
+		u8 code;
+
+		switch (getchar()) {
+		case 'l':
+			code = 21;
+			break;
+
+		case 'r':
+			code = 22;
+			break;
+
+		case 'd':
+			code = 20;
+			break;
+
+		case 'u':
+			code = 19;
+			break;
+
+		case 't':
+			code = 61;
+			break;
+
+		case 'n':
+			code = 66;
+			break;
+
+		case 'b':
+			code = 4;
+			break;
+
+		case 'h':
+			code = 3;
+			break;
+
+		default:
+			continue;
+		}
+
+		println("code = %d", code);
+
+		if (client.send(&client, &code, 1) <= 0) {
+			break;
+		}
+	}
+
+	network_client_close(&client);
+
+	return ret;
+}
 
 CAVAN_COMMAND_MAP_START {
 	{ "client", do_test_client },
@@ -372,4 +439,5 @@ CAVAN_COMMAND_MAP_START {
 	{ "route", do_test_route },
 	{ "read_write", do_test_read_write },
 	{ "write_read", do_test_write_read },
+	{ "keypad", do_test_keypad },
 } CAVAN_COMMAND_MAP_END;

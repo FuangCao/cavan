@@ -1,5 +1,9 @@
 package com.cavan.cavanmain;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.List;
 
 import android.app.ActivityManager;
@@ -17,6 +21,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
+import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -57,6 +62,8 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	private int mActivityRepeat;
 	private String mActivityClassName;
 
+	private String mCode;
+	private int mCodeDelay;
 	private List<String> mCodes;
 	private GridView mCodeGridView;
 
@@ -69,6 +76,9 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	private int mSelection;
 	private int mSelectionStart;
 	private int mSelectionEnd;
+
+	private ServerSocket mServerSocket;
+	private Socket mClientSocket;
 
 	private Handler mHandler = new Handler() {
 
@@ -188,8 +198,10 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		ComponentName info = manager.getRunningTasks(1).get(0).topActivity;
 		String pkgName = info.getPackageName();
 		String clsName = info.getClassName();
+		long delayMillis = 500;
 
-		CavanAndroid.efLog("package = %s, activity = %s", pkgName, clsName);
+		CavanAndroid.eLog("activity = " + clsName);
+		CavanAndroid.eLog("code = " + code + ", delay = " + mCodeDelay);
 
 		if (!clsName.equals(mActivityClassName)) {
 			mActivityClassName = clsName;
@@ -199,7 +211,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		if (pkgName.equals("com.eg.android.AlipayGphone")) {
 			CavanAndroid.eLog("mActivityRepeat = " + mActivityRepeat);
 
-			if (mActivityRepeat < 5) {
+			if (mActivityRepeat < 100) {
 				if (clsName.equals("com.alipay.android.phone.discovery.envelope.HomeActivity")) {
 					if (mActivityRepeat < 3) {
 						CavanAndroid.pfLog("index = %d, code = %s", mCodeIndex, code);
@@ -209,8 +221,14 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 					}
 				} else if (clsName.equals("com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity")) {
 					if (mCodePending) {
-						sendDownUpKeyEvents(KeyEvent.KEYCODE_DPAD_DOWN);
-						sendDownUpKeyEvents(KeyEvent.KEYCODE_ENTER);
+						if (mCodeDelay > 0) {
+							CavanAndroid.showToast(this, String.format("%d 秒后自动提交", mCodeDelay));
+							delayMillis = 1000;
+							mCodeDelay--;
+						} else {
+							sendKeyDownUp(KeyEvent.KEYCODE_DPAD_DOWN);
+							sendKeyDownUp(KeyEvent.KEYCODE_ENTER);
+						}
 					} else {
 						sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
 					}
@@ -233,7 +251,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		}
 
 		mHandler.removeMessages(MSG_POST_CODE);
-		mHandler.sendEmptyMessageDelayed(MSG_POST_CODE, 500);
+		mHandler.sendEmptyMessageDelayed(MSG_POST_CODE, delayMillis);
 	}
 
 	public void setCodeIndex(int index) {
@@ -246,7 +264,19 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		if (mCodes == null) {
 			setCodeIndex(0);
 		} else if (mCodeIndex < mCodes.size()) {
-			autoSendRedPacketCode(mCodes.get(mCodeIndex));
+			String code = mCodes.get(mCodeIndex);
+			if (code != mCode) {
+				try {
+					mCodeDelay = mService.getCodeDelay(code);
+				} catch (RemoteException e) {
+					e.printStackTrace();
+					mCodeDelay = 0;
+				}
+
+				mCode = code;
+			}
+
+			autoSendRedPacketCode(code);
 		} else {
 			setCodeIndex(mCodes.size());
 		}
@@ -276,6 +306,23 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		return true;
 	}
 
+	public boolean sendKeyEvent(int code, int value) {
+		InputConnection conn = getCurrentInputConnection();
+		if (conn == null) {
+			return false;
+		}
+
+		long time = System.currentTimeMillis();
+		int action = (value == 0) ? KeyEvent.ACTION_UP : KeyEvent.ACTION_DOWN;
+		KeyEvent event = new KeyEvent(time, time, action, code, 0, 0, KeyCharacterMap.VIRTUAL_KEYBOARD, 0, 0);
+
+		return conn.sendKeyEvent(event);
+	}
+
+	public boolean sendKeyDownUp(int code) {
+		return sendKeyEvent(code, 1) && sendKeyEvent(code, 0);
+	}
+
 	@Override
 	public void onCreate() {
 		mManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
@@ -285,13 +332,35 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 		registerReceiver(mReceiver, new IntentFilter(FloatMessageService.ACTION_CODE_UPDATED));
 
+		KeypadThread thread = new KeypadThread();
+		thread.start();
+
 		super.onCreate();
 	}
 
 	@Override
 	public void onDestroy() {
+		if (mClientSocket != null) {
+			try {
+				mClientSocket.close();
+				mClientSocket = null;
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		if (mServerSocket != null) {
+			try {
+				mServerSocket.close();
+				mServerSocket = null;
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
 		unregisterReceiver(mReceiver);
 		unbindService(mConnection);
+
 		super.onDestroy();
 	}
 
@@ -472,5 +541,65 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 	@Override
 	public void swipeUp() {
+	}
+
+	public class KeypadThread extends Thread {
+
+		@Override
+		public void run() {
+			try {
+				mServerSocket = new ServerSocket(23456);
+				CavanAndroid.eLog("server = " + mServerSocket);
+
+				while (mServerSocket != null) {
+					mClientSocket = mServerSocket.accept();
+					if (mClientSocket == null) {
+						break;
+					}
+
+					CavanAndroid.eLog("client = " + mClientSocket);
+
+					try {
+						InputStream stream = mClientSocket.getInputStream();
+
+						byte[] bytes = new byte[1024];
+
+						while (true) {
+							int length = stream.read(bytes);
+							if (length <= 0) {
+								break;
+							}
+
+							for (int i = 0; i < length; i++) {
+								int code = bytes[i] & 0xFF;
+
+								CavanAndroid.eLog("code = " + code);
+								sendKeyDownUp(code);
+							}
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					} finally {
+						try {
+							mClientSocket.close();
+							mClientSocket = null;
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				if (mServerSocket != null) {
+					try {
+						mServerSocket.close();
+						mServerSocket = null;
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
 	}
 }
