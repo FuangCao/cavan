@@ -9,5 +9,5 @@ interface IFloatMessageService {
 	boolean hasMessage(CharSequence message);
 	void removeMessage(CharSequence message);
 	List<String> getMessages();
-	List<String> getCodes();
+	List<RedPacketCode> getCodes();
 }

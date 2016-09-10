@@ -152,11 +152,11 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		@Override
-		public List<String> getCodes() throws RemoteException {
-			List<String> codes = new ArrayList<String>();
+		public List<RedPacketCode> getCodes() throws RemoteException {
+			List<RedPacketCode> codes = new ArrayList<RedPacketCode>();
 
 			for (RedPacketCode code : mMessageCodeMap.values()) {
-				codes.add(code.getCode());
+				codes.add(code);
 			}
 
 			return codes;

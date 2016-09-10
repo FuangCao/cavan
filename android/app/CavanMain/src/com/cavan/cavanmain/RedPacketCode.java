@@ -14,6 +14,7 @@ public class RedPacketCode implements Parcelable {
 
 	private long mTime;
 	private String mCode;
+	private boolean mComplete;
 
 	public RedPacketCode(String code) {
 		mCode = code;
@@ -59,6 +60,14 @@ public class RedPacketCode implements Parcelable {
 		}
 
 		return 0;
+	}
+
+	public void setComplete() {
+		mComplete = true;
+	}
+
+	public boolean isCompleted() {
+		return mComplete;
 	}
 
 	@Override

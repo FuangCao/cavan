@@ -18,7 +18,9 @@ import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.inputmethodservice.KeyboardView.OnKeyboardActionListener;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.RemoteException;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
@@ -38,7 +40,8 @@ import com.cavan.java.CavanString;
 
 public class CavanInputMethod extends InputMethodService implements OnClickListener, OnKeyboardActionListener {
 
-	public static final int CODE_MAX_COLUMNS = 4;
+	private static final int AUTO_COMMIT_DELAY = 500;
+	private static final int CODE_MAX_COLUMNS = 4;
 
 	public static final int KEYCODE_COPY = 1;
 	public static final int KEYCODE_PASTE = 2;
@@ -58,11 +61,10 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	private String mActivityClassName;
 
 	private GridView mCodeGridView;
-	private List<String> mCodes = new ArrayList<String>();
-
-	private RedPacketCode mCode;
-	private AutoCommitThread mAutoCommitThread;
-	private List<RedPacketCode> mAutoSendCodes = new ArrayList<RedPacketCode>();
+	private RedPacketCode[] mUiCodes;
+	private RedPacketCode mAutoCommitCode;
+	private List<RedPacketCode> mCodes = new ArrayList<RedPacketCode>();
+	private AutoCommitHandler mAutoCommitHandler = new AutoCommitHandler();
 
 	private Keyboard mKeyboard;
 	private KeyboardView mKeyboardView;
@@ -88,7 +90,14 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			mService = IFloatMessageService.Stub.asInterface(service);
-			updateData();
+
+			List<RedPacketCode> codes = getRedPacketCode();
+			if (codes != null && codes.size() > 0) {
+				mCodes = codes;
+
+				startAutoCommitThread();
+				updateInputView();
+			}
 		}
 	};
 
@@ -100,73 +109,42 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 			CavanAndroid.eLog("action = " + action);
 
-			synchronized (mAutoSendCodes) {
+			synchronized (mCodes) {
 				switch (action) {
 				case FloatMessageService.ACTION_CODE_ADD:
 					RedPacketCode code = intent.getParcelableExtra("code");
-					mAutoSendCodes.add(code);
+					if (code == null) {
+						break;
+					}
+
+					mCodes.add(code);
 					startAutoCommitThread();
 					break;
 
 				case FloatMessageService.ACTION_CODE_REMOVE:
 					code = intent.getParcelableExtra("code");
-					mAutoSendCodes.remove(code);
+					if (code == null) {
+						break;
+					}
+
+					mCodes.remove(code);
 					break;
 				}
 			}
 
-			updateData();
+			updateInputView();
 		}
 	};
 
-	private BaseAdapter mAdapter = new BaseAdapter() {
+	private Runnable mRunnableUpdateInputView = new Runnable() {
 
 		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			Button view = new Button(CavanInputMethod.this);
-			view.setOnClickListener(CavanInputMethod.this);
-			view.setText(mCodes.get(position));
-			return view;
-		}
+		public void run() {
+			int columns, size;
 
-		@Override
-		public long getItemId(int position) {
-			return 0;
-		}
-
-		@Override
-		public Object getItem(int position) {
-			return null;
-		}
-
-		@Override
-		public int getCount() {
-			return mCodes.size();
-		}
-	};
-
-	public void updateData() {
-		if (mService == null) {
-			return;
-		}
-
-		List<String> codes;
-
-		try {
-			codes = mService.getCodes();
-		} catch (RemoteException e) {
-			e.printStackTrace();
-			return;
-		}
-
-		if (codes != null && mCodeGridView != null) {
-			int columns = codes.size();
-
-			mCodes = codes;
-
-			if (columns > CODE_MAX_COLUMNS) {
+			columns = size = mCodes.size();
+			if (size > CODE_MAX_COLUMNS) {
 				int max = 0;
-				int size = columns;
 
 				for (int i = CODE_MAX_COLUMNS; i > 1; i--) {
 					int remain = size % i;
@@ -182,17 +160,71 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 				}
 			}
 
+			mUiCodes = new RedPacketCode[size];
+			mCodes.toArray(mUiCodes);
+
 			mCodeGridView.setNumColumns(columns);
 			mAdapter.notifyDataSetChanged();
+		}
+	};
+
+	private BaseAdapter mAdapter = new BaseAdapter() {
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			Button view = new Button(CavanInputMethod.this);
+			view.setOnClickListener(CavanInputMethod.this);
+			view.setText(mUiCodes[position].getCode());
+			return view;
+		}
+
+		@Override
+		public long getItemId(int position) {
+			return 0;
+		}
+
+		@Override
+		public Object getItem(int position) {
+			return null;
+		}
+
+		@Override
+		public int getCount() {
+			if (mUiCodes != null) {
+				return mUiCodes.length;
+			}
+
+			return 0;
+		}
+	};
+
+	public List<RedPacketCode> getRedPacketCode() {
+		if (mService == null) {
+			return null;
+		}
+
+		try {
+			return mService.getCodes();
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	public void updateInputView() {
+		if (mCodeGridView != null) {
+			mCodeGridView.post(mRunnableUpdateInputView);
 		}
 	}
 
 	@SuppressWarnings("deprecation")
-	public void autoSendRedPacketCode(RedPacketCode code) {
+	public long autoSendRedPacketCode(RedPacketCode code) {
 		ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
 		ComponentName info = manager.getRunningTasks(1).get(0).topActivity;
 		String pkgName = info.getPackageName();
 		String clsName = info.getClassName();
+		long delayMillis = AUTO_COMMIT_DELAY;
 
 		CavanAndroid.eLog("activity = " + clsName);
 		CavanAndroid.eLog(code.toString());
@@ -208,16 +240,17 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 			if (clsName.equals("com.alipay.android.phone.discovery.envelope.HomeActivity")) {
 				if (mActivityRepeat < 3) {
 					if ((mActivityRepeat & 1) == 0) {
-						mCode = code;
+						mAutoCommitCode = code;
 						sendRedPacketCode(code.getCode());
 					}
 				} else if (mActivityRepeat > 3) {
 					doRemoveCode(code);
 				}
 			} else if (clsName.equals("com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity")) {
-				if (code.equals(mCode)) {
+				if (code.equals(mAutoCommitCode)) {
 					int delay = (int) (code.getDelay() / 1000);
 					if (delay > 0) {
+						delayMillis = 1000;
 						CavanAndroid.showToast(this, String.format("%d 秒后自动提交", delay));
 					} else if (mActivityRepeat < 3) {
 						sendKeyDownUp(KeyEvent.KEYCODE_DPAD_DOWN);
@@ -241,9 +274,9 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 				}
 
 				if (needBack) {
-					if (code.equals(mCode)) {
+					if (code.equals(mAutoCommitCode)) {
 						if (needRemove) {
-							mAutoSendCodes.remove(code);
+							code.setComplete();
 						} else {
 							code.updateTime();
 						}
@@ -255,33 +288,45 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 			mActivityRepeat++;
 		}
+
+		return delayMillis;
 	}
 
 	public void doRemoveCode(RedPacketCode code) {
-		mCode = null;
-		mAutoSendCodes.remove(code);
+		code.setComplete();
+		mAutoCommitCode = null;
 	}
 
 	public RedPacketCode getNextCode() {
 		RedPacketCode min = null;
-		long time = Long.MAX_VALUE;
 
-		for (RedPacketCode code : mAutoSendCodes) {
-			if (code.getTime() < time) {
-				time = code.getTime();
-				min = code;
+		if (isAutoCommitEnabled()) {
+			long time = Long.MAX_VALUE;
+
+			for (RedPacketCode code : mCodes) {
+				if (code.isCompleted()) {
+					continue;
+				}
+
+				if (code.getTime() < time) {
+					time = code.getTime();
+					min = code;
+				}
 			}
 		}
 
 		return min;
 	}
 
-	public boolean startAutoCommitThread() {
-		boolean enabled = CavanAndroid.isPreferenceEnabled(CavanInputMethod.this, MainActivity.KEY_AUTO_COMMIT);
+	public boolean isAutoCommitEnabled() {
+		return CavanAndroid.isPreferenceEnabled(CavanInputMethod.this, MainActivity.KEY_AUTO_COMMIT);
+	}
 
-		if (enabled && mAutoCommitThread == null) {
-			mAutoCommitThread = new AutoCommitThread();
-			mAutoCommitThread.start();
+	public boolean startAutoCommitThread() {
+		boolean enabled = isAutoCommitEnabled();
+
+		if (enabled) {
+			mAutoCommitHandler.sendAutoCommitMessage();
 		}
 
 		return enabled;
@@ -373,8 +418,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	}
 
 	@Override
-	public void onUpdateSelection(int oldSelStart, int oldSelEnd,
-			int newSelStart, int newSelEnd, int candidatesStart, int candidatesEnd) {
+	public void onUpdateSelection(int oldSelStart, int oldSelEnd, int newSelStart, int newSelEnd, int candidatesStart, int candidatesEnd) {
 		if (newSelStart < newSelEnd) {
 			mSelectioActive = true;
 		} else {
@@ -394,8 +438,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		mSelectionStart = newSelStart;
 		mSelectionEnd = newSelEnd;
 
-		super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd,
-				candidatesStart, candidatesEnd);
+		super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd);
 	}
 
 	@Override
@@ -403,11 +446,9 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		String pkgName = getCurrentInputEditorInfo().packageName;
 		mIsAlipay = RedPacketNotification.PACKAGE_NAME_ALIPAY.equals(pkgName);
 
-		if (mIsAlipay) {
-			if (mAutoSendCodes.size() > 0 && startAutoCommitThread()) {
-				CavanAndroid.eLog("use auto commit mode");
-			} else if (mCodes.size() == 1) {
-				sendRedPacketCode(mCodes.get(0));
+		if (mIsAlipay && mCodes.size() > 0) {
+			if (startAutoCommitThread() == false && mCodes.size() == 1) {
+				sendRedPacketCode(mCodes.get(0).getCode());
 			}
 		}
 
@@ -420,6 +461,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 		mCodeGridView = (GridView) view.findViewById(R.id.gridViewCodes);
 		mCodeGridView.setAdapter(mAdapter);
+		updateInputView();
 
 		mKeyboardView = (KeyboardView) view.findViewById(R.id.keyboardView);
 		mKeyboard = new Keyboard(this, R.xml.keyboard);
@@ -555,37 +597,27 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	public void swipeUp() {
 	}
 
-	public class AutoCommitThread extends Thread {
+	public class AutoCommitHandler extends Handler {
+
+		public void sendAutoCommitMessage(long delay) {
+			sendEmptyMessageDelayed(0, delay);
+		}
+
+		public void sendAutoCommitMessage() {
+			sendAutoCommitMessage(AUTO_COMMIT_DELAY);
+		}
 
 		@Override
-		public void run() {
-			CavanAndroid.eLog("Enter: AutoCommitThread");
+		public void handleMessage(Message msg) {
+			RedPacketCode code = getNextCode();
+			if (code != null) {
+				long delay = autoSendRedPacketCode(code);
 
-			while (true) {
-				RedPacketCode code = getNextCode();
-				if (code == null) {
-					break;
-				}
-
-				autoSendRedPacketCode(code);
-
-				synchronized (this) {
-					try {
-						wait(500);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
+				removeMessages(0);
+				sendAutoCommitMessage(delay);
 			}
-
-			mAutoCommitThread = null;
-
-			mCode = null;
-			mActivityClassName = null;
-
-			CavanAndroid.eLog("Exit: AutoCommitThread");
 		}
-	}
+	};
 
 	public class KeypadThread extends Thread {
 
