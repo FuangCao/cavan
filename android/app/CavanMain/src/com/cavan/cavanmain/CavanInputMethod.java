@@ -251,8 +251,10 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 					int delay = (int) (code.getDelay() / 1000);
 					if (delay > 0) {
 						delayMillis = 1000;
+						mActivityRepeat = 0;
 						CavanAndroid.showToast(this, String.format("%d 秒后自动提交", delay));
 					} else if (mActivityRepeat < 3) {
+						sendKeyDownUp(KeyEvent.KEYCODE_TAB);
 						sendKeyDownUp(KeyEvent.KEYCODE_DPAD_DOWN);
 						sendKeyDownUp(KeyEvent.KEYCODE_ENTER);
 					} else {
