@@ -1,11 +1,13 @@
 package com.cavan.android;
 
+import android.app.ActivityManager;
 import android.app.KeyguardManager;
 import android.app.KeyguardManager.KeyguardLock;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -41,6 +43,8 @@ public class CavanAndroid {
 
 	private static ClipboardManager sClipboardManager;
 	private static NotificationManager sNotificationManager;
+
+	private static ActivityManager sActivityManager;
 
 	public static void eLog(String message) {
 		Log.e(TAG, message);
@@ -332,5 +336,16 @@ public class CavanAndroid {
 		}
 
 		return preferences.getBoolean(key, false);
+	}
+
+	public static ComponentName getTopActivityInfo(Context context) {
+		if (sActivityManager == null) {
+			sActivityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+			if (sActivityManager == null) {
+				return null;
+			}
+		}
+
+		return sActivityManager.getRunningTasks(1).get(0).topActivity;
 	}
 }

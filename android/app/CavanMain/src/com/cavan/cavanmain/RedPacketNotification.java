@@ -22,18 +22,11 @@ import android.preference.PreferenceManager;
 import android.service.notification.StatusBarNotification;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
 
 public class RedPacketNotification extends CavanNotification {
-
-	public static final String PACKAGE_NAME_DESKCLOCK = "com.android.deskclock";
-	public static final String PACKAGE_NAME_CALENDAR = "com.android.calendar";
-	public static final String PACKAGE_NAME_QQ = "com.tencent.mobileqq";
-	public static final String PACKAGE_NAME_MM = "com.tencent.mm";
-	public static final String PACKAGE_NAME_TMALL = "com.tmall.wireless";
-	public static final String PACKAGE_NAME_TAOBAO = "com.taobao.taobao";
-	public static final String PACKAGE_NAME_ALIPAY = "com.eg.android.AlipayGphone";
 
 	public static final long OVER_TIME = 3600000;
 	public static final String NORMAL_PATTERN = "(\\w+红包)";
@@ -90,16 +83,16 @@ public class RedPacketNotification extends CavanNotification {
 	};
 
 	public static final String[] sFindTitlePackages = {
-		PACKAGE_NAME_CALENDAR,
-		PACKAGE_NAME_DESKCLOCK,
+		CavanPackageName.CALENDAR,
+		CavanPackageName.DESKCLOCK,
 	};
 
 	public static final String[] sSavePackages = {
-		PACKAGE_NAME_QQ,
-		PACKAGE_NAME_MM,
-		PACKAGE_NAME_TMALL,
-		PACKAGE_NAME_TAOBAO,
-		PACKAGE_NAME_ALIPAY,
+		CavanPackageName.QQ,
+		CavanPackageName.MM,
+		CavanPackageName.TMALL,
+		CavanPackageName.TAOBAO,
+		CavanPackageName.ALIPAY,
 	};
 
 	public static HashMap<CharSequence, Long> sCodeTimeMap = new HashMap<CharSequence, Long>();
