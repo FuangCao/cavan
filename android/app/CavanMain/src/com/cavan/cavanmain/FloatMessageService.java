@@ -2,7 +2,6 @@ package com.cavan.cavanmain;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.List;
 
 import android.content.BroadcastReceiver;
@@ -42,8 +41,7 @@ public class FloatMessageService extends FloatWidowService {
 	private boolean mUserPresent;
 	private TextView mTextViewTime;
 	private TextView mTextViewAutoUnlock;
-	private List<String> mCodeList = new ArrayList<String>();
-	private HashMap<String, Integer> mCodeDelayMap = new HashMap<String, Integer>();
+	private List<RedPacketCode> mCodeList = new ArrayList<RedPacketCode>();
 
 	private Handler mHandler = new Handler() {
 
@@ -112,7 +110,7 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		@Override
-		public int addMessage(CharSequence message, CharSequence code, int delay) throws RemoteException {
+		public int addMessage(CharSequence message, RedPacketCode code) throws RemoteException {
 			TextView view = (TextView) FloatMessageService.this.addText(message, -1);
 			if (view == null) {
 				return -1;
@@ -121,9 +119,7 @@ public class FloatMessageService extends FloatWidowService {
 			unlockScreen();
 
 			if (code != null) {
-				String text = code.toString();
-				mCodeList.add(text);
-				mCodeDelayMap.put(text, delay);
+				mCodeList.add(code);
 
 				String method = CavanAndroid.getDefaultInputMethod(getApplicationContext());
 				if ("com.cavan.cavanmain/.CavanInputMethod".equals(method) == false) {
@@ -147,7 +143,6 @@ public class FloatMessageService extends FloatWidowService {
 
 			if (getTextCount() == 0) {
 				mCodeList.clear();
-				mCodeDelayMap.clear();
 				sendCodeUpdateBroadcast();
 			}
 		}
@@ -163,18 +158,8 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		@Override
-		public List<String> getCodes() throws RemoteException {
+		public List<RedPacketCode> getCodes() throws RemoteException {
 			return mCodeList;
-		}
-
-		@Override
-		public int getCodeDelay(String code) throws RemoteException {
-			Integer delay = mCodeDelayMap.get(code);
-			if (delay == null || delay < 0) {
-				return 0;
-			}
-
-			return delay;
 		}
 	};
 

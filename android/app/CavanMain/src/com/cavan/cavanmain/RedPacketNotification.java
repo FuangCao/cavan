@@ -382,15 +382,16 @@ public class RedPacketNotification extends CavanNotification {
 
 	// ================================================================================
 
-	private int getCodeDelay() {
+	private long getCodeDelay() {
 		if (mContent == null || mContent.indexOf("手气王") < 0) {
 			return 0;
 		}
 
-		return 15;
+		return 15000;
 	}
 
 	public int sendRedPacketNotifyAlipay() {
+		long delay = getCodeDelay();
 		List<String> codes = getRedPacketCodes();
 
 		for (String code : codes) {
@@ -398,7 +399,7 @@ public class RedPacketNotification extends CavanNotification {
 			if (notification != null) {
 				mService.startAlipayActivity();
 				mService.postRedPacketCode(code);
-				mService.sendNotification(notification, code, "支付宝口令@" + getUserDescription() + ": " + code, getCodeDelay());
+				mService.sendNotification(notification, "支付宝口令@" + getUserDescription() + ": " + code, new RedPacketCode(code, delay));
 			}
 		}
 
@@ -417,7 +418,7 @@ public class RedPacketNotification extends CavanNotification {
 			}
 		}
 
-		mService.sendNotification(notification, null, message, getCodeDelay());
+		mService.sendNotification(notification, message, null);
 
 		return true;
 	}

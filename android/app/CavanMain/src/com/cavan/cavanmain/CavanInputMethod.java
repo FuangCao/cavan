@@ -62,9 +62,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	private int mActivityRepeat;
 	private String mActivityClassName;
 
-	private String mCode;
-	private int mCodeDelay;
-	private List<String> mCodes;
+	private List<RedPacketCode> mCodes;
 	private GridView mCodeGridView;
 
 	private Keyboard mKeyboard;
@@ -112,7 +110,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		public View getView(int position, View convertView, ViewGroup parent) {
 			Button view = new Button(CavanInputMethod.this);
 			view.setOnClickListener(CavanInputMethod.this);
-			view.setText(mCodes.get(position));
+			view.setText(mCodes.get(position).getCode());
 			return view;
 		}
 
@@ -193,7 +191,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	}
 
 	@SuppressWarnings("deprecation")
-	public void autoSendRedPacketCode(String code) {
+	public void autoSendRedPacketCode(RedPacketCode code) {
 		ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
 		ComponentName info = manager.getRunningTasks(1).get(0).topActivity;
 		String pkgName = info.getPackageName();
@@ -201,7 +199,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		long delayMillis = 500;
 
 		CavanAndroid.eLog("activity = " + clsName);
-		CavanAndroid.eLog("code = " + code + ", delay = " + mCodeDelay);
+		CavanAndroid.eLog(code.toString());
 
 		if (!clsName.equals(mActivityClassName)) {
 			mActivityClassName = clsName;
@@ -217,14 +215,14 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 						CavanAndroid.pfLog("index = %d, code = %s", mCodeIndex, code);
 
 						mCodePending = true;
-						sendRedPacketCode(code);
+						sendRedPacketCode(code.getCode());
 					}
 				} else if (clsName.equals("com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity")) {
 					if (mCodePending) {
-						if (mCodeDelay > 0) {
-							CavanAndroid.showToast(this, String.format("%d 秒后自动提交", mCodeDelay));
+						int delay = (int) (code.getDelay() / 1000);
+						if (delay > 0) {
+							CavanAndroid.showToast(this, String.format("%d 秒后自动提交", delay));
 							delayMillis = 1000;
-							mCodeDelay--;
 						} else {
 							sendKeyDownUp(KeyEvent.KEYCODE_DPAD_DOWN);
 							sendKeyDownUp(KeyEvent.KEYCODE_ENTER);
@@ -264,19 +262,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		if (mCodes == null) {
 			setCodeIndex(0);
 		} else if (mCodeIndex < mCodes.size()) {
-			String code = mCodes.get(mCodeIndex);
-			if (code != mCode) {
-				try {
-					mCodeDelay = mService.getCodeDelay(code);
-				} catch (RemoteException e) {
-					e.printStackTrace();
-					mCodeDelay = 0;
-				}
-
-				mCode = code;
-			}
-
-			autoSendRedPacketCode(code);
+			autoSendRedPacketCode(mCodes.get(mCodeIndex));
 		} else {
 			setCodeIndex(mCodes.size());
 		}
@@ -396,7 +382,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		mIsAlipay = RedPacketNotification.PACKAGE_NAME_ALIPAY.equals(pkgName);
 
 		if (mIsAlipay && mCodes != null && mCodes.size() == 1) {
-			sendRedPacketCode(mCodes.get(0));
+			sendRedPacketCode(mCodes.get(0).getCode());
 		}
 
 		super.onStartInputView(info, restarting);

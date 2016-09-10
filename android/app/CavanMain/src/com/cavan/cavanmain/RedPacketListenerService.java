@@ -97,13 +97,13 @@ public class RedPacketListenerService extends NotificationListenerService {
 		return mGeneratorNotificationId.genIndex();
 	}
 
-	public boolean sendNotification(Notification notification, CharSequence code, CharSequence message, int delay) {
+	public boolean sendNotification(Notification notification, CharSequence message, RedPacketCode code) {
 		if (mNotificationManager == null) {
 			return false;
 		}
 
 		if (code != null) {
-			notification.extras.putCharSequence(EXTRA_CODE, code);
+			notification.extras.putCharSequence(EXTRA_CODE, code.getCode());
 		}
 
 		notification.extras.putCharSequence(EXTRA_MESSAGE, message);
@@ -112,7 +112,7 @@ public class RedPacketListenerService extends NotificationListenerService {
 
 		if (mFloatMessageService != null) {
 			try {
-				mFloatMessageService.addMessage(message, code, delay);
+				mFloatMessageService.addMessage(message, code);
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
