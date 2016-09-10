@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
 
 import android.app.ActivityManager;
@@ -17,9 +18,7 @@ import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.inputmethodservice.KeyboardView.OnKeyboardActionListener;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
 import android.os.RemoteException;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
@@ -55,15 +54,15 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	public static final int KEYCODE_ENTER = 12;
 	public static final int KEYCODE_SPACE = 13;
 
-	private static final int MSG_POST_CODE = 1;
-
-	private int mCodeIndex;
-	private boolean mCodePending;
 	private int mActivityRepeat;
 	private String mActivityClassName;
 
-	private List<RedPacketCode> mCodes;
 	private GridView mCodeGridView;
+	private List<String> mCodes = new ArrayList<String>();
+
+	private RedPacketCode mCode;
+	private AutoCommitThread mAutoCommitThread;
+	private List<RedPacketCode> mAutoSendCodes = new ArrayList<RedPacketCode>();
 
 	private Keyboard mKeyboard;
 	private KeyboardView mKeyboardView;
@@ -77,62 +76,6 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 	private ServerSocket mServerSocket;
 	private Socket mClientSocket;
-
-	private Handler mHandler = new Handler() {
-
-		@Override
-		public void handleMessage(Message msg) {
-			switch (msg.what) {
-			case MSG_POST_CODE:
-				autoSendRedPacketCode();
-				break;
-			}
-		}
-	};
-
-	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
-
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			String action = intent.getAction();
-
-			CavanAndroid.eLog("action = " + action);
-
-			if (action.equals(FloatMessageService.ACTION_CODE_UPDATED)) {
-				updateData();
-			}
-		}
-	};
-
-	private BaseAdapter mAdapter = new BaseAdapter() {
-
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			Button view = new Button(CavanInputMethod.this);
-			view.setOnClickListener(CavanInputMethod.this);
-			view.setText(mCodes.get(position).getCode());
-			return view;
-		}
-
-		@Override
-		public long getItemId(int position) {
-			return 0;
-		}
-
-		@Override
-		public Object getItem(int position) {
-			return null;
-		}
-
-		@Override
-		public int getCount() {
-			if (mCodes != null) {
-				return mCodes.size();
-			}
-
-			return 0;
-		}
-	};
 
 	private IFloatMessageService mService;
 	private ServiceConnection mConnection = new ServiceConnection() {
@@ -149,45 +92,99 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		}
 	};
 
-	public void updateData() {
-		if (mService != null) {
-			try {
-				int columns;
+	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
 
-				mCodes = mService.getCodes();
-				if (mCodes == null) {
-					columns = 0;
-				} else {
-					columns = mCodes.size();
-					if (columns > CODE_MAX_COLUMNS) {
-						int max = 0;
-						int size = columns;
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String action = intent.getAction();
 
-						for (int i = CODE_MAX_COLUMNS; i > 1; i--) {
-							int remain = size % i;
-							if (remain == 0) {
-								columns = i;
-								break;
-							}
+			CavanAndroid.eLog("action = " + action);
 
-							if (remain >= max) {
-								columns = i;
-								max = remain;
-							}
-						}
-					}
+			synchronized (mAutoSendCodes) {
+				switch (action) {
+				case FloatMessageService.ACTION_CODE_ADD:
+					RedPacketCode code = intent.getParcelableExtra("code");
+					mAutoSendCodes.add(code);
+					startAutoCommitThread();
+					break;
+
+				case FloatMessageService.ACTION_CODE_REMOVE:
+					code = intent.getParcelableExtra("code");
+					mAutoSendCodes.remove(code);
+					break;
 				}
-
-				if (mCodeGridView != null) {
-					mCodeGridView.setNumColumns(columns);
-					mAdapter.notifyDataSetChanged();
-				}
-			} catch (RemoteException e) {
-				e.printStackTrace();
 			}
+
+			updateData();
+		}
+	};
+
+	private BaseAdapter mAdapter = new BaseAdapter() {
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			Button view = new Button(CavanInputMethod.this);
+			view.setOnClickListener(CavanInputMethod.this);
+			view.setText(mCodes.get(position));
+			return view;
 		}
 
-		autoSendRedPacketCode();
+		@Override
+		public long getItemId(int position) {
+			return 0;
+		}
+
+		@Override
+		public Object getItem(int position) {
+			return null;
+		}
+
+		@Override
+		public int getCount() {
+			return mCodes.size();
+		}
+	};
+
+	public void updateData() {
+		if (mService == null) {
+			return;
+		}
+
+		List<String> codes;
+
+		try {
+			codes = mService.getCodes();
+		} catch (RemoteException e) {
+			e.printStackTrace();
+			return;
+		}
+
+		if (codes != null && mCodeGridView != null) {
+			int columns = codes.size();
+
+			mCodes = codes;
+
+			if (columns > CODE_MAX_COLUMNS) {
+				int max = 0;
+				int size = columns;
+
+				for (int i = CODE_MAX_COLUMNS; i > 1; i--) {
+					int remain = size % i;
+					if (remain == 0) {
+						columns = i;
+						break;
+					}
+
+					if (remain >= max) {
+						columns = i;
+						max = remain;
+					}
+				}
+			}
+
+			mCodeGridView.setNumColumns(columns);
+			mAdapter.notifyDataSetChanged();
+		}
 	}
 
 	@SuppressWarnings("deprecation")
@@ -196,7 +193,6 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		ComponentName info = manager.getRunningTasks(1).get(0).topActivity;
 		String pkgName = info.getPackageName();
 		String clsName = info.getClassName();
-		long delayMillis = 500;
 
 		CavanAndroid.eLog("activity = " + clsName);
 		CavanAndroid.eLog(code.toString());
@@ -209,63 +205,86 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		if (pkgName.equals("com.eg.android.AlipayGphone")) {
 			CavanAndroid.eLog("mActivityRepeat = " + mActivityRepeat);
 
-			if (mActivityRepeat < 100) {
-				if (clsName.equals("com.alipay.android.phone.discovery.envelope.HomeActivity")) {
-					if (mActivityRepeat < 3) {
-						CavanAndroid.pfLog("index = %d, code = %s", mCodeIndex, code);
-
-						mCodePending = true;
+			if (clsName.equals("com.alipay.android.phone.discovery.envelope.HomeActivity")) {
+				if (mActivityRepeat < 3) {
+					if ((mActivityRepeat & 1) == 0) {
+						mCode = code;
 						sendRedPacketCode(code.getCode());
 					}
-				} else if (clsName.equals("com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity")) {
-					if (mCodePending) {
-						int delay = (int) (code.getDelay() / 1000);
-						if (delay > 0) {
-							CavanAndroid.showToast(this, String.format("%d 秒后自动提交", delay));
-							delayMillis = 1000;
-						} else {
-							sendKeyDownUp(KeyEvent.KEYCODE_DPAD_DOWN);
-							sendKeyDownUp(KeyEvent.KEYCODE_ENTER);
-						}
+				} else if (mActivityRepeat > 3) {
+					doRemoveCode(code);
+				}
+			} else if (clsName.equals("com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity")) {
+				if (code.equals(mCode)) {
+					int delay = (int) (code.getDelay() / 1000);
+					if (delay > 0) {
+						CavanAndroid.showToast(this, String.format("%d 秒后自动提交", delay));
+					} else if (mActivityRepeat < 3) {
+						sendKeyDownUp(KeyEvent.KEYCODE_DPAD_DOWN);
+						sendKeyDownUp(KeyEvent.KEYCODE_ENTER);
 					} else {
-						sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
+						doRemoveCode(code);
 					}
-				} else if ((mActivityRepeat & 1) == 0) {
-					if (clsName.equals("com.alipay.mobile.nebulacore.ui.H5Activity") ||
-							clsName.equals("com.alipay.android.phone.discovery.envelope.mine.AllCouponList")) {
-						sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
-					} else if (clsName.equals("com.alipay.android.phone.discovery.envelope.crowd.CrowdHostActivity")) {
-						if (mCodePending) {
-							mCodePending = false;
-							mCodeIndex++;
-						}
+				} else {
+					sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
+				}
+			} else if (mActivityRepeat % 3 == 0) {
+				boolean needBack = false;
+				boolean needRemove = false;
 
-						sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
-					}
+				if (clsName.equals("com.alipay.android.phone.discovery.envelope.crowd.CrowdHostActivity")) {
+					needBack = true;
+					needRemove = true;
+				} else if (clsName.equals("com.alipay.mobile.nebulacore.ui.H5Activity") ||
+						clsName.equals("com.alipay.android.phone.discovery.envelope.mine.AllCouponList")) {
+					needBack = true;
 				}
 
-				mActivityRepeat++;
+				if (needBack) {
+					if (code.equals(mCode)) {
+						if (needRemove) {
+							mAutoSendCodes.remove(code);
+						} else {
+							code.updateTime();
+						}
+					}
+
+					sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
+				}
+			}
+
+			mActivityRepeat++;
+		}
+	}
+
+	public void doRemoveCode(RedPacketCode code) {
+		mCode = null;
+		mAutoSendCodes.remove(code);
+	}
+
+	public RedPacketCode getNextCode() {
+		RedPacketCode min = null;
+		long time = Long.MAX_VALUE;
+
+		for (RedPacketCode code : mAutoSendCodes) {
+			if (code.getTime() < time) {
+				time = code.getTime();
+				min = code;
 			}
 		}
 
-		mHandler.removeMessages(MSG_POST_CODE);
-		mHandler.sendEmptyMessageDelayed(MSG_POST_CODE, delayMillis);
+		return min;
 	}
 
-	public void setCodeIndex(int index) {
-		mCodeIndex = index;
-		mCodePending = false;
-		mActivityClassName = null;
-	}
+	public boolean startAutoCommitThread() {
+		boolean enabled = CavanAndroid.isPreferenceEnabled(CavanInputMethod.this, MainActivity.KEY_AUTO_COMMIT);
 
-	public void autoSendRedPacketCode() {
-		if (mCodes == null) {
-			setCodeIndex(0);
-		} else if (mCodeIndex < mCodes.size()) {
-			autoSendRedPacketCode(mCodes.get(mCodeIndex));
-		} else {
-			setCodeIndex(mCodes.size());
+		if (enabled && mAutoCommitThread == null) {
+			mAutoCommitThread = new AutoCommitThread();
+			mAutoCommitThread.start();
 		}
+
+		return enabled;
 	}
 
 	public void sendFinishAction(InputConnection conn) {
@@ -313,10 +332,12 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	public void onCreate() {
 		mManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
 
-		Intent service = FloatMessageService.startService(this);
-		bindService(service, mConnection, 0);
+		bindService(FloatMessageService.startService(this), mConnection, 0);
 
-		registerReceiver(mReceiver, new IntentFilter(FloatMessageService.ACTION_CODE_UPDATED));
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(FloatMessageService.ACTION_CODE_ADD);
+		filter.addAction(FloatMessageService.ACTION_CODE_REMOVE);
+		registerReceiver(mReceiver, filter);
 
 		KeypadThread thread = new KeypadThread();
 		thread.start();
@@ -326,6 +347,8 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 	@Override
 	public void onDestroy() {
+		unbindService(mConnection);
+
 		if (mClientSocket != null) {
 			try {
 				mClientSocket.close();
@@ -345,7 +368,6 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		}
 
 		unregisterReceiver(mReceiver);
-		unbindService(mConnection);
 
 		super.onDestroy();
 	}
@@ -381,8 +403,12 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		String pkgName = getCurrentInputEditorInfo().packageName;
 		mIsAlipay = RedPacketNotification.PACKAGE_NAME_ALIPAY.equals(pkgName);
 
-		if (mIsAlipay && mCodes != null && mCodes.size() == 1) {
-			sendRedPacketCode(mCodes.get(0).getCode());
+		if (mIsAlipay) {
+			if (mAutoSendCodes.size() > 0 && startAutoCommitThread()) {
+				CavanAndroid.eLog("use auto commit mode");
+			} else if (mCodes.size() == 1) {
+				sendRedPacketCode(mCodes.get(0));
+			}
 		}
 
 		super.onStartInputView(info, restarting);
@@ -527,6 +553,38 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 	@Override
 	public void swipeUp() {
+	}
+
+	public class AutoCommitThread extends Thread {
+
+		@Override
+		public void run() {
+			CavanAndroid.eLog("Enter: AutoCommitThread");
+
+			while (true) {
+				RedPacketCode code = getNextCode();
+				if (code == null) {
+					break;
+				}
+
+				autoSendRedPacketCode(code);
+
+				synchronized (this) {
+					try {
+						wait(500);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+			mAutoCommitThread = null;
+
+			mCode = null;
+			mActivityClassName = null;
+
+			CavanAndroid.eLog("Exit: AutoCommitThread");
+		}
 	}
 
 	public class KeypadThread extends Thread {

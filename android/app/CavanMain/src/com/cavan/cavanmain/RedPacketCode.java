@@ -15,15 +15,13 @@ public class RedPacketCode implements Parcelable {
 	private long mTime;
 	private String mCode;
 
-	public RedPacketCode(String code, long delay) {
-		super();
-
-		mTime = System.currentTimeMillis() + delay;
+	public RedPacketCode(String code) {
 		mCode = code;
 	}
 
-	public RedPacketCode(String code) {
+	public RedPacketCode(String code, long time) {
 		mCode = code;
+		mTime = time;
 	}
 
 	public long getTime() {
@@ -34,12 +32,24 @@ public class RedPacketCode implements Parcelable {
 		mTime = time;
 	}
 
+	public void updateTime() {
+		long time = System.currentTimeMillis();
+
+		if (mTime < time) {
+			mTime = time;
+		}
+	}
+
 	public String getCode() {
 		return mCode;
 	}
 
 	public void setCode(String code) {
 		mCode = code;
+	}
+
+	public void setDelay(long delay) {
+		mTime = System.currentTimeMillis() + delay;
 	}
 
 	public long getDelay() {
@@ -49,6 +59,16 @@ public class RedPacketCode implements Parcelable {
 		}
 
 		return 0;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof RedPacketCode) {
+			RedPacketCode code = (RedPacketCode) o;
+			return mCode.equals(code.getCode());
+		}
+
+		return false;
 	}
 
 	@Override
@@ -83,9 +103,7 @@ public class RedPacketCode implements Parcelable {
 
 		@Override
 		public RedPacketCode createFromParcel(Parcel source) {
-			RedPacketCode code = new RedPacketCode(source.readString());
-			code.setTime(source.readLong());
-			return code;
+			return new RedPacketCode(source.readString(), source.readLong());
 		}
 	};
 }

@@ -40,5 +40,6 @@
     <string name="cavan_input_method">曹福昂输入法</string>
     <string name="text_input_method_select">输入法选择</string>
     <string name="text_auto_unlock">自动解锁</string>
+    <string name="text_auto_commit">自动提交</string>
 
 </resources>

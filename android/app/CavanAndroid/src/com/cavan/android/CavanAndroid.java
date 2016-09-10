@@ -1,18 +1,20 @@
 package com.cavan.android;
 
 import android.app.KeyguardManager;
+import android.app.KeyguardManager.KeyguardLock;
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.KeyguardManager.KeyguardLock;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
@@ -321,5 +323,14 @@ public class CavanAndroid {
 
 	public static String getDefaultInputMethod(Context context) {
 		return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD);
+	}
+
+	public static boolean isPreferenceEnabled(Context context, String key) {
+		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+		if (preferences == null) {
+			return false;
+		}
+
+		return preferences.getBoolean(key, false);
 	}
 }

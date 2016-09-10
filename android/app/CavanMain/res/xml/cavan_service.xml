@@ -14,6 +14,9 @@
 	<CheckBoxPreference android:key="auto_unlock"
 	    android:title="@string/text_auto_unlock" />
 
+	<CheckBoxPreference android:key="auto_commit"
+	    android:title="@string/text_auto_commit" />
+
 	<RingtonePreference android:key="red_packet_notify_ringtone"
 	    android:persistent="true"
 	    android:title="@string/red_packet_notify_ringtone" />

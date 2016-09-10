@@ -2,19 +2,18 @@ package com.cavan.cavanmain;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
-import android.preference.PreferenceManager;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,7 +26,8 @@ import com.cavan.android.FloatWidowService;
 
 public class FloatMessageService extends FloatWidowService {
 
-	public static final String ACTION_CODE_UPDATED = "cavan.intent.action.ACTION_CODE_UPDATED";
+	public static final String ACTION_CODE_ADD = "cavan.intent.action.ACTION_CODE_ADD";
+	public static final String ACTION_CODE_REMOVE = "cavan.intent.action.ACTION_CODE_REMOVE";
 
 	public static final int TEXT_PADDING = 8;
 	public static final float TEXT_SIZE_TIME = 16;
@@ -41,7 +41,7 @@ public class FloatMessageService extends FloatWidowService {
 	private boolean mUserPresent;
 	private TextView mTextViewTime;
 	private TextView mTextViewAutoUnlock;
-	private List<RedPacketCode> mCodeList = new ArrayList<RedPacketCode>();
+	private HashMap<CharSequence, RedPacketCode> mMessageCodeMap = new HashMap<CharSequence, RedPacketCode>();
 
 	private Handler mHandler = new Handler() {
 
@@ -71,18 +71,9 @@ public class FloatMessageService extends FloatWidowService {
 				break;
 
 			case Intent.ACTION_SCREEN_ON:
-				if (getTextCount() <= 0) {
-					SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(FloatMessageService.this);
-					if (preferences == null) {
-						break;
-					}
-
-					if (!preferences.getBoolean(MainActivity.KEY_AUTO_UNLOCK, false)) {
-						break;
-					}
+				if (getTextCount() > 0 || CavanAndroid.isPreferenceEnabled(FloatMessageService.this, MainActivity.KEY_AUTO_UNLOCK)) {
+					unlockScreen();
 				}
-
-				unlockScreen();
 				break;
 
 			case Intent.ACTION_USER_PRESENT:
@@ -95,8 +86,10 @@ public class FloatMessageService extends FloatWidowService {
 
 	private IFloatMessageService.Stub mBinder = new IFloatMessageService.Stub() {
 
-		private void sendCodeUpdateBroadcast() {
-			sendBroadcast(new Intent(ACTION_CODE_UPDATED));
+		private void sendCodeUpdateBroadcast(String action, RedPacketCode code) {
+			Intent intent = new Intent(action);
+			intent.putExtra("code", code);
+			sendBroadcast(intent);
 		}
 
 		@Override
@@ -119,14 +112,14 @@ public class FloatMessageService extends FloatWidowService {
 			unlockScreen();
 
 			if (code != null) {
-				mCodeList.add(code);
+				mMessageCodeMap.put(message, code);
 
 				String method = CavanAndroid.getDefaultInputMethod(getApplicationContext());
 				if ("com.cavan.cavanmain/.CavanInputMethod".equals(method) == false) {
 					mHandler.sendEmptyMessageDelayed(MSG_SHOW_INPUT_METHOD_PICKER, 500);
 				}
 
-				sendCodeUpdateBroadcast();
+				sendCodeUpdateBroadcast(ACTION_CODE_ADD, code);
 			}
 
 			return view.getId();
@@ -141,9 +134,10 @@ public class FloatMessageService extends FloatWidowService {
 		public void removeMessage(CharSequence message) throws RemoteException {
 			FloatMessageService.this.removeText(message);
 
-			if (getTextCount() == 0) {
-				mCodeList.clear();
-				sendCodeUpdateBroadcast();
+			RedPacketCode code = mMessageCodeMap.get(message);
+			if (code != null) {
+				mMessageCodeMap.remove(message);
+				sendCodeUpdateBroadcast(ACTION_CODE_REMOVE, code);
 			}
 		}
 
@@ -158,8 +152,14 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		@Override
-		public List<RedPacketCode> getCodes() throws RemoteException {
-			return mCodeList;
+		public List<String> getCodes() throws RemoteException {
+			List<String> codes = new ArrayList<String>();
+
+			for (RedPacketCode code : mMessageCodeMap.values()) {
+				codes.add(code.getCode());
+			}
+
+			return codes;
 		}
 	};
 
@@ -309,8 +309,7 @@ public class FloatMessageService extends FloatWidowService {
 		mTextViewTime.setTextSize(TEXT_SIZE_TIME);
 		mTextViewTime.setTextColor(TEXT_COLOR_TIME);
 
-		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-		if (preferences != null && preferences.getBoolean(MainActivity.KEY_FLOAT_TIMER, false)) {
+		if (CavanAndroid.isPreferenceEnabled(this, MainActivity.KEY_FLOAT_TIMER)) {
 			setTimerEnable(true);
 		} else {
 			setTimerEnable(false);
