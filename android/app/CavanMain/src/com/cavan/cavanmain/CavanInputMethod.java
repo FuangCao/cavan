@@ -254,7 +254,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 						sendRedPacketCode(code.getCode());
 					}
 				} else if (mActivityRepeat > 10) {
-					doRemoveCode(code);
+					setCodeComplete(code);
 				}
 			} else if (clsName.equals("com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity")) {
 				if (code.equals(mAutoCommitCode)) {
@@ -269,7 +269,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 						sendKeyDownUp(KeyEvent.KEYCODE_DPAD_DOWN);
 						sendKeyDownUp(KeyEvent.KEYCODE_ENTER);
 					} else {
-						doRemoveCode(code);
+						setCodeComplete(code);
 					}
 				} else {
 					sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
@@ -289,7 +289,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 				if (needBack) {
 					if (code.equals(mAutoCommitCode)) {
 						if (needRemove) {
-							doRemoveCode(code);
+							setCodeComplete(code);
 						} else {
 							code.updateTime();
 						}
@@ -303,13 +303,13 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		return delayMillis;
 	}
 
-	public void doRemoveCode(RedPacketCode code) {
+	public void setCodeComplete(RedPacketCode code) {
 		code.setComplete();
 		mActivityRepeat = 0;
 		mAutoCommitCode = null;
 		mActivityClassName = null;
 
-		String text = getResources().getString(R.string.text_remove_code, code.getCode());
+		String text = getResources().getString(R.string.text_complete_code, code.getCode());
 		CavanAndroid.showToastLong(this, text);
 	}
 
