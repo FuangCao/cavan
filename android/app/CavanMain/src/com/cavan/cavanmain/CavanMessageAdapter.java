@@ -71,10 +71,10 @@ public class CavanMessageAdapter extends BaseAdapter {
 
 	public void updateData(Uri uri, String selection, String[] selectionArgs) {
 		if (uri == null) {
-			mCursor = CavanNotification.query(mActivity.getContentResolver(), selection, selectionArgs, CavanNotification.KEY_TIMESTAMP);
+			mCursor = CavanNotification.query(mActivity.getContentResolver(), selection, selectionArgs, null);
 			mCursors.clear();
 		} else {
-			Cursor cursor = CavanNotification.query(mActivity.getContentResolver(), uri, selection, selectionArgs, CavanNotification.KEY_TIMESTAMP);
+			Cursor cursor = CavanNotification.query(mActivity.getContentResolver(), uri, selection, selectionArgs, null);
 			if (cursor.moveToFirst()) {
 				mCursors.add(cursor);
 			} else {
