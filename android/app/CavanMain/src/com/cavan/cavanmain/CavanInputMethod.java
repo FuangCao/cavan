@@ -92,11 +92,12 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 			mService = IFloatMessageService.Stub.asInterface(service);
 
 			List<RedPacketCode> codes = getRedPacketCode();
-			if (codes != null && codes.size() > 0) {
+			if (codes != null) {
 				mCodes = codes;
 
 				startAutoCommitThread();
 				updateInputView();
+
 			}
 		}
 	};
@@ -328,7 +329,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	}
 
 	public boolean isAutoCommitEnabled() {
-		return CavanAndroid.isPreferenceEnabled(CavanInputMethod.this, MainActivity.KEY_AUTO_COMMIT);
+		return CavanAndroid.isPreferenceEnabled(this, MainActivity.KEY_AUTO_COMMIT);
 	}
 
 	public boolean startAutoCommitThread() {
@@ -485,7 +486,13 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	@Override
 	public void onClick(View v) {
 		Button button = (Button) v;
-		sendRedPacketCode(button.getText());
+		CharSequence text = button.getText();
+
+		if (!mIsAlipay) {
+			text = "支付宝红包口令：" + text;
+		}
+
+		sendRedPacketCode(text);
 	}
 
 	@Override

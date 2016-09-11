@@ -17,12 +17,12 @@
 	<CheckBoxPreference android:key="auto_commit"
 	    android:title="@string/text_auto_commit" />
 
+	<Preference android:key="input_method_select"
+	    android:title="@string/text_input_method_select" />
+
 	<RingtonePreference android:key="red_packet_notify_ringtone"
 	    android:persistent="true"
 	    android:title="@string/red_packet_notify_ringtone" />
-
-	<Preference android:key="input_method_select"
-	    android:title="@string/text_input_method_select" />
 
 	<EditTextPreference android:key="red_packet_notify_test"
 	    android:persistent="true"
