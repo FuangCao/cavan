@@ -1,8 +1,10 @@
 package com.cavan.cavanmain;
 
-import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.List;
 
 import android.database.Cursor;
+import android.net.Uri;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -13,39 +15,31 @@ public class CavanMessageAdapter extends BaseAdapter {
 	private ListView mView;
 	private CavanMessageActivity mActivity;
 
-	private boolean mFilterEnable;
-	private Pattern[] mFilterPatterns;
-
+	private int mCount;
 	private Cursor mCursor;
-	private Cursor mCursorPending;
+	private List<Cursor> mCursors = new ArrayList<Cursor>();
+
 	private CavanNotification mNotification = new CavanNotification();
 	private Runnable mRunnableUpdate = new Runnable() {
 
 		@Override
 		public void run() {
-			if (mCursorPending == null) {
-				return;
-			}
-
-			int count;
-			Cursor cursor = mCursorPending;
-
-			mCursorPending = null;
-
-			if (cursor != null) {
-				count = cursor.getCount();
-			} else {
-				count = 0;
-			}
-
 			boolean isBottom = isSelectionBottom();
+			int count = mCursors.size();
 
-			mCursor = cursor;
+			if (mCursor != null) {
+				count += mCursor.getCount();
+			}
+
+			mCount = count;
 			notifyDataSetChanged();
 
 			if (isBottom) {
 				mView.setSelection(count - 1);
 			}
+
+			String title = mActivity.getResources().getString(R.string.text_message_count);
+			mActivity.setTitle(title + count);
 		}
 	};
 
@@ -75,65 +69,25 @@ public class CavanMessageAdapter extends BaseAdapter {
 		return true;
 	}
 
-	synchronized public void setCursor(Cursor cursor) {
-		mCursorPending = cursor;
-		mView.post(mRunnableUpdate);
-	}
-
-	public void setFilterEnable(boolean enable) {
-		mFilterEnable = enable;
-	}
-
-	public boolean isFilterEnabled() {
-		return mFilterEnable;
-	}
-
-	public Cursor updateData() {
-		String[] selectionArgs = null;
-		String selection = null;
-
-		mFilterPatterns = null;
-
-		if (mFilterEnable) {
-			CavanFilter[] filters = CavanFilter.queryFilterEnabled(mActivity.getContentResolver());
-			if (filters != null && filters.length > 0) {
-				mFilterPatterns = new Pattern[filters.length];
-				StringBuilder builder = new StringBuilder();
-
-				selectionArgs = new String[filters.length];
-
-				for (int i = 0; i < filters.length; i++) {
-					String text = filters[i].getContent();
-
-					mFilterPatterns[i] = Pattern.compile(text, Pattern.CASE_INSENSITIVE);
-
-					if (i > 0) {
-						builder.append(" or ");
-					}
-
-					builder.append(CavanNotification.KEY_CONTENT + " like ?");
-					selectionArgs[i] = "%" + text + "%";
-				}
-
-				builder.append(" collate nocase");
-
-				selection = builder.toString();
+	public void updateData(Uri uri, String selection, String[] selectionArgs) {
+		if (uri == null) {
+			mCursor = CavanNotification.query(mActivity.getContentResolver(), selection, selectionArgs, CavanNotification.KEY_TIMESTAMP);
+			mCursors.clear();
+		} else {
+			Cursor cursor = CavanNotification.query(mActivity.getContentResolver(), uri, selection, selectionArgs, CavanNotification.KEY_TIMESTAMP);
+			if (cursor.moveToFirst()) {
+				mCursors.add(cursor);
+			} else {
+				return;
 			}
 		}
 
-		Cursor cursor = CavanNotification.query(mActivity.getContentResolver(), selection, selectionArgs, CavanNotification.KEY_TIMESTAMP);
-		setCursor(cursor);
-
-		return cursor;
+		mView.post(mRunnableUpdate);
 	}
 
 	@Override
 	public int getCount() {
-		if (mCursor == null) {
-			return 0;
-		}
-
-		return mCursor.getCount();
+		return mCount;
 	}
 
 	@Override
@@ -148,11 +102,15 @@ public class CavanMessageAdapter extends BaseAdapter {
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup viewGroup) {
-		if (!mCursor.moveToPosition(position)) {
-			return null;
+		Cursor cursor;
+
+		if (mCursor.moveToPosition(position)) {
+			cursor = mCursor;
+		} else {
+			cursor = mCursors.get(position - mCursor.getCount());
 		}
 
-		if (!mNotification.parse(mCursor)) {
+		if (!mNotification.parse(cursor)) {
 			return null;
 		}
 
@@ -168,7 +126,7 @@ public class CavanMessageAdapter extends BaseAdapter {
 
 		String content = mNotification.getContent();
 		if (content != null) {
-			view.setContent(content, mNotification.getPackageName(), mFilterPatterns);
+			view.setContent(content, mNotification.getPackageName(), mActivity.getFilterPatterns());
 		}
 
 		return view;

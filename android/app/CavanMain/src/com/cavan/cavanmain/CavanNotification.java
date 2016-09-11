@@ -298,6 +298,10 @@ public class CavanNotification {
 		return resolver.query(CONTENT_URI, projection, selection, selectionArgs, sortOrder);
 	}
 
+	public static Cursor query(ContentResolver resolver, Uri uri, String selection, String[] selectionArgs, String sortOrder) {
+		return resolver.query(uri, PROJECTION, selection, selectionArgs, sortOrder);
+	}
+
 	public static Cursor query(ContentResolver resolver, String selection, String[] selectionArgs, String sortOrder) {
 		return resolver.query(CONTENT_URI, PROJECTION, selection, selectionArgs, sortOrder);
 	}

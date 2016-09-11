@@ -19,7 +19,7 @@
 
 	<Preference android:key="input_method_select"
 	    android:title="@string/text_input_method_select" />
-
+1
 	<RingtonePreference android:key="red_packet_notify_ringtone"
 	    android:persistent="true"
 	    android:title="@string/red_packet_notify_ringtone" />

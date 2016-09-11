@@ -167,7 +167,8 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 			builder.setTables(mName);
 
 			if (code == 1) {
-				builder.appendWhere(KEY_ID + "=");
+				builder.appendWhere(KEY_ID);
+				builder.appendWhere("=");
 				builder.appendWhere(uri.getPathSegments().get(1));
 			}
 

@@ -1,6 +1,7 @@
 package com.cavan.cavanmain;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -11,7 +12,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.ContentObserver;
-import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -41,8 +41,21 @@ public class CavanMessageActivity extends Activity {
 	private ContentObserver mContentObserverMessage = new ContentObserver(new Handler()) {
 
 		@Override
+		public void onChange(boolean selfChange, Uri uri) {
+			updateData(uri);
+		}
+	};
+
+	private boolean mFilterEnable;
+	private String mSelection;
+	private String[] mSelectionArgs;
+	private Pattern[] mFilterPatterns;
+
+	private ContentObserver mContentObserverFilter = new ContentObserver(new Handler()) {
+
+		@Override
 		public void onChange(boolean selfChange) {
-			updateData();
+			updateFilter();
 		}
 	};
 
@@ -50,11 +63,58 @@ public class CavanMessageActivity extends Activity {
 		return new Intent(context, CavanMessageActivity.class);
 	}
 
-	private void updateData() {
-		Cursor cursor = mAdapter.updateData();
-		if (cursor != null) {
-			String title = getResources().getString(R.string.text_message_count);
-			setTitle(title + cursor.getCount());
+	public Pattern[] getFilterPatterns() {
+		return mFilterPatterns;
+	}
+
+	public void updateData(Uri uri) {
+		mAdapter.updateData(uri, mSelection, mSelectionArgs);
+	}
+
+	private void updateFilter() {
+		CavanFilter[] filters;
+
+		if (mFilterEnable) {
+			filters = CavanFilter.queryFilterEnabled(getContentResolver());
+		} else {
+			filters = null;
+		}
+
+		if (filters != null && filters.length > 0) {
+			mFilterPatterns = new Pattern[filters.length];
+			StringBuilder builder = new StringBuilder();
+
+			mSelectionArgs = new String[filters.length];
+
+			for (int i = 0; i < filters.length; i++) {
+				String text = filters[i].getContent();
+
+				mFilterPatterns[i] = Pattern.compile(text, Pattern.CASE_INSENSITIVE);
+
+				if (i > 0) {
+					builder.append(" or ");
+				}
+
+				builder.append(CavanNotification.KEY_CONTENT + " like ?");
+				mSelectionArgs[i] = "%" + text + "%";
+			}
+
+			builder.append(" collate nocase");
+
+			mSelection = builder.toString();
+		} else {
+			mSelection = null;
+			mSelectionArgs = null;
+			mFilterPatterns = null;
+		}
+
+		updateData(null);
+	}
+
+	public void setFilterEnable(boolean enable) {
+		if (mFilterEnable != enable) {
+			mFilterEnable = enable;
+			updateFilter();
 		}
 	}
 
@@ -94,14 +154,19 @@ public class CavanMessageActivity extends Activity {
 			getWindow().setFlags(FLAG_NEEDS_MENU_KEY, FLAG_NEEDS_MENU_KEY);
 
 			mAdapter = new CavanMessageAdapter(this);
-			updateData();
+			updateData(null);
 
 			getContentResolver().registerContentObserver(CavanNotification.CONTENT_URI, true, mContentObserverMessage);
+			getContentResolver().registerContentObserver(CavanFilter.CONTENT_URI, true, mContentObserverFilter);
 		}
 	}
 
 	@Override
 	protected void onDestroy() {
+		if (mContentObserverFilter != null) {
+			getContentResolver().unregisterContentObserver(mContentObserverFilter);
+		}
+
 		if (mContentObserverMessage != null) {
 			getContentResolver().unregisterContentObserver(mContentObserverMessage);
 		}
@@ -121,7 +186,7 @@ public class CavanMessageActivity extends Activity {
 		case R.id.action_message_clean:
 			int count = CavanNotification.deleteAll(getContentResolver());
 			CavanAndroid.showToast(this, String.format("成功清除 %d 条消息", count));
-			updateData();
+			updateData(null);
 			break;
 
 		case R.id.action_message_finder:
@@ -228,11 +293,11 @@ public class CavanMessageActivity extends Activity {
 		public void onClick(DialogInterface dialog, int which) {
 			switch (which) {
 			case DialogInterface.BUTTON_POSITIVE:
-				mAdapter.setFilterEnable(true);
+				setFilterEnable(true);
 				break;
 
 			case DialogInterface.BUTTON_NEGATIVE:
-				mAdapter.setFilterEnable(false);
+				setFilterEnable(false);
 				break;
 			}
 		}
@@ -240,7 +305,7 @@ public class CavanMessageActivity extends Activity {
 		@Override
 		public void onDismiss(DialogInterface dialog) {
 			addFilter(mEditTextFilter.getText().toString());
-			updateData();
+			updateData(null);
 
 			super.onDismiss(dialog);
 		}
