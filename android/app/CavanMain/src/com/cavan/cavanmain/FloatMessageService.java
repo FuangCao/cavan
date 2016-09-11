@@ -146,6 +146,11 @@ public class FloatMessageService extends FloatWidowService {
 
 			return codes;
 		}
+
+		@Override
+		public int getCodeCount() throws RemoteException {
+			return mMessageCodeMap.size();
+		}
 	};
 
 	private Runnable mRunnableTime = new Runnable() {

@@ -38,8 +38,8 @@ public class CavanMessageAdapter extends BaseAdapter {
 				mView.setSelection(count - 1);
 			}
 
-			String title = mActivity.getResources().getString(R.string.text_message_count);
-			mActivity.setTitle(title + count);
+			String title = mActivity.getResources().getString(R.string.text_message_count, count);
+			mActivity.setTitle(title);
 		}
 	};
 

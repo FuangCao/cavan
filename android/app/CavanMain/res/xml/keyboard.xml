@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
-    android:keyHeight="8%p"
-    android:keyWidth="100%p" >
+	android:keyHeight="8%p"
+	android:keyWidth="100%p"
+	android:horizontalGap="0px"
+	android:verticalGap="0px" >
 
     <Row>
         <Key
@@ -18,9 +20,6 @@
             android:keyIcon="@drawable/key_del"
             android:isRepeatable="true" />
         <Key
-            android:codes="10"
-            android:keyLabel="清空" />
-        <Key
             android:codes="11"
             android:keyLabel="前往" />
     </Row>
@@ -36,14 +35,11 @@
             android:keyOutputText="6"
             android:keyLabel="6" />
         <Key
-            android:codes="1"
-            android:keyLabel="复制" />
+            android:codes="10"
+            android:keyLabel="清空" />
         <Key
             android:codes="3"
             android:keyLabel="剪切" />
-        <Key
-            android:codes="2"
-            android:keyLabel="粘贴" />
     </Row>
 
     <Row>
@@ -57,28 +53,39 @@
             android:keyOutputText="9"
             android:keyLabel="9" />
         <Key
-	        android:codes="13"
-            android:keyOutputText=" "
-            android:keyIcon="@drawable/key_space" />
+            android:codes="1"
+            android:keyLabel="复制" />
         <Key
-            android:codes="5"
-            android:keyLabel="全选" />
-        <Key
-            android:codes="4"
-            android:keyLabel="选择" />
+            android:codes="2"
+            android:keyLabel="粘贴" />
     </Row>
 
 	<Row>
 	    <Key
-            android:codes="8"
-            android:keyLabel="输入法" />
+            android:keyOutputText="."
+            android:keyLabel="." />
 	    <Key
             android:keyOutputText="0"
             android:keyLabel="0" />
 	    <Key
             android:keyOutputText=":"
             android:keyLabel=":" />
-	    <Key
+        <Key
+            android:codes="4"
+            android:keyLabel="选择" />
+        <Key
+            android:codes="5"
+            android:keyLabel="全选" />
+    </Row>
+    <Row>
+        <Key
+            android:codes="8"
+            android:keyLabel="输入法" />
+        <Key
+	        android:codes="13"
+            android:keyOutputText=" "
+            android:keyIcon="@drawable/key_space" />
+        <Key
 	        android:codes="12"
             android:keyOutputText="\n"
             android:keyIcon="@drawable/key_enter" />

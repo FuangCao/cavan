@@ -253,18 +253,19 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 						mAutoCommitCode = code;
 						sendRedPacketCode(code.getCode());
 					}
-				} else if (mActivityRepeat > 3) {
+				} else if (mActivityRepeat > 10) {
 					doRemoveCode(code);
 				}
 			} else if (clsName.equals("com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity")) {
 				if (code.equals(mAutoCommitCode)) {
-					int delay = (int) (code.getDelay() / 1000);
+					long delay = code.getDelay() / 1000;
 					if (delay > 0) {
 						delayMillis = 1000;
 						mActivityRepeat = 0;
-						CavanAndroid.showToast(this, String.format("%d 秒后自动提交", delay));
+
+						String text = getResources().getString(R.string.text_auto_commit_after, delay);
+						CavanAndroid.showToast(this, text);
 					} else if (mActivityRepeat < 3) {
-						sendKeyDownUp(KeyEvent.KEYCODE_TAB);
 						sendKeyDownUp(KeyEvent.KEYCODE_DPAD_DOWN);
 						sendKeyDownUp(KeyEvent.KEYCODE_ENTER);
 					} else {
@@ -288,7 +289,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 				if (needBack) {
 					if (code.equals(mAutoCommitCode)) {
 						if (needRemove) {
-							code.setComplete();
+							doRemoveCode(code);
 						} else {
 							code.updateTime();
 						}
@@ -304,7 +305,12 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 	public void doRemoveCode(RedPacketCode code) {
 		code.setComplete();
+		mActivityRepeat = 0;
 		mAutoCommitCode = null;
+		mActivityClassName = null;
+
+		String text = getResources().getString(R.string.text_remove_code, code.getCode());
+		CavanAndroid.showToastLong(this, text);
 	}
 
 	public RedPacketCode getNextCode() {
@@ -455,6 +461,17 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	public void onStartInputView(EditorInfo info, boolean restarting) {
 		String pkgName = getCurrentInputEditorInfo().packageName;
 		mIsAlipay = CavanPackageName.ALIPAY.equals(pkgName);
+
+		if (mService != null) {
+			try {
+				if (mService.getCodeCount() <= 0) {
+					mCodes.clear();
+					updateInputView();
+				}
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		}
 
 		if (mIsAlipay && mCodes.size() > 0) {
 			if (startAutoCommitThread() == false && mCodes.size() == 1) {

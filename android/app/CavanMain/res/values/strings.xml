@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
 
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">服务管理器</string>
     <string name="text_start">启动</string>
     <string name="text_stop">停止</string>
@@ -27,7 +27,7 @@
     <string name="text_copy">复制</string>
     <string name="text_filter">筛选</string>
     <string name="text_filter_none">不筛选</string>
-    <string name="text_message_count">消息总数： </string>
+    <string name="text_message_count">消息总数：<xliff:g>%1$d</xliff:g></string>
     <string name="text_message_show">查看消息</string>
     <string name="text_message_clean">清空消息</string>
     <string name="text_message_find">筛选消息</string>
@@ -41,5 +41,6 @@
     <string name="text_input_method_select">输入法选择</string>
     <string name="text_auto_unlock">自动解锁</string>
     <string name="text_auto_commit">自动提交</string>
-
+    <string name="text_auto_commit_after"><xliff:g>%1$d</xliff:g> 秒后自动提交</string>
+    <string name="text_remove_code">删除已完成的口令：<xliff:g>%1$s</xliff:g></string>
 </resources>
