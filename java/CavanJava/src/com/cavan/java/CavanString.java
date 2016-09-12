@@ -94,6 +94,37 @@ public class CavanString {
 		return matcher.replaceAll(EMPTY_STRING);
 	}
 
+	public static String fromBdAddr(byte[] bytes) {
+		return String.format("%02x:%02x:%02x:%02x:%02x:%02x", bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]);
+	}
+
+	public static byte[] parseBdAddr(String text) {
+		String[] texts = text.split("\\s*[:\\-\\.]\\s*");
+		if (texts.length != 6) {
+			if (texts.length == 1 && text.length() == 12) {
+				texts = new String[6];
+				for (int i = 0; i < 12; i += 2) {
+					texts[i / 2] = text.substring(i, i + 2);
+				}
+			} else {
+				return null;
+			}
+		}
+
+		byte[] bytes = new byte[6];
+
+		try {
+			for (int i = 0; i < 6; i++) {
+				bytes[i] = (byte) Integer.parseInt(texts[i], 16);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+
+		return bytes;
+	}
+
 	public boolean hasChineseChar() {
 		return hasChineseChar(mContent);
 	}

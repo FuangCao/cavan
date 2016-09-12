@@ -10,6 +10,7 @@ import com.cavan.java.CavanByteCache;
 import com.cavan.java.CavanHexFile;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanProgressListener;
+import com.cavan.java.CavanString;
 
 public class JwaooBleToy extends CavanBleGatt {
 
@@ -476,7 +477,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			return null;
 		}
 
-		return String.format("%02x:%02x:%02x:%02x:%02x:%02x", bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]);
+		return CavanString.fromBdAddr(bytes);
 	}
 
 	public boolean writeBdAddress(byte[] bytes) {
@@ -493,27 +494,8 @@ public class JwaooBleToy extends CavanBleGatt {
 	}
 
 	public boolean writeBdAddress(String addr) {
-		String[] addresses = addr.split("\\s*[:\\-\\.]\\s*");
-		if (addresses.length != 6) {
-			if (addresses.length == 1 && addr.length() == 12) {
-				addresses = new String[6];
-				for (int i = 0; i < 12; i += 2) {
-					addresses[i / 2] = addr.substring(i, i + 2);
-				}
-			} else {
-				CavanAndroid.eLog("Invalid format");
-				return false;
-			}
-		}
-
-		byte[] bytes = new byte[6];
-
-		try {
-			for (int i = 0; i < 6; i++) {
-				bytes[i] = (byte) Integer.parseInt(addresses[i], 16);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
+		byte[] bytes = CavanString.parseBdAddr(addr);
+		if (bytes == null) {
 			return false;
 		}
 

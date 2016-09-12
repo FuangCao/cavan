@@ -23,7 +23,6 @@ import android.widget.Spinner;
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanProgressListener;
 import com.cavan.resource.JwaooToyActivity;
-import com.jwaoo.android.JwaooToySensor;
 
 @SuppressLint("HandlerLeak")
 public class MainActivity extends JwaooToyActivity implements OnClickListener, OnCheckedChangeListener {

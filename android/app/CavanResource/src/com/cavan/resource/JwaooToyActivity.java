@@ -45,7 +45,10 @@ public class JwaooToyActivity extends Activity {
 		return true;
 	}
 
-	protected void onConnected() {}
+	protected void onConnected() {
+		updateUI(true);
+	}
+
 	protected void onSensorDataReceived(byte[] data) {}
 
 	protected JwaooBleToy createJwaooBleToy(BluetoothDevice device) {
