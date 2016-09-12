@@ -429,6 +429,63 @@ static int do_test_keypad(int argc, char *argv[])
 	return ret;
 }
 
+static int do_test_bd_addr(int argc, char *argv[])
+{
+	int ret;
+	char buff[1024];
+	const char *url;
+	struct network_client client;
+
+	assert(argc > 1);
+
+	url = argv[1];
+
+	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	if (ret < 0) {
+		pr_red_info("network_client_open");
+		return -EFAULT;
+	}
+
+	ret = client.recv(&client, buff, sizeof(buff));
+	if (ret <= 0) {
+		pr_red_info("client->recv");
+		goto out_network_client_close;
+	}
+
+	buff[ret] = 0;
+
+	println("buff[%d] = %s", ret, buff);
+
+	if (strcmp(buff, "JwaooBdAddrServer") != 0) {
+		pr_red_info("invalid response");
+		goto out_network_client_close;
+	}
+
+	ret = network_client_send_text(&client, "AllocBdAddr: 1");
+	if (ret < 0) {
+		pr_red_info("network_client_send_text");
+		goto out_network_client_close;
+	}
+
+	ret = client.recv(&client, buff, sizeof(buff));
+	if (ret < 0) {
+		pr_red_info("client.recv");
+		goto out_network_client_close;
+	}
+
+	if (ret != 6) {
+		ret = -EINVAL;
+		pr_red_info("invalid bd addr length: %d", ret);
+		goto out_network_client_close;
+	}
+
+	println("BD_ADDR = %s", mac_address_tostring(buff, 6));
+
+out_network_client_close:
+	network_client_close(&client);
+	return ret;
+}
+
 CAVAN_COMMAND_MAP_START {
 	{ "client", do_test_client },
 	{ "service", do_test_service },
@@ -440,4 +497,5 @@ CAVAN_COMMAND_MAP_START {
 	{ "read_write", do_test_read_write },
 	{ "write_read", do_test_write_read },
 	{ "keypad", do_test_keypad },
+	{ "bd_addr", do_test_bd_addr },
 } CAVAN_COMMAND_MAP_END;

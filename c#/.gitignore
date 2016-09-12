@@ -1,2 +1,5 @@
+*.user
 bin
 obj
+visual studio *
+Visual Studio *
