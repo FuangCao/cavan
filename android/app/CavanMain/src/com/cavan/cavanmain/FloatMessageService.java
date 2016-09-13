@@ -137,6 +137,11 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		@Override
+		public int getMessageCount() throws RemoteException {
+			return FloatMessageService.this.getTextCount();
+		}
+
+		@Override
 		public List<RedPacketCode> getCodes() throws RemoteException {
 			List<RedPacketCode> codes = new ArrayList<RedPacketCode>();
 

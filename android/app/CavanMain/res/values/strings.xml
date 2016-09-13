@@ -41,6 +41,7 @@
     <string name="text_input_method_select">输入法选择</string>
     <string name="text_auto_unlock">自动解锁</string>
     <string name="text_auto_commit">自动提交</string>
+    <string name="text_auto_unpack">自动拆开</string>
     <string name="text_auto_commit_after"><xliff:g>%1$d</xliff:g> 秒后自动提交</string>
     <string name="text_complete_code">已完成口令：<xliff:g>%1$s</xliff:g></string>
 </resources>

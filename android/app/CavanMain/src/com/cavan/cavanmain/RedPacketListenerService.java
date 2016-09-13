@@ -97,28 +97,48 @@ public class RedPacketListenerService extends NotificationListenerService {
 		return mGeneratorNotificationId.genIndex();
 	}
 
-	public boolean sendNotification(Notification notification, CharSequence message, RedPacketCode code) {
-		if (mNotificationManager == null) {
-			return false;
-		}
-
-		if (code != null) {
-			notification.extras.putCharSequence(EXTRA_CODE, code.getCode());
-		}
-
-		notification.extras.putCharSequence(EXTRA_MESSAGE, message);
-
-		mNotificationManager.notify(createNotificationId(), notification);
-
+	public int getMessageCount() {
 		if (mFloatMessageService != null) {
 			try {
-				mFloatMessageService.addMessage(message, code);
+				return mFloatMessageService.getMessageCount();
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
 		}
 
-		return true;
+		return 0;
+	}
+
+	public int getCodeCount() {
+		if (mFloatMessageService != null) {
+			try {
+				return mFloatMessageService.getCodeCount();
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return 0;
+	}
+
+	public void sendNotification(Notification notification, CharSequence message, RedPacketCode code) {
+		if (mNotificationManager != null) {
+			if (code != null) {
+				notification.extras.putCharSequence(EXTRA_CODE, code.getCode());
+			}
+
+			notification.extras.putCharSequence(EXTRA_MESSAGE, message);
+
+			mNotificationManager.notify(createNotificationId(), notification);
+		}
+
+		if (mFloatMessageService != null) {
+			try {
+				mFloatMessageService.addMessage(message, code);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public static boolean postRedPacketCode(ClipboardManager manager, CharSequence code) {
