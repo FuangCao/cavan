@@ -231,7 +231,7 @@ namespace JwaooBdAddrServer {
                 lock (this) {
                     UInt32 index = mIndex + count;
 
-                    bytes = getBdAddr();
+                    bytes = BitConverter.GetBytes(mIndex);
                     stream.Write(bytes, 0, bytes.Length);
 
                     if (saveIndex(index)) {

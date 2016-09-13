@@ -13,4 +13,6 @@
 
     <string name="text_burn">烧录</string>
 
+    <string name="text_request">请求</string>
+
 </resources>

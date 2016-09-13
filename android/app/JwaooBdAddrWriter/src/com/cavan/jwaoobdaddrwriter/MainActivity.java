@@ -13,23 +13,29 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
 import com.cavan.resource.JwaooToyActivity;
 
 public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
-	private static final int MSG_UPDATE_BD_ADDR = 10;
+	private static final int ALLOC_COUNT = 100;
+	private static final String ALLOC_REQ = "AllocBdAddr: " + ALLOC_COUNT;
 
-	private byte[] mBdAddr;
+	private static final int MSG_UPDATE_BD_ADDR = 10;
+	private static final int MSG_REQUEST_COMPLETE = 11;
+
+	private byte[] mBdAddrBytes;
 
 	private Button mButtonExit;
 	private Button mButtonBurn;
+	private Button mButtonRequest;
 
 	private EditText mEditTextIp;
 	private EditText mEditTextPort;
 	private EditText mEditTextBdAddr;
 
-	private byte[] getBdAddrFromServer() {
+	private JwaooBdAddr getBdAddrFromServer() {
 		Socket socket = null;
 		InputStream inStream = null;
 		OutputStream outStream = null;
@@ -62,16 +68,16 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				return null;
 			}
 
-			outStream.write("AllocBdAddr: 1".getBytes());
+			outStream.write(ALLOC_REQ.getBytes());
 
-			byte[] addr = new byte[6];
+			bytes = new byte[4];
 
-			length = inStream.read(addr);
-			if (length != 6) {
+			length = inStream.read(bytes);
+			if (length != 4) {
 				return null;
 			}
 
-			return addr;
+			return new JwaooBdAddr(CavanJava.buildValue32(bytes, 0), ALLOC_COUNT);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -103,13 +109,22 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		return null;
 	}
 
+	private JwaooBdAddr allocBdAddr() {
+		JwaooBdAddr addr = JwaooBdAddr.query(getContentResolver());
+		if (addr == null) {
+			return null;
+		}
+
+		return addr.alloc(getContentResolver());
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
 		mEditTextIp = (EditText) findViewById(R.id.editTextServerIp);
-		mEditTextIp.setText("192.168.1.59");
+		mEditTextIp.setText("192.168.1.42");
 
 		mEditTextPort = (EditText) findViewById(R.id.editTextServerPort);
 		mEditTextPort.setText("12345");
@@ -122,6 +137,9 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		mButtonBurn = (Button) findViewById(R.id.buttonBurn);
 		mButtonBurn.setOnClickListener(this);
 
+		mButtonRequest = (Button) findViewById(R.id.buttonRequest);
+		mButtonRequest.setOnClickListener(this);
+
 		showScanActivity();
 	}
 
@@ -129,15 +147,19 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	protected void handleMessage(Message msg) {
 		switch (msg.what) {
 		case MSG_UPDATE_BD_ADDR:
-			mEditTextBdAddr.setText(CavanString.fromBdAddr(mBdAddr));
+			mEditTextBdAddr.setText(CavanString.fromBdAddr(mBdAddrBytes));
+			break;
+
+		case MSG_REQUEST_COMPLETE:
+			mButtonRequest.setEnabled(true);
 			break;
 		}
 	}
 
 	@Override
 	protected boolean onInitialize() {
-		mBdAddr = mBleToy.readBdAddress();
-		if (mBdAddr == null) {
+		mBdAddrBytes = mBleToy.readBdAddress();
+		if (mBdAddrBytes == null) {
 			return false;
 		}
 
@@ -154,7 +176,31 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 			break;
 
 		case R.id.buttonBurn:
-			mBdAddr = getBdAddrFromServer();
+			CavanAndroid.pLog("count = " + JwaooBdAddr.queryAddrCount(getContentResolver()));
+			JwaooBdAddr addr = allocBdAddr();
+			CavanAndroid.pLog("count = " + JwaooBdAddr.queryAddrCount(getContentResolver()));
+			CavanAndroid.eLog("addr = " + addr);
+			if (addr != null) {
+				addr.recycle(getContentResolver());
+			}
+			CavanAndroid.pLog("count = " + JwaooBdAddr.queryAddrCount(getContentResolver()));
+			break;
+
+		case R.id.buttonRequest:
+			mButtonRequest.setEnabled(false);
+			new Thread() {
+
+				@Override
+				public void run() {
+					JwaooBdAddr addr = getBdAddrFromServer();
+					if (addr != null) {
+						addr.fflush(getContentResolver());
+					}
+
+					CavanAndroid.eLog("addr = " + addr);
+					mHandler.sendEmptyMessage(MSG_REQUEST_COMPLETE);
+				}
+			}.start();
 			break;
 		}
 	}

@@ -432,6 +432,7 @@ static int do_test_keypad(int argc, char *argv[])
 static int do_test_bd_addr(int argc, char *argv[])
 {
 	int ret;
+	u32 value;
 	char buff[1024];
 	const char *url;
 	struct network_client client;
@@ -461,25 +462,25 @@ static int do_test_bd_addr(int argc, char *argv[])
 		goto out_network_client_close;
 	}
 
-	ret = network_client_send_text(&client, "AllocBdAddr: 1");
+	ret = network_client_send_text(&client, "AllocBdAddr: 100");
 	if (ret < 0) {
 		pr_red_info("network_client_send_text");
 		goto out_network_client_close;
 	}
 
-	ret = client.recv(&client, buff, sizeof(buff));
+	ret = client.recv(&client, &value, sizeof(value));
 	if (ret < 0) {
 		pr_red_info("client.recv");
 		goto out_network_client_close;
 	}
 
-	if (ret != 6) {
+	if (ret != sizeof(value)) {
 		ret = -EINVAL;
 		pr_red_info("invalid bd addr length: %d", ret);
 		goto out_network_client_close;
 	}
 
-	println("BD_ADDR = %s", mac_address_tostring(buff, 6));
+	println("BD_ADDR = 0x%08x", value);
 
 out_network_client_close:
 	network_client_close(&client);

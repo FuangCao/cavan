@@ -26,6 +26,7 @@
             </intent-filter>
         </activity>
         <activity android:name="com.cavan.resource.CavanBleScanActivity"></activity>
+        <provider android:name="JwaooBdAddrProvider" android:authorities="com.jwaoo.bdaddr.provider" android:exported="false"></provider>
     </application>
 
 </manifest>
