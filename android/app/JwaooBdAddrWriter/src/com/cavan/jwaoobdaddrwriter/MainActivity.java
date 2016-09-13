@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 import android.os.Bundle;
 import android.os.Message;
@@ -110,7 +109,11 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		setContentView(R.layout.activity_main);
 
 		mEditTextIp = (EditText) findViewById(R.id.editTextServerIp);
+		mEditTextIp.setText("192.168.1.59");
+
 		mEditTextPort = (EditText) findViewById(R.id.editTextServerPort);
+		mEditTextPort.setText("12345");
+
 		mEditTextBdAddr = (EditText) findViewById(R.id.editTextBdAddr);
 
 		mButtonExit = (Button) findViewById(R.id.buttonExit);

@@ -15,6 +15,7 @@ public class RedPacketCode implements Parcelable {
 	private long mTime;
 	private String mCode;
 	private boolean mComplete;
+	private boolean mRepeatable;
 
 	public RedPacketCode(String code) {
 		mCode = code;
@@ -33,12 +34,16 @@ public class RedPacketCode implements Parcelable {
 		mTime = time;
 	}
 
-	public void updateTime() {
+	public long updateTime() {
 		long time = System.currentTimeMillis();
 
-		if (mTime < time) {
-			mTime = time;
+		if (mTime > time) {
+			return mTime - time;
 		}
+
+		mTime = time;
+
+		return 0;
 	}
 
 	public String getCode() {
@@ -62,32 +67,59 @@ public class RedPacketCode implements Parcelable {
 		return 0;
 	}
 
+	public void setComplete(boolean enable) {
+		mComplete = enable;
+	}
+
 	public void setComplete() {
-		mComplete = true;
+		setComplete(true);
 	}
 
 	public boolean isCompleted() {
 		return mComplete;
 	}
 
+	public void setRepeatable(boolean enable) {
+		mRepeatable = enable;
+		updateTime();
+	}
+
+	public void setRepeatable() {
+		setRepeatable(true);
+	}
+
+	public boolean isRepeatable() {
+		return mRepeatable;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof RedPacketCode) {
-			RedPacketCode code = (RedPacketCode) o;
-			return mCode.equals(code.getCode());
+			o = ((RedPacketCode) o).getCode();
 		}
 
-		return false;
+		return mCode.equals(o);
+	}
+
+	@Override
+	public int hashCode() {
+		return mCode.hashCode();
 	}
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder(mCode);
+		StringBuilder builder = new StringBuilder();
+
+		builder.append("code = ");
+		builder.append(mCode);
 
 		if (mTime > 0) {
 			builder.append(", time = ");
 			builder.append(sDateFormat.format(new Date(mTime)));
 		}
+
+		builder.append(", repeatable = ");
+		builder.append(mRepeatable);
 
 		return builder.toString();
 	}
