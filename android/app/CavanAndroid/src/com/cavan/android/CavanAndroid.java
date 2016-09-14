@@ -10,6 +10,7 @@ import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -327,6 +328,28 @@ public class CavanAndroid {
 
 	public static String getDefaultInputMethod(Context context) {
 		return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD);
+	}
+
+	public static String getPreference(Context context, String key, String defValue) {
+		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+		if (preferences == null) {
+			return defValue;
+		}
+
+		return preferences.getString(key, defValue);
+	}
+
+	public static boolean putPreference(Context context, String key, String value) {
+		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+		if (preferences == null) {
+			return false;
+		}
+
+		Editor editor = preferences.edit();
+
+		editor.putString(key, value);
+
+		return editor.commit();
 	}
 
 	public static boolean isPreferenceEnabled(Context context, String key) {

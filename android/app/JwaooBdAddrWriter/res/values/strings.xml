@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
     <string name="app_name">井蛙硬件地址烧录器</string>
-
     <string name="text_server_ip">服务器IP地址：</string>
-
     <string name="text_server_port">服务器端口号：</string>
-
     <string name="text_bd_addr">设备硬件地址：</string>
-
-    <string name="text_exit">退出</string>
-
-    <string name="text_burn">烧录</string>
-
-    <string name="text_request">请求</string>
+    <string name="text_burn">开始烧录</string>
+    <string name="text_request">申请地址</string>
+    <string name="text_addr_remain">剩余地址个数：</string>
+    <string name="text_already_burn">已经烧录过了</string>
+    <string name="text_request_addr_failed">从服务器申请地址失败</string>
+    <string name="text_request_addr_success">成功从服务器申请了 <xliff:g>%1$d</xliff:g> 个地址</string>
+    <string name="text_no_addr">地址用完了，请从服务器申请</string>
+    <string name="text_burn_success">烧录成功</string>
+    <string name="text_burn_failed">烧录失败</string>
+    <string name="text_complete">完成烧录</string>
 
 </resources>

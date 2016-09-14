@@ -17,6 +17,9 @@ public class JwaooBdAddr {
 	private static final String TABLE_NAME = "addresses";
 	public static final Uri CONTENT_URI = Uri.withAppendedPath(JwaooBdAddrProvider.CONTENT_URI, TABLE_NAME);
 
+	public static final byte BD_ADDR_BYTE0 = (byte) 0x80;
+	public static final byte BD_ADDR_BYTE1 = (byte) 0xEA;
+
 	public static final String KEY_TIMESTAMP = "timestamp";
 	public static final String KEY_ADDRESS = "address";
 	public static final String KEY_COUNT = "count";
@@ -29,8 +32,24 @@ public class JwaooBdAddr {
 		CavanDatabaseTable table = provider.getTable(TABLE_NAME);
 
 		table.setColumn(KEY_TIMESTAMP, "long");
-		table.setColumn(KEY_ADDRESS, "long");
+		table.setColumn(KEY_ADDRESS, "integer");
 		table.setColumn(KEY_COUNT, "integer");
+	}
+
+	public static byte[] buildBdAddr(int addr) {
+		CavanByteCache cache = new CavanByteCache(6);
+		cache.writeValue8(BD_ADDR_BYTE0);
+		cache.writeValue8(BD_ADDR_BYTE1);
+		cache.writeValueBe32(addr);
+		return cache.getBytes();
+	}
+
+	public static boolean isValidBdAddr(byte[] bytes) {
+		if (bytes == null || bytes.length != 6) {
+			return false;
+		}
+
+		return bytes[0] == BD_ADDR_BYTE0 && bytes[1] == BD_ADDR_BYTE1;
 	}
 
 	public static Cursor queryCursor(ContentResolver resolver) {
@@ -57,10 +76,10 @@ public class JwaooBdAddr {
 
 	private long mIdentify;
 	private long mTimestamp;
-	private long mAddress;
+	private int mAddress;
 	private int mCount;
 
-	public JwaooBdAddr(long address, int count) {
+	public JwaooBdAddr(int address, int count) {
 		mIdentify = -1;
 		mTimestamp = System.currentTimeMillis();
 		mAddress = address;
@@ -70,7 +89,7 @@ public class JwaooBdAddr {
 	public JwaooBdAddr(Cursor cursor) {
 		mIdentify = cursor.getLong(0);
 		mTimestamp = cursor.getLong(1);
-		mAddress = cursor.getLong(2);
+		mAddress = cursor.getInt(2);
 		mCount = cursor.getInt(3);
 	}
 
@@ -86,7 +105,7 @@ public class JwaooBdAddr {
 		return mAddress;
 	}
 
-	public void setAddress(long address) {
+	public void setAddress(int address) {
 		mAddress = address;
 	}
 
@@ -142,7 +161,7 @@ public class JwaooBdAddr {
 
 	public JwaooBdAddr alloc(ContentResolver resolver) {
 		if (mCount > 0) {
-			long address = mAddress;
+			int address = mAddress;
 
 			mAddress++;
 			mCount--;
@@ -163,11 +182,7 @@ public class JwaooBdAddr {
 	}
 
 	public byte[] getBytes() {
-		CavanByteCache cache = new CavanByteCache(6);
-		cache.writeValue8((byte) 0x80);
-		cache.writeValue8((byte) 0xEA);
-		cache.writeValueBe32((int) mAddress);
-		return cache.getBytes();
+		return buildBdAddr(mAddress);
 	}
 
 	@Override

@@ -10,7 +10,7 @@ public class JwaooBdAddrProvider extends CavanDatabaseProvider {
 	public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORIT);
 
 	private static final String DB_NAME = "bdaddr.db";
-	private static final int DB_VERSION = 3;
+	private static final int DB_VERSION = 1;
 
 	@Override
 	protected void initTables() {
