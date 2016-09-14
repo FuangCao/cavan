@@ -10,6 +10,7 @@ import java.net.InetAddress;
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.Ringtone;
@@ -39,6 +40,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_AUTO_UNLOCK = "auto_unlock";
 	public static final String KEY_AUTO_COMMIT = "auto_commit";
 	public static final String KEY_AUTO_UNPACK = "auto_unpack";
+	public static final String KEY_LISTEN_CLIP = "listen_clip";
 	public static final String KEY_FLOAT_TIMER = "float_timer";
 	public static final String KEY_MESSAGE_SHOW = "message_show";
 	public static final String KEY_INPUT_METHOD_SELECT = "input_method_select";
@@ -48,6 +50,22 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_TCP_DD = "tcp_dd";
 	public static final String KEY_FTP = "ftp";
 	public static final String KEY_WEB_PROXY = "web_proxy";
+
+	public static boolean isFloatTimerEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, MainActivity.KEY_FLOAT_TIMER);
+	}
+
+	public static boolean isAutoCommitEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, MainActivity.KEY_AUTO_COMMIT);
+	}
+
+	public static boolean isAutoUnpackEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, MainActivity.KEY_AUTO_UNPACK);
+	}
+
+	public static boolean isListenClipEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, MainActivity.KEY_LISTEN_CLIP);
+	}
 
 	private File mFileBin;
 	private Preference mPreferenceIpAddress;

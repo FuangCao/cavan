@@ -124,22 +124,42 @@ public class RedPacketNotification extends CavanNotification {
 
 		mNeedSave = CavanJava.ArrayContains(sSavePackages, mPackageName);
 		if (mContent != null && (mNeedSave || needFindTitle || mService.getPackageName().equals(getPackageName()))) {
-			for (String line : mContent.split("\n")) {
-				line = CavanString.strip(line);
-				for (Pattern pattern : sExcludePatterns) {
-					Matcher matcher = pattern.matcher(line);
-					line = matcher.replaceAll(CavanString.EMPTY_STRING);
-				}
-
-				mLines.add(line);
-			}
+			splitContent();
 		}
 
+		joinLines();
+	}
+
+	public RedPacketNotification(RedPacketListenerService service, String content) {
+		super(service.getPackageName(), "剪切板", null, null, content);
+
+		mService = service;
+		splitContent();
+		joinLines();
+	}
+
+	private void splitContent() {
+		for (String line : mContent.split("\n")) {
+			line = CavanString.strip(line);
+			for (Pattern pattern : sExcludePatterns) {
+				Matcher matcher = pattern.matcher(line);
+				line = matcher.replaceAll(CavanString.EMPTY_STRING);
+			}
+
+			mLines.add(line);
+		}
+	}
+
+	private void joinLines() {
 		mJoinedLines = CavanString.join(mLines, " ");
 		mLines.add(mJoinedLines);
 	}
 
 	public Notification getNotification() {
+		if (mNotification == null) {
+			return null;
+		}
+
 		return mNotification.getNotification();
 	}
 
@@ -160,6 +180,10 @@ public class RedPacketNotification extends CavanNotification {
 	}
 
 	public String getPackageName() {
+		if (mNotification == null) {
+			return null;
+		}
+
 		return mNotification.getPackageName();
 	}
 

@@ -304,7 +304,7 @@ public class FloatMessageService extends FloatWidowService {
 		mTextViewTime.setTextSize(TEXT_SIZE_TIME);
 		mTextViewTime.setTextColor(TEXT_COLOR_TIME);
 
-		if (CavanAndroid.isPreferenceEnabled(this, MainActivity.KEY_FLOAT_TIMER)) {
+		if (MainActivity.isFloatTimerEnabled(this)) {
 			setTimerEnable(true);
 		} else {
 			setTimerEnable(false);

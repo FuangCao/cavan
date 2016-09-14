@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ClipboardManager.OnPrimaryClipChangedListener;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -19,7 +20,7 @@ import android.service.notification.StatusBarNotification;
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanIndexGenerator;
 
-public class RedPacketListenerService extends NotificationListenerService {
+public class RedPacketListenerService extends NotificationListenerService implements OnPrimaryClipChangedListener {
 
 	public static final int NOTIFY_TEST = -1;
 	public static final String EXTRA_CODE = "cavan.code";
@@ -27,6 +28,7 @@ public class RedPacketListenerService extends NotificationListenerService {
 
 	private static final int MSG_POST_NOTIFICATION = 1;
 	private static final int MSG_REMOVE_NOTIFICATION = 2;
+	private static final int MSG_CLIP_CHANGED = 3;
 
 	private ClipboardManager mClipboardManager;
 	private NotificationManager mNotificationManager;
@@ -36,11 +38,13 @@ public class RedPacketListenerService extends NotificationListenerService {
 
 		@Override
 		public void handleMessage(Message msg) {
-			StatusBarNotification sbn = (StatusBarNotification) msg.obj;
-			String pkgName = sbn.getPackageName();
+
 
 			switch (msg.what) {
 			case MSG_POST_NOTIFICATION:
+				StatusBarNotification sbn = (StatusBarNotification) msg.obj;
+				String pkgName = sbn.getPackageName();
+
 				if (getPackageName().equals(pkgName)) {
 					if (sbn.getId() != NOTIFY_TEST) {
 						break;
@@ -53,6 +57,9 @@ public class RedPacketListenerService extends NotificationListenerService {
 				break;
 
 			case MSG_REMOVE_NOTIFICATION:
+				sbn = (StatusBarNotification) msg.obj;
+				pkgName = sbn.getPackageName();
+
 				if (getPackageName().equals(pkgName)) {
 					Bundle extras = sbn.getNotification().extras;
 					CharSequence code = extras.getCharSequence(EXTRA_CODE);
@@ -70,6 +77,11 @@ public class RedPacketListenerService extends NotificationListenerService {
 						}
 					}
 				}
+				break;
+
+			case MSG_CLIP_CHANGED:
+				notification = new RedPacketNotification(RedPacketListenerService.this, (String) msg.obj);
+				notification.sendRedPacketNotifyAlipay();
 				break;
 			}
 		}
@@ -181,6 +193,8 @@ public class RedPacketListenerService extends NotificationListenerService {
 	@Override
 	public void onCreate() {
 		mClipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+		mClipboardManager.addPrimaryClipChangedListener(this);
+
 		mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
 		Intent service = FloatMessageService.startService(this);
@@ -203,5 +217,16 @@ public class RedPacketListenerService extends NotificationListenerService {
 	@Override
 	public void onNotificationRemoved(StatusBarNotification sbn) {
 		mHandler.obtainMessage(MSG_REMOVE_NOTIFICATION, sbn).sendToTarget();
+	}
+
+	@Override
+	public void onPrimaryClipChanged() {
+		if (MainActivity.isListenClipEnabled(this)) {
+			ClipData clip = mClipboardManager.getPrimaryClip();
+			if (clip != null && clip.getItemCount() > 0) {
+				String text = clip.getItemAt(0).getText().toString();
+				mHandler.obtainMessage(MSG_CLIP_CHANGED, text).sendToTarget();
+			}
+		}
 	}
 }

@@ -12,13 +12,19 @@
 	    android:title="@string/text_message_show" />
 
 	<CheckBoxPreference android:key="auto_unlock"
+	    android:persistent="true"
 	    android:title="@string/text_auto_unlock" />
 
 	<CheckBoxPreference android:key="auto_commit"
+	    android:persistent="true"
 	    android:title="@string/text_auto_commit" />
 
 	<CheckBoxPreference android:key="auto_unpack"
 	    android:title="@string/text_auto_unpack" />
+
+	<CheckBoxPreference android:key="listen_clip"
+	    android:persistent="true"
+	    android:title="@string/text_listen_clip" />
 
 	<Preference android:key="input_method_select"
 	    android:title="@string/text_input_method_select" />

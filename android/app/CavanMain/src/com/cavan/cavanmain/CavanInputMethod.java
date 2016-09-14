@@ -282,7 +282,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 			CavanAndroid.eLog("mActivityRepeat = " + mActivityRepeat);
 
 			if (clsName.equals("com.alipay.android.phone.discovery.envelope.HomeActivity")) {
-				if (isAutoCommitEnabled()) {
+				if (MainActivity.isAutoCommitEnabled(this)) {
 					if (mActivityRepeat < 3) {
 						if (mAutoCommitCode != code) {
 							if (mAutoCommitCode != null) {
@@ -299,7 +299,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 					}
 				}
 			} else if (clsName.equals("com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity")) {
-				if (isAutoUnpackEnabled()) {
+				if (MainActivity.isAutoUnpackEnabled(this)) {
 					if (code.equals(mAutoCommitCode)) {
 						long delay = code.getDelay() / 1000;
 						if (delay > 0) {
@@ -417,19 +417,11 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		return min;
 	}
 
-	public boolean isAutoCommitEnabled() {
-		return CavanAndroid.isPreferenceEnabled(this, MainActivity.KEY_AUTO_COMMIT);
-	}
-
-	public boolean isAutoUnpackEnabled() {
-		return CavanAndroid.isPreferenceEnabled(this, MainActivity.KEY_AUTO_UNPACK);
-	}
-
 	public boolean startAutoCommitThread() {
 		mAutoStartAlipay = true;
 		mAutoCommitRunnable.sendAutoCommitMessage();
 
-		return isAutoCommitEnabled();
+		return MainActivity.isAutoCommitEnabled(this);
 	}
 
 	public void sendFinishAction(InputConnection conn) {
@@ -597,7 +589,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 			case KeyEvent.KEYCODE_VOLUME_UP:
 			case KeyEvent.KEYCODE_VOLUME_DOWN:
 				setCodeComplete(mAutoCommitCode);
-				return true;
+				break;
 
 			default:
 				mAutoCommitCode.updateTime();
