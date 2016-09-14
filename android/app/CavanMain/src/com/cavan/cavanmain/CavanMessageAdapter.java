@@ -13,6 +13,7 @@ import android.widget.ListView;
 public class CavanMessageAdapter extends BaseAdapter {
 
 	private ListView mView;
+	private boolean mSelectionBottom;
 	private CavanMessageActivity mActivity;
 
 	private int mCount;
@@ -36,6 +37,7 @@ public class CavanMessageAdapter extends BaseAdapter {
 
 			if (isBottom) {
 				mView.setSelection(count - 1);
+				mSelectionBottom = false;
 			}
 
 			String title = mActivity.getResources().getString(R.string.text_message_count, count);
@@ -52,7 +54,15 @@ public class CavanMessageAdapter extends BaseAdapter {
 		mView.setAdapter(this);
 	}
 
+	public void setSelectionBottom() {
+		mSelectionBottom = true;
+	}
+
 	public boolean isSelectionBottom() {
+		if (mSelectionBottom) {
+			return true;
+		}
+
 		int childs = mView.getChildCount();
 		if (childs > 0) {
 			int position = mView.getLastVisiblePosition();
@@ -69,7 +79,7 @@ public class CavanMessageAdapter extends BaseAdapter {
 		return true;
 	}
 
-	public void updateData(Uri uri, String selection, String[] selectionArgs) {
+	public void updateData(Uri uri, String selection, String[] selectionArgs, boolean bottom) {
 		if (uri == null) {
 			mCursor = CavanNotification.query(mActivity.getContentResolver(), selection, selectionArgs, null);
 			mCursors.clear();
@@ -82,6 +92,7 @@ public class CavanMessageAdapter extends BaseAdapter {
 			}
 		}
 
+		mSelectionBottom = bottom;
 		mView.post(mRunnableUpdate);
 	}
 

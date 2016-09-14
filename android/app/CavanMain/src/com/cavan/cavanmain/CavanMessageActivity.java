@@ -42,7 +42,7 @@ public class CavanMessageActivity extends Activity {
 
 		@Override
 		public void onChange(boolean selfChange, Uri uri) {
-			updateData(uri);
+			updateData(uri, false);
 		}
 	};
 
@@ -50,14 +50,6 @@ public class CavanMessageActivity extends Activity {
 	private String mSelection;
 	private String[] mSelectionArgs;
 	private Pattern[] mFilterPatterns;
-
-	private ContentObserver mContentObserverFilter = new ContentObserver(new Handler()) {
-
-		@Override
-		public void onChange(boolean selfChange) {
-			updateFilter();
-		}
-	};
 
 	public static Intent getIntent(Context context) {
 		return new Intent(context, CavanMessageActivity.class);
@@ -67,8 +59,8 @@ public class CavanMessageActivity extends Activity {
 		return mFilterPatterns;
 	}
 
-	public void updateData(Uri uri) {
-		mAdapter.updateData(uri, mSelection, mSelectionArgs);
+	public void updateData(Uri uri, boolean bottom) {
+		mAdapter.updateData(uri, mSelection, mSelectionArgs, bottom);
 	}
 
 	private void updateFilter() {
@@ -108,14 +100,7 @@ public class CavanMessageActivity extends Activity {
 			mFilterPatterns = null;
 		}
 
-		updateData(null);
-	}
-
-	public void setFilterEnable(boolean enable) {
-		if (mFilterEnable != enable) {
-			mFilterEnable = enable;
-			updateFilter();
-		}
+		updateData(null, true);
 	}
 
 	@Override
@@ -154,19 +139,14 @@ public class CavanMessageActivity extends Activity {
 			getWindow().setFlags(FLAG_NEEDS_MENU_KEY, FLAG_NEEDS_MENU_KEY);
 
 			mAdapter = new CavanMessageAdapter(this);
-			updateData(null);
+			updateData(null, true);
 
 			getContentResolver().registerContentObserver(CavanNotification.CONTENT_URI, true, mContentObserverMessage);
-			getContentResolver().registerContentObserver(CavanFilter.CONTENT_URI, true, mContentObserverFilter);
 		}
 	}
 
 	@Override
 	protected void onDestroy() {
-		if (mContentObserverFilter != null) {
-			getContentResolver().unregisterContentObserver(mContentObserverFilter);
-		}
-
 		if (mContentObserverMessage != null) {
 			getContentResolver().unregisterContentObserver(mContentObserverMessage);
 		}
@@ -186,7 +166,7 @@ public class CavanMessageActivity extends Activity {
 		case R.id.action_message_clean:
 			int count = CavanNotification.deleteAll(getContentResolver());
 			CavanAndroid.showToast(this, String.format("成功清除 %d 条消息", count));
-			updateData(null);
+			updateData(null, true);
 			break;
 
 		case R.id.action_message_finder:
@@ -293,11 +273,11 @@ public class CavanMessageActivity extends Activity {
 		public void onClick(DialogInterface dialog, int which) {
 			switch (which) {
 			case DialogInterface.BUTTON_POSITIVE:
-				setFilterEnable(true);
+				mFilterEnable = true;
 				break;
 
 			case DialogInterface.BUTTON_NEGATIVE:
-				setFilterEnable(false);
+				mFilterEnable = false;
 				break;
 			}
 		}
@@ -305,7 +285,7 @@ public class CavanMessageActivity extends Activity {
 		@Override
 		public void onDismiss(DialogInterface dialog) {
 			addFilter(mEditTextFilter.getText().toString());
-			updateData(null);
+			updateFilter();
 
 			super.onDismiss(dialog);
 		}
