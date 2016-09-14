@@ -1,48 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content" >
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignParentTop="true"
+    android:layout_centerHorizontal="true"
+    android:orientation="vertical" >
 
     <ListView
         android:id="@+id/listViewFilter"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true" >
+        android:layout_height="0dp"
+        android:layout_weight="1" >
     </ListView>
 
-    <CheckBox
-        android:id="@+id/checkBoxSelectAll"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/listViewFilter"
-        android:text="@string/text_select_all" />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
 
-    <Button
-        android:id="@+id/buttonDelete"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_alignBaseline="@+id/checkBoxSelectAll"
-        android:text="@string/text_delete" />
+        <CheckBox
+            android:id="@+id/checkBoxSelectAll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignRight="@+id/editTextFilter"
+            android:text="@string/text_select_all" />
 
-    <EditText
-        android:id="@+id/editTextFilter"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_toLeftOf="@+id/buttonAdd"
-        android:layout_below="@+id/checkBoxSelectAll"
-        android:ems="10"
-        android:inputType="text" />
+        <Button
+            android:id="@+id/buttonAdd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/buttonDelete"
+            android:text="@string/text_add" />
 
-    <Button
-        android:id="@+id/buttonAdd"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_alignBaseline="@+id/editTextFilter"
-        android:text="@string/text_add" />
+        <Button
+            android:id="@+id/buttonDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:text="@string/text_delete" />
 
-</RelativeLayout>
+        <EditText
+            android:id="@+id/editTextFilter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/buttonAdd"
+            android:layout_alignBottom="@+id/buttonAdd"
+            android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@+id/buttonAdd"
+            android:ems="10"
+            android:inputType="text" />
+
+    </RelativeLayout>
+
+</LinearLayout>
