@@ -219,13 +219,13 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		mHandler.obtainMessage(MSG_REMOVE_NOTIFICATION, sbn).sendToTarget();
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public void onPrimaryClipChanged() {
 		if (MainActivity.isListenClipEnabled(this)) {
-			ClipData clip = mClipboardManager.getPrimaryClip();
-			if (clip != null && clip.getItemCount() > 0) {
-				String text = clip.getItemAt(0).getText().toString();
-				mHandler.obtainMessage(MSG_CLIP_CHANGED, text).sendToTarget();
+			CharSequence text = mClipboardManager.getText();
+			if (text != null) {
+				mHandler.obtainMessage(MSG_CLIP_CHANGED, text.toString()).sendToTarget();
 			}
 		}
 	}
