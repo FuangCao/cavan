@@ -437,7 +437,11 @@ public class FloatMessageService extends FloatWidowService {
 				}
 			}
 
-			return false;
+			if (msg.what < 3) {
+				mHandler.obtainMessage(msg.what + 1, code).sendToTarget();
+			}
+
+			return true;
 		}
 	}
 }

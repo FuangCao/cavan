@@ -302,13 +302,16 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				while (mActive) {
 					try {
 						mSocket.receive(pack);
-						String text = new String(pack.getData(), 0, pack.getLength());
 
-						if (text.startsWith(LAN_SHARE_PREFIX)) {
-							String user = pack.getAddress().getHostAddress();
-							RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, user, text.substring(LAN_SHARE_PREFIX.length()));
+						if (MainActivity.isLanShareEnabled(RedPacketListenerService.this)) {
+							String text = new String(pack.getData(), 0, pack.getLength());
 
-							mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
+							if (text.startsWith(LAN_SHARE_PREFIX)) {
+								String user = pack.getAddress().getHostAddress();
+								RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, user, text.substring(LAN_SHARE_PREFIX.length()));
+
+								mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
+							}
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
