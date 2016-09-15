@@ -423,6 +423,8 @@ public class FloatMessageService extends FloatWidowService {
 			CharSequence code = (CharSequence) msg.obj;
 			byte[] bytes = (RedPacketListenerService.LAN_SHARE_PREFIX + code).getBytes();
 
+			CavanAndroid.eLog("send" + msg.what + " = " + code);
+
 			try {
 				if (mSocket == null) {
 					mSocket = new MulticastSocket();
@@ -430,7 +432,6 @@ public class FloatMessageService extends FloatWidowService {
 
 				DatagramPacket pack = new DatagramPacket(bytes, bytes.length, InetAddress.getByName(RedPacketListenerService.LAN_SHARE_ADDR), RedPacketListenerService.LAN_SHARE_PORT);
 				mSocket.send(pack);
-				return true;
 			} catch (Exception e) {
 				e.printStackTrace();
 
@@ -440,9 +441,11 @@ public class FloatMessageService extends FloatWidowService {
 				}
 			}
 
-			if (msg.what < 5) {
-				Message message = mHandler.obtainMessage(msg.what + 1, code);
-				mHandler.sendMessageDelayed(message, 1000);
+			if (msg.what < 10) {
+				int index = msg.what + 1;
+
+				Message message = mHandler.obtainMessage(index, code);
+				mHandler.sendMessageDelayed(message, index * 100);
 			}
 
 			return true;
