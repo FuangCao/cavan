@@ -1,5 +1,8 @@
 package com.cavan.cavanmain;
 
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -12,7 +15,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Handler;
+import android.os.Handler.Callback;
+import android.os.HandlerThread;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.RemoteException;
 import android.view.Gravity;
 import android.view.View;
@@ -42,6 +48,7 @@ public class FloatMessageService extends FloatWidowService {
 	private TextView mTextViewAutoUnlock;
 	private HashMap<CharSequence, RedPacketCode> mMessageCodeMap = new HashMap<CharSequence, RedPacketCode>();
 
+	private UdpClientThread mShareThread;
 	private Handler mHandler = new Handler();
 	private InputMethodPickerRunnable mInputMethodPickerRunnable = new InputMethodPickerRunnable();
 
@@ -105,6 +112,7 @@ public class FloatMessageService extends FloatWidowService {
 				mInputMethodPickerRunnable.post();
 
 				sendCodeUpdateBroadcast(ACTION_CODE_ADD, code);
+				shareCode(code.getCode());
 			}
 
 			return view.getId();
@@ -155,6 +163,15 @@ public class FloatMessageService extends FloatWidowService {
 		@Override
 		public int getCodeCount() throws RemoteException {
 			return mMessageCodeMap.size();
+		}
+
+		@Override
+		public boolean shareCode(CharSequence code) throws RemoteException {
+			if (mShareThread != null) {
+				mShareThread.sendCode(code);
+			}
+
+			return false;
 		}
 	};
 
@@ -257,13 +274,22 @@ public class FloatMessageService extends FloatWidowService {
 		filter.addAction(Intent.ACTION_SCREEN_ON);
 		filter.addAction(Intent.ACTION_USER_PRESENT);
 		registerReceiver(mReceiver, filter );
+
+		mShareThread = new UdpClientThread();
+		mShareThread.start();
+
 		super.onCreate();
 	}
 
 	@Override
 	public void onDestroy() {
+		if (mShareThread != null) {
+			mShareThread.quit();
+		}
+
 		unregisterReceiver(mReceiver);
 		setTimerEnable(false);
+
 		super.onDestroy();
 	}
 
@@ -350,6 +376,68 @@ public class FloatMessageService extends FloatWidowService {
 				mHandler.removeCallbacks(this);
 				mHandler.postDelayed(this, 500);
 			}
+		}
+	}
+
+	public class UdpClientThread extends HandlerThread implements Callback {
+
+		private Handler mHandler;
+		private MulticastSocket mSocket;
+
+		public UdpClientThread() {
+			super("UdpClientThread");
+		}
+
+		public boolean sendCode(CharSequence code) {
+			if (mHandler == null) {
+				return false;
+			}
+
+			mHandler.obtainMessage(0, code).sendToTarget();
+
+			return true;
+		}
+
+		@Override
+		public boolean quit() {
+			boolean result = super.quit();
+
+			if (mSocket != null) {
+				mSocket.close();
+				mSocket = null;
+			}
+
+			return result;
+		}
+
+		@Override
+		protected void onLooperPrepared() {
+			mHandler = new Handler(getLooper(), this);
+		}
+
+		@Override
+		public boolean handleMessage(Message msg) {
+			CharSequence code = (CharSequence) msg.obj;
+			byte[] bytes = (RedPacketListenerService.LAN_SHARE_PREFIX + code).getBytes();
+
+			try {
+				if (mSocket == null) {
+					mSocket = new MulticastSocket();
+				}
+
+				DatagramPacket pack = new DatagramPacket(bytes, bytes.length, InetAddress.getByName(RedPacketListenerService.LAN_SHARE_ADDR), RedPacketListenerService.LAN_SHARE_PORT);
+				mSocket.send(pack);
+				return true;
+			} catch (Exception e) {
+				e.printStackTrace();
+
+				if (mSocket != null) {
+					mSocket.close();
+					mSocket = null;
+				}
+			}
+
+			return false;
 		}
 	}
 }

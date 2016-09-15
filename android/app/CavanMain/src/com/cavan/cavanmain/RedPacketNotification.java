@@ -130,8 +130,8 @@ public class RedPacketNotification extends CavanNotification {
 		joinLines();
 	}
 
-	public RedPacketNotification(RedPacketListenerService service, String content) {
-		super(service.getPackageName(), "剪切板", null, null, content);
+	public RedPacketNotification(RedPacketListenerService service, String user, String content) {
+		super(service.getPackageName(), user, null, null, content);
 
 		mService = service;
 		splitContent();

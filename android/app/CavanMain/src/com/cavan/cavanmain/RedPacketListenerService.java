@@ -1,5 +1,10 @@
 package com.cavan.cavanmain;
 
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.ClipData;
@@ -22,14 +27,21 @@ import com.cavan.java.CavanIndexGenerator;
 
 public class RedPacketListenerService extends NotificationListenerService implements OnPrimaryClipChangedListener {
 
+	public static final int LAN_SHARE_PORT = 9898;
+	public static final String LAN_SHARE_ADDR = "224.0.0.1";
+	public static final String LAN_SHARE_PREFIX = "RedPacketCode: ";
+
 	public static final int NOTIFY_TEST = -1;
 	public static final String EXTRA_CODE = "cavan.code";
 	public static final String EXTRA_MESSAGE = "cavan.message";
 
 	private static final int MSG_POST_NOTIFICATION = 1;
 	private static final int MSG_REMOVE_NOTIFICATION = 2;
-	private static final int MSG_CLIP_CHANGED = 3;
+	private static final int MSG_RED_PACKET_NOTIFICATION = 3;
 
+	private UdpServiceThread mLanShareThread;
+
+	private CharSequence mClipText;
 	private ClipboardManager mClipboardManager;
 	private NotificationManager mNotificationManager;
 	private CavanIndexGenerator mGeneratorRequestCode = new CavanIndexGenerator();
@@ -38,7 +50,6 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 		@Override
 		public void handleMessage(Message msg) {
-
 
 			switch (msg.what) {
 			case MSG_POST_NOTIFICATION:
@@ -79,8 +90,8 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				}
 				break;
 
-			case MSG_CLIP_CHANGED:
-				notification = new RedPacketNotification(RedPacketListenerService.this, (String) msg.obj);
+			case MSG_RED_PACKET_NOTIFICATION:
+				notification = (RedPacketNotification) msg.obj;
 				notification.sendRedPacketNotifyAlipay();
 				break;
 			}
@@ -200,11 +211,18 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		Intent service = FloatMessageService.startService(this);
 		bindService(service, mFloatMessageConnection, 0);
 
+		mLanShareThread = new UdpServiceThread();
+		mLanShareThread.start();
+
 		super.onCreate();
 	}
 
 	@Override
 	public void onDestroy() {
+		if (mLanShareThread != null) {
+			mLanShareThread.setActive(false);
+		}
+
 		unbindService(mFloatMessageConnection);
 		super.onDestroy();
 	}
@@ -224,9 +242,89 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	public void onPrimaryClipChanged() {
 		if (MainActivity.isListenClipEnabled(this)) {
 			CharSequence text = mClipboardManager.getText();
-			if (text != null) {
-				mHandler.obtainMessage(MSG_CLIP_CHANGED, text.toString()).sendToTarget();
+			if (text != null && text.equals(mClipText) == false) {
+				mClipText = text;
+				RedPacketNotification notification = new RedPacketNotification(this, "剪切板", text.toString());
+				mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
 			}
+		}
+	}
+
+	public class UdpServiceThread extends Thread {
+
+		private boolean mActive;
+		private MulticastSocket mSocket;
+
+		public void setActive(boolean enable) {
+			if (enable) {
+				mActive = true;
+			} else {
+				mActive = false;
+
+				if (mSocket != null) {
+					MulticastSocket socket = mSocket;
+
+					mSocket = null;
+					socket.close();
+				}
+			}
+		}
+
+		@Override
+		public void run() {
+			mActive = true;
+
+			while (mActive) {
+				if (mSocket != null) {
+					mSocket.close();
+				}
+
+				try {
+					mSocket = new MulticastSocket(LAN_SHARE_PORT);
+					mSocket.joinGroup(InetAddress.getByName(LAN_SHARE_ADDR));
+				} catch (IOException e) {
+					e.printStackTrace();
+
+					synchronized (this) {
+						try {
+							wait(2000);
+						} catch (InterruptedException e1) {
+							e1.printStackTrace();
+						}
+					}
+
+					continue;
+				}
+
+				byte[] bytes = new byte[128];
+				DatagramPacket pack = new DatagramPacket(bytes, bytes.length);
+
+				while (mActive) {
+					try {
+						mSocket.receive(pack);
+						String text = new String(pack.getData(), 0, pack.getLength());
+
+						if (text.startsWith(LAN_SHARE_PREFIX)) {
+							String user = pack.getAddress().getHostAddress();
+							RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, user, text.substring(LAN_SHARE_PREFIX.length()));
+
+							mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
+						}
+					} catch (IOException e) {
+						e.printStackTrace();
+						break;
+					}
+				}
+			}
+
+			mLanShareThread = null;
+
+			if (mSocket != null) {
+				mSocket.close();
+				mSocket = null;
+			}
+
+			mActive = false;
 		}
 	}
 }

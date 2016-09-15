@@ -309,22 +309,18 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 							String text = getResources().getString(R.string.text_auto_commit_after, delay);
 							CavanAndroid.showToast(this, text);
 						} else if (mActivityRepeat < 4) {
-							delayMillis = 200;
-
-							if ((mActivityRepeat & 1) == 0) {
-								sendKeyDownUp(KeyEvent.KEYCODE_TAB);
-							} else {
-								sendKeyDownUp(KeyEvent.KEYCODE_ENTER);
-							}
+							sendKeyDownUp(KeyEvent.KEYCODE_TAB);
+							sendKeyDownUp(KeyEvent.KEYCODE_DPAD_DOWN);
+							sendKeyDownUp(KeyEvent.KEYCODE_ENTER);
 						} else if (mActivityRepeat % 6 == 0) {
 							code.setRepeatable();
 							sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
 						}
-					} else if (mActivityRepeat % 6 == 0) {
+					} else if (mActivityRepeat == 4) {
 						sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
 					}
 				}
-			} else if (mActivityRepeat % 5 == 1) {
+			} else if (mActivityRepeat == 0 || mActivityRepeat == 3) {
 				boolean needBack = false;
 				boolean needRepeat = false;
 				boolean needRemove = false;
@@ -523,6 +519,14 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 					CharSequence text = conn.getTextBeforeCursor(8, 0);
 					if (text != null && text.length() == 8 && CavanJava.isDigit(text)) {
 						sendFinishAction(conn);
+
+						if (mService != null) {
+							try {
+								mService.shareCode(text);
+							} catch (RemoteException e) {
+								e.printStackTrace();
+							}
+						}
 					}
 				}
 			}

@@ -45,4 +45,5 @@
     <string name="text_auto_commit_after"><xliff:g>%1$d</xliff:g> 秒后自动提交</string>
     <string name="text_complete_code">已完成口令：<xliff:g>%1$s</xliff:g></string>
     <string name="text_listen_clip">监听剪切板</string>
+    <string name="text_lan_share">局域网分享</string>
 </resources>

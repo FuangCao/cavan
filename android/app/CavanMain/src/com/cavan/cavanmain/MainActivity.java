@@ -42,6 +42,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_AUTO_UNPACK = "auto_unpack";
 	public static final String KEY_LISTEN_CLIP = "listen_clip";
 	public static final String KEY_FLOAT_TIMER = "float_timer";
+	public static final String KEY_LAN_SHARE = "lan_share";
 	public static final String KEY_MESSAGE_SHOW = "message_show";
 	public static final String KEY_INPUT_METHOD_SELECT = "input_method_select";
 	public static final String KEY_PERMISSION_SETTINGS = "permission_settings";
@@ -65,6 +66,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 	public static boolean isListenClipEnabled(Context context) {
 		return CavanAndroid.isPreferenceEnabled(context, MainActivity.KEY_LISTEN_CLIP);
+	}
+
+	public static boolean isLanShareEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, MainActivity.KEY_LAN_SHARE);
 	}
 
 	private File mFileBin;
