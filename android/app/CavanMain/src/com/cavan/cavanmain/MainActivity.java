@@ -156,10 +156,13 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			}.start();
 		}
 
-		Intent service = new Intent(this, FloatMessageService.class);
+		Intent service = FloatMessageService.buildIntent(this);
 
 		startService(service);
 		bindService(service, mFloatMessageConnection, 0);
+
+		service = RedPacketListenerService.buildIntent(this);
+		startService(service);
 	}
 
 	@Override

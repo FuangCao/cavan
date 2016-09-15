@@ -316,7 +316,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 							code.setRepeatable();
 							sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
 						}
-					} else if (mActivityRepeat == 4) {
+					} else if (mActivityRepeat == 10) {
 						sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
 					}
 				}

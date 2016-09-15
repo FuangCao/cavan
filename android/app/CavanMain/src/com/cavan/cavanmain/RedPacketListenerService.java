@@ -8,6 +8,7 @@ import java.net.MulticastSocket;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.ClipData;
+import android.content.ClipDescription;
 import android.content.ClipboardManager;
 import android.content.ClipboardManager.OnPrimaryClipChangedListener;
 import android.content.ComponentName;
@@ -30,6 +31,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	public static final int LAN_SHARE_PORT = 9898;
 	public static final String LAN_SHARE_ADDR = "224.0.0.1";
 	public static final String LAN_SHARE_PREFIX = "RedPacketCode: ";
+	public static final String CLIP_LABEL = "CavanRedPacketCode";
 
 	public static final int NOTIFY_TEST = -1;
 	public static final String EXTRA_CODE = "cavan.code";
@@ -169,7 +171,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			return false;
 		}
 
-		ClipData data = ClipData.newPlainText("支付宝红包口令", code);
+		ClipData data = ClipData.newPlainText(CLIP_LABEL, code);
 
 		CavanAndroid.eLog("ClipData = " + data);
 		manager.setPrimaryClip(data);
@@ -195,6 +197,10 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
 		context.startActivity(intent);
 		return true;
+	}
+
+	public static Intent buildIntent(Context context) {
+		return new Intent(context, RedPacketListenerService.class);
 	}
 
 	public boolean startAlipayActivity() {
@@ -237,16 +243,29 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		mHandler.obtainMessage(MSG_REMOVE_NOTIFICATION, sbn).sendToTarget();
 	}
 
-	@SuppressWarnings("deprecation")
 	@Override
 	public void onPrimaryClipChanged() {
 		if (MainActivity.isListenClipEnabled(this)) {
-			CharSequence text = mClipboardManager.getText();
-			if (text != null && text.equals(mClipText) == false) {
-				mClipText = text;
-				RedPacketNotification notification = new RedPacketNotification(this, "剪切板", text.toString());
-				mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
+			ClipData clip = mClipboardManager.getPrimaryClip();
+			if (clip == null || clip.getItemCount() <= 0) {
+				return;
 			}
+
+			ClipDescription desc = clip.getDescription();
+			if (desc != null && CLIP_LABEL.equals(desc.getLabel())) {
+				return;
+			}
+
+			CharSequence text = clip.getItemAt(0).coerceToText(this);
+			if (text == null || text.equals(mClipText)) {
+				return;
+			}
+
+			CavanAndroid.eLog("clip = " + text);
+
+			mClipText = text;
+			RedPacketNotification notification = new RedPacketNotification(this, "剪切板", text.toString());
+			mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
 		}
 	}
 
@@ -296,6 +315,8 @@ public class RedPacketListenerService extends NotificationListenerService implem
 					continue;
 				}
 
+				CavanAndroid.eLog("UdpServiceThread running");
+
 				byte[] bytes = new byte[128];
 				DatagramPacket pack = new DatagramPacket(bytes, bytes.length);
 
@@ -307,9 +328,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 							String text = new String(pack.getData(), 0, pack.getLength());
 
 							if (text.startsWith(LAN_SHARE_PREFIX)) {
-								String user = pack.getAddress().getHostAddress();
-								RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, user, text.substring(LAN_SHARE_PREFIX.length()));
-
+								RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, "网络分享", text.substring(LAN_SHARE_PREFIX.length()));
 								mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
 							}
 						}
@@ -318,6 +337,8 @@ public class RedPacketListenerService extends NotificationListenerService implem
 						break;
 					}
 				}
+
+				CavanAndroid.eLog("UdpServiceThread stopping");
 			}
 
 			mLanShareThread = null;

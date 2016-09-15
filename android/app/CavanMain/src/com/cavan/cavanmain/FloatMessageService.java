@@ -191,8 +191,12 @@ public class FloatMessageService extends FloatWidowService {
 		}
 	};
 
+	public static Intent buildIntent(Context context) {
+		return new Intent(context, FloatMessageService.class);
+	}
+
 	public static Intent startService(Context context) {
-		Intent intent = new Intent(context, FloatMessageService.class);
+		Intent intent = buildIntent(context);
 		context.startService(intent);
 		return intent;
 	}
@@ -389,13 +393,12 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		public boolean sendCode(CharSequence code) {
-			if (mHandler == null) {
-				return false;
+			if (mHandler != null && MainActivity.isLanShareEnabled(FloatMessageService.this)) {
+				mHandler.obtainMessage(0, code).sendToTarget();
+				return true;
 			}
 
-			mHandler.obtainMessage(0, code).sendToTarget();
-
-			return true;
+			return false;
 		}
 
 		@Override
@@ -437,8 +440,9 @@ public class FloatMessageService extends FloatWidowService {
 				}
 			}
 
-			if (msg.what < 3) {
-				mHandler.obtainMessage(msg.what + 1, code).sendToTarget();
+			if (msg.what < 5) {
+				Message message = mHandler.obtainMessage(msg.what + 1, code);
+				mHandler.sendMessageDelayed(message, 1000);
 			}
 
 			return true;
