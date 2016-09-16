@@ -36,6 +36,10 @@ import com.cavan.java.CavanJava;
 
 public class MainActivity extends PreferenceActivity implements OnPreferenceChangeListener {
 
+	public static final String ACTION_CODE_ADD = "cavan.intent.action.ACTION_CODE_ADD";
+	public static final String ACTION_CODE_REMOVE = "cavan.intent.action.ACTION_CODE_REMOVE";
+	public static final String ACTION_CODE_POST = "cavan.intent.action.ACTION_CODE_POST";
+
 	public static final String KEY_IP_ADDRESS = "ip_address";
 	public static final String KEY_AUTO_UNLOCK = "auto_unlock";
 	public static final String KEY_AUTO_COMMIT = "auto_commit";

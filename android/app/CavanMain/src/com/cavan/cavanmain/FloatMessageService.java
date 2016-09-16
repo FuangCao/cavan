@@ -33,9 +33,6 @@ import com.cavan.android.FloatWidowService;
 
 public class FloatMessageService extends FloatWidowService {
 
-	public static final String ACTION_CODE_ADD = "cavan.intent.action.ACTION_CODE_ADD";
-	public static final String ACTION_CODE_REMOVE = "cavan.intent.action.ACTION_CODE_REMOVE";
-
 	public static final int TEXT_PADDING = 8;
 	public static final float TEXT_SIZE_TIME = 16;
 	public static final float TEXT_SIZE_MESSAGE = 12;
@@ -111,7 +108,7 @@ public class FloatMessageService extends FloatWidowService {
 				mMessageCodeMap.put(message, code);
 				mInputMethodPickerRunnable.post();
 
-				sendCodeUpdateBroadcast(ACTION_CODE_ADD, code);
+				sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_ADD, code);
 				shareCode(code.getCode());
 			}
 
@@ -130,7 +127,7 @@ public class FloatMessageService extends FloatWidowService {
 			RedPacketCode code = mMessageCodeMap.get(message);
 			if (code != null) {
 				mMessageCodeMap.remove(message);
-				sendCodeUpdateBroadcast(ACTION_CODE_REMOVE, code);
+				sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_REMOVE, code);
 			}
 		}
 

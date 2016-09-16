@@ -12,9 +12,10 @@ public class RedPacketCode implements Parcelable {
 
 	private static final SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
+	private int mCommitCount;
+
 	private long mTime;
 	private String mCode;
-	private boolean mComplete;
 	private boolean mRepeatable;
 
 	public RedPacketCode(String code) {
@@ -67,18 +68,6 @@ public class RedPacketCode implements Parcelable {
 		return 0;
 	}
 
-	public void setComplete(boolean enable) {
-		mComplete = enable;
-	}
-
-	public void setComplete() {
-		setComplete(true);
-	}
-
-	public boolean isCompleted() {
-		return mComplete;
-	}
-
 	public void setRepeatable(boolean enable) {
 		mRepeatable = enable;
 		updateTime();
@@ -90,6 +79,22 @@ public class RedPacketCode implements Parcelable {
 
 	public boolean isRepeatable() {
 		return mRepeatable;
+	}
+
+	public int getCommitCount() {
+		return mCommitCount;
+	}
+
+	public int addCommitCount() {
+		return ++mCommitCount;
+	}
+
+	public int subCommitCount() {
+		if (mCommitCount > 0) {
+			return --mCommitCount;
+		}
+
+		return 0;
 	}
 
 	@Override

@@ -414,11 +414,8 @@ public class RedPacketNotification extends CavanNotification {
 		for (String code : codes) {
 			Notification notification = buildRedPacketNotifyAlipay(code);
 			if (notification != null) {
-				if (mService.getMessageCount() == 0) {
-					mService.startAlipayActivity();
-					mService.postRedPacketCode(code);
-				}
-
+				mService.startAlipayActivity();
+				mService.postRedPacketCode(code);
 				mService.sendNotification(notification, "支付宝口令@" + getUserDescription() + ": " + code, new RedPacketCode(code, time));
 			}
 		}
@@ -430,7 +427,7 @@ public class RedPacketNotification extends CavanNotification {
 		PendingIntent intent = mNotification.getNotification().contentIntent;
 		Notification notification = buildNotification(content, intent);
 
-		if (mService.getMessageCount() == 0) {
+		if (mService.getCodeCount() == 0) {
 			try {
 				intent.send();
 			} catch (CanceledException e) {

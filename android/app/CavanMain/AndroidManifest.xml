@@ -85,6 +85,12 @@
 
             <meta-data android:resource="@xml/inputmethod" android:name="android.view.im"/>
         </service>
+        <service android:name="CavanAccessibilityService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:label="@string/cavan_red_packet_notify">
+            <meta-data android:resource="@xml/accessibility" android:name="android.accessibilityservice"/>
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService"/>
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

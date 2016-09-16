@@ -5,8 +5,6 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import android.content.BroadcastReceiver;
@@ -19,7 +17,6 @@ import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.inputmethodservice.KeyboardView.OnKeyboardActionListener;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.view.KeyCharacterMap;
@@ -41,9 +38,7 @@ import com.cavan.java.CavanString;
 
 public class CavanInputMethod extends InputMethodService implements OnClickListener, OnKeyboardActionListener {
 
-	private static final int AUTO_COMMIT_DELAY = 500;
 	private static final int CODE_MAX_COLUMNS = 4;
-	private static final long CODE_OVERTIME = 7200000;
 
 	public static final int KEYCODE_COPY = 1;
 	public static final int KEYCODE_PASTE = 2;
@@ -59,17 +54,9 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	public static final int KEYCODE_ENTER = 12;
 	public static final int KEYCODE_SPACE = 13;
 
-	private int mActivityRepeat;
-	private boolean mAutoStartAlipay;
-	private String mActivityClassName;
-	private Handler mHandler = new Handler();
-	private AutoCommitRunnable mAutoCommitRunnable = new AutoCommitRunnable();
-
 	private GridView mCodeGridView;
 	private RedPacketCode[] mUiCodes;
-	private RedPacketCode mAutoCommitCode;
 	private List<RedPacketCode> mCodes = new ArrayList<RedPacketCode>();
-	private HashMap<RedPacketCode, Long> mInvalidCodeMap = new HashMap<RedPacketCode, Long>();
 
 	private Keyboard mKeyboard;
 	private KeyboardView mKeyboardView;
@@ -95,21 +82,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			mService = IFloatMessageService.Stub.asInterface(service);
-
-			List<RedPacketCode> codes = getRedPacketCode();
-			if (codes != null) {
-				for (RedPacketCode code : codes) {
-					if (isInvalidCode(code)) {
-						code.setComplete();
-					}
-				}
-
-				mCodes = codes;
-
-				startAutoCommitThread();
-				updateInputView();
-
-			}
+			checkCodeArray();
 		}
 	};
 
@@ -122,23 +95,17 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 			CavanAndroid.eLog("action = " + action);
 
 			switch (action) {
-			case FloatMessageService.ACTION_CODE_ADD:
+			case MainActivity.ACTION_CODE_ADD:
 				RedPacketCode code = intent.getParcelableExtra("code");
 				if (code == null) {
 					break;
 				}
 
-				if (isInvalidCode(code)) {
-					code.setComplete();
-				}
-
 				mCodes.add(code);
-
-				startAutoCommitThread();
 				updateInputView();
 				break;
 
-			case FloatMessageService.ACTION_CODE_REMOVE:
+			case MainActivity.ACTION_CODE_REMOVE:
 				code = intent.getParcelableExtra("code");
 				if (code == null) {
 					break;
@@ -148,9 +115,18 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 				updateInputView();
 				break;
 
-			case Intent.ACTION_CLOSE_SYSTEM_DIALOGS:
-				mAutoStartAlipay = false;
-				checkCodeList();
+			case MainActivity.ACTION_CODE_POST:
+				InputConnection conn = getCurrentInputConnection();
+				if (conn == null) {
+					break;
+				}
+
+				code = intent.getParcelableExtra("code");
+				if (code == null) {
+					sendFinishAction(conn);
+				} else {
+					sendRedPacketCode(code.getCode());
+				}
 				break;
 			}
 		}
@@ -222,20 +198,6 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		return "com.cavan.cavanmain/.CavanInputMethod".equals(CavanAndroid.getDefaultInputMethod(context));
 	}
 
-	public List<RedPacketCode> getRedPacketCode() {
-		if (mService == null) {
-			return null;
-		}
-
-		try {
-			return mService.getCodes();
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		}
-
-		return null;
-	}
-
 	public void updateInputView() {
 		if (mCodeGridView != null) {
 			mCodeGridView.removeCallbacks(mRunnableUpdateInputView);
@@ -243,181 +205,18 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		}
 	}
 
-	public void checkCodeList() {
+	private void checkCodeArray() {
 		try {
-			if (mService != null && mService.getCodeCount() <= 0) {
-				mCodes.clear();
-				updateInputView();
+			if (mService != null && mService.getCodeCount() != mCodes.size()) {
+				List<RedPacketCode> codes = mService.getCodes();
+				if (codes != null) {
+					mCodes = codes;
+					updateInputView();
+				}
 			}
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
-	}
-
-	public long sendRedPacketCodeAuto(RedPacketCode code) {
-		CavanAndroid.setSuspendEnable(this, false, 5000);
-
-		ComponentName info = CavanAndroid.getTopActivityInfo(this);
-		if (info == null) {
-			return AUTO_COMMIT_DELAY;
-		}
-
-		mIsAlipay = CavanPackageName.ALIPAY.equals(info.getPackageName());
-
-		String clsName = info.getClassName();
-
-		CavanAndroid.eLog("activity = " + clsName);
-		CavanAndroid.eLog(code.toString());
-
-		if (clsName.equals(mActivityClassName)) {
-			mActivityRepeat++;
-		} else {
-			mActivityClassName = clsName;
-			mActivityRepeat = 0;
-		}
-
-		long delayMillis = AUTO_COMMIT_DELAY;
-
-		if (mIsAlipay) {
-			CavanAndroid.eLog("mActivityRepeat = " + mActivityRepeat);
-
-			if (clsName.equals("com.alipay.android.phone.discovery.envelope.HomeActivity")) {
-				if (MainActivity.isAutoCommitEnabled(this)) {
-					if (mActivityRepeat < 3) {
-						if (mAutoCommitCode != code) {
-							if (mAutoCommitCode != null) {
-								mAutoCommitCode.updateTime();
-							}
-
-							mAutoCommitCode = code;
-						}
-
-						sendRedPacketCode(code.getCode());
-					} else if (mActivityRepeat > 10) {
-						setCodeComplete(code);
-						addInvalidCode(code);
-					}
-				}
-			} else if (clsName.equals("com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity")) {
-				if (MainActivity.isAutoUnpackEnabled(this)) {
-					if (code.equals(mAutoCommitCode)) {
-						long delay = code.getDelay() / 1000;
-						if (delay > 0) {
-							delayMillis = 1000;
-							mActivityRepeat = -1;
-
-							String text = getResources().getString(R.string.text_auto_commit_after, delay);
-							CavanAndroid.showToast(this, text);
-						} else if (mActivityRepeat < 4) {
-							sendKeyDownUp(KeyEvent.KEYCODE_TAB);
-							sendKeyDownUp(KeyEvent.KEYCODE_DPAD_DOWN);
-							sendKeyDownUp(KeyEvent.KEYCODE_ENTER);
-						} else if (mActivityRepeat % 6 == 0) {
-							code.setRepeatable();
-							sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
-						}
-					} else if (mActivityRepeat == 10) {
-						sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
-					}
-				}
-			} else if (mActivityRepeat == 0 || mActivityRepeat == 3) {
-				boolean needBack = false;
-				boolean needRepeat = false;
-				boolean needRemove = false;
-
-				if (clsName.equals("com.alipay.android.phone.discovery.envelope.crowd.CrowdHostActivity")) {
-					needBack = true;
-					needRemove = true;
-				} else if (clsName.equals("com.alipay.mobile.nebulacore.ui.H5Activity")) {
-					needBack = true;
-					needRepeat = true;
-				} else if (clsName.equals("com.alipay.android.phone.discovery.envelope.mine.AllCouponList")) {
-					needBack = true;
-				}
-
-				if (needBack) {
-					if (code.equals(mAutoCommitCode)) {
-						if (needRemove) {
-							setCodeComplete(code);
-						} else if (needRepeat) {
-							code.setRepeatable();
-						} else {
-							code.updateTime();
-						}
-					}
-
-					sendDownUpKeyEvents(KeyEvent.KEYCODE_BACK);
-				}
-			}
-		} else {
-			if (code.updateTime() <= 0 && mAutoStartAlipay && code.isRepeatable() == false) {
-				RedPacketListenerService.startAlipayActivity(this);
-			}
-		}
-
-		return delayMillis;
-	}
-
-	public void setCodeComplete(RedPacketCode code) {
-		code.setComplete();
-		mActivityRepeat = 0;
-
-		String text = getResources().getString(R.string.text_complete_code, code.getCode());
-		CavanAndroid.showToastLong(this, text);
-	}
-
-	public void addInvalidCode(RedPacketCode code) {
-		long time = System.currentTimeMillis();
-		long overtime = time - CODE_OVERTIME;
-
-		Iterator<Long> iterator = mInvalidCodeMap.values().iterator();
-		while (iterator.hasNext()) {
-			if (iterator.next() < overtime) {
-				iterator.remove();
-			}
-		}
-
-		mInvalidCodeMap.put(code, time);
-	}
-
-	public boolean isInvalidCode(RedPacketCode code) {
-		Long time = mInvalidCodeMap.get(code);
-		if (time == null) {
-			return false;
-		}
-
-		if (System.currentTimeMillis() - time < CODE_OVERTIME) {
-			return true;
-		}
-
-		mInvalidCodeMap.remove(code);
-
-		return false;
-	}
-
-	public RedPacketCode getNextCode() {
-		RedPacketCode min = null;
-		long time = Long.MAX_VALUE;
-
-		for (RedPacketCode code : mCodes) {
-			if (code.isCompleted()) {
-				continue;
-			}
-
-			if (code.getTime() < time) {
-				time = code.getTime();
-				min = code;
-			}
-		}
-
-		return min;
-	}
-
-	public boolean startAutoCommitThread() {
-		mAutoStartAlipay = true;
-		mAutoCommitRunnable.sendAutoCommitMessage();
-
-		return MainActivity.isAutoCommitEnabled(this);
 	}
 
 	public void sendFinishAction(InputConnection conn) {
@@ -468,9 +267,9 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		bindService(FloatMessageService.startService(this), mConnection, 0);
 
 		IntentFilter filter = new IntentFilter();
-		filter.addAction(FloatMessageService.ACTION_CODE_ADD);
-		filter.addAction(FloatMessageService.ACTION_CODE_REMOVE);
-		filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
+		filter.addAction(MainActivity.ACTION_CODE_ADD);
+		filter.addAction(MainActivity.ACTION_CODE_REMOVE);
+		filter.addAction(MainActivity.ACTION_CODE_POST);
 		registerReceiver(mReceiver, filter);
 
 		KeypadThread thread = new KeypadThread();
@@ -542,12 +341,10 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	public void onStartInputView(EditorInfo info, boolean restarting) {
 		mIsAlipay = CavanPackageName.ALIPAY.equals(getCurrentInputEditorInfo().packageName);
 
-		checkCodeList();
+		checkCodeArray();
 
-		if (mIsAlipay && mCodes.size() > 0) {
-			if (startAutoCommitThread() == false && mCodes.size() == 1) {
-				sendRedPacketCode(mCodes.get(0).getCode());
-			}
+		if (mIsAlipay && mCodes.size() == 1) {
+			sendRedPacketCode(mCodes.get(0).getCode());
 		}
 
 		super.onStartInputView(info, restarting);
@@ -581,26 +378,6 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		}
 
 		sendRedPacketCode(text);
-	}
-
-	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		CavanAndroid.eLog("onKeyDown: code = " + keyCode);
-
-		if (mIsAlipay && mAutoCommitCode != null) {
-			switch (keyCode) {
-			case KeyEvent.KEYCODE_MENU:
-			case KeyEvent.KEYCODE_VOLUME_UP:
-			case KeyEvent.KEYCODE_VOLUME_DOWN:
-				setCodeComplete(mAutoCommitCode);
-				break;
-
-			default:
-				mAutoCommitCode.updateTime();
-			}
-		}
-
-		return super.onKeyDown(keyCode, event);
 	}
 
 	@Override
@@ -720,28 +497,6 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	@Override
 	public void swipeUp() {
 	}
-
-	public class AutoCommitRunnable implements Runnable {
-
-		public void sendAutoCommitMessage(long delay) {
-			mHandler.postDelayed(this, delay);
-		}
-
-		public void sendAutoCommitMessage() {
-			sendAutoCommitMessage(AUTO_COMMIT_DELAY);
-		}
-
-		@Override
-		public void run() {
-			RedPacketCode code = getNextCode();
-			if (code != null) {
-				long delay = sendRedPacketCodeAuto(code);
-
-				mHandler.removeCallbacks(this);
-				sendAutoCommitMessage(delay);
-			}
-		}
-	};
 
 	public class KeypadThread extends Thread {
 
