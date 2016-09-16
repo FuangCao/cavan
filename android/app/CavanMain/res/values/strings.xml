@@ -37,6 +37,7 @@
     <string name="text_protected_apps">受保护后台应用</string>
     <string name="text_notification_manager">通知管理中心</string>
     <string name="text_notification_access">通知读取权限</string>
+    <string name="text_accessibility_settings">辅助功能设置</string>
     <string name="cavan_input_method">曹福昂输入法</string>
     <string name="text_input_method_select">输入法选择</string>
     <string name="text_auto_unlock">自动解锁</string>

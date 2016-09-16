@@ -4,13 +4,16 @@
     xmlns:settings="http://schemas.android.com/apk/res/com.android.settings"
     android:key="parent">
 
-	<Preference android:key="protected_apps"
-	    android:title="@string/text_protected_apps" />
+	<Preference android:key="notification_access"
+	    android:title="@string/text_notification_access" />
+
+	<Preference android:key="accessibility_settings"
+	    android:title="@string/text_accessibility_settings" />
 
 	<Preference android:key="notification_manager"
 	    android:title="@string/text_notification_manager" />
 
-	<Preference android:key="notification_access"
-	    android:title="@string/text_notification_access" />
+	<Preference android:key="protected_apps"
+	    android:title="@string/text_protected_apps" />
 
 </PreferenceScreen>
