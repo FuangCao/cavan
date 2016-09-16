@@ -23,6 +23,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
+import com.cavan.java.CavanString;
 
 public class CavanAccessibilityService extends AccessibilityService {
 
@@ -37,6 +38,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private long mDelay;
 	private long mCommitTime;
 	private boolean mAutoStartAlipay;
+
+	private String mClassName = CavanString.EMPTY_STRING;
+	private String mPackageName = CavanString.EMPTY_STRING;
 
 	private RedPacketCode mCode;
 	private List<RedPacketCode> mCodes = new ArrayList<RedPacketCode>();
@@ -59,10 +63,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				List<RedPacketCode> codes = mService.getCodes();
 				if (codes != null) {
 					mCodes = codes;
-
-					if (codes.size() > 0) {
-						startAutoCommitRedPacketCode();
-					}
+					startAutoCommitRedPacketCode(0);
 				}
 			} catch (RemoteException e) {
 				e.printStackTrace();
@@ -76,12 +77,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 		@Override
 		public void run() {
 			mHandler.removeCallbacks(this);
-
 			postRedPacketCode(getNextCode());
-
-			if (getRedPacketCodeCount() > 0) {
-				mHandler.postDelayed(this, POLL_DELAY);
-			}
+			startAutoCommitRedPacketCode(POLL_DELAY);
 		}
 	};
 
@@ -107,24 +104,16 @@ public class CavanAccessibilityService extends AccessibilityService {
 				}
 
 				mCodes.add(code);
-				startAutoCommitRedPacketCode();
+				startAutoCommitRedPacketCode(0);
 				break;
 
 			case MainActivity.ACTION_CODE_REMOVE:
-				try {
-					if (mService == null || mService.getCodeCount() > 0) {
-						code = intent.getParcelableExtra("code");
-						if (code == null) {
-							break;
-						}
-
-						mCodes.remove(code);
-					} else {
-						mCodes.clear();
-					}
-				} catch (RemoteException e) {
-					e.printStackTrace();
+				code = intent.getParcelableExtra("code");
+				if (code == null) {
+					break;
 				}
+
+				mCodes.remove(code);
 				break;
 
 			case Intent.ACTION_CLOSE_SYSTEM_DIALOGS:
@@ -141,7 +130,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 
 		for (AccessibilityNodeInfo node : nodes) {
-			if (text.equals(node.getText().toString())) {
+			CharSequence sequence = node.getText();
+			if (sequence == null) {
+				continue;
+			}
+
+			if (text.equals(sequence.toString())) {
 				return node;
 			}
 		}
@@ -161,9 +155,28 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return mCodes.size();
 	}
 
-	public void startAutoCommitRedPacketCode() {
-		mAutoStartAlipay = true;
-		mHandler.post(mRunnableAlipay);
+	public boolean startAutoCommitRedPacketCode(long delayMillis) {
+		int count = getRedPacketCodeCount();
+
+		CavanAndroid.eLog("getRedPacketCodeCount = " + count);
+
+		if (count <= 0) {
+			mCodes.clear();
+			return false;
+		}
+
+		if (delayMillis > 0) {
+			mHandler.postDelayed(mRunnableAlipay, delayMillis);
+		} else {
+			mAutoStartAlipay = true;
+			mHandler.post(mRunnableAlipay);
+		}
+
+		return true;
+	}
+
+	private void performBackAction() {
+		performGlobalAction(GLOBAL_ACTION_BACK);
 	}
 
 	private boolean onAccessibilityEventMM(AccessibilityEvent event) {
@@ -176,8 +189,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	private boolean postRedPacketCode(RedPacketCode code) {
 		ComponentName info = CavanAndroid.getTopActivityInfo(this);
-		if (info == null || CavanPackageName.ALIPAY.equals(info.getPackageName()) == false) {
-			if (mAutoStartAlipay && code != null && code.isRepeatable() == false) {
+		if (info != null) {
+			mPackageName = info.getPackageName();
+		}
+
+		CavanAndroid.eLog("mPackageName = " + mPackageName);
+
+		if (!CavanPackageName.ALIPAY.equals(mPackageName)) {
+			if (mAutoStartAlipay && code != null) {
 				RedPacketListenerService.startAlipayActivity(this);
 			}
 
@@ -189,7 +208,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 			return false;
 		}
 
-		switch (info.getClassName()) {
+		CavanAndroid.eLog("mClassName = " + mClassName);
+
+		switch (mClassName) {
 		case "com.eg.android.AlipayGphone.AlipayLogin":
 			gotoRedPacketActivity(root);
 			break;
@@ -218,7 +239,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 					mCode.subCommitCount();
 				}
 
-				performGlobalAction(GLOBAL_ACTION_BACK);
+				performBackAction();
 			}
 			break;
 
@@ -230,7 +251,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 		case "com.alipay.android.phone.discovery.envelope.crowd.CrowdHostActivity":
 			setRedPacketCodeComplete();
-			performGlobalAction(GLOBAL_ACTION_BACK);
+			performBackAction();
 			break;
 
 		case "com.alipay.mobile.nebulacore.ui.H5Activity":
@@ -239,8 +260,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				mCode.updateTime();
 				mCode = null;
 			}
-		default:
-			performGlobalAction(GLOBAL_ACTION_BACK);
+			performBackAction();
 		}
 
 		return false;
@@ -365,7 +385,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			CharSequence text = infoInput.getText();
 			if (text != null && text.length() > 0) {
 				mCode = null;
-				performGlobalAction(GLOBAL_ACTION_BACK);
+				performBackAction();
 				return false;
 			}
 
@@ -387,15 +407,18 @@ public class CavanAccessibilityService extends AccessibilityService {
 			List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText("看看朋友手气");
 			if (nodes != null && nodes.size() > 0) {
 				setRedPacketCodeComplete();
-				performGlobalAction(GLOBAL_ACTION_BACK);
+				performBackAction();
 			}
 		}
 	}
 
 	private void onWindowStateChanged(AccessibilityEvent event) {
-		switch (event.getPackageName().toString()) {
+		mClassName = event.getClassName().toString();
+		mPackageName = event.getPackageName().toString();
+
+		switch (mPackageName) {
 		case CavanPackageName.ALIPAY:
-			startAutoCommitRedPacketCode();
+			startAutoCommitRedPacketCode(0);
 			break;
 
 		case CavanPackageName.QQ:

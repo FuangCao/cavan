@@ -86,6 +86,10 @@ public class RedPacketCode implements Parcelable {
 	}
 
 	public int addCommitCount() {
+		if (mRepeatable) {
+			return 1;
+		}
+
 		return ++mCommitCount;
 	}
 
