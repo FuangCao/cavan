@@ -80,6 +80,7 @@ public class RedPacketNotification extends CavanNotification {
 
 	public static final Pattern[] sExcludePatterns = {
 		Pattern.compile("[a-z]+://\\S+", Pattern.CASE_INSENSITIVE),
+		Pattern.compile("(QQ|群|手机|电话|微信|号码)\\D*\\d+", Pattern.CASE_INSENSITIVE),
 	};
 
 	public static final String[] sFindTitlePackages = {

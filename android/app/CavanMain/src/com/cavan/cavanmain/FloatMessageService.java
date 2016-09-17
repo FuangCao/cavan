@@ -114,8 +114,9 @@ public class FloatMessageService extends FloatWidowService {
 
 				if (code.isNetShared()) {
 					mNetSharedCodes.addTimedValue(code.getCode());
-				} else {
-					sendSharedCode(code.getCode());
+				} else if (mShareThread != null) {
+					long delay = code.getTime() - System.currentTimeMillis();
+					mShareThread.sendCode(code.getCode(), delay);
 				}
 			}
 
@@ -171,11 +172,11 @@ public class FloatMessageService extends FloatWidowService {
 
 		@Override
 		public boolean sendSharedCode(String code) throws RemoteException {
-			if (mShareThread == null || mNetSharedCodes.hasTimedValue(code)) {
-				return false;
+			if (mShareThread != null) {
+				return mShareThread.sendCode(code, 0);
 			}
 
-			return mShareThread.sendCode(code);
+			return false;
 		}
 	};
 
@@ -396,14 +397,23 @@ public class FloatMessageService extends FloatWidowService {
 			super("UdpClientThread");
 		}
 
-		public boolean sendCode(String code) {
-			if (mHandler == null) {
+		public boolean sendCode(String code, long delay) {
+			if (mHandler == null || mNetSharedCodes.hasTimedValue(code)) {
 				return false;
 			}
 
-			if (MainActivity.isLanShareEnabled(FloatMessageService.this)) {
-				mHandler.obtainMessage(0, code).sendToTarget();
-				return true;
+			if (!MainActivity.isLanShareEnabled(FloatMessageService.this)) {
+				return false;
+			}
+
+			mNetSharedCodes.addTimedValue(code);
+
+			Message message = mHandler.obtainMessage(0, code);
+
+			if (delay > 0) {
+				mHandler.sendMessageDelayed(message, delay);
+			} else {
+				mHandler.sendMessage(message);
 			}
 
 			return false;
