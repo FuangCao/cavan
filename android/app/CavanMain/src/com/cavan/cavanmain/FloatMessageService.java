@@ -398,11 +398,17 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		public boolean sendCode(String code, long delay) {
-			if (mHandler == null || mNetSharedCodes.hasTimedValue(code)) {
+			if (!MainActivity.isLanShareEnabled(FloatMessageService.this)) {
 				return false;
 			}
 
-			if (!MainActivity.isLanShareEnabled(FloatMessageService.this)) {
+			if (mNetSharedCodes.hasTimedValue(code)) {
+				String text = getResources().getString(R.string.text_ignore_shared_code, code);
+				CavanAndroid.showToast(FloatMessageService.this, text );
+				return false;
+			}
+
+			if (mHandler == null) {
 				return false;
 			}
 
