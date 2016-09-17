@@ -321,7 +321,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 						if (mService != null) {
 							try {
-								mService.shareCode(text);
+								mService.sendSharedCode(text.toString());
 							} catch (RemoteException e) {
 								e.printStackTrace();
 							}

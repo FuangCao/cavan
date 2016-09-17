@@ -108,6 +108,7 @@ public class RedPacketNotification extends CavanNotification {
 	private String mJoinedLines;
 	private List<String> mLines = new ArrayList<String>();
 
+	private boolean mNetShared;
 	private RedPacketListenerService mService;
 	private StatusBarNotification mNotification;
 
@@ -130,9 +131,10 @@ public class RedPacketNotification extends CavanNotification {
 		joinLines();
 	}
 
-	public RedPacketNotification(RedPacketListenerService service, String user, String content) {
+	public RedPacketNotification(RedPacketListenerService service, String user, String content, boolean shared) {
 		super(service.getPackageName(), user, null, null, content);
 
+		mNetShared = shared;
 		mService = service;
 		splitContent();
 		joinLines();
@@ -153,6 +155,10 @@ public class RedPacketNotification extends CavanNotification {
 	private void joinLines() {
 		mJoinedLines = CavanString.join(mLines, " ");
 		mLines.add(mJoinedLines);
+	}
+
+	public void setNetShared() {
+		mNetShared = true;
 	}
 
 	public Notification getNotification() {
@@ -416,7 +422,7 @@ public class RedPacketNotification extends CavanNotification {
 			if (notification != null) {
 				mService.startAlipayActivity();
 				mService.postRedPacketCode(code);
-				mService.sendNotification(notification, "支付宝口令@" + getUserDescription() + ": " + code, new RedPacketCode(code, time));
+				mService.sendNotification(notification, "支付宝口令@" + getUserDescription() + ": " + code, new RedPacketCode(code, time, mNetShared));
 			}
 		}
 
@@ -454,7 +460,7 @@ public class RedPacketNotification extends CavanNotification {
 	public String getRedPacketCodeNormal() {
 		String code = sPackageCodeMap.get(getPackageName());
 		if (code != null) {
-			if (getContent().startsWith("[" + code + "]")) {
+			if (mContent != null && mContent.startsWith("[" + code + "]")) {
 				return code;
 			}
 

@@ -3,6 +3,8 @@ package com.cavan.cavanmain;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.cavan.java.CavanJava;
+
 import android.annotation.SuppressLint;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -16,15 +18,17 @@ public class RedPacketCode implements Parcelable {
 
 	private long mTime;
 	private String mCode;
+	private boolean mNetShared;
 	private boolean mRepeatable;
 
 	public RedPacketCode(String code) {
 		mCode = code;
 	}
 
-	public RedPacketCode(String code, long time) {
+	public RedPacketCode(String code, long time, boolean shared) {
 		mCode = code;
 		mTime = time;
+		mNetShared = shared;
 	}
 
 	public long getTime() {
@@ -105,6 +109,14 @@ public class RedPacketCode implements Parcelable {
 		return 0;
 	}
 
+	public void setNetShared() {
+		mNetShared = true;
+	}
+
+	public boolean isNetShared() {
+		return mNetShared;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (mCode == obj) {
@@ -154,6 +166,7 @@ public class RedPacketCode implements Parcelable {
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeString(mCode);
 		dest.writeLong(mTime);
+		dest.writeByte(CavanJava.getBoolValueByte(mNetShared));
 	}
 
 	public static final Creator<RedPacketCode> CREATOR = new Creator<RedPacketCode>() {
@@ -165,7 +178,7 @@ public class RedPacketCode implements Parcelable {
 
 		@Override
 		public RedPacketCode createFromParcel(Parcel source) {
-			return new RedPacketCode(source.readString(), source.readLong());
+			return new RedPacketCode(source.readString(), source.readLong(), source.readByte() > 0);
 		}
 	};
 }

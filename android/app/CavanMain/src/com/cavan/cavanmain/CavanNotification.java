@@ -15,6 +15,7 @@ import android.service.notification.StatusBarNotification;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanDatabaseProvider.CavanDatabaseTable;
+import com.cavan.java.CavanString;
 
 public class CavanNotification {
 
@@ -194,6 +195,10 @@ public class CavanNotification {
 	}
 
 	public String getContent() {
+		if (mContent == null) {
+			return CavanString.EMPTY_STRING;
+		}
+
 		return mContent;
 	}
 

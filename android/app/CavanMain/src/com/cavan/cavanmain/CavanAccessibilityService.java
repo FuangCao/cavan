@@ -19,7 +19,6 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Parcelable;
 import android.os.RemoteException;
-import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -47,7 +46,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private String mClassName = CavanString.EMPTY_STRING;
 	private String mPackageName = CavanString.EMPTY_STRING;
 
+	private int mCodeCount;
 	private RedPacketCode mCode;
+	private CharSequence mInputtedCode;
 	private List<RedPacketCode> mCodes = new ArrayList<RedPacketCode>();
 	private HashMap<RedPacketCode, Long> mInvalidCodeMap = new HashMap<RedPacketCode, Long>();
 
@@ -94,8 +95,17 @@ public class CavanAccessibilityService extends AccessibilityService {
 		@Override
 		public void run() {
 			mHandler.removeCallbacks(this);
+			mCodeCount = getRedPacketCodeCount();
+
+			CavanAndroid.eLog("getRedPacketCodeCount = " + mCodeCount);
+
 			postRedPacketCode(getNextCode());
-			startAutoCommitRedPacketCode(POLL_DELAY);
+
+			if (mCodeCount > 0) {
+				startAutoCommitRedPacketCode(POLL_DELAY);
+			} else {
+				mAutoStartAlipay = false;
+			}
 		}
 	};
 
@@ -173,15 +183,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public boolean startAutoCommitRedPacketCode(long delayMillis) {
-		int count = getRedPacketCodeCount();
-
-		CavanAndroid.eLog("getRedPacketCodeCount = " + count);
-
-		if (count <= 0) {
-			mCodes.clear();
-			return false;
-		}
-
 		if (delayMillis > 0) {
 			mHandler.postDelayed(mRunnableAlipay, delayMillis);
 		} else {
@@ -193,7 +194,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	private void performBackAction() {
-		performGlobalAction(GLOBAL_ACTION_BACK);
+		if (mCodeCount > 0) {
+			performGlobalAction(GLOBAL_ACTION_BACK);
+		}
 	}
 
 	private boolean onAccessibilityEventMM(AccessibilityEvent event) {
@@ -229,11 +232,13 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 		switch (mClassName) {
 		case "com.eg.android.AlipayGphone.AlipayLogin":
-			gotoRedPacketActivity(root);
+			if (mCodeCount > 0) {
+				gotoRedPacketActivity(root);
+			}
 			break;
 
 		case "com.alipay.android.phone.discovery.envelope.HomeActivity":
-			if (code != null && MainActivity.isAutoCommitEnabled(this)) {
+			if (mCodeCount > 0 && code != null && MainActivity.isAutoCommitEnabled(this)) {
 				long delay = code.getDelay() / 1000;
 				if (delay > 0) {
 					if (delay != mDelay) {
@@ -269,6 +274,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		case "com.alipay.android.phone.discovery.envelope.crowd.CrowdHostActivity":
 			setRedPacketCodeComplete();
 			performBackAction();
+			mInputtedCode = null;
 			break;
 
 		case "com.alipay.mobile.nebulacore.ui.H5Activity":
@@ -276,7 +282,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 				mCode.setRepeatable();
 				mCode.updateTime();
 			}
+
 			performBackAction();
+			break;
+
+		default:
+			if (!mClassName.startsWith("com.alipay.mobile.framework.app.ui.DialogHelper")) {
+				performBackAction();
+			}
 		}
 
 		return false;
@@ -291,6 +304,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private void setRedPacketCodeComplete() {
 		if (mCode != null) {
 			removeRedPacketCode(mCode);
+			mCode = null;
 		}
 	}
 
@@ -423,6 +437,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 		AccessibilityNodeInfo info = findAccessibilityNodeInfoByText(root, "拆红包");
 		if (info != null) {
 			info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+
+			if (mInputtedCode != null && mService != null) {
+				try {
+					mService.sendSharedCode(mInputtedCode.toString());
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			}
 		} else {
 			List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText("看看朋友手气");
 			if (nodes != null && nodes.size() > 0) {
@@ -465,6 +487,19 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 	}
 
+	private void onViewTextChanged(AccessibilityEvent event) {
+		switch (event.getPackageName().toString()) {
+		case CavanPackageName.ALIPAY:
+			List<CharSequence> sequences = event.getText();
+			if (sequences == null || sequences.size() <= 0) {
+				break;
+			}
+
+			mInputtedCode = sequences.get(0);
+			break;
+		}
+	}
+
 	@Override
 	public void onAccessibilityEvent(AccessibilityEvent event) {
 		CavanAndroid.eLog("================================================================================");
@@ -477,6 +512,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 		case AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED:
 			onNotificationStateChanged(event);
+			break;
+
+		case AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED:
+			onViewTextChanged(event);
 			break;
 		}
 	}

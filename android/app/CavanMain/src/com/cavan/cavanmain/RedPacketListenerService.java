@@ -264,7 +264,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			CavanAndroid.eLog("clip = " + text);
 
 			mClipText = text;
-			RedPacketNotification notification = new RedPacketNotification(this, "剪切板", text.toString());
+			RedPacketNotification notification = new RedPacketNotification(this, "剪切板", text.toString(), false);
 			mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
 		}
 	}
@@ -330,7 +330,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 							CavanAndroid.eLog("receive = " + text);
 
 							if (text.startsWith(LAN_SHARE_PREFIX)) {
-								RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, "网络分享", text.substring(LAN_SHARE_PREFIX.length()));
+								RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, "网络分享", text.substring(LAN_SHARE_PREFIX.length()), true);
 								mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
 							}
 						}

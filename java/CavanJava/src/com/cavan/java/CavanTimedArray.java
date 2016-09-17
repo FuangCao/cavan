@@ -31,6 +31,32 @@ public class CavanTimedArray<E> extends ArrayList<CavanTimedNode<E>> {
 		return remove(index);
 	}
 
+
+	public void addTimedNode(CavanTimedNode<E> node) {
+		mLastNode = node;
+
+		removeOvertimeNodes(node.getTime());
+		add(node);
+	}
+
+	public void addTimedValue(E value) {
+		addTimedNode(new CavanTimedNode<E>(value));
+	}
+
+	public E getTimedValue(int index) {
+		return get(index).getValue();
+	}
+
+	public boolean hasTimedValue(E value) {
+		for (CavanTimedNode<E> node : this) {
+			if (node.getValue().equals(value)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	protected int removeTimedNodes(long timeNow, long overtime) {
 		int count = 0;
 
@@ -60,13 +86,6 @@ public class CavanTimedArray<E> extends ArrayList<CavanTimedNode<E>> {
 
 	protected int removeOvertimeNodes() {
 		return removeTimedNodes(System.currentTimeMillis(), mOverTime);
-	}
-
-	protected void addTimedNode(CavanTimedNode<E> node) {
-		mLastNode = node;
-
-		removeOvertimeNodes(node.getTime());
-		add(node);
 	}
 
 	protected double updateFreq() {
