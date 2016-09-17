@@ -16,8 +16,10 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.Parcelable;
 import android.os.RemoteException;
+import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -28,8 +30,11 @@ import com.cavan.java.CavanString;
 public class CavanAccessibilityService extends AccessibilityService {
 
 	private static final long POLL_DELAY = 500;
+	private static final long INPUT_OVERTIME = 5000;
 	private static final long COMMIT_OVERTIME = 5000;
 	private static final long CODE_OVERTIME = 7200000;
+
+	private static final int MSG_INPUT_TIMEOUT = 1;
 
 	private static final String[] PACKAGE_NAMES = {
 		CavanPackageName.ALIPAY,
@@ -71,7 +76,19 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 	};
 
-	private Handler mHandler = new Handler();
+	private Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case MSG_INPUT_TIMEOUT:
+				RedPacketCode code = (RedPacketCode) msg.obj;
+				code.updateTime();
+				break;
+			}
+		}
+	};
+
 	private Runnable mRunnableAlipay = new Runnable() {
 
 		@Override
@@ -258,7 +275,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 			if (mCode != null) {
 				mCode.setRepeatable();
 				mCode.updateTime();
-				mCode = null;
 			}
 			performBackAction();
 		}
@@ -275,7 +291,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private void setRedPacketCodeComplete() {
 		if (mCode != null) {
 			removeRedPacketCode(mCode);
-			mCode = null;
 		}
 	}
 
@@ -368,33 +383,38 @@ public class CavanAccessibilityService extends AccessibilityService {
 			return false;
 		}
 
-		int count = code.addCommitCount();
-		if (count > 3) {
-			addInvalidCode(code);
-			return false;
-		} else if ((count & 1) == 0) {
-			code.setDelay(COMMIT_OVERTIME);
-			return false;
-		}
+		String text = CavanString.fromCharSequence(infoInput.getText());
+		if (text.equals(code.getCode())) {
+			CavanAndroid.eLog("don't need commit code: " + text);
 
-		Intent intent = new Intent(MainActivity.ACTION_CODE_POST);
-
-		if (CavanInputMethod.isDefaultInputMethod(this)) {
-			intent.putExtra("code", code);
-		} else {
-			CharSequence text = infoInput.getText();
-			if (text != null && text.length() > 0) {
-				mCode = null;
-				performBackAction();
-				return false;
+			if (!mHandler.hasMessages(MSG_INPUT_TIMEOUT, code)) {
+				Message message = mHandler.obtainMessage(MSG_INPUT_TIMEOUT, code);
+				mHandler.sendMessageDelayed(message, INPUT_OVERTIME);
 			}
 
-			RedPacketListenerService.postRedPacketCode(this, code.getCode());
-			infoInput.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+			return true;
+		}
+
+		int count = code.getCommitCount();
+		if (count > 3) {
+			addInvalidCode(code);
+		} else {
+			code.addCommitCount();
 		}
 
 		mCode = code;
-		sendBroadcast(intent);
+
+		if (count < 2 && CavanInputMethod.isDefaultInputMethod(this)) {
+			Intent intent = new Intent(MainActivity.ACTION_CODE_POST);
+			intent.putExtra("code", code);
+			sendBroadcast(intent);
+		} else if (text.isEmpty()) {
+			RedPacketListenerService.postRedPacketCode(this, code.getCode());
+			infoInput.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+		} else {
+			performBackAction();
+			return false;
+		}
 
 		return true;
 	}

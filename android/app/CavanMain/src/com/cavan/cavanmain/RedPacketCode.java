@@ -82,6 +82,10 @@ public class RedPacketCode implements Parcelable {
 	}
 
 	public int getCommitCount() {
+		if (mRepeatable) {
+			return 0;
+		}
+
 		return mCommitCount;
 	}
 
@@ -102,12 +106,20 @@ public class RedPacketCode implements Parcelable {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if (o instanceof RedPacketCode) {
-			o = ((RedPacketCode) o).getCode();
+	public boolean equals(Object obj) {
+		if (mCode == obj) {
+			return true;
 		}
 
-		return mCode.equals(o);
+		if (obj instanceof RedPacketCode) {
+			obj = ((RedPacketCode) obj).getCode();
+		} else if (obj != null) {
+			obj = obj.toString();
+		} else {
+			return false;
+		}
+
+		return mCode.equals(obj);
 	}
 
 	@Override

@@ -125,6 +125,14 @@ public class CavanString {
 		return bytes;
 	}
 
+	public static String fromCharSequence(CharSequence sequence) {
+		if (sequence == null) {
+			return EMPTY_STRING;
+		}
+
+		return sequence.toString();
+	}
+
 	public boolean hasChineseChar() {
 		return hasChineseChar(mContent);
 	}
