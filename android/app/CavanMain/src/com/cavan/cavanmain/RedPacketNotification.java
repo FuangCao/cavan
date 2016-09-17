@@ -414,8 +414,16 @@ public class RedPacketNotification extends CavanNotification {
 	}
 
 	public int sendRedPacketNotifyAlipay() {
-		List<String> codes = getRedPacketCodes();
-		long time = System.currentTimeMillis() + getCodeDelay();
+		List<String> codes;
+		long time = System.currentTimeMillis();
+
+		if (mNetShared) {
+			codes = new ArrayList<String>();
+			codes.add(mContent);
+		} else {
+			codes = getRedPacketCodes();
+			time += getCodeDelay();
+		}
 
 		for (String code : codes) {
 			Notification notification = buildRedPacketNotifyAlipay(code);
