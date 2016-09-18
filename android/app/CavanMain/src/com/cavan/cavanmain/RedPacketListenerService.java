@@ -25,6 +25,7 @@ import android.service.notification.StatusBarNotification;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanIndexGenerator;
+import com.cavan.java.CavanString;
 
 public class RedPacketListenerService extends NotificationListenerService implements OnPrimaryClipChangedListener {
 
@@ -330,7 +331,11 @@ public class RedPacketListenerService extends NotificationListenerService implem
 							CavanAndroid.eLog("receive = " + text);
 
 							if (text.startsWith(LAN_SHARE_PREFIX)) {
-								RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, "网络分享", text.substring(LAN_SHARE_PREFIX.length()), true);
+								String code = CavanString.deleteSpace(text.substring(LAN_SHARE_PREFIX.length()));
+
+								CavanAndroid.eLog("code = " + code);
+
+								RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, "网络分享", code, true);
 								mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
 							}
 						}

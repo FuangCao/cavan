@@ -104,6 +104,22 @@ const char *inet_get_special_address(const char *hostname)
 	return NULL;
 }
 
+
+bool inet_addr_is_broadcast(struct sockaddr_in *addr)
+{
+	uint32_t value = ntohl(addr->sin_addr.s_addr);
+
+	if ((value & 0xFF) == 0xFF) {
+		return true;
+	}
+
+	if (value == CAVAN_BUILD_IP_ADDR(224, 0, 0, 1)) {
+		return true;
+	}
+
+	return false;
+}
+
 const char *inet_check_hostname(const char *hostname, char *buff, size_t size)
 {
 	const char *special = inet_get_special_address(hostname);
@@ -2030,15 +2046,15 @@ static int network_client_udp_common_open(struct network_client *client, struct 
 			pr_red_info("network_client_udp_talk");
 			return ret;
 		}
-
-		ret = connect(client->sockfd, addr, client->addrlen);
-		if (ret < 0) {
-			pr_error_info("connect");
-			return ret;
-		}
-
-		client->close = network_client_tcp_close;
 	}
+
+	ret = connect(client->sockfd, addr, client->addrlen);
+	if (ret < 0) {
+		pr_error_info("connect");
+		return ret;
+	}
+
+	client->close = network_client_tcp_close;
 
 	if (flags & CAVAN_NET_FLAG_SYNC) {
 		ret = network_client_set_sync(client);
@@ -2069,7 +2085,7 @@ static int network_client_udp_open(struct network_client *client, const struct n
 		return sockfd;
 	}
 
-	if ((ntohl(addr.sin_addr.s_addr) & 0xFF) == 0xFF) {
+	if (inet_addr_is_broadcast(&addr)) {
 		int broadcast = 1;
 
 		ret = setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));

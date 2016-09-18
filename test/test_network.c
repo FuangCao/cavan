@@ -84,7 +84,7 @@ static int do_test_client(int argc, char *argv[])
 
 	url = argv[1];
 
-	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_WAIT);
 	if (ret < 0) {
 		pr_red_info("network_client_open");
 		return -EFAULT;
@@ -201,7 +201,7 @@ static int do_test_send(int argc, char *argv[])
 	url = argv[1];
 	pathname = argv[2];
 
-	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_WAIT);
 	if (ret < 0) {
 		pr_red_info("network_client_open");
 		return -EFAULT;
@@ -289,7 +289,7 @@ static int do_test_read_write(int argc, char *argv[])
 
 	url = argv[1];
 
-	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_WAIT);
 	if (ret < 0) {
 		pr_red_info("network_client_open");
 		return -EFAULT;
@@ -330,7 +330,7 @@ static int do_test_write_read(int argc, char *argv[])
 
 	url = argv[1];
 
-	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_WAIT);
 	if (ret < 0) {
 		pr_red_info("network_client_open");
 		return -EFAULT;
@@ -370,7 +370,7 @@ static int do_test_keypad(int argc, char *argv[])
 	url = argv[1];
 	pr_pos_info();
 
-	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_WAIT);
 	if (ret < 0) {
 		pr_red_info("network_client_open");
 		return -EFAULT;
@@ -441,7 +441,7 @@ static int do_test_bd_addr(int argc, char *argv[])
 
 	url = argv[1];
 
-	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC);
+	ret = network_client_open2(&client, url, CAVAN_NET_FLAG_WAIT);
 	if (ret < 0) {
 		pr_red_info("network_client_open");
 		return -EFAULT;

@@ -50,6 +50,9 @@
 #define CAVAN_NET_FLAG_SYNC			(1 << 1)
 #define CAVAN_NET_FLAG_WAIT			(1 << 2)
 
+#define CAVAN_BUILD_IP_ADDR(a, b, c, d) \
+	((uint32_t) ((a) << 24 | (b) << 16 | (c) << 8 | (d)))
+
 struct tcp_discovery_client;
 
 #pragma pack(1)
@@ -381,6 +384,7 @@ struct cavan_inet_route {
 
 const char *network_get_socket_pathname(void);
 char *network_get_hostname(char *buff, size_t size);
+bool inet_addr_is_broadcast(struct sockaddr_in *addr);
 const char *inet_get_special_address(const char *hostname);
 const char *inet_check_hostname(const char *hostname, char *buff, size_t size);
 ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const struct sockaddr_in *remote_addr);
