@@ -400,6 +400,13 @@ class CavanCommandNetMonitor implements ICavanCommand {
 	}
 }
 
+class CavanCommandNetwork implements ICavanCommand {
+	@Override
+	public int main(String... args) {
+		return CavanNative.doNetwork(args);
+	}
+}
+
 class CavanCommandPartProbe implements ICavanCommand {
 	@Override
 	public int main(String... args) {
@@ -722,6 +729,13 @@ class CavanCommandTcpProxy implements ICavanCommand {
 	}
 }
 
+class CavanCommandTcpRepeater implements ICavanCommand {
+	@Override
+	public int main(String... args) {
+		return CavanNative.doTcpRepeater(args);
+	}
+}
+
 class CavanCommandTee implements ICavanCommand {
 	@Override
 	public int main(String... args) {
@@ -911,6 +925,7 @@ public class CavanNative {
 		sHashMap.put("mtd", new CavanCommandMtd());
 		sHashMap.put("net_discovery", new CavanCommandNetDiscovery());
 		sHashMap.put("net_monitor", new CavanCommandNetMonitor());
+		sHashMap.put("network", new CavanCommandNetwork());
 		sHashMap.put("part_probe", new CavanCommandPartProbe());
 		sHashMap.put("part_show", new CavanCommandPartShow());
 		sHashMap.put("part_table", new CavanCommandPartTable());
@@ -957,6 +972,7 @@ public class CavanNative {
 		sHashMap.put("tcp_install", new CavanCommandTcpInstall());
 		sHashMap.put("tcp_keypad", new CavanCommandTcpKeypad());
 		sHashMap.put("tcp_proxy", new CavanCommandTcpProxy());
+		sHashMap.put("tcp_repeater", new CavanCommandTcpRepeater());
 		sHashMap.put("tee", new CavanCommandTee());
 		sHashMap.put("textlen", new CavanCommandTextlen());
 		sHashMap.put("tftp_auto_dd", new CavanCommandTftpAutoDd());
@@ -1033,6 +1049,7 @@ public class CavanNative {
 	public static native int doMtd(String... args);
 	public static native int doNetDiscovery(String... args);
 	public static native int doNetMonitor(String... args);
+	public static native int doNetwork(String... args);
 	public static native int doPartProbe(String... args);
 	public static native int doPartShow(String... args);
 	public static native int doPartTable(String... args);
@@ -1079,6 +1096,7 @@ public class CavanNative {
 	public static native int doTcpInstall(String... args);
 	public static native int doTcpKeypad(String... args);
 	public static native int doTcpProxy(String... args);
+	public static native int doTcpRepeater(String... args);
 	public static native int doTee(String... args);
 	public static native int doTextlen(String... args);
 	public static native int doTftpAutoDd(String... args);

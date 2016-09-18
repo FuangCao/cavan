@@ -394,6 +394,13 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doNetMonitor(JNIEnv *env, jcl
 	return CavanMainExecute(env, args, "net_monitor", do_cavan_net_monitor);
 }
 
+extern int do_cavan_network(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doNetwork(JNIEnv *env, jclass clazz, jobjectArray args)
+{
+	return CavanMainExecute(env, args, "network", do_cavan_network);
+}
+
 extern int do_cavan_part_probe(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doPartProbe(JNIEnv *env, jclass clazz, jobjectArray args)
@@ -714,6 +721,13 @@ extern int do_cavan_tcp_proxy(int argc, char *argv[]);
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpProxy(JNIEnv *env, jclass clazz, jobjectArray args)
 {
 	return CavanMainExecute(env, args, "tcp_proxy", do_cavan_tcp_proxy);
+}
+
+extern int do_cavan_tcp_repeater(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpRepeater(JNIEnv *env, jclass clazz, jobjectArray args)
+{
+	return CavanMainExecute(env, args, "tcp_repeater", do_cavan_tcp_repeater);
 }
 
 extern int do_cavan_tee(int argc, char *argv[]);

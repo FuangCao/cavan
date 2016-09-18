@@ -5,6 +5,7 @@
     <string name="text_start">启动</string>
     <string name="text_stop">停止</string>
     <string name="ftp_service">FTP 服务器</string>
+    <string name="tcp_repeater">TCP 转发器</string>
     <string name="tcp_dd_service">TCP_DD 服务器</string>
     <string name="web_proxy_service">Web 代理服务器</string>
     <string name="text_running">正在运行</string>
@@ -15,7 +16,7 @@
     <string name="text_close_service">关闭服务</string>
     <string name="text_service_connected">已连接到服务</string>
     <string name="text_service_disconnected">已断开服务</string>
-    <string name="text_ip_address">本机IP地址</string>
+    <string name="text_local_ip_address">本机IP地址</string>
     <string name="text_unknown">未知</string>
     <string name="desktop_float_timer">桌面悬浮时钟</string>
     <string name="cavan_red_packet_notify">曹福昂红包提醒</string>
@@ -48,5 +49,8 @@
     <string name="text_ignore_invalid_code">忽略非法的口令：<xliff:g>%1$s</xliff:g></string>
     <string name="text_ignore_shared_code">忽略已分享的口令：<xliff:g>%1$s</xliff:g></string>
     <string name="text_listen_clip">监听剪切板</string>
-    <string name="text_lan_share">局域网分享</string>
+    <string name="text_lan_share">内网分享</string>
+    <string name="text_wan_share">外网分享</string>
+    <string name="text_wan_ip">外网IP地址</string>
+    <string name="text_wan_port">外网端口号</string>
 </resources>

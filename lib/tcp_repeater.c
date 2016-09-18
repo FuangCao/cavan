@@ -79,9 +79,6 @@ static int cavan_tcp_repeater_run_handler(struct cavan_dynamic_service *service,
 			break;
 		}
 
-		buff[length] = 0;
-		println("buff[%d] = %s", length, buff);
-
 		cavan_dynamic_service_lock(service);
 
 		for (head = conn->next; head != conn; head = head->next) {

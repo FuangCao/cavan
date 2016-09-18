@@ -34,7 +34,6 @@ int main(int argc, char *argv[])
 
 	service->min = 20;
 	service->max = 1000;
-	service->verbose = true;
 
 	repeater = cavan_dynamic_service_get_data(service);
 	network_url_init(&repeater->url, "tcp", "any", CAVAN_TCP_REPEATER_PORT, network_get_socket_pathname());

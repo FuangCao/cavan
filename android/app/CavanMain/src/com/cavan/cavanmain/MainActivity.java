@@ -27,6 +27,7 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.preference.RingtonePreference;
+import android.text.InputType;
 import android.view.inputmethod.InputMethodManager;
 
 import com.cavan.android.CavanAndroid;
@@ -47,14 +48,18 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_LISTEN_CLIP = "listen_clip";
 	public static final String KEY_FLOAT_TIMER = "float_timer";
 	public static final String KEY_LAN_SHARE = "lan_share";
+	public static final String KEY_WAN_SHARE = "wan_share";
+	public static final String KEY_WAN_IP = "wan_ip";
+	public static final String KEY_WAN_PORT = "wan_port";
 	public static final String KEY_MESSAGE_SHOW = "message_show";
 	public static final String KEY_INPUT_METHOD_SELECT = "input_method_select";
 	public static final String KEY_PERMISSION_SETTINGS = "permission_settings";
 	public static final String KEY_RED_PACKET_NOTIFY_TEST = "red_packet_notify_test";
 	public static final String KEY_RED_PACKET_NOTIFY_RINGTONE = "red_packet_notify_ringtone";
-	public static final String KEY_TCP_DD = "tcp_dd";
 	public static final String KEY_FTP = "ftp";
+	public static final String KEY_TCP_DD = "tcp_dd";
 	public static final String KEY_WEB_PROXY = "web_proxy";
+	public static final String KEY_TCP_REPEATER = "tcp_repeater";
 
 	public static boolean isFloatTimerEnabled(Context context) {
 		return CavanAndroid.isPreferenceEnabled(context, MainActivity.KEY_FLOAT_TIMER);
@@ -76,6 +81,28 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		return CavanAndroid.isPreferenceEnabled(context, MainActivity.KEY_LAN_SHARE);
 	}
 
+	public static boolean isWanShareEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, MainActivity.KEY_WAN_SHARE);
+	}
+
+	public static String getWanShareIpAddress(Context context) {
+		return CavanAndroid.getPreference(context, KEY_WAN_PORT, null);
+	}
+
+	public static int getWanSharePort(Context context) {
+		String text = CavanAndroid.getPreference(context, KEY_WAN_PORT, null);
+
+		try {
+			if (text != null) {
+				return Integer.parseInt(text);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return -1;
+	}
+
 	private File mFileBin;
 	private Preference mPreferenceIpAddress;
 	private Preference mPreferenceInputMethodSelect;
@@ -87,6 +114,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private CavanServicePreference mPreferenceTcpDd;
 	private CavanServicePreference mPreferenceFtp;
 	private CavanServicePreference mPreferenceWebProxy;
+	private CavanServicePreference mPreferenceTcpRepeater;
+	private EditTextPreference mPreferenceWanIp;
+	private EditTextPreference mPreferenceWanPort;
 
 	private IFloatMessageService mFloatMessageService;
 	private ServiceConnection mFloatMessageConnection = new ServiceConnection() {
@@ -121,8 +151,19 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceFloatTime = (CheckBoxPreference) findPreference(KEY_FLOAT_TIMER);
 		mPreferenceFloatTime.setOnPreferenceChangeListener(this);
 
+		mPreferenceWanIp = (EditTextPreference) findPreference(KEY_WAN_IP);
+		mPreferenceWanIp.setSummary(mPreferenceWanIp.getText());
+
+		mPreferenceWanPort = (EditTextPreference) findPreference(KEY_WAN_PORT);
+		mPreferenceWanPort.getEditText().setInputType(InputType.TYPE_CLASS_NUMBER);
+		String text = mPreferenceWanPort.getText();
+		if (text == null || text.isEmpty()) {
+			mPreferenceWanPort.setText("8864");
+		}
+		mPreferenceWanPort.setSummary(mPreferenceWanPort.getText());
+
 		mPreferenceRedPacketNotifyTest = (EditTextPreference) findPreference(KEY_RED_PACKET_NOTIFY_TEST);
-		String text = mPreferenceRedPacketNotifyTest.getText();
+		text = mPreferenceRedPacketNotifyTest.getText();
 		if (text == null || text.isEmpty()) {
 			mPreferenceRedPacketNotifyTest.setText("支付宝红包口令: 12345678");
 		}
@@ -139,9 +180,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceRedPacketNotifyRingtone.setRingtoneType(RingtoneManager.TYPE_NOTIFICATION);
 		mPreferenceRedPacketNotifyRingtone.setOnPreferenceChangeListener(this);
 
-		mPreferenceTcpDd = (CavanServicePreference) findPreference(KEY_TCP_DD);
 		mPreferenceFtp = (CavanServicePreference) findPreference(KEY_FTP);
+		mPreferenceTcpDd = (CavanServicePreference) findPreference(KEY_TCP_DD);
 		mPreferenceWebProxy = (CavanServicePreference) findPreference(KEY_WEB_PROXY);
+		mPreferenceTcpRepeater = (CavanServicePreference) findPreference(KEY_TCP_REPEATER);
 
 		updateIpAddressStatus();
 
@@ -173,9 +215,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	protected void onDestroy() {
 		unbindService(mFloatMessageConnection);
 
-		mPreferenceTcpDd.unbindService(this);
 		mPreferenceFtp.unbindService(this);
+		mPreferenceTcpDd.unbindService(this);
 		mPreferenceWebProxy.unbindService(this);
+		mPreferenceTcpRepeater.unbindService(this);
 
 		super.onDestroy();
 	}
@@ -329,7 +372,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 				PermissionSettingsActivity.startNotificationListenerSettingsActivity(this);
 				CavanAndroid.showToastLong(this, "请打开通知读取权限");
 			}
-		} else if (preference == mPreferenceRedPacketNotifyRingtone) {
+		} else if (preference == mPreferenceRedPacketNotifyRingtone ||
+				preference == mPreferenceWanIp || preference == mPreferenceWanPort) {
 			updateRingtoneSummary((String) object);
 		}
 
