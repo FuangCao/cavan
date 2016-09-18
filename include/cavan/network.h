@@ -452,6 +452,8 @@ void network_url_init(struct network_url *url, const char *protocol, const char 
 char *network_url_get_pathname(const struct network_url *url, char *buff, size_t size);
 char *network_url_tostring(const struct network_url *url, char *buff, size_t size, char **tail);
 char *network_url_parse(struct network_url *url, const char *text);
+void network_url_show_usage(const char *command);
+int network_url_parse_cmdline(struct network_url *url, int argc, char *argv[]);
 
 const struct network_protocol_desc *network_get_protocol_by_name(const char *name);
 const struct network_protocol_desc *network_get_protocol_by_type(network_protocol_t type);

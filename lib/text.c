@@ -2753,6 +2753,28 @@ int text_array_find(const char *text, char *buff[], int size)
 	return -1;
 }
 
+char *text_strip(const char *text, size_t length, char *buff, size_t size)
+{
+	char *buff_end = buff + size - 1;
+	const char *last = text + length - 1;
+
+	while (cavan_isspace(*text)) {
+		text++;
+	}
+
+	while (last >= text && cavan_isspace(*last)) {
+		last--;
+	}
+
+	while (text <= last && buff < buff_end) {
+		*buff++ = *text++;
+	}
+
+	*buff = 0;
+
+	return buff;
+}
+
 char *text_skip_space(const char *text, const char *text_end)
 {
 	while (text < text_end && byte_is_space(*text)) {

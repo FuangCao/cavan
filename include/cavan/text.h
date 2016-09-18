@@ -170,6 +170,7 @@ int text_cmp_nocase(const char *text1, const char *text2);
 int text_ncmp_nocase(const char *text1, const char *text2, size_t size);
 bool text2bool(const char *text);
 
+char *text_strip(const char *text, size_t length, char *buff, size_t size);
 char *text_skip_space(const char *text, const char *text_end);
 char *text_skip_space_invert(const char *text, const char *line);
 char *text_skip_lf(const char *text, const char *text_end);

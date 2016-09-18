@@ -449,6 +449,13 @@ class CavanCommandRamdisk implements ICavanCommand {
 	}
 }
 
+class CavanCommandRedpacket implements ICavanCommand {
+	@Override
+	public int main(String... args) {
+		return CavanNative.doRedpacket(args);
+	}
+}
+
 class CavanCommandRemove implements ICavanCommand {
 	@Override
 	public int main(String... args) {
@@ -911,6 +918,7 @@ public class CavanNative {
 		sHashMap.put("poll_event", new CavanCommandPollEvent());
 		sHashMap.put("poll_input", new CavanCommandPollInput());
 		sHashMap.put("ramdisk", new CavanCommandRamdisk());
+		sHashMap.put("redpacket", new CavanCommandRedpacket());
 		sHashMap.put("remove", new CavanCommandRemove());
 		sHashMap.put("resize", new CavanCommandResize());
 		sHashMap.put("rle", new CavanCommandRle());
@@ -1032,6 +1040,7 @@ public class CavanNative {
 	public static native int doPollEvent(String... args);
 	public static native int doPollInput(String... args);
 	public static native int doRamdisk(String... args);
+	public static native int doRedpacket(String... args);
 	public static native int doRemove(String... args);
 	public static native int doResize(String... args);
 	public static native int doRle(String... args);

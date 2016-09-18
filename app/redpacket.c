@@ -21,8 +21,15 @@
 #include <cavan/command.h>
 #include <cavan/network.h>
 
-#define REDPACKET_IP	"224.0.0.1"
-#define REDPACKET_PORT	9898
+#define REDPACKET_IP			"224.0.0.1"
+#define REDPACKET_PORT			9898
+#define REDPACKET_PREFIX		"RedPacketCode: "
+#define REDPACKET_PREFIX_LEN	(sizeof(REDPACKET_PREFIX) - 1)
+
+static inline int redpacket_udp_build_pack(char *buff, size_t size, const char *code)
+{
+	return snprintf(buff, size, REDPACKET_PREFIX "%s", code);
+}
 
 static int redpacket_udp_sender_cmdline(struct network_client *client)
 {
@@ -30,7 +37,7 @@ static int redpacket_udp_sender_cmdline(struct network_client *client)
 	char pack[1024];
 
 	while (1) {
-		int length;
+		char *p;
 		char code[1024];
 
 		print_ntext("> ", 2);
@@ -40,15 +47,10 @@ static int redpacket_udp_sender_cmdline(struct network_client *client)
 			return -EFAULT;
 		}
 
-		length = strlen(code);
-
-		while (length > 0 && code[length - 1] == '\n') {
-			code[--length] = 0;
-		}
-
-		if (length > 0) {
-			println("code[%d] = %s", length, code);
-			wrlen = snprintf(pack, sizeof(pack), "RedPacketCode: %s", code);
+		p = text_strip(code, strlen(code), code, sizeof(code));
+		if (p > code) {
+			println("code = %s", code);
+			wrlen = redpacket_udp_build_pack(pack, sizeof(pack), code);
 		}
 
 		if (wrlen > 0) {
@@ -75,17 +77,29 @@ static int redpacket_udp_sender_main(int argc, char *argv[])
 
 	network_url_init(&url, "udp", REDPACKET_IP, REDPACKET_PORT, NULL);
 
+	ret = network_url_parse_cmdline(&url, argc, argv);
+	if (ret < 0) {
+		pr_red_info("network_url_parse_cmdline: %d", ret);
+		network_url_show_usage(argv[0]);
+		return ret;
+	}
+
 	ret = network_client_open(&client, &url, 0);
 	if (ret < 0) {
 		pr_err_info("network_client_open: %d", ret);
 		return ret;
 	}
 
-	if (argc > 1) {
-		for (int i = 1; i < argc; i++) {
-			ret = network_client_send_text(&client, argv[i]);
+	if (optind < argc) {
+		int i;
+
+		for (i = optind; i < argc; i++) {
+			char buff[1024];
+			int length = redpacket_udp_build_pack(buff, sizeof(buff), argv[i]);
+
+			ret = client.send(&client, buff, length);
 			if (ret <= 0) {
-				pr_err_info("network_client_send_text: %d", ret);
+				pr_err_info("client.send: %d", ret);
 				break;
 			}
 		}
@@ -106,6 +120,13 @@ static int redpacket_udp_receiver_main(int argc, char *argv[])
 
 	network_url_init(&url, "udp", "any", REDPACKET_PORT, NULL);
 
+	ret = network_url_parse_cmdline(&url, argc, argv);
+	if (ret < 0) {
+		pr_red_info("network_url_parse_cmdline: %d", ret);
+		network_url_show_usage(argv[0]);
+		return ret;
+	}
+
 	ret = network_service_open(&service, &url, 0);
 	if (ret < 0) {
 		pr_err_info("network_service_open: %d", ret);
@@ -123,9 +144,8 @@ static int redpacket_udp_receiver_main(int argc, char *argv[])
 		}
 
 		inet_show_sockaddr((struct sockaddr_in *) &addr);
-
-		buff[ret] = 0;
-		println("buff[%d] = %s", ret, buff);
+		print_ntext(buff, ret);
+		print_char('\n');
 	}
 
 	network_service_close(&service);

@@ -443,6 +443,13 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doRamdisk(JNIEnv *env, jclass
 	return CavanMainExecute(env, args, "ramdisk", do_cavan_ramdisk);
 }
 
+extern int do_cavan_redpacket(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doRedpacket(JNIEnv *env, jclass clazz, jobjectArray args)
+{
+	return CavanMainExecute(env, args, "redpacket", do_cavan_redpacket);
+}
+
 extern int do_cavan_remove(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doRemove(JNIEnv *env, jclass clazz, jobjectArray args)

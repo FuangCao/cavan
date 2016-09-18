@@ -1501,6 +1501,155 @@ bool network_url_equals(const struct network_url *url1, const struct network_url
 	return true;
 }
 
+void network_url_show_usage(const char *command)
+{
+	println("-I, -i, --ip IP\t\t\t%s", cavan_help_message_ip);
+	println("--host [HOSTNAME]\t\t%s", cavan_help_message_hostname);
+	println("-L, -l, ---local\t\t%s", cavan_help_message_local);
+	println("-p, --port PORT\t\t\t%s", cavan_help_message_port);
+	println("-A, -a, --adb\t\t\t%s", cavan_help_message_adb);
+	println("--udp\t\t\t\t%s", cavan_help_message_udp);
+	println("--unix, --unix-tcp [PATHNAME]\t%s", cavan_help_message_unix_tcp);
+	println("--unix-udp [PATHNAME]\t\t%s", cavan_help_message_unix_udp);
+	println("-P, --pt, --protocol PROTOCOL\t%s", cavan_help_message_protocol);
+	println("-U, -u, --url [URL]\t\t%s", cavan_help_message_url);
+	println("--loop\t\t\t\tcycle to execute the command");
+	println("--aloop\t\t\t\tuse adb and cycle to execute the command");
+}
+
+int network_url_parse_cmdline(struct network_url *url, int argc, char *argv[])
+{
+	int c;
+	int option_index;
+	static const struct option long_option[] = {
+		{
+			.name = "ip",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_IP,
+		}, {
+			.name = "port",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_PORT,
+		}, {
+			.name = "adb",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_ADB,
+		}, {
+			.name = "udp",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_UDP,
+		}, {
+			.name = "url",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_URL,
+		}, {
+			.name = "local",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_LOCAL,
+		}, {
+			.name = "host",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_HOST,
+		}, {
+			.name = "unix",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_UNIX,
+		}, {
+			.name = "unix-tcp",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_UNIX_TCP,
+		}, {
+			.name = "unix-udp",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_UNIX_UDP,
+		}, {
+			.name = "protocol",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
+		}, {
+			.name = "pt",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_PROTOCOL,
+		}, {
+			0, 0, 0, 0
+		},
+	};
+
+	while ((c = getopt_long(argc, argv, "IaA:i:I:p:P:lLu:U:", long_option, &option_index)) != EOF) {
+		switch (c) {
+		case 'a':
+		case 'A':
+		case CAVAN_COMMAND_OPTION_ADB:
+			url->protocol = "adb";
+		case 'l':
+		case 'L':
+		case CAVAN_COMMAND_OPTION_LOCAL:
+			optarg = "127.0.0.1";
+		case 'i':
+		case 'I':
+		case CAVAN_COMMAND_OPTION_IP:
+		case CAVAN_COMMAND_OPTION_HOST:
+			url->hostname = optarg;
+			break;
+
+		case CAVAN_COMMAND_OPTION_UDP:
+			url->protocol = "udp";
+			break;
+
+		case 'p':
+		case CAVAN_COMMAND_OPTION_PORT:
+			url->port = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		case 'u':
+		case 'U':
+		case CAVAN_COMMAND_OPTION_URL:
+			if (network_url_parse(url, optarg) == NULL) {
+				pr_red_info("invalid url %s", optarg);
+				return -EINVAL;
+			}
+			break;
+
+		case CAVAN_COMMAND_OPTION_UNIX:
+		case CAVAN_COMMAND_OPTION_UNIX_TCP:
+			url->protocol = "unix-tcp";
+			if (optarg) {
+				url->pathname = optarg;
+			}
+			break;
+
+		case CAVAN_COMMAND_OPTION_UNIX_UDP:
+			url->protocol = "unix-udp";
+			if (optarg) {
+				url->pathname = optarg;
+			}
+			break;
+
+		case 'P':
+		case CAVAN_COMMAND_OPTION_PROTOCOL:
+			url->protocol = optarg;
+			break;
+
+		default:
+			return -EINVAL;
+		}
+	}
+
+	return 0;
+}
+
 int network_create_socket_mac(const char *if_name, int protocol)
 {
 	int ret;
