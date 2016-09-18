@@ -1,12 +1,8 @@
 package com.cavan.cavanmain;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.ClipboardManager;
@@ -14,6 +10,7 @@ import android.content.ClipboardManager.OnPrimaryClipChangedListener;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
@@ -25,13 +22,9 @@ import android.service.notification.StatusBarNotification;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanIndexGenerator;
-import com.cavan.java.CavanString;
 
 public class RedPacketListenerService extends NotificationListenerService implements OnPrimaryClipChangedListener {
 
-	public static final int LAN_SHARE_PORT = 9898;
-	public static final String LAN_SHARE_ADDR = "224.0.0.1";
-	public static final String LAN_SHARE_PREFIX = "RedPacketCode: ";
 	public static final String CLIP_LABEL = "CavanRedPacketCode";
 
 	public static final int NOTIFY_TEST = -1;
@@ -41,8 +34,6 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	private static final int MSG_POST_NOTIFICATION = 1;
 	private static final int MSG_REMOVE_NOTIFICATION = 2;
 	private static final int MSG_RED_PACKET_NOTIFICATION = 3;
-
-	private UdpServiceThread mLanShareThread;
 
 	private CharSequence mClipText;
 	private ClipboardManager mClipboardManager;
@@ -112,6 +103,27 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		@Override
 		public void onServiceConnected(ComponentName arg0, IBinder arg1) {
 			mFloatMessageService = IFloatMessageService.Stub.asInterface(arg1);
+		}
+	};
+
+	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String action = intent.getAction();
+
+			CavanAndroid.eLog("action = " + action);
+
+			switch (action) {
+			case MainActivity.ACTION_CODE_RECEIVED:
+				String code = intent.getStringExtra("code");
+
+				CavanAndroid.eLog("code = " + code);
+
+				RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, "网络分享", code, true);
+				mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
+				break;
+			}
 		}
 	};
 
@@ -218,18 +230,14 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		Intent service = FloatMessageService.startService(this);
 		bindService(service, mFloatMessageConnection, 0);
 
-		mLanShareThread = new UdpServiceThread();
-		mLanShareThread.start();
+		registerReceiver(mReceiver, new IntentFilter(MainActivity.ACTION_CODE_RECEIVED));
 
 		super.onCreate();
 	}
 
 	@Override
 	public void onDestroy() {
-		if (mLanShareThread != null) {
-			mLanShareThread.setActive(false);
-		}
-
+		unregisterReceiver(mReceiver);
 		unbindService(mFloatMessageConnection);
 		super.onDestroy();
 	}
@@ -267,95 +275,6 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			mClipText = text;
 			RedPacketNotification notification = new RedPacketNotification(this, "剪切板", text.toString(), false);
 			mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
-		}
-	}
-
-	public class UdpServiceThread extends Thread {
-
-		private boolean mActive;
-		private MulticastSocket mSocket;
-
-		public void setActive(boolean enable) {
-			if (enable) {
-				mActive = true;
-			} else {
-				mActive = false;
-
-				if (mSocket != null) {
-					MulticastSocket socket = mSocket;
-
-					mSocket = null;
-					socket.close();
-				}
-			}
-		}
-
-		@Override
-		public void run() {
-			mActive = true;
-
-			while (mActive) {
-				if (mSocket != null) {
-					mSocket.close();
-				}
-
-				try {
-					mSocket = new MulticastSocket(LAN_SHARE_PORT);
-					mSocket.joinGroup(InetAddress.getByName(LAN_SHARE_ADDR));
-				} catch (IOException e) {
-					e.printStackTrace();
-
-					synchronized (this) {
-						try {
-							wait(2000);
-						} catch (InterruptedException e1) {
-							e1.printStackTrace();
-						}
-					}
-
-					continue;
-				}
-
-				CavanAndroid.eLog("UdpServiceThread running");
-
-				byte[] bytes = new byte[128];
-				DatagramPacket pack = new DatagramPacket(bytes, bytes.length);
-
-				while (mActive) {
-					try {
-						mSocket.receive(pack);
-
-						if (MainActivity.isLanShareEnabled(RedPacketListenerService.this)) {
-							String text = new String(pack.getData(), 0, pack.getLength());
-
-							CavanAndroid.eLog("receive = " + text);
-
-							if (text.startsWith(LAN_SHARE_PREFIX)) {
-								String code = CavanString.deleteSpace(text.substring(LAN_SHARE_PREFIX.length()));
-
-								CavanAndroid.eLog("code = " + code);
-
-								RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, "网络分享", code, true);
-								mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
-							}
-						}
-					} catch (IOException e) {
-						e.printStackTrace();
-						break;
-					}
-				}
-
-				CavanAndroid.eLog("UdpServiceThread stopping");
-			}
-
-			mLanShareThread = null;
-
-			if (mSocket != null) {
-				mSocket.close();
-				mSocket = null;
-			}
-
-			mActive = false;
 		}
 	}
 }

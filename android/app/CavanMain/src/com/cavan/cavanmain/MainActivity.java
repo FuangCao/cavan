@@ -40,6 +40,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String ACTION_CODE_ADD = "cavan.intent.action.ACTION_CODE_ADD";
 	public static final String ACTION_CODE_REMOVE = "cavan.intent.action.ACTION_CODE_REMOVE";
 	public static final String ACTION_CODE_POST = "cavan.intent.action.ACTION_CODE_POST";
+	public static final String ACTION_CODE_RECEIVED = "cavan.intent.action.ACTION_CODE_RECEIVED";
 
 	public static final String KEY_IP_ADDRESS = "ip_address";
 	public static final String KEY_AUTO_UNLOCK = "auto_unlock";
@@ -152,15 +153,21 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceFloatTime.setOnPreferenceChangeListener(this);
 
 		mPreferenceWanIp = (EditTextPreference) findPreference(KEY_WAN_IP);
+		String text = mPreferenceWanIp.getText();
+		if (text == null || text.isEmpty()) {
+			mPreferenceWanIp.setText("127.0.0.1");
+		}
 		mPreferenceWanIp.setSummary(mPreferenceWanIp.getText());
+		mPreferenceWanIp.setOnPreferenceChangeListener(this);
 
 		mPreferenceWanPort = (EditTextPreference) findPreference(KEY_WAN_PORT);
 		mPreferenceWanPort.getEditText().setInputType(InputType.TYPE_CLASS_NUMBER);
-		String text = mPreferenceWanPort.getText();
+		text = mPreferenceWanPort.getText();
 		if (text == null || text.isEmpty()) {
 			mPreferenceWanPort.setText("8864");
 		}
 		mPreferenceWanPort.setSummary(mPreferenceWanPort.getText());
+		mPreferenceWanPort.setOnPreferenceChangeListener(this);
 
 		mPreferenceRedPacketNotifyTest = (EditTextPreference) findPreference(KEY_RED_PACKET_NOTIFY_TEST);
 		text = mPreferenceRedPacketNotifyTest.getText();
@@ -372,9 +379,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 				PermissionSettingsActivity.startNotificationListenerSettingsActivity(this);
 				CavanAndroid.showToastLong(this, "请打开通知读取权限");
 			}
-		} else if (preference == mPreferenceRedPacketNotifyRingtone ||
-				preference == mPreferenceWanIp || preference == mPreferenceWanPort) {
+		} else if (preference == mPreferenceRedPacketNotifyRingtone) {
 			updateRingtoneSummary((String) object);
+		} else if (preference == mPreferenceWanIp || preference == mPreferenceWanPort) {
+			preference.setSummary((CharSequence) object);
 		}
 
 		return true;

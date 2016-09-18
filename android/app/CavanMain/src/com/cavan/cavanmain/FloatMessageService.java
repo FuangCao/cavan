@@ -1,5 +1,6 @@
 package com.cavan.cavanmain;
 
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -30,9 +31,14 @@ import android.widget.TextView;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.android.FloatWidowService;
+import com.cavan.java.CavanString;
 import com.cavan.java.CavanTimedArray;
 
 public class FloatMessageService extends FloatWidowService {
+
+	public static final int LAN_SHARE_PORT = 9898;
+	public static final String LAN_SHARE_ADDR = "224.0.0.1";
+	public static final String LAN_SHARE_PREFIX = "RedPacketCode: ";
 
 	public static final int TEXT_PADDING = 8;
 	public static final float TEXT_SIZE_TIME = 16;
@@ -47,7 +53,8 @@ public class FloatMessageService extends FloatWidowService {
 	private CavanTimedArray<String> mNetSharedCodes = new CavanTimedArray<String>(3600000);
 	private HashMap<CharSequence, RedPacketCode> mMessageCodeMap = new HashMap<CharSequence, RedPacketCode>();
 
-	private UdpClientThread mShareThread;
+	private UdpClientThread mUdpClientThread;
+	private UdpServiceThread mUdpServiceThread;
 	private Handler mHandler = new Handler();
 	private InputMethodPickerRunnable mInputMethodPickerRunnable = new InputMethodPickerRunnable();
 
@@ -114,9 +121,9 @@ public class FloatMessageService extends FloatWidowService {
 
 				if (code.isNetShared()) {
 					mNetSharedCodes.addTimedValue(code.getCode());
-				} else if (mShareThread != null) {
+				} else if (mUdpClientThread != null) {
 					long delay = code.getTime() - System.currentTimeMillis();
-					mShareThread.sendCode(code.getCode(), delay);
+					mUdpClientThread.sendCode(code.getCode(), delay);
 				}
 			}
 
@@ -172,8 +179,8 @@ public class FloatMessageService extends FloatWidowService {
 
 		@Override
 		public boolean sendSharedCode(String code) throws RemoteException {
-			if (mShareThread != null) {
-				return mShareThread.sendCode(code, 0);
+			if (mUdpClientThread != null) {
+				return mUdpClientThread.sendCode(code, 0);
 			}
 
 			return false;
@@ -259,6 +266,20 @@ public class FloatMessageService extends FloatWidowService {
 		view.setBackgroundResource(R.drawable.desktop_timer_bg);
 	}
 
+	private void sendCodeReceivedBroadcast(String text) {
+		CavanAndroid.eLog("receive = " + text);
+
+		if (text.startsWith(LAN_SHARE_PREFIX)) {
+			String code = CavanString.deleteSpace(text.substring(LAN_SHARE_PREFIX.length()));
+
+			CavanAndroid.eLog("code = " + code);
+
+			Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
+			intent.putExtra("code", code);
+			sendBroadcast(intent );
+		}
+	}
+
 	@Override
 	protected View createRootView() {
 		return View.inflate(this, R.layout.float_message, null);
@@ -284,16 +305,23 @@ public class FloatMessageService extends FloatWidowService {
 		filter.addAction(Intent.ACTION_USER_PRESENT);
 		registerReceiver(mReceiver, filter );
 
-		mShareThread = new UdpClientThread();
-		mShareThread.start();
+		mUdpClientThread = new UdpClientThread();
+		mUdpClientThread.start();
+
+		mUdpServiceThread = new UdpServiceThread();
+		mUdpServiceThread.start();
 
 		super.onCreate();
 	}
 
 	@Override
 	public void onDestroy() {
-		if (mShareThread != null) {
-			mShareThread.quit();
+		if (mUdpServiceThread != null) {
+			mUdpServiceThread.setActive(false);
+		}
+
+		if (mUdpClientThread != null) {
+			mUdpClientThread.quit();
 		}
 
 		unregisterReceiver(mReceiver);
@@ -445,7 +473,7 @@ public class FloatMessageService extends FloatWidowService {
 		@Override
 		public boolean handleMessage(Message msg) {
 			String code = (String) msg.obj;
-			byte[] bytes = (RedPacketListenerService.LAN_SHARE_PREFIX + code).getBytes();
+			byte[] bytes = (LAN_SHARE_PREFIX + code).getBytes();
 
 			CavanAndroid.eLog("send" + msg.what + " = " + code);
 
@@ -455,8 +483,7 @@ public class FloatMessageService extends FloatWidowService {
 				}
 
 				DatagramPacket pack = new DatagramPacket(bytes, bytes.length,
-						InetAddress.getByName(RedPacketListenerService.LAN_SHARE_ADDR),
-						RedPacketListenerService.LAN_SHARE_PORT);
+						InetAddress.getByName(LAN_SHARE_ADDR), LAN_SHARE_PORT);
 
 				mSocket.send(pack);
 			} catch (Exception e) {
@@ -476,6 +503,85 @@ public class FloatMessageService extends FloatWidowService {
 			}
 
 			return true;
+		}
+	}
+
+	public class UdpServiceThread extends Thread {
+
+		private boolean mActive;
+		private MulticastSocket mSocket;
+
+		public void setActive(boolean enable) {
+			if (enable) {
+				mActive = true;
+			} else {
+				mActive = false;
+
+				if (mSocket != null) {
+					MulticastSocket socket = mSocket;
+
+					mSocket = null;
+					socket.close();
+				}
+			}
+		}
+
+		@Override
+		public void run() {
+			mActive = true;
+
+			while (mActive) {
+				if (mSocket != null) {
+					mSocket.close();
+				}
+
+				try {
+					mSocket = new MulticastSocket(LAN_SHARE_PORT);
+					mSocket.joinGroup(InetAddress.getByName(LAN_SHARE_ADDR));
+				} catch (IOException e) {
+					e.printStackTrace();
+
+					synchronized (this) {
+						try {
+							wait(2000);
+						} catch (InterruptedException e1) {
+							e1.printStackTrace();
+						}
+					}
+
+					continue;
+				}
+
+				CavanAndroid.eLog("UdpServiceThread running");
+
+				byte[] bytes = new byte[128];
+				DatagramPacket pack = new DatagramPacket(bytes, bytes.length);
+
+				while (mActive) {
+					try {
+						mSocket.receive(pack);
+
+						if (MainActivity.isLanShareEnabled(FloatMessageService.this)) {
+							String text = new String(pack.getData(), 0, pack.getLength());
+							sendCodeReceivedBroadcast(text);
+						}
+					} catch (IOException e) {
+						e.printStackTrace();
+						break;
+					}
+				}
+
+				CavanAndroid.eLog("UdpServiceThread stopping");
+			}
+
+			mUdpServiceThread = null;
+
+			if (mSocket != null) {
+				mSocket.close();
+				mSocket = null;
+			}
+
+			mActive = false;
 		}
 	}
 }
