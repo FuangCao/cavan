@@ -376,6 +376,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 		for (int i = root.getChildCount() - 1; i >= 0; i--) {
 			AccessibilityNodeInfo info = root.getChild(i);
+			if (info == null) {
+				continue;
+			}
 
 			CharSequence desc = info.getContentDescription();
 			if (desc == null) {
@@ -450,6 +453,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 			if (nodes != null && nodes.size() > 0) {
 				setRedPacketCodeComplete();
 				performBackAction();
+			} else if (mCodeCount <= 0) {
+				startAutoCommitRedPacketCode(500);
 			}
 		}
 	}

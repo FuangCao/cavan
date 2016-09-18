@@ -53,6 +53,7 @@ public class FloatMessageService extends FloatWidowService {
 
 	private static final int MSG_WAN_SERVICE_STATE_CHANGED = 1;
 	private static final int MSG_WAN_SERVICE_UPDATED = 2;
+	private static final int MSG_SHOW_TOAST = 3;
 
 	private int mLastSecond;
 	private boolean mUserPresent;
@@ -92,6 +93,14 @@ public class FloatMessageService extends FloatWidowService {
 					}
 				} else if (mTcpReceiveThread != null) {
 					mTcpReceiveThread.setActive(false);
+				}
+				break;
+
+			case MSG_SHOW_TOAST:
+				if (msg.obj instanceof String) {
+					CavanAndroid.showToast(getApplicationContext(), (String) msg.obj);
+				} else {
+					CavanAndroid.showToast(getApplicationContext(), (int) msg.obj);
 				}
 				break;
 			}
@@ -321,10 +330,15 @@ public class FloatMessageService extends FloatWidowService {
 
 			CavanAndroid.eLog("code = " + code);
 
-			Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
-			intent.putExtra("type", type);
-			intent.putExtra("code", code);
-			sendBroadcast(intent );
+			if (mNetSharedCodes.hasTimedValue(code)) {
+				text = getResources().getString(R.string.text_ignore_received_code, code);
+				mHandler.obtainMessage(MSG_SHOW_TOAST, text).sendToTarget();
+			} else {
+				Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
+				intent.putExtra("type", type);
+				intent.putExtra("code", code);
+				sendBroadcast(intent);
+			}
 		}
 	}
 
@@ -472,7 +486,7 @@ public class FloatMessageService extends FloatWidowService {
 
 	public class NetworkShareThread extends HandlerThread implements Callback {
 
-		private Handler mHandler;
+		private Handler mUdpHandler;
 		private MulticastSocket mUdpSocket;
 
 		public NetworkShareThread() {
@@ -482,20 +496,22 @@ public class FloatMessageService extends FloatWidowService {
 		public boolean sendCode(String code, long delay) {
 			if (mNetSharedCodes.hasTimedValue(code)) {
 				String text = getResources().getString(R.string.text_ignore_shared_code, code);
-				CavanAndroid.showToast(FloatMessageService.this, text );
+				mHandler.obtainMessage(MSG_SHOW_TOAST, text).sendToTarget();
 				return false;
 			}
 
-			if (mHandler == null) {
+			mNetSharedCodes.addTimedValue(code);
+
+			if (mUdpHandler == null) {
 				return false;
 			}
 
-			Message message = mHandler.obtainMessage(0, code);
+			Message message = mUdpHandler.obtainMessage(0, code);
 
 			if (delay > 0) {
-				mHandler.sendMessageDelayed(message, delay);
+				mUdpHandler.sendMessageDelayed(message, delay);
 			} else {
-				mHandler.sendMessage(message);
+				mUdpHandler.sendMessage(message);
 			}
 
 			return false;
@@ -515,7 +531,7 @@ public class FloatMessageService extends FloatWidowService {
 
 		@Override
 		protected void onLooperPrepared() {
-			mHandler = new Handler(getLooper(), this);
+			mUdpHandler = new Handler(getLooper(), this);
 		}
 
 		@Override
@@ -551,8 +567,8 @@ public class FloatMessageService extends FloatWidowService {
 				if (msg.what < 10) {
 					int index = msg.what + 1;
 
-					Message message = mHandler.obtainMessage(index, code);
-					mHandler.sendMessageDelayed(message, index * 100);
+					Message message = mUdpHandler.obtainMessage(index, code);
+					mUdpHandler.sendMessageDelayed(message, index * 100);
 				}
 			}
 
