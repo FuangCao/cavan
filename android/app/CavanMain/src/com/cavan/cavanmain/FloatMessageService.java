@@ -52,6 +52,7 @@ public class FloatMessageService extends FloatWidowService {
 	public static final int TEXT_COLOR_MESSAGE = Color.YELLOW;
 
 	private static final int MSG_WAN_SERVICE_STATE_CHANGED = 1;
+	private static final int MSG_WAN_SERVICE_UPDATED = 2;
 
 	private int mLastSecond;
 	private boolean mUserPresent;
@@ -65,14 +66,32 @@ public class FloatMessageService extends FloatWidowService {
 	private TcpReceiveThread mTcpReceiveThread;
 	private Handler mHandler = new Handler() {
 
+		@SuppressWarnings("deprecation")
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case MSG_WAN_SERVICE_STATE_CHANGED:
-				if ((boolean) msg.obj) {
-					CavanAndroid.showToast(getApplicationContext(), R.string.text_wan_service_running);
-				} else {
-					CavanAndroid.showToast(getApplicationContext(), R.string.text_wan_service_stopped);
+				Intent intent = new Intent(MainActivity.ACTION_WAN_UPDATED);
+				intent.putExtra("state", msg.arg1);
+				sendStickyBroadcast(intent);
+
+				CavanAndroid.showToast(getApplicationContext(), msg.arg1);
+				break;
+
+			case MSG_WAN_SERVICE_UPDATED:
+				if (MainActivity.isWanShareEnabled(FloatMessageService.this)) {
+					if (mTcpReceiveThread == null) {
+						mTcpReceiveThread = new TcpReceiveThread();
+						mTcpReceiveThread.start();
+					} else {
+						synchronized (mTcpReceiveThread) {
+							mTcpReceiveThread.setActive(true);
+							mTcpReceiveThread.closeSocket();
+							mTcpReceiveThread.notify();
+						}
+					}
+				} else if (mTcpReceiveThread != null) {
+					mTcpReceiveThread.setActive(false);
 				}
 				break;
 			}
@@ -211,7 +230,7 @@ public class FloatMessageService extends FloatWidowService {
 
 		@Override
 		public void updateTcpService() throws RemoteException {
-			FloatMessageService.this.updateTcpServiceState();
+			mHandler.sendEmptyMessageDelayed(MSG_WAN_SERVICE_UPDATED, 500);
 		}
 	};
 
@@ -294,7 +313,7 @@ public class FloatMessageService extends FloatWidowService {
 		view.setBackgroundResource(R.drawable.desktop_timer_bg);
 	}
 
-	private void sendCodeReceivedBroadcast(String text) {
+	private void sendCodeReceivedBroadcast(String type, String text) {
 		CavanAndroid.eLog("receive = " + text);
 
 		if (text.startsWith(LAN_SHARE_PREFIX)) {
@@ -303,22 +322,9 @@ public class FloatMessageService extends FloatWidowService {
 			CavanAndroid.eLog("code = " + code);
 
 			Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
+			intent.putExtra("type", type);
 			intent.putExtra("code", code);
 			sendBroadcast(intent );
-		}
-	}
-
-	private void updateTcpServiceState() {
-		if (MainActivity.isWanShareEnabled(this)) {
-			if (mTcpReceiveThread == null) {
-				mTcpReceiveThread = new TcpReceiveThread();
-				mTcpReceiveThread.start();
-			} else {
-				mTcpReceiveThread.setActive(true);
-				mTcpReceiveThread.closeSocket();
-			}
-		} else if (mTcpReceiveThread != null) {
-			mTcpReceiveThread.setActive(false);
 		}
 	}
 
@@ -353,7 +359,7 @@ public class FloatMessageService extends FloatWidowService {
 		mUdpServiceThread = new UdpReceiveThread();
 		mUdpServiceThread.start();
 
-		updateTcpServiceState();
+		mHandler.sendEmptyMessage(MSG_WAN_SERVICE_UPDATED);
 
 		super.onCreate();
 	}
@@ -474,10 +480,6 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		public boolean sendCode(String code, long delay) {
-			if (!MainActivity.isLanShareEnabled(FloatMessageService.this)) {
-				return false;
-			}
-
 			if (mNetSharedCodes.hasTimedValue(code)) {
 				String text = getResources().getString(R.string.text_ignore_shared_code, code);
 				CavanAndroid.showToast(FloatMessageService.this, text );
@@ -487,8 +489,6 @@ public class FloatMessageService extends FloatWidowService {
 			if (mHandler == null) {
 				return false;
 			}
-
-			mNetSharedCodes.addTimedValue(code);
 
 			Message message = mHandler.obtainMessage(0, code);
 
@@ -525,33 +525,35 @@ public class FloatMessageService extends FloatWidowService {
 
 			CavanAndroid.eLog("send" + msg.what + " = " + code);
 
-			try {
-				if (mUdpSocket == null) {
-					mUdpSocket = new MulticastSocket();
-				}
-
-				DatagramPacket pack = new DatagramPacket(bytes, bytes.length,
-						InetAddress.getByName(LAN_SHARE_ADDR), LAN_SHARE_PORT);
-
-				mUdpSocket.send(pack);
-
-				if (mTcpReceiveThread != null) {
-					mTcpReceiveThread.sendCodeBytes(bytes);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-
-				if (mUdpSocket != null) {
-					mUdpSocket.close();
-					mUdpSocket = null;
-				}
+			if (msg.what == 0 && mTcpReceiveThread != null) {
+				mTcpReceiveThread.sendCodeBytes(bytes);
 			}
 
-			if (msg.what < 10) {
-				int index = msg.what + 1;
+			if (MainActivity.isLanShareEnabled(FloatMessageService.this)) {
+				try {
+					if (mUdpSocket == null) {
+						mUdpSocket = new MulticastSocket();
+					}
 
-				Message message = mHandler.obtainMessage(index, code);
-				mHandler.sendMessageDelayed(message, index * 100);
+					DatagramPacket pack = new DatagramPacket(bytes, bytes.length,
+							InetAddress.getByName(LAN_SHARE_ADDR), LAN_SHARE_PORT);
+
+					mUdpSocket.send(pack);
+				} catch (Exception e) {
+					e.printStackTrace();
+
+					if (mUdpSocket != null) {
+						mUdpSocket.close();
+						mUdpSocket = null;
+					}
+				}
+
+				if (msg.what < 10) {
+					int index = msg.what + 1;
+
+					Message message = mHandler.obtainMessage(index, code);
+					mHandler.sendMessageDelayed(message, index * 100);
+				}
 			}
 
 			return true;
@@ -615,7 +617,7 @@ public class FloatMessageService extends FloatWidowService {
 
 						if (MainActivity.isLanShareEnabled(FloatMessageService.this)) {
 							String text = new String(pack.getData(), 0, pack.getLength());
-							sendCodeReceivedBroadcast(text);
+							sendCodeReceivedBroadcast("内网分享", text);
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
@@ -718,32 +720,35 @@ public class FloatMessageService extends FloatWidowService {
 				}
 
 				try {
-					synchronized (this) {
-						mSocket = new Socket(InetAddress.getByName(host), port);
-						mInputStream = mSocket.getInputStream();
-						mOutputStream = mSocket.getOutputStream();
-					}
+					mHandler.obtainMessage(MSG_WAN_SERVICE_STATE_CHANGED, R.string.text_wan_connecting, 0).sendToTarget();
 
+					mSocket = new Socket(InetAddress.getByName(host), port);
+					mInputStream = mSocket.getInputStream();
+					mOutputStream = mSocket.getOutputStream();
+
+					mHandler.obtainMessage(MSG_WAN_SERVICE_STATE_CHANGED, R.string.text_wan_connected, 0).sendToTarget();
 
 					BufferedReader reader = new BufferedReader(new InputStreamReader(mInputStream));
-
-					mHandler.obtainMessage(MSG_WAN_SERVICE_STATE_CHANGED, true);
 
 					while (true) {
 						try {
 							String line = reader.readLine();
-							sendCodeReceivedBroadcast(line);
+							CavanAndroid.eLog("line = " + line);
+
+							sendCodeReceivedBroadcast("外网分享", line);
 						} catch (IOException e) {
 							e.printStackTrace();
 							break;
 						}
 					}
+
+					mHandler.obtainMessage(MSG_WAN_SERVICE_STATE_CHANGED, R.string.text_wan_disconnected, 0).sendToTarget();
 				} catch (Exception e) {
 					e.printStackTrace();
 
 					synchronized (this) {
 						try {
-							wait(2000);
+							wait(5000);
 						} catch (InterruptedException e1) {
 							e1.printStackTrace();
 						}
@@ -751,8 +756,6 @@ public class FloatMessageService extends FloatWidowService {
 				} finally {
 					closeSocket();
 				}
-
-				mHandler.obtainMessage(MSG_WAN_SERVICE_STATE_CHANGED, false);
 			}
 
 			mTcpReceiveThread = null;

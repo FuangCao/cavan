@@ -116,11 +116,12 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 			switch (action) {
 			case MainActivity.ACTION_CODE_RECEIVED:
+				String type = intent.getStringExtra("type");
 				String code = intent.getStringExtra("code");
 
 				CavanAndroid.eLog("code = " + code);
 
-				RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, "网络分享", code, true);
+				RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, type, code, true);
 				mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
 				break;
 			}

@@ -9,9 +9,11 @@ import java.net.InetAddress;
 
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -41,6 +43,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String ACTION_CODE_REMOVE = "cavan.intent.action.ACTION_CODE_REMOVE";
 	public static final String ACTION_CODE_POST = "cavan.intent.action.ACTION_CODE_POST";
 	public static final String ACTION_CODE_RECEIVED = "cavan.intent.action.ACTION_CODE_RECEIVED";
+	public static final String ACTION_WAN_UPDATED = "cavan.intent.action.ACTION_WAN_UPDATED";
 
 	public static final String KEY_IP_ADDRESS = "ip_address";
 	public static final String KEY_AUTO_UNLOCK = "auto_unlock";
@@ -87,7 +90,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	}
 
 	public static String getWanShareIpAddress(Context context) {
-		return CavanAndroid.getPreference(context, KEY_WAN_PORT, null);
+		return CavanAndroid.getPreference(context, KEY_WAN_IP, null);
 	}
 
 	public static int getWanSharePort(Context context) {
@@ -132,6 +135,35 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		public void onServiceConnected(ComponentName component, IBinder binder) {
 			mFloatMessageService = IFloatMessageService.Stub.asInterface(binder);
 			setDesktopFloatTimerEnable(mPreferenceFloatTime.isChecked());
+		}
+	};
+
+	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String action = intent.getAction();
+
+			CavanAndroid.eLog("action = " + action);
+
+			switch (action) {
+			case ACTION_WAN_UPDATED:
+				int state = intent.getIntExtra("state", 0);
+				switch (state) {
+				case R.string.text_wan_connecting:
+					mPreferenceWanShare.setSummary(R.string.text_connecting);
+					break;
+
+				case R.string.text_wan_connected:
+					mPreferenceWanShare.setSummary(R.string.text_connected);
+					break;
+
+				case R.string.text_wan_disconnected:
+					mPreferenceWanShare.setSummary(R.string.text_disconnected);
+					break;
+				}
+				break;
+			}
 		}
 	};
 
@@ -218,12 +250,12 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		startService(service);
 		bindService(service, mFloatMessageConnection, 0);
 
-		service = RedPacketListenerService.buildIntent(this);
-		startService(service);
+		registerReceiver(mReceiver, new IntentFilter(ACTION_WAN_UPDATED));
 	}
 
 	@Override
 	protected void onDestroy() {
+		unregisterReceiver(mReceiver);
 		unbindService(mFloatMessageConnection);
 
 		mPreferenceFtp.unbindService(this);

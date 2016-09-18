@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
     <string name="app_name">服务管理器</string>
     <string name="text_start">启动</string>
     <string name="text_stop">停止</string>
@@ -48,11 +48,16 @@
     <string name="text_complete_code">已完成口令：<xliff:g>%1$s</xliff:g></string>
     <string name="text_ignore_invalid_code">忽略非法的口令：<xliff:g>%1$s</xliff:g></string>
     <string name="text_ignore_shared_code">忽略已分享的口令：<xliff:g>%1$s</xliff:g></string>
+    <string name="text_connecting">正在连接</string>
+    <string name="text_connected">已连接</string>
+    <string name="text_disconnected">已断开连接</string>
     <string name="text_listen_clip">监听剪切板</string>
     <string name="text_lan_share">内网分享</string>
     <string name="text_wan_share">外网分享</string>
     <string name="text_wan_ip">外网IP地址</string>
     <string name="text_wan_port">外网端口号</string>
-    <string name="text_wan_service_running">外网分享服务正在运行</string>
-    <string name="text_wan_service_stopped">外网分享服务已停止运行</string>
+    <string name="text_wan_connecting">正在连接到外网服务器</string>
+    <string name="text_wan_connected">已连接到外网服务器</string>
+    <string name="text_wan_disconnected">外网服务器已断开连接</string>
+
 </resources>
