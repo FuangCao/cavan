@@ -116,6 +116,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private CavanServicePreference mPreferenceFtp;
 	private CavanServicePreference mPreferenceWebProxy;
 	private CavanServicePreference mPreferenceTcpRepeater;
+	private CheckBoxPreference mPreferenceWanShare;
 	private EditTextPreference mPreferenceWanIp;
 	private EditTextPreference mPreferenceWanPort;
 
@@ -151,6 +152,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 		mPreferenceFloatTime = (CheckBoxPreference) findPreference(KEY_FLOAT_TIMER);
 		mPreferenceFloatTime.setOnPreferenceChangeListener(this);
+
+		mPreferenceWanShare = (CheckBoxPreference) findPreference(KEY_WAN_SHARE);
+		mPreferenceWanShare.setOnPreferenceChangeListener(this);
 
 		mPreferenceWanIp = (EditTextPreference) findPreference(KEY_WAN_IP);
 		String text = mPreferenceWanIp.getText();
@@ -381,8 +385,24 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			}
 		} else if (preference == mPreferenceRedPacketNotifyRingtone) {
 			updateRingtoneSummary((String) object);
+		} else if (preference == mPreferenceWanShare) {
+			if (mFloatMessageService != null) {
+				try {
+					mFloatMessageService.updateTcpService();
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			}
 		} else if (preference == mPreferenceWanIp || preference == mPreferenceWanPort) {
 			preference.setSummary((CharSequence) object);
+
+			if (mFloatMessageService != null) {
+				try {
+					mFloatMessageService.updateTcpService();
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 
 		return true;

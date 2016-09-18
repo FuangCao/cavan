@@ -53,4 +53,6 @@
     <string name="text_wan_share">外网分享</string>
     <string name="text_wan_ip">外网IP地址</string>
     <string name="text_wan_port">外网端口号</string>
+    <string name="text_wan_service_running">外网分享服务正在运行</string>
+    <string name="text_wan_service_stopped">外网分享服务已停止运行</string>
 </resources>

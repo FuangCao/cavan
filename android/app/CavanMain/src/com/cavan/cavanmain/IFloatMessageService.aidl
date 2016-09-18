@@ -14,4 +14,6 @@ interface IFloatMessageService {
 	List<RedPacketCode> getCodes();
 	int getCodeCount();
 	boolean sendSharedCode(String code);
+
+	void updateTcpService();
 }
