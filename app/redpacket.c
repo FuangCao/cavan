@@ -26,12 +26,12 @@
 #define REDPACKET_PREFIX		"RedPacketCode: "
 #define REDPACKET_PREFIX_LEN	(sizeof(REDPACKET_PREFIX) - 1)
 
-static inline int redpacket_udp_build_pack(char *buff, size_t size, const char *code)
+static inline int redpacket_build_pack(char *buff, size_t size, const char *code)
 {
 	return snprintf(buff, size, REDPACKET_PREFIX "%s", code);
 }
 
-static int redpacket_udp_sender_cmdline(struct network_client *client)
+static int redpacket_sender_cmdline(struct network_client *client)
 {
 	int wrlen = 0;
 	char pack[1024];
@@ -50,7 +50,7 @@ static int redpacket_udp_sender_cmdline(struct network_client *client)
 		p = text_strip(code, strlen(code), code, sizeof(code));
 		if (p > code) {
 			println("code = %s", code);
-			wrlen = redpacket_udp_build_pack(pack, sizeof(pack), code);
+			wrlen = redpacket_build_pack(pack, sizeof(pack), code);
 		}
 
 		if (wrlen > 0) {
@@ -69,7 +69,7 @@ static int redpacket_udp_sender_cmdline(struct network_client *client)
 	return 0;
 }
 
-static int redpacket_udp_sender_main(int argc, char *argv[])
+static int redpacket_sender_main(int argc, char *argv[])
 {
 	int ret;
 	struct network_url url;
@@ -95,7 +95,7 @@ static int redpacket_udp_sender_main(int argc, char *argv[])
 
 		for (i = optind; i < argc; i++) {
 			char buff[1024];
-			int length = redpacket_udp_build_pack(buff, sizeof(buff), argv[i]);
+			int length = redpacket_build_pack(buff, sizeof(buff), argv[i]);
 
 			ret = client.send(&client, buff, length);
 			if (ret <= 0) {
@@ -104,7 +104,7 @@ static int redpacket_udp_sender_main(int argc, char *argv[])
 			}
 		}
 	} else {
-		ret = redpacket_udp_sender_cmdline(&client);
+		ret = redpacket_sender_cmdline(&client);
 	}
 
 	network_client_close(&client);
@@ -112,7 +112,7 @@ static int redpacket_udp_sender_main(int argc, char *argv[])
 	return ret;
 }
 
-static int redpacket_udp_receiver_main(int argc, char *argv[])
+static int redpacket_receiver_main(int argc, char *argv[])
 {
 	int ret;
 	struct network_url url;
@@ -154,6 +154,6 @@ static int redpacket_udp_receiver_main(int argc, char *argv[])
 }
 
 CAVAN_COMMAND_MAP_START {
-	{ "udp_sender", redpacket_udp_sender_main },
-	{ "udp_receiver", redpacket_udp_receiver_main },
+	{ "sender", redpacket_sender_main },
+	{ "receiver", redpacket_receiver_main },
 } CAVAN_COMMAND_MAP_END;

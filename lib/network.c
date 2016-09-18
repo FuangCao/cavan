@@ -1509,6 +1509,7 @@ void network_url_show_usage(const char *command)
 	println("-p, --port PORT\t\t\t%s", cavan_help_message_port);
 	println("-A, -a, --adb\t\t\t%s", cavan_help_message_adb);
 	println("--udp\t\t\t\t%s", cavan_help_message_udp);
+	println("--udp\t\t\t\t%s", cavan_help_message_tcp);
 	println("--unix, --unix-tcp [PATHNAME]\t%s", cavan_help_message_unix_tcp);
 	println("--unix-udp [PATHNAME]\t\t%s", cavan_help_message_unix_udp);
 	println("-P, --pt, --protocol PROTOCOL\t%s", cavan_help_message_protocol);
@@ -1542,6 +1543,11 @@ int network_url_parse_cmdline(struct network_url *url, int argc, char *argv[])
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_UDP,
+		}, {
+			.name = "tcp",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_TCP,
 		}, {
 			.name = "url",
 			.has_arg = required_argument,
@@ -1606,6 +1612,10 @@ int network_url_parse_cmdline(struct network_url *url, int argc, char *argv[])
 
 		case CAVAN_COMMAND_OPTION_UDP:
 			url->protocol = "udp";
+			break;
+
+		case CAVAN_COMMAND_OPTION_TCP:
+			url->protocol = "tcp";
 			break;
 
 		case 'p':

@@ -322,13 +322,15 @@ struct cavan_dynamic_service *cavan_dynamic_service_create(size_t size)
 {
 	struct cavan_dynamic_service *service;
 
-	service = malloc(sizeof(*service) + size);
+	size += sizeof(struct cavan_dynamic_service);
+
+	service = malloc(size);
 	if (service == NULL) {
 		pr_error_info("malloc");
 		return NULL;
 	}
 
-	memset(service, 0, sizeof(*service));
+	memset(service, 0, size);
 
 	if (cavan_dynamic_service_init(service) < 0) {
 		pr_red_info("cavan_dynamic_service_init");

@@ -54,11 +54,11 @@ struct cavan_dynamic_service {
 	cavan_service_state_t state;
 	bool stopping;
 
-	int (*open_connect)(struct cavan_dynamic_service *service, void *conn);
-	void (*close_connect)(struct cavan_dynamic_service *service, void *conn);
+	int (*open_connect)(struct cavan_dynamic_service *service, void *conn_data);
+	void (*close_connect)(struct cavan_dynamic_service *service, void *conn_data);
 	int (*start)(struct cavan_dynamic_service *service);
 	void (*stop)(struct cavan_dynamic_service *service);
-	int (*run)(struct cavan_dynamic_service *service, void *conn);
+	int (*run)(struct cavan_dynamic_service *service, void *conn_data);
 };
 
 extern int cavan_dynamic_service_count;
@@ -85,6 +85,16 @@ bool cavan_dynamic_service_unregister(struct cavan_dynamic_service *service);
 struct cavan_dynamic_service *cavan_dynamic_service_find(const char *name);
 boolean cavan_dynamic_service_stop_by_name(const char *name);
 void cavan_dynamic_service_scan(void *data, void (*handler)(struct cavan_dynamic_service *service, void *data));
+
+static inline void cavan_dynamic_service_lock(struct cavan_dynamic_service *service)
+{
+	pthread_mutex_lock(&service->lock);
+}
+
+static inline void cavan_dynamic_service_unlock(struct cavan_dynamic_service *service)
+{
+	pthread_mutex_unlock(&service->lock);
+}
 
 static inline void *cavan_dynamic_service_get_data(struct cavan_dynamic_service *service)
 {
