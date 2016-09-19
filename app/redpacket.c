@@ -77,10 +77,8 @@ static int redpacket_sender_main(int argc, char *argv[])
 
 	network_url_init(&url, "udp", REDPACKET_IP, REDPACKET_PORT, NULL);
 
-	ret = network_url_parse_cmdline(&url, argc, argv);
+	ret = network_url_parse_cmdline(&url, NULL, argc, argv);
 	if (ret < 0) {
-		pr_red_info("network_url_parse_cmdline: %d", ret);
-		network_url_show_usage(argv[0]);
 		return ret;
 	}
 
@@ -120,10 +118,8 @@ static int redpacket_receiver_main(int argc, char *argv[])
 
 	network_url_init(&url, "udp", "any", REDPACKET_PORT, NULL);
 
-	ret = network_url_parse_cmdline(&url, argc, argv);
+	ret = network_url_parse_cmdline(&url, NULL, argc, argv);
 	if (ret < 0) {
-		pr_red_info("network_url_parse_cmdline: %d", ret);
-		network_url_show_usage(argv[0]);
 		return ret;
 	}
 

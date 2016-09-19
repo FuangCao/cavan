@@ -7,6 +7,7 @@
 #include <cavan/android.h>
 #include <cavan/network.h>
 #include <cavan/progress.h>
+#include <cavan/permission.h>
 
 #define CAVAN_NETWORK_DEBUG				0
 #define CAVAN_IFCONFIG_DEBUG			0
@@ -1501,8 +1502,17 @@ bool network_url_equals(const struct network_url *url1, const struct network_url
 	return true;
 }
 
-void network_url_show_usage(const char *command)
+static void network_url_show_usage(const char *command)
 {
+	println("Usage: %s [OPTION]", command);
+	println("-H, -h, --help\t\t\t%s", cavan_help_message_help);
+	println("-S, -s, --super\t\t\t%s", cavan_help_message_super);
+	println("-d, --daemon\t\t\t%s", cavan_help_message_daemon);
+	println("-m, -c, --min\t\t\t%s", cavan_help_message_daemon_min);
+	println("-M, -C, --max\t\t\t%s", cavan_help_message_daemon_max);
+	println("-V, -v, --verbose\t\t%s", cavan_help_message_verbose);
+	println("--user USERNAME\t\t\t%s", cavan_help_message_user);
+	println("--group GROUPNAME\t\t%s", cavan_help_message_group);
 	println("-I, -i, --ip IP\t\t\t%s", cavan_help_message_ip);
 	println("--host [HOSTNAME]\t\t%s", cavan_help_message_hostname);
 	println("-L, -l, ---local\t\t%s", cavan_help_message_local);
@@ -1514,16 +1524,54 @@ void network_url_show_usage(const char *command)
 	println("--unix-udp [PATHNAME]\t\t%s", cavan_help_message_unix_udp);
 	println("-P, --pt, --protocol PROTOCOL\t%s", cavan_help_message_protocol);
 	println("-U, -u, --url [URL]\t\t%s", cavan_help_message_url);
-	println("--loop\t\t\t\tcycle to execute the command");
-	println("--aloop\t\t\t\tuse adb and cycle to execute the command");
 }
 
-int network_url_parse_cmdline(struct network_url *url, int argc, char *argv[])
+int network_url_parse_cmdline(struct network_url *url, struct cavan_dynamic_service *service, int argc, char *argv[])
 {
 	int c;
 	int option_index;
 	static const struct option long_option[] = {
 		{
+			.name = "help",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_HELP,
+		}, {
+			.name = "daemon",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_DAEMON,
+		}, {
+			.name = "min",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_DAEMON_MIN,
+		}, {
+			.name = "max",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_DAEMON_MAX,
+		}, {
+			.name = "verbose",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_VERBOSE,
+		}, {
+			.name = "super",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_SUPER,
+		}, {
+			.name = "user",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_USER,
+		}, {
+			.name = "group",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_GROUP,
+		}, {
 			.name = "ip",
 			.has_arg = required_argument,
 			.flag = NULL,
@@ -1593,8 +1641,65 @@ int network_url_parse_cmdline(struct network_url *url, int argc, char *argv[])
 		},
 	};
 
-	while ((c = getopt_long(argc, argv, "IaA:i:I:p:P:lLu:U:", long_option, &option_index)) != EOF) {
+	while ((c = getopt_long(argc, argv, "hHvVds:S:c:C:m:M:aA:i:I:p:P:lLu:U:", long_option, &option_index)) != EOF) {
 		switch (c) {
+		case 'h':
+		case 'H':
+		case CAVAN_COMMAND_OPTION_HELP:
+			network_url_show_usage(argv[0]);
+			return -EFAULT;
+
+		case 'v':
+		case 'V':
+		case CAVAN_COMMAND_OPTION_VERBOSE:
+			if (service != NULL) {
+				service->verbose = true;
+			}
+			break;
+
+		case 'd':
+		case CAVAN_COMMAND_OPTION_DAEMON:
+			if (service != NULL) {
+				service->as_daemon = true;
+			}
+			break;
+
+		case 'c':
+		case 'm':
+		case CAVAN_COMMAND_OPTION_DAEMON_MIN:
+			if (service != NULL) {
+				service->min = text2value_unsigned(optarg, NULL, 10);
+			}
+			break;
+
+		case 'C':
+		case 'M':
+		case CAVAN_COMMAND_OPTION_DAEMON_MAX:
+			if (service != NULL) {
+				service->max = text2value_unsigned(optarg, NULL, 10);
+			}
+			break;
+
+		case 's':
+		case 'S':
+		case CAVAN_COMMAND_OPTION_SUPER:
+			if (service != NULL) {
+				service->super_permission = text2bool(optarg);
+			}
+			break;
+
+		case CAVAN_COMMAND_OPTION_USER:
+			if (service != NULL) {
+				cavan_parse_user_text(optarg, &service->user, &service->group);
+			}
+			break;
+
+		case CAVAN_COMMAND_OPTION_GROUP:
+			if (service != NULL) {
+				service->group = optarg;
+			}
+			break;
+
 		case 'a':
 		case 'A':
 		case CAVAN_COMMAND_OPTION_ADB:
@@ -1653,6 +1758,7 @@ int network_url_parse_cmdline(struct network_url *url, int argc, char *argv[])
 			break;
 
 		default:
+			network_url_show_usage(argv[0]);
 			return -EINVAL;
 		}
 	}
