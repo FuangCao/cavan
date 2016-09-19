@@ -86,7 +86,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		FragmentTransaction transaction = getFragmentManager().beginTransaction();
 		transaction.replace(R.id.frame_content, fragment);
-		transaction.commit();
+		transaction.commitAllowingStateLoss();
 
 		setTitle(fragment.getTestName());
 
