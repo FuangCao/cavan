@@ -48,7 +48,6 @@ static void tcp_repeater_close_connect(struct cavan_dynamic_service *service, vo
 
 static int cavan_tcp_repeater_run_handler(struct cavan_dynamic_service *service, void *_conn)
 {
-	char buff[1024];
 	struct cavan_tcp_repeater_conn *head;
 	struct cavan_tcp_repeater_conn *conn = _conn;
 	struct network_client *client = &conn->client;
@@ -72,12 +71,15 @@ static int cavan_tcp_repeater_run_handler(struct cavan_dynamic_service *service,
 	cavan_dynamic_service_unlock(service);
 
 	while (1) {
-		int length;
+		u16 length;
+		char *p, buff[1024];
 
-		length = client->recv(client, buff, sizeof(buff));
-		if (length <= 0) {
+		p = network_client_recv_line(client, buff, sizeof(buff));
+		if (p == NULL) {
 			break;
 		}
+
+		length = p - buff + 1;
 
 		cavan_dynamic_service_lock(service);
 

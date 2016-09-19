@@ -2779,11 +2779,15 @@ char *network_client_recv_line(struct network_client *client, char *buff, size_t
 
 		rdlen = client->recv(client, buff, 1);
 		if (rdlen <= 0) {
+#if 0
 			if (rdlen < 0) {
 				return NULL;
 			}
 
 			break;
+#else
+			return NULL;
+#endif
 		}
 
 		if (*buff == '\n') {

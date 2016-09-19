@@ -68,11 +68,6 @@ static int app_network_cmdline(struct network_client *client)
 		}
 
 		length = strlen(buff);
-		if (length <= 1) {
-			continue;
-		}
-
-		length = strlen(buff) - 1;
 		buff[length] = 0;
 
 		println("send[%d]: %s", length, buff);
