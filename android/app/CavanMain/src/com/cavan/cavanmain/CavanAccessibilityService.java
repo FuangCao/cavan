@@ -194,9 +194,16 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return true;
 	}
 
-	private void performBackAction() {
+	private void performBackAction(AccessibilityNodeInfo root) {
 		if (mCodeCount > 0) {
-			performGlobalAction(GLOBAL_ACTION_BACK);
+			List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId("com.alipay.mobile.ui:id/title_bar_back_button");
+			if (nodes != null && nodes.size() > 0) {
+				for (AccessibilityNodeInfo node : nodes) {
+					node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+				}
+			} else {
+				performGlobalAction(GLOBAL_ACTION_BACK);
+			}
 		}
 	}
 
@@ -239,20 +246,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 			break;
 
 		case "com.alipay.android.phone.discovery.envelope.HomeActivity":
-			if (mCodeCount > 0 && code != null && MainActivity.isAutoCommitEnabled(this)) {
-				long delay = code.getDelay() / 1000;
-				if (delay > 0) {
-					if (delay != mDelay) {
-						mDelay = delay;
-						String text = getResources().getString(R.string.text_auto_commit_after, delay);
-						CavanAndroid.showToast(this, text);
-					}
-					break;
-				}
-
-				if (postRedPacketCode(root, code)) {
-					mCommitTime = System.currentTimeMillis();
-				}
+			if (mCodeCount > 0 && code != null && postRedPacketCode(root, code)) {
+				mCommitTime = System.currentTimeMillis();
 			}
 			break;
 
@@ -262,19 +257,20 @@ public class CavanAccessibilityService extends AccessibilityService {
 					mCode.subCommitCount();
 				}
 
-				performBackAction();
+				performBackAction(root);
 			}
 			break;
 
 		case "com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity":
 			if (MainActivity.isAutoUnpackEnabled(this)) {
 				unpackRedPacket(root);
+				startAutoCommitRedPacketCode(500);
 			}
 			break;
 
 		case "com.alipay.android.phone.discovery.envelope.crowd.CrowdHostActivity":
 			setRedPacketCodeComplete();
-			performBackAction();
+			performBackAction(root);
 			mInputtedCode = null;
 			break;
 
@@ -284,12 +280,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 				mCode.updateTime();
 			}
 
-			performBackAction();
+			performBackAction(root);
 			break;
 
 		default:
 			if (!mClassName.startsWith("com.alipay.mobile.framework.app.ui.DialogHelper")) {
-				performBackAction();
+				performBackAction(root);
 			}
 		}
 
@@ -379,43 +375,58 @@ public class CavanAccessibilityService extends AccessibilityService {
 			return false;
 		}
 
-		AccessibilityNodeInfo node = nodes.get(0);
+		for (AccessibilityNodeInfo node : nodes) {
+			String text = CavanString.fromCharSequence(node.getText());
+			if (!text.equals(code.getCode())) {
+				if (text.length() > 0) {
+					Bundle arguments = new Bundle();
+					arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, 0);
+					arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, text.length());
+					node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, arguments);
+				}
 
-		String text = CavanString.fromCharSequence(node.getText());
-		if (!text.equals(code)) {
-			if (text.length() > 0) {
-				Bundle arguments = new Bundle();
-				arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, 0);
-				arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, text.length());
-				node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, arguments);
+				RedPacketListenerService.postRedPacketCode(this, code.getCode());
+				node.performAction(AccessibilityNodeInfo.ACTION_PASTE);
 			}
-
-			RedPacketListenerService.postRedPacketCode(this, code.getCode());
-			node.performAction(AccessibilityNodeInfo.ACTION_PASTE);
 		}
 
 		mCode = code;
 
-		if (CavanInputMethod.isDefaultInputMethod(this)) {
-			if (code.addCommitCount() > 3) {
-				addInvalidCode(code);
-			} else {
+		long delay = code.getDelay() / 1000;
+		if (delay > 0) {
+			if (delay != mDelay) {
+				mDelay = delay;
+				String message = getResources().getString(R.string.text_auto_commit_after, delay);
+				CavanAndroid.showToast(this, message);
+			}
+
+			return false;
+		}
+
+		if (MainActivity.isAutoCommitEnabled(this) && CavanInputMethod.isDefaultInputMethod(this)) {
+			if (code.addCommitCount() < 3) {
 				sendBroadcast(new Intent(MainActivity.ACTION_CODE_COMMIT));
 
 				if (!mHandler.hasMessages(MSG_INPUT_TIMEOUT, code)) {
 					Message message = mHandler.obtainMessage(MSG_INPUT_TIMEOUT, code);
 					mHandler.sendMessageDelayed(message, INPUT_OVERTIME);
 				}
+
+				return true;
 			}
+
+			addInvalidCode(code);
 		}
 
-		return true;
+		return false;
 	}
 
-	private void unpackRedPacket(AccessibilityNodeInfo root) {
-		AccessibilityNodeInfo info = findAccessibilityNodeInfoByText(root, "拆红包");
-		if (info != null) {
-			info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+	private boolean unpackRedPacket(AccessibilityNodeInfo root) {
+		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId("com.alipay.android.phone.discovery.envelope:id/action_chai");
+		if (nodes != null && nodes.size() > 0) {
+			for (AccessibilityNodeInfo node : nodes) {
+				node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+			}
 
 			if (mInputtedCode != null && mService != null) {
 				try {
@@ -424,15 +435,18 @@ public class CavanAccessibilityService extends AccessibilityService {
 					e.printStackTrace();
 				}
 			}
-		} else {
-			List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText("看看朋友手气");
-			if (nodes != null && nodes.size() > 0) {
-				setRedPacketCodeComplete();
-				performBackAction();
-			} else if (mCodeCount <= 0) {
-				startAutoCommitRedPacketCode(500);
-			}
+
+			return true;
 		}
+
+		nodes = root.findAccessibilityNodeInfosByViewId("com.alipay.android.phone.discovery.envelope:id/coupon_action");
+		if (nodes != null && nodes.size() > 0) {
+			setRedPacketCodeComplete();
+			performBackAction(root);
+			return true;
+		}
+
+		return false;
 	}
 
 	private void onWindowStateChanged(AccessibilityEvent event) {
@@ -481,7 +495,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				break;
 			}
 
-			if (!"com.alipay.android.phone.discovery.envelope:id/solitaire_edit".equals(event)) {
+			if (!id.equals("com.alipay.android.phone.discovery.envelope:id/solitaire_edit")) {
 				break;
 			}
 

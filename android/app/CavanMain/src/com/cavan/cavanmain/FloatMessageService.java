@@ -59,7 +59,7 @@ public class FloatMessageService extends FloatWidowService {
 	private boolean mUserPresent;
 	private TextView mTextViewTime;
 	private TextView mTextViewAutoUnlock;
-	private CavanTimedArray<String> mNetSharedCodes = new CavanTimedArray<String>(3600000);
+	private CavanTimedArray<String> mNetSharedCodes = new CavanTimedArray<String>(60000);
 	private HashMap<CharSequence, RedPacketCode> mMessageCodeMap = new HashMap<CharSequence, RedPacketCode>();
 
 	private NetworkShareThread mNetShareThread;
@@ -764,7 +764,7 @@ public class FloatMessageService extends FloatWidowService {
 
 					synchronized (this) {
 						try {
-							wait(5000);
+							wait(20000);
 						} catch (InterruptedException e1) {
 							e1.printStackTrace();
 						}
