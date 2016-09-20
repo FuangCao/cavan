@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -249,7 +250,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 					break;
 				}
 
-				if (sendRedPacketCode(root, code)) {
+				if (postRedPacketCode(root, code)) {
 					mCommitTime = System.currentTimeMillis();
 				}
 			}
@@ -354,83 +355,58 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	private boolean gotoRedPacketActivity(AccessibilityNodeInfo root) {
+		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId("com.alipay.android.phone.openplatform:id/home_app_view");
+		if (nodes == null || nodes.size() <= 0) {
+			return false;
+		}
+
+		root = nodes.get(0);
+
 		AccessibilityNodeInfo info = findAccessibilityNodeInfoByText(root, "红包");
 		if (info == null) {
 			return false;
 		}
 
-		AccessibilityNodeInfo parent = info.getParent();
-		if (parent == null) {
-			return false;
-		}
-
 		info.performAction(AccessibilityNodeInfo.ACTION_SELECT);
-		parent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+		root.performAction(AccessibilityNodeInfo.ACTION_CLICK);
 
 		return true;
 	}
 
-	private boolean sendRedPacketCode(AccessibilityNodeInfo root, RedPacketCode code) {
-		AccessibilityNodeInfo infoInput = null;
-		AccessibilityNodeInfo infoCommit = null;
-
-		for (int i = root.getChildCount() - 1; i >= 0; i--) {
-			AccessibilityNodeInfo info = root.getChild(i);
-			if (info == null) {
-				continue;
-			}
-
-			CharSequence desc = info.getContentDescription();
-			if (desc == null) {
-				continue;
-			}
-
-			switch (desc.toString()) {
-			case "点击输入口令":
-				infoInput = info;
-				break;
-
-			case "确定":
-				infoCommit = info;
-				break;
-			}
-		}
-
-		if (infoInput == null || infoCommit == null) {
+	private boolean postRedPacketCode(AccessibilityNodeInfo root, RedPacketCode code) {
+		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId("com.alipay.android.phone.discovery.envelope:id/solitaire_edit");
+		if (nodes == null || nodes.size() <= 0) {
 			return false;
 		}
 
-		String text = CavanString.fromCharSequence(infoInput.getText());
-		if (text.equals(code.getCode())) {
-			CavanAndroid.eLog("don't need commit code: " + text);
+		AccessibilityNodeInfo node = nodes.get(0);
 
-			if (!mHandler.hasMessages(MSG_INPUT_TIMEOUT, code)) {
-				Message message = mHandler.obtainMessage(MSG_INPUT_TIMEOUT, code);
-				mHandler.sendMessageDelayed(message, INPUT_OVERTIME);
+		String text = CavanString.fromCharSequence(node.getText());
+		if (!text.equals(code)) {
+			if (text.length() > 0) {
+				Bundle arguments = new Bundle();
+				arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, 0);
+				arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, text.length());
+				node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, arguments);
 			}
 
-			return true;
-		}
-
-		int count = code.getCommitCount();
-		if (count > 3) {
-			addInvalidCode(code);
-		} else {
-			code.addCommitCount();
+			RedPacketListenerService.postRedPacketCode(this, code.getCode());
+			node.performAction(AccessibilityNodeInfo.ACTION_PASTE);
 		}
 
 		mCode = code;
 
-		if (count < 2 && CavanInputMethod.isDefaultInputMethod(this)) {
-			Intent intent = new Intent(MainActivity.ACTION_CODE_POST);
-			intent.putExtra("code", code);
-			sendBroadcast(intent);
-		} else if (text.isEmpty()) {
-			RedPacketListenerService.postRedPacketCode(this, code.getCode());
-			infoInput.performAction(AccessibilityNodeInfo.ACTION_PASTE);
-		} else {
-			performBackAction();
-			return false;
+		if (CavanInputMethod.isDefaultInputMethod(this)) {
+			if (code.addCommitCount() > 3) {
+				addInvalidCode(code);
+			} else {
+				sendBroadcast(new Intent(MainActivity.ACTION_CODE_COMMIT));
+
+				if (!mHandler.hasMessages(MSG_INPUT_TIMEOUT, code)) {
+					Message message = mHandler.obtainMessage(MSG_INPUT_TIMEOUT, code);
+					mHandler.sendMessageDelayed(message, INPUT_OVERTIME);
+				}
+			}
 		}
 
 		return true;
@@ -495,12 +471,24 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private void onViewTextChanged(AccessibilityEvent event) {
 		switch (event.getPackageName().toString()) {
 		case CavanPackageName.ALIPAY:
-			List<CharSequence> sequences = event.getText();
-			if (sequences == null || sequences.size() <= 0) {
+			AccessibilityNodeInfo source = event.getSource();
+			if (source == null) {
 				break;
 			}
 
-			mInputtedCode = sequences.get(0);
+			String id = source.getViewIdResourceName();
+			if (id == null) {
+				break;
+			}
+
+			if (!"com.alipay.android.phone.discovery.envelope:id/solitaire_edit".equals(event)) {
+				break;
+			}
+
+			List<CharSequence> sequences = event.getText();
+			if (sequences != null && sequences.size() > 0) {
+				mInputtedCode = sequences.get(0);
+			}
 			break;
 		}
 	}
@@ -529,6 +517,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	protected void onServiceConnected() {
 		AccessibilityServiceInfo info = getServiceInfo();
 		info.packageNames = PACKAGE_NAMES;
+		info.flags |= AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS;
 		setServiceInfo(info);
 
 		super.onServiceConnected();

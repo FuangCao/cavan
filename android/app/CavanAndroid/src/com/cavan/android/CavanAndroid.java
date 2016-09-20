@@ -27,7 +27,7 @@ import com.cavan.java.CavanJava;
 @SuppressWarnings("deprecation")
 public class CavanAndroid {
 
-	public static final String TAG = "Cavan";
+	public static String TAG = "Cavan";
 
 	public static final String ENABLED_NOTIFICATION_LISTENERS = "enabled_notification_listeners";
 

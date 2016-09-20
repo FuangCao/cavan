@@ -115,17 +115,10 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 				updateInputView();
 				break;
 
-			case MainActivity.ACTION_CODE_POST:
+			case MainActivity.ACTION_CODE_COMMIT:
 				InputConnection conn = getCurrentInputConnection();
-				if (conn == null) {
-					break;
-				}
-
-				code = intent.getParcelableExtra("code");
-				if (code == null) {
+				if (conn != null) {
 					sendFinishAction(conn);
-				} else {
-					sendRedPacketCode(code.getCode());
 				}
 				break;
 			}
@@ -269,7 +262,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(MainActivity.ACTION_CODE_ADD);
 		filter.addAction(MainActivity.ACTION_CODE_REMOVE);
-		filter.addAction(MainActivity.ACTION_CODE_POST);
+		filter.addAction(MainActivity.ACTION_CODE_COMMIT);
 		registerReceiver(mReceiver, filter);
 
 		KeypadThread thread = new KeypadThread();
