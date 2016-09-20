@@ -145,6 +145,21 @@ public class CavanString {
 		return strip(mContent);
 	}
 
+	public static String getDigit(String text) {
+		StringBuilder builder = new StringBuilder();
+
+		for (int i = 0; i < text.length(); i++) {
+			char c = text.charAt(i);
+			if (CavanJava.isDigit(c)) {
+				builder.append(c);
+			} else if (isChineseChar(c)) {
+				break;
+			}
+		}
+
+		return builder.toString();
+	}
+
 	@Override
 	public String toString() {
 		return mContent;
