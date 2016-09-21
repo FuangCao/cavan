@@ -44,6 +44,7 @@ public class FloatMessageService extends FloatWidowService {
 	public static final int LAN_SHARE_PORT = 9898;
 	public static final String LAN_SHARE_ADDR = "224.0.0.1";
 	public static final String LAN_SHARE_PREFIX = "RedPacketCode: ";
+	public static final String NETWORK_TEST_CODE = "CavanNetworkTest";
 
 	public static final int TEXT_PADDING = 8;
 	public static final float TEXT_SIZE_TIME = 16;
@@ -59,7 +60,7 @@ public class FloatMessageService extends FloatWidowService {
 	private boolean mUserPresent;
 	private TextView mTextViewTime;
 	private TextView mTextViewAutoUnlock;
-	private CavanTimedArray<String> mNetSharedCodes = new CavanTimedArray<String>(3600000);
+	private CavanTimedArray<String> mCodes = new CavanTimedArray<String>(600000);
 	private HashMap<CharSequence, RedPacketCode> mMessageCodeMap = new HashMap<CharSequence, RedPacketCode>();
 
 	private NetworkShareThread mNetShareThread;
@@ -170,12 +171,12 @@ public class FloatMessageService extends FloatWidowService {
 
 				sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_ADD, code);
 
-				if (code.isNetShared()) {
-					mNetSharedCodes.addTimedValue(code.getCode());
-				} else if (mNetShareThread != null) {
+				if (code.isNetShared() == false && mNetShareThread != null) {
 					long delay = code.getTime() - System.currentTimeMillis();
 					mNetShareThread.sendCode(code.getCode(), delay);
 				}
+
+				mCodes.addTimedValue(code.getCode());
 			}
 
 			return view.getId();
@@ -330,7 +331,10 @@ public class FloatMessageService extends FloatWidowService {
 
 			CavanAndroid.eLog("code = " + code);
 
-			if (mNetSharedCodes.hasTimedValue(code)) {
+			if (code.equals(NETWORK_TEST_CODE)) {
+				text = getResources().getString(R.string.text_network_test_success, type);
+				mHandler.obtainMessage(MSG_SHOW_TOAST, text).sendToTarget();
+			} else if (mCodes.hasTimedValue(code)) {
 				text = getResources().getString(R.string.text_ignore_received_code, code);
 				mHandler.obtainMessage(MSG_SHOW_TOAST, text).sendToTarget();
 			} else {
@@ -494,14 +498,6 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		public boolean sendCode(String code, long delay) {
-			if (mNetSharedCodes.hasTimedValue(code)) {
-				String text = getResources().getString(R.string.text_ignore_shared_code, code);
-				mHandler.obtainMessage(MSG_SHOW_TOAST, text).sendToTarget();
-				return false;
-			}
-
-			mNetSharedCodes.addTimedValue(code);
-
 			if (mUdpHandler == null) {
 				return false;
 			}

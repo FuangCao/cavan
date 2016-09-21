@@ -51,6 +51,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_AUTO_UNPACK = "auto_unpack";
 	public static final String KEY_LISTEN_CLIP = "listen_clip";
 	public static final String KEY_FLOAT_TIMER = "float_timer";
+	public static final String KEY_NETWORK_TEST = "network_test";
 	public static final String KEY_LAN_SHARE = "lan_share";
 	public static final String KEY_WAN_SHARE = "wan_share";
 	public static final String KEY_WAN_IP = "wan_ip";
@@ -122,6 +123,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private CheckBoxPreference mPreferenceWanShare;
 	private EditTextPreference mPreferenceWanIp;
 	private EditTextPreference mPreferenceWanPort;
+	private Preference mPreferenceNetworkTest;
 
 	private IFloatMessageService mFloatMessageService;
 	private ServiceConnection mFloatMessageConnection = new ServiceConnection() {
@@ -175,6 +177,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
 		mPreferenceInputMethodSelect = findPreference(KEY_INPUT_METHOD_SELECT);
+		mPreferenceNetworkTest = findPreference(KEY_NETWORK_TEST);
 
 		mPreferenceMessageShow = findPreference(KEY_MESSAGE_SHOW);
 		mPreferenceMessageShow.setIntent(CavanMessageActivity.getIntent(this));
@@ -387,6 +390,14 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		} else if (preference == mPreferenceInputMethodSelect) {
 			InputMethodManager manager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
 			manager.showInputMethodPicker();
+		} else if (preference == mPreferenceNetworkTest) {
+			if (mFloatMessageService != null) {
+				try {
+					mFloatMessageService.sendSharedCode(FloatMessageService.NETWORK_TEST_CODE);
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 
 		return super.onPreferenceTreeClick(preferenceScreen, preference);
@@ -397,7 +408,13 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		if (preference == mPreferenceFloatTime) {
 			return setDesktopFloatTimerEnable((boolean) object);
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
-			if (CavanAndroid.isNotificationListenerEnabled(this, RedPacketListenerService.class)) {
+			if (!CavanAndroid.isNotificationListenerEnabled(this, RedPacketListenerService.class)) {
+				PermissionSettingsActivity.startNotificationListenerSettingsActivity(this);
+				CavanAndroid.showToastLong(this, "请打开通知读取权限");
+			} else if (!CavanAndroid.isAccessibilityServiceEnabled(this, CavanAccessibilityService.class)) {
+				PermissionSettingsActivity.startAccessibilitySettingsActivity(this);
+				CavanAndroid.showToast(this, "请打开辅助功能");
+			} else {
 				NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 				if (manager != null) {
 					String text = (String) object;
@@ -411,9 +428,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 					manager.notify(RedPacketListenerService.NOTIFY_TEST, builder.build());
 				}
-			} else {
-				PermissionSettingsActivity.startNotificationListenerSettingsActivity(this);
-				CavanAndroid.showToastLong(this, "请打开通知读取权限");
 			}
 		} else if (preference == mPreferenceRedPacketNotifyRingtone) {
 			updateRingtoneSummary((String) object);

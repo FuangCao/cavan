@@ -273,22 +273,48 @@ public class CavanAndroid {
 		return true;
 	}
 
+	public static String[] getEnabledAccessibilityServices(Context context) {
+		String text = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+		if (text == null) {
+			return new String[0];
+		}
+
+		return text.split(":");
+	}
+
+	public static boolean isAccessibilityServiceEnabled(Context context) {
+		return Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.ACCESSIBILITY_ENABLED, 0) > 0;
+	}
+
+	public static boolean isAccessibilityServiceEnabled(Context context, String service) {
+		if (isAccessibilityServiceEnabled(context)) {
+			for (String item : getEnabledAccessibilityServices(context)) {
+				if (item.equals(service)) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	public static boolean isAccessibilityServiceEnabled(Context context, Class<?> cls) {
+		String service = context.getPackageName() + "/" + cls.getName();
+
+		return isAccessibilityServiceEnabled(context, service);
+	}
+
 	public static String[] getEnabledNotificationListeners(Context context) {
 		String text = Settings.Secure.getString(context.getContentResolver(), ENABLED_NOTIFICATION_LISTENERS);
 		if (text == null) {
-			return null;
+			return new String[0];
 		}
 
 		return text.split(":");
 	}
 
 	public static boolean isNotificationListenerEnabled(Context context, String service) {
-		String[] listeners = getEnabledNotificationListeners(context);
-		if (listeners == null) {
-			return false;
-		}
-
-		for (String listener : listeners) {
+		for (String listener : getEnabledNotificationListeners(context)) {
 			if (listener.equals(service)) {
 				return true;
 			}
