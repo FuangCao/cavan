@@ -155,7 +155,7 @@ int CavanMainExecute(JNIEnv *env, jobjectArray args, const char *name, int (*mai
 
 	if (pid == 0) {
 		int ret = CavanMainRun(env, args, name, main_func);
-		exit(ret < 0 ? ret : 0);
+		_exit(ret < 0);
 	} else {
 		int code;
 		int index;

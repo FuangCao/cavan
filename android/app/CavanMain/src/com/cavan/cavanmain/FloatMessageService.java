@@ -410,6 +410,7 @@ public class FloatMessageService extends FloatWidowService {
 		mUdpServiceThread.start();
 
 		mHandler.sendEmptyMessage(MSG_WAN_SERVICE_UPDATED);
+		mHandler.sendEmptyMessage(MSG_TCP_BRIDGE_UPDATED);
 
 		super.onCreate();
 	}
@@ -844,15 +845,13 @@ public class FloatMessageService extends FloatWidowService {
 				String url2 = "tcp://" + CavanString.deleteSpace(settings[1]);
 
 				mHandler.obtainMessage(MSG_TCP_BRIDGE_STATE_CHANGED, R.string.text_tcp_bridge_running, 0).sendToTarget();
-				CavanAndroid.pLog();
 				CavanJni.doTcpBridge(url1, url2);
-				CavanAndroid.pLog();
 				mHandler.obtainMessage(MSG_TCP_BRIDGE_STATE_CHANGED, R.string.text_tcp_bridge_exit, 0).sendToTarget();
 
 				if (mActive) {
 					synchronized (this) {
 						try {
-							wait(2000);
+							wait(10000);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
