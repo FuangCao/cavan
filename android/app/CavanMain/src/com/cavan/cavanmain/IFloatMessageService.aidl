@@ -16,4 +16,5 @@ interface IFloatMessageService {
 	boolean sendSharedCode(String code);
 
 	void updateTcpService();
+	void updateTcpBridge();
 }

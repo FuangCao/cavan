@@ -674,6 +674,13 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSystemInit(JNIEnv *env, jcl
 	return CavanMainExecute(env, args, "system_init", do_cavan_system_init);
 }
 
+extern int do_cavan_tcp_bridge(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpBridge(JNIEnv *env, jclass clazz, jobjectArray args)
+{
+	return CavanMainExecute(env, args, "tcp_bridge", do_cavan_tcp_bridge);
+}
+
 extern int do_cavan_tcp_copy(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpCopy(JNIEnv *env, jclass clazz, jobjectArray args)

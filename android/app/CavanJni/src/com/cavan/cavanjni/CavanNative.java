@@ -680,6 +680,13 @@ class CavanCommandSystemInit implements ICavanCommand {
 	}
 }
 
+class CavanCommandTcpBridge implements ICavanCommand {
+	@Override
+	public int main(String... args) {
+		return CavanNative.doTcpBridge(args);
+	}
+}
+
 class CavanCommandTcpCopy implements ICavanCommand {
 	@Override
 	public int main(String... args) {
@@ -965,6 +972,7 @@ public class CavanNative {
 		sHashMap.put("swan_vk", new CavanCommandSwanVk());
 		sHashMap.put("swan_vn", new CavanCommandSwanVn());
 		sHashMap.put("system_init", new CavanCommandSystemInit());
+		sHashMap.put("tcp_bridge", new CavanCommandTcpBridge());
 		sHashMap.put("tcp_copy", new CavanCommandTcpCopy());
 		sHashMap.put("tcp_dd", new CavanCommandTcpDd());
 		sHashMap.put("tcp_dd_server", new CavanCommandTcpDdServer());
@@ -1089,6 +1097,7 @@ public class CavanNative {
 	public static native int doSwanVk(String... args);
 	public static native int doSwanVn(String... args);
 	public static native int doSystemInit(String... args);
+	public static native int doTcpBridge(String... args);
 	public static native int doTcpCopy(String... args);
 	public static native int doTcpDd(String... args);
 	public static native int doTcpDdServer(String... args);

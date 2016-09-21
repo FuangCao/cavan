@@ -44,6 +44,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String ACTION_CODE_COMMIT = "cavan.intent.action.ACTION_CODE_COMMIT";
 	public static final String ACTION_CODE_RECEIVED = "cavan.intent.action.ACTION_CODE_RECEIVED";
 	public static final String ACTION_WAN_UPDATED = "cavan.intent.action.ACTION_WAN_UPDATED";
+	public static final String ACTION_BRIDGE_UPDATED = "cavan.intent.action.ACTION_BRIDGE_UPDATED";
 
 	public static final String KEY_IP_ADDRESS = "ip_address";
 	public static final String KEY_AUTO_UNLOCK = "auto_unlock";
@@ -61,37 +62,47 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_PERMISSION_SETTINGS = "permission_settings";
 	public static final String KEY_RED_PACKET_NOTIFY_TEST = "red_packet_notify_test";
 	public static final String KEY_RED_PACKET_NOTIFY_RINGTONE = "red_packet_notify_ringtone";
+	public static final String KEY_TCP_BRIDGE = "tcp_bridge";
+	public static final String KEY_TCP_BRIDGE_SETTING = "tcp_bridge_setting";
 	public static final String KEY_FTP = "ftp";
 	public static final String KEY_TCP_DD = "tcp_dd";
 	public static final String KEY_WEB_PROXY = "web_proxy";
 	public static final String KEY_TCP_REPEATER = "tcp_repeater";
 
 	public static boolean isFloatTimerEnabled(Context context) {
-		return CavanAndroid.isPreferenceEnabled(context, MainActivity.KEY_FLOAT_TIMER);
+		return CavanAndroid.isPreferenceEnabled(context, KEY_FLOAT_TIMER);
 	}
 
 	public static boolean isAutoCommitEnabled(Context context) {
-		return CavanAndroid.isPreferenceEnabled(context, MainActivity.KEY_AUTO_COMMIT);
+		return CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_COMMIT);
 	}
 
 	public static boolean isAutoUnpackEnabled(Context context) {
-		return CavanAndroid.isPreferenceEnabled(context, MainActivity.KEY_AUTO_UNPACK);
+		return CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_UNPACK);
 	}
 
 	public static boolean isListenClipEnabled(Context context) {
-		return CavanAndroid.isPreferenceEnabled(context, MainActivity.KEY_LISTEN_CLIP);
+		return CavanAndroid.isPreferenceEnabled(context, KEY_LISTEN_CLIP);
 	}
 
 	public static boolean isLanShareEnabled(Context context) {
-		return CavanAndroid.isPreferenceEnabled(context, MainActivity.KEY_LAN_SHARE);
+		return CavanAndroid.isPreferenceEnabled(context, KEY_LAN_SHARE);
 	}
 
 	public static boolean isWanShareEnabled(Context context) {
-		return CavanAndroid.isPreferenceEnabled(context, MainActivity.KEY_WAN_SHARE);
+		return CavanAndroid.isPreferenceEnabled(context, KEY_WAN_SHARE);
 	}
 
 	public static String getWanShareIpAddress(Context context) {
 		return CavanAndroid.getPreference(context, KEY_WAN_IP, null);
+	}
+
+	public static boolean isTcpBridgeEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_TCP_BRIDGE);
+	}
+
+	public static String getTcpBridgeSetting(Context context) {
+		return CavanAndroid.getPreference(context, KEY_TCP_BRIDGE_SETTING, null);
 	}
 
 	public static int getWanSharePort(Context context) {
@@ -124,6 +135,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private EditTextPreference mPreferenceWanIp;
 	private EditTextPreference mPreferenceWanPort;
 	private Preference mPreferenceNetworkTest;
+	private CheckBoxPreference mPreferenceTcpBridge;
+	private EditTextPreference mPreferenceTcpBridgeSetting;
 
 	private IFloatMessageService mFloatMessageService;
 	private ServiceConnection mFloatMessageConnection = new ServiceConnection() {
@@ -150,8 +163,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 			switch (action) {
 			case ACTION_WAN_UPDATED:
-				int state = intent.getIntExtra("state", 0);
-				switch (state) {
+				switch (intent.getIntExtra("state", 0)) {
 				case R.string.text_wan_connecting:
 					mPreferenceWanShare.setSummary(R.string.text_connecting);
 					break;
@@ -162,6 +174,22 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 				case R.string.text_wan_disconnected:
 					mPreferenceWanShare.setSummary(R.string.text_disconnected);
+					break;
+				}
+				break;
+
+			case ACTION_BRIDGE_UPDATED:
+				switch (intent.getIntExtra("state", 0)) {
+				case R.string.text_tcp_bridge_running:
+					mPreferenceTcpBridge.setSummary(R.string.text_running);
+					break;
+
+				case R.string.text_tcp_bridge_stopped:
+					mPreferenceTcpBridge.setSummary(R.string.text_stopped);
+					break;
+
+				case R.string.text_tcp_bridge_exit:
+					mPreferenceTcpBridge.setSummary(R.string.text_exit);
 					break;
 				}
 				break;
@@ -226,6 +254,13 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceRedPacketNotifyRingtone.setRingtoneType(RingtoneManager.TYPE_NOTIFICATION);
 		mPreferenceRedPacketNotifyRingtone.setOnPreferenceChangeListener(this);
 
+		mPreferenceTcpBridge = (CheckBoxPreference) findPreference(KEY_TCP_BRIDGE);
+		mPreferenceTcpBridge.setOnPreferenceChangeListener(this);
+
+		mPreferenceTcpBridgeSetting = (EditTextPreference) findPreference(KEY_TCP_BRIDGE_SETTING);
+		mPreferenceTcpBridgeSetting.setSummary(mPreferenceTcpBridgeSetting.getText());
+		mPreferenceTcpBridgeSetting.setOnPreferenceChangeListener(this);
+
 		mPreferenceFtp = (CavanServicePreference) findPreference(KEY_FTP);
 		mPreferenceTcpDd = (CavanServicePreference) findPreference(KEY_TCP_DD);
 		mPreferenceWebProxy = (CavanServicePreference) findPreference(KEY_WEB_PROXY);
@@ -253,7 +288,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		startService(service);
 		bindService(service, mFloatMessageConnection, 0);
 
-		registerReceiver(mReceiver, new IntentFilter(ACTION_WAN_UPDATED));
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(ACTION_WAN_UPDATED);
+		filter.addAction(ACTION_BRIDGE_UPDATED);
+		registerReceiver(mReceiver, filter);
 	}
 
 	@Override
@@ -431,7 +469,11 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			}
 		} else if (preference == mPreferenceRedPacketNotifyRingtone) {
 			updateRingtoneSummary((String) object);
-		} else if (preference == mPreferenceWanShare) {
+		} else if (preference == mPreferenceWanIp || preference == mPreferenceWanPort || preference == mPreferenceWanShare) {
+			if (object instanceof CharSequence) {
+				preference.setSummary((CharSequence) object);
+			}
+
 			if (mFloatMessageService != null) {
 				try {
 					mFloatMessageService.updateTcpService();
@@ -439,12 +481,14 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 					e.printStackTrace();
 				}
 			}
-		} else if (preference == mPreferenceWanIp || preference == mPreferenceWanPort) {
-			preference.setSummary((CharSequence) object);
+		} else if (preference == mPreferenceTcpBridge || preference == mPreferenceTcpBridgeSetting) {
+			if (object instanceof CharSequence) {
+				preference.setSummary((CharSequence) object);
+			}
 
 			if (mFloatMessageService != null) {
 				try {
-					mFloatMessageService.updateTcpService();
+					mFloatMessageService.updateTcpBridge();
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}

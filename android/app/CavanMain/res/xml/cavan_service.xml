@@ -8,6 +8,9 @@
 	    android:title="@string/text_local_ip_address"
 	    android:summary="@string/text_unknown" />
 
+	<Preference android:key="network_test"
+	    android:title="@string/text_network_test" />
+
 	<Preference android:key="message_show"
 	    android:title="@string/text_message_show" />
 
@@ -34,9 +37,6 @@
 	    android:persistent="true"
 	    android:title="@string/text_wan_share" />
 
-	<Preference android:key="network_test"
-	    android:title="@string/text_network_test" />
-
 	<EditTextPreference android:key="wan_ip"
 	    android:persistent="true"
 	    android:title="@string/text_wan_ip" />
@@ -62,6 +62,14 @@
 	<CheckBoxPreference android:key="float_timer"
 	    android:persistent="true"
 	    android:title="@string/desktop_float_timer" />
+
+	<CheckBoxPreference android:key="tcp_bridge"
+	    android:persistent="true"
+	    android:title="@string/text_tcp_bridge" />
+
+	<EditTextPreference android:key="tcp_bridge_setting"
+	    android:persistent="true"
+	    android:title="@string/text_tcp_bridge_setting" />
 
 	<com.cavan.cavanjni.TcpRepeaterPreference android:key="tcp_repeater"
 	    android:persistent="true"

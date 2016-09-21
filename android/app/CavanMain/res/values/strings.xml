@@ -62,5 +62,11 @@
     <string name="text_wan_disconnected">外网服务器已断开连接</string>
     <string name="text_network_test_success">网络测试成功：<xliff:g>%1$s</xliff:g></string>
     <string name="text_network_test">网络测试</string>
+    <string name="text_tcp_bridge">TCP 桥接器</string>
+    <string name="text_tcp_bridge_setting">TCP 桥接器设置</string>
+    <string name="text_tcp_bridge_running">TCP 桥接器正在运行</string>
+    <string name="text_tcp_bridge_stopped">TCP 桥接器已停止运行</string>
+    <string name="text_tcp_bridge_exit">TCP 桥接器已退出</string>
+    <string name="text_exit">已退出</string>
 
 </resources>

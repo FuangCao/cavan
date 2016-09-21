@@ -57,10 +57,6 @@ public class RedPacketNotification extends CavanNotification {
 	};
 
 	public static final Pattern[] sJoinedDigitPatterns = {
-		Pattern.compile("支付宝.*红包\\D*" + DIGIT_JOINED_PATTERN),
-		Pattern.compile("支付宝.*口令\\D*" + DIGIT_JOINED_PATTERN),
-		Pattern.compile("红包口令\\D*" + DIGIT_JOINED_PATTERN),
-		Pattern.compile("口令红包\\D*" + DIGIT_JOINED_PATTERN),
 		Pattern.compile("红包\\s*[:：]" + DIGIT_JOINED_PATTERN),
 		Pattern.compile("口令\\s*[:：]" + DIGIT_JOINED_PATTERN),
 	};

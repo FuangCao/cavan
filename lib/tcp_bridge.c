@@ -73,7 +73,7 @@ int cavan_tcp_bridge_run(const char *url1, const char *url2)
 	struct network_client client1;
 	struct network_client client2;
 
-	println("%s <-> %s", url1, url2);
+	pd_info("%s <-> %s", url1, url2);
 
 	ret = network_client_open2(&client1, url1, CAVAN_NET_FLAG_WAIT);
 	if (ret < 0) {
@@ -81,7 +81,7 @@ int cavan_tcp_bridge_run(const char *url1, const char *url2)
 		return ret;
 	}
 
-	println("success to open: %s", url1);
+	pd_info("success to open: %s", url1);
 
 	ret = network_client_open2(&client2, url2, CAVAN_NET_FLAG_WAIT);
 	if (ret < 0) {
@@ -89,7 +89,7 @@ int cavan_tcp_bridge_run(const char *url1, const char *url2)
 		goto out_network_client_close1;
 	}
 
-	println("success to open: %s", url2);
+	pd_info("success to open: %s", url2);
 
 	cavan_tcp_bridge_main_loop(&client1, &client2);
 

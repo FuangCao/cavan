@@ -36,6 +36,7 @@ import android.widget.TextView;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.android.FloatWidowService;
+import com.cavan.cavanjni.CavanJni;
 import com.cavan.java.CavanString;
 import com.cavan.java.CavanTimedArray;
 
@@ -52,9 +53,11 @@ public class FloatMessageService extends FloatWidowService {
 	public static final int TEXT_COLOR_TIME = Color.WHITE;
 	public static final int TEXT_COLOR_MESSAGE = Color.YELLOW;
 
-	private static final int MSG_WAN_SERVICE_STATE_CHANGED = 1;
-	private static final int MSG_WAN_SERVICE_UPDATED = 2;
-	private static final int MSG_SHOW_TOAST = 3;
+	private static final int MSG_SHOW_TOAST = 1;
+	private static final int MSG_WAN_SERVICE_STATE_CHANGED = 2;
+	private static final int MSG_WAN_SERVICE_UPDATED = 3;
+	private static final int MSG_TCP_BRIDGE_STATE_CHANGED = 4;
+	private static final int MSG_TCP_BRIDGE_UPDATED = 5;
 
 	private int mLastSecond;
 	private boolean mUserPresent;
@@ -66,6 +69,8 @@ public class FloatMessageService extends FloatWidowService {
 	private NetworkShareThread mNetShareThread;
 	private UdpReceiveThread mUdpServiceThread;
 	private TcpReceiveThread mTcpReceiveThread;
+	private TcpBridgeThread mTcpBridgeThread;
+
 	private Handler mHandler = new Handler() {
 
 		@SuppressWarnings("deprecation")
@@ -94,6 +99,31 @@ public class FloatMessageService extends FloatWidowService {
 					}
 				} else if (mTcpReceiveThread != null) {
 					mTcpReceiveThread.setActive(false);
+				}
+				break;
+
+			case MSG_TCP_BRIDGE_STATE_CHANGED:
+				intent = new Intent(MainActivity.ACTION_BRIDGE_UPDATED);
+				intent.putExtra("state", msg.arg1);
+				sendStickyBroadcast(intent);
+
+				CavanAndroid.showToast(getApplicationContext(), msg.arg1);
+				break;
+
+			case MSG_TCP_BRIDGE_UPDATED:
+				if (MainActivity.isTcpBridgeEnabled(FloatMessageService.this)) {
+					if (mTcpBridgeThread == null) {
+						mTcpBridgeThread = new TcpBridgeThread();
+						mTcpBridgeThread.start();
+					} else {
+						synchronized (mTcpBridgeThread) {
+							mTcpBridgeThread.setActive(true);
+							mTcpBridgeThread.killCommand();
+							mTcpBridgeThread.notify();
+						}
+					}
+				} else if (mTcpBridgeThread != null) {
+					mTcpBridgeThread.setActive(false);
 				}
 				break;
 
@@ -242,6 +272,11 @@ public class FloatMessageService extends FloatWidowService {
 		public void updateTcpService() throws RemoteException {
 			mHandler.sendEmptyMessageDelayed(MSG_WAN_SERVICE_UPDATED, 500);
 		}
+
+		@Override
+		public void updateTcpBridge() throws RemoteException {
+			mHandler.sendEmptyMessageDelayed(MSG_TCP_BRIDGE_UPDATED, 500);
+		}
 	};
 
 	private Runnable mRunnableTime = new Runnable() {
@@ -334,10 +369,7 @@ public class FloatMessageService extends FloatWidowService {
 			if (code.equals(NETWORK_TEST_CODE)) {
 				text = getResources().getString(R.string.text_network_test_success, type);
 				mHandler.obtainMessage(MSG_SHOW_TOAST, text).sendToTarget();
-			} else if (mCodes.hasTimedValue(code)) {
-				text = getResources().getString(R.string.text_ignore_received_code, code);
-				mHandler.obtainMessage(MSG_SHOW_TOAST, text).sendToTarget();
-			} else {
+			} else if (!mCodes.hasTimedValue(code)) {
 				Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
 				intent.putExtra("type", type);
 				intent.putExtra("code", code);
@@ -758,11 +790,13 @@ public class FloatMessageService extends FloatWidowService {
 				} catch (Exception e) {
 					e.printStackTrace();
 
-					synchronized (this) {
-						try {
-							wait(10000);
-						} catch (InterruptedException e1) {
-							e1.printStackTrace();
+					if (mActive) {
+						synchronized (this) {
+							try {
+								wait(10000);
+							} catch (InterruptedException e1) {
+								e1.printStackTrace();
+							}
 						}
 					}
 				} finally {
@@ -771,6 +805,63 @@ public class FloatMessageService extends FloatWidowService {
 			}
 
 			mTcpReceiveThread = null;
+		}
+	}
+
+	public class TcpBridgeThread extends Thread {
+
+		private boolean mActive;
+
+		public void killCommand() {
+			CavanJni.kill("tcp_bridge");
+		}
+
+		public void setActive(boolean active) {
+			if (active) {
+				mActive = true;
+			} else {
+				mActive = false;
+				killCommand();
+			}
+		}
+
+		@Override
+		public void run() {
+			mActive = true;
+
+			while (mActive && MainActivity.isTcpBridgeEnabled(getApplicationContext())) {
+				String setting = MainActivity.getTcpBridgeSetting(getApplicationContext());
+				if (setting == null) {
+					break;
+				}
+
+				String[] settings = setting.split("\\n");
+				if (settings.length != 2) {
+					break;
+				}
+
+				String url1 = "tcp://" + CavanString.deleteSpace(settings[0]);
+				String url2 = "tcp://" + CavanString.deleteSpace(settings[1]);
+
+				mHandler.obtainMessage(MSG_TCP_BRIDGE_STATE_CHANGED, R.string.text_tcp_bridge_running, 0).sendToTarget();
+				CavanAndroid.pLog();
+				CavanJni.doTcpBridge(url1, url2);
+				CavanAndroid.pLog();
+				mHandler.obtainMessage(MSG_TCP_BRIDGE_STATE_CHANGED, R.string.text_tcp_bridge_exit, 0).sendToTarget();
+
+				if (mActive) {
+					synchronized (this) {
+						try {
+							wait(2000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+
+			mTcpBridgeThread = null;
+			mHandler.obtainMessage(MSG_TCP_BRIDGE_STATE_CHANGED, R.string.text_tcp_bridge_stopped, 0).sendToTarget();
 		}
 	}
 }
