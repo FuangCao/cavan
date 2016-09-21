@@ -52,8 +52,11 @@ public class PermissionSettingsActivity extends PreferenceActivity {
 	}
 
 	public static void startNotificationListenerSettingsActivity(Context context) {
-		Intent intent = getNotificationAccessIntent();
-		context.startActivity(intent);
+		context.startActivity(getNotificationAccessIntent());
+	}
+
+	public static void startAccessibilitySettingsActivity(Context context) {
+		context.startActivity(getAccessibilitySettingsIntent());
 	}
 
 	public static Intent getIntent(Context context) {

@@ -48,6 +48,8 @@ public class CavanTimedArray<E> extends ArrayList<CavanTimedNode<E>> {
 	}
 
 	public boolean hasTimedValue(E value) {
+		removeOvertimeNodes();
+
 		for (CavanTimedNode<E> node : this) {
 			if (node.getValue().equals(value)) {
 				return true;

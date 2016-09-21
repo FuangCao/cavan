@@ -84,7 +84,10 @@ static int cavan_tcp_repeater_run_handler(struct cavan_dynamic_service *service,
 		cavan_dynamic_service_lock(service);
 
 		for (head = conn->next; head != conn; head = head->next) {
-			head->client.send(&head->client, buff, length);
+			int wrlen = head->client.send(&head->client, buff, length);
+			if (wrlen < length) {
+				network_client_close(&head->client);
+			}
 		}
 
 		cavan_dynamic_service_unlock(service);

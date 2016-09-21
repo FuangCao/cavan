@@ -34,6 +34,9 @@
 	    android:persistent="true"
 	    android:title="@string/text_wan_share" />
 
+	<Preference android:key="network_test"
+	    android:title="@string/text_network_test" />
+
 	<EditTextPreference android:key="wan_ip"
 	    android:persistent="true"
 	    android:title="@string/text_wan_ip" />
