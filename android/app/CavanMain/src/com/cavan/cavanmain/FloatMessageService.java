@@ -593,11 +593,11 @@ public class FloatMessageService extends FloatWidowService {
 					}
 				}
 
-				if (msg.what < 10) {
+				if (msg.what < 3) {
 					int index = msg.what + 1;
 
 					Message message = mUdpHandler.obtainMessage(index, code);
-					mUdpHandler.sendMessageDelayed(message, index * 100);
+					mUdpHandler.sendMessageDelayed(message, 1000);
 				}
 			}
 
