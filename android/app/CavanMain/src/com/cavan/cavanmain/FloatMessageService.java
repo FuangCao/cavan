@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -30,11 +29,9 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager.LayoutParams;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
-import com.cavan.android.CavanPackageName;
 import com.cavan.android.FloatWidowService;
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.java.CavanString;
@@ -138,8 +135,6 @@ public class FloatMessageService extends FloatWidowService {
 		}
 	};
 
-	private InputMethodPickerRunnable mInputMethodPickerRunnable = new InputMethodPickerRunnable();
-
 	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
 
 		@Override
@@ -197,7 +192,6 @@ public class FloatMessageService extends FloatWidowService {
 
 			if (code != null) {
 				mMessageCodeMap.put(message, code);
-				mInputMethodPickerRunnable.post();
 
 				sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_ADD, code);
 
@@ -485,40 +479,6 @@ public class FloatMessageService extends FloatWidowService {
 		mTextViewAutoUnlock.setTextColor(TEXT_COLOR_TIME);
 
 		return super.doInitialize();
-	}
-
-	public class InputMethodPickerRunnable implements Runnable {
-
-		private boolean mAlipayRunning;
-
-		public void post() {
-			mAlipayRunning = false;
-			mHandler.post(this);
-		}
-
-		@Override
-		public void run() {
-			if (getTextCount() <= 0) {
-				return;
-			}
-
-			if (CavanInputMethod.isDefaultInputMethod(getApplicationContext())) {
-				return;
-			}
-
-			if (mAlipayRunning) {
-				InputMethodManager manager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-				manager.showInputMethodPicker();
-			} else {
-				ComponentName info = CavanAndroid.getTopActivityInfo(getApplicationContext());
-				if (info != null && CavanPackageName.ALIPAY.equals(info.getPackageName())) {
-					mAlipayRunning = true;
-				}
-
-				mHandler.removeCallbacks(this);
-				mHandler.postDelayed(this, 500);
-			}
-		}
 	}
 
 	public class NetworkShareThread extends HandlerThread implements Callback {

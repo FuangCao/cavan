@@ -1,8 +1,6 @@
 package com.cavan.cavanmain;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import android.accessibilityservice.AccessibilityService;
@@ -26,12 +24,13 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanString;
+import com.cavan.java.CavanTimedArray;
 
 public class CavanAccessibilityService extends AccessibilityService {
 
 	private static final long POLL_DELAY = 500;
 	private static final long INPUT_OVERTIME = 5000;
-	private static final long COMMIT_OVERTIME = 5000;
+	private static final long COMMIT_OVERTIME = 2000;
 	private static final long CODE_OVERTIME = 7200000;
 
 	private static final int MSG_INPUT_TIMEOUT = 1;
@@ -51,7 +50,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private RedPacketCode mCode;
 	private CharSequence mInputtedCode;
 	private List<RedPacketCode> mCodes = new ArrayList<RedPacketCode>();
-	private HashMap<RedPacketCode, Long> mInvalidCodeMap = new HashMap<RedPacketCode, Long>();
+	private CavanTimedArray<String> mTimedCodes = new CavanTimedArray<String>(CODE_OVERTIME);
 
 	private IFloatMessageService mService;
 	private ServiceConnection mConnection = new ServiceConnection() {
@@ -125,10 +124,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 					break;
 				}
 
-				if (isInvalidCode(code)) {
-					String text = getResources().getString(R.string.text_ignore_invalid_code, code.getCode());
-					CavanAndroid.showToast(CavanAccessibilityService.this, text);
-					break;
+				if (mTimedCodes.hasTimedValue(code.getCode())) {
+					code.setCompleted();
+				} else {
+					mTimedCodes.addTimedValue(code.getCode());
 				}
 
 				mCodes.add(code);
@@ -246,9 +245,11 @@ public class CavanAccessibilityService extends AccessibilityService {
 			break;
 
 		case "com.alipay.android.phone.discovery.envelope.HomeActivity":
-			if (mCodeCount > 0 && code != null && postRedPacketCode(root, code)) {
-				mCommitTime = System.currentTimeMillis();
+			if (mCodeCount > 0 && code != null) {
+				postRedPacketCode(root, code);
 			}
+
+			mCommitTime = System.currentTimeMillis();
 			break;
 
 		case "com.alipay.mobile.framework.app.ui.DialogHelper$APGenericProgressDialog":
@@ -294,8 +295,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	private void removeRedPacketCode(RedPacketCode code) {
 		mCodes.remove(code);
-		String text = getResources().getString(R.string.text_complete_code, code.getCode());
-		CavanAndroid.showToastLong(this, text);
 	}
 
 	private void setRedPacketCodeComplete() {
@@ -303,37 +302,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 			removeRedPacketCode(mCode);
 			mCode = null;
 		}
-	}
-
-	private void addInvalidCode(RedPacketCode code) {
-		long time = System.currentTimeMillis();
-		long overtime = time - CODE_OVERTIME;
-
-		removeRedPacketCode(code);
-
-		Iterator<Long> iterator = mInvalidCodeMap.values().iterator();
-		while (iterator.hasNext()) {
-			if (iterator.next() < overtime) {
-				iterator.remove();
-			}
-		}
-
-		mInvalidCodeMap.put(code, time);
-	}
-
-	private boolean isInvalidCode(RedPacketCode code) {
-		Long time = mInvalidCodeMap.get(code);
-		if (time == null) {
-			return false;
-		}
-
-		if (System.currentTimeMillis() - time < CODE_OVERTIME) {
-			return true;
-		}
-
-		mInvalidCodeMap.remove(code);
-
-		return false;
 	}
 
 	private RedPacketCode getNextCode() {
@@ -404,18 +372,18 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 
 		if (MainActivity.isAutoCommitEnabled(this) && CavanInputMethod.isDefaultInputMethod(this)) {
-			if (code.addCommitCount() < 3) {
-				sendBroadcast(new Intent(MainActivity.ACTION_CODE_COMMIT));
-
-				if (!mHandler.hasMessages(MSG_INPUT_TIMEOUT, code)) {
-					Message message = mHandler.obtainMessage(MSG_INPUT_TIMEOUT, code);
-					mHandler.sendMessageDelayed(message, INPUT_OVERTIME);
-				}
-
-				return true;
+			if (code.isCompleted() || code.addCommitCount() > 1) {
+				return false;
 			}
 
-			addInvalidCode(code);
+			sendBroadcast(new Intent(MainActivity.ACTION_CODE_COMMIT));
+
+			if (!mHandler.hasMessages(MSG_INPUT_TIMEOUT, code)) {
+				Message message = mHandler.obtainMessage(MSG_INPUT_TIMEOUT, code);
+				mHandler.sendMessageDelayed(message, INPUT_OVERTIME);
+			}
+
+			return true;
 		}
 
 		return false;
@@ -509,9 +477,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	@Override
 	public void onAccessibilityEvent(AccessibilityEvent event) {
-		CavanAndroid.eLog("================================================================================");
-		CavanAndroid.eLog("event = " + event);
-
 		switch (event.getEventType()) {
 		case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
 			onWindowStateChanged(event);

@@ -68,5 +68,6 @@
     <string name="text_tcp_bridge_stopped">TCP 桥接器已停止运行</string>
     <string name="text_tcp_bridge_exit">TCP 桥接器已退出</string>
     <string name="text_exit">已退出</string>
+    <string name="text_please_click_ok">请点击确定键</string>
 
 </resources>

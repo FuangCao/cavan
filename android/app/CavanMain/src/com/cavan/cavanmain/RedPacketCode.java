@@ -20,6 +20,7 @@ public class RedPacketCode implements Parcelable {
 	private String mCode;
 	private boolean mNetShared;
 	private boolean mRepeatable;
+	private boolean mCompleted;
 
 	public RedPacketCode(String code) {
 		mCode = code;
@@ -83,6 +84,14 @@ public class RedPacketCode implements Parcelable {
 
 	public boolean isRepeatable() {
 		return mRepeatable;
+	}
+
+	public void setCompleted() {
+		mCompleted = true;
+	}
+
+	public boolean isCompleted() {
+		return mCompleted;
 	}
 
 	public int getCommitCount() {

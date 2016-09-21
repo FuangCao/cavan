@@ -454,16 +454,22 @@ public class RedPacketNotification extends CavanNotification {
 			time += getCodeDelay();
 		}
 
+		int count = codes.size();
+		if (count <= 0) {
+			return 0;
+		}
+
+		mService.startAlipayActivity();
+		// mService.postRedPacketCode(code);
+
 		for (String code : codes) {
 			Notification notification = buildRedPacketNotifyAlipay(code);
 			if (notification != null) {
-				mService.startAlipayActivity();
-				mService.postRedPacketCode(code);
 				mService.sendNotification(notification, "支付宝口令@" + getUserDescription() + ": " + code, new RedPacketCode(code, time, mNetShared));
 			}
 		}
 
-		return codes.size();
+		return count;
 	}
 
 	public boolean sendRedPacketNotifyNormal(String content, String message) {
