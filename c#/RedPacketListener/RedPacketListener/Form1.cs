@@ -25,6 +25,7 @@ namespace RedPacketListener {
         private delegate void OnRedPacketCodeReceivedCallback(string code);
 
         private Thread mClipThread;
+        private bool mClipThreadRunning;
 
         private NetworkStream mStream;
         private Thread mNetworkThread;
@@ -85,6 +86,8 @@ namespace RedPacketListener {
                 labelState.Text = "已连接";
                 saveConfig();
 
+                mClipThreadRunning = true;
+
                 if (mClipThread == null) {
                     mClipThread = new Thread(new ThreadStart(ClipPollThread));
                     mClipThread.Start();
@@ -118,7 +121,9 @@ namespace RedPacketListener {
 
             string backup = (string) Invoke(callback);
 
-            while (true) {
+            mClipThreadRunning = true;
+
+            while (mClipThreadRunning) {
                 try {
                     string text = (string)Invoke(callback);
                     if (text.Equals(backup) == false) {
@@ -132,6 +137,7 @@ namespace RedPacketListener {
                 Thread.Sleep(500);
             }
 
+            mClipThreadRunning = false;
             mClipThread = null;
         }
 
@@ -141,6 +147,8 @@ namespace RedPacketListener {
             if (mStream != null) {
                 mStream.Close();
             }
+
+            mClipThreadRunning = false;
         }
 
         private void onRedPacketCodeReceived(string code) {
@@ -205,7 +213,10 @@ namespace RedPacketListener {
                 client.Close();
             }
 
-            Invoke(callback, new object[] { 0 });
+            try {
+                Invoke(callback, new object[] { 0 });
+            } catch {
+            }
 
             mNetworkThread = null;
             mNetworkThreadRunning = false;
@@ -270,6 +281,10 @@ namespace RedPacketListener {
 
         private void buttonTest_Click(object sender, EventArgs e) {
             sendRedPacketCode("CavanNetworkTest");
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e) {
+            disconnect();
         }
     }
 }

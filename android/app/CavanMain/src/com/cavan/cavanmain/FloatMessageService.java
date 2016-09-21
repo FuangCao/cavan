@@ -760,7 +760,7 @@ public class FloatMessageService extends FloatWidowService {
 
 					synchronized (this) {
 						try {
-							wait(5000);
+							wait(10000);
 						} catch (InterruptedException e1) {
 							e1.printStackTrace();
 						}
