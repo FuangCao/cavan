@@ -2,7 +2,7 @@ package com.jwaoo.android;
 
 import com.cavan.java.CavanByteCache;
 
-public class JwaooToySensorMpu6050 extends JwaooToySensor {
+public class JwaooToySensorK100 extends JwaooToySensor {
 
 	private CavanByteCache mCache = new CavanByteCache();
 
@@ -35,5 +35,10 @@ public class JwaooToySensorMpu6050 extends JwaooToySensor {
 			setCapacity(2, readCapacity16());
 			setCapacity(3, readCapacity16());
 		}
+	}
+
+	@Override
+	public int getCapacityValueCount() {
+		return 4;
 	}
 }

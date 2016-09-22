@@ -71,7 +71,6 @@ public class MainActivity extends JwaooToyActivity {
 				mWaveViewX.addValue(mSensor.getAxisX());
 				mWaveViewY.addValue(mSensor.getAxisY());
 				mWaveViewZ.addValue(mSensor.getAxisZ());
-				mWaveViewDepth.addValue(mSensor.getDepth());
 
 				CavanAndroid.eLog(mSensor.getCapacityText());
 			}

@@ -26,10 +26,12 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public static final String DEVICE_ID_TOY = "JwaooToy";
 	public static final String DEVICE_ID_K100 = "K100";
+	public static final String DEVICE_ID_K101 = "K101";
 
 	public static final String[] DEVICE_ID_LIST = {
 		DEVICE_ID_TOY,
 		DEVICE_ID_K100,
+		DEVICE_ID_K101,
 	};
 
 	public static final UUID UUID_SERVICE = UUID.fromString("00001888-0000-1000-8000-00805f9b34fb");
@@ -37,7 +39,6 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final UUID UUID_EVENT = UUID.fromString("0000188a-0000-1000-8000-00805f9b34fb");
 	public static final UUID UUID_FLASH = UUID.fromString("0000188b-0000-1000-8000-00805f9b34fb");
 	public static final UUID UUID_SENSOR = UUID.fromString("0000188c-0000-1000-8000-00805f9b34fb");
-	public static final UUID UUID_DEBUG = UUID.fromString("0000188d-0000-1000-8000-00805f9b34fb");
 
 	public static final byte JWAOO_TOY_RSP_BOOL = 0;
 	public static final byte JWAOO_TOY_RSP_U8 = 1;
@@ -91,7 +92,6 @@ public class JwaooBleToy extends CavanBleGatt {
 	protected CavanBleChar mCharEvent;
 	protected CavanBleChar mCharFlash;
 	protected CavanBleChar mCharSensor;
-	protected CavanBleChar mCharDebug;
 	protected JwaooToyCommand mCommand = new JwaooToyCommand();
 
 	protected int mSensorDataSkip;
@@ -112,17 +112,9 @@ public class JwaooBleToy extends CavanBleGatt {
 		public void onDataReceived(byte[] data) {
 			if (mSensorDataSkip > 0) {
 				mSensorDataSkip--;
-			} else {
+			} else if (mSensor != null) {
 				onSensorDataReceived(data);
 			}
-		}
-	};
-
-	private CavanBleDataListener mDebugListener = new CavanBleDataListener() {
-
-		@Override
-		public void onDataReceived(byte[] data) {
-			onDebugDataReceived(data);
 		}
 	};
 
@@ -194,17 +186,12 @@ public class JwaooBleToy extends CavanBleGatt {
 		CavanAndroid.eLog("Debug: " + new String(data));
 	}
 
-	public JwaooBleToy(BluetoothDevice device, JwaooToySensor sensor, UUID uuid) {
+	public JwaooBleToy(BluetoothDevice device, UUID uuid) {
 		super(device, uuid);
-		mSensor = sensor;
-	}
-
-	public JwaooBleToy(BluetoothDevice device, JwaooToySensor sensor) {
-		this(device, sensor, UUID_SERVICE);
 	}
 
 	public JwaooBleToy(BluetoothDevice device) {
-		this(device, new JwaooToySensorMpu6050(), UUID_SERVICE);
+		this(device, UUID_SERVICE);
 	}
 
 	public JwaooToySensor getSensor() {
@@ -573,16 +560,6 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mCommand.readBool(result.buildCommand());
 	}
 
-	public boolean isValidDeviceId(String id) {
-		for (String value : DEVICE_ID_LIST) {
-			if (value.equals(id)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	@Override
 	protected boolean doInitialize() {
 		mCharCommand = openChar(UUID_COMMAND);
@@ -611,16 +588,6 @@ public class JwaooBleToy extends CavanBleGatt {
 
 		setAutoConnectAllow(true);
 
-		mCharDebug = openChar(UUID_DEBUG);
-		if (mCharDebug == null) {
-			CavanAndroid.eLog("uuid not found: " + UUID_DEBUG);
-		} else {
-			if (!mCharDebug.setDataListener(mDebugListener)) {
-				CavanAndroid.eLog("Failed to mCharDebug.setDataListener");
-				return false;
-			}
-		}
-
 		if (!mCharEvent.setDataListener(mEventListener)) {
 			CavanAndroid.eLog("Failed to mCharEvent.setDataListener");
 			return false;
@@ -641,7 +608,17 @@ public class JwaooBleToy extends CavanBleGatt {
 
 		CavanAndroid.eLog("identify = " + identify);
 
-		if (!isValidDeviceId(identify)) {
+		switch (identify) {
+		case DEVICE_ID_TOY:
+		case DEVICE_ID_K100:
+			mSensor = new JwaooToySensorK100();
+			break;
+
+		case DEVICE_ID_K101:
+			mSensor = new JwaooToySensorK101();
+			break;
+
+		default:
 			CavanAndroid.eLog("Invalid identify");
 			return false;
 		}
