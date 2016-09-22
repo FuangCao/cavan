@@ -30,10 +30,11 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	private static final long POLL_DELAY = 500;
 	private static final long INPUT_OVERTIME = 5000;
-	private static final long COMMIT_OVERTIME = 2000;
+	private static final long UNPACK_OVERTIME = 2000;
+	private static final long COMMIT_OVERTIME = 60000;
 	private static final long CODE_OVERTIME = 7200000;
 
-	private static final int MSG_INPUT_TIMEOUT = 1;
+	private static final int MSG_COMMIT_TIMEOUT = 1;
 
 	private static final String[] PACKAGE_NAMES = {
 		CavanPackageName.ALIPAY,
@@ -82,9 +83,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
-			case MSG_INPUT_TIMEOUT:
-				RedPacketCode code = (RedPacketCode) msg.obj;
-				code.updateTime();
+			case MSG_COMMIT_TIMEOUT:
+				removeRedPacketCode((RedPacketCode) msg.obj);
 				break;
 			}
 		}
@@ -193,14 +193,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return true;
 	}
 
-	private void performBackAction(AccessibilityNodeInfo root) {
+	private void performBackAction(AccessibilityNodeInfo root, boolean force) {
 		if (mCodeCount > 0) {
 			List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId("com.alipay.mobile.ui:id/title_bar_back_button");
 			if (nodes != null && nodes.size() > 0) {
 				for (AccessibilityNodeInfo node : nodes) {
 					node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
 				}
-			} else {
+			} else if (force) {
 				performGlobalAction(GLOBAL_ACTION_BACK);
 			}
 		}
@@ -247,18 +247,26 @@ public class CavanAccessibilityService extends AccessibilityService {
 		case "com.alipay.android.phone.discovery.envelope.HomeActivity":
 			if (mCodeCount > 0 && code != null) {
 				postRedPacketCode(root, code);
+				if (code.getTimeout() > INPUT_OVERTIME) {
+					if (!mHandler.hasMessages(MSG_COMMIT_TIMEOUT, code)) {
+						Message message = mHandler.obtainMessage(MSG_COMMIT_TIMEOUT, code);
+						mHandler.sendMessageDelayed(message, COMMIT_OVERTIME);
+					}
+
+					code.updateTime();
+				}
 			}
 
 			mCommitTime = System.currentTimeMillis();
 			break;
 
 		case "com.alipay.mobile.framework.app.ui.DialogHelper$APGenericProgressDialog":
-			if (System.currentTimeMillis() - mCommitTime > COMMIT_OVERTIME) {
+			if (System.currentTimeMillis() - mCommitTime > UNPACK_OVERTIME) {
 				if (mCode != null) {
 					mCode.subCommitCount();
 				}
 
-				performBackAction(root);
+				performBackAction(root, true);
 			}
 			break;
 
@@ -271,7 +279,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 		case "com.alipay.android.phone.discovery.envelope.crowd.CrowdHostActivity":
 			setRedPacketCodeComplete();
-			performBackAction(root);
+			performBackAction(root, false);
 			mInputtedCode = null;
 			break;
 
@@ -281,12 +289,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 				mCode.updateTime();
 			}
 
-			performBackAction(root);
+			performBackAction(root, false);
 			break;
 
 		default:
 			if (!mClassName.startsWith("com.alipay.mobile.framework.app.ui.DialogHelper")) {
-				performBackAction(root);
+				performBackAction(root, true);
 			}
 		}
 
@@ -295,6 +303,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	private void removeRedPacketCode(RedPacketCode code) {
 		mCodes.remove(code);
+
+		String text = getResources().getString(R.string.text_complete_code, code.getCode());
+		CavanAndroid.showToast(this, text);
 	}
 
 	private void setRedPacketCodeComplete() {
@@ -358,6 +369,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 			}
 		}
 
+		boolean changed = (mCode != code);
+
 		mCode = code;
 
 		long delay = code.getDelay() / 1000;
@@ -372,24 +385,22 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 
 		if (MainActivity.isAutoCommitEnabled(this) && CavanInputMethod.isDefaultInputMethod(this)) {
-			if (code.isCompleted() || code.addCommitCount() > 1) {
-				return false;
+			if (code.isCompleted() == false && code.addCommitCount() == 1) {
+				sendBroadcast(new Intent(MainActivity.ACTION_CODE_COMMIT));
+				return true;
 			}
+		}
 
-			sendBroadcast(new Intent(MainActivity.ACTION_CODE_COMMIT));
-
-			if (!mHandler.hasMessages(MSG_INPUT_TIMEOUT, code)) {
-				Message message = mHandler.obtainMessage(MSG_INPUT_TIMEOUT, code);
-				mHandler.sendMessageDelayed(message, INPUT_OVERTIME);
-			}
-
-			return true;
+		if (changed) {
+			CavanAndroid.showToastLong(this, R.string.text_please_manual_commit);
 		}
 
 		return false;
 	}
 
 	private boolean unpackRedPacket(AccessibilityNodeInfo root) {
+		CavanAndroid.cancelToast();
+
 		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId("com.alipay.android.phone.discovery.envelope:id/action_chai");
 		if (nodes != null && nodes.size() > 0) {
 			for (AccessibilityNodeInfo node : nodes) {
@@ -410,7 +421,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		nodes = root.findAccessibilityNodeInfosByViewId("com.alipay.android.phone.discovery.envelope:id/coupon_action");
 		if (nodes != null && nodes.size() > 0) {
 			setRedPacketCodeComplete();
-			performBackAction(root);
+			performBackAction(root, false);
 			return true;
 		}
 

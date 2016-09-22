@@ -73,6 +73,15 @@ public class RedPacketCode implements Parcelable {
 		return 0;
 	}
 
+	public long getTimeout() {
+		long time = System.currentTimeMillis();
+		if (mTime < time) {
+			return time - mTime;
+		}
+
+		return 0;
+	}
+
 	public void setRepeatable(boolean enable) {
 		mRepeatable = enable;
 		updateTime();

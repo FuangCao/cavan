@@ -46,47 +46,44 @@ public class RedPacketNotification extends CavanNotification {
 	};
 
 	public static final Pattern[] sDigitPatterns = {
-		Pattern.compile("支付宝.*红包\\D*" + DIGIT_PATTERN),
-		Pattern.compile("支付宝.*口令\\D*" + DIGIT_PATTERN),
-		Pattern.compile("红包口令\\D*" + DIGIT_PATTERN),
-		Pattern.compile("口令红包\\D*" + DIGIT_PATTERN),
-		Pattern.compile("红包\\s*[:：]?\\s*" + DIGIT_PATTERN),
-		Pattern.compile("口令\\s*[:：]?\\s*" + DIGIT_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝.*红\\s*包\\D*" + DIGIT_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝.*口\\s*令\\D*" + DIGIT_PATTERN),
+		Pattern.compile("红\\s*包\\s*口\\s*令\\D*" + DIGIT_PATTERN),
+		Pattern.compile("口\\s*令\\s*红\\s*包\\D*" + DIGIT_PATTERN),
+		Pattern.compile("红\\s*包\\s*[:：]?\\s*" + DIGIT_PATTERN),
+		Pattern.compile("口\\s*令\\s*[:：]?\\s*" + DIGIT_PATTERN),
 		Pattern.compile("[:：]\\s*" + DIGIT_PATTERN),
 		Pattern.compile("\\b" + DIGIT_PATTERN + "\\s*$"),
 	};
 
 	public static final Pattern[] sJoinedDigitPatterns = {
-		Pattern.compile("红包\\s*[:：]" + DIGIT_JOINED_PATTERN),
-		Pattern.compile("口令\\s*[:：]" + DIGIT_JOINED_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝.*红\\s*包" + DIGIT_JOINED_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝.*口\\s*令" + DIGIT_JOINED_PATTERN),
+		Pattern.compile("红\\s*包\\s*口\\s*令" + DIGIT_JOINED_PATTERN),
+		Pattern.compile("口\\s*令\\s*红\\s*包" + DIGIT_JOINED_PATTERN),
+		Pattern.compile("红\\s*包\\s*[:：]" + DIGIT_JOINED_PATTERN),
+		Pattern.compile("口\\s*令\\s*[:：]" + DIGIT_JOINED_PATTERN),
 	};
 
 	public static final Pattern[] sWordPatterns = {
-		Pattern.compile("支付宝.*红包\\s*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("支付宝.*口令\\s*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("红包口令\\s*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("口令红包\\s*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("红包\\s*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
-		Pattern.compile("口令\\s*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
+		Pattern.compile("支\\s*付\\s*宝.*红\\s*包\\s*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝.*口\\s*令\\s*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("红\\s*包\\s*口\\s*令\\s*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("口\\s*令\\s*红\\s*包\\s*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("红\\s*包\\s*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
+		Pattern.compile("口\\s*令\\s*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
 	};
 
 	public static final Pattern[] sPicturePatterns = {
-		Pattern.compile("\\[图片\\].*支付宝红包"),
-		Pattern.compile("\\[图片\\].*支付宝口令"),
-		Pattern.compile("\\[图片\\].*支付宝.*红包.*口令"),
-		Pattern.compile("\\[图片\\].*支付宝.*口令.*红包"),
-		Pattern.compile("\\[图片\\].*红包口令"),
-		Pattern.compile("\\[图片\\].*口令红包"),
-	};
-
-	public static final Pattern[] sOtherPatterns = {
-		/* Pattern.compile("(\\b华美\\S{2})\\b"),
-		Pattern.compile("口令.*(华美\\S{2})"), */
+		Pattern.compile("支\\s*付\\s*宝\\s*红\\s*包"),
+		Pattern.compile("支\\s*付\\s*宝\\s*口\\s*令"),
+		Pattern.compile("红\\s*包\\s*口\\s*令"),
+		Pattern.compile("口\\s*令\\s*红\\s*包"),
 	};
 
 	public static final Pattern[] sExcludePatterns = {
 		Pattern.compile("[a-z]+://\\S+", Pattern.CASE_INSENSITIVE),
-		Pattern.compile("(QQ|群|手机|电话|微信|码)\\s*[:：]?\\s*\\d+", Pattern.CASE_INSENSITIVE),
+		Pattern.compile("(Q\\s*Q|群|手\\s*机|电\\s*话|微\\s*信|码)\\s*[:：]?\\s*\\d+", Pattern.CASE_INSENSITIVE),
 	};
 
 	public static final String[] sFindTitlePackages = {
@@ -266,27 +263,6 @@ public class RedPacketNotification extends CavanNotification {
 		sCodeTimeMap.remove(code);
 	}
 
-	public static boolean isRedPacketDigitCode(String text, String code) {
-		if (code.length() % 8 != 0) {
-			return false;
-		}
-
-		int count = 0;
-		char[] array = text.toCharArray();
-
-		for (int i = array.length - 1; i > 0; i--) {
-			if (CavanJava.isDigit(array[i])) {
-				if (++count % 8 == 0) {
-					if (CavanJava.isDigit(array[--i])) {
-						return false;
-					}
-				}
-			}
-		}
-
-		return true;
-	}
-
 	public static boolean isRedPacketWordCode(String code) {
 		int found = 0;
 		int length = code.length();
@@ -355,29 +331,50 @@ public class RedPacketNotification extends CavanNotification {
 		return true;
 	}
 
-	public void addRedPacketCodes(List<String> codes, String text) {
-		for (int end = 8; end <= text.length(); end += 8) {
-			addRedPacketCode(codes, text.substring(end - 8, end));
+	public void addRedPacketCodes(List<String> codes, String code) {
+		for (int end = 8; end <= code.length(); end += 8) {
+			addRedPacketCode(codes, code.substring(end - 8, end));
 		}
+	}
+
+	public String getRedPacketDigitCode(String text) {
+		StringBuilder builder = new StringBuilder();
+		int length = text.length();
+
+		for (int i = 0; i < length; i++) {
+			char c = text.charAt(i);
+
+			if (c == ':' || c == '：') {
+				builder.setLength(0);
+			} else if (CavanJava.isDigit(c)) {
+				if (builder.length() % 8 == 0 && i > 0 && CavanJava.isDigit(text.charAt(i - 1))) {
+					return null;
+				}
+
+				builder.append(c);
+			} else if (CavanString.isChineseChar(c)) {
+				break;
+			}
+		}
+
+		return builder.toString();
 	}
 
 	public List<String> getRedPacketCodes() {
 		List<String> codes = new ArrayList<String>();
 
 		for (String text : getRedPacketCodes(sDigitPatterns, false)) {
-			String code = CavanString.getDigit(text);
-
-			if (isRedPacketDigitCode(text, code)) {
+			String code = getRedPacketDigitCode(text);
+			if (code != null && code.length() % 8 == 0) {
 				addRedPacketCodes(codes, code);
 			}
 		}
 
-		String content = CavanString.deleteSpace(mJoinedLines);
-
-		for (String text : getRedPacketCodes(content, sJoinedDigitPatterns, false)) {
-			String code = CavanString.getDigit(text);
-			CavanAndroid.eLog("code = " + code);
-			addRedPacketCodes(codes, code);
+		for (String text : getRedPacketCodes(mJoinedLines, sJoinedDigitPatterns, false)) {
+			String code = getRedPacketDigitCode(text);
+			if (code != null) {
+				addRedPacketCodes(codes, code);
+			}
 		}
 
 		for (String code : getRedPacketCodes(sWordPatterns, true)) {
@@ -386,7 +383,7 @@ public class RedPacketNotification extends CavanNotification {
 			}
 		}
 
-		return getRedPacketCodes(sOtherPatterns, codes, true);
+		return codes;
 	}
 
 	public Notification buildNotification(CharSequence content, PendingIntent intent) {

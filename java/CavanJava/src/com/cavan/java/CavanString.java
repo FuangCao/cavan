@@ -150,10 +150,9 @@ public class CavanString {
 
 		for (int i = 0; i < text.length(); i++) {
 			char c = text.charAt(i);
+
 			if (CavanJava.isDigit(c)) {
 				builder.append(c);
-			} else if (isChineseChar(c)) {
-				break;
 			}
 		}
 
