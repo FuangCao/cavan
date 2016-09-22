@@ -225,7 +225,7 @@ namespace RedPacketListener {
         private bool sendRedPacketCode(String code) {
             try {
                 if (mStream != null) {
-                    byte[] bytes = Encoding.Default.GetBytes(RED_PACKET_PREFIX + code + "\n");
+                    byte[] bytes = Encoding.UTF8.GetBytes(RED_PACKET_PREFIX + code + "\n");
                     mStream.Write(bytes, 0, bytes.Length);
                     listBoxCodes.Items.Add(code);
                     return true;
