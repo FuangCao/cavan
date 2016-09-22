@@ -398,7 +398,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 			if (mInputtedCode != null && mService != null) {
 				try {
-					mService.sendSharedCode(mInputtedCode.toString());
+					mService.sendRedPacketCode(mInputtedCode.toString());
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}

@@ -39,10 +39,12 @@ import com.cavan.java.CavanTimedArray;
 
 public class FloatMessageService extends FloatWidowService {
 
-	public static final int LAN_SHARE_PORT = 9898;
-	public static final String LAN_SHARE_ADDR = "224.0.0.1";
-	public static final String LAN_SHARE_PREFIX = "RedPacketCode: ";
-	public static final String NETWORK_TEST_CODE = "CavanNetworkTest";
+	public static final String NET_CMD_RDPKG = "RedPacketCode: ";
+	public static final String NET_CMD_TEST = "CavanNetworkTest";
+	public static final String NET_CMD_KEEP_LIVE = "CavanKeepLive";
+
+	public static final int UDP_PORT = 9898;
+	public static final String UDP_ADDR = "224.0.0.1";
 
 	public static final int TEXT_PADDING = 8;
 	public static final float TEXT_SIZE_TIME = 16;
@@ -51,10 +53,11 @@ public class FloatMessageService extends FloatWidowService {
 	public static final int TEXT_COLOR_MESSAGE = Color.YELLOW;
 
 	private static final int MSG_SHOW_TOAST = 1;
-	private static final int MSG_WAN_SERVICE_STATE_CHANGED = 2;
-	private static final int MSG_WAN_SERVICE_UPDATED = 3;
-	private static final int MSG_TCP_BRIDGE_STATE_CHANGED = 4;
-	private static final int MSG_TCP_BRIDGE_UPDATED = 5;
+	private static final int MSG_TCP_SERVICE_STATE_CHANGED = 2;
+	private static final int MSG_TCP_SERVICE_UPDATED = 3;
+	private static final int MSG_TCP_SERVICE_KEEP_LIVE = 4;
+	private static final int MSG_TCP_BRIDGE_STATE_CHANGED = 5;
+	private static final int MSG_TCP_BRIDGE_UPDATED = 6;
 
 	private int mLastSecond;
 	private boolean mUserPresent;
@@ -63,10 +66,10 @@ public class FloatMessageService extends FloatWidowService {
 	private CavanTimedArray<String> mCodes = new CavanTimedArray<String>(600000);
 	private HashMap<CharSequence, RedPacketCode> mMessageCodeMap = new HashMap<CharSequence, RedPacketCode>();
 
-	private NetworkShareThread mNetShareThread;
-	private UdpReceiveThread mUdpServiceThread;
-	private TcpReceiveThread mTcpReceiveThread;
-	private TcpBridgeThread mTcpBridgeThread;
+	private UdpDaemonThread mUdpDaemon;
+	private TcpDaemonThread mTcpDaemon;
+	private TcpBridgeThread mTcpBridge;
+	private NetworkSendThread mNetSender;
 
 	private Handler mHandler = new Handler() {
 
@@ -74,7 +77,7 @@ public class FloatMessageService extends FloatWidowService {
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
-			case MSG_WAN_SERVICE_STATE_CHANGED:
+			case MSG_TCP_SERVICE_STATE_CHANGED:
 				Intent intent = new Intent(MainActivity.ACTION_WAN_UPDATED);
 				intent.putExtra("state", msg.arg1);
 				sendStickyBroadcast(intent);
@@ -82,20 +85,25 @@ public class FloatMessageService extends FloatWidowService {
 				CavanAndroid.showToast(getApplicationContext(), msg.arg1);
 				break;
 
-			case MSG_WAN_SERVICE_UPDATED:
+			case MSG_TCP_SERVICE_UPDATED:
 				if (MainActivity.isWanShareEnabled(FloatMessageService.this)) {
-					if (mTcpReceiveThread == null) {
-						mTcpReceiveThread = new TcpReceiveThread();
-						mTcpReceiveThread.start();
+					if (mTcpDaemon == null) {
+						mTcpDaemon = new TcpDaemonThread();
+						mTcpDaemon.start();
 					} else {
-						synchronized (mTcpReceiveThread) {
-							mTcpReceiveThread.setActive(true);
-							mTcpReceiveThread.closeSocket();
-							mTcpReceiveThread.notify();
+						synchronized (mTcpDaemon) {
+							mTcpDaemon.setActive(true);
+							mTcpDaemon.closeSocket();
+							mTcpDaemon.notify();
 						}
 					}
-				} else if (mTcpReceiveThread != null) {
-					mTcpReceiveThread.setActive(false);
+				} else if (mTcpDaemon != null) {
+					mTcpDaemon.setActive(false);
+				}
+				break;
+
+			case MSG_TCP_SERVICE_KEEP_LIVE:
+				if (mTcpDaemon != null) {
 				}
 				break;
 
@@ -109,18 +117,18 @@ public class FloatMessageService extends FloatWidowService {
 
 			case MSG_TCP_BRIDGE_UPDATED:
 				if (MainActivity.isTcpBridgeEnabled(FloatMessageService.this)) {
-					if (mTcpBridgeThread == null) {
-						mTcpBridgeThread = new TcpBridgeThread();
-						mTcpBridgeThread.start();
+					if (mTcpBridge == null) {
+						mTcpBridge = new TcpBridgeThread();
+						mTcpBridge.start();
 					} else {
-						synchronized (mTcpBridgeThread) {
-							mTcpBridgeThread.setActive(true);
-							mTcpBridgeThread.killCommand();
-							mTcpBridgeThread.notify();
+						synchronized (mTcpBridge) {
+							mTcpBridge.setActive(true);
+							mTcpBridge.killCommand();
+							mTcpBridge.notify();
 						}
 					}
-				} else if (mTcpBridgeThread != null) {
-					mTcpBridgeThread.setActive(false);
+				} else if (mTcpBridge != null) {
+					mTcpBridge.setActive(false);
 				}
 				break;
 
@@ -195,9 +203,9 @@ public class FloatMessageService extends FloatWidowService {
 
 				sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_ADD, code);
 
-				if (code.isNetShared() == false && mNetShareThread != null) {
+				if (code.isNetShared() == false && mNetSender != null) {
 					long delay = code.getTime() - System.currentTimeMillis();
-					mNetShareThread.sendCode(code.getCode(), delay);
+					mNetSender.sendCode(code.getCode(), delay);
 				}
 
 				mCodes.addTimedValue(code.getCode());
@@ -254,22 +262,32 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		@Override
-		public boolean sendSharedCode(String code) throws RemoteException {
-			if (mNetShareThread != null) {
-				return mNetShareThread.sendCode(code, 0);
+		public void updateTcpService() throws RemoteException {
+			mHandler.sendEmptyMessageDelayed(MSG_TCP_SERVICE_UPDATED, 500);
+		}
+
+		@Override
+		public void updateTcpBridge() throws RemoteException {
+			mHandler.sendEmptyMessageDelayed(MSG_TCP_BRIDGE_UPDATED, 500);
+		}
+
+		@Override
+		public boolean sendRedPacketCode(String code) throws RemoteException {
+			if (mNetSender != null) {
+				return mNetSender.sendCode(code, 0);
 			}
 
 			return false;
 		}
 
 		@Override
-		public void updateTcpService() throws RemoteException {
-			mHandler.sendEmptyMessageDelayed(MSG_WAN_SERVICE_UPDATED, 500);
+		public boolean sendUdpCommand(String command) throws RemoteException {
+			return mNetSender.sendUdpCommand(command, 0, 0);
 		}
 
 		@Override
-		public void updateTcpBridge() throws RemoteException {
-			mHandler.sendEmptyMessageDelayed(MSG_TCP_BRIDGE_UPDATED, 500);
+		public boolean sendTcpCommand(String command) throws RemoteException {
+			return mNetSender.sendTcpCommand(command, 0);
 		}
 	};
 
@@ -352,17 +370,20 @@ public class FloatMessageService extends FloatWidowService {
 		view.setBackgroundResource(R.drawable.desktop_timer_bg);
 	}
 
-	private void sendCodeReceivedBroadcast(String type, String text) {
-		CavanAndroid.eLog("receive = " + text);
+	private void onNetworkCommandReceived(String type, String command) {
+		CavanAndroid.eLog("receive = " + command);
 
-		if (text.startsWith(LAN_SHARE_PREFIX)) {
-			String code = CavanString.deleteSpace(text.substring(LAN_SHARE_PREFIX.length()));
+		if (command.equals(NET_CMD_TEST)) {
+			command = getResources().getString(R.string.text_network_test_success, type);
+			mHandler.obtainMessage(MSG_SHOW_TOAST, command).sendToTarget();
+		} else if (command.startsWith(NET_CMD_RDPKG)) {
+			String code = CavanString.deleteSpace(command.substring(NET_CMD_RDPKG.length()));
 
 			CavanAndroid.eLog("code = " + code);
 
-			if (code.equals(NETWORK_TEST_CODE)) {
-				text = getResources().getString(R.string.text_network_test_success, type);
-				mHandler.obtainMessage(MSG_SHOW_TOAST, text).sendToTarget();
+			if (code.equals(NET_CMD_TEST)) {
+				command = getResources().getString(R.string.text_network_test_success, type);
+				mHandler.obtainMessage(MSG_SHOW_TOAST, command).sendToTarget();
 			} else if (!mCodes.hasTimedValue(code)) {
 				Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
 				intent.putExtra("type", type);
@@ -397,13 +418,13 @@ public class FloatMessageService extends FloatWidowService {
 		filter.addAction(Intent.ACTION_USER_PRESENT);
 		registerReceiver(mReceiver, filter );
 
-		mNetShareThread = new NetworkShareThread();
-		mNetShareThread.start();
+		mNetSender = new NetworkSendThread();
+		mNetSender.start();
 
-		mUdpServiceThread = new UdpReceiveThread();
-		mUdpServiceThread.start();
+		mUdpDaemon = new UdpDaemonThread();
+		mUdpDaemon.start();
 
-		mHandler.sendEmptyMessage(MSG_WAN_SERVICE_UPDATED);
+		mHandler.sendEmptyMessage(MSG_TCP_SERVICE_UPDATED);
 		mHandler.sendEmptyMessage(MSG_TCP_BRIDGE_UPDATED);
 
 		super.onCreate();
@@ -411,16 +432,16 @@ public class FloatMessageService extends FloatWidowService {
 
 	@Override
 	public void onDestroy() {
-		if (mTcpReceiveThread != null) {
-			mTcpReceiveThread.setActive(false);
+		if (mTcpDaemon != null) {
+			mTcpDaemon.setActive(false);
 		}
 
-		if (mUdpServiceThread != null) {
-			mUdpServiceThread.setActive(false);
+		if (mUdpDaemon != null) {
+			mUdpDaemon.setActive(false);
 		}
 
-		if (mNetShareThread != null) {
-			mNetShareThread.quit();
+		if (mNetSender != null) {
+			mNetSender.quit();
 		}
 
 		unregisterReceiver(mReceiver);
@@ -481,29 +502,59 @@ public class FloatMessageService extends FloatWidowService {
 		return super.doInitialize();
 	}
 
-	public class NetworkShareThread extends HandlerThread implements Callback {
+	public class NetworkSendThread extends HandlerThread implements Callback {
 
-		private Handler mUdpHandler;
+		public static final int MSG_KEEP_LIVE = 1;
+		public static final int MSG_SEND_UDP_COMMAND = 2;
+		public static final int MSG_SEND_TCP_COMMAND = 3;
+
+		private Handler mNetSendHandler;
 		private MulticastSocket mUdpSocket;
 
-		public NetworkShareThread() {
-			super("NetworkShareThread");
+		public NetworkSendThread() {
+			super("NetworkSendThread");
 		}
 
-		public boolean sendCode(String code, long delay) {
-			if (mUdpHandler == null) {
+		public boolean sendCommand(int what, String command, long delay, int retry) {
+			if (mNetSendHandler == null) {
 				return false;
 			}
 
-			Message message = mUdpHandler.obtainMessage(0, code);
+			Message message = mNetSendHandler.obtainMessage(what, retry, 0, command);
 
 			if (delay > 0) {
-				mUdpHandler.sendMessageDelayed(message, delay);
+				mNetSendHandler.sendMessageDelayed(message, delay);
 			} else {
-				mUdpHandler.sendMessage(message);
+				mNetSendHandler.sendMessage(message);
+			}
+
+			return true;
+		}
+
+		public boolean sendTcpCommand(String command, long delay) {
+			if (MainActivity.isWanShareEnabled(getApplicationContext())) {
+				return sendCommand(MSG_SEND_TCP_COMMAND, command, delay, 0);
 			}
 
 			return false;
+		}
+
+		public boolean sendUdpCommand(String command, long delay, int retry) {
+			if (MainActivity.isLanShareEnabled(getApplicationContext())) {
+				return sendCommand(MSG_SEND_UDP_COMMAND, command, delay, retry);
+			}
+
+			return false;
+		}
+
+		public boolean sendCode(String code, long delay) {
+			String command = NET_CMD_RDPKG + code;
+			return sendTcpCommand(command, delay) || sendUdpCommand(command, delay, 3);
+		}
+
+		public void restartKeepLive() {
+			mNetSendHandler.removeMessages(MSG_KEEP_LIVE);
+			mNetSendHandler.sendEmptyMessageDelayed(MSG_KEEP_LIVE, 1800000);
 		}
 
 		@Override
@@ -520,30 +571,38 @@ public class FloatMessageService extends FloatWidowService {
 
 		@Override
 		protected void onLooperPrepared() {
-			mUdpHandler = new Handler(getLooper(), this);
+			mNetSendHandler = new Handler(getLooper(), this);
 		}
 
 		@Override
 		public boolean handleMessage(Message msg) {
-			String code = (String) msg.obj;
-			byte[] bytes = (LAN_SHARE_PREFIX + code).getBytes();
+			switch (msg.what) {
+			case MSG_KEEP_LIVE:
+				msg.obj = NET_CMD_KEEP_LIVE;
+			case MSG_SEND_TCP_COMMAND:
+				if (mTcpDaemon != null) {
+					String command = (String) msg.obj;
 
-			CavanAndroid.eLog("send" + msg.what + " = " + code);
+					if (mTcpDaemon.sendCommand(command)) {
+						CavanAndroid.eLog("tcp success send: " + command);
+					}
+				}
 
-			if (msg.what == 0 && mTcpReceiveThread != null) {
-				mTcpReceiveThread.sendCodeBytes(bytes);
-			}
+				restartKeepLive();
+				break;
 
-			if (MainActivity.isLanShareEnabled(FloatMessageService.this)) {
+			case MSG_SEND_UDP_COMMAND:
 				try {
 					if (mUdpSocket == null) {
 						mUdpSocket = new MulticastSocket();
 					}
 
-					DatagramPacket pack = new DatagramPacket(bytes, bytes.length,
-							InetAddress.getByName(LAN_SHARE_ADDR), LAN_SHARE_PORT);
+					String command = (String) msg.obj;
+					byte[] bytes = command.getBytes();
+					DatagramPacket pack = new DatagramPacket(bytes, bytes.length, InetAddress.getByName(UDP_ADDR), UDP_PORT);
 
 					mUdpSocket.send(pack);
+					CavanAndroid.eLog("udp success send: " + command);
 				} catch (Exception e) {
 					e.printStackTrace();
 
@@ -553,19 +612,18 @@ public class FloatMessageService extends FloatWidowService {
 					}
 				}
 
-				if (msg.what < 3) {
-					int index = msg.what + 1;
-
-					Message message = mUdpHandler.obtainMessage(index, code);
-					mUdpHandler.sendMessageDelayed(message, 1000);
+				if (msg.arg1 > 0) {
+					Message message = mNetSendHandler.obtainMessage(msg.what, msg.arg1 - 1, 0, msg.obj);
+					mNetSendHandler.sendMessageDelayed(message, 1000);
 				}
+				break;
 			}
 
 			return true;
 		}
 	}
 
-	public class UdpReceiveThread extends Thread {
+	public class UdpDaemonThread extends Thread {
 
 		private boolean mActive;
 		private MulticastSocket mSocket;
@@ -595,8 +653,8 @@ public class FloatMessageService extends FloatWidowService {
 				}
 
 				try {
-					mSocket = new MulticastSocket(LAN_SHARE_PORT);
-					mSocket.joinGroup(InetAddress.getByName(LAN_SHARE_ADDR));
+					mSocket = new MulticastSocket(UDP_PORT);
+					mSocket.joinGroup(InetAddress.getByName(UDP_ADDR));
 				} catch (IOException e) {
 					e.printStackTrace();
 
@@ -622,7 +680,7 @@ public class FloatMessageService extends FloatWidowService {
 
 						if (MainActivity.isLanShareEnabled(FloatMessageService.this)) {
 							String text = new String(pack.getData(), 0, pack.getLength());
-							sendCodeReceivedBroadcast("内网分享", text);
+							onNetworkCommandReceived("内网分享", text);
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
@@ -633,7 +691,7 @@ public class FloatMessageService extends FloatWidowService {
 				CavanAndroid.eLog("UdpServiceThread stopping");
 			}
 
-			mUdpServiceThread = null;
+			mUdpDaemon = null;
 
 			if (mSocket != null) {
 				mSocket.close();
@@ -644,7 +702,7 @@ public class FloatMessageService extends FloatWidowService {
 		}
 	}
 
-	public class TcpReceiveThread extends Thread {
+	public class TcpDaemonThread extends Thread {
 
 		private boolean mActive;
 
@@ -652,14 +710,15 @@ public class FloatMessageService extends FloatWidowService {
 		private InputStream mInputStream;
 		private OutputStream mOutputStream;
 
-		synchronized public boolean sendCodeBytes(byte[] bytes) {
+		synchronized public boolean sendCommand(String command) {
 			if (mOutputStream == null) {
 				return false;
 			}
 
 			try {
-				mOutputStream.write(bytes);
-				mOutputStream.write('\n');
+				command += "\n";
+				mOutputStream.write(command.getBytes());
+				mOutputStream.flush();
 				return true;
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -725,29 +784,27 @@ public class FloatMessageService extends FloatWidowService {
 				}
 
 				try {
-					mHandler.obtainMessage(MSG_WAN_SERVICE_STATE_CHANGED, R.string.text_wan_connecting, 0).sendToTarget();
+					mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_connecting, 0).sendToTarget();
 
 					mSocket = new Socket(InetAddress.getByName(host), port);
 					mInputStream = mSocket.getInputStream();
 					mOutputStream = mSocket.getOutputStream();
 
-					mHandler.obtainMessage(MSG_WAN_SERVICE_STATE_CHANGED, R.string.text_wan_connected, 0).sendToTarget();
+					mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_connected, 0).sendToTarget();
 
 					BufferedReader reader = new BufferedReader(new InputStreamReader(mInputStream));
 
 					while (true) {
 						try {
-							String line = reader.readLine();
-							CavanAndroid.eLog("line = " + line);
-
-							sendCodeReceivedBroadcast("外网分享", line);
+							mNetSender.restartKeepLive();
+							onNetworkCommandReceived("外网分享", reader.readLine());
 						} catch (IOException e) {
 							e.printStackTrace();
 							break;
 						}
 					}
 
-					mHandler.obtainMessage(MSG_WAN_SERVICE_STATE_CHANGED, R.string.text_wan_disconnected, 0).sendToTarget();
+					mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_disconnected, 0).sendToTarget();
 				} catch (Exception e) {
 					e.printStackTrace();
 
@@ -765,7 +822,7 @@ public class FloatMessageService extends FloatWidowService {
 				}
 			}
 
-			mTcpReceiveThread = null;
+			mTcpDaemon = null;
 		}
 	}
 
@@ -819,7 +876,7 @@ public class FloatMessageService extends FloatWidowService {
 				}
 			}
 
-			mTcpBridgeThread = null;
+			mTcpBridge = null;
 			mHandler.obtainMessage(MSG_TCP_BRIDGE_STATE_CHANGED, R.string.text_tcp_bridge_stopped, 0).sendToTarget();
 		}
 	}

@@ -91,6 +91,9 @@ static int cavan_tcp_repeater_run_handler(struct cavan_dynamic_service *service,
 		}
 
 		cavan_dynamic_service_unlock(service);
+
+		*p = 0;
+		pd_info("buff[%d] = %s", length, buff);
 	}
 
 	cavan_dynamic_service_lock(service);

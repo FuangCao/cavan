@@ -13,7 +13,10 @@ interface IFloatMessageService {
 
 	List<RedPacketCode> getCodes();
 	int getCodeCount();
-	boolean sendSharedCode(String code);
+
+	boolean sendRedPacketCode(String code);
+	boolean sendUdpCommand(String command);
+	boolean sendTcpCommand(String command);
 
 	void updateTcpService();
 	void updateTcpBridge();

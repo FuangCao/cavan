@@ -52,9 +52,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_AUTO_UNPACK = "auto_unpack";
 	public static final String KEY_LISTEN_CLIP = "listen_clip";
 	public static final String KEY_FLOAT_TIMER = "float_timer";
-	public static final String KEY_NETWORK_TEST = "network_test";
 	public static final String KEY_LAN_SHARE = "lan_share";
+	public static final String KEY_LAN_TEST = "lan_test";
 	public static final String KEY_WAN_SHARE = "wan_share";
+	public static final String KEY_WAN_TEST = "wan_test";
 	public static final String KEY_WAN_IP = "wan_ip";
 	public static final String KEY_WAN_PORT = "wan_port";
 	public static final String KEY_MESSAGE_SHOW = "message_show";
@@ -134,7 +135,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private CheckBoxPreference mPreferenceWanShare;
 	private EditTextPreference mPreferenceWanIp;
 	private EditTextPreference mPreferenceWanPort;
-	private Preference mPreferenceNetworkTest;
+	private Preference mPreferenceLanTest;
+	private Preference mPreferenceWanTest;
 	private CheckBoxPreference mPreferenceTcpBridge;
 	private EditTextPreference mPreferenceTcpBridgeSetting;
 
@@ -205,7 +207,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
 		mPreferenceInputMethodSelect = findPreference(KEY_INPUT_METHOD_SELECT);
-		mPreferenceNetworkTest = findPreference(KEY_NETWORK_TEST);
+		mPreferenceLanTest = findPreference(KEY_LAN_TEST);
+		mPreferenceWanTest = findPreference(KEY_WAN_TEST);
 
 		mPreferenceMessageShow = findPreference(KEY_MESSAGE_SHOW);
 		mPreferenceMessageShow.setIntent(CavanMessageActivity.getIntent(this));
@@ -428,10 +431,18 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		} else if (preference == mPreferenceInputMethodSelect) {
 			InputMethodManager manager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
 			manager.showInputMethodPicker();
-		} else if (preference == mPreferenceNetworkTest) {
+		} else if (preference == mPreferenceLanTest) {
 			if (mFloatMessageService != null) {
 				try {
-					mFloatMessageService.sendSharedCode(FloatMessageService.NETWORK_TEST_CODE);
+					mFloatMessageService.sendUdpCommand(FloatMessageService.NET_CMD_TEST);
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			}
+		} else if (preference == mPreferenceWanTest) {
+			if (mFloatMessageService != null) {
+				try {
+					mFloatMessageService.sendTcpCommand(FloatMessageService.NET_CMD_TEST);
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}

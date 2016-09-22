@@ -8,9 +8,6 @@
 	    android:title="@string/text_local_ip_address"
 	    android:summary="@string/text_unknown" />
 
-	<Preference android:key="network_test"
-	    android:title="@string/text_network_test" />
-
 	<Preference android:key="message_show"
 	    android:title="@string/text_message_show" />
 
@@ -33,9 +30,15 @@
 	    android:persistent="true"
 	    android:title="@string/text_lan_share" />
 
+	<Preference android:key="lan_test"
+	    android:title="@string/text_lan_test" />
+
 	<CheckBoxPreference android:key="wan_share"
 	    android:persistent="true"
 	    android:title="@string/text_wan_share" />
+
+	<Preference android:key="wan_test"
+	    android:title="@string/text_wan_test" />
 
 	<EditTextPreference android:key="wan_ip"
 	    android:persistent="true"
