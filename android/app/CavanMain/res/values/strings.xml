@@ -73,6 +73,7 @@
     <string name="text_ime_fault_please_manual_commit">没有切换输入法，请手动提交</string>
     <string name="text_commit_too_much_please_manual_commit">提交次数过多，请手动提交</string>
     <string name="text_auto_commit_not_enable_please_manual_commit">自动提交没有打开，请手动提交</string>
+   <string name="text_auto_commit_count">提交次数：<xliff:g>%1$s</xliff:g></string>
     <string name="text_test_sucess">测试成功</string>
     <string name="text_send">发送</string>
     <string name="text_red_packet_code_send">红包口令发送</string>

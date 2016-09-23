@@ -32,13 +32,13 @@
 	    android:persistent="true"
 	    android:title="@string/desktop_float_timer" />
 
-	<CheckBoxPreference android:key="auto_unlock"
-	    android:persistent="true"
-	    android:title="@string/text_auto_unlock" />
-
 	<EditTextPreference android:key="auto_commit"
 	    android:persistent="true"
 	    android:title="@string/text_auto_commit" />
+
+	<CheckBoxPreference android:key="auto_unlock"
+	    android:persistent="true"
+	    android:title="@string/text_auto_unlock" />
 
 	<CheckBoxPreference android:key="auto_unpack"
 	    android:title="@string/text_auto_unpack" />

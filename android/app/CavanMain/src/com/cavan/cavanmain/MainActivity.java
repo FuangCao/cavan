@@ -229,7 +229,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		if (text == null || text.isEmpty()) {
 			mPreferenceAutoCommit.setText("3");
 		}
-		mPreferenceAutoCommit.setSummary(mPreferenceAutoCommit.getText());
+		updateAutoCommitSummary(mPreferenceAutoCommit.getText());
 		mPreferenceAutoCommit.setOnPreferenceChangeListener(this);
 
 		mPreferencePermissionSettings = findPreference(KEY_PERMISSION_SETTINGS);
@@ -421,6 +421,11 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		return false;
 	}
 
+	private void updateAutoCommitSummary(CharSequence text) {
+		String summary = getResources().getString(R.string.text_auto_commit_count, text);
+		mPreferenceAutoCommit.setSummary(summary);
+	}
+
 	@SuppressWarnings("deprecation")
 	public void updateRingtoneSummary(String uri) {
 		String summary;
@@ -529,7 +534,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 				}
 			}
 		} else if (preference == mPreferenceAutoCommit) {
-			mPreferenceAutoCommit.setSummary((CharSequence) object);
+			updateAutoCommitSummary((CharSequence) object);
 		}
 
 		return true;
