@@ -11,11 +11,32 @@
 	<Preference android:key="message_show"
 	    android:title="@string/text_message_show" />
 
+	<Preference android:key="input_method_select"
+	    android:title="@string/text_input_method_select" />
+
+	<RingtonePreference android:key="red_packet_notify_ringtone"
+	    android:persistent="true"
+	    android:title="@string/red_packet_notify_ringtone" />
+
+	<Preference android:key="red_packet_notify_test"
+	    android:title="@string/red_packet_notify_test" />
+
+	<EditTextPreference android:key="red_packet_code_send"
+	    android:persistent="true"
+	    android:title="@string/text_red_packet_code_send" />
+
+	<Preference android:key="permission_settings"
+	    android:title="@string/text_permission_settings" />
+
+	<CheckBoxPreference android:key="float_timer"
+	    android:persistent="true"
+	    android:title="@string/desktop_float_timer" />
+
 	<CheckBoxPreference android:key="auto_unlock"
 	    android:persistent="true"
 	    android:title="@string/text_auto_unlock" />
 
-	<CheckBoxPreference android:key="auto_commit"
+	<EditTextPreference android:key="auto_commit"
 	    android:persistent="true"
 	    android:title="@string/text_auto_commit" />
 
@@ -47,24 +68,6 @@
 	<EditTextPreference android:key="wan_port"
 	    android:persistent="true"
 	    android:title="@string/text_wan_port" />
-
-	<Preference android:key="input_method_select"
-	    android:title="@string/text_input_method_select" />
-
-	<RingtonePreference android:key="red_packet_notify_ringtone"
-	    android:persistent="true"
-	    android:title="@string/red_packet_notify_ringtone" />
-
-	<EditTextPreference android:key="red_packet_notify_test"
-	    android:persistent="true"
-	    android:title="@string/red_packet_notify_test" />
-
-	<Preference android:key="permission_settings"
-	    android:title="@string/text_permission_settings" />
-
-	<CheckBoxPreference android:key="float_timer"
-	    android:persistent="true"
-	    android:title="@string/desktop_float_timer" />
 
 	<CheckBoxPreference android:key="tcp_bridge"
 	    android:persistent="true"

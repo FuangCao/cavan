@@ -69,6 +69,12 @@
     <string name="text_tcp_bridge_stopped">TCP 桥接器已停止运行</string>
     <string name="text_tcp_bridge_exit">TCP 桥接器已退出</string>
     <string name="text_exit">已退出</string>
-    <string name="text_please_manual_commit">请手动提交</string>
+    <string name="text_completed_please_manual_commit">已完成的口令，请手动提交</string>
+    <string name="text_ime_fault_please_manual_commit">没有切换输入法，请手动提交</string>
+    <string name="text_commit_too_much_please_manual_commit">提交次数过多，请手动提交</string>
+    <string name="text_auto_commit_not_enable_please_manual_commit">自动提交没有打开，请手动提交</string>
+    <string name="text_test_sucess">测试成功</string>
+    <string name="text_send">发送</string>
+    <string name="text_red_packet_code_send">红包口令发送</string>
 
 </resources>

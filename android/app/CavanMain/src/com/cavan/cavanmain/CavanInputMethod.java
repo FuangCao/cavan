@@ -309,16 +309,8 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 				InputConnection conn = getCurrentInputConnection();
 				if (conn != null) {
 					CharSequence text = conn.getTextBeforeCursor(8, 0);
-					if (text != null && text.length() == 8 && CavanJava.isDigit(text)) {
+					if (text != null && text.length() == 8 && CavanJava.isDigit(text) && mCodes.indexOf(text.toString()) < 0) {
 						sendFinishAction(conn);
-
-						if (mService != null) {
-							try {
-								mService.sendRedPacketCode(text.toString());
-							} catch (RemoteException e) {
-								e.printStackTrace();
-							}
-						}
 					}
 				}
 			}

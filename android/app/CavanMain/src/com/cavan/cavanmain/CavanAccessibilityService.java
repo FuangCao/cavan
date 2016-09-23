@@ -29,7 +29,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private static final long POLL_DELAY = 500;
 	private static final long INPUT_OVERTIME = 5000;
 	private static final long UNPACK_OVERTIME = 2000;
-	private static final long COMMIT_OVERTIME = 60000;
+	private static final long COMMIT_OVERTIME = 300000;
 	private static final long CODE_OVERTIME = 7200000;
 
 	private static final int MSG_COMMIT_TIMEOUT = 1;
@@ -83,6 +83,11 @@ public class CavanAccessibilityService extends AccessibilityService {
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case MSG_COMMIT_TIMEOUT:
+				RedPacketCode code = (RedPacketCode) msg.obj;
+				if (code.isRepeatable()) {
+					break;
+				}
+
 				removeRedPacketCode((RedPacketCode) msg.obj);
 				break;
 			}
@@ -120,6 +125,11 @@ public class CavanAccessibilityService extends AccessibilityService {
 			case MainActivity.ACTION_CODE_ADD:
 				RedPacketCode code = intent.getParcelableExtra("code");
 				if (code == null) {
+					break;
+				}
+
+				if (RedPacketCode.TEST_CODE.equals(code.getCode())) {
+					CavanAndroid.showToast(getApplicationContext(), R.string.text_test_sucess);
 					break;
 				}
 
@@ -288,7 +298,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				mCode.updateTime();
 			}
 
-			performBackAction(root, false);
+			performBackAction(root, true);
 			break;
 
 		default:
@@ -353,45 +363,57 @@ public class CavanAccessibilityService extends AccessibilityService {
 			return false;
 		}
 
-		for (AccessibilityNodeInfo node : nodes) {
-			String text = CavanString.fromCharSequence(node.getText());
-			if (!text.equals(code.getCode())) {
-				if (text.length() > 0) {
-					Bundle arguments = new Bundle();
-					arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, 0);
-					arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, text.length());
-					node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, arguments);
-				}
+		AccessibilityNodeInfo node = nodes.get(0);
+		String text = CavanString.fromCharSequence(node.getText());
+		boolean codeNotMatch = !text.equals(code.getCode());
 
-				RedPacketListenerService.postRedPacketCode(this, code.getCode());
-				node.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+		if (codeNotMatch) {
+			if (text.length() > 0) {
+				Bundle arguments = new Bundle();
+				arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, 0);
+				arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, text.length());
+				node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, arguments);
 			}
-		}
 
-		boolean changed = (mCode != code);
+			RedPacketListenerService.postRedPacketCode(this, code.getCode());
+			node.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+		}
 
 		mCode = code;
 
-		long delay = code.getDelay() / 1000;
-		if (delay > 0) {
-			if (delay != mDelay) {
-				mDelay = delay;
-				String message = getResources().getString(R.string.text_auto_commit_after, delay);
-				CavanAndroid.showToast(this, message);
-			}
+		int msgResId;
+		int maxCommitCount = MainActivity.getAutoCommitCount(this);
 
-			return false;
+		if (maxCommitCount > 0) {
+			if (CavanInputMethod.isDefaultInputMethod(this)) {
+				if (code.isCompleted()) {
+					msgResId = R.string.text_completed_please_manual_commit;
+				} else if (code.addCommitCount() > maxCommitCount) {
+					msgResId = R.string.text_commit_too_much_please_manual_commit;
+				} else {
+					long delay = code.getDelay() / 1000;
+					if (delay > 0) {
+						if (delay != mDelay) {
+							mDelay = delay;
+							String message = getResources().getString(R.string.text_auto_commit_after, delay);
+							CavanAndroid.showToast(this, message);
+						}
+
+						return false;
+					} else {
+						sendBroadcast(new Intent(MainActivity.ACTION_CODE_COMMIT));
+						return true;
+					}
+				}
+			} else {
+				msgResId = R.string.text_ime_fault_please_manual_commit;
+			}
+		} else {
+			msgResId = R.string.text_auto_commit_not_enable_please_manual_commit;
 		}
 
-		if (MainActivity.isAutoCommitEnabled(this) && CavanInputMethod.isDefaultInputMethod(this)) {
-			if (code.isCompleted() == false && code.addCommitCount() == 1) {
-				sendBroadcast(new Intent(MainActivity.ACTION_CODE_COMMIT));
-				return true;
-			}
-		}
-
-		if (changed) {
-			CavanAndroid.showToastLong(this, R.string.text_please_manual_commit);
+		if (codeNotMatch) {
+			CavanAndroid.showToastLong(this, msgResId);
 		}
 
 		return false;
@@ -465,10 +487,32 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 	}
 
+	public static void dumpAccessibilityNodeInfo(StringBuilder builder, String prefix, AccessibilityNodeInfo node) {
+		if (node == null) {
+			return;
+		}
+
+		builder.append(prefix);
+		builder.append(node);
+		builder.append('\n');
+		prefix += '\t';
+
+		for (int i = 0, count = node.getChildCount(); i < count; i++) {
+			dumpAccessibilityNodeInfo(builder, prefix, node.getChild(i));
+		}
+	}
+
+	public static String dumpAccessibilityNodeInfo(AccessibilityNodeInfo node) {
+		StringBuilder builder = new StringBuilder();
+		dumpAccessibilityNodeInfo(builder, "", node);
+		return builder.toString();
+	}
+
 	@Override
 	public void onAccessibilityEvent(AccessibilityEvent event) {
-		CavanAndroid.eLog("=============================================================================");
-		CavanAndroid.eLog("event = " + event);
+		// CavanAndroid.eLog("=============================================================================");
+		// CavanAndroid.eLog("event = " + event);
+		// CavanAndroid.eLog(dumpAccessibilityNodeInfo(event.getSource()));
 
 		switch (event.getEventType()) {
 		case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
@@ -476,8 +520,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 			break;
 
 		case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
-			AccessibilityNodeInfo source = event.getSource();
-			CavanAndroid.eLog("source = " + source);
 			break;
 
 		case AccessibilityEvent.TYPE_VIEW_CLICKED:
@@ -492,11 +534,17 @@ public class CavanAccessibilityService extends AccessibilityService {
 	@Override
 	protected void onServiceConnected() {
 		AccessibilityServiceInfo info = getServiceInfo();
+
 		info.packageNames = PACKAGE_NAMES;
-		info.flags |= AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS;
+
+		info.flags |= AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS |
+				AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS |
+				AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
+
 		info.eventTypes = AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED |
 				AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED | AccessibilityEvent.TYPE_VIEW_CLICKED |
 				AccessibilityEvent.TYPE_VIEW_CLICKED | AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED;
+
 		setServiceInfo(info);
 
 		super.onServiceConnected();

@@ -473,7 +473,7 @@ public class RedPacketNotification extends CavanNotification {
 		PendingIntent intent = mNotification.getNotification().contentIntent;
 		Notification notification = buildNotification(content, intent);
 
-		if (mService.getCodeCount() == 0) {
+		if (mService.getCodeCount() == 0 && intent != null) {
 			try {
 				intent.send();
 			} catch (CanceledException e) {

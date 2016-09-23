@@ -608,17 +608,11 @@ public class JwaooBleToy extends CavanBleGatt {
 
 		CavanAndroid.eLog("identify = " + identify);
 
-		switch (identify) {
-		case DEVICE_ID_TOY:
-		case DEVICE_ID_K100:
+		if (identify.equals(DEVICE_ID_TOY) || identify.equals(DEVICE_ID_K100)) {
 			mSensor = new JwaooToySensorK100();
-			break;
-
-		case DEVICE_ID_K101:
+		} else if (identify.equals(DEVICE_ID_K101)) {
 			mSensor = new JwaooToySensorK101();
-			break;
-
-		default:
+		} else {
 			CavanAndroid.eLog("Invalid identify");
 			return false;
 		}

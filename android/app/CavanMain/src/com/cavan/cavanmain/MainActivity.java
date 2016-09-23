@@ -62,6 +62,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_MESSAGE_SHOW = "message_show";
 	public static final String KEY_INPUT_METHOD_SELECT = "input_method_select";
 	public static final String KEY_PERMISSION_SETTINGS = "permission_settings";
+	public static final String KEY_RED_PACKET_CODE_SEND = "red_packet_code_send";
 	public static final String KEY_RED_PACKET_NOTIFY_TEST = "red_packet_notify_test";
 	public static final String KEY_RED_PACKET_NOTIFY_RINGTONE = "red_packet_notify_ringtone";
 	public static final String KEY_TCP_BRIDGE = "tcp_bridge";
@@ -75,8 +76,14 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		return CavanAndroid.isPreferenceEnabled(context, KEY_FLOAT_TIMER);
 	}
 
-	public static boolean isAutoCommitEnabled(Context context) {
-		return CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_COMMIT);
+	public static int getAutoCommitCount(Context context) {
+		String text = CavanAndroid.getPreference(context, KEY_AUTO_COMMIT, "1");
+
+		try {
+			return Integer.parseInt(text);
+		} catch (Exception e) {
+			return 1;
+		}
 	}
 
 	public static boolean isAutoUnpackEnabled(Context context) {
@@ -127,7 +134,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private CheckBoxPreference mPreferenceFloatTime;
 	private Preference mPreferencePermissionSettings;
 	private Preference mPreferenceMessageShow;
-	private EditTextPreference mPreferenceRedPacketNotifyTest;
+	private EditTextPreference mPreferenceAutoCommit;
+	private EditTextPreference mPreferenceRedPacketCodeSend;
+	private Preference mPreferenceRedPacketNotifyTest;
 	private RingtonePreference mPreferenceRedPacketNotifyRingtone;
 	private CavanServicePreference mPreferenceTcpDd;
 	private CavanServicePreference mPreferenceFtp;
@@ -214,6 +223,15 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceMessageShow = findPreference(KEY_MESSAGE_SHOW);
 		mPreferenceMessageShow.setIntent(CavanMessageActivity.getIntent(this));
 
+		mPreferenceAutoCommit = (EditTextPreference) findPreference(KEY_AUTO_COMMIT);
+		mPreferenceAutoCommit.getEditText().setInputType(InputType.TYPE_CLASS_NUMBER);
+		String text = mPreferenceAutoCommit.getText();
+		if (text == null || text.isEmpty()) {
+			mPreferenceAutoCommit.setText("3");
+		}
+		mPreferenceAutoCommit.setSummary(mPreferenceAutoCommit.getText());
+		mPreferenceAutoCommit.setOnPreferenceChangeListener(this);
+
 		mPreferencePermissionSettings = findPreference(KEY_PERMISSION_SETTINGS);
 		mPreferencePermissionSettings.setIntent(PermissionSettingsActivity.getIntent(this));
 
@@ -224,7 +242,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceWanShare.setOnPreferenceChangeListener(this);
 
 		mPreferenceWanIp = (EditTextPreference) findPreference(KEY_WAN_IP);
-		String text = mPreferenceWanIp.getText();
+		text = mPreferenceWanIp.getText();
 		if (text == null || text.isEmpty()) {
 			mPreferenceWanIp.setText("127.0.0.1");
 		}
@@ -240,14 +258,11 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceWanPort.setSummary(mPreferenceWanPort.getText());
 		mPreferenceWanPort.setOnPreferenceChangeListener(this);
 
-		mPreferenceRedPacketNotifyTest = (EditTextPreference) findPreference(KEY_RED_PACKET_NOTIFY_TEST);
-		text = mPreferenceRedPacketNotifyTest.getText();
-		if (text == null || text.isEmpty()) {
-			mPreferenceRedPacketNotifyTest.setText("支付宝红包口令: 12345678");
-		}
+		mPreferenceRedPacketNotifyTest = findPreference(KEY_RED_PACKET_NOTIFY_TEST);
 
-		mPreferenceRedPacketNotifyTest.setPositiveButtonText(R.string.text_test);
-		mPreferenceRedPacketNotifyTest.setOnPreferenceChangeListener(this);
+		mPreferenceRedPacketCodeSend = (EditTextPreference) findPreference(KEY_RED_PACKET_CODE_SEND);
+		mPreferenceRedPacketCodeSend.setPositiveButtonText(R.string.text_send);
+		mPreferenceRedPacketCodeSend.setOnPreferenceChangeListener(this);
 
 		mPreferenceRedPacketNotifyRingtone = (RingtonePreference) findPreference(KEY_RED_PACKET_NOTIFY_RINGTONE);
 		text = mPreferenceRedPacketNotifyRingtone.getPreferenceManager().getSharedPreferences().getString(KEY_RED_PACKET_NOTIFY_RINGTONE, null);
@@ -448,15 +463,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 					e.printStackTrace();
 				}
 			}
-		}
-
-		return super.onPreferenceTreeClick(preferenceScreen, preference);
-	}
-
-	@Override
-	public boolean onPreferenceChange(Preference preference, Object object) {
-		if (preference == mPreferenceFloatTime) {
-			return setDesktopFloatTimerEnable((boolean) object);
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
 			if (!CavanAndroid.isNotificationListenerEnabled(this, RedPacketListenerService.class)) {
 				PermissionSettingsActivity.startNotificationListenerSettingsActivity(this);
@@ -467,7 +473,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			} else {
 				NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 				if (manager != null) {
-					String text = (String) object;
+					String text = "支付宝红包口令: " +  RedPacketCode.TEST_CODE;
 
 					Builder builder = new Builder(this)
 						.setSmallIcon(R.drawable.ic_launcher)
@@ -478,6 +484,23 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 					manager.notify(RedPacketListenerService.NOTIFY_TEST, builder.build());
 				}
+			}
+		}
+
+		return super.onPreferenceTreeClick(preferenceScreen, preference);
+	}
+
+	@Override
+	public boolean onPreferenceChange(Preference preference, Object object) {
+		if (preference == mPreferenceFloatTime) {
+			return setDesktopFloatTimerEnable((boolean) object);
+		} else if (preference == mPreferenceRedPacketCodeSend) {
+			CharSequence text = (String) object;
+			if (text != null && text.length() > 0) {
+				Intent intent = new Intent(ACTION_CODE_RECEIVED);
+				intent.putExtra("type", "手动输入");
+				intent.putExtra("code", text);
+				sendBroadcast(intent);
 			}
 		} else if (preference == mPreferenceRedPacketNotifyRingtone) {
 			updateRingtoneSummary((String) object);
@@ -505,6 +528,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 					e.printStackTrace();
 				}
 			}
+		} else if (preference == mPreferenceAutoCommit) {
+			mPreferenceAutoCommit.setSummary((CharSequence) object);
 		}
 
 		return true;

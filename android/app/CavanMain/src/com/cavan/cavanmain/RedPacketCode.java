@@ -12,6 +12,8 @@ import android.os.Parcelable;
 @SuppressLint("SimpleDateFormat")
 public class RedPacketCode implements Parcelable {
 
+	public static final String TEST_CODE = "曹福昂测试口令";
+
 	private static final SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	private int mCommitCount;
