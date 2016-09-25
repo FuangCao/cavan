@@ -257,6 +257,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 		mPreferenceRedPacketNotifyTest = (EditTextPreference) findPreference(KEY_RED_PACKET_NOTIFY_TEST);
 		mPreferenceRedPacketNotifyTest.setPositiveButtonText(R.string.text_test);
+		text = mPreferenceRedPacketNotifyTest.getText();
+		if (text == null || text.isEmpty()) {
+			mPreferenceRedPacketNotifyTest.setText("支付宝红包口令：12345678");
+		}
 		mPreferenceRedPacketNotifyTest.setOnPreferenceChangeListener(this);
 
 		mPreferenceRedPacketCodeSend = (EditTextPreference) findPreference(KEY_RED_PACKET_CODE_SEND);

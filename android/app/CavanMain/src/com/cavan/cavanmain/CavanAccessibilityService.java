@@ -94,9 +94,18 @@ public class CavanAccessibilityService extends AccessibilityService {
 				break;
 
 			case MSG_COMMIT_COMPLETE:
-				code = (RedPacketCode) msg.obj;
-				String text = getResources().getString(R.string.text_complete_code, code.getCode());
-				CavanAndroid.showToast(CavanAccessibilityService.this, text);
+				try {
+					if (mService != null && mService.getCodeCount() > 0) {
+						Message message = obtainMessage(msg.what, msg.obj);
+						sendMessageDelayed(message, 5000);
+					} else {
+						code = (RedPacketCode) msg.obj;
+						String text = getResources().getString(R.string.text_complete_code, code.getCode());
+						CavanAndroid.showToast(CavanAccessibilityService.this, text);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 				break;
 			}
 		}
