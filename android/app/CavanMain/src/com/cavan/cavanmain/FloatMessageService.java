@@ -189,7 +189,7 @@ public class FloatMessageService extends FloatWidowService {
 
 		@Override
 		public boolean getTimerState() throws RemoteException {
-			return mTextViewTime != null && mTextViewTime.getVisibility() != View.INVISIBLE;
+			return mTextViewTime != null && mTextViewTime.getVisibility() == View.VISIBLE;
 		}
 
 		@Override

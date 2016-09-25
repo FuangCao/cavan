@@ -33,8 +33,11 @@
 	    android:persistent="true"
 	    android:title="@string/desktop_float_timer" />
 
-	<EditTextPreference android:key="auto_commit"
+	<ListPreference android:key="auto_commit"
 	    android:persistent="true"
+		android:entries="@array/text_auto_entries"
+		android:entryValues="@array/text_auto_values"
+		android:defaultValue="2"
 	    android:title="@string/text_auto_commit" />
 
 	<CheckBoxPreference android:key="auto_unlock"
@@ -48,19 +51,19 @@
 	    android:persistent="true"
 	    android:title="@string/text_listen_clip" />
 
+	<Preference android:key="lan_test"
+	    android:title="@string/text_lan_test" />
+
 	<CheckBoxPreference android:key="lan_share"
 	    android:persistent="true"
 	    android:title="@string/text_lan_share" />
 
-	<Preference android:key="lan_test"
-	    android:title="@string/text_lan_test" />
+	<Preference android:key="wan_test"
+	    android:title="@string/text_wan_test" />
 
 	<CheckBoxPreference android:key="wan_share"
 	    android:persistent="true"
 	    android:title="@string/text_wan_share" />
-
-	<Preference android:key="wan_test"
-	    android:title="@string/text_wan_test" />
 
 	<EditTextPreference android:key="wan_ip"
 	    android:persistent="true"

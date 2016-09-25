@@ -77,5 +77,31 @@
     <string name="text_test_sucess">测试成功</string>
     <string name="text_send">发送</string>
     <string name="text_red_packet_code_send">红包口令发送</string>
+    <string-array name="text_auto_entries">
+        <item >关闭</item>
+        <item >提交1次</item>
+        <item >提交2次</item>
+        <item >提交3次</item>
+        <item >提交4次</item>
+        <item >提交5次</item>
+        <item >提交6次</item>
+        <item >提交7次</item>
+        <item >提交8次</item>
+        <item >提交9次</item>
+        <item >提交10次</item>
+    </string-array>
+    <string-array name="text_auto_values">
+        <item >0</item>
+        <item >1</item>
+        <item >2</item>
+        <item >3</item>
+        <item >4</item>
+        <item >5</item>
+        <item >6</item>
+        <item >7</item>
+        <item >8</item>
+        <item >9</item>
+        <item >10</item>
+    </string-array>
 
 </resources>

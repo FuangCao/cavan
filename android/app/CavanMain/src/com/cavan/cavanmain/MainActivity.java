@@ -24,6 +24,7 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
+import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
@@ -135,7 +136,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private CheckBoxPreference mPreferenceFloatTime;
 	private Preference mPreferencePermissionSettings;
 	private Preference mPreferenceMessageShow;
-	private EditTextPreference mPreferenceAutoCommit;
+	private ListPreference mPreferenceAutoCommit;
 	private EditTextPreference mPreferenceRedPacketCodeSend;
 	private EditTextPreference mPreferenceRedPacketNotifyTest;
 	private RingtonePreference mPreferenceRedPacketNotifyRingtone;
@@ -224,13 +225,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceMessageShow = findPreference(KEY_MESSAGE_SHOW);
 		mPreferenceMessageShow.setIntent(CavanMessageActivity.getIntent(this));
 
-		mPreferenceAutoCommit = (EditTextPreference) findPreference(KEY_AUTO_COMMIT);
-		mPreferenceAutoCommit.getEditText().setInputType(InputType.TYPE_CLASS_NUMBER);
-		String text = mPreferenceAutoCommit.getText();
-		if (text == null || text.isEmpty()) {
-			mPreferenceAutoCommit.setText("3");
-		}
-		updateAutoCommitSummary(mPreferenceAutoCommit.getText());
+		mPreferenceAutoCommit = (ListPreference) findPreference(KEY_AUTO_COMMIT);
+		mPreferenceAutoCommit.setSummary(mPreferenceAutoCommit.getEntry());
 		mPreferenceAutoCommit.setOnPreferenceChangeListener(this);
 
 		mPreferencePermissionSettings = findPreference(KEY_PERMISSION_SETTINGS);
@@ -243,7 +239,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceWanShare.setOnPreferenceChangeListener(this);
 
 		mPreferenceWanIp = (EditTextPreference) findPreference(KEY_WAN_IP);
-		text = mPreferenceWanIp.getText();
+		String text = mPreferenceWanIp.getText();
 		if (text == null || text.isEmpty()) {
 			mPreferenceWanIp.setText("127.0.0.1");
 		}
@@ -424,11 +420,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		return false;
 	}
 
-	private void updateAutoCommitSummary(CharSequence text) {
-		String summary = getResources().getString(R.string.text_auto_commit_count, text);
-		mPreferenceAutoCommit.setSummary(summary);
-	}
-
 	@SuppressWarnings("deprecation")
 	public void updateRingtoneSummary(String uri) {
 		String summary;
@@ -538,7 +529,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 				}
 			}
 		} else if (preference == mPreferenceAutoCommit) {
-			updateAutoCommitSummary((CharSequence) object);
+			int index = mPreferenceAutoCommit.findIndexOfValue((String) object);
+			if (index >= 0) {
+				mPreferenceAutoCommit.setSummary(mPreferenceAutoCommit.getEntries()[index]);
+			}
 		}
 
 		return true;
