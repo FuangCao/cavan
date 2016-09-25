@@ -298,16 +298,22 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	}
 
 	@Override
-	public void onStartInputView(EditorInfo info, boolean restarting) {
-		mIsAlipay = CavanPackageName.ALIPAY.equals(getCurrentInputEditorInfo().packageName);
-
-		checkCodeArray();
-
+	public void onViewClicked(boolean focusChanged) {
 		if (mIsAlipay && mCodes.size() == 1) {
 			sendRedPacketCode(mCodes.get(0).getCode());
 		}
 
-		super.onStartInputView(info, restarting);
+		super.onViewClicked(focusChanged);
+	}
+
+	@Override
+	public void onStartInput(EditorInfo attribute, boolean restarting) {
+		mAutoCommitEnable = false;
+		mIsAlipay = CavanPackageName.ALIPAY.equals(getCurrentInputEditorInfo().packageName);
+
+		checkCodeArray();
+
+		super.onStartInput(attribute, restarting);
 	}
 
 	@Override
