@@ -1,9 +1,5 @@
 package com.cavan.cavanmain;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,13 +59,11 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	private InputMethodManager mManager;
 
 	private boolean mIsAlipay;
+	private boolean mAutoCommitEnable;
 	private boolean mSelectioActive;
 	private int mSelection;
 	private int mSelectionStart;
 	private int mSelectionEnd;
-
-	private ServerSocket mServerSocket;
-	private Socket mClientSocket;
 
 	private IFloatMessageService mService;
 	private ServiceConnection mConnection = new ServiceConnection() {
@@ -265,34 +259,12 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		filter.addAction(MainActivity.ACTION_CODE_COMMIT);
 		registerReceiver(mReceiver, filter);
 
-		KeypadThread thread = new KeypadThread();
-		thread.start();
-
 		super.onCreate();
 	}
 
 	@Override
 	public void onDestroy() {
 		unbindService(mConnection);
-
-		if (mClientSocket != null) {
-			try {
-				mClientSocket.close();
-				mClientSocket = null;
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
-		if (mServerSocket != null) {
-			try {
-				mServerSocket.close();
-				mServerSocket = null;
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
 		unregisterReceiver(mReceiver);
 
 		super.onDestroy();
@@ -305,12 +277,15 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		} else {
 			mSelection = newSelStart;
 
-			if (newSelStart == 8 && mIsAlipay) {
+			if (mAutoCommitEnable && newSelStart == 8 && newSelStart == newSelEnd) {
 				InputConnection conn = getCurrentInputConnection();
 				if (conn != null) {
 					CharSequence text = conn.getTextBeforeCursor(8, 0);
-					if (text != null && text.length() == 8 && CavanJava.isDigit(text) && mCodes.indexOf(text.toString()) < 0) {
-						sendFinishAction(conn);
+					if (text != null && CavanJava.isDigit(text)) {
+						text = conn.getTextAfterCursor(1, 0);
+						if (text == null || text.length() <= 0) {
+							sendFinishAction(conn);
+						}
 					}
 				}
 			}
@@ -333,6 +308,12 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		}
 
 		super.onStartInputView(info, restarting);
+	}
+
+	@Override
+	public void onFinishInputView(boolean finishingInput) {
+		mAutoCommitEnable = false;
+		super.onFinishInputView(finishingInput);
 	}
 
 	@Override
@@ -464,6 +445,11 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	@Override
 	public void onText(CharSequence text) {
 		mSelectioActive = false;
+
+		if (mIsAlipay) {
+			mAutoCommitEnable = true;
+		}
+
 		getCurrentInputConnection().commitText(text, 1);
 	}
 
@@ -481,65 +467,5 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 	@Override
 	public void swipeUp() {
-	}
-
-	public class KeypadThread extends Thread {
-
-		@Override
-		public void run() {
-			try {
-				mServerSocket = new ServerSocket(23456);
-				CavanAndroid.eLog("server = " + mServerSocket);
-
-				while (mServerSocket != null) {
-					mClientSocket = mServerSocket.accept();
-					if (mClientSocket == null) {
-						break;
-					}
-
-					CavanAndroid.eLog("client = " + mClientSocket);
-
-					try {
-						InputStream stream = mClientSocket.getInputStream();
-
-						byte[] bytes = new byte[1024];
-
-						while (true) {
-							int length = stream.read(bytes);
-							if (length <= 0) {
-								break;
-							}
-
-							for (int i = 0; i < length; i++) {
-								int code = bytes[i] & 0xFF;
-
-								CavanAndroid.eLog("code = " + code);
-								sendKeyDownUp(code);
-							}
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-					} finally {
-						try {
-							mClientSocket.close();
-							mClientSocket = null;
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				if (mServerSocket != null) {
-					try {
-						mServerSocket.close();
-						mServerSocket = null;
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}
 	}
 }
