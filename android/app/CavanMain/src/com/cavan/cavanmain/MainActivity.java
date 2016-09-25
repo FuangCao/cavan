@@ -40,6 +40,7 @@ import com.cavan.java.CavanJava;
 public class MainActivity extends PreferenceActivity implements OnPreferenceChangeListener {
 
 	public static final String ACTION_CODE_ADD = "cavan.intent.action.ACTION_CODE_ADD";
+	public static final String ACTION_CODE_TEST = "cavan.intent.action.ACTION_CODE_TEST";
 	public static final String ACTION_CODE_REMOVE = "cavan.intent.action.ACTION_CODE_REMOVE";
 	public static final String ACTION_CODE_COMMIT = "cavan.intent.action.ACTION_CODE_COMMIT";
 	public static final String ACTION_CODE_RECEIVED = "cavan.intent.action.ACTION_CODE_RECEIVED";
@@ -136,7 +137,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private Preference mPreferenceMessageShow;
 	private EditTextPreference mPreferenceAutoCommit;
 	private EditTextPreference mPreferenceRedPacketCodeSend;
-	private Preference mPreferenceRedPacketNotifyTest;
+	private EditTextPreference mPreferenceRedPacketNotifyTest;
 	private RingtonePreference mPreferenceRedPacketNotifyRingtone;
 	private CavanServicePreference mPreferenceTcpDd;
 	private CavanServicePreference mPreferenceFtp;
@@ -258,7 +259,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceWanPort.setSummary(mPreferenceWanPort.getText());
 		mPreferenceWanPort.setOnPreferenceChangeListener(this);
 
-		mPreferenceRedPacketNotifyTest = findPreference(KEY_RED_PACKET_NOTIFY_TEST);
+		mPreferenceRedPacketNotifyTest = (EditTextPreference) findPreference(KEY_RED_PACKET_NOTIFY_TEST);
+		mPreferenceRedPacketNotifyTest.setPositiveButtonText(R.string.text_test);
+		mPreferenceRedPacketNotifyTest.setOnPreferenceChangeListener(this);
 
 		mPreferenceRedPacketCodeSend = (EditTextPreference) findPreference(KEY_RED_PACKET_CODE_SEND);
 		mPreferenceRedPacketCodeSend.setPositiveButtonText(R.string.text_send);
@@ -468,28 +471,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 					e.printStackTrace();
 				}
 			}
-		} else if (preference == mPreferenceRedPacketNotifyTest) {
-			if (!CavanAndroid.isNotificationListenerEnabled(this, RedPacketListenerService.class)) {
-				PermissionSettingsActivity.startNotificationListenerSettingsActivity(this);
-				CavanAndroid.showToastLong(this, "请打开通知读取权限");
-			} else if (!CavanAndroid.isAccessibilityServiceEnabled(this, CavanAccessibilityService.class)) {
-				PermissionSettingsActivity.startAccessibilitySettingsActivity(this);
-				CavanAndroid.showToast(this, "请打开辅助功能");
-			} else {
-				NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-				if (manager != null) {
-					String text = "支付宝红包口令: " +  RedPacketCode.TEST_CODE;
-
-					Builder builder = new Builder(this)
-						.setSmallIcon(R.drawable.ic_launcher)
-						.setAutoCancel(true)
-						.setContentTitle("红包提醒测试")
-						.setTicker(text)
-						.setContentText(text);
-
-					manager.notify(RedPacketListenerService.NOTIFY_TEST, builder.build());
-				}
-			}
 		}
 
 		return super.onPreferenceTreeClick(preferenceScreen, preference);
@@ -505,7 +486,30 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 				Intent intent = new Intent(ACTION_CODE_RECEIVED);
 				intent.putExtra("type", "手动输入");
 				intent.putExtra("code", text);
+				intent.putExtra("shared", false);
 				sendBroadcast(intent);
+			}
+		} else if (preference == mPreferenceRedPacketNotifyTest) {
+			if (!CavanAndroid.isNotificationListenerEnabled(this, RedPacketListenerService.class)) {
+				PermissionSettingsActivity.startNotificationListenerSettingsActivity(this);
+				CavanAndroid.showToastLong(this, "请打开通知读取权限");
+			} else if (!CavanAndroid.isAccessibilityServiceEnabled(this, CavanAccessibilityService.class)) {
+				PermissionSettingsActivity.startAccessibilitySettingsActivity(this);
+				CavanAndroid.showToast(this, "请打开辅助功能");
+			} else {
+				NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+				if (manager != null) {
+					String text = (String) object;
+
+					Builder builder = new Builder(this)
+						.setSmallIcon(R.drawable.ic_launcher)
+						.setAutoCancel(true)
+						.setContentTitle("红包提醒测试")
+						.setTicker(text)
+						.setContentText(text);
+
+					manager.notify(RedPacketListenerService.NOTIFY_TEST, builder.build());
+				}
 			}
 		} else if (preference == mPreferenceRedPacketNotifyRingtone) {
 			updateRingtoneSummary((String) object);

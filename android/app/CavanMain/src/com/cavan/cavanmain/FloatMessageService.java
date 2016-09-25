@@ -19,6 +19,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.Handler.Callback;
 import android.os.HandlerThread;
@@ -55,7 +57,6 @@ public class FloatMessageService extends FloatWidowService {
 	private static final int MSG_SHOW_TOAST = 1;
 	private static final int MSG_TCP_SERVICE_STATE_CHANGED = 2;
 	private static final int MSG_TCP_SERVICE_UPDATED = 3;
-	private static final int MSG_TCP_SERVICE_KEEP_LIVE = 4;
 	private static final int MSG_TCP_BRIDGE_STATE_CHANGED = 5;
 	private static final int MSG_TCP_BRIDGE_UPDATED = 6;
 
@@ -70,6 +71,9 @@ public class FloatMessageService extends FloatWidowService {
 	private TcpDaemonThread mTcpDaemon;
 	private TcpBridgeThread mTcpBridge;
 	private NetworkSendThread mNetSender;
+
+	private boolean mNetworkConnected;
+	private ConnectivityManager mConnectivityManager;
 
 	private Handler mHandler = new Handler() {
 
@@ -86,7 +90,7 @@ public class FloatMessageService extends FloatWidowService {
 				break;
 
 			case MSG_TCP_SERVICE_UPDATED:
-				if (MainActivity.isWanShareEnabled(FloatMessageService.this)) {
+				if (mNetworkConnected && MainActivity.isWanShareEnabled(FloatMessageService.this)) {
 					if (mTcpDaemon == null) {
 						mTcpDaemon = new TcpDaemonThread();
 						mTcpDaemon.start();
@@ -102,11 +106,6 @@ public class FloatMessageService extends FloatWidowService {
 				}
 				break;
 
-			case MSG_TCP_SERVICE_KEEP_LIVE:
-				if (mTcpDaemon != null) {
-				}
-				break;
-
 			case MSG_TCP_BRIDGE_STATE_CHANGED:
 				intent = new Intent(MainActivity.ACTION_BRIDGE_UPDATED);
 				intent.putExtra("state", msg.arg1);
@@ -116,7 +115,7 @@ public class FloatMessageService extends FloatWidowService {
 				break;
 
 			case MSG_TCP_BRIDGE_UPDATED:
-				if (MainActivity.isTcpBridgeEnabled(FloatMessageService.this)) {
+				if (mNetworkConnected && MainActivity.isTcpBridgeEnabled(FloatMessageService.this)) {
 					if (mTcpBridge == null) {
 						mTcpBridge = new TcpBridgeThread();
 						mTcpBridge.start();
@@ -167,6 +166,10 @@ public class FloatMessageService extends FloatWidowService {
 				mTextViewAutoUnlock.setVisibility(View.INVISIBLE);
 				mUserPresent = true;
 				break;
+
+			case ConnectivityManager.CONNECTIVITY_ACTION:
+				updateNetworkConnState();
+				break;
 			}
 		}
 	};
@@ -190,7 +193,7 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		@Override
-		public int addMessage(CharSequence message, RedPacketCode code) throws RemoteException {
+		public int addMessage(CharSequence message, RedPacketCode code, boolean test) throws RemoteException {
 			TextView view = (TextView) FloatMessageService.this.addText(message, -1);
 			if (view == null) {
 				return -1;
@@ -199,16 +202,20 @@ public class FloatMessageService extends FloatWidowService {
 			unlockScreen();
 
 			if (code != null) {
-				mMessageCodeMap.put(message, code);
+				if (test) {
+					sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_TEST, code);
+				} else {
+					mMessageCodeMap.put(message, code);
 
-				sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_ADD, code);
+					sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_ADD, code);
 
-				if (code.isNetShared() == false && mNetSender != null) {
-					long delay = code.getTime() - System.currentTimeMillis();
-					mNetSender.sendCode(code.getCode(), delay);
+					if (code.isNetShared() == false && mNetSender != null) {
+						long delay = code.getTime() - System.currentTimeMillis();
+						mNetSender.sendCode(code.getCode(), delay);
+					}
+
+					mCodes.addTimedValue(code.getCode());
 				}
-
-				mCodes.addTimedValue(code.getCode());
 			}
 
 			return view.getId();
@@ -388,9 +395,18 @@ public class FloatMessageService extends FloatWidowService {
 				Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
 				intent.putExtra("type", type);
 				intent.putExtra("code", code);
+				intent.putExtra("shared", true);
 				sendBroadcast(intent);
 			}
 		}
+	}
+
+	public void updateNetworkConnState() {
+		NetworkInfo info = mConnectivityManager.getActiveNetworkInfo();
+		mNetworkConnected = (info != null && info.isConnected());
+
+		mHandler.sendEmptyMessage(MSG_TCP_SERVICE_UPDATED);
+		mHandler.sendEmptyMessage(MSG_TCP_BRIDGE_UPDATED);
 	}
 
 	@Override
@@ -412,10 +428,13 @@ public class FloatMessageService extends FloatWidowService {
 
 	@Override
 	public void onCreate() {
+		mConnectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Intent.ACTION_SCREEN_OFF);
 		filter.addAction(Intent.ACTION_SCREEN_ON);
 		filter.addAction(Intent.ACTION_USER_PRESENT);
+		filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
 		registerReceiver(mReceiver, filter );
 
 		mNetSender = new NetworkSendThread();
@@ -424,8 +443,7 @@ public class FloatMessageService extends FloatWidowService {
 		mUdpDaemon = new UdpDaemonThread();
 		mUdpDaemon.start();
 
-		mHandler.sendEmptyMessage(MSG_TCP_SERVICE_UPDATED);
-		mHandler.sendEmptyMessage(MSG_TCP_BRIDGE_UPDATED);
+		updateNetworkConnState();
 
 		super.onCreate();
 	}
@@ -553,8 +571,11 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		public void restartKeepLive() {
-			mNetSendHandler.removeMessages(MSG_KEEP_LIVE);
-			mNetSendHandler.sendEmptyMessageDelayed(MSG_KEEP_LIVE, 1800000);
+			String command = NET_CMD_KEEP_LIVE;
+			Message message = mNetSendHandler.obtainMessage(MSG_KEEP_LIVE, command);
+
+			mNetSendHandler.removeMessages(MSG_KEEP_LIVE, command);
+			mNetSendHandler.sendMessageDelayed(message, 600000);
 		}
 
 		@Override
@@ -578,7 +599,6 @@ public class FloatMessageService extends FloatWidowService {
 		public boolean handleMessage(Message msg) {
 			switch (msg.what) {
 			case MSG_KEEP_LIVE:
-				msg.obj = NET_CMD_KEEP_LIVE;
 			case MSG_SEND_TCP_COMMAND:
 				if (mTcpDaemon != null) {
 					String command = (String) msg.obj;
@@ -791,34 +811,34 @@ public class FloatMessageService extends FloatWidowService {
 					mOutputStream = mSocket.getOutputStream();
 
 					mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_connected, 0).sendToTarget();
+					mNetSender.restartKeepLive();
 
 					BufferedReader reader = new BufferedReader(new InputStreamReader(mInputStream));
 
 					while (true) {
 						try {
-							mNetSender.restartKeepLive();
 							onNetworkCommandReceived("外网分享", reader.readLine());
 						} catch (IOException e) {
 							e.printStackTrace();
 							break;
 						}
 					}
-
-					mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_disconnected, 0).sendToTarget();
 				} catch (Exception e) {
 					e.printStackTrace();
-
-					if (mActive) {
-						synchronized (this) {
-							try {
-								wait(10000);
-							} catch (InterruptedException e1) {
-								e1.printStackTrace();
-							}
-						}
-					}
 				} finally {
 					closeSocket();
+				}
+
+				mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_disconnected, 0).sendToTarget();
+
+				if (mActive) {
+					synchronized (this) {
+						try {
+							wait(20000);
+						} catch (InterruptedException e1) {
+							e1.printStackTrace();
+						}
+					}
 				}
 			}
 
@@ -868,7 +888,7 @@ public class FloatMessageService extends FloatWidowService {
 				if (mActive) {
 					synchronized (this) {
 						try {
-							wait(10000);
+							wait(20000);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}

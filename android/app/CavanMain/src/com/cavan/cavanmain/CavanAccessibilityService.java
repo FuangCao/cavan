@@ -16,6 +16,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
+import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -33,6 +34,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private static final long CODE_OVERTIME = 7200000;
 
 	private static final int MSG_COMMIT_TIMEOUT = 1;
+	private static final int MSG_COMMIT_COMPLETE = 2;
 
 	private static final String[] PACKAGE_NAMES = {
 		CavanPackageName.ALIPAY,
@@ -90,6 +92,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 				removeRedPacketCode((RedPacketCode) msg.obj);
 				break;
+
+			case MSG_COMMIT_COMPLETE:
+				code = (RedPacketCode) msg.obj;
+				String text = getResources().getString(R.string.text_complete_code, code.getCode());
+				CavanAndroid.showToast(CavanAccessibilityService.this, text);
+				break;
 			}
 		}
 	};
@@ -122,14 +130,16 @@ public class CavanAccessibilityService extends AccessibilityService {
 			CavanAndroid.eLog("action = " + action);
 
 			switch (action) {
-			case MainActivity.ACTION_CODE_ADD:
+			case MainActivity.ACTION_CODE_TEST:
 				RedPacketCode code = intent.getParcelableExtra("code");
-				if (code == null) {
-					break;
-				}
-
-				if (RedPacketCode.TEST_CODE.equals(code.getCode())) {
+				if (code != null) {
 					CavanAndroid.showToast(getApplicationContext(), R.string.text_test_sucess);
+				}
+				break;
+
+			case MainActivity.ACTION_CODE_ADD:
+				code = intent.getParcelableExtra("code");
+				if (code == null) {
 					break;
 				}
 
@@ -313,8 +323,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private void removeRedPacketCode(RedPacketCode code) {
 		mCodes.remove(code);
 
-		String text = getResources().getString(R.string.text_complete_code, code.getCode());
-		CavanAndroid.showToast(this, text);
+		Message message = mHandler.obtainMessage(MSG_COMMIT_COMPLETE, code);
+		mHandler.sendMessageDelayed(message, 10000);
 	}
 
 	private void setRedPacketCodeComplete() {
@@ -388,9 +398,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			if (CavanInputMethod.isDefaultInputMethod(this)) {
 				if (code.isCompleted()) {
 					msgResId = R.string.text_completed_please_manual_commit;
-				} else if (code.addCommitCount() > maxCommitCount) {
-					msgResId = R.string.text_commit_too_much_please_manual_commit;
-				} else {
+				} else if (code.getCommitCount() < maxCommitCount) {
 					long delay = code.getDelay() / 1000;
 					if (delay > 0) {
 						if (delay != mDelay) {
@@ -400,10 +408,13 @@ public class CavanAccessibilityService extends AccessibilityService {
 						}
 
 						return false;
-					} else {
-						sendBroadcast(new Intent(MainActivity.ACTION_CODE_COMMIT));
-						return true;
 					}
+
+					sendBroadcast(new Intent(MainActivity.ACTION_CODE_COMMIT));
+					code.addCommitCount();
+					return true;
+				} else {
+					msgResId = R.string.text_commit_too_much_please_manual_commit;
 				}
 			} else {
 				msgResId = R.string.text_ime_fault_please_manual_commit;
@@ -532,6 +543,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	@Override
+	protected boolean onKeyEvent(KeyEvent event) {
+		CavanAndroid.pLog("event = " + event);
+		return super.onKeyEvent(event);
+	}
+
+	@Override
 	protected void onServiceConnected() {
 		AccessibilityServiceInfo info = getServiceInfo();
 
@@ -558,6 +575,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	@Override
 	public void onCreate() {
 		IntentFilter filter = new IntentFilter();
+		filter.addAction(MainActivity.ACTION_CODE_TEST);
 		filter.addAction(MainActivity.ACTION_CODE_ADD);
 		filter.addAction(MainActivity.ACTION_CODE_REMOVE);
 		filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);

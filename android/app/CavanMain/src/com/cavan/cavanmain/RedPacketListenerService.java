@@ -50,13 +50,19 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				StatusBarNotification sbn = (StatusBarNotification) msg.obj;
 				String pkgName = sbn.getPackageName();
 
+				boolean testOnly;
+
 				if (getPackageName().equals(pkgName)) {
 					if (sbn.getId() != NOTIFY_TEST) {
 						break;
 					}
+
+					testOnly = true;
+				} else {
+					testOnly = false;
 				}
 
-				RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, sbn);
+				RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, sbn, testOnly);
 				notification.sendRedPacketNotifyAuto();
 				notification.insert(getContentResolver());
 				break;
@@ -118,10 +124,11 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			case MainActivity.ACTION_CODE_RECEIVED:
 				String type = intent.getStringExtra("type");
 				String code = intent.getStringExtra("code");
+				boolean shared = intent.getBooleanExtra("shared", false);
 
 				CavanAndroid.eLog("code = " + code);
 
-				RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, type, code, true);
+				RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, type, code, shared);
 				mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
 				break;
 			}
@@ -160,7 +167,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		return 0;
 	}
 
-	public void sendNotification(Notification notification, CharSequence message, RedPacketCode code) {
+	public void sendNotification(Notification notification, CharSequence message, RedPacketCode code, boolean test) {
 		if (mNotificationManager != null) {
 			if (code != null) {
 				notification.extras.putCharSequence(EXTRA_CODE, code.getCode());
@@ -173,7 +180,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 		if (mFloatMessageService != null) {
 			try {
-				mFloatMessageService.addMessage(message, code);
+				mFloatMessageService.addMessage(message, code, test);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

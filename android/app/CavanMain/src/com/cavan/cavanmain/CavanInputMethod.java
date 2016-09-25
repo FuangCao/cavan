@@ -277,7 +277,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		} else {
 			mSelection = newSelStart;
 
-			if (mAutoCommitEnable && newSelStart == 8 && newSelStart == newSelEnd) {
+			if (mAutoCommitEnable && newSelEnd == 8) {
 				InputConnection conn = getCurrentInputConnection();
 				if (conn != null) {
 					CharSequence text = conn.getTextBeforeCursor(8, 0);

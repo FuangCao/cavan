@@ -108,6 +108,7 @@ public class RedPacketNotification extends CavanNotification {
 		sPackageCodeMap.put("com.tencent.mm", "微信红包");
 	}
 
+	private boolean mTestOnly;
 	private boolean mNeedSave;
 	private String mJoinedLines;
 	private List<String> mLines = new ArrayList<String>();
@@ -116,9 +117,10 @@ public class RedPacketNotification extends CavanNotification {
 	private RedPacketListenerService mService;
 	private StatusBarNotification mNotification;
 
-	public RedPacketNotification(RedPacketListenerService service, StatusBarNotification sbn) {
+	public RedPacketNotification(RedPacketListenerService service, StatusBarNotification sbn, boolean test) {
 		super(sbn);
 
+		mTestOnly = test;
 		mService = service;
 		mNotification = sbn;
 
@@ -462,7 +464,7 @@ public class RedPacketNotification extends CavanNotification {
 		for (String code : codes) {
 			Notification notification = buildRedPacketNotifyAlipay(code);
 			if (notification != null) {
-				mService.sendNotification(notification, "支付宝口令@" + getUserDescription() + ": " + code, new RedPacketCode(code, time, mNetShared));
+				mService.sendNotification(notification, "支付宝口令@" + getUserDescription() + ": " + code, new RedPacketCode(code, time, mNetShared), mTestOnly);
 			}
 		}
 
@@ -481,7 +483,7 @@ public class RedPacketNotification extends CavanNotification {
 			}
 		}
 
-		mService.sendNotification(notification, message, null);
+		mService.sendNotification(notification, message, null, mTestOnly);
 
 		return true;
 	}

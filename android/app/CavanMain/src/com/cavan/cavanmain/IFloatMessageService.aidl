@@ -5,7 +5,7 @@ import com.cavan.cavanmain.RedPacketCode;
 interface IFloatMessageService {
 	boolean getTimerState();
 	boolean setTimerEnable(boolean enable);
-	int addMessage(CharSequence message, in RedPacketCode code);
+	int addMessage(CharSequence message, in RedPacketCode code, boolean test);
 	boolean hasMessage(CharSequence message);
 	void removeMessage(CharSequence message);
 	List<String> getMessages();
