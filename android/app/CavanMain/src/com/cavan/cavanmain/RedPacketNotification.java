@@ -113,6 +113,7 @@ public class RedPacketNotification extends CavanNotification {
 	private String mJoinedLines;
 	private List<String> mLines = new ArrayList<String>();
 
+	private boolean mIsCode;
 	private boolean mNetShared;
 	private RedPacketListenerService mService;
 	private StatusBarNotification mNotification;
@@ -137,13 +138,20 @@ public class RedPacketNotification extends CavanNotification {
 		joinLines();
 	}
 
-	public RedPacketNotification(RedPacketListenerService service, String user, String content, boolean shared) {
+	public RedPacketNotification(RedPacketListenerService service, String user, String content, boolean isCode, boolean shared) {
 		super(service.getPackageName(), user, null, null, content);
 
 		mNetShared = shared;
 		mService = service;
-		splitContent();
-		joinLines();
+		mIsCode = isCode;
+
+		if (isCode) {
+			mLines.add(content);
+			mJoinedLines = content;
+		} else {
+			splitContent();
+			joinLines();
+		}
 	}
 
 	private void splitContent() {
@@ -445,7 +453,7 @@ public class RedPacketNotification extends CavanNotification {
 		List<String> codes;
 		long time = System.currentTimeMillis();
 
-		if (mNetShared) {
+		if (mIsCode) {
 			codes = new ArrayList<String>();
 			codes.add(mContent);
 		} else {
