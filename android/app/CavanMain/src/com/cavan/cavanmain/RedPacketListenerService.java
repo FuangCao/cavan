@@ -131,6 +131,20 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, type, code, true, shared);
 				mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
 				break;
+
+			case MainActivity.ACTION_CONTENT_RECEIVED:
+				String title = intent.getStringExtra("title");
+				String content = intent.getStringExtra("content");
+				String pkgName = intent.getStringExtra("package");
+				boolean hasPrefix = intent.getBooleanExtra("hasPrefix", false);
+
+				if (pkgName == null) {
+					pkgName = getPackageName();
+				}
+
+				notification = new RedPacketNotification(RedPacketListenerService.this, pkgName, content, title, hasPrefix);
+				mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
+				break;
 			}
 		}
 	};
@@ -238,7 +252,10 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		Intent service = FloatMessageService.startService(this);
 		bindService(service, mFloatMessageConnection, 0);
 
-		registerReceiver(mReceiver, new IntentFilter(MainActivity.ACTION_CODE_RECEIVED));
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(MainActivity.ACTION_CODE_RECEIVED);
+		filter.addAction(MainActivity.ACTION_CONTENT_RECEIVED);
+		registerReceiver(mReceiver, filter);
 
 		super.onCreate();
 	}

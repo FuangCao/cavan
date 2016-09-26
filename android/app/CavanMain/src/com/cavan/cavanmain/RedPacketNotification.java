@@ -154,6 +154,14 @@ public class RedPacketNotification extends CavanNotification {
 		}
 	}
 
+	public RedPacketNotification(RedPacketListenerService service, String pkgName, String content, String title, boolean hasPrefix) {
+		super(pkgName, content, title, hasPrefix);
+
+		mService = service;
+		splitContent();
+		joinLines();
+	}
+
 	private void splitContent() {
 		for (String line : mContent.split("\n")) {
 			line = CavanString.strip(line);
@@ -223,6 +231,10 @@ public class RedPacketNotification extends CavanNotification {
 
 		if (mUserName != null) {
 			return mUserName;
+		}
+
+		if (mTitle != null) {
+			return mTitle;
 		}
 
 		CharSequence name = getApplicationName();

@@ -14,6 +14,8 @@ import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.net.wifi.WifiManager;
+import android.net.wifi.WifiManager.MulticastLock;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
@@ -46,6 +48,9 @@ public class CavanAndroid {
 	private static NotificationManager sNotificationManager;
 
 	private static ActivityManager sActivityManager;
+
+	private static MulticastLock sMulticastLock;
+	private static WifiManager sWifiManager;
 
 	public static void eLog(String message) {
 		Log.e(TAG, message);
@@ -349,7 +354,7 @@ public class CavanAndroid {
 
 	public static boolean isHuaweiPhone() {
 		String id = SystemProperties.getClientIdBase();
-		return (id != null && id.equals("android-huawei"));
+		return (id != null && id.contains("huawei"));
 	}
 
 	public static String getDefaultInputMethod(Context context) {
@@ -396,5 +401,45 @@ public class CavanAndroid {
 		}
 
 		return sActivityManager.getRunningTasks(1).get(0).topActivity;
+	}
+
+	public static WifiManager getWifiManager(Context context) {
+		if (sWifiManager != null) {
+			return sWifiManager;
+		}
+
+		sWifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+
+		return sWifiManager;
+	}
+
+	public static MulticastLock getMulticastLock(Context context) {
+		if (sMulticastLock != null) {
+			return sMulticastLock;
+		}
+
+		WifiManager manager = getWifiManager(context);
+		if (manager == null) {
+			return null;
+		}
+
+		sMulticastLock = manager.createMulticastLock(TAG);
+
+		return sMulticastLock;
+	}
+
+	public static boolean setMulticastEnabled(Context context, boolean enable) {
+		MulticastLock lock = getMulticastLock(context);
+		if (lock == null) {
+			return false;
+		}
+
+		if (enable) {
+			lock.acquire();
+		} else {
+			lock.release();
+		}
+
+		return true;
 	}
 }

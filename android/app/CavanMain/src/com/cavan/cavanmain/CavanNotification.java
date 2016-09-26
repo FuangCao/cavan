@@ -69,6 +69,30 @@ public class CavanNotification {
 		mContent = content;
 	}
 
+	public CavanNotification(String packageName, String content, String title, boolean hasPrefix) {
+		mTimestamp = System.currentTimeMillis();
+		mPackageName = packageName;
+		mContent = content;
+		mTitle = title;
+
+		if (hasPrefix) {
+			int end = content.indexOf(':');
+			if (end > 0) {
+				int start = end - 1;
+
+				for (start = end - 1; start >= 0; start--) {
+					if (content.charAt(start) == '-') {
+						mGroupName = content.substring(0, start);
+						break;
+					}
+				}
+
+				mUserName = content.substring(start + 1, end);
+				mContent = content.substring(end + 1);
+			}
+		}
+	}
+
 	public CavanNotification(StatusBarNotification sbn) {
 		parse(sbn);
 	}

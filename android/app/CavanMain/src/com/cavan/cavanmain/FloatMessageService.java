@@ -567,7 +567,7 @@ public class FloatMessageService extends FloatWidowService {
 
 		public boolean sendCode(String code, long delay) {
 			String command = NET_CMD_RDPKG + code;
-			return sendTcpCommand(command, delay) || sendUdpCommand(command, delay, 3);
+			return sendTcpCommand(command, delay) || sendUdpCommand(command, delay, 5);
 		}
 
 		public void restartKeepLive() {
@@ -666,6 +666,7 @@ public class FloatMessageService extends FloatWidowService {
 		@Override
 		public void run() {
 			mActive = true;
+			CavanAndroid.setMulticastEnabled(getApplicationContext(), true);
 
 			while (mActive) {
 				if (mSocket != null) {
@@ -718,6 +719,7 @@ public class FloatMessageService extends FloatWidowService {
 				mSocket = null;
 			}
 
+			CavanAndroid.setMulticastEnabled(getApplicationContext(), false);
 			mActive = false;
 		}
 	}

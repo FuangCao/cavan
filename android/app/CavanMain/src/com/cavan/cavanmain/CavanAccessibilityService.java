@@ -38,7 +38,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	private static final String[] PACKAGE_NAMES = {
 		CavanPackageName.ALIPAY,
-		// CavanPackageName.QQ,
+		CavanPackageName.QQ,
 	};
 
 	private long mDelay;
@@ -507,6 +507,64 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 	}
 
+	private void onWindowContentChanged(AccessibilityEvent event) {
+		AccessibilityNodeInfo source = event.getSource();
+		if (source == null) {
+			return;
+		}
+
+		String id = source.getViewIdResourceName();
+		if (id == null) {
+			return;
+		}
+
+		if (id.equals("com.tencent.mobileqq:id/msgbox")) {
+			CharSequence sequence = source.getText();
+			CavanAndroid.eLog("sequence = " + sequence);
+			if (sequence != null) {
+				String text = sequence.toString();
+				if (text.indexOf("[QQ红包]") >= 0) {
+					source.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+				}
+
+				Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
+				intent.putExtra("package", source.getPackageName());
+				intent.putExtra("title", "QQ");
+				intent.putExtra("content", text);
+				intent.putExtra("hasPrefix", true);
+				sendBroadcast(intent);
+			}
+		}
+	}
+
+	private void onViewClicked(AccessibilityEvent event) {
+		AccessibilityNodeInfo source = event.getSource();
+		if (source == null) {
+			return;
+		}
+
+		String id = source.getViewIdResourceName();
+		if (id == null) {
+			AccessibilityNodeInfo parent = source.getParent();
+			if (parent == null) {
+				return;
+			}
+
+			id = parent.getViewIdResourceName();
+			if (id == null) {
+				return;
+			}
+		}
+
+		if (id.equals("com.tencent.mobileqq:id/chat_item_content_layout")) {
+			Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
+			intent.putExtra("package", source.getPackageName());
+			intent.putExtra("title", "用户点击");
+			intent.putExtra("content", CavanString.fromCharSequence(source.getText()));
+			sendBroadcast(intent);
+		}
+	}
+
 	public static void dumpAccessibilityNodeInfo(StringBuilder builder, String prefix, AccessibilityNodeInfo node) {
 		if (node == null) {
 			return;
@@ -540,9 +598,11 @@ public class CavanAccessibilityService extends AccessibilityService {
 			break;
 
 		case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
+			onWindowContentChanged(event);
 			break;
 
 		case AccessibilityEvent.TYPE_VIEW_CLICKED:
+			onViewClicked(event);
 			break;
 
 		case AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED:

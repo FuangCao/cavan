@@ -45,6 +45,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String ACTION_CODE_REMOVE = "cavan.intent.action.ACTION_CODE_REMOVE";
 	public static final String ACTION_CODE_COMMIT = "cavan.intent.action.ACTION_CODE_COMMIT";
 	public static final String ACTION_CODE_RECEIVED = "cavan.intent.action.ACTION_CODE_RECEIVED";
+	public static final String ACTION_CONTENT_RECEIVED = "cavan.intent.action.ACTION_CONTENT_RECEIVED";
 	public static final String ACTION_TEXT_RECEIVED = "cavan.intent.action.ACTION_TEXT_RECEIVED";
 	public static final String ACTION_WAN_UPDATED = "cavan.intent.action.ACTION_WAN_UPDATED";
 	public static final String ACTION_BRIDGE_UPDATED = "cavan.intent.action.ACTION_BRIDGE_UPDATED";
@@ -134,6 +135,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private Preference mPreferenceIpAddress;
 	private Preference mPreferenceInputMethodSelect;
 	private CheckBoxPreference mPreferenceFloatTime;
+	private CheckBoxPreference mPreferenceAutoUnlock;
 	private Preference mPreferencePermissionSettings;
 	private Preference mPreferenceMessageShow;
 	private ListPreference mPreferenceAutoCommit;
@@ -221,6 +223,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceInputMethodSelect = findPreference(KEY_INPUT_METHOD_SELECT);
 		mPreferenceLanTest = findPreference(KEY_LAN_TEST);
 		mPreferenceWanTest = findPreference(KEY_WAN_TEST);
+
+		mPreferenceAutoUnlock = (CheckBoxPreference) findPreference(KEY_AUTO_UNLOCK);
+		mPreferenceAutoUnlock.setOnPreferenceChangeListener(this);
 
 		mPreferenceMessageShow = findPreference(KEY_MESSAGE_SHOW);
 		mPreferenceMessageShow.setIntent(CavanMessageActivity.getIntent(this));
@@ -536,6 +541,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			int index = mPreferenceAutoCommit.findIndexOfValue((String) object);
 			if (index >= 0) {
 				mPreferenceAutoCommit.setSummary(mPreferenceAutoCommit.getEntries()[index]);
+			}
+		} else if (preference == mPreferenceAutoUnlock) {
+			if ((boolean) object) {
+				CavanAndroid.setLockScreenEnable(this, true);
 			}
 		}
 
