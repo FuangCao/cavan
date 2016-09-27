@@ -133,7 +133,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				break;
 
 			case MainActivity.ACTION_CONTENT_RECEIVED:
-				String title = intent.getStringExtra("title");
+				String desc = intent.getStringExtra("desc");
 				String content = intent.getStringExtra("content");
 				String pkgName = intent.getStringExtra("package");
 				boolean hasPrefix = intent.getBooleanExtra("hasPrefix", false);
@@ -142,7 +142,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 					pkgName = getPackageName();
 				}
 
-				notification = new RedPacketNotification(RedPacketListenerService.this, pkgName, content, title, hasPrefix);
+				notification = new RedPacketNotification(RedPacketListenerService.this, pkgName, content, desc, hasPrefix);
 				mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
 				break;
 			}

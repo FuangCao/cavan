@@ -69,11 +69,10 @@ public class CavanNotification {
 		mContent = content;
 	}
 
-	public CavanNotification(String packageName, String content, String title, boolean hasPrefix) {
+	public CavanNotification(String packageName, String content, boolean hasPrefix) {
 		mTimestamp = System.currentTimeMillis();
 		mPackageName = packageName;
 		mContent = content;
-		mTitle = title;
 
 		if (hasPrefix) {
 			int end = content.indexOf(':');

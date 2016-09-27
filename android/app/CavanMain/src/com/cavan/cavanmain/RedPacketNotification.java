@@ -115,6 +115,7 @@ public class RedPacketNotification extends CavanNotification {
 
 	private boolean mIsCode;
 	private boolean mNetShared;
+	private String mDescription;
 	private RedPacketListenerService mService;
 	private StatusBarNotification mNotification;
 
@@ -154,9 +155,10 @@ public class RedPacketNotification extends CavanNotification {
 		}
 	}
 
-	public RedPacketNotification(RedPacketListenerService service, String pkgName, String content, String title, boolean hasPrefix) {
-		super(pkgName, content, title, hasPrefix);
+	public RedPacketNotification(RedPacketListenerService service, String pkgName, String content, String desc, boolean hasPrefix) {
+		super(pkgName, content, hasPrefix);
 
+		mDescription = desc;
 		mService = service;
 		splitContent();
 		joinLines();
@@ -233,8 +235,8 @@ public class RedPacketNotification extends CavanNotification {
 			return mUserName;
 		}
 
-		if (mTitle != null) {
-			return mTitle;
+		if (mDescription != null) {
+			return mDescription;
 		}
 
 		CharSequence name = getApplicationName();

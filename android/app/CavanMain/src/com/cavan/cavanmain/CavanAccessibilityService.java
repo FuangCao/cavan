@@ -529,7 +529,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 				Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
 				intent.putExtra("package", source.getPackageName());
-				intent.putExtra("title", "QQ");
+				intent.putExtra("desc", "QQ消息盒子");
 				intent.putExtra("content", text);
 				intent.putExtra("hasPrefix", true);
 				sendBroadcast(intent);
@@ -559,7 +559,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		if (id.equals("com.tencent.mobileqq:id/chat_item_content_layout")) {
 			Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
 			intent.putExtra("package", source.getPackageName());
-			intent.putExtra("title", "用户点击");
+			intent.putExtra("desc", "用户点击");
 			intent.putExtra("content", CavanString.fromCharSequence(source.getText()));
 			sendBroadcast(intent);
 		}
