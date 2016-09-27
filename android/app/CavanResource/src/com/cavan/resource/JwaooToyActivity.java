@@ -135,6 +135,8 @@ public class JwaooToyActivity extends Activity {
 			mBleToy.disconnect();
 		}
 
+		System.exit(0);
+
 		super.onDestroy();
 	}
 }

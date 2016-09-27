@@ -112,14 +112,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/checkBoxBattEvent"
+        android:layout_below="@+id/checkBoxMotoEvent"
         android:text="@string/text_read_bd_addr" />
 
     <CheckBox
         android:id="@+id/checkBoxFactoryMode"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/buttonWriteBdAddr"
+        android:layout_below="@+id/checkBoxSensor"
         android:layout_alignLeft="@+id/checkBoxSensor"
         android:text="@string/text_factory_mode" />
 
@@ -149,5 +149,13 @@
         android:layout_alignBottom="@+id/buttonDisconnect"
         android:layout_toRightOf="@+id/buttonDisconnect"
         android:text="@string/text_shutdown" />
+
+    <CheckBox
+        android:id="@+id/checkBoxMotoEvent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/checkBoxBattEvent"
+        android:text="@string/text_moto_event_enable" />
 
 </RelativeLayout>

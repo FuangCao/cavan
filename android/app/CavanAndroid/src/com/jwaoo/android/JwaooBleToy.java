@@ -74,6 +74,8 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_BATT_EVENT_ENABLE = 61;
 	public static final byte JWAOO_TOY_CMD_SENSOR_ENABLE = 70;
 	public static final byte JWAOO_TOY_CMD_MOTO_SET_MODE = 80;
+	public static final byte JWAOO_TOY_CMD_MOTO_GET_MODE = 81;
+	public static final byte JWAOO_TOY_CMD_MOTO_EVENT_ENABLE = 82;
 	public static final byte JWAOO_TOY_CMD_KEY_CLICK_ENABLE = 90;
 	public static final byte JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE = 91;
 	public static final byte JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE = 92;
@@ -85,6 +87,8 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_EVT_KEY_STATE = 2;
 	public static final byte JWAOO_TOY_EVT_KEY_CLICK = 3;
 	public static final byte JWAOO_TOY_EVT_KEY_LONG_CLICK = 4;
+	public static final byte JWAOO_TOY_EVT_UPGRADE_COMPLETE = 5;
+	public static final byte JWAOO_TOY_EVT_MOTO_STATE_CHANGED = 6;
 
 	private byte mFlashCrc;
 
@@ -134,6 +138,14 @@ public class JwaooBleToy extends CavanBleGatt {
 		CavanAndroid.eLog("onKeyLongClicked: code = " + code);
 	}
 
+	protected void onMotoStateChanged(int mode, int level) {
+		CavanAndroid.eLog("onMotoStateChanged: mode = " + mode + ", level = " + level);
+	}
+
+	protected void onUpgradeComplete(boolean success) {
+		CavanAndroid.eLog("onUpgradeComplete: success = " + success);
+	}
+
 	protected void onEventReceived(byte[] event) {
 		if (event.length > 0) {
 			switch (event[0]) {
@@ -168,6 +180,18 @@ public class JwaooBleToy extends CavanBleGatt {
 			case JWAOO_TOY_EVT_KEY_LONG_CLICK:
 				if (event.length > 1) {
 					onKeyLongClicked(event[1]);
+				}
+				break;
+
+			case JWAOO_TOY_EVT_UPGRADE_COMPLETE:
+				if (event.length == 2) {
+					onUpgradeComplete(event[1] > 0);
+				}
+				break;
+
+			case JWAOO_TOY_EVT_MOTO_STATE_CHANGED:
+				if (event.length == 3) {
+					onMotoStateChanged(event[1], event[2]);
 				}
 				break;
 
@@ -439,6 +463,19 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mCommand.readBool(command);
 	}
 
+	public JwaooToyMotoMode getMotoMode() {
+		JwaooToyResponse response = mCommand.send(JWAOO_TOY_CMD_MOTO_GET_MODE);
+		if (response == null) {
+			return null;
+		}
+
+		return response.getMotoMode();
+	}
+
+	public boolean setMotoEventEnable(boolean enable) {
+		return mCommand.readBool(JWAOO_TOY_CMD_MOTO_EVENT_ENABLE, enable);
+	}
+
 	public boolean setFactoryModeEnable(boolean enable) {
 		return mCommand.readBool(JWAOO_TOY_CMD_FACTORY_ENABLE, enable);
 	}
@@ -622,6 +659,38 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	// ================================================================================
 
+	public static class JwaooToyMotoMode {
+
+		private int mMode;
+		private int mLevel;
+
+		public JwaooToyMotoMode(int mode, int level) {
+			mMode = mode;
+			mLevel = level;
+		}
+
+		public int getMode() {
+			return mMode;
+		}
+
+		public void setMode(int mode) {
+			mMode = mode;
+		}
+
+		public int getLevel() {
+			return mLevel;
+		}
+
+		public void setLevel(int level) {
+			mLevel = level;
+		}
+
+		@Override
+		public String toString() {
+			return "mode = " + mMode + ", level = " + mLevel;
+		}
+	}
+
 	public static class JwaooToyTestResult {
 
 		private int mTestValid;
@@ -751,6 +820,14 @@ public class JwaooBleToy extends CavanBleGatt {
 			}
 
 			return new JwaooToyTestResult(mBytes);
+		}
+
+		public JwaooToyMotoMode getMotoMode() {
+			if (getType() != JWAOO_TOY_RSP_DATA || length() != 4) {
+				return null;
+			}
+
+			return new JwaooToyMotoMode(mBytes[2], mBytes[3]);
 		}
 
 		public static boolean getBool(JwaooToyResponse response) {

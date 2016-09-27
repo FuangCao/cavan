@@ -286,7 +286,7 @@ public class CavanBleGatt {
 			mAutoConnCount++;
 
 			try {
-				wait(2000);
+				wait(3000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

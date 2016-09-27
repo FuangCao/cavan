@@ -54,6 +54,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private CheckBox mCheckBoxMultiClick;
 	private CheckBox mCheckBoxBatteryEvent;
 	private CheckBox mCheckBoxFactoryMode;
+	private CheckBox mCheckBoxMotoEvent;
 
 	private ProgressBar mProgressBar;
 	private EditText mEditTextBdAddr;
@@ -146,6 +147,9 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 		mCheckBoxBatteryEvent = (CheckBox) findViewById(R.id.checkBoxBattEvent);
 		mCheckBoxBatteryEvent.setOnCheckedChangeListener(this);
+
+		mCheckBoxMotoEvent = (CheckBox) findViewById(R.id.checkBoxMotoEvent);
+		mCheckBoxMotoEvent.setOnCheckedChangeListener(this);
 
 		mCheckBoxFactoryMode = (CheckBox) findViewById(R.id.checkBoxFactoryMode);
 		mCheckBoxFactoryMode.setOnCheckedChangeListener(this);
@@ -339,6 +343,11 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			return false;
 		}
 
+		if (mBleToy.setMotoEventEnable(mCheckBoxMotoEvent.isChecked()) == false && mBleToy.isCommandTimeout()) {
+			CavanAndroid.eLog("Failed to setMotoEventEnable");
+			return false;
+		}
+
 		if (mMotoMode > 0 || mMotoLevel > 0) {
 			if (setMotoMode() == false && mBleToy.isCommandTimeout()) {
 				return false;
@@ -385,6 +394,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 		case R.id.checkBoxFactoryMode:
 			mBleToy.setFactoryModeEnable(isChecked);
+			break;
+
+		case R.id.checkBoxMotoEvent:
+			mBleToy.setMotoEventEnable(isChecked);
 			break;
 		}
 	}
