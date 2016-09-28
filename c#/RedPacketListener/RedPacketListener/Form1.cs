@@ -17,7 +17,14 @@ namespace RedPacketListener {
     public partial class Form1 : Form {
 
         public const string RED_PACKET_PREFIX = "RedPacketCode: ";
-        public static Regex sRedPackageRegex = new Regex("支付宝.*口令.*[:：]([\\s\\w]+)");
+        public static Regex[] sRedPackageRegexs = {
+            new Regex("支\\s*付\\s*宝.*口\\s*令\\s*[:：]?([\\s\\d]+)"),
+            new Regex("支\\s*付\\s*宝.*红\\s*包\\s*[:：]?([\\s\\d]+)"),
+            new Regex("口\\s*令.*红\\s*包\\s*[:：]?([\\s\\d]+)"),
+            new Regex("红\\s*包.*口\\s*令\\s*[:：]?([\\s\\d]+)"),
+            new Regex("红\\s*包\\s*[:：]([\\s\\w]+)"),
+            new Regex("口\\s*令\\s*[:：]([\\s\\w]+)"),
+        };
 
         private delegate string GetClipboardTextCallback();
         private delegate void OnClipboardChangedCallback(string text);
@@ -27,6 +34,7 @@ namespace RedPacketListener {
         private Thread mClipThread;
         private bool mClipThreadRunning;
 
+        private UdpClient mUdpClient;
         private NetworkStream mStream;
         private Thread mNetworkThread;
         private bool mNetworkThreadRunning;
@@ -34,9 +42,11 @@ namespace RedPacketListener {
         public Form1() {
             InitializeComponent();
             loadConfig();
+            mUdpClient = new UdpClient("224.0.0.1", 9898);
         }
 
         ~Form1() {
+            mUdpClient.Close();
             disconnect();
         }
 
@@ -224,25 +234,43 @@ namespace RedPacketListener {
 
         private bool sendRedPacketCode(String code) {
             try {
+                byte[] bytes = Encoding.UTF8.GetBytes(RED_PACKET_PREFIX + code + "\n");
+
+                mUdpClient.Send(bytes, bytes.Length - 1);
+
                 if (mStream != null) {
-                    byte[] bytes = Encoding.UTF8.GetBytes(RED_PACKET_PREFIX + code + "\n");
                     mStream.Write(bytes, 0, bytes.Length);
                     listBoxCodes.Items.Add(code);
-                    return true;
                 }
+
+                mUdpClient.Send(bytes, bytes.Length - 1);
+
+                return true;
             } catch {
                 return false;
             }
-
-            return false;
         }
 
         private void onClipboardChanged(string text) {
+            List<string> codes = new List<string>();
+
             foreach (string line in text.Split(new char[] { '\n' })) {
-                Match match = sRedPackageRegex.Match(line);
-                if (match != null && match.Success) {
-                    sendRedPacketCode(match.Groups[1].Value);
+                foreach (Regex regex in sRedPackageRegexs) {
+                    Match match = regex.Match(line);
+
+                    while (match != null && match.Success) {
+                        string code = Regex.Replace(match.Groups[1].Value, "\\s+", "");
+                        if (codes.IndexOf(code) < 0) {
+                            codes.Add(code);
+                        }
+
+                        match = match.NextMatch();
+                    }
                 }
+            }
+
+            foreach (string code in codes) {
+                sendRedPacketCode(code);
             }
         }
 
@@ -255,11 +283,29 @@ namespace RedPacketListener {
             }
         }
 
-        private void buttonSend_Click(object sender, EventArgs e) {
+        private bool sendTextBoxCode() {
             string text = textBoxSend.Text;
-            if (text.Length > 0) {
-                sendRedPacketCode(text);
-            } else {
+            if (text == null) {
+                return false;
+            }
+
+            string code = Regex.Replace(text, "\\W+", "");
+            if (code.Length > 0) {
+                sendRedPacketCode(code);
+                return true;
+            }
+
+            return false;
+        }
+
+        private void textBoxSend_KeyPress(object sender, KeyPressEventArgs e) {
+            if (e.KeyChar == (char) Keys.Enter) {
+                sendTextBoxCode();
+            }
+        }
+
+        private void buttonSend_Click(object sender, EventArgs e) {
+            if (!sendTextBoxCode()) {
                 onClipboardChanged(getClipboardText());
             }
         }
@@ -271,7 +317,7 @@ namespace RedPacketListener {
         private void listBoxCodes_DoubleClick(object sender, EventArgs e) {
             object item = listBoxCodes.SelectedItem;
             if (item != null) {
-                sendRedPacketCode(listBoxCodes.SelectedItem.ToString());
+                sendRedPacketCode(item.ToString());
             }
         }
 
@@ -285,6 +331,13 @@ namespace RedPacketListener {
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e) {
             disconnect();
+        }
+
+        private void listBoxCodes_SelectedIndexChanged(object sender, EventArgs e) {
+            object item = listBoxCodes.SelectedItem;
+            if (item != null) {
+                textBoxSend.Text = item.ToString();
+            }
         }
     }
 }

@@ -107,6 +107,7 @@
             this.listBoxCodes.Name = "listBoxCodes";
             this.listBoxCodes.Size = new System.Drawing.Size(260, 220);
             this.listBoxCodes.TabIndex = 7;
+            this.listBoxCodes.SelectedIndexChanged += new System.EventHandler(this.listBoxCodes_SelectedIndexChanged);
             this.listBoxCodes.DoubleClick += new System.EventHandler(this.listBoxCodes_DoubleClick);
             // 
             // buttonClear
@@ -136,6 +137,7 @@
             this.textBoxSend.Name = "textBoxSend";
             this.textBoxSend.Size = new System.Drawing.Size(179, 21);
             this.textBoxSend.TabIndex = 10;
+            this.textBoxSend.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBoxSend_KeyPress);
             // 
             // buttonTest
             // 
