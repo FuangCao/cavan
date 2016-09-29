@@ -289,19 +289,20 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				return;
 			}
 
-			ClipDescription desc = clip.getDescription();
-			if (desc != null && CLIP_LABEL.equals(desc.getLabel())) {
-				return;
-			}
-
 			CharSequence text = clip.getItemAt(0).coerceToText(this);
 			if (text == null || text.equals(mClipText)) {
 				return;
 			}
 
+			mClipText = text;
+
+			ClipDescription desc = clip.getDescription();
+			if (desc != null && CLIP_LABEL.equals(desc.getLabel())) {
+				return;
+			}
+
 			CavanAndroid.eLog("clip = " + text);
 
-			mClipText = text;
 			RedPacketNotification notification = new RedPacketNotification(this, "剪切板", text.toString(), false, false);
 			mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
 		}
