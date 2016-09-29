@@ -37,6 +37,7 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.cavanjni.CavanServicePreference;
 import com.cavan.java.CavanJava;
+import com.cavan.java.CavanString;
 
 public class MainActivity extends PreferenceActivity implements OnPreferenceChangeListener {
 
@@ -55,6 +56,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_AUTO_COMMIT = "auto_commit";
 	public static final String KEY_AUTO_UNPACK = "auto_unpack";
 	public static final String KEY_LISTEN_CLIP = "listen_clip";
+	public static final String KEY_LISTEN_CLICK = "listen_click";
 	public static final String KEY_FLOAT_TIMER = "float_timer";
 	public static final String KEY_LAN_SHARE = "lan_share";
 	public static final String KEY_LAN_TEST = "lan_test";
@@ -63,6 +65,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_WAN_IP = "wan_ip";
 	public static final String KEY_WAN_PORT = "wan_port";
 	public static final String KEY_MESSAGE_SHOW = "message_show";
+	public static final String KEY_COMMIT_AHEAD = "commit_ahead";
+	public static final String KEY_AUTO_OPEN_APP = "auto_open_app";
 	public static final String KEY_INPUT_METHOD_SELECT = "input_method_select";
 	public static final String KEY_PERMISSION_SETTINGS = "permission_settings";
 	public static final String KEY_RED_PACKET_CODE_SEND = "red_packet_code_send";
@@ -95,6 +99,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 	public static boolean isListenClipEnabled(Context context) {
 		return CavanAndroid.isPreferenceEnabled(context, KEY_LISTEN_CLIP);
+	}
+
+	public static boolean isListenClickEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_LISTEN_CLICK);
 	}
 
 	public static boolean isLanShareEnabled(Context context) {
@@ -131,6 +139,24 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		return -1;
 	}
 
+	public static boolean isAutoOpenAppEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_OPEN_APP);
+	}
+
+	public static int getCommitAhead(Context context) {
+		String text = CavanAndroid.getPreference(context, KEY_COMMIT_AHEAD, null);
+
+		try {
+			if (text != null) {
+				return Integer.parseInt(text);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return 5;
+	}
+
 	private File mFileBin;
 	private Preference mPreferenceIpAddress;
 	private Preference mPreferenceInputMethodSelect;
@@ -153,6 +179,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private Preference mPreferenceWanTest;
 	private CheckBoxPreference mPreferenceTcpBridge;
 	private EditTextPreference mPreferenceTcpBridgeSetting;
+	private ListPreference mPreferenceCommitAhead;
 
 	private IFloatMessageService mFloatMessageService;
 	private ServiceConnection mFloatMessageConnection = new ServiceConnection() {
@@ -292,6 +319,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceTcpDd = (CavanServicePreference) findPreference(KEY_TCP_DD);
 		mPreferenceWebProxy = (CavanServicePreference) findPreference(KEY_WEB_PROXY);
 		mPreferenceTcpRepeater = (CavanServicePreference) findPreference(KEY_TCP_REPEATER);
+
+		mPreferenceCommitAhead = (ListPreference) findPreference(KEY_COMMIT_AHEAD);
+		mPreferenceCommitAhead.setSummary(mPreferenceCommitAhead.getEntry());
+		mPreferenceCommitAhead.setOnPreferenceChangeListener(this);
 
 		updateIpAddressStatus();
 
@@ -481,13 +512,16 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		if (preference == mPreferenceFloatTime) {
 			return setDesktopFloatTimerEnable((boolean) object);
 		} else if (preference == mPreferenceRedPacketCodeSend) {
-			CharSequence text = (String) object;
-			if (text != null && text.length() > 0) {
-				Intent intent = new Intent(ACTION_CODE_RECEIVED);
-				intent.putExtra("type", "手动输入");
-				intent.putExtra("code", text);
-				intent.putExtra("shared", false);
-				sendBroadcast(intent);
+			String text = (String) object;
+			if (text != null) {
+				String code = text.replaceAll("\\W+", CavanString.EMPTY_STRING);
+				if (code.length() > 0) {
+					Intent intent = new Intent(ACTION_CODE_RECEIVED);
+					intent.putExtra("type", "手动输入");
+					intent.putExtra("code", code);
+					intent.putExtra("shared", false);
+					sendBroadcast(intent);
+				}
 			}
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
 			if (!CavanAndroid.isNotificationListenerEnabled(this, RedPacketListenerService.class)) {
@@ -537,10 +571,11 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 					e.printStackTrace();
 				}
 			}
-		} else if (preference == mPreferenceAutoCommit) {
-			int index = mPreferenceAutoCommit.findIndexOfValue((String) object);
+		} else if (preference == mPreferenceAutoCommit || preference == mPreferenceCommitAhead) {
+			ListPreference listPreference = (ListPreference) preference;
+			int index = listPreference.findIndexOfValue((String) object);
 			if (index >= 0) {
-				mPreferenceAutoCommit.setSummary(mPreferenceAutoCommit.getEntries()[index]);
+				listPreference.setSummary(listPreference.getEntries()[index]);
 			}
 		} else if (preference == mPreferenceAutoUnlock) {
 			if ((boolean) object) {

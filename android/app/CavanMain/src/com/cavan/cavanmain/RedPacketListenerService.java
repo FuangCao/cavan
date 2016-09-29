@@ -224,6 +224,10 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	}
 
 	public static boolean startAlipayActivity(Context context) {
+		if (!MainActivity.isAutoOpenAppEnabled(context)) {
+			return false;
+		}
+
 		Intent intent = context.getPackageManager().getLaunchIntentForPackage("com.eg.android.AlipayGphone");
 		if (intent == null) {
 			return false;

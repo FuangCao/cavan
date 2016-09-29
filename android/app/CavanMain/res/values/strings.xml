@@ -23,7 +23,7 @@
     <string name="red_packet_notify">红包提醒</string>
     <string name="red_packet_notify_test">红包提醒测试</string>
     <string name="red_packet_notify_ringtone">红包提示音</string>
-    <string name="text_permission_settings">系统权限设置</string>
+    <string name="text_permission_settings">权限设置</string>
     <string name="text_test">测试</string>
     <string name="text_copy">复制</string>
     <string name="text_filter">筛选</string>
@@ -41,9 +41,12 @@
     <string name="text_accessibility_settings">辅助功能设置</string>
     <string name="cavan_input_method">曹福昂输入法</string>
     <string name="text_input_method_select">输入法选择</string>
+    <string name="text_commit_ahead">提前提交</string>
     <string name="text_auto_unlock">自动解锁</string>
     <string name="text_auto_commit">自动提交</string>
     <string name="text_auto_unpack">自动拆开</string>
+    <string name="text_listen_click">监听点击</string>
+    <string name="text_auto_open_app">自动打开应用</string>
     <string name="text_auto_commit_after"><xliff:g>%1$d</xliff:g> 秒后自动提交</string>
     <string name="text_complete_code">已完成口令：<xliff:g>%1$s</xliff:g></string>
     <string name="text_ignore_invalid_code">忽略非法的口令：<xliff:g>%1$s</xliff:g></string>
@@ -73,35 +76,62 @@
     <string name="text_ime_fault_please_manual_commit">没有切换输入法，请手动提交</string>
     <string name="text_commit_too_much_please_manual_commit">提交次数过多，请手动提交</string>
     <string name="text_auto_commit_not_enable_please_manual_commit">自动提交没有打开，请手动提交</string>
-   <string name="text_auto_commit_count">提交次数：<xliff:g>%1$s</xliff:g></string>
+    <string name="text_auto_commit_count">提交次数：<xliff:g>%1$s</xliff:g></string>
     <string name="text_test_sucess">测试成功</string>
     <string name="text_send">发送</string>
     <string name="text_red_packet_code_send">红包口令发送</string>
+
     <string-array name="text_auto_entries">
-        <item >关闭</item>
-        <item >提交1次</item>
-        <item >提交2次</item>
-        <item >提交3次</item>
-        <item >提交4次</item>
-        <item >提交5次</item>
-        <item >提交6次</item>
-        <item >提交7次</item>
-        <item >提交8次</item>
-        <item >提交9次</item>
-        <item >提交10次</item>
+        <item>关闭</item>
+        <item>提交1次</item>
+        <item>提交2次</item>
+        <item>提交3次</item>
+        <item>提交4次</item>
+        <item>提交5次</item>
+        <item>提交6次</item>
+        <item>提交7次</item>
+        <item>提交8次</item>
+        <item>提交9次</item>
+        <item>提交10次</item>
     </string-array>
     <string-array name="text_auto_values">
-        <item >0</item>
-        <item >1</item>
-        <item >2</item>
-        <item >3</item>
-        <item >4</item>
-        <item >5</item>
-        <item >6</item>
-        <item >7</item>
-        <item >8</item>
-        <item >9</item>
-        <item >10</item>
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+    </string-array>
+    <string-array name="text_ahead_entries">
+        <item>准点</item>
+        <item>提前1秒</item>
+        <item>提前2秒</item>
+        <item>提前3秒</item>
+        <item>提前4秒</item>
+        <item>提前5秒</item>
+        <item>提前6秒</item>
+        <item>提前7秒</item>
+        <item>提前8秒</item>
+        <item>提前9秒</item>
+        <item>提前10秒</item>
+    </string-array>
+    <string-array name="text_ahead_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
     </string-array>
 
 </resources>

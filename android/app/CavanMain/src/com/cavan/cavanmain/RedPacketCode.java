@@ -52,6 +52,10 @@ public class RedPacketCode implements Parcelable {
 		return 0;
 	}
 
+	public void alignTime(long align, long ahead) {
+		mTime = ((System.currentTimeMillis() + (align - 1)) / align) * align - ahead;
+	}
+
 	public String getCode() {
 		return mCode;
 	}

@@ -313,17 +313,32 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 		case "com.alipay.mobile.nebulacore.ui.H5Activity":
 			if (mCode != null) {
-				mCode.setRepeatable();
-				mCode.updateTime();
+				if (mCode.isRepeatable()) {
+					mCode.updateTime();
+				} else {
+					mCode.alignTime(300000, MainActivity.getCommitAhead(this) * 1000);
+					mCode.setRepeatable();
+				}
 			}
 
 			performBackAction(root, true);
 			break;
 
+		case "com.alipay.mobile.commonui.widget.APNoticePopDialog":
+			mAutoStartAlipay = false;
+		case "com.alipay.mobile.security.login.ui.AlipayUserLoginActivity":
+			break;
+
 		default:
-			if (!mClassName.startsWith("com.alipay.mobile.framework.app.ui.DialogHelper")) {
-				performBackAction(root, true);
+			if (mClassName.endsWith("Dialog")) {
+				break;
 			}
+
+			if (mClassName.startsWith("com.alipay.mobile.framework.app.ui.DialogHelper")) {
+				break;
+			}
+
+			performBackAction(root, true);
 		}
 
 		return false;
@@ -588,9 +603,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	@Override
 	public void onAccessibilityEvent(AccessibilityEvent event) {
-		// CavanAndroid.eLog("=============================================================================");
-		// CavanAndroid.eLog("event = " + event);
-		// CavanAndroid.eLog(dumpAccessibilityNodeInfo(event.getSource()));
+		/* CavanAndroid.eLog("=============================================================================");
+		CavanAndroid.eLog("event = " + event);
+		CavanAndroid.eLog(dumpAccessibilityNodeInfo(event.getSource())); */
 
 		switch (event.getEventType()) {
 		case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
@@ -602,7 +617,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 			break;
 
 		case AccessibilityEvent.TYPE_VIEW_CLICKED:
-			onViewClicked(event);
+			if (MainActivity.isListenClickEnabled(this)) {
+				onViewClicked(event);
+			}
 			break;
 
 		case AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED:

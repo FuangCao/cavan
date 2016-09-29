@@ -11,6 +11,9 @@
 	<Preference android:key="message_show"
 	    android:title="@string/text_message_show" />
 
+	<Preference android:key="permission_settings"
+	    android:title="@string/text_permission_settings" />
+
 	<Preference android:key="input_method_select"
 	    android:title="@string/text_input_method_select" />
 
@@ -26,12 +29,16 @@
 	    android:persistent="true"
 	    android:title="@string/text_red_packet_code_send" />
 
-	<Preference android:key="permission_settings"
-	    android:title="@string/text_permission_settings" />
-
-	<CheckBoxPreference android:key="float_timer"
+	<CheckBoxPreference android:key="auto_open_app"
 	    android:persistent="true"
-	    android:title="@string/desktop_float_timer" />
+	    android:title="@string/text_auto_open_app" />
+
+	<ListPreference android:key="commit_ahead"
+	    android:persistent="true"
+		android:entries="@array/text_ahead_entries"
+		android:entryValues="@array/text_ahead_values"
+		android:defaultValue="5"
+	    android:title="@string/text_commit_ahead" />
 
 	<ListPreference android:key="auto_commit"
 	    android:persistent="true"
@@ -45,7 +52,12 @@
 	    android:title="@string/text_auto_unlock" />
 
 	<CheckBoxPreference android:key="auto_unpack"
+	    android:persistent="true"
 	    android:title="@string/text_auto_unpack" />
+
+	<CheckBoxPreference android:key="listen_click"
+	    android:persistent="true"
+	    android:title="@string/text_listen_click" />
 
 	<CheckBoxPreference android:key="listen_clip"
 	    android:persistent="true"
@@ -72,6 +84,10 @@
 	<EditTextPreference android:key="wan_port"
 	    android:persistent="true"
 	    android:title="@string/text_wan_port" />
+
+	<CheckBoxPreference android:key="float_timer"
+	    android:persistent="true"
+	    android:title="@string/desktop_float_timer" />
 
 	<CheckBoxPreference android:key="tcp_bridge"
 	    android:persistent="true"
