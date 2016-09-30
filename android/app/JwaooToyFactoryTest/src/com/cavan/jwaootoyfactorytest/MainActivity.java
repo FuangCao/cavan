@@ -303,12 +303,22 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		@Override
 		public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 			mRootView = inflater.inflate(getLayoutResource(), container, false);
+			return mRootView;
+		}
+
+		@Override
+		public void onStart() {
 			if (mRootView != null && doInitialize()) {
 				mInitilized = true;
-				return mRootView;
 			}
 
-			return null;
+			super.onStart();
+		}
+
+		@Override
+		public void onStop() {
+			mInitilized = false;
+			super.onStop();
 		}
 	}
 
@@ -430,7 +440,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		}
 
 		public void setPassEnable() {
-			CavanAndroid.dumpstack();
 			mButtonPass.setVisibility(View.VISIBLE);
 		}
 	}

@@ -8,28 +8,33 @@ import android.widget.TextView;
 public class JwaooSensorTestView extends TextView {
 
 	private boolean mPassed;
+	private double mValueMin;
+	private double mValueMax;
 	private double mDifferenceMin;
-	private double mValueMin = Double.MAX_VALUE;
-	private double mValueMax = Double.MIN_VALUE;
 
 	public JwaooSensorTestView(Context context) {
 		super(context);
+		initValues();
 	}
 
 	public JwaooSensorTestView(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		initValues();
 	}
 
 	public JwaooSensorTestView(Context context, AttributeSet attrs, int defStyleAttr) {
 		super(context, attrs, defStyleAttr);
+		initValues();
 	}
 
 	public JwaooSensorTestView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
 		super(context, attrs, defStyleAttr, defStyleRes);
+		initValues();
 	}
 
 	public void setDifferenceMin(double min) {
 		mDifferenceMin = min;
+		initValues();
 	}
 
 	public double getDifference() {
@@ -38,6 +43,12 @@ public class JwaooSensorTestView extends TextView {
 
 	public boolean isPassed() {
 		return mPassed;
+	}
+
+	public void initValues() {
+		mPassed = false;
+		mValueMin = Double.MAX_VALUE;
+		mValueMax = Double.MIN_VALUE;
 	}
 
 	public boolean putValueValue(double value) {
