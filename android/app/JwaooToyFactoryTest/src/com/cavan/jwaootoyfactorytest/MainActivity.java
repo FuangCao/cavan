@@ -55,7 +55,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 	private TestItemFragment[] mTestItemFragmanets = {
 		new ButtonTestFragment(0),
-		new CapacityTestFragment(1),
+		new DepthSensorTestFragment(1),
 		new GsensorTestFragment(2),
 		new ChargeTestFragment(3),
 		new LedTestFragment(4),
@@ -558,40 +558,40 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		}
 	}
 
-	public class CapacityTestFragment extends SensorTestFragment {
+	public class DepthSensorTestFragment extends SensorTestFragment {
 
-		public CapacityTestFragment(int index) {
+		public DepthSensorTestFragment(int index) {
 			super(index);
 		}
 
 		@Override
 		protected int getNameResource() {
-			return R.string.test_item_capacity_sensor;
+			return R.string.test_item_depth_sensor;
 		}
 
 		@Override
 		protected int getLayoutResource() {
-			if (mBleToy.getDeviveId() == JwaooBleToy.DEVICE_ID_K100) {
-				return R.layout.capacity_test_k100;
+			if (mBleToy.getDeviveId() == JwaooBleToy.DEVICE_ID_K101) {
+				return R.layout.depth_sensor_test_k101;
 			}
 
-			return R.layout.capacity_test_k101;
+			return R.layout.depth_sensor_test_k100;
 		}
 
 		@Override
 		protected boolean doInitialize() {
-			if (mBleToy.getDeviveId() == JwaooBleToy.DEVICE_ID_K100) {
+			if (mBleToy.getDeviveId() == JwaooBleToy.DEVICE_ID_K101) {
 				mTestViews = new JwaooSensorTestView[] {
 					(JwaooSensorTestView) findViewById(R.id.capacityView1),
 					(JwaooSensorTestView) findViewById(R.id.capacityView2),
 					(JwaooSensorTestView) findViewById(R.id.capacityView3),
-					(JwaooSensorTestView) findViewById(R.id.capacityView4),
 				};
 			} else {
 				mTestViews = new JwaooSensorTestView[] {
 					(JwaooSensorTestView) findViewById(R.id.capacityView1),
 					(JwaooSensorTestView) findViewById(R.id.capacityView2),
 					(JwaooSensorTestView) findViewById(R.id.capacityView3),
+					(JwaooSensorTestView) findViewById(R.id.capacityView4),
 				};
 			}
 
