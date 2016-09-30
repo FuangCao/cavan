@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal" >
+
+    <com.cavan.jwaootoyfactorytest.JwaooSensorTestView
+        android:id="@+id/capacityView1"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:layout_margin="1dp"
+        android:layout_weight="0.25"
+        android:background="#000000"
+        android:gravity="center_vertical|center_horizontal"
+        android:textColor="#ffffff" />
+
+    <com.cavan.jwaootoyfactorytest.JwaooSensorTestView
+        android:id="@+id/capacityView2"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:layout_margin="1dp"
+        android:layout_weight="0.25"
+        android:background="#000000"
+        android:gravity="center_vertical|center_horizontal"
+        android:textColor="#ffffff" />
+
+    <com.cavan.jwaootoyfactorytest.JwaooSensorTestView
+        android:id="@+id/capacityView3"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:layout_margin="1dp"
+        android:layout_weight="0.25"
+        android:background="#000000"
+        android:gravity="center_vertical|center_horizontal"
+        android:textColor="#ffffff" />
+
+    <com.cavan.jwaootoyfactorytest.JwaooSensorTestView
+        android:id="@+id/capacityView4"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:layout_margin="1dp"
+        android:layout_marginRight="2dp"
+        android:layout_weight="0.25"
+        android:background="#000000"
+        android:gravity="center_vertical|center_horizontal"
+        android:textColor="#ffffff" />
+
+</LinearLayout>

@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-	<com.cavan.jwaootoyfactorytest.JwaooTestButton
+	<com.cavan.jwaootoyfactorytest.JwaooKeyTestView
         android:id="@+id/buttonKey0"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -11,7 +11,7 @@
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="20dp" />
 
-	<com.cavan.jwaootoyfactorytest.JwaooTestButton
+	<com.cavan.jwaootoyfactorytest.JwaooKeyTestView
         android:id="@+id/buttonKey1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -19,14 +19,14 @@
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="20dp" />
 
-    <com.cavan.jwaootoyfactorytest.JwaooTestButton
+    <com.cavan.jwaootoyfactorytest.JwaooKeyTestView
         android:id="@+id/buttonKey2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true" />
 
-    <com.cavan.jwaootoyfactorytest.JwaooTestButton
+    <com.cavan.jwaootoyfactorytest.JwaooKeyTestView
         android:id="@+id/buttonKey3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

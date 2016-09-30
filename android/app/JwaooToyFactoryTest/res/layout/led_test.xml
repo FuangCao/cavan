@@ -1,20 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical" >
-
-    <CheckBox
-        android:id="@+id/checkBoxLedBattery"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/led_battery_state" />
+    android:layout_height="match_parent" >
 
     <CheckBox
         android:id="@+id/checkBoxLedBluetooth"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/checkBoxLedBattery"
+        android:layout_below="@+id/checkBoxLedBattery"
+        android:layout_marginTop="50dp"
         android:checked="true"
         android:text="@string/led_bluetooth_state" />
 
-</LinearLayout>
+    <CheckBox
+        android:id="@+id/checkBoxLedBattery"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="100dp"
+        android:text="@string/led_battery_state" />
+
+</RelativeLayout>

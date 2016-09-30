@@ -5,25 +5,25 @@ import android.graphics.Color;
 import android.util.AttributeSet;
 import android.widget.Button;
 
-public class JwaooTestButton extends Button {
+public class JwaooKeyTestView extends Button {
 
 	private String mTextRaw;
 	private int mPressCount;
 	private boolean mPressed;
 
-	public JwaooTestButton(Context context) {
+	public JwaooKeyTestView(Context context) {
 		super(context);
 	}
 
-	public JwaooTestButton(Context context, AttributeSet attrs) {
+	public JwaooKeyTestView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 	}
 
-	public JwaooTestButton(Context context, AttributeSet attrs, int defStyleAttr) {
+	public JwaooKeyTestView(Context context, AttributeSet attrs, int defStyleAttr) {
 		super(context, attrs, defStyleAttr);
 	}
 
-	public JwaooTestButton(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+	public JwaooKeyTestView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
 		super(context, attrs, defStyleAttr, defStyleRes);
 	}
 

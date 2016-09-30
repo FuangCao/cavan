@@ -56,9 +56,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	private TestItemFragment[] mTestItemFragmanets = {
 		new ButtonTestFragment(0),
 		new CapacityTestFragment(1),
-		new ChargeTestFragment(2),
-		new LedTestFragment(3),
-		new MotoTestFragment(4),
+		new GsensorTestFragment(2),
+		new ChargeTestFragment(3),
+		new LedTestFragment(4),
+		new MotoTestFragment(5),
 	};
 
 	public void setTestItem(int item) {
@@ -429,13 +430,14 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		}
 
 		public void setPassEnable() {
+			CavanAndroid.dumpstack();
 			mButtonPass.setVisibility(View.VISIBLE);
 		}
 	}
 
 	public class ButtonTestFragment extends TestItemFragment {
 
-		private JwaooTestButton[] mButtons;
+		private JwaooKeyTestView[] mButtons;
 
 		public ButtonTestFragment(int index) {
 			super(index);
@@ -453,11 +455,11 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		@Override
 		protected boolean doInitialize() {
-			mButtons = new JwaooTestButton[] {
-				(JwaooTestButton) findViewById(R.id.buttonKey0),
-				(JwaooTestButton) findViewById(R.id.buttonKey1),
-				(JwaooTestButton) findViewById(R.id.buttonKey2),
-				(JwaooTestButton) findViewById(R.id.buttonKey3),
+			mButtons = new JwaooKeyTestView[] {
+				(JwaooKeyTestView) findViewById(R.id.buttonKey0),
+				(JwaooKeyTestView) findViewById(R.id.buttonKey1),
+				(JwaooKeyTestView) findViewById(R.id.buttonKey2),
+				(JwaooKeyTestView) findViewById(R.id.buttonKey3),
 			};
 
 			CharSequence[] texts = getResources().getTextArray(R.array.text_keys);
@@ -470,7 +472,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		}
 
 		private boolean isTestPass() {
-			for (JwaooTestButton button : mButtons) {
+			for (JwaooKeyTestView button : mButtons) {
 				if (button.isTestFail()) {
 					return false;
 				}
@@ -498,33 +500,34 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		}
 	}
 
-	public class CapacityTestFragment extends TestItemFragment {
+	public abstract class SensorTestFragment extends TestItemFragment {
 
-		private TextView[] mCapacityViews;
+		protected JwaooSensorTestView[] mTestViews;
 
-		public CapacityTestFragment(int index) {
+		protected abstract void onSensorDataReceived(JwaooToySensor sensor);
+
+		public SensorTestFragment(int index) {
 			super(index);
 		}
 
-		@Override
-		protected int getNameResource() {
-			return R.string.test_item_capacity_sensor;
+		public boolean isPassed() {
+			for (int i = mTestViews.length - 1; i >= 0; i--) {
+				if (!mTestViews[i].isPassed()) {
+					return false;
+				}
+			}
+
+			return true;
 		}
 
-		@Override
-		protected int getLayoutResource() {
-			return R.layout.capacity_test;
+		public void setDifferenceMin(double min) {
+			for (int i = mTestViews.length - 1; i >= 0; i--) {
+				mTestViews[i].setDifferenceMin(min);
+			}
 		}
 
 		@Override
 		protected boolean doInitialize() {
-			mCapacityViews = new TextView[] {
-				(TextView) findViewById(R.id.textViewCapacity1),
-				(TextView) findViewById(R.id.textViewCapacity2),
-				(TextView) findViewById(R.id.textViewCapacity3),
-				(TextView) findViewById(R.id.textViewCapacity4),
-			};
-
 			return mBleToy.setSensorEnable(true, 30);
 		}
 
@@ -537,22 +540,101 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		@Override
 		protected void handleMessage(Message msg) {
 			if (msg.what == MSG_SENSOR_DATA) {
-				JwaooToySensor sensor = (JwaooToySensor) msg.obj;
-				double[] capacitys = sensor.getCapacitys();
+				onSensorDataReceived((JwaooToySensor) msg.obj);
 
-				for (int i = capacitys.length - 1; i >= 0; i--) {
-					int color;
-
-					if (capacitys[i] < JwaooToySensor.CAPACITY_MAX * 2 / 3) {
-						color = Color.GRAY;
-					} else {
-						color = Color.GREEN;
-					}
-
-					mCapacityViews[i].setText(String.format("%7.2f", capacitys[i]));
-					mCapacityViews[i].setBackgroundColor(color);
+				if (isPassed()) {
+					gotoNextTest(true);
 				}
 			}
+		}
+	}
+
+	public class CapacityTestFragment extends SensorTestFragment {
+
+		public CapacityTestFragment(int index) {
+			super(index);
+		}
+
+		@Override
+		protected int getNameResource() {
+			return R.string.test_item_capacity_sensor;
+		}
+
+		@Override
+		protected int getLayoutResource() {
+			if (mBleToy.getDeviveId() == JwaooBleToy.DEVICE_ID_K100) {
+				return R.layout.capacity_test_k100;
+			}
+
+			return R.layout.capacity_test_k101;
+		}
+
+		@Override
+		protected boolean doInitialize() {
+			if (mBleToy.getDeviveId() == JwaooBleToy.DEVICE_ID_K100) {
+				mTestViews = new JwaooSensorTestView[] {
+					(JwaooSensorTestView) findViewById(R.id.capacityView1),
+					(JwaooSensorTestView) findViewById(R.id.capacityView2),
+					(JwaooSensorTestView) findViewById(R.id.capacityView3),
+					(JwaooSensorTestView) findViewById(R.id.capacityView4),
+				};
+			} else {
+				mTestViews = new JwaooSensorTestView[] {
+					(JwaooSensorTestView) findViewById(R.id.capacityView1),
+					(JwaooSensorTestView) findViewById(R.id.capacityView2),
+					(JwaooSensorTestView) findViewById(R.id.capacityView3),
+				};
+			}
+
+			setDifferenceMin(30);
+
+			return super.doInitialize();
+		}
+
+		@Override
+		protected void onSensorDataReceived(JwaooToySensor sensor) {
+			double[] capacitys = sensor.getCapacitys();
+
+			for (int i = mTestViews.length - 1; i >= 0; i--) {
+				mTestViews[i].putValueValue(capacitys[i]);
+			}
+		}
+	}
+
+	public class GsensorTestFragment extends SensorTestFragment {
+
+		public GsensorTestFragment(int index) {
+			super(index);
+		}
+
+		@Override
+		protected int getNameResource() {
+			return R.string.test_item_accel_sensor;
+		}
+
+		@Override
+		protected int getLayoutResource() {
+			return R.layout.gsensor_test;
+		}
+
+		@Override
+		protected boolean doInitialize() {
+			mTestViews = new JwaooSensorTestView[] {
+				(JwaooSensorTestView) findViewById(R.id.gsensorView1),
+				(JwaooSensorTestView) findViewById(R.id.gsensorView2),
+				(JwaooSensorTestView) findViewById(R.id.gsensorView3),
+			};
+
+			setDifferenceMin(18);
+
+			return super.doInitialize();
+		}
+
+		@Override
+		protected void onSensorDataReceived(JwaooToySensor sensor) {
+			mTestViews[0].putValueValue(sensor.getAxisX());
+			mTestViews[1].putValueValue(sensor.getAxisY());
+			mTestViews[2].putValueValue(sensor.getAxisZ());
 		}
 	}
 
