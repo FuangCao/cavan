@@ -288,26 +288,26 @@ public class RedPacketNotification extends CavanNotification {
 	}
 
 	public static boolean isRedPacketWordCode(String code) {
-		int found = 0;
-		int length = code.length();
+		int number_count = 0;
+		int chinese_count = 0;
 
-		for (int i = 0; i < length; i++) {
-			if (CavanString.isChineseChar(code.charAt(i))) {
-				found++;
+		for (int i = code.length() - 1; i >= 0; i--) {
+			char c = code.charAt(i);
+
+			if (CavanJava.isDigit(c)) {
+				if (++number_count > 6) {
+					return false;
+				}
+			} else {
+				number_count = 0;
+
+				if (CavanString.isChineseChar(c)) {
+					chinese_count++;
+				}
 			}
 		}
 
-		if (found == 0) {
-			return false;
-		}
-
-		/* length += found;
-
-		if (length < 6 || length > 20) {
-			return false;
-		} */
-
-		return true;
+		return (chinese_count > 0);
 	}
 
 	public List<String> getRedPacketCodes(String line, Pattern[] patterns, List<String> codes, boolean strip) {

@@ -403,8 +403,8 @@ public class FloatMessageService extends FloatWidowService {
 
 	public void updateNetworkConnState() {
 		NetworkInfo info = mConnectivityManager.getActiveNetworkInfo();
-		mNetworkConnected = (info != null && info.isConnected());
 
+		mNetworkConnected = (info != null && info.isAvailable());
 		mHandler.sendEmptyMessage(MSG_TCP_SERVICE_UPDATED);
 		mHandler.sendEmptyMessage(MSG_TCP_BRIDGE_UPDATED);
 	}
