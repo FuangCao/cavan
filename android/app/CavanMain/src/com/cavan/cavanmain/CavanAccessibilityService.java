@@ -45,6 +45,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private long mCommitTime;
 	private boolean mAutoStartAlipay;
 
+	private long mWindowStartTime;
 	private String mClassName = CavanString.EMPTY_STRING;
 	private String mPackageName = CavanString.EMPTY_STRING;
 
@@ -178,6 +179,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 	};
 
+	private long getWindowTimeConsume() {
+		return System.currentTimeMillis() - mWindowStartTime;
+	}
+
 	public static AccessibilityNodeInfo findAccessibilityNodeInfoByText(AccessibilityNodeInfo root, String text) {
 		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(text);
 		if (nodes == null) {
@@ -221,17 +226,34 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return true;
 	}
 
-	private void performBackAction(AccessibilityNodeInfo root, boolean force) {
-		if (mCodeCount > 0) {
-			List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId("com.alipay.mobile.ui:id/title_bar_back_button");
-			if (nodes != null && nodes.size() > 0) {
-				for (AccessibilityNodeInfo node : nodes) {
-					node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-				}
-			} else if (force) {
-				performGlobalAction(GLOBAL_ACTION_BACK);
-			}
+	private boolean performBackAction(AccessibilityNodeInfo root, String backViewId, boolean force) {
+		if (mCodeCount <= 0) {
+			return false;
 		}
+
+		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(backViewId);
+		if (nodes != null && nodes.size() > 0) {
+			for (AccessibilityNodeInfo node : nodes) {
+				node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+			}
+
+			return true;
+		}
+
+		if (force) {
+			performGlobalAction(GLOBAL_ACTION_BACK);
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean performBackAction(AccessibilityNodeInfo root, boolean force) {
+		return performBackAction(root, "com.alipay.mobile.ui:id/title_bar_back_button", force);
+	}
+
+	private boolean performBackActionH5(AccessibilityNodeInfo root) {
+		return performBackAction(root, "com.alipay.mobile.nebula:id/h5_tv_nav_back", false);
 	}
 
 	private boolean onAccessibilityEventMM(AccessibilityEvent event) {
@@ -321,7 +343,13 @@ public class CavanAccessibilityService extends AccessibilityService {
 				}
 			}
 
-			performBackAction(root, true);
+			long time = getWindowTimeConsume();
+
+			CavanAndroid.eLog("getWindowTimeConsume = " + time);
+
+			if (time > 800) {
+				performBackActionH5(root);
+			}
 			break;
 
 		case "com.alipay.mobile.commonui.widget.APNoticePopDialog":
@@ -485,6 +513,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	private void onWindowStateChanged(AccessibilityEvent event) {
+		mWindowStartTime = System.currentTimeMillis();
 		mClassName = event.getClassName().toString();
 		mPackageName = event.getPackageName().toString();
 
