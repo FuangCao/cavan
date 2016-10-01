@@ -102,6 +102,18 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		setTestItem(mAutoTestEnable ? (mTestItem + 1) : -1);
 	}
 
+	public void setPassEnable() {
+		mButtonPass.setVisibility(View.VISIBLE);
+	}
+
+	public void setTestComplete(boolean pass) {
+		if (mAutoTestEnable) {
+			gotoNextTest(pass);
+		} else {
+			setPassEnable();
+		}
+	}
+
 	@SuppressWarnings("deprecation")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -438,10 +450,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				return mDrawableFail;
 			}
 		}
-
-		public void setPassEnable() {
-			mButtonPass.setVisibility(View.VISIBLE);
-		}
 	}
 
 	public class ButtonTestFragment extends TestItemFragment {
@@ -502,7 +510,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 					mButtons[code].setPressState(value > 0);
 
 					if (isTestPass()) {
-						gotoNextTest(true);
+						setTestComplete(true);
 					}
 				}
 			}
@@ -552,7 +560,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				onSensorDataReceived((JwaooToySensor) msg.obj);
 
 				if (isPassed()) {
-					gotoNextTest(true);
+					setTestComplete(true);
 				}
 			}
 		}
