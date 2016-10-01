@@ -15,9 +15,9 @@ public class JwaooToySensorK101 extends JwaooToySensor {
 	}
 
 	private void setCapacity(byte value) {
-		setCapacity(0, readCapacity(value, 0));
+		setCapacity(0, readCapacity(value, 2));
 		setCapacity(1, readCapacity(value, 1));
-		setCapacity(2, readCapacity(value, 2));
+		setCapacity(2, readCapacity(value, 0));
 	}
 
 	@Override
