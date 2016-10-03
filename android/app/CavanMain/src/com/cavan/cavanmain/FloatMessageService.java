@@ -575,7 +575,7 @@ public class FloatMessageService extends FloatWidowService {
 			Message message = mNetSendHandler.obtainMessage(MSG_KEEP_LIVE, command);
 
 			mNetSendHandler.removeMessages(MSG_KEEP_LIVE, command);
-			mNetSendHandler.sendMessageDelayed(message, 600000);
+			mNetSendHandler.sendMessageDelayed(message, 120000);
 		}
 
 		@Override

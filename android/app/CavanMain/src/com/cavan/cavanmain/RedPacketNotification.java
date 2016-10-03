@@ -456,11 +456,19 @@ public class RedPacketNotification extends CavanNotification {
 	// ================================================================================
 
 	private long getCodeDelay() {
-		if (mContent == null || mContent.indexOf("手气王") < 0) {
-			return 0;
+		if (mGroupName != null) {
+			if (mGroupName.equals("【VIP】内部福利6群")) {
+				return 8000;
+			}
 		}
 
-		return 15000;
+		if (mContent != null) {
+			if (mContent.contains("手气王")) {
+				return 15000;
+			}
+		}
+
+		return 0;
 	}
 
 	public int sendRedPacketNotifyAlipay() {
