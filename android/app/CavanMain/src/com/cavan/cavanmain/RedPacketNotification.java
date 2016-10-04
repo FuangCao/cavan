@@ -519,6 +519,14 @@ public class RedPacketNotification extends CavanNotification {
 	}
 
 	public boolean sendRedPacketNotifyAlipayPicture() {
+		if (!mJoinedLines.contains("[图片]")) {
+			return false;
+		}
+
+		if (mJoinedLines.contains("不要使用支付宝红包")) {
+			return false;
+		}
+
 		for (Pattern pattern : sPicturePatterns) {
 			Matcher matcher = pattern.matcher(mJoinedLines);
 			if (matcher.find()) {
