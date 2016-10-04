@@ -2738,7 +2738,7 @@ int network_client_recv_file(struct network_client *client, int fd, size64_t ski
 		}
 	} else {
 		while (size) {
-#if 0
+#if 1
 			rdlen = client->recv(client, buff, size < sizeof(buff) ? size : sizeof(buff));
 #else
 			rdlen = client->recv(client, buff, sizeof(buff));
@@ -2825,7 +2825,7 @@ int network_client_send_file(struct network_client *client, int fd, size64_t ski
 		}
 	} else {
 		while (size) {
-#if 0
+#if 1
 			rdlen = ffile_read(fd, buff, size < sizeof(buff) ? size : sizeof(buff));
 #else
 			rdlen = ffile_read(fd, buff, sizeof(buff));

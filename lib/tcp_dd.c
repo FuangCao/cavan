@@ -1677,6 +1677,8 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 		println("size = %s", size2text(file_req->size));
 		println("skip = %s", size2text(skip));
 
+		msleep(200);
+
 		ret = network_client_send_file(&client, fd, skip, file_req->size);
 		if (ret < 0) {
 			pr_red_info("network_client_send_file");
