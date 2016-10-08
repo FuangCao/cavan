@@ -79,6 +79,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_WEB_PROXY = "web_proxy";
 	public static final String KEY_TCP_REPEATER = "tcp_repeater";
 
+	static {
+		CavanAndroid.TAG = "CavanMain";
+	}
+
 	public static boolean isFloatTimerEnabled(Context context) {
 		return CavanAndroid.isPreferenceEnabled(context, KEY_FLOAT_TIMER);
 	}
