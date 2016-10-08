@@ -66,14 +66,14 @@ public class RedPacketNotification extends CavanNotification {
 	};
 
 	public static final Pattern[] sWordPatterns = {
-		Pattern.compile("支\\s*付\\s*宝.*红\\s*包[\\s\\w]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("支\\s*付\\s*宝.*口\\s*令[\\s\\w]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("红\\s*包\\s*口\\s*令[\\s\\w]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("口\\s*令\\s*红\\s*包[\\s\\w]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("中\\s*文\\s*口\\s*令[\\s\\w]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("中\\s*文\\s*红\\s*包[\\s\\w]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("红\\s*包[\\s\\w]*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
-		Pattern.compile("口\\s*令[\\s\\w]*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
+		Pattern.compile("支\\s*付\\s*宝.*红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝.*口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("红\\s*包\\s*口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("口\\s*令\\s*红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("中\\s*文\\s*口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("中\\s*文\\s*红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
+		Pattern.compile("口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
 	};
 
 	public static final Pattern[] sPicturePatterns = {
@@ -462,11 +462,19 @@ public class RedPacketNotification extends CavanNotification {
 			if (mGroupName.equals("【VIP】内部福利6群")) {
 				return 8000;
 			}
+
+			if (mGroupName.equals("【小六04】内部VIP群")) {
+				return 6000;
+			}
 		}
 
 		if (mContent != null) {
 			if (mContent.contains("手气王")) {
 				return 15000;
+			}
+
+			if (mContent.contains("运气王")) {
+				return 5000;
 			}
 		}
 

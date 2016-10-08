@@ -42,8 +42,8 @@ function cavan-android-lunch()
 	[ -d "${android_root}" ] && source "${android_root}/build/envsetup.sh" && lunch $1
 }
 
-alias cavan-lunch-rk3288="cavan-android-lunch rk3288-userdebug"
-alias cavan-lunch-ms600="cavan-android-lunch imx6ms600-user"
+alias cavan-lunch-rk3288="cavan-set-jdk-version 1.7 && cavan-android-lunch rk3288-userdebug"
+alias cavan-lunch-ms600="cavan-set-jdk-version 1.6 && cavan-android-lunch imx6ms600-user"
 
 function cavan-sign-update-zip()
 {

@@ -564,7 +564,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 		if (id.equals("com.tencent.mobileqq:id/msgbox")) {
 			CharSequence sequence = source.getText();
-			CavanAndroid.eLog("sequence = " + sequence);
 			if (sequence != null) {
 				String text = sequence.toString();
 				if (text.indexOf("[QQ红包]") >= 0) {
