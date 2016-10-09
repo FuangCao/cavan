@@ -31,7 +31,7 @@ public class RedPacketNotification extends CavanNotification {
 	public static final long OVER_TIME = 3600000;
 	public static final String NORMAL_PATTERN = "(\\w+红包)";
 	public static final String DIGIT_PATTERN = "([\\d\\s]+)";
-	public static final String DIGIT_JOINED_PATTERN = "((?:\\D*\\d)+)";
+	public static final String DIGIT_MULTI_LINE_PATTERN = "((?:\\D*\\d)+)";
 	public static final String WORD_PATTERN = "([\\w\\s]+)";
 
 	public static String[] sSoundExtensions = {
@@ -56,24 +56,33 @@ public class RedPacketNotification extends CavanNotification {
 		Pattern.compile("\\b" + DIGIT_PATTERN + "\\s*$"),
 	};
 
-	public static final Pattern[] sJoinedDigitPatterns = {
-		Pattern.compile("支\\s*付\\s*宝.*红\\s*包" + DIGIT_JOINED_PATTERN),
-		Pattern.compile("支\\s*付\\s*宝.*口\\s*令" + DIGIT_JOINED_PATTERN),
-		Pattern.compile("红\\s*包\\s*口\\s*令" + DIGIT_JOINED_PATTERN),
-		Pattern.compile("口\\s*令\\s*红\\s*包" + DIGIT_JOINED_PATTERN),
-		Pattern.compile("红\\s*包\\s*[:：]" + DIGIT_JOINED_PATTERN),
-		Pattern.compile("口\\s*令\\s*[:：]" + DIGIT_JOINED_PATTERN),
+	public static final Pattern[] sMultiLineDigitPatterns = {
+		Pattern.compile("支\\s*付\\s*宝.*红\\s*包" + DIGIT_MULTI_LINE_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝.*口\\s*令" + DIGIT_MULTI_LINE_PATTERN),
+		Pattern.compile("红\\s*包\\s*口\\s*令" + DIGIT_MULTI_LINE_PATTERN),
+		Pattern.compile("口\\s*令\\s*红\\s*包" + DIGIT_MULTI_LINE_PATTERN),
+		Pattern.compile("红\\s*包\\s*[:：]" + DIGIT_MULTI_LINE_PATTERN),
+		Pattern.compile("口\\s*令\\s*[:：]" + DIGIT_MULTI_LINE_PATTERN),
 	};
 
 	public static final Pattern[] sWordPatterns = {
-		Pattern.compile("支\\s*付\\s*宝.*红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("支\\s*付\\s*宝.*口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝\\s*红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝\\s*口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
 		Pattern.compile("红\\s*包\\s*口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
 		Pattern.compile("口\\s*令\\s*红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
 		Pattern.compile("中\\s*文\\s*口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
 		Pattern.compile("中\\s*文\\s*红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
 		Pattern.compile("红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
 		Pattern.compile("口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
+	};
+
+	public static final Pattern[] sMultiLineWordPatterns = {
+		Pattern.compile("支\\s*付\\s*宝\\s*红\\s*包\\s*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝\\s*口\\s*令\\s*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("红\\s*包\\s*口\\s*令\\s*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("口\\s*令\\s*红\\s*包\\s*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("中\\s*文\\s*口\\s*令\\s*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("中\\s*文\\s*红\\s*包\\s*[:：]\\s*" + WORD_PATTERN),
 	};
 
 	public static final Pattern[] sPicturePatterns = {
@@ -180,7 +189,6 @@ public class RedPacketNotification extends CavanNotification {
 
 	private void joinLines() {
 		mJoinedLines = CavanString.join(mLines, " ");
-		mLines.add(mJoinedLines);
 	}
 
 	public void setNetShared() {
@@ -312,15 +320,22 @@ public class RedPacketNotification extends CavanNotification {
 		return (chinese_count > 0);
 	}
 
-	public List<String> getRedPacketCodes(String line, Pattern[] patterns, List<String> codes, boolean strip) {
+	private List<String> getRedPacketCodes(String line, Pattern[] patterns, List<String> codes, boolean strip) {
 		for (Pattern pattern : patterns) {
 			Matcher matcher = pattern.matcher(line);
 
 			while (matcher.find()) {
 				String code = matcher.group(1);
+
 				if (strip) {
 					code = CavanString.deleteSpace(code);
 				}
+
+				if (code.length() < 2) {
+					continue;
+				}
+
+				// CavanAndroid.eLog("code = " + code + ", pattern = " + pattern.pattern());
 
 				codes.add(code);
 			}
@@ -329,23 +344,34 @@ public class RedPacketNotification extends CavanNotification {
 		return codes;
 	}
 
-	public List<String> getRedPacketCodes(String line, Pattern[] patterns, boolean strip) {
+	private List<String> getRedPacketCodes(String line, Pattern[] patterns, boolean strip) {
 		return getRedPacketCodes(line, patterns, new ArrayList<String>(), strip);
 	}
 
-	public List<String> getRedPacketCodes(Pattern[] patterns, List<String> codes, boolean strip) {
+	private List<String> getRedPacketCodes(Pattern[] patterns, List<String> codes, boolean strip, boolean multiLine) {
 		for (String line : mLines) {
 			getRedPacketCodes(line, patterns, codes, strip);
+		}
+
+		if (multiLine) {
+			getRedPacketCodes(mJoinedLines, patterns, codes, strip);
 		}
 
 		return codes;
 	}
 
-	public List<String> getRedPacketCodes(Pattern[] patterns, boolean strip) {
-		return getRedPacketCodes(patterns, new ArrayList<String>(), strip);
+	private List<String> getRedPacketCodes(Pattern[] patterns, boolean strip, boolean multiLine) {
+		return getRedPacketCodes(patterns, new ArrayList<String>(), strip, multiLine);
 	}
 
-	public boolean addRedPacketCode(List<String> codes, String code) {
+	private List<String> getRedPacketWordCodes() {
+		List<String> codes = new ArrayList<String>();
+		getRedPacketCodes(sWordPatterns, codes, true, false);
+		getRedPacketCodes(mJoinedLines, sMultiLineWordPatterns, codes, false);
+		return codes;
+	}
+
+	private boolean addRedPacketCode(List<String> codes, String code) {
 		for (String a : codes) {
 			if (code.indexOf(a) >= 0) {
 				return false;
@@ -357,13 +383,13 @@ public class RedPacketNotification extends CavanNotification {
 		return true;
 	}
 
-	public void addRedPacketCodes(List<String> codes, String code) {
+	private void addRedPacketCodes(List<String> codes, String code) {
 		for (int end = 8; end <= code.length(); end += 8) {
 			addRedPacketCode(codes, code.substring(end - 8, end));
 		}
 	}
 
-	public String getRedPacketDigitCode(String text) {
+	private String getRedPacketDigitCode(String text) {
 		StringBuilder builder = new StringBuilder();
 		int length = text.length();
 
@@ -386,24 +412,24 @@ public class RedPacketNotification extends CavanNotification {
 		return builder.toString();
 	}
 
-	public List<String> getRedPacketCodes() {
+	private List<String> getRedPacketCodes() {
 		List<String> codes = new ArrayList<String>();
 
-		for (String text : getRedPacketCodes(sDigitPatterns, false)) {
+		for (String text : getRedPacketCodes(sDigitPatterns, false, true)) {
 			String code = getRedPacketDigitCode(text);
 			if (code != null && code.length() % 8 == 0) {
 				addRedPacketCodes(codes, code);
 			}
 		}
 
-		for (String text : getRedPacketCodes(mJoinedLines, sJoinedDigitPatterns, false)) {
+		for (String text : getRedPacketCodes(mJoinedLines, sMultiLineDigitPatterns, false)) {
 			String code = getRedPacketDigitCode(text);
 			if (code != null) {
 				addRedPacketCodes(codes, code);
 			}
 		}
 
-		for (String code : getRedPacketCodes(sWordPatterns, true)) {
+		for (String code : getRedPacketWordCodes()) {
 			if (isRedPacketWordCode(code)) {
 				addRedPacketCode(codes, code);
 			}
