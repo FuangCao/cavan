@@ -492,7 +492,7 @@ public class RedPacketNotification extends CavanNotification {
 			}
 
 			if (mGroupName.equals("【小六04】内部VIP群")) {
-				return 6000;
+				return 10000;
 			}
 		}
 
