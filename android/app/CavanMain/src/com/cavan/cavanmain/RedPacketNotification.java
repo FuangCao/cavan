@@ -66,12 +66,14 @@ public class RedPacketNotification extends CavanNotification {
 	};
 
 	public static final Pattern[] sWordPatterns = {
-		Pattern.compile("支\\s*付\\s*宝\\s*红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("支\\s*付\\s*宝\\s*口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝.*红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝.*口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
 		Pattern.compile("红\\s*包\\s*口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
 		Pattern.compile("口\\s*令\\s*红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
 		Pattern.compile("中\\s*文\\s*口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
 		Pattern.compile("中\\s*文\\s*红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝.*口\\s*令[\\s\\d:：]*【" + WORD_PATTERN + "】"),
+		Pattern.compile("支\\s*付\\s*宝.*红\\s*包[\\s\\d:：]*【" + WORD_PATTERN + "】"),
 		Pattern.compile("红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
 		Pattern.compile("口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
 	};
