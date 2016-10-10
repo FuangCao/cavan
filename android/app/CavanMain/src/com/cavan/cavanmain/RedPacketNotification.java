@@ -327,15 +327,17 @@ public class RedPacketNotification extends CavanNotification {
 			Matcher matcher = pattern.matcher(line);
 
 			while (matcher.find()) {
-				String code = matcher.group(1);
-
-				int end = matcher.end();
-				if (end < line.length()) {
-					char c = line.charAt(end);
-					if (c == ':' || c == '：') {
-						continue;
+				if (patterns == sMultiLineWordPatterns) {
+					int end = matcher.end();
+					if (end < line.length()) {
+						char c = line.charAt(end);
+						if (c == ':' || c == '：') {
+							continue;
+						}
 					}
 				}
+
+				String code = matcher.group(1);
 
 				if (strip) {
 					code = CavanString.deleteSpace(code);
