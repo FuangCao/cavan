@@ -329,6 +329,14 @@ public class RedPacketNotification extends CavanNotification {
 			while (matcher.find()) {
 				String code = matcher.group(1);
 
+				int end = matcher.end();
+				if (end < line.length()) {
+					char c = line.charAt(end);
+					if (c == ':' || c == '：') {
+						continue;
+					}
+				}
+
 				if (strip) {
 					code = CavanString.deleteSpace(code);
 				}
