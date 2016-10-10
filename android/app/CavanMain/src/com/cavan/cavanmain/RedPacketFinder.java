@@ -14,7 +14,8 @@ public class RedPacketFinder {
 	private static final String NORMAL_PATTERN = "(\\w+红包)";
 	private static final String DIGIT_PATTERN = "([\\d\\s]+)";
 	private static final String DIGIT_MULTI_LINE_PATTERN = "((?:\\D*\\d)+)";
-	private static final String WORD_PATTERN = "([\\w\\s]+)";
+	private static final String WORD_PATTERN = "(\\w+)";
+	private static final String WORD_MULTI_LINE_PATTERN = "([\\w\\s]+)";
 
 	private static final Pattern[] sNormalPatterns = {
 		Pattern.compile("^\\[" + NORMAL_PATTERN + "\\]"),
@@ -62,17 +63,19 @@ public class RedPacketFinder {
 	};
 
 	private static final Pattern[] sMultiLineWordPatterns = {
-		Pattern.compile("支\\s*付\\s*宝\\s*红\\s*包\\s*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("支\\s*付\\s*宝\\s*口\\s*令\\s*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("红\\s*包\\s*口\\s*令\\s*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("口\\s*令\\s*红\\s*包\\s*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("中\\s*文\\s*口\\s*令\\s*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("中\\s*文\\s*红\\s*包\\s*[:：]\\s*" + WORD_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝\\s*红\\s*包\\s*[:：]\\s*" + WORD_MULTI_LINE_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝\\s*口\\s*令\\s*[:：]\\s*" + WORD_MULTI_LINE_PATTERN),
+		Pattern.compile("红\\s*包\\s*口\\s*令\\s*[:：]\\s*" + WORD_MULTI_LINE_PATTERN),
+		Pattern.compile("口\\s*令\\s*红\\s*包\\s*[:：]\\s*" + WORD_MULTI_LINE_PATTERN),
+		Pattern.compile("中\\s*文\\s*口\\s*令\\s*[:：]\\s*" + WORD_MULTI_LINE_PATTERN),
+		Pattern.compile("中\\s*文\\s*红\\s*包\\s*[:：]\\s*" + WORD_MULTI_LINE_PATTERN),
 	};
 
 	public static final Pattern[] sExcludePatterns = {
 		Pattern.compile("[a-z]+://\\S+", Pattern.CASE_INSENSITIVE),
-		Pattern.compile("(Q\\s*Q|群|手\\s*机|电\\s*话|微\\s*信|码|号)\\s*[:：]?\\s*\\d+", Pattern.CASE_INSENSITIVE),
+		Pattern.compile("(?:(?:Q\\s*Q)|群|(?:手\\s*机)|(?:电\\s*话)|(?:微\\s*信)|码|号)(?:(?:[^:：]*[:：])|(?:\\s*[:：]?))\\s*\\d+", Pattern.CASE_INSENSITIVE),
+		Pattern.compile("领\\s*取\\s*方\\s*法\\s*[:：].*$"),
+		Pattern.compile("领\\s*取\\s*方\\s*法.*口\\s*令"),
 	};
 
 	public static HashMap<String, String> sPackageCodeMap = new HashMap<String, String>();
@@ -93,12 +96,12 @@ public class RedPacketFinder {
 		StringBuilder builder = new StringBuilder(mJoinedLines);
 
 		for (String line : content.split("\n")) {
-			line = CavanString.strip(line);
 			for (Pattern pattern : sExcludePatterns) {
 				Matcher matcher = pattern.matcher(line);
 				line = matcher.replaceAll(CavanString.EMPTY_STRING);
 			}
 
+			line = CavanString.strip(line);
 			mLines.add(line);
 
 			if (builder.length() > 0) {

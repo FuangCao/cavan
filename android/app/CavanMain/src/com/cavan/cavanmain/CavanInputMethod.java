@@ -298,6 +298,20 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	}
 
 	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		ComponentName info = CavanAndroid.getTopActivityInfo(this);
+		if (info != null && "com.alipay.android.phone.discovery.envelope.HomeActivity".equals(info.getClassName())) {
+			if (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+				Intent intent = new Intent(MainActivity.ACTION_CODE_INVALID);
+				sendBroadcast(intent);
+				return true;
+			}
+		}
+
+		return super.onKeyDown(keyCode, event);
+	}
+
+	@Override
 	public void onViewClicked(boolean focusChanged) {
 		if (mIsAlipay && mCodes.size() == 1) {
 			sendRedPacketCode(mCodes.get(0).getCode());

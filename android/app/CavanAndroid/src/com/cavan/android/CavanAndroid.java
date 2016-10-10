@@ -403,6 +403,11 @@ public class CavanAndroid {
 		return sActivityManager.getRunningTasks(1).get(0).topActivity;
 	}
 
+	public static boolean isTopActivity(Context context, String pkgName) {
+		ComponentName info = getTopActivityInfo(context);
+		return (info != null && pkgName.equals(info.getPackageName()));
+	}
+
 	public static WifiManager getWifiManager(Context context) {
 		if (sWifiManager != null) {
 			return sWifiManager;

@@ -165,11 +165,13 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 			case MainActivity.ACTION_CODE_REMOVE:
 				code = intent.getParcelableExtra("code");
-				if (code == null) {
-					break;
+				if (code != null) {
+					mCodes.remove(code);
 				}
+				break;
 
-				mCodes.remove(code);
+			case MainActivity.ACTION_CODE_INVALID:
+				setRedPacketCodeComplete();
 				break;
 
 			case Intent.ACTION_CLOSE_SYSTEM_DIALOGS:
@@ -692,6 +694,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		filter.addAction(MainActivity.ACTION_CODE_TEST);
 		filter.addAction(MainActivity.ACTION_CODE_ADD);
 		filter.addAction(MainActivity.ACTION_CODE_REMOVE);
+		filter.addAction(MainActivity.ACTION_CODE_INVALID);
 		filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
 
 		registerReceiver(mReceiver, filter);
