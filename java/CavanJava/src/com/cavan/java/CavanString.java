@@ -159,6 +159,10 @@ public class CavanString {
 		return builder.toString();
 	}
 
+	public static boolean isColon(char c) {
+		return c == ':' || c == '：';
+	}
+
 	@Override
 	public String toString() {
 		return mContent;

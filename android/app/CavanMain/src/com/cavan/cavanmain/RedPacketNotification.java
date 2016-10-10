@@ -4,8 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -24,87 +22,21 @@ import android.service.notification.StatusBarNotification;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanJava;
-import com.cavan.java.CavanString;
 
 public class RedPacketNotification extends CavanNotification {
 
-	public static final long OVER_TIME = 3600000;
-	public static final String NORMAL_PATTERN = "(\\w+红包)";
-	public static final String DIGIT_PATTERN = "([\\d\\s]+)";
-	public static final String DIGIT_MULTI_LINE_PATTERN = "((?:\\D*\\d)+)";
-	public static final String WORD_PATTERN = "([\\w\\s]+)";
+	private static final long OVER_TIME = 3600000;
 
-	public static String[] sSoundExtensions = {
+	private static String[] sSoundExtensions = {
 		"m4a", "ogg", "wav", "mp3", "ac3", "wma"
 	};
 
-	public static final Pattern sGroupPattern = Pattern.compile("([^\\(]+)\\((.+)\\)\\s*$");
-
-	public static final Pattern[] sNormalPatterns = {
-		Pattern.compile("^\\[" + NORMAL_PATTERN + "\\]"),
-		Pattern.compile("^【" + NORMAL_PATTERN + "】"),
-	};
-
-	public static final Pattern[] sDigitPatterns = {
-		Pattern.compile("支\\s*付\\s*宝.*红\\s*包\\D*" + DIGIT_PATTERN),
-		Pattern.compile("支\\s*付\\s*宝.*口\\s*令\\D*" + DIGIT_PATTERN),
-		Pattern.compile("红\\s*包\\s*口\\s*令\\D*" + DIGIT_PATTERN),
-		Pattern.compile("口\\s*令\\s*红\\s*包\\D*" + DIGIT_PATTERN),
-		Pattern.compile("红\\s*包\\s*[:：]?\\s*" + DIGIT_PATTERN),
-		Pattern.compile("口\\s*令\\s*[:：]?\\s*" + DIGIT_PATTERN),
-		Pattern.compile("[:：]\\s*" + DIGIT_PATTERN),
-		Pattern.compile("\\b" + DIGIT_PATTERN + "\\s*$"),
-	};
-
-	public static final Pattern[] sMultiLineDigitPatterns = {
-		Pattern.compile("支\\s*付\\s*宝.*红\\s*包" + DIGIT_MULTI_LINE_PATTERN),
-		Pattern.compile("支\\s*付\\s*宝.*口\\s*令" + DIGIT_MULTI_LINE_PATTERN),
-		Pattern.compile("红\\s*包\\s*口\\s*令" + DIGIT_MULTI_LINE_PATTERN),
-		Pattern.compile("口\\s*令\\s*红\\s*包" + DIGIT_MULTI_LINE_PATTERN),
-		Pattern.compile("红\\s*包\\s*[:：]" + DIGIT_MULTI_LINE_PATTERN),
-		Pattern.compile("口\\s*令\\s*[:：]" + DIGIT_MULTI_LINE_PATTERN),
-	};
-
-	public static final Pattern[] sWordPatterns = {
-		Pattern.compile("支\\s*付\\s*宝.*红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("支\\s*付\\s*宝.*口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("红\\s*包\\s*口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("口\\s*令\\s*红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("中\\s*文\\s*口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("中\\s*文\\s*红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("支\\s*付\\s*宝.*口\\s*令[\\s\\d:：]*【" + WORD_PATTERN + "】"),
-		Pattern.compile("支\\s*付\\s*宝.*红\\s*包[\\s\\d:：]*【" + WORD_PATTERN + "】"),
-		Pattern.compile("红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
-		Pattern.compile("口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
-	};
-
-	public static final Pattern[] sMultiLineWordPatterns = {
-		Pattern.compile("支\\s*付\\s*宝\\s*红\\s*包\\s*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("支\\s*付\\s*宝\\s*口\\s*令\\s*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("红\\s*包\\s*口\\s*令\\s*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("口\\s*令\\s*红\\s*包\\s*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("中\\s*文\\s*口\\s*令\\s*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("中\\s*文\\s*红\\s*包\\s*[:：]\\s*" + WORD_PATTERN),
-	};
-
-	public static final Pattern[] sPicturePatterns = {
-		Pattern.compile("支\\s*付\\s*宝\\s*红\\s*包"),
-		Pattern.compile("支\\s*付\\s*宝\\s*口\\s*令"),
-		Pattern.compile("红\\s*包\\s*口\\s*令"),
-		Pattern.compile("口\\s*令\\s*红\\s*包"),
-	};
-
-	public static final Pattern[] sExcludePatterns = {
-		Pattern.compile("[a-z]+://\\S+", Pattern.CASE_INSENSITIVE),
-		Pattern.compile("(Q\\s*Q|群|手\\s*机|电\\s*话|微\\s*信|码|号)\\s*[:：]?\\s*\\d+", Pattern.CASE_INSENSITIVE),
-	};
-
-	public static final String[] sFindTitlePackages = {
+	private static final String[] sFindTitlePackages = {
 		CavanPackageName.CALENDAR,
 		CavanPackageName.DESKCLOCK,
 	};
 
-	public static final String[] sSavePackages = {
+	private static final String[] sSavePackages = {
 		CavanPackageName.QQ,
 		CavanPackageName.MM,
 		CavanPackageName.TMALL,
@@ -113,18 +45,11 @@ public class RedPacketNotification extends CavanNotification {
 	};
 
 	public static HashMap<CharSequence, Long> sCodeTimeMap = new HashMap<CharSequence, Long>();
-	public static HashMap<String, String> sPackageCodeMap = new HashMap<String, String>();
 	public static List<String> sExcludeCodes = new ArrayList<String>();
-
-	static {
-		sPackageCodeMap.put("com.tencent.mobileqq", "QQ红包");
-		sPackageCodeMap.put("com.tencent.mm", "微信红包");
-	}
 
 	private boolean mTestOnly;
 	private boolean mNeedSave;
-	private String mJoinedLines;
-	private List<String> mLines = new ArrayList<String>();
+	private RedPacketFinder mFinder = new RedPacketFinder();
 
 	private boolean mIsCode;
 	private boolean mNetShared;
@@ -141,15 +66,13 @@ public class RedPacketNotification extends CavanNotification {
 
 		boolean needFindTitle = CavanJava.ArrayContains(sFindTitlePackages, mPackageName);
 		if (mTitle != null && needFindTitle) {
-			mLines.add(mTitle);
+			mFinder.addLine(mTitle);
 		}
 
 		mNeedSave = CavanJava.ArrayContains(sSavePackages, mPackageName);
-		if (mContent != null && (mNeedSave || needFindTitle || mService.getPackageName().equals(getPackageName()))) {
-			splitContent();
+		if (mNeedSave || needFindTitle || mService.getPackageName().equals(getPackageName())) {
+			mFinder.split(mContent);
 		}
-
-		joinLines();
 	}
 
 	public RedPacketNotification(RedPacketListenerService service, String user, String content, boolean isCode, boolean shared) {
@@ -160,11 +83,9 @@ public class RedPacketNotification extends CavanNotification {
 		mIsCode = isCode;
 
 		if (isCode) {
-			mLines.add(content);
-			mJoinedLines = content;
+			mFinder.addLine(content);
 		} else {
-			splitContent();
-			joinLines();
+			mFinder.split(content);
 		}
 	}
 
@@ -173,24 +94,7 @@ public class RedPacketNotification extends CavanNotification {
 
 		mDescription = desc;
 		mService = service;
-		splitContent();
-		joinLines();
-	}
-
-	private void splitContent() {
-		for (String line : mContent.split("\n")) {
-			line = CavanString.strip(line);
-			for (Pattern pattern : sExcludePatterns) {
-				Matcher matcher = pattern.matcher(line);
-				line = matcher.replaceAll(CavanString.EMPTY_STRING);
-			}
-
-			mLines.add(line);
-		}
-	}
-
-	private void joinLines() {
-		mJoinedLines = CavanString.join(mLines, " ");
+		mFinder.split(mContent);
 	}
 
 	public void setNetShared() {
@@ -299,156 +203,6 @@ public class RedPacketNotification extends CavanNotification {
 		sCodeTimeMap.remove(code);
 	}
 
-	public static boolean isRedPacketWordCode(String code) {
-		int number_count = 0;
-		int chinese_count = 0;
-
-		for (int i = code.length() - 1; i >= 0; i--) {
-			char c = code.charAt(i);
-
-			if (CavanJava.isDigit(c)) {
-				if (++number_count > 6) {
-					return false;
-				}
-			} else {
-				number_count = 0;
-
-				if (CavanString.isChineseChar(c)) {
-					chinese_count++;
-				}
-			}
-		}
-
-		return (chinese_count > 0);
-	}
-
-	private List<String> getRedPacketCodes(String line, Pattern[] patterns, List<String> codes, boolean strip) {
-		for (Pattern pattern : patterns) {
-			Matcher matcher = pattern.matcher(line);
-
-			while (matcher.find()) {
-				if (patterns == sMultiLineWordPatterns) {
-					int end = matcher.end();
-					if (end < line.length()) {
-						char c = line.charAt(end);
-						if (c == ':' || c == '：') {
-							continue;
-						}
-					}
-				}
-
-				String code = matcher.group(1);
-
-				if (strip) {
-					code = CavanString.deleteSpace(code);
-				}
-
-				if (code.length() < 2) {
-					continue;
-				}
-
-				// CavanAndroid.eLog("code = " + code + ", pattern = " + pattern.pattern());
-
-				codes.add(code);
-			}
-		}
-
-		return codes;
-	}
-
-	private List<String> getRedPacketCodes(String line, Pattern[] patterns, boolean strip) {
-		return getRedPacketCodes(line, patterns, new ArrayList<String>(), strip);
-	}
-
-	private List<String> getRedPacketCodes(Pattern[] patterns, List<String> codes, boolean strip, boolean multiLine) {
-		for (String line : mLines) {
-			getRedPacketCodes(line, patterns, codes, strip);
-		}
-
-		if (multiLine) {
-			getRedPacketCodes(mJoinedLines, patterns, codes, strip);
-		}
-
-		return codes;
-	}
-
-	private List<String> getRedPacketCodes(Pattern[] patterns, boolean strip, boolean multiLine) {
-		return getRedPacketCodes(patterns, new ArrayList<String>(), strip, multiLine);
-	}
-
-	private List<String> getRedPacketWordCodes() {
-		List<String> codes = new ArrayList<String>();
-		getRedPacketCodes(sWordPatterns, codes, true, false);
-		getRedPacketCodes(mJoinedLines, sMultiLineWordPatterns, codes, false);
-		return codes;
-	}
-
-	private boolean addRedPacketCode(List<String> codes, String code) {
-		for (String a : codes) {
-			if (code.indexOf(a) >= 0) {
-				return false;
-			}
-		}
-
-		codes.add(code);
-
-		return true;
-	}
-
-	private void addRedPacketCodes(List<String> codes, String code) {
-		for (int end = 8; end <= code.length(); end += 8) {
-			addRedPacketCode(codes, code.substring(end - 8, end));
-		}
-	}
-
-	private String getRedPacketDigitCode(String text) {
-		StringBuilder builder = new StringBuilder();
-		int length = text.length();
-
-		for (int i = 0; i < length; i++) {
-			char c = text.charAt(i);
-
-			if (c == ':' || c == '：') {
-				builder.setLength(0);
-			} else if (CavanJava.isDigit(c)) {
-				if (builder.length() % 8 == 0 && i > 0 && CavanJava.isDigit(text.charAt(i - 1))) {
-					return null;
-				}
-
-				builder.append(c);
-			} else if (CavanString.isChineseChar(c)) {
-				break;
-			}
-		}
-
-		return builder.toString();
-	}
-
-	private List<String> getRedPacketCodes() {
-		List<String> codes = new ArrayList<String>();
-
-		for (String text : getRedPacketCodes(sDigitPatterns, false, true)) {
-			String code = getRedPacketDigitCode(text);
-			if (code != null && code.length() % 8 == 0) {
-				addRedPacketCodes(codes, code);
-			}
-		}
-
-		for (String text : getRedPacketCodes(mJoinedLines, sMultiLineDigitPatterns, false)) {
-			String code = getRedPacketDigitCode(text);
-			if (code != null) {
-				addRedPacketCodes(codes, code);
-			}
-		}
-
-		for (String code : getRedPacketWordCodes()) {
-			if (isRedPacketWordCode(code)) {
-				addRedPacketCode(codes, code);
-			}
-		}
-
-		return codes;
-	}
 
 	public Notification buildNotification(CharSequence content, PendingIntent intent) {
 		CavanAndroid.setSuspendEnable(mService, false, 5000);
@@ -527,7 +281,7 @@ public class RedPacketNotification extends CavanNotification {
 			codes = new ArrayList<String>();
 			codes.add(mContent);
 		} else {
-			codes = getRedPacketCodes();
+			codes = mFinder.getRedPacketCodes();
 			time += getCodeDelay();
 		}
 
@@ -567,43 +321,15 @@ public class RedPacketNotification extends CavanNotification {
 	}
 
 	public boolean sendRedPacketNotifyAlipayPicture() {
-		if (!mJoinedLines.contains("[图片]")) {
-			return false;
-		}
-
-		if (mJoinedLines.contains("不要使用支付宝红包")) {
-			return false;
-		}
-
-		for (Pattern pattern : sPicturePatterns) {
-			Matcher matcher = pattern.matcher(mJoinedLines);
-			if (matcher.find()) {
-				return sendRedPacketNotifyNormal("支付宝口令图片", "支付宝口令图片@" + getUserDescription());
-			}
+		if (mFinder.isPictureCode()) {
+			return sendRedPacketNotifyNormal("支付宝口令图片", "支付宝口令图片@" + getUserDescription());
 		}
 
 		return false;
 	}
 
 	public String getRedPacketCodeNormal() {
-		String code = sPackageCodeMap.get(getPackageName());
-		if (code != null) {
-			if (mContent != null && mContent.startsWith("[" + code + "]")) {
-				return code;
-			}
-
-			return null;
-		}
-
-		for (Pattern pattern : sNormalPatterns) {
-			Matcher matcher = pattern.matcher(mJoinedLines);
-			if (matcher.find()) {
-				String content = matcher.group(1);
-				return content;
-			}
-		}
-
-		return null;
+		return mFinder.getNormalCode(getPackageName());
 	}
 
 	public boolean sendRedPacketNotifyNormal() {
