@@ -253,7 +253,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	private boolean performBackActionH5(AccessibilityNodeInfo root) {
-		return performBackAction(root, "com.alipay.mobile.nebula:id/h5_tv_nav_back", false);
+		return performBackAction(root, "com.alipay.mobile.nebula:id/h5_tv_nav_back", true);
 	}
 
 	private boolean onAccessibilityEventMM(AccessibilityEvent event) {
