@@ -115,12 +115,18 @@ public class RedPacketCode implements Parcelable {
 		return mCommitCount;
 	}
 
+	public void setCommitCount(int count) {
+		mCommitCount = count;
+	}
+
 	public int addCommitCount() {
 		if (mRepeatable) {
-			return 1;
+			mCommitCount = 1;
+		} else {
+			mCommitCount++;
 		}
 
-		return ++mCommitCount;
+		return mCommitCount;
 	}
 
 	public int subCommitCount() {
@@ -129,6 +135,10 @@ public class RedPacketCode implements Parcelable {
 		}
 
 		return 0;
+	}
+
+	public boolean canComplete() {
+		return mCommitCount > 0;
 	}
 
 	public void setNetShared() {
