@@ -73,7 +73,7 @@ public class RedPacketFinder {
 
 	public static final Pattern[] sExcludePatterns = {
 		Pattern.compile("[a-z]+://\\S+", Pattern.CASE_INSENSITIVE),
-		Pattern.compile("(?:(?:Q\\s*Q)|群|(?:手\\s*机)|(?:电\\s*话)|(?:微\\s*信)|码|号)(?:(?:[^:：]*[:：])|(?:\\s*[:：]?))\\s*\\d+", Pattern.CASE_INSENSITIVE),
+		Pattern.compile("(?:(?:Q\\s*Q)|群|(?:手\\s*机)|(?:电\\s*话)|(?:微\\s*信)|码|号)(?:(?:[\\s\\d]*[:：])|(?:\\s*[:：]?))\\s*\\d+", Pattern.CASE_INSENSITIVE),
 		Pattern.compile("领\\s*取\\s*方\\s*法\\s*[:：].*$"),
 		Pattern.compile("领\\s*取\\s*方\\s*法.*口\\s*令"),
 	};

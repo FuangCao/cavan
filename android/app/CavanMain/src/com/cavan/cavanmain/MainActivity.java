@@ -45,7 +45,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String ACTION_CODE_TEST = "cavan.intent.action.ACTION_CODE_TEST";
 	public static final String ACTION_CODE_REMOVE = "cavan.intent.action.ACTION_CODE_REMOVE";
 	public static final String ACTION_CODE_COMMIT = "cavan.intent.action.ACTION_CODE_COMMIT";
-	public static final String ACTION_CODE_INVALID = "cavan.intent.action.ACTION_CODE_INVALID";
 	public static final String ACTION_CODE_RECEIVED = "cavan.intent.action.ACTION_CODE_RECEIVED";
 	public static final String ACTION_CONTENT_RECEIVED = "cavan.intent.action.ACTION_CONTENT_RECEIVED";
 	public static final String ACTION_TEXT_RECEIVED = "cavan.intent.action.ACTION_TEXT_RECEIVED";

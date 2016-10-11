@@ -170,10 +170,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 				}
 				break;
 
-			case MainActivity.ACTION_CODE_INVALID:
-				setRedPacketCodeComplete();
-				break;
-
 			case Intent.ACTION_CLOSE_SYSTEM_DIALOGS:
 				mAutoStartAlipay = false;
 				break;
@@ -660,7 +656,18 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	@Override
 	protected boolean onKeyEvent(KeyEvent event) {
-		CavanAndroid.pLog("event = " + event);
+		int keyCode = event.getKeyCode();
+		if (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+			ComponentName info = CavanAndroid.getTopActivityInfo(this);
+			if (info != null && "com.alipay.android.phone.discovery.envelope.HomeActivity".equals(info.getClassName())) {
+				if (mCode != null && mCode.getCommitCount() > 0 && event.getAction() == KeyEvent.ACTION_DOWN) {
+					setRedPacketCodeComplete();
+				}
+
+				return true;
+			}
+		}
+
 		return super.onKeyEvent(event);
 	}
 
@@ -670,7 +677,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 		info.packageNames = PACKAGE_NAMES;
 
-		info.flags |= AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS |
+		info.flags |= AccessibilityServiceInfo.DEFAULT | AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS |
 				AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS |
 				AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
 
@@ -679,6 +686,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 				AccessibilityEvent.TYPE_VIEW_CLICKED | AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED;
 
 		setServiceInfo(info);
+
+		CavanAndroid.eLog("info = " + getServiceInfo());
 
 		super.onServiceConnected();
 	}
@@ -694,7 +703,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 		filter.addAction(MainActivity.ACTION_CODE_TEST);
 		filter.addAction(MainActivity.ACTION_CODE_ADD);
 		filter.addAction(MainActivity.ACTION_CODE_REMOVE);
-		filter.addAction(MainActivity.ACTION_CODE_INVALID);
 		filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
 
 		registerReceiver(mReceiver, filter);

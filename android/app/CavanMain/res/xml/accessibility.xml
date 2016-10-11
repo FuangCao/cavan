@@ -3,4 +3,5 @@
 	android:accessibilityFlags="flagDefault"
 	android:accessibilityFeedbackType="feedbackSpoken"
 	android:canRetrieveWindowContent="true"
+	android:canRequestFilterKeyEvents="true"
 	android:settingsActivity="com.cavan.cavanmain.MainActivity" />
