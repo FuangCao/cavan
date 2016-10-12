@@ -636,12 +636,18 @@ public class CavanAccessibilityService extends AccessibilityService {
 			}
 		}
 
-		if (id.equals("com.tencent.mobileqq:id/chat_item_content_layout")) {
-			Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
-			intent.putExtra("package", source.getPackageName());
-			intent.putExtra("desc", "用户点击");
-			intent.putExtra("content", CavanString.fromCharSequence(source.getText()));
-			sendBroadcast(intent);
+		if (id.equals("com.alipay.android.phone.discovery.envelope:id/solitaire_commit")) {
+			if (isCurrentRedPacketCode(mCode)) {
+				mCode.addCommitCount();
+			}
+		} else if (MainActivity.isListenClickEnabled(this)) {
+			if (id.equals("com.tencent.mobileqq:id/chat_item_content_layout")) {
+				Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
+				intent.putExtra("package", source.getPackageName());
+				intent.putExtra("desc", "用户点击");
+				intent.putExtra("content", CavanString.fromCharSequence(source.getText()));
+				sendBroadcast(intent);
+			}
 		}
 	}
 
@@ -682,9 +688,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			break;
 
 		case AccessibilityEvent.TYPE_VIEW_CLICKED:
-			if (MainActivity.isListenClickEnabled(this)) {
-				onViewClicked(event);
-			}
+			onViewClicked(event);
 			break;
 
 		case AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED:
@@ -699,7 +703,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		case KeyEvent.KEYCODE_VOLUME_UP:
 		case KeyEvent.KEYCODE_VOLUME_DOWN:
 			ComponentName info = CavanAndroid.getTopActivityInfo(this);
-			if (info != null && "com.alipay.android.phone.discovery.envelope.HomeActivity".equals(info.getClassName())) {
+			if (info != null && CavanPackageName.ALIPAY.equals(info.getPackageName())) {
 				if (event.getAction() == KeyEvent.ACTION_DOWN && isCurrentRedPacketCode(mCode) && mCode.canComplete()) {
 					String code = mCode.getCode();
 
