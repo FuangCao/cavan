@@ -30,6 +30,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private static final long POLL_DELAY = 500;
 	private static final long INPUT_OVERTIME = 5000;
 	private static final long UNPACK_OVERTIME = 2000;
+	private static final long COMMIT_TIME = 2000;
 	private static final long COMMIT_OVERTIME = 300000;
 	private static final long CODE_OVERTIME = 28800000;
 
@@ -42,7 +43,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 	};
 
 	private long mDelay;
-	private long mCommitTime;
 	private boolean mAutoStartAlipay;
 
 	private long mWindowStartTime;
@@ -51,7 +51,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	private int mCodeCount;
 	private RedPacketCode mCode;
-	private CharSequence mInputtedCode;
+	private String mInputtedCode;
 	private List<RedPacketCode> mCodes = new ArrayList<RedPacketCode>();
 	private CavanTimedArray<String> mInvalidCodes = new CavanTimedArray<String>(CODE_OVERTIME);
 	private CavanTimedArray<String> mTimedCodes = new CavanTimedArray<String>(CODE_OVERTIME);
@@ -88,7 +88,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			switch (msg.what) {
 			case MSG_COMMIT_TIMEOUT:
 				RedPacketCode code = (RedPacketCode) msg.obj;
-				if (code.isRepeatable()) {
+				if (code.isValid()) {
 					break;
 				}
 
@@ -299,7 +299,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			break;
 
 		case "com.alipay.android.phone.discovery.envelope.HomeActivity":
-			if (mCodeCount > 0 && code != null) {
+			if (code != null) {
 				postRedPacketCode(root, code);
 				if (code.getTimeout() > INPUT_OVERTIME) {
 					if (!mHandler.hasMessages(MSG_COMMIT_TIMEOUT, code)) {
@@ -310,14 +310,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 					code.updateTime();
 				}
 			}
-
-			mCommitTime = System.currentTimeMillis();
 			break;
 
 		case "com.alipay.mobile.framework.app.ui.DialogHelper$APGenericProgressDialog":
-			if (System.currentTimeMillis() - mCommitTime > UNPACK_OVERTIME) {
-				if (mCode != null) {
-					mCode.subCommitCount();
+			if (mCode != null && mCode.getCommitTimeConsume() > UNPACK_OVERTIME) {
+				if (mCode.isCommited()) {
+					mCode.setCommitCount(0);
 				}
 
 				performBackAction(root, true);
@@ -325,9 +323,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 			break;
 
 		case "com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity":
+			setRedPacketCodeValid();
+
 			if (MainActivity.isAutoUnpackEnabled(this)) {
 				unpackRedPacket(root);
-				startAutoCommitRedPacketCode(500);
 			}
 			break;
 
@@ -335,8 +334,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText("领取成功");
 			if (nodes != null && nodes.size() > 0) {
 				setRedPacketCodeComplete();
-			} else if (mCode != null) {
-				mCode.setCommitCount(0);
+			} else if (setRedPacketCodeValid()) {
 				mCode.updateTime();
 			}
 
@@ -345,7 +343,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			break;
 
 		case "com.alipay.mobile.nebulacore.ui.H5Activity":
-			if (mCode != null) {
+			if (isCurrentRedPacketCode(mCode)) {
 				if (mCode.isRepeatable()) {
 					mCode.updateTime();
 				} else {
@@ -384,31 +382,51 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	private void removeRedPacketCode(RedPacketCode code) {
+		code.setCompleted();
 		mCodes.remove(code);
 
 		Message message = mHandler.obtainMessage(MSG_COMMIT_COMPLETE, code);
 		mHandler.sendMessageDelayed(message, 10000);
 	}
 
-	private void setRedPacketCodeComplete() {
-		if (mCode != null) {
+	private boolean isCurrentRedPacketCode(RedPacketCode code) {
+		return code != null && mInputtedCode != null && mInputtedCode.equals(code.getCode());
+	}
+
+	private boolean setRedPacketCodeComplete() {
+		if (isCurrentRedPacketCode(mCode)) {
 			removeRedPacketCode(mCode);
-			mCode = null;
+			return true;
 		}
+
+		if (mCode != null) {
+			mCode.updateTime();
+		}
+
+		return false;
+	}
+
+	private boolean setRedPacketCodeValid() {
+		if (isCurrentRedPacketCode(mCode)) {
+			mCode.setValid();
+			return true;
+		}
+
+		return false;
 	}
 
 	private RedPacketCode getNextCode() {
-		RedPacketCode min = null;
+		RedPacketCode code = null;
 		long time = Long.MAX_VALUE;
 
-		for (RedPacketCode code : mCodes) {
-			if (code.getTime() < time) {
-				time = code.getTime();
-				min = code;
+		for (RedPacketCode node : mCodes) {
+			if (node.getTime() < time) {
+				time = node.getTime();
+				code = node;
 			}
 		}
 
-		return min;
+		return code;
 	}
 
 	private boolean gotoRedPacketActivity(AccessibilityNodeInfo root) {
@@ -431,6 +449,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	private boolean postRedPacketCode(AccessibilityNodeInfo root, RedPacketCode code) {
+		if (code.isCommited()) {
+			if (code.getCommitTimeConsume() > COMMIT_TIME) {
+				code.updateTime();
+			}
+
+			return false;
+		}
+
 		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId("com.alipay.android.phone.discovery.envelope:id/solitaire_edit");
 		if (nodes == null || nodes.size() <= 0) {
 			return false;
@@ -473,10 +499,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 						return false;
 					}
 
-					if (getWindowTimeConsume() < code.getCommitCount() * 1000) {
-						return false;
-					}
-
 					sendBroadcast(new Intent(MainActivity.ACTION_CODE_COMMIT));
 					code.addCommitCount();
 					return true;
@@ -508,7 +530,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 			if (mInputtedCode != null && mService != null) {
 				try {
-					mService.sendRedPacketCode(mInputtedCode.toString());
+					mService.sendRedPacketCode(mInputtedCode);
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}
@@ -561,7 +583,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 			List<CharSequence> sequences = event.getText();
 			if (sequences != null && sequences.size() > 0) {
-				mInputtedCode = sequences.get(0);
+				mInputtedCode = sequences.get(0).toString();
 			}
 		}
 	}
@@ -673,11 +695,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	@Override
 	protected boolean onKeyEvent(KeyEvent event) {
-		int keyCode = event.getKeyCode();
-		if (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+		switch (event.getKeyCode()) {
+		case KeyEvent.KEYCODE_VOLUME_UP:
+		case KeyEvent.KEYCODE_VOLUME_DOWN:
 			ComponentName info = CavanAndroid.getTopActivityInfo(this);
 			if (info != null && "com.alipay.android.phone.discovery.envelope.HomeActivity".equals(info.getClassName())) {
-				if (mCode != null && mCode.canComplete() && event.getAction() == KeyEvent.ACTION_DOWN) {
+				if (event.getAction() == KeyEvent.ACTION_DOWN && isCurrentRedPacketCode(mCode) && mCode.canComplete()) {
 					String code = mCode.getCode();
 
 					CavanAndroid.eLog("add invalid code: " + code);
@@ -687,6 +710,13 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 				return true;
 			}
+			break;
+
+		case KeyEvent.KEYCODE_BACK:
+			if (mCode != null) {
+				mCode.setCommitCount(0);
+			}
+			break;
 		}
 
 		return super.onKeyEvent(event);

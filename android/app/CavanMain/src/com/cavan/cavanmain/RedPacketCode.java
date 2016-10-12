@@ -15,9 +15,11 @@ public class RedPacketCode implements Parcelable {
 	private static final SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	private int mCommitCount;
+	private long mCommitTime;
 
 	private long mTime;
 	private String mCode;
+	private boolean mIsValid;
 	private boolean mNetShared;
 	private boolean mRepeatable;
 	private boolean mCompleted;
@@ -42,6 +44,8 @@ public class RedPacketCode implements Parcelable {
 
 	public long updateTime() {
 		long time = System.currentTimeMillis();
+
+		mCommitTime = 0;
 
 		if (mTime > time) {
 			return mTime - time;
@@ -86,13 +90,10 @@ public class RedPacketCode implements Parcelable {
 		return 0;
 	}
 
-	public void setRepeatable(boolean enable) {
-		mRepeatable = enable;
-		updateTime();
-	}
-
 	public void setRepeatable() {
-		setRepeatable(true);
+		mRepeatable = true;
+		mIsValid = true;
+		updateTime();
 	}
 
 	public boolean isRepeatable() {
@@ -108,7 +109,7 @@ public class RedPacketCode implements Parcelable {
 	}
 
 	public int getCommitCount() {
-		if (mRepeatable) {
+		if (mIsValid) {
 			return 0;
 		}
 
@@ -120,7 +121,9 @@ public class RedPacketCode implements Parcelable {
 	}
 
 	public int addCommitCount() {
-		if (mRepeatable) {
+		mCommitTime = System.currentTimeMillis();
+
+		if (mIsValid) {
 			mCommitCount = 1;
 		} else {
 			mCommitCount++;
@@ -149,6 +152,22 @@ public class RedPacketCode implements Parcelable {
 		return mNetShared;
 	}
 
+	public void setValid() {
+		mIsValid = true;
+	}
+
+	public boolean isValid() {
+		return mIsValid;
+	}
+
+	public boolean isCommited() {
+		return mCommitTime != 0;
+	}
+
+	public long getCommitTimeConsume() {
+		return System.currentTimeMillis() - mCommitTime;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (mCode == obj) {
@@ -173,18 +192,24 @@ public class RedPacketCode implements Parcelable {
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-
-		builder.append("code = ");
-		builder.append(mCode);
+		StringBuilder builder = new StringBuilder(mCode);
 
 		if (mTime > 0) {
-			builder.append(", time = ");
+			builder.append(" ");
 			builder.append(sDateFormat.format(new Date(mTime)));
 		}
 
-		builder.append(", repeatable = ");
-		builder.append(mRepeatable);
+		if (mNetShared) {
+			builder.append(" Shared");
+		}
+
+		if (mRepeatable) {
+			builder.append(" Repeatable");
+		}
+
+		if (mIsValid) {
+			builder.append(" Valid");
+		}
 
 		return builder.toString();
 	}
