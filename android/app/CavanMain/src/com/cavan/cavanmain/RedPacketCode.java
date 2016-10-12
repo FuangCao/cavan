@@ -117,19 +117,22 @@ public class RedPacketCode implements Parcelable {
 	}
 
 	public void setCommitCount(int count) {
+		mCommitTime = System.currentTimeMillis();
 		mCommitCount = count;
 	}
 
 	public int addCommitCount() {
-		mCommitTime = System.currentTimeMillis();
+		int count;
 
 		if (mIsValid) {
-			mCommitCount = 1;
+			count = 1;
 		} else {
-			mCommitCount++;
+			count = mCommitCount + 1;
 		}
 
-		return mCommitCount;
+		setCommitCount(count);
+
+		return count;
 	}
 
 	public int subCommitCount() {
@@ -140,7 +143,7 @@ public class RedPacketCode implements Parcelable {
 		return 0;
 	}
 
-	public boolean canComplete() {
+	public boolean canRemove() {
 		return mCommitCount > 0;
 	}
 

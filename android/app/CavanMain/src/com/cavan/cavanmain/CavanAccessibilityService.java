@@ -30,7 +30,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private static final long POLL_DELAY = 500;
 	private static final long INPUT_OVERTIME = 5000;
 	private static final long UNPACK_OVERTIME = 2000;
-	private static final long COMMIT_TIME = 2000;
+	private static final long COMMIT_TIME = 1000;
 	private static final long COMMIT_OVERTIME = 300000;
 	private static final long CODE_OVERTIME = 28800000;
 
@@ -294,6 +294,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 		switch (mClassName) {
 		case "com.eg.android.AlipayGphone.AlipayLogin":
 			if (mCodeCount > 0) {
+				if (mCode != null) {
+					mCode.setCommitCount(0);
+				}
+
 				gotoRedPacketActivity(root);
 			}
 			break;
@@ -327,6 +331,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 			if (MainActivity.isAutoUnpackEnabled(this)) {
 				unpackRedPacket(root);
+				startAutoCommitRedPacketCode(500);
 			}
 			break;
 
@@ -367,6 +372,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 			break;
 
 		default:
+			if (mClassName == CavanString.EMPTY_STRING) {
+				break;
+			}
+
 			if (mClassName.endsWith("Dialog")) {
 				break;
 			}
@@ -466,14 +475,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 		String text = CavanString.fromCharSequence(node.getText());
 		boolean codeNotMatch = !text.equals(code.getCode());
 
-		if (codeNotMatch) {
-			if (text.length() > 0) {
-				Bundle arguments = new Bundle();
-				arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, 0);
-				arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, text.length());
-				node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, arguments);
-			}
+		Bundle arguments = new Bundle();
+		arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, 0);
+		arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, text.length());
+		node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, arguments);
 
+		if (codeNotMatch) {
 			RedPacketListenerService.postRedPacketCode(this, code.getCode());
 			node.performAction(AccessibilityNodeInfo.ACTION_PASTE);
 		}
@@ -704,12 +711,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 		case KeyEvent.KEYCODE_VOLUME_DOWN:
 			ComponentName info = CavanAndroid.getTopActivityInfo(this);
 			if (info != null && CavanPackageName.ALIPAY.equals(info.getPackageName())) {
-				if (event.getAction() == KeyEvent.ACTION_DOWN && isCurrentRedPacketCode(mCode) && mCode.canComplete()) {
-					String code = mCode.getCode();
+				if (event.getAction() == KeyEvent.ACTION_DOWN && isCurrentRedPacketCode(mCode) && mCode.canRemove()) {
+					if (mCode.isRepeatable() || mCodeCount == 1) {
+						String code = mCode.getCode();
 
-					CavanAndroid.eLog("add invalid code: " + code);
-					mInvalidCodes.addTimedValue(code);
-					setRedPacketCodeComplete();
+						CavanAndroid.eLog("add invalid code: " + code);
+						mInvalidCodes.addTimedValue(code);
+						setRedPacketCodeComplete();
+					}
 				}
 
 				return true;
