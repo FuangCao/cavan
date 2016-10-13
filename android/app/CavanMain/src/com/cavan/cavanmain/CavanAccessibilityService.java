@@ -71,9 +71,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 			try {
 				List<RedPacketCode> codes = mService.getCodes();
-				if (codes != null) {
+				if (codes != null && codes.size() > 0) {
 					mCodes = codes;
-					startAutoCommitRedPacketCode(0);
+					startAlipayActivity();
 				}
 			} catch (RemoteException e) {
 				e.printStackTrace();
@@ -120,14 +120,25 @@ public class CavanAccessibilityService extends AccessibilityService {
 			mHandler.removeCallbacks(this);
 			mCodeCount = getRedPacketCodeCount();
 
-			CavanAndroid.eLog("getRedPacketCodeCount = " + mCodeCount);
+			// CavanAndroid.eLog("getRedPacketCodeCount = " + mCodeCount);
 
-			postRedPacketCode(getNextCode());
+			ComponentName info = CavanAndroid.getTopActivityInfo(CavanAccessibilityService.this);
+			if (info != null) {
+				mPackageName = info.getPackageName();
+			}
 
-			if (mCodeCount > 0) {
-				startAutoCommitRedPacketCode(POLL_DELAY);
-			} else {
-				mAutoStartAlipay = false;
+			CavanAndroid.eLog("mPackageName = " + mPackageName);
+
+			if (CavanPackageName.ALIPAY.equals(mPackageName)) {
+				postRedPacketCode(getNextCode());
+
+				if (mCodeCount > 0) {
+					startAutoCommitRedPacketCode(POLL_DELAY);
+				} else {
+					mAutoStartAlipay = false;
+				}
+			} else if (mAutoStartAlipay && mCodeCount > 0) {
+				RedPacketListenerService.startAlipayActivity(CavanAccessibilityService.this);
 			}
 		}
 	};
@@ -166,7 +177,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				}
 
 				mCodes.add(code);
-				startAutoCommitRedPacketCode(0);
+				startAlipayActivity();
 				break;
 
 			case MainActivity.ACTION_CODE_REMOVE:
@@ -182,6 +193,11 @@ public class CavanAccessibilityService extends AccessibilityService {
 			}
 		}
 	};
+
+	private void startAlipayActivity() {
+		mAutoStartAlipay = true;
+		RedPacketListenerService.startAlipayActivity(this);
+	}
 
 	private long getWindowTimeConsume() {
 		return System.currentTimeMillis() - mWindowStartTime;
@@ -238,6 +254,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(backViewId);
 		if (nodes != null && nodes.size() > 0) {
 			for (AccessibilityNodeInfo node : nodes) {
+				CavanAndroid.eLog("backViewId = " + backViewId);
 				node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
 			}
 
@@ -245,6 +262,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 
 		if (force) {
+			CavanAndroid.eLog("GLOBAL_ACTION_BACK");
 			performGlobalAction(GLOBAL_ACTION_BACK);
 			return true;
 		}
@@ -269,21 +287,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	private boolean postRedPacketCode(RedPacketCode code) {
-		ComponentName info = CavanAndroid.getTopActivityInfo(this);
-		if (info != null) {
-			mPackageName = info.getPackageName();
-		}
-
-		CavanAndroid.eLog("mPackageName = " + mPackageName);
-
-		if (!CavanPackageName.ALIPAY.equals(mPackageName)) {
-			if (mAutoStartAlipay && code != null) {
-				RedPacketListenerService.startAlipayActivity(this);
-			}
-
-			return false;
-		}
-
 		AccessibilityNodeInfo root = getRootInActiveWindow();
 		if (root == null) {
 			return false;
@@ -372,10 +375,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 			break;
 
 		default:
-			if (mClassName == CavanString.EMPTY_STRING) {
-				break;
-			}
-
 			if (mClassName.endsWith("Dialog")) {
 				break;
 			}

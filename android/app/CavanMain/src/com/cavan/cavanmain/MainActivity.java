@@ -168,6 +168,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private Preference mPreferencePermissionSettings;
 	private Preference mPreferenceMessageShow;
 	private ListPreference mPreferenceAutoCommit;
+	private CheckBoxPreference mPreferenceAutoOpenApp;
 	private EditTextPreference mPreferenceRedPacketCodeSend;
 	private EditTextPreference mPreferenceRedPacketNotifyTest;
 	private RingtonePreference mPreferenceRedPacketNotifyRingtone;
@@ -253,6 +254,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceInputMethodSelect = findPreference(KEY_INPUT_METHOD_SELECT);
 		mPreferenceLanTest = findPreference(KEY_LAN_TEST);
 		mPreferenceWanTest = findPreference(KEY_WAN_TEST);
+		mPreferenceAutoOpenApp = (CheckBoxPreference) findPreference(KEY_AUTO_OPEN_APP);
 
 		mPreferenceAutoUnlock = (CheckBoxPreference) findPreference(KEY_AUTO_UNLOCK);
 		mPreferenceAutoUnlock.setOnPreferenceChangeListener(this);
@@ -529,6 +531,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 				}
 			}
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
+			mPreferenceAutoOpenApp.setChecked(true);
+
 			if (!CavanAndroid.isNotificationListenerEnabled(this, RedPacketListenerService.class)) {
 				PermissionSettingsActivity.startNotificationListenerSettingsActivity(this);
 				CavanAndroid.showToastLong(this, "请打开通知读取权限");
