@@ -14,6 +14,7 @@ import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.hardware.input.InputManager;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.MulticastLock;
 import android.os.Looper;
@@ -22,6 +23,7 @@ import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import com.cavan.java.CavanJava;
@@ -48,6 +50,7 @@ public class CavanAndroid {
 	private static NotificationManager sNotificationManager;
 
 	private static ActivityManager sActivityManager;
+	public static InputMethodManager sInputMethodManager;
 
 	private static MulticastLock sMulticastLock;
 	private static WifiManager sWifiManager;
@@ -444,6 +447,25 @@ public class CavanAndroid {
 		} else {
 			lock.release();
 		}
+
+		return true;
+	}
+
+	public static InputMethodManager getInputMethodManager(Context context) {
+		if (sInputMethodManager == null) {
+			sInputMethodManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+		}
+
+		return sInputMethodManager;
+	}
+
+	public static boolean showInputMethodPicker(Context context) {
+		InputMethodManager manager = getInputMethodManager(context);
+		if (manager == null) {
+			return false;
+		}
+
+		manager.showInputMethodPicker();
 
 		return true;
 	}

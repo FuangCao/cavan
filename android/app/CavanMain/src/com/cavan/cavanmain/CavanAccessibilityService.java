@@ -475,12 +475,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 		String text = CavanString.fromCharSequence(node.getText());
 		boolean codeNotMatch = !text.equals(code.getCode());
 
-		Bundle arguments = new Bundle();
-		arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, 0);
-		arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, text.length());
-		node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, arguments);
-
 		if (codeNotMatch) {
+			Bundle arguments = new Bundle();
+			arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, 0);
+			arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, text.length());
+			node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, arguments);
+
 			RedPacketListenerService.postRedPacketCode(this, code.getCode());
 			node.performAction(AccessibilityNodeInfo.ACTION_PASTE);
 		}

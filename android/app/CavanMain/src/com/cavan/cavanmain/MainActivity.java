@@ -31,7 +31,6 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.preference.RingtonePreference;
 import android.text.InputType;
-import android.view.inputmethod.InputMethodManager;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.cavanjni.CavanJni;
@@ -488,8 +487,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		if (preference == mPreferenceIpAddress) {
 			updateIpAddressStatus();
 		} else if (preference == mPreferenceInputMethodSelect) {
-			InputMethodManager manager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-			manager.showInputMethodPicker();
+			CavanAndroid.showInputMethodPicker(this);
 		} else if (preference == mPreferenceLanTest) {
 			if (mFloatMessageService != null) {
 				try {
@@ -518,13 +516,16 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		} else if (preference == mPreferenceRedPacketCodeSend) {
 			String text = (String) object;
 			if (text != null) {
-				String code = text.replaceAll("\\W+", CavanString.EMPTY_STRING);
-				if (code.length() > 0) {
-					Intent intent = new Intent(ACTION_CODE_RECEIVED);
-					intent.putExtra("type", "手动输入");
-					intent.putExtra("code", code);
-					intent.putExtra("shared", false);
-					sendBroadcast(intent);
+				for (String line : text.split("\n")) {
+					String code = line.replaceAll("\\W+", CavanString.EMPTY_STRING);
+
+					if (code.length() > 0) {
+						Intent intent = new Intent(ACTION_CODE_RECEIVED);
+						intent.putExtra("type", "手动输入");
+						intent.putExtra("code", code);
+						intent.putExtra("shared", false);
+						sendBroadcast(intent);
+					}
 				}
 			}
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
@@ -534,6 +535,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			} else if (!CavanAndroid.isAccessibilityServiceEnabled(this, CavanAccessibilityService.class)) {
 				PermissionSettingsActivity.startAccessibilitySettingsActivity(this);
 				CavanAndroid.showToast(this, "请打开辅助功能");
+			} else if (!CavanInputMethod.isDefaultInputMethod(this)) {
+				CavanAndroid.showInputMethodPicker(this);
 			} else {
 				NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 				if (manager != null) {
