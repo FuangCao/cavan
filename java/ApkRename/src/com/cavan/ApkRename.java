@@ -27,6 +27,7 @@ import com.cavan.java.CavanCommand;
 import com.cavan.java.CavanFile;
 import com.cavan.java.CavanFile.CavanReplaceHandler;
 import com.cavan.java.CavanJava;
+import com.cavan.java.CavanString;
 import com.cavan.java.CavanXml;
 
 public class ApkRename {
@@ -141,12 +142,12 @@ public class ApkRename {
 	}
 
 	public static boolean doApkDecode(String inPath, String outPath) {
-		CavanJava.logD("decode: " + inPath + " => " + outPath);
+		CavanJava.dLog("decode: " + inPath + " => " + outPath);
 		return doApktool("decode", inPath, outPath);
 	}
 
 	public static boolean doApkEncode(String inPath, String outPath) {
-		CavanJava.logD("encode: " + inPath + " => " + outPath);
+		CavanJava.dLog("encode: " + inPath + " => " + outPath);
 		return doApktool("build", inPath, outPath);
 	}
 
@@ -157,7 +158,7 @@ public class ApkRename {
 				"-storepass", "CFA8888", "-keystore", KEYSTORE,
 				"-signedjar", outPath, inPath, KEYSTORE);
 
-		CavanJava.logD("signer: " + inPath + " => " + outPath);
+		CavanJava.dLog("signer: " + inPath + " => " + outPath);
 
 		return command.doExec();
 	}
@@ -165,7 +166,7 @@ public class ApkRename {
 	public static boolean doApkAlign(String inPath, String outPath) {
 		CavanCommand command = new CavanCommand("zipalign", "-v", "4", inPath, outPath);
 
-		CavanJava.logD("align: " + inPath + " => " + outPath);
+		CavanJava.dLog("align: " + inPath + " => " + outPath);
 
 		command.closeOut();
 
@@ -194,7 +195,7 @@ public class ApkRename {
 					String value = attr.getNodeValue();
 					if (value.endsWith("/" + mSourcePackage)) {
 						String newValue = value.substring(0, value.length() - mSourcePackage.length()) + mDestPackage;
-						CavanJava.logD(name + ": " + value + " => " + newValue);
+						CavanJava.dLog(name + ": " + value + " => " + newValue);
 						attr.setNodeValue(newValue);
 						changed = true;
 					}
@@ -245,13 +246,13 @@ public class ApkRename {
 							break;
 						}
 
-						nameValue = CavanJava.strStrip(nameValue);
+						nameValue = CavanString.strip(nameValue);
 
 						String type = file.getParentFile().getName();
 						addAppName(type, nameValue);
 
 						String newName = renameAppName(nameValue);
-						CavanJava.logD(type + "@" + mAppNameProp + ": " + nameValue + " => " + newName);
+						CavanJava.dLog(type + "@" + mAppNameProp + ": " + nameValue + " => " + newName);
 
 						valueNode.setNodeValue(newName);
 						changed = true;
@@ -299,7 +300,7 @@ public class ApkRename {
 							pathname = pathname.substring(0, index) + image;
 						}
 
-						CavanJava.logD("rename: " + file.getPath() + " => " + pathname);
+						CavanJava.dLog("rename: " + file.getPath() + " => " + pathname);
 						if (!file.renameTo(new File(pathname))) {
 							return false;
 						}
@@ -354,7 +355,7 @@ public class ApkRename {
 
 		Matcher matcher = sPatternSmaliGetIdentifier.matcher(line);
 		if (matcher.find()) {
-			CavanJava.logP(line);
+			CavanJava.pLog(line);
 			line = matcher.group(1) + "const-string/jumbo " + matcher.group(2) + ", \"" + mDestPackage + "\"\n" + line;
 		}
 
@@ -404,7 +405,7 @@ public class ApkRename {
 
 	public boolean doCopySmaliDir(CavanFile dirSource, CavanFile dirDest) {
 		if (!dirDest.mkdirs()) {
-			CavanJava.logP("Failed to mkdirs: " + dirDest.getPath());
+			CavanJava.pLog("Failed to mkdirs: " + dirDest.getPath());
 			return false;
 		}
 
@@ -451,7 +452,7 @@ public class ApkRename {
 		}
 
 		for (File dir : dirs) {
-			CavanJava.logD("rename: " + dir.getPath());
+			CavanJava.dLog("rename: " + dir.getPath());
 			if (!doRenameSmaliDir(dir)) {
 				return false;
 			}
@@ -463,7 +464,7 @@ public class ApkRename {
 
 			CavanFile dirDest = new CavanFile(buildSmaliDir(dirTop, index), mDestPackagePath);
 
-			CavanJava.logD("copy: " + dirSource.getPath() + " => " + dirDest.getPath());
+			CavanJava.dLog("copy: " + dirSource.getPath() + " => " + dirDest.getPath());
 			if (!doCopySmaliDir(dirSource, dirDest)) {
 				return false;
 			}
@@ -496,7 +497,7 @@ public class ApkRename {
 		}
 
 		if (mime.startsWith("text/") || mime.equals("application/xml")) {
-			CavanJava.logD("rename: [" + mime + "] " + cavanFile.getPath());
+			CavanJava.dLog("rename: [" + mime + "] " + cavanFile.getPath());
 			return cavanFile.replaceText(new CavanReplaceHandler() {
 
 				@Override
@@ -510,7 +511,7 @@ public class ApkRename {
 	}
 
 	public boolean doRenameApktool(CavanFile file) {
-		CavanJava.logD("rename: " + file.getPath());
+		CavanJava.dLog("rename: " + file.getPath());
 
 		return file.replaceLines(new CavanReplaceHandler() {
 
@@ -528,7 +529,7 @@ public class ApkRename {
 
 						if (!mFullRename) {
 							text = values[0] + ": " + mDestPackage;
-							CavanJava.logD(mSourcePackage + " => " + mDestPackage);
+							CavanJava.dLog(mSourcePackage + " => " + mDestPackage);
 						}
 					}
 				}
@@ -570,7 +571,7 @@ public class ApkRename {
 	}
 
 	public String addAppName(String type, String name) {
-		CavanJava.logD(type + ": app_name = " + name);
+		CavanJava.dLog(type + ": app_name = " + name);
 		return mHashMapAppName.put(type, name);
 	}
 
@@ -582,7 +583,7 @@ public class ApkRename {
 			}
 
 			appName = mHashMapAppName.get("values");
-			if (appName != null && CavanJava.hasChineseChar(appName)) {
+			if (appName != null && CavanString.hasChineseChar(appName)) {
 				return appName;
 			}
 
@@ -615,15 +616,15 @@ public class ApkRename {
 
 		mFullRename = fullRename;
 
-		CavanJava.logD("rename: " + mInFile.getPath() + " => " + mOutFile.getPath());
+		CavanJava.dLog("rename: " + mInFile.getPath() + " => " + mOutFile.getPath());
 
 		if (!CavanFile.deleteAll(mWorkFile)) {
-			CavanJava.logP("Failed to deleteAll: " + mWorkFile.getPath());
+			CavanJava.pLog("Failed to deleteAll: " + mWorkFile.getPath());
 			return false;
 		}
 
 		if (!doApkDecode(mInFile.getPath(), mWorkFile.getPath())) {
-			CavanJava.logP("Failed to doApkDecode: " + mWorkFile.getPath());
+			CavanJava.pLog("Failed to doApkDecode: " + mWorkFile.getPath());
 			return false;
 		}
 
@@ -652,8 +653,8 @@ public class ApkRename {
 			}
 		}
 
-		CavanJava.logD("mFullRename = " + mFullRename);
-		CavanJava.logD("package: " + mSourcePackage + " => " + mDestPackage);
+		CavanJava.dLog("mFullRename = " + mFullRename);
+		CavanJava.dLog("package: " + mSourcePackage + " => " + mDestPackage);
 
 		boolean manifestChanged = false;
 
@@ -675,33 +676,33 @@ public class ApkRename {
 		}
 
 		if (!doRenameApktool(new CavanFile(mWorkFile, "apktool.yml"))) {
-			CavanJava.logE("Failed to doRenameApktool");
+			CavanJava.eLog("Failed to doRenameApktool");
 			return false;
 		}
 
 		if (!doRenameResource(new File(mWorkFile, "res"))) {
-			CavanJava.logE("Failed to doRenameResource");
+			CavanJava.eLog("Failed to doRenameResource");
 			return false;
 		}
 
 		if (mFullRename) {
 			if (!mAndroidManifest.doRename(mDestPackage)) {
-				CavanJava.logE("Failed to mAndroidManifest.doRename");
+				CavanJava.eLog("Failed to mAndroidManifest.doRename");
 				return false;
 			}
 
 			if (!doRenameSmali(new File(mWorkFile, "smali"))) {
-				CavanJava.logE("Failed to doRenameSmali");
+				CavanJava.eLog("Failed to doRenameSmali");
 				return false;
 			}
 
 			if (!doRenameAssets(new File(mWorkFile, "assets"))) {
-				CavanJava.logE("Failed to doRenameAssets");
+				CavanJava.eLog("Failed to doRenameAssets");
 				return false;
 			}
 		} else if (manifestChanged) {
 			if (!mAndroidManifest.save()) {
-				CavanJava.logE("Failed to mAndroidManifest.save");
+				CavanJava.eLog("Failed to mAndroidManifest.save");
 				return false;
 			}
 		}
@@ -709,25 +710,25 @@ public class ApkRename {
 		mApkUnsigned.delete();
 
 		if (!doApkEncode(mWorkFile.getPath(), mApkUnsigned.getPath())) {
-			CavanJava.logE("Failed to doApkEncode");
+			CavanJava.eLog("Failed to doApkEncode");
 			return false;
 		}
 
 		mApkSigned.delete();
 
 		if (!doApkSign(mApkUnsigned.getPath(), mApkSigned.getPath())) {
-			CavanJava.logE("Failed to doApkSign");
+			CavanJava.eLog("Failed to doApkSign");
 			return false;
 		}
 
 		mOutFile.delete();
 
 		if (!doApkAlign(mApkSigned.getPath(), mOutFile.getPath())) {
-			CavanJava.logE("Failed to doApkAlign");
+			CavanJava.eLog("Failed to doApkAlign");
 			return false;
 		}
 
-		CavanJava.logD("File stored in: " + mOutFile.getPath());
+		CavanJava.dLog("File stored in: " + mOutFile.getPath());
 
 		return true;
 	}

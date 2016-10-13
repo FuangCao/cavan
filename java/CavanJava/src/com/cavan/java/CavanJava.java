@@ -95,6 +95,10 @@ public class CavanJava {
 		eLog(buildPosMessage());
 	}
 
+	public static void pLog(String message) {
+		eLog(buildPosMessage(message));
+	}
+
 	public static void pfLog(String format, Object... args) {
 		eLog(buildPosMessage(format, args));
 	}

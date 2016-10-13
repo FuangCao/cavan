@@ -25,7 +25,7 @@ public class ApkRenameMain {
 			mDirOut = outFile;
 		}
 
-		CavanJava.logD("mDirOut = " + mDirOut.getPath());
+		CavanJava.dLog("mDirOut = " + mDirOut.getPath());
 
 		mFileFailure = new CavanApkMapFile(mDirOut, "failure.txt");
 		mFileFailure.load();
@@ -82,12 +82,12 @@ public class ApkRenameMain {
 	public boolean doRenameFile(File inFile) {
 		String filename = inFile.getName();
 		if (mFileSuccessfull.hasApk(filename)) {
-			CavanJava.logD("skip exists file: " + inFile.getPath());
+			CavanJava.dLog("skip exists file: " + inFile.getPath());
 			return true;
 		}
 
 		if (mFileFailure.hasApk(filename)) {
-			CavanJava.logD("skip error file: " + inFile.getPath());
+			CavanJava.dLog("skip error file: " + inFile.getPath());
 			return true;
 		}
 
@@ -99,9 +99,9 @@ public class ApkRenameMain {
 			if (appName != null) {
 				CavanFile namedFile = buildApkFile(filename, appName);
 				if (namedFile != null) {
-					CavanJava.logD("move: " + outFile.getPath() + " => " + namedFile.getPath());
+					CavanJava.dLog("move: " + outFile.getPath() + " => " + namedFile.getPath());
 					if (!outFile.renameTo(namedFile)) {
-						CavanJava.logP("Failed to renameTo: " + namedFile.getPath());
+						CavanJava.pLog("Failed to renameTo: " + namedFile.getPath());
 						return false;
 					}
 
@@ -111,7 +111,7 @@ public class ApkRenameMain {
 
 			mFileSuccessfull.addApk(filename, appName);
 		} else {
-			CavanJava.logP("Failed to doRename: " + inFile.getPath());
+			CavanJava.pLog("Failed to doRename: " + inFile.getPath());
 			mFileFailure.addApk(filename, appName);
 		}
 
@@ -134,7 +134,7 @@ public class ApkRenameMain {
 
 	public boolean doRename() {
 		if (!mDirOut.mkdirsSafe()) {
-			CavanJava.logP("Failed to mkdirsSafe: " + mDirOut.getPath());
+			CavanJava.pLog("Failed to mkdirsSafe: " + mDirOut.getPath());
 			return false;
 		}
 
@@ -142,24 +142,24 @@ public class ApkRenameMain {
 		int error = 0;
 
 		for (String pathname : mSourceApks) {
-			CavanJava.logD("rename file: " + pathname + " (" + count + "/" + mSourceApks.size() + ")");
+			CavanJava.dLog("rename file: " + pathname + " (" + count + "/" + mSourceApks.size() + ")");
 
 			File file = new File(pathname);
 			if (!doRenameFile(file)) {
-				CavanJava.logE("Failed to rename file: " + file.getAbsolutePath());
+				CavanJava.eLog("Failed to rename file: " + file.getAbsolutePath());
 				error++;
 			}
 
-			CavanJava.printSep();
+			CavanJava.sepLog();
 			count++;
 		}
 
 		if (error > 0) {
-			CavanJava.logE("rename failure count = " + error);
+			CavanJava.eLog("rename failure count = " + error);
 			return false;
 		}
 
-		CavanJava.logD("rename successfull");
+		CavanJava.dLog("rename successfull");
 
 		return true;
 	}
@@ -182,7 +182,7 @@ public class ApkRenameMain {
 			ApkRename rename = new ApkRename(args[0]);
 			success = rename.doRename();
 		} else {
-			CavanJava.logD("apkrename <IN_APK> ... [OUT_APK]");
+			CavanJava.dLog("apkrename <IN_APK> ... [OUT_APK]");
 		}
 
 		if (!success) {
