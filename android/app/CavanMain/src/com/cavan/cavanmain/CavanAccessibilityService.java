@@ -44,6 +44,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	private long mDelay;
 	private boolean mAutoStartAlipay;
+	private String mClassNameAlipay = CavanString.EMPTY_STRING;
 
 	private long mWindowStartTime;
 	private String mClassName = CavanString.EMPTY_STRING;
@@ -130,15 +131,27 @@ public class CavanAccessibilityService extends AccessibilityService {
 			CavanAndroid.eLog("mPackageName = " + mPackageName);
 
 			if (CavanPackageName.ALIPAY.equals(mPackageName)) {
+				if (mClassNameAlipay == CavanString.EMPTY_STRING && info != null) {
+					String clsName = info.getClassName();
+					if (clsName != null) {
+						mClassNameAlipay = clsName;
+					}
+				}
+
 				postRedPacketCode(getNextCode());
 
 				if (mCodeCount > 0) {
 					startAutoCommitRedPacketCode(POLL_DELAY);
 				} else {
+					mClassNameAlipay = CavanString.EMPTY_STRING;
 					mAutoStartAlipay = false;
 				}
-			} else if (mAutoStartAlipay && mCodeCount > 0) {
-				RedPacketListenerService.startAlipayActivity(CavanAccessibilityService.this);
+			} else {
+				mClassNameAlipay = CavanString.EMPTY_STRING;
+
+				if (mAutoStartAlipay && mCodeCount > 0) {
+					RedPacketListenerService.startAlipayActivity(CavanAccessibilityService.this);
+				}
 			}
 		}
 	};
@@ -196,7 +209,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	private void startAlipayActivity() {
 		mAutoStartAlipay = true;
-		RedPacketListenerService.startAlipayActivity(this);
+
+		if (CavanAndroid.isTopActivity(this, CavanPackageName.ALIPAY)) {
+			startAutoCommitRedPacketCode(200);
+		} else {
+			RedPacketListenerService.startAlipayActivity(this);
+		}
 	}
 
 	private long getWindowTimeConsume() {
@@ -292,9 +310,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 			return false;
 		}
 
-		CavanAndroid.eLog("mClassName = " + mClassName);
+		CavanAndroid.eLog("mClassNameAlipay = " + mClassNameAlipay);
 
-		switch (mClassName) {
+		switch (mClassNameAlipay) {
 		case "com.eg.android.AlipayGphone.AlipayLogin":
 			if (mCodeCount > 0) {
 				if (mCode != null) {
@@ -320,7 +338,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			break;
 
 		case "com.alipay.mobile.framework.app.ui.DialogHelper$APGenericProgressDialog":
-			if (mCode != null && mCode.getCommitTimeConsume() > UNPACK_OVERTIME) {
+			if (mCode != null && getWindowTimeConsume() > UNPACK_OVERTIME) {
 				if (mCode.isCommited()) {
 					mCode.setCommitCount(0);
 				}
@@ -375,11 +393,11 @@ public class CavanAccessibilityService extends AccessibilityService {
 			break;
 
 		default:
-			if (mClassName.endsWith("Dialog")) {
+			if (mClassNameAlipay.endsWith("Dialog")) {
 				break;
 			}
 
-			if (mClassName.startsWith("com.alipay.mobile.framework.app.ui.DialogHelper")) {
+			if (mClassNameAlipay.startsWith("com.alipay.mobile.framework.app.ui.DialogHelper")) {
 				break;
 			}
 
@@ -480,6 +498,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 				arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, 0);
 				arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, text.length());
 				node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, arguments);
+			} else {
+				node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
 			}
 
 			RedPacketListenerService.postRedPacketCode(this, code.getCode());
@@ -559,11 +579,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	private void onWindowStateChanged(AccessibilityEvent event) {
 		mWindowStartTime = System.currentTimeMillis();
-		mClassName = event.getClassName().toString();
 		mPackageName = event.getPackageName().toString();
+		mClassName = event.getClassName().toString();
 
 		switch (mPackageName) {
 		case CavanPackageName.ALIPAY:
+			mClassNameAlipay = mClassName;
 			startAutoCommitRedPacketCode(0);
 			break;
 

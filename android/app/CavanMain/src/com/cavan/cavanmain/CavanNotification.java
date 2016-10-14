@@ -15,6 +15,7 @@ import android.service.notification.StatusBarNotification;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanDatabaseProvider.CavanDatabaseTable;
+import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanString;
 
 public class CavanNotification {
@@ -30,9 +31,6 @@ public class CavanNotification {
 	public static final String KEY_CONTENT = "content";
 
 	public static final Pattern sGroupPattern = Pattern.compile("([^\\(]+)\\((.+)\\)\\s*$");
-	public static final String[] sSplitPackages = {
-		"com.tencent.mobileqq", "com.tencent.mm"
-	};
 
 	public static final String[] PROJECTION = {
 		KEY_TIMESTAMP, KEY_PACKAGE, KEY_TITLE, KEY_USER_NAME, KEY_GROUP_NAME, KEY_CONTENT
@@ -102,16 +100,6 @@ public class CavanNotification {
 		}
 	}
 
-	public boolean isNeedSplit() {
-		for (String pkgName : sSplitPackages) {
-			if (pkgName.equals(mPackageName)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	public void parse(StatusBarNotification sbn) {
 		mTimestamp = System.currentTimeMillis();
 		mPackageName = sbn.getPackageName();
@@ -135,7 +123,7 @@ public class CavanNotification {
 
 			CavanAndroid.eLog(content);
 
-			if (isNeedSplit()) {
+			if (CavanPackageName.QQ.equals(mPackageName)) {
 				String[] contents = content.split(":", 2);
 
 				if (contents.length < 2) {
@@ -152,6 +140,17 @@ public class CavanNotification {
 
 					mContent = contents[1].trim();
 				}
+			} else if (CavanPackageName.MM.equals(mPackageName)) {
+				String[] contents = content.split(":", 2);
+
+				if (contents.length < 2) {
+					mContent = content.trim();
+				} else {
+					mUserName = contents[0].trim();
+					mContent = contents[1].trim();
+				}
+
+				mGroupName = mTitle;
 			} else {
 				mContent = content.trim();
 			}
