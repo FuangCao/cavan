@@ -143,7 +143,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 				if (mCodeCount > 0) {
 					startAutoCommitRedPacketCode(POLL_DELAY);
 				} else {
-					mClassNameAlipay = CavanString.EMPTY_STRING;
 					mAutoStartAlipay = false;
 				}
 			} else {
