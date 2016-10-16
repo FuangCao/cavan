@@ -328,6 +328,14 @@ public class RedPacketNotification extends CavanNotification {
 		return false;
 	}
 
+	public boolean sendRedPacketNotifyAlipayPredict() {
+		if (mFinder.isPredictCode()) {
+			return sendRedPacketNotifyNormal("准备抢红包", "准备抢红包@" + getUserDescription());
+		}
+
+		return false;
+	}
+
 	public String getRedPacketCodeNormal() {
 		return mFinder.getNormalCode(getPackageName());
 	}
@@ -351,6 +359,10 @@ public class RedPacketNotification extends CavanNotification {
 		}
 
 		if (sendRedPacketNotifyAlipayPicture()) {
+			return true;
+		}
+
+		if (sendRedPacketNotifyAlipayPredict()) {
 			return true;
 		}
 

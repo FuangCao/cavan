@@ -5,9 +5,14 @@ import java.util.List;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
+import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -17,8 +22,11 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
 import android.view.KeyEvent;
+import android.view.View;
+import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.EditText;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
@@ -28,7 +36,6 @@ import com.cavan.java.CavanTimedArray;
 public class CavanAccessibilityService extends AccessibilityService {
 
 	private static final long POLL_DELAY = 500;
-	private static final long INPUT_OVERTIME = 5000;
 	private static final long UNPACK_OVERTIME = 2000;
 	private static final long COMMIT_TIME = 1000;
 	private static final long COMMIT_OVERTIME = 300000;
@@ -36,10 +43,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	private static final int MSG_COMMIT_TIMEOUT = 1;
 	private static final int MSG_COMMIT_COMPLETE = 2;
+	private static final int MSG_CHECK_CONTENT = 3;
 
 	private static final String[] PACKAGE_NAMES = {
 		CavanPackageName.ALIPAY,
 		CavanPackageName.QQ,
+		CavanPackageName.SOGOU_IME,
 	};
 
 	private long mDelay;
@@ -53,6 +62,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private int mCodeCount;
 	private RedPacketCode mCode;
 	private String mInputtedCode;
+	private Dialog mCheckContentDialog;
 	private List<RedPacketCode> mCodes = new ArrayList<RedPacketCode>();
 	private CavanTimedArray<String> mInvalidCodes = new CavanTimedArray<String>(CODE_OVERTIME);
 	private CavanTimedArray<String> mTimedCodes = new CavanTimedArray<String>(CODE_OVERTIME);
@@ -109,6 +119,42 @@ public class CavanAccessibilityService extends AccessibilityService {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+				break;
+
+			case MSG_CHECK_CONTENT:
+				if (mCheckContentDialog != null && mCheckContentDialog.isShowing()) {
+					break;
+				}
+
+				View view = View.inflate(CavanAccessibilityService.this, R.layout.message_context, null);
+				final EditText editText = (EditText) view.findViewById(R.id.editTextMessage);
+				editText.setText((CharSequence) msg.obj);
+
+				AlertDialog.Builder builder = new AlertDialog.Builder(CavanAccessibilityService.this);
+				builder.setView(view);
+				builder.setCancelable(false);
+				builder.setNegativeButton(android.R.string.cancel, null);
+				builder.setPositiveButton(R.string.text_send, new OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
+						intent.putExtra("desc", "图片识别");
+						intent.putExtra("content", editText.getText().toString());
+						sendBroadcast(intent);
+					}
+				});
+				builder.setOnDismissListener(new OnDismissListener() {
+
+					@Override
+					public void onDismiss(DialogInterface dialog) {
+						mCheckContentDialog = null;
+					}
+				});
+
+				mCheckContentDialog = builder.create();
+				mCheckContentDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+				mCheckContentDialog.show();
 				break;
 			}
 		}
@@ -325,13 +371,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 		case "com.alipay.android.phone.discovery.envelope.HomeActivity":
 			if (code != null) {
 				postRedPacketCode(root, code);
-				if (code.getTimeout() > INPUT_OVERTIME) {
-					if (!mHandler.hasMessages(MSG_COMMIT_TIMEOUT, code)) {
-						Message message = mHandler.obtainMessage(MSG_COMMIT_TIMEOUT, code);
-						mHandler.sendMessageDelayed(message, COMMIT_OVERTIME);
-					}
-
-					code.updateTime();
+				if (!mHandler.hasMessages(MSG_COMMIT_TIMEOUT, code)) {
+					Message message = mHandler.obtainMessage(MSG_COMMIT_TIMEOUT, code);
+					mHandler.sendMessageDelayed(message, COMMIT_OVERTIME);
 				}
 			}
 			break;
@@ -617,7 +659,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	private void onWindowContentChanged(AccessibilityEvent event) {
-		AccessibilityNodeInfo source = event.getSource();
+		final AccessibilityNodeInfo source = event.getSource();
 		if (source == null) {
 			return;
 		}
@@ -641,6 +683,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 				intent.putExtra("content", text);
 				intent.putExtra("hasPrefix", true);
 				sendBroadcast(intent);
+			}
+		} else if (id.equals("com.sohu.inputmethod.sogou:id/result_view")) {
+			CharSequence sequence = source.getText();
+			if (sequence != null) {
+				Message message = mHandler.obtainMessage(MSG_CHECK_CONTENT, sequence);
+				mHandler.sendMessageDelayed(message, 500);
 			}
 		}
 	}

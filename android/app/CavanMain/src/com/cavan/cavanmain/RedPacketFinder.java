@@ -29,6 +29,10 @@ public class RedPacketFinder {
 		Pattern.compile("口\\s*令\\s*红\\s*包"),
 	};
 
+	private static final Pattern[] sPredictPatterns = {
+		Pattern.compile("准\\s*备.*红\\s*包"),
+	};
+
 	private static final Pattern[] sDigitPatterns = {
 		Pattern.compile("支\\s*付\\s*宝.*红\\s*包\\D*" + DIGIT_PATTERN),
 		Pattern.compile("支\\s*付\\s*宝.*口\\s*令\\D*" + DIGIT_PATTERN),
@@ -284,6 +288,17 @@ public class RedPacketFinder {
 		}
 
 		for (Pattern pattern : sPicturePatterns) {
+			Matcher matcher = pattern.matcher(mJoinedLines);
+			if (matcher.find()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public boolean isPredictCode() {
+		for (Pattern pattern : sPredictPatterns) {
 			Matcher matcher = pattern.matcher(mJoinedLines);
 			if (matcher.find()) {
 				return true;
