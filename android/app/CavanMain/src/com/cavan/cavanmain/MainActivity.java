@@ -69,6 +69,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_INPUT_METHOD_SELECT = "input_method_select";
 	public static final String KEY_PERMISSION_SETTINGS = "permission_settings";
 	public static final String KEY_RED_PACKET_CODE_SEND = "red_packet_code_send";
+	public static final String KEY_RED_PACKET_CODE_RECOGNIZE = "red_packet_code_recognize";
 	public static final String KEY_RED_PACKET_NOTIFY_TEST = "red_packet_notify_test";
 	public static final String KEY_RED_PACKET_NOTIFY_RINGTONE = "red_packet_notify_ringtone";
 	public static final String KEY_TCP_BRIDGE = "tcp_bridge";
@@ -170,6 +171,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private ListPreference mPreferenceAutoCommit;
 	private CheckBoxPreference mPreferenceAutoOpenApp;
 	private EditTextPreference mPreferenceRedPacketCodeSend;
+	private EditTextPreference mPreferenceRedPacketCodeRecognize;
 	private EditTextPreference mPreferenceRedPacketNotifyTest;
 	private RingtonePreference mPreferenceRedPacketNotifyRingtone;
 	private CavanServicePreference mPreferenceTcpDd;
@@ -303,6 +305,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceRedPacketCodeSend = (EditTextPreference) findPreference(KEY_RED_PACKET_CODE_SEND);
 		mPreferenceRedPacketCodeSend.setPositiveButtonText(R.string.text_send);
 		mPreferenceRedPacketCodeSend.setOnPreferenceChangeListener(this);
+
+		mPreferenceRedPacketCodeRecognize = (EditTextPreference) findPreference(KEY_RED_PACKET_CODE_RECOGNIZE);
+		mPreferenceRedPacketCodeRecognize.setPositiveButtonText(R.string.text_recognize);
+		mPreferenceRedPacketCodeRecognize.setOnPreferenceChangeListener(this);
 
 		mPreferenceRedPacketNotifyRingtone = (RingtonePreference) findPreference(KEY_RED_PACKET_NOTIFY_RINGTONE);
 		text = mPreferenceRedPacketNotifyRingtone.getPreferenceManager().getSharedPreferences().getString(KEY_RED_PACKET_NOTIFY_RINGTONE, null);
@@ -529,6 +535,14 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 						sendBroadcast(intent);
 					}
 				}
+			}
+		} else if (preference == mPreferenceRedPacketCodeRecognize) {
+			String text = (String) object;
+			if (text != null) {
+				Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
+				intent.putExtra("desc", "手动输入");
+				intent.putExtra("content", CavanString.fromCharSequence(text));
+				sendBroadcast(intent);
 			}
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
 			mPreferenceAutoOpenApp.setChecked(true);

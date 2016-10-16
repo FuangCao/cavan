@@ -29,6 +29,10 @@
 	    android:persistent="true"
 	    android:title="@string/text_red_packet_code_send" />
 
+	<EditTextPreference android:key="red_packet_code_recognize"
+	    android:persistent="true"
+	    android:title="@string/text_red_packet_code_recognize" />
+
 	<CheckBoxPreference android:key="auto_open_app"
 	    android:persistent="true"
 	    android:title="@string/text_auto_open_app" />

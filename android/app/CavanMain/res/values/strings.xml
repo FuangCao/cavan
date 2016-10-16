@@ -79,7 +79,9 @@
     <string name="text_auto_commit_count">提交次数：<xliff:g>%1$s</xliff:g></string>
     <string name="text_test_sucess">测试成功</string>
     <string name="text_send">发送</string>
+    <string name="text_recognize">识别</string>
     <string name="text_red_packet_code_send">红包口令发送</string>
+    <string name="text_red_packet_code_recognize">红包口令识别</string>
 
     <string-array name="text_auto_entries">
         <item>关闭</item>
