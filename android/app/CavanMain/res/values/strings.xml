@@ -135,5 +135,6 @@
         <item>9</item>
         <item>10</item>
     </string-array>
+        <string name="text_as_code">每行都是一条完整的口令</string>
 
 </resources>

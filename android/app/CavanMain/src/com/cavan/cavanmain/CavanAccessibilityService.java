@@ -26,6 +26,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.CheckBox;
 import android.widget.EditText;
 
 import com.cavan.android.CavanAndroid;
@@ -62,6 +63,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private int mCodeCount;
 	private RedPacketCode mCode;
 	private String mInputtedCode;
+	private String mLastContent;
 	private Dialog mCheckContentDialog;
 	private List<RedPacketCode> mCodes = new ArrayList<RedPacketCode>();
 	private CavanTimedArray<String> mInvalidCodes = new CavanTimedArray<String>(CODE_OVERTIME);
@@ -126,9 +128,17 @@ public class CavanAccessibilityService extends AccessibilityService {
 					break;
 				}
 
-				View view = View.inflate(CavanAccessibilityService.this, R.layout.message_context, null);
-				final EditText editText = (EditText) view.findViewById(R.id.editTextMessage);
-				editText.setText((CharSequence) msg.obj);
+				String content = (String) msg.obj;
+
+				if (mLastContent != null && mLastContent.equals(content)) {
+					break;
+				}
+
+				mLastContent = content;
+
+				final View view = View.inflate(CavanAccessibilityService.this, R.layout.red_packet_check, null);
+				final EditText editText = (EditText) view.findViewById(R.id.editTextContent);
+				editText.setText(content);
 
 				AlertDialog.Builder builder = new AlertDialog.Builder(CavanAccessibilityService.this);
 				builder.setView(view);
@@ -138,12 +148,32 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
-						Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
-						intent.putExtra("desc", "图片识别");
-						intent.putExtra("content", editText.getText().toString());
-						sendBroadcast(intent);
+						String text = editText.getText().toString();
+						CheckBox checkBox = (CheckBox) view.findViewById(R.id.checkBoxAsCode);
+
+						if (checkBox != null && checkBox.isChecked()) {
+							if (text != null) {
+								for (String line : text.split("\n")) {
+									String code = line.replaceAll("\\W+", CavanString.EMPTY_STRING);
+
+									if (code.length() > 0) {
+										Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
+										intent.putExtra("type", "图片识别");
+										intent.putExtra("code", code);
+										intent.putExtra("shared", false);
+										sendBroadcast(intent);
+									}
+								}
+							}
+						} else {
+							Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
+							intent.putExtra("desc", "图片识别");
+							intent.putExtra("content", editText.getText().toString());
+							sendBroadcast(intent);
+						}
 					}
 				});
+
 				builder.setOnDismissListener(new OnDismissListener() {
 
 					@Override
@@ -341,11 +371,34 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return performBackAction(root, "com.alipay.mobile.nebula:id/h5_tv_nav_back", true);
 	}
 
-	private boolean onAccessibilityEventMM(AccessibilityEvent event) {
+	private boolean onWindowStateChangedMM(AccessibilityEvent event) {
 		return false;
 	}
 
-	private boolean onAccessibilityEventQQ(AccessibilityEvent event) {
+	private boolean onWindowStateChangedQQ(AccessibilityEvent event) {
+		return false;
+	}
+
+	private boolean onWindowStateChangedSogouIME(AccessibilityEvent event) {
+		AccessibilityNodeInfo source = event.getSource();
+		if (source == null) {
+			return false;
+		}
+
+		if ("com.sogou.ocrplugin.OCRResultActivity".equals(mClassName)) {
+			List<AccessibilityNodeInfo> nodes = source.findAccessibilityNodeInfosByViewId("com.sohu.inputmethod.sogou:id/result_view");
+			if (nodes != null && nodes.size() > 0) {
+				CharSequence sequence = nodes.get(0).getText();
+				if (sequence != null) {
+					Message message = mHandler.obtainMessage(MSG_CHECK_CONTENT, sequence.toString());
+					mHandler.sendMessageDelayed(message, 500);
+					return true;
+				}
+			}
+		} else {
+			mLastContent = null;
+		}
+
 		return false;
 	}
 
@@ -630,11 +683,15 @@ public class CavanAccessibilityService extends AccessibilityService {
 			break;
 
 		case CavanPackageName.QQ:
-			onAccessibilityEventQQ(event);
+			onWindowStateChangedQQ(event);
 			break;
 
 		case CavanPackageName.MM:
-			onAccessibilityEventMM(event);
+			onWindowStateChangedMM(event);
+			break;
+
+		case CavanPackageName.SOGOU_IME:
+			onWindowStateChangedSogouIME(event);
 			break;
 		}
 	}
@@ -683,12 +740,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 				intent.putExtra("content", text);
 				intent.putExtra("hasPrefix", true);
 				sendBroadcast(intent);
-			}
-		} else if (id.equals("com.sohu.inputmethod.sogou:id/result_view")) {
-			CharSequence sequence = source.getText();
-			if (sequence != null) {
-				Message message = mHandler.obtainMessage(MSG_CHECK_CONTENT, sequence);
-				mHandler.sendMessageDelayed(message, 500);
 			}
 		}
 	}
@@ -810,7 +861,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 		info.packageNames = PACKAGE_NAMES;
 
-		info.flags |= AccessibilityServiceInfo.DEFAULT | AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS |
+		info.flags |= AccessibilityServiceInfo.DEFAULT |
+				AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS |
 				AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS |
 				AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
 
