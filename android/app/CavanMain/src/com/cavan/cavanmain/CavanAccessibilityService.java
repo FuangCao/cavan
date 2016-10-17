@@ -832,7 +832,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			ComponentName info = CavanAndroid.getTopActivityInfo(this);
 			if (info != null && CavanPackageName.ALIPAY.equals(info.getPackageName())) {
 				if (event.getAction() == KeyEvent.ACTION_DOWN && isCurrentRedPacketCode(mCode) && mCode.canRemove()) {
-					if (mCode.isRepeatable() || mCodeCount == 1) {
+					if (mCode.isRepeatable() || mCodeCount == 1 || CavanInputMethod.isDefaultInputMethod(this) == false) {
 						String code = mCode.getCode();
 
 						CavanAndroid.eLog("add invalid code: " + code);
