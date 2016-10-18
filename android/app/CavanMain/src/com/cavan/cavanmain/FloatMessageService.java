@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -727,6 +728,7 @@ public class FloatMessageService extends FloatWidowService {
 	public class TcpDaemonThread extends Thread {
 
 		private boolean mActive;
+		private long mConnDelay;
 
 		private Socket mSocket;
 		private InputStream mInputStream;
@@ -784,6 +786,7 @@ public class FloatMessageService extends FloatWidowService {
 		synchronized public void setActive(boolean active) {
 			if (active) {
 				mActive = true;
+				mConnDelay = 0;
 			} else {
 				mActive = false;
 				closeSocket();
@@ -791,9 +794,13 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		@Override
-		public void run() {
-			mActive = true;
+		public synchronized void start() {
+			setActive(true);
+			super.start();
+		}
 
+		@Override
+		public void run() {
 			while (mActive && MainActivity.isWanShareEnabled(getApplicationContext())) {
 				String host = MainActivity.getWanShareIpAddress(getApplicationContext());
 				if (host == null) {
@@ -808,12 +815,15 @@ public class FloatMessageService extends FloatWidowService {
 				try {
 					mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_connecting, 0).sendToTarget();
 
-					mSocket = new Socket(InetAddress.getByName(host), port);
+					mSocket = new Socket();
+					mSocket.connect(new InetSocketAddress(host, port), 6000);
+
 					mInputStream = mSocket.getInputStream();
 					mOutputStream = mSocket.getOutputStream();
 
 					mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_connected, 0).sendToTarget();
 					mNetSender.restartKeepLive();
+					mConnDelay = 0;
 
 					BufferedReader reader = new BufferedReader(new InputStreamReader(mInputStream));
 
@@ -836,7 +846,9 @@ public class FloatMessageService extends FloatWidowService {
 				if (mActive) {
 					synchronized (this) {
 						try {
-							wait(20000);
+							mConnDelay = mConnDelay * 2 + 500;
+							CavanAndroid.eLog("mConnDelay = " + mConnDelay);
+							wait(mConnDelay);
 						} catch (InterruptedException e1) {
 							e1.printStackTrace();
 						}
