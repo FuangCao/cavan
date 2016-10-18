@@ -31,6 +31,9 @@ public class RedPacketFinder {
 
 	private static final Pattern[] sPredictPatterns = {
 		Pattern.compile("准\\s*备.*红\\s*包"),
+		Pattern.compile("红\\s*包.*准\\s*备"),
+		Pattern.compile("突\\s*袭.*红\\s*包"),
+		Pattern.compile("红\\s*包.*突\\s*袭"),
 	};
 
 	private static final Pattern[] sDigitPatterns = {
