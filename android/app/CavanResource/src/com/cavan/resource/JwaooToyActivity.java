@@ -17,7 +17,9 @@ import com.jwaoo.android.JwaooBleToy;
 @SuppressLint("HandlerLeak")
 public class JwaooToyActivity extends Activity {
 
-	public static final String DEVICE_NAME = "JwaooToy";
+	public static final String[] DEVICE_NAMES = {
+		"JwaooToy", "SenseTube"
+	};
 
 	public static final int SENSOR_DELAY = 30;
 
@@ -98,7 +100,7 @@ public class JwaooToyActivity extends Activity {
 
 	public void showScanActivity() {
 		updateUI(false);
-		CavanBleScanActivity.show(this, DEVICE_NAME);
+		CavanBleScanActivity.show(this, DEVICE_NAMES);
 	}
 
 	@Override

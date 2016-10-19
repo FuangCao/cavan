@@ -45,7 +45,7 @@ public class CavanBleScanActivity extends Activity {
 		setContentView(R.layout.ble_scanner);
 
 		Intent intent = getIntent();
-		String name = intent.getStringExtra("name");
+		String[] names = intent.getStringArrayExtra("names");
 		UUID[] uuids = (UUID[]) intent.getSerializableExtra("uuids");
 
 		ListView view = (ListView) findViewById(R.id.listViewDevices);
@@ -70,11 +70,11 @@ public class CavanBleScanActivity extends Activity {
 			}
 		};
 
-		if (uuids != null || name != null) {
+		if (uuids != null || names != null) {
 			mScanner.setAutoSelect(3000);
 		}
 
-		mScanner.startScan(uuids, name);
+		mScanner.startScan(uuids, names);
 	}
 
 	@Override
@@ -91,7 +91,7 @@ public class CavanBleScanActivity extends Activity {
 		context.startActivity(getIntent(context));
 	}
 
-	public static void show(Activity activity, int requestCode, UUID[] uuids, String name) {
+	public static void show(Activity activity, int requestCode, UUID[] uuids, String[] names) {
 		if (activity.isDestroyed()) {
 			return;
 		}
@@ -102,19 +102,19 @@ public class CavanBleScanActivity extends Activity {
 			intent.putExtra("uuids", uuids);
 		}
 
-		if (name != null) {
-			intent.putExtra("name", name);
+		if (names != null) {
+			intent.putExtra("names", names);
 		}
 
 		activity.startActivityForResult(intent, requestCode);
 	}
 
-	public static void show(Activity activity, String name, UUID[] uuids) {
-		show(activity, 0, uuids, name);
+	public static void show(Activity activity, String[] names, UUID[] uuids) {
+		show(activity, 0, uuids, names);
 	}
 
-	public static void show(Activity activity, String name) {
-		show(activity, 0, null, name);
+	public static void show(Activity activity, String[] names) {
+		show(activity, 0, null, names);
 	}
 
 	public static void show(Activity activity, UUID[] uuids) {

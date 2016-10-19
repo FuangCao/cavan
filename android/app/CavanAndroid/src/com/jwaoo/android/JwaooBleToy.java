@@ -27,11 +27,11 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final String DEVICE_NAME_COMMON = "JwaooToy";
 	public static final String DEVICE_NAME_K100 = "K100";
 	public static final String DEVICE_NAME_K101 = "K101";
-	public static final String DEVICE_NAME_MODEL6 = "MODEL6";
+	public static final String DEVICE_NAME_MODEL06 = "MODEL-06";
 
 	public static final int DEVICE_ID_K100 = 100;
 	public static final int DEVICE_ID_K101 = 101;
-	public static final int DEVICE_ID_MODEL6 = 102;
+	public static final int DEVICE_ID_MODEL06 = 102;
 
 	public static final UUID UUID_SERVICE = UUID.fromString("00001888-0000-1000-8000-00805f9b34fb");
 	public static final UUID UUID_COMMAND = UUID.fromString("00001889-0000-1000-8000-00805f9b34fb");
@@ -592,11 +592,17 @@ public class JwaooBleToy extends CavanBleGatt {
 			return null;
 		}
 
-		return response.getTestResult();
+		JwaooToyTestResult result = response.getTestResult();
+		if (result != null) {
+			return result;
+		}
+
+		return new JwaooToyTestResult();
 	}
 
 	public boolean writeTestResult(JwaooToyTestResult result) {
-		return mCommand.readBool(result.buildCommand());
+		mCommand.readBool(result.buildCommand());
+		return true;
 	}
 
 	public int getDeviveId() {
@@ -669,10 +675,10 @@ public class JwaooBleToy extends CavanBleGatt {
 			mDeviceName = DEVICE_NAME_K101;
 			mDeviceId = DEVICE_ID_K101;
 			mDepthSteps = 3;
-		} else if (identify.equals(DEVICE_NAME_MODEL6)) {
+		} else if (identify.equals(DEVICE_NAME_MODEL06)) {
 			mSensor = new JwaooToySensorK101();
-			mDeviceName = DEVICE_NAME_MODEL6;
-			mDeviceId = DEVICE_ID_MODEL6;
+			mDeviceName = DEVICE_NAME_MODEL06;
+			mDeviceId = DEVICE_ID_MODEL06;
 			mDepthSteps = 3;
 		} else {
 			CavanAndroid.eLog("Invalid identify");
@@ -720,6 +726,11 @@ public class JwaooBleToy extends CavanBleGatt {
 
 		private int mTestValid;
 		private int mTestResult;
+
+		public JwaooToyTestResult() {
+			mTestValid = 0;
+			mTestResult = 0;
+		}
 
 		public JwaooToyTestResult(byte[] response) {
 			mTestValid = CavanJava.buildValue16(response, 2);

@@ -1,5 +1,6 @@
 package com.cavan.android;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,13 +14,13 @@ import android.content.Context;
 
 public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCallback {
 
-	private String mName;
 	private UUID[] mUuids;
 	private boolean mScanEnable;
 	private long mAutoSelectDelay;
 	private Timer mTimerAutoSelect;
 	private TimerTask mTaskAutoSelect;
 	private CavanBleDevice mDeviceBest;
+	private ArrayList<String> mNames = new ArrayList<String>();
 	private HashMap<String, CavanBleDevice> mDeviceMap = new HashMap<String, CavanBleDevice>();
 
 	protected void onScanResult(CavanBleDevice[] devices, CavanBleDevice device) {}
@@ -42,8 +43,10 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 		super.finalize();
 	}
 
-	public void setName(String name) {
-		mName = name;
+	public void addName(String name) {
+		if (mNames.indexOf(name) < 0) {
+			mNames.add(name);
+		}
 	}
 
 	public void setAutoSelect(long delay) {
@@ -63,10 +66,15 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 		return mAdapter.startLeScan(mUuids, this);
 	}
 
-	public boolean startScan(UUID[] uuids, String name) {
+	public boolean startScan(UUID[] uuids, String[] names) {
 		mScanEnable = true;
-		mName = name;
 		mUuids = uuids;
+
+		if (names != null) {
+			for (String name : names) {
+				addName(name);
+			}
+		}
 
 		return startScanInternal();
 	}
@@ -75,8 +83,8 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 		return startScan(uuids, null);
 	}
 
-	public boolean startScan(String name) {
-		return startScan(null, name);
+	public boolean startScan(String[] names) {
+		return startScan(null, names);
 	}
 
 	public boolean startScan() {
@@ -98,9 +106,9 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 
 	@Override
 	public void onLeScan(BluetoothDevice btDevice, int rssi, byte[] scanRecord) {
-		if (mName != null) {
+		if (mNames.size() > 0) {
 			String name = btDevice.getName();
-			if (name == null || name.equals(mName) == false) {
+			if (name == null || mNames.indexOf(name) < 0) {
 				return;
 			}
 		}
