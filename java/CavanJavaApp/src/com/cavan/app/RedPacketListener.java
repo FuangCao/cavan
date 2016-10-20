@@ -26,6 +26,8 @@ public class RedPacketListener extends TcpConnector implements ClipboardOwner {
 	private MulticastSocket mUdpSocket;
 	private InetSocketAddress mUdpAddress = new InetSocketAddress(UDP_HOSTNAME, UDP_PORT);
 
+	private String mClipboardText;
+
 	public RedPacketListener(String hostname, int port) {
 		super(hostname, port);
 
@@ -102,18 +104,28 @@ public class RedPacketListener extends TcpConnector implements ClipboardOwner {
 	public void lostOwnership(Clipboard clipboard, Transferable contents) {
 		while (true) {
 			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			try {
 				if (clipboard.isDataFlavorAvailable(DataFlavor.stringFlavor)) {
 					String text = (String) clipboard.getData(DataFlavor.stringFlavor);
 					if (text != null) {
 						clipboard.setContents(new StringSelection(text), this);
-						RedPacketFinder finder = new RedPacketFinder();
-						finder.split(text);
 
-						for (String code : finder.getRedPacketCodes()) {
-							sendRedPacketCode(code);
+						if (!text.equals(mClipboardText)) {
+							mClipboardText = text;
+							CavanJava.dLog("clipboard = " + text);
+
+							RedPacketFinder finder = new RedPacketFinder();
+							finder.split(text);
+
+							for (String code : finder.getRedPacketCodes()) {
+								sendRedPacketCode(code);
+							}
 						}
-
-						CavanJava.dLog("clipboard = " + text);
 					}
 				} else {
 					clipboard.setContents(clipboard.getContents(null), this);
@@ -121,12 +133,6 @@ public class RedPacketListener extends TcpConnector implements ClipboardOwner {
 
 				break;
 			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-			try {
-				Thread.sleep(500);
-			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
