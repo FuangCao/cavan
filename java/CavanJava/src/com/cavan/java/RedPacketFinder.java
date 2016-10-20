@@ -8,8 +8,9 @@ import java.util.regex.Pattern;
 
 public class RedPacketFinder {
 
+	private static final String SEPARATOR = "~\\-_+=";
 	private static final String NORMAL_PATTERN = "(\\w+红包)";
-	private static final String DIGIT_PATTERN = "([\\d\\s]+)";
+	private static final String DIGIT_PATTERN = "([\\d\\s" + SEPARATOR + "]+)";
 	private static final String DIGIT_MULTI_LINE_PATTERN = "((?:\\D*\\d)+)";
 	private static final String WORD_PATTERN = "(\\w+)";
 	private static final String WORD_MULTI_LINE_PATTERN = "([\\w\\s]+)";
@@ -40,7 +41,9 @@ public class RedPacketFinder {
 		Pattern.compile("口\\s*令\\s*红\\s*包\\D*" + DIGIT_PATTERN),
 		Pattern.compile("红\\s*包\\s*[:：]?\\s*" + DIGIT_PATTERN),
 		Pattern.compile("口\\s*令\\s*[:：]?\\s*" + DIGIT_PATTERN),
-		Pattern.compile("[:：]\\s*" + DIGIT_PATTERN),
+		Pattern.compile("[:：" + SEPARATOR + "]\\s*" + DIGIT_PATTERN),
+		Pattern.compile("\\b" + DIGIT_PATTERN + "[" + SEPARATOR + "]"),
+		Pattern.compile("\\b" + DIGIT_PATTERN + "走起"),
 		Pattern.compile("\\b" + DIGIT_PATTERN + "\\s*$"),
 	};
 
