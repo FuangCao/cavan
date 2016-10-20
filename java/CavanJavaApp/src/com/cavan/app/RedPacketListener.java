@@ -1,4 +1,4 @@
-package com.cavan.java;
+package com.cavan.app;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -12,6 +12,11 @@ import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
+
+import com.cavan.java.CavanJava;
+import com.cavan.java.CavanString;
+import com.cavan.java.RedPacketFinder;
+import com.cavan.java.TcpConnector;
 
 public class RedPacketListener extends TcpConnector implements ClipboardOwner {
 
@@ -95,9 +100,9 @@ public class RedPacketListener extends TcpConnector implements ClipboardOwner {
 
 	@Override
 	public void lostOwnership(Clipboard clipboard, Transferable contents) {
-		if (clipboard.isDataFlavorAvailable(DataFlavor.stringFlavor)) {
-			while (true) {
-				try {
+		while (true) {
+			try {
+				if (clipboard.isDataFlavorAvailable(DataFlavor.stringFlavor)) {
 					String text = (String) clipboard.getData(DataFlavor.stringFlavor);
 					if (text != null) {
 						clipboard.setContents(new StringSelection(text), this);
@@ -110,20 +115,20 @@ public class RedPacketListener extends TcpConnector implements ClipboardOwner {
 
 						CavanJava.dLog("clipboard = " + text);
 					}
-
-					break;
-				} catch (Exception e) {
-					e.printStackTrace();
+				} else {
+					clipboard.setContents(clipboard.getContents(null), this);
 				}
 
-				try {
-					Thread.sleep(500);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				break;
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-		} else {
-			clipboard.setContents(clipboard.getContents(null), this);
+
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -131,16 +136,16 @@ public class RedPacketListener extends TcpConnector implements ClipboardOwner {
 		int port = 8864;
 		String hostname = "192.168.88.88";
 
-		if (args.length > 2) {
-			hostname = args[1];
-			port = Integer.parseInt(args[2]);
-		} else if (args.length > 1) {
-			String[] texts = args[1].split(":");
+		if (args.length > 1) {
+			hostname = args[0];
+			port = Integer.parseInt(args[1]);
+		} else if (args.length > 0) {
+			String[] texts = args[0].split(":");
 			if (texts.length > 1) {
 				hostname = texts[0];
 				port = Integer.parseInt(texts[1]);
 			} else {
-				hostname = args[1];
+				hostname = args[0];
 			}
 		}
 

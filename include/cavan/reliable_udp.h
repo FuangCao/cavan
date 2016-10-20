@@ -52,6 +52,7 @@ struct reliable_udp_package {
 	u64 send_time;
 	u8 send_count;
 	bool need_ack;
+	bool ack_received;
 	struct reliable_udp_package *next;
 
 	u16 size;
@@ -59,6 +60,7 @@ struct reliable_udp_package {
 };
 
 struct reliable_udp_client {
+	u16 rtt;
 	u16 index;
 	u16	index_ack;
 	u16 index_send;
@@ -67,13 +69,17 @@ struct reliable_udp_client {
 	struct reliable_udp_package *send_head;
 	struct reliable_udp_header *recv_packages[RELIABLE_UDP_WIN_SIZE];
 
-
-	void (*send_wait)(struct reliable_udp_client *client, u32 msec);
-	void (*send_wakeup)(struct reliable_udp_client *client);
-	void (*send_lock)(struct reliable_udp_client *client);
-	void (*send_unlock)(struct reliable_udp_client *client);
-	ssize_t (*send)(struct reliable_udp_client *client, const void *pacakge, size_t size);
-	ssize_t (*recv)(struct reliable_udp_client *client, void *pacakge, size_t size);
+	void (*wait)(struct reliable_udp_client *client);
+	void (*msleep)(struct reliable_udp_client *client, u32 msec);
+	void (*wakeup)(struct reliable_udp_client *client);
+	void (*lock_send)(struct reliable_udp_client *client);
+	void (*unlock_send)(struct reliable_udp_client *client);
+	void (*lock_recv)(struct reliable_udp_client *client);
+	void (*unlock_recv)(struct reliable_udp_client *client);
+	void *(*alloc_mem)(size_t size);
+	void (*free_mem)(void *mem);
+	ssize_t (*send_packet)(struct reliable_udp_client *client, const void *pacakge, size_t size);
+	ssize_t (*recv_packet)(struct reliable_udp_client *client, void *pacakge, size_t size);
 };
 
 void reliable_udp_client_init(struct reliable_udp_client *client, void *data);

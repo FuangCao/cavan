@@ -22,6 +22,7 @@ import android.service.notification.StatusBarNotification;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanJava;
+import com.cavan.java.RedPacketFinder;
 
 public class RedPacketNotification extends CavanNotification {
 

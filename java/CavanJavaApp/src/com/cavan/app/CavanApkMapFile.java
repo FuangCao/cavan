@@ -1,4 +1,4 @@
-package com.cavan;
+package com.cavan.app;
 
 import java.io.File;
 import java.io.IOException;

@@ -21,9 +21,9 @@
 #include <cavan/timer.h>
 #include <cavan/reliable_udp.h>
 
-static struct reliable_udp_package *reliable_udp_package_alloc(size_t size, bool need_ack)
+static struct reliable_udp_package *reliable_udp_package_alloc(struct reliable_udp_client *client, size_t size, bool need_ack)
 {
-	struct reliable_udp_package *package = malloc(sizeof(struct reliable_udp_package) + size);
+	struct reliable_udp_package *package = client->alloc_mem(sizeof(struct reliable_udp_package) + size);
 
 	if (package == NULL) {
 		return NULL;
@@ -55,15 +55,16 @@ static void reliable_udp_add_package_locked(struct reliable_udp_client *client, 
 	*pp = package;
 
 	if (package == client->send_head) {
-		client->send_wakeup(client);
+		client->wakeup(client);
 	}
 }
 
 static void reliable_udp_send_package(struct reliable_udp_client *client, struct reliable_udp_package *package)
 {
 	package->send_count = 0;
+	package->ack_received = false;
 
-	client->send_lock(client);
+	client->lock_send(client);
 
 	package->package->index = client->index_send;
 
@@ -73,13 +74,13 @@ static void reliable_udp_send_package(struct reliable_udp_client *client, struct
 
 	reliable_udp_add_package_locked(client, package, clock_gettime_ms_real());
 
-	client->send_unlock(client);
+	client->unlock_send(client);
 }
 
 static bool reliable_udp_send_empty_package(struct reliable_udp_client *client, u8 flags, bool need_ack)
 {
 	struct reliable_udp_header *header;
-	struct reliable_udp_package *package = reliable_udp_package_alloc(sizeof(struct reliable_udp_header), need_ack);
+	struct reliable_udp_package *package = reliable_udp_package_alloc(client, sizeof(struct reliable_udp_header), need_ack);
 
 	if (package == NULL) {
 		return false;
@@ -97,49 +98,47 @@ static bool reliable_udp_send_empty_package(struct reliable_udp_client *client, 
 
 void reliable_udp_client_init(struct reliable_udp_client *client, void *data)
 {
+	client->rtt = 5000;
 	client->client_data = data;
 	client->index = client->index_send = clock_gettime_ms_mono();
 }
 
 void reliable_udp_send_main_loop(struct reliable_udp_client *client)
 {
-	client->send_lock(client);
+	client->lock_send(client);
 
 	while (1) {
 		struct reliable_udp_package *p = client->send_head;
 
 		if (p == NULL) {
-			client->send_unlock(client);
-			client->send_wait(client, 0);
-			client->send_lock(client);
+			client->wait(client);
 		} else {
 			u64 time = clock_gettime_ms_real();
 
 			if (p->time < time) {
-				client->send_unlock(client);
-				client->send_wait(client, time - p->time);
-				client->send_lock(client);
+				client->msleep(client, time - p->time);
 			} else {
 				client->send_head = p->next;
 
-				if (p->need_ack) {
-					p->send_count++;
-					reliable_udp_add_package_locked(client, p, time + p->send_count * 5000);
+				if (p->send_count > 0) {
 				}
 
-				client->send_unlock(client);
-				client->send(client, p->package, p->size);
-				p->send_time = time;
-				client->send_lock(client);
+				client->unlock_send(client);
+				client->send_packet(client, p->package, p->size);
+				client->lock_send(client);
 
-				if (!p->need_ack) {
-					free(p);
+				if (p->need_ack) {
+					p->send_count++;
+					p->send_time = time;
+					reliable_udp_add_package_locked(client, p, time + (p->send_count + 2 * client->rtt));
+				} else {
+					client->free_mem(p);
 				}
 			}
 		}
 	}
 
-	client->send_unlock(client);
+	client->unlock_send(client);
 }
 
 void reliable_udp_recv_main_loop(struct reliable_udp_client *client)
@@ -148,10 +147,15 @@ void reliable_udp_recv_main_loop(struct reliable_udp_client *client)
 	char buff[2048];
 	struct reliable_udp_header *header = (struct reliable_udp_header *) buff;
 
+	client->lock_recv(client);
+
 	while (1) {
-		rdlen = client->recv(client, buff, sizeof(buff));
+		client->unlock_recv(client);
+		rdlen = client->recv_packet(client, buff, sizeof(buff));
+		client->lock_recv(client);
+
 		if (rdlen < 0) {
-			return;
+			break;
 		}
 
 		switch (client->state) {
@@ -212,4 +216,6 @@ void reliable_udp_recv_main_loop(struct reliable_udp_client *client)
 			break;
 		}
 	}
+
+	client->unlock_recv(client);
 }

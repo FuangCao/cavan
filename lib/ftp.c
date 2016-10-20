@@ -184,7 +184,7 @@ static int ftp_data_service_open(struct network_service *service, struct network
 	u8 *ip;
 	int ret;
 	u16 port;
-	struct in_addr addr;
+	struct sockaddr_in addr;
 	struct network_url url;
 
 	network_url_init(&url, "tcp", "any", 0, NULL);
@@ -195,21 +195,14 @@ static int ftp_data_service_open(struct network_service *service, struct network
 		return ret;
 	}
 
-	ret = network_service_get_local_port(service);
+	ret = network_service_get_local_addr(service, (struct sockaddr *) &addr, sizeof(addr));
 	if (ret < 0) {
-		pr_error_info("network_service_get_local_port");
+		pr_err_info("network_service_get_local_addr");
 		goto out_network_service_close;
 	}
 
-	port = ret;
-
-	ret = network_client_get_local_ip(client, &addr);
-	if (ret < 0) {
-		pr_error_info("network_client_getsockname");
-		goto out_network_service_close;
-	}
-
-	ip = (u8 *) &addr;
+	port = addr.sin_port;
+	ip = (u8 *) &addr.sin_addr;
 
 	return snprintf(buff, size, "227 Entering Passive Mode (%d,%d,%d,%d,%d,%d).\r\n", ip[0], ip[1], ip[2], ip[3], port & 0xFF, (port >> 8) & 0xFF);
 
