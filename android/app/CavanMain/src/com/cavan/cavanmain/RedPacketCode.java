@@ -15,7 +15,7 @@ public class RedPacketCode implements Parcelable {
 	private static final SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	private int mCommitCount;
-	private long mCommitTime;
+	private boolean mCommitPending;
 
 	private long mTime;
 	private String mCode;
@@ -23,6 +23,7 @@ public class RedPacketCode implements Parcelable {
 	private boolean mNetShared;
 	private boolean mRepeatable;
 	private boolean mCompleted;
+	private boolean mMaybeInvalid;
 
 	public RedPacketCode(String code) {
 		mCode = code;
@@ -44,8 +45,6 @@ public class RedPacketCode implements Parcelable {
 
 	public long updateTime() {
 		long time = System.currentTimeMillis();
-
-		mCommitTime = 0;
 
 		if (mTime > time) {
 			return mTime - time;
@@ -117,22 +116,8 @@ public class RedPacketCode implements Parcelable {
 	}
 
 	public void setCommitCount(int count) {
-		mCommitTime = System.currentTimeMillis();
 		mCommitCount = count;
-	}
-
-	public int addCommitCount() {
-		int count;
-
-		if (mIsValid) {
-			count = 1;
-		} else {
-			count = mCommitCount + 1;
-		}
-
-		setCommitCount(count);
-
-		return count;
+		mCommitPending = false;
 	}
 
 	public int subCommitCount() {
@@ -163,12 +148,27 @@ public class RedPacketCode implements Parcelable {
 		return mIsValid;
 	}
 
-	public boolean isCommited() {
-		return mCommitTime != 0;
+	public boolean isCommitPending() {
+		return mCommitPending;
 	}
 
-	public long getCommitTimeConsume() {
-		return System.currentTimeMillis() - mCommitTime;
+	public void setCommitPending(boolean pending) {
+		mCommitPending = pending;
+		mMaybeInvalid = false;
+	}
+
+	public boolean maybeInvalid() {
+		if (mIsValid || mCommitPending) {
+			return false;
+		}
+
+		return mMaybeInvalid && mCommitCount > 0;
+	}
+
+	public void setCommitComplete() {
+		mMaybeInvalid = true;
+		mCommitPending = false;
+		setCommitCount(mIsValid ? 1 : mCommitCount + 1);
 	}
 
 	@Override

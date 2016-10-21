@@ -32,6 +32,7 @@ public class RedPacketFinder {
 		Pattern.compile("红\\s*包.*准\\s*备"),
 		Pattern.compile("突\\s*袭.*红\\s*包"),
 		Pattern.compile("红\\s*包.*突\\s*袭"),
+		Pattern.compile("红包.*发.*空间"),
 	};
 
 	private static final Pattern[] sDigitPatterns = {
@@ -80,7 +81,7 @@ public class RedPacketFinder {
 
 	public static final Pattern[] sExcludePatterns = {
 		Pattern.compile("[a-z]+://\\S+", Pattern.CASE_INSENSITIVE),
-		Pattern.compile("(?:(?:Q\\s*Q)|群|(?:手\\s*机)|(?:电\\s*话)|(?:微\\s*信)|码|号)(?:(?:[\\W\\d]*[:：])|(?:\\W*[:：]?))\\s*\\d+", Pattern.CASE_INSENSITIVE),
+		Pattern.compile("(?:(?:Q\\s*Q)|(?:扣\\s*扣)|群|(?:手\\s*机)|(?:电\\s*话)|(?:微\\s*信)|码|号)(?:(?:[\\W\\d]*[:：])|(?:\\W*[:：]?))\\s*\\d+", Pattern.CASE_INSENSITIVE),
 		Pattern.compile("领\\s*取\\s*方\\s*法\\s*[:：].*$"),
 		Pattern.compile("领\\s*取\\s*方\\s*法.*口\\s*令"),
 	};
@@ -93,7 +94,7 @@ public class RedPacketFinder {
 	}
 
 	private String mJoinedLines = CavanString.EMPTY_STRING;
-	private List<String> mLines = new ArrayList<String>();
+	private ArrayList<String> mLines = new ArrayList<String>();
 
 	public void split(String content) {
 		if (content == null) {
@@ -328,5 +329,17 @@ public class RedPacketFinder {
 		}
 
 		return null;
+	}
+
+	public ArrayList<String> getLines() {
+		return mLines;
+	}
+
+	public String getJoinedLines() {
+		return mJoinedLines;
+	}
+
+	public boolean contains(String text) {
+		return mJoinedLines.contains(text);
 	}
 }

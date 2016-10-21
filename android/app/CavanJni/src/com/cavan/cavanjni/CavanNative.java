@@ -407,6 +407,13 @@ class CavanCommandNetwork implements ICavanCommand {
 	}
 }
 
+class CavanCommandP2p implements ICavanCommand {
+	@Override
+	public int main(String... args) {
+		return CavanNative.doP2p(args);
+	}
+}
+
 class CavanCommandPartProbe implements ICavanCommand {
 	@Override
 	public int main(String... args) {
@@ -933,6 +940,7 @@ public class CavanNative {
 		sHashMap.put("net_discovery", new CavanCommandNetDiscovery());
 		sHashMap.put("net_monitor", new CavanCommandNetMonitor());
 		sHashMap.put("network", new CavanCommandNetwork());
+		sHashMap.put("p2p", new CavanCommandP2p());
 		sHashMap.put("part_probe", new CavanCommandPartProbe());
 		sHashMap.put("part_show", new CavanCommandPartShow());
 		sHashMap.put("part_table", new CavanCommandPartTable());
@@ -1058,6 +1066,7 @@ public class CavanNative {
 	public static native int doNetDiscovery(String... args);
 	public static native int doNetMonitor(String... args);
 	public static native int doNetwork(String... args);
+	public static native int doP2p(String... args);
 	public static native int doPartProbe(String... args);
 	public static native int doPartShow(String... args);
 	public static native int doPartTable(String... args);

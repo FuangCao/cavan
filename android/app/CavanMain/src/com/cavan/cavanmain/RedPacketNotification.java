@@ -331,6 +331,10 @@ public class RedPacketNotification extends CavanNotification {
 
 	public boolean sendRedPacketNotifyAlipayPredict() {
 		if (mFinder.isPredictCode()) {
+			if (mFinder.contains("预告") || mFinder.contains("早知道")) {
+				return false;
+			}
+
 			return sendRedPacketNotifyNormal("准备抢红包", "准备抢红包@" + getUserDescription());
 		}
 

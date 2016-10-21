@@ -401,6 +401,13 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doNetwork(JNIEnv *env, jclass
 	return CavanMainExecute(env, args, "network", do_cavan_network);
 }
 
+extern int do_cavan_p2p(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doP2p(JNIEnv *env, jclass clazz, jobjectArray args)
+{
+	return CavanMainExecute(env, args, "p2p", do_cavan_p2p);
+}
+
 extern int do_cavan_part_probe(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doPartProbe(JNIEnv *env, jclass clazz, jobjectArray args)
