@@ -32,12 +32,14 @@
             this.textBoxBdAddress = new System.Windows.Forms.TextBox();
             this.openFileDialogFirmware = new System.Windows.Forms.OpenFileDialog();
             this.openFileDialogSmartSnippets = new System.Windows.Forms.OpenFileDialog();
+            this.textBoxLog = new System.Windows.Forms.TextBox();
+            this.buttonClearLog = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 55);
+            this.label1.Location = new System.Drawing.Point(14, 365);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(65, 12);
             this.label1.TabIndex = 0;
@@ -45,14 +47,14 @@
             // 
             // textBoxFirmware
             // 
-            this.textBoxFirmware.Location = new System.Drawing.Point(83, 50);
+            this.textBoxFirmware.Location = new System.Drawing.Point(85, 360);
             this.textBoxFirmware.Name = "textBoxFirmware";
-            this.textBoxFirmware.Size = new System.Drawing.Size(227, 21);
+            this.textBoxFirmware.Size = new System.Drawing.Size(259, 21);
             this.textBoxFirmware.TabIndex = 1;
             // 
             // buttonFirmware
             // 
-            this.buttonFirmware.Location = new System.Drawing.Point(316, 50);
+            this.buttonFirmware.Location = new System.Drawing.Point(350, 358);
             this.buttonFirmware.Name = "buttonFirmware";
             this.buttonFirmware.Size = new System.Drawing.Size(47, 23);
             this.buttonFirmware.TabIndex = 2;
@@ -63,7 +65,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 15);
+            this.label2.Location = new System.Drawing.Point(14, 325);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(65, 12);
             this.label2.TabIndex = 3;
@@ -71,7 +73,7 @@
             // 
             // buttonConnect
             // 
-            this.buttonConnect.Location = new System.Drawing.Point(5, 103);
+            this.buttonConnect.Location = new System.Drawing.Point(4, 402);
             this.buttonConnect.Name = "buttonConnect";
             this.buttonConnect.Size = new System.Drawing.Size(75, 23);
             this.buttonConnect.TabIndex = 5;
@@ -81,7 +83,7 @@
             // 
             // buttonBurn
             // 
-            this.buttonBurn.Location = new System.Drawing.Point(288, 103);
+            this.buttonBurn.Location = new System.Drawing.Point(322, 402);
             this.buttonBurn.Name = "buttonBurn";
             this.buttonBurn.Size = new System.Drawing.Size(75, 23);
             this.buttonBurn.TabIndex = 6;
@@ -91,9 +93,9 @@
             // 
             // textBoxBdAddress
             // 
-            this.textBoxBdAddress.Location = new System.Drawing.Point(83, 12);
+            this.textBoxBdAddress.Location = new System.Drawing.Point(85, 322);
             this.textBoxBdAddress.Name = "textBoxBdAddress";
-            this.textBoxBdAddress.Size = new System.Drawing.Size(280, 21);
+            this.textBoxBdAddress.Size = new System.Drawing.Size(312, 21);
             this.textBoxBdAddress.TabIndex = 4;
             // 
             // openFileDialogFirmware
@@ -108,11 +110,32 @@
             this.openFileDialogSmartSnippets.Filter = "SmartSnippets|SmartSnippets.exe";
             this.openFileDialogSmartSnippets.Title = "选择文件 SmartSnippets.exe";
             // 
+            // textBoxLog
+            // 
+            this.textBoxLog.Location = new System.Drawing.Point(14, 12);
+            this.textBoxLog.Multiline = true;
+            this.textBoxLog.Name = "textBoxLog";
+            this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.textBoxLog.Size = new System.Drawing.Size(383, 285);
+            this.textBoxLog.TabIndex = 7;
+            // 
+            // buttonClearLog
+            // 
+            this.buttonClearLog.Location = new System.Drawing.Point(152, 402);
+            this.buttonClearLog.Name = "buttonClearLog";
+            this.buttonClearLog.Size = new System.Drawing.Size(75, 23);
+            this.buttonClearLog.TabIndex = 8;
+            this.buttonClearLog.Text = "清空打印";
+            this.buttonClearLog.UseVisualStyleBackColor = true;
+            this.buttonClearLog.Click += new System.EventHandler(this.buttonClearLog_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(375, 136);
+            this.ClientSize = new System.Drawing.Size(409, 437);
+            this.Controls.Add(this.buttonClearLog);
+            this.Controls.Add(this.textBoxLog);
             this.Controls.Add(this.buttonBurn);
             this.Controls.Add(this.buttonConnect);
             this.Controls.Add(this.textBoxBdAddress);
@@ -137,6 +160,8 @@
         private System.Windows.Forms.TextBox textBoxBdAddress;
         private System.Windows.Forms.OpenFileDialog openFileDialogFirmware;
         private System.Windows.Forms.OpenFileDialog openFileDialogSmartSnippets;
+        private System.Windows.Forms.TextBox textBoxLog;
+        private System.Windows.Forms.Button buttonClearLog;
     }
 }
 

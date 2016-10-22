@@ -1,13 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 
 namespace JwaooOtpProgrammer {
 
@@ -17,12 +13,14 @@ namespace JwaooOtpProgrammer {
             "C:\\Program Files (x86)", "C:\\Program Files", "D:\\Program Files (x86)", "D:\\Program Files"
         };
 
-        private static String sBdAddrPath = Path.Combine(Application.StartupPath, "bd_address.txt");
-        private static String sProgrammerPath = Path.Combine(Application.StartupPath, "jtag_programmer.bin");
-        private static String[] sOtpCommandArgs = { "-type", "otp", "-chip", "DA14580-01", "-jtag", "123456", "-baudrate", "57600", "-firmware", sProgrammerPath };
+        private static String sFileBdAddrTxt = Path.Combine(Application.StartupPath, "mac.txt");
+        private static String sFileHeaderTxt = Path.Combine(Application.StartupPath, "header.txt");
+        private static String sFileFirmwareTxt = Path.Combine(Application.StartupPath, "firmware.txt");
+        private static String sFileProgrammerBin = Path.Combine(Application.StartupPath, "jtag_programmer.bin");
+        private static String[] sOtpCommandArgs = { "-type", "otp", "-chip", "DA14580-01", "-jtag", "123456", "-baudrate", "57600", "-firmware", sFileProgrammerBin };
 
-        private byte[] mBdAddress;
-        private String mSmartSnippetsPath;
+        private UInt64 mBdAddress;
+        private String mFileSmartSnippetsExe;
 
         delegate void Process_OutputDataReceivedDelegate(object sender, DataReceivedEventArgs e);
 
@@ -30,24 +28,33 @@ namespace JwaooOtpProgrammer {
             InitializeComponent();
             openFileDialogFirmware.InitialDirectory = Application.StartupPath;
             openFileDialogSmartSnippets.InitialDirectory = Application.StartupPath;
-
-            mBdAddress = readBdAddressFile();
-            textBoxBdAddress.Text = getBdAddressString(mBdAddress);
+            setBdAddress(readBdAddressFile());
         }
 
-        private String getBdAddressString(byte[] bytes) {
-            if (bytes == null || bytes.Length != 6) {
-                return null;
+        private void setBdAddress(UInt64 addr) {
+            mBdAddress = addr;
+            textBoxBdAddress.Text = getBdAddressString(addr);
+        }
+
+        private bool addBdAddress() {
+            UInt64 addr = mBdAddress + 1;
+
+            if (writeBdAddressFile(addr)) {
+                setBdAddress(addr);
+                return true;
             }
 
+            return false;
+        }
+
+        private String getBdAddressString(UInt64 value) {
             StringBuilder builder = new StringBuilder();
 
-            for (int i = bytes.Length - 1; i >= 0; i--) {
-                byte value = bytes[i];
-                builder.Append(valueToChar(value >> 4));
-                builder.Append(valueToChar(value & 0x0F));
+            for (int offset = 40; offset >= 0; offset -= 8) {
+                builder.Append(valueToChar((int) ((value >> (offset + 4)) & 0x0F)));
+                builder.Append(valueToChar((int) ((value >> offset) & 0x0F)));
 
-                if (i > 0) {
+                if (offset > 0) {
                     builder.Append(':');
                 }
             }
@@ -55,58 +62,89 @@ namespace JwaooOtpProgrammer {
             return builder.ToString();
         }
 
-        private byte[] getBdAddressBytes(String text) {
+        private UInt64 getBdAddressValue(String text) {
             if (text == null) {
-                return null;
+                return 0;
             }
 
-            String[] texts = text.Split(':');
+            String[] texts = text.Split(':', '-');
             if (texts.Length != 6) {
-                return null;
+                return 0;
             }
 
-            byte[] bytes = new byte[6];
-            int index = bytes.Length;
+            UInt64 value = 0;
 
-            foreach (String node in texts) {
-                bytes[--index] = Convert.ToByte(node, 16);
+            try {
+                foreach (String node in texts) {
+                    if (node.Length != 2) {
+                        return 0;
+                    }
+
+                    value = (value << 8) | Convert.ToByte(node, 16);
+                }
+            } catch {
+                return 0;
+            }
+
+            return value;
+        }
+
+        private byte[] getBdAddressBytes(UInt64 addr) {
+            byte[] bytes = new byte[6];
+
+            for (int i = bytes.Length - 1; i >= 0;  i--) {
+                bytes[i] = (byte)(addr >> (i * 8));
             }
 
             return bytes;
         }
 
-        private byte[] readBdAddressFile() {
+        private UInt64 readBdAddressFile() {
             FileStream stream = null;
 
             try {
-                stream = File.OpenRead(sBdAddrPath);
+                stream = File.OpenRead(sFileBdAddrTxt);
 
                 byte[] buff = new byte[32];
                 int length = stream.Read(buff, 0, buff.Length);
                 String text = Encoding.ASCII.GetString(buff, 0, length);
+                UInt64 addr = getBdAddressValue(text);
+                if (addr != 0) {
+                    return addr;
+                }
 
-                return getBdAddressBytes(text);
-            } catch {
-                return null;
+                if (text.Length > 0) {
+                    MessageBox.Show("MAC地址文件：" + sFileBdAddrTxt + "\r\n格式错误：" + text);
+                } else {
+                    MessageBox.Show("MAC地址文件为空：" + sFileBdAddrTxt);
+                }
+            } catch (FileNotFoundException) {
+                UInt64 addr = 0x88EA00000000;
+                writeBdAddressFile(addr);
+                return addr;
+            } catch (Exception e) {
+                MessageBox.Show("读取MAC地址文件失败：\r\n" + e);
             } finally {
                 if (stream != null) {
                     stream.Close();
                 }
             }
+
+            return 0;
         }
 
-        private bool writeBdAddressFile(byte[] bytes) {
-            String text = getBdAddressString(bytes);
+        private bool writeBdAddressFile(UInt64 addr) {
+            String text = getBdAddressString(addr);
             if (text == null) {
                 return false;
             }
 
-            bytes = Encoding.ASCII.GetBytes(text);
+            byte[] bytes = Encoding.ASCII.GetBytes(text);
 
             FileStream stream = null;
 
             try {
-                stream = File.OpenWrite(sBdAddrPath);
+                stream = File.OpenWrite(sFileBdAddrTxt);
                 stream.Write(bytes, 0, bytes.Length);
                 return true;
             } catch (Exception) {
@@ -136,43 +174,50 @@ namespace JwaooOtpProgrammer {
         }
 
         private String getSmartSnippetsPath() {
-            if (mSmartSnippetsPath != null && File.Exists(mSmartSnippetsPath)) {
-                return mSmartSnippetsPath;
+            if (mFileSmartSnippetsExe != null && File.Exists(mFileSmartSnippetsExe)) {
+                return mFileSmartSnippetsExe;
             }
 
-            mSmartSnippetsPath = findSmartSnippetsPath();
-            if (mSmartSnippetsPath != null) {
-                return mSmartSnippetsPath;
+            mFileSmartSnippetsExe = findSmartSnippetsPath();
+            if (mFileSmartSnippetsExe != null) {
+                return mFileSmartSnippetsExe;
             }
 
             if (openFileDialogSmartSnippets.ShowDialog() != DialogResult.OK) {
                 return null;
             }
 
-            mSmartSnippetsPath = openFileDialogSmartSnippets.FileName;
+            mFileSmartSnippetsExe = openFileDialogSmartSnippets.FileName;
 
-            return mSmartSnippetsPath;
+            return mFileSmartSnippetsExe;
+        }
+
+        private ShellCommandRunner doRunCommand(ShellCommandRunner runner) {
+            if (runner.execute()) {
+                foreach (String line in runner.OutputLines) {
+                    textBoxLog.AppendText(line);
+                    textBoxLog.AppendText("\r\n");
+                }
+
+                textBoxLog.AppendText("============================================================\r\n");
+
+                return runner;
+            }
+
+            return null;
         }
 
         private ShellCommandRunner runSmartSnippetsCommand(params String[] args) {
             ShellCommandRunner runner = new ShellCommandRunner(getSmartSnippetsPath());
             runner.addArguments(args);
-            if (runner.execute()) {
-                return runner;
-            }
-
-            return null;
+            return doRunCommand(runner);
         }
 
         private ShellCommandRunner runOtpCommand(params String[] args) {
             ShellCommandRunner runner = new ShellCommandRunner(getSmartSnippetsPath());
             runner.addArguments(sOtpCommandArgs);
             runner.addArguments(args);
-            if (runner.execute()) {
-                return runner;
-            }
-
-            return null;
+            return doRunCommand(runner);
         }
 
         private bool writeOtpData(String offset, String data) {
@@ -216,12 +261,12 @@ namespace JwaooOtpProgrammer {
             return writeOtpData(offset, getBytesHexString(data));
         }
 
-        private bool writeBdAddress(byte[] addr) {
-            if (addr == null || addr.Length != 6) {
+        private bool writeBdAddress() {
+            if (mBdAddress == 0) {
                 return false;
             }
 
-            return writeOtpData("0x7FD4", addr);
+            return writeOtpData("0x7FD4", getBdAddressBytes(mBdAddress)) && addBdAddress();
         }
 
         private bool setOtpBootEnable() {
@@ -238,8 +283,6 @@ namespace JwaooOtpProgrammer {
             if (line == null) {
                 return false;
             }
-
-            textBoxFirmware.Text = line;
 
             if (line.StartsWith("Failed")) {
                 return false;
@@ -259,8 +302,6 @@ namespace JwaooOtpProgrammer {
                 return false;
             }
 
-            textBoxFirmware.Text = line;
-
             if (line.StartsWith("OTP memory reading has failed")) {
                 return false;
             }
@@ -279,13 +320,11 @@ namespace JwaooOtpProgrammer {
                 return false;
             }
 
-            textBoxFirmware.Text = line;
-
             if (line.StartsWith("OTP Memory burning failed")) {
                 return false;
             }
 
-            return true;
+            return line.StartsWith("OTP Memory burning completed successfully");
         }
 
         private void buttonFirmware_Click(object sender, EventArgs e) {
@@ -295,17 +334,50 @@ namespace JwaooOtpProgrammer {
         }
 
         private void buttonConnect_Click(object sender, EventArgs e) {
-            bool result = false;
-            // result = readOtpHeader("C:\\header.txt");
-            result = writeBdAddress(new byte[] { 0x13, 0x12, 0x03, 0x04, 0x14, 0x25 });
-            // result = writeOtpFirmware("C:\\jwaoo-toy.hex");
-            // result = setOtpBootEnable();
-            result = readOtpFirmware("C:\\firmware.txt");
-            MessageBox.Show("result = " + result);
+            if (readOtpHeader(sFileHeaderTxt)) {
+                MessageBox.Show("连接成功");
+            } else {
+                MessageBox.Show("连接失败");
+            }
         }
 
         private void buttonBurn_Click(object sender, EventArgs e) {
+            String pathname = textBoxFirmware.Text;
+            if (pathname == null || pathname.Length == 0) {
+                MessageBox.Show("请选择固件文件");
+                return;
+            }
 
+            if (!File.Exists(pathname)) {
+                MessageBox.Show("固件文件不存在：" + pathname);
+                return;
+            }
+
+            if (!readOtpFirmware(sFileFirmwareTxt)) {
+                MessageBox.Show("读取固件失败");
+                return;
+            }
+
+            if (!writeOtpFirmware(pathname)) {
+                MessageBox.Show("写固件失败: " + pathname);
+                return;
+            }
+
+            if (!setOtpBootEnable()) {
+                MessageBox.Show("设置从OTP启动失败");
+                return;
+            }
+
+            if (!writeBdAddress()) {
+                MessageBox.Show("写MAC地址失败");
+                return;
+            }
+
+            MessageBox.Show("恭喜，烧录成功");
+        }
+
+        private void buttonClearLog_Click(object sender, EventArgs e) {
+            textBoxLog.Clear();
         }
     }
 
@@ -393,7 +465,9 @@ namespace JwaooOtpProgrammer {
             process.OutputDataReceived += Process_OutputDataReceived;
             process.ErrorDataReceived += Process_ErrorDataReceived;
 
+#if true
             MessageBox.Show("Arguments = " + process.StartInfo.Arguments);
+#endif
 
             mOutLines.Clear();
             mErrLines.Clear();
@@ -408,9 +482,11 @@ namespace JwaooOtpProgrammer {
                         return false;
                     }
 
+#if false
                     if (mOutLines.Count > 0) {
                         MessageBox.Show(linesToString(mOutLines));
                     }
+#endif
 
                     return true;
                 }
