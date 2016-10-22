@@ -21,7 +21,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
-import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
@@ -186,7 +185,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 				mCheckContentDialog = builder.create();
 				Window win = mCheckContentDialog.getWindow();
 				win.setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
-				win.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.TOP);
 				mCheckContentDialog.show();
 				break;
 			}

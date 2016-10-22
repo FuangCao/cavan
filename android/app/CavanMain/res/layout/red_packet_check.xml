@@ -9,7 +9,8 @@
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="textMultiLine"
-        android:scrollbars="horizontal|vertical" >
+        android:scrollbars="horizontal|vertical"
+        android:textSize="12sp" >
 
         <requestFocus />
     </EditText>
