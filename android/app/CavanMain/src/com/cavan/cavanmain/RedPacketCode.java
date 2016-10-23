@@ -2,17 +2,20 @@ package com.cavan.cavanmain;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
 
 import android.annotation.SuppressLint;
-import android.os.Parcel;
-import android.os.Parcelable;
-
-import com.cavan.java.CavanJava;
+import android.content.Context;
 
 @SuppressLint("SimpleDateFormat")
-public class RedPacketCode implements Parcelable {
+public class RedPacketCode {
+
+	private static long CODE_OVERTIME = 28800000;
+	private static long REPEAT_TIME_ALIGN = 300000;
 
 	private static final SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	private static HashMap<String, RedPacketCode> mCodeMap = new HashMap<String, RedPacketCode>();
 
 	private int mPostCount;
 	private int mCommitCount;
@@ -22,19 +25,32 @@ public class RedPacketCode implements Parcelable {
 	private long mRepeatTime;
 
 	private String mCode;
-	private boolean mIsValid;
-	private boolean mNetShared;
+	private boolean mValid;
+	private boolean mInvalid;
+	private boolean mShared;
 	private boolean mCompleted;
 	private boolean mMaybeInvalid;
 
-	public RedPacketCode(String code) {
-		mCode = code;
+	public static RedPacketCode getInstence(String code, boolean create) {
+		Iterator<RedPacketCode> iterator = mCodeMap.values().iterator();
+		while (iterator.hasNext()) {
+			RedPacketCode node = iterator.next();
+			if (node.getTimeout() > CODE_OVERTIME) {
+				iterator.remove();
+			}
+		}
+
+		RedPacketCode node = mCodeMap.get(code);
+		if (node == null && create) {
+			node = new RedPacketCode(code);
+			mCodeMap.put(code, node);
+		}
+
+		return node;
 	}
 
-	public RedPacketCode(String code, long time, boolean shared) {
+	private RedPacketCode(String code) {
 		mCode = code;
-		mTime = time;
-		mNetShared = shared;
 	}
 
 	public long getTime() {
@@ -88,30 +104,42 @@ public class RedPacketCode implements Parcelable {
 	}
 
 	public void setValid() {
-		mIsValid = true;
+		mValid = true;
 	}
 
 	public boolean isValid() {
-		return mIsValid;
+		return mValid;
 	}
 
-	public void setNetShared() {
-		mNetShared = true;
+	public void setInvalid() {
+		mInvalid = true;
 	}
 
-	public boolean isNetShared() {
-		return mNetShared;
+	public boolean isInvalid() {
+		if (mValid) {
+			return false;
+		}
+
+		return mInvalid;
 	}
 
-	public void setRepeatable(long align, long ahead) {
-		mRepeatTime = System.currentTimeMillis() + align - 1;
-		mRepeatTime -= mRepeatTime % align;
-		mTime = mRepeatTime - ahead;
-		mIsValid = true;
+	public void setShared() {
+		mShared = true;
+	}
+
+	public boolean isShared() {
+		return mShared;
 	}
 
 	public boolean isRepeatable() {
 		return mRepeatTime > 0;
+	}
+
+	public void setRepeatable(Context context) {
+		mRepeatTime = System.currentTimeMillis() + REPEAT_TIME_ALIGN - 1;
+		mRepeatTime -= mRepeatTime % REPEAT_TIME_ALIGN;
+		mTime = mRepeatTime - MainActivity.getCommitAhead(context);
+		mValid = true;
 	}
 
 	public long getRepeatTimeout() {
@@ -123,11 +151,15 @@ public class RedPacketCode implements Parcelable {
 	}
 
 	public boolean isCompleted() {
+		if (mRepeatTime > 0) {
+			return false;
+		}
+
 		return mCompleted;
 	}
 
 	public int getCommitCount() {
-		if (mIsValid) {
+		if (mValid) {
 			return 0;
 		}
 
@@ -149,7 +181,7 @@ public class RedPacketCode implements Parcelable {
 	}
 
 	public boolean maybeInvalid() {
-		if (mIsValid) {
+		if (mValid) {
 			return false;
 		}
 
@@ -199,7 +231,7 @@ public class RedPacketCode implements Parcelable {
 			builder.append(sDateFormat.format(new Date(mTime)));
 		}
 
-		if (mNetShared) {
+		if (mShared) {
 			builder.append(", Shared");
 		}
 
@@ -207,35 +239,10 @@ public class RedPacketCode implements Parcelable {
 			builder.append(", Completed");
 		} else if (mRepeatTime > 0) {
 			builder.append(", Repeatable");
-		} else if (mIsValid) {
+		} else if (mValid) {
 			builder.append(", Valid");
 		}
 
 		return builder.toString();
 	}
-
-	@Override
-	public int describeContents() {
-		return 0;
-	}
-
-	@Override
-	public void writeToParcel(Parcel dest, int flags) {
-		dest.writeString(mCode);
-		dest.writeLong(mTime);
-		dest.writeByte(CavanJava.getBoolValueByte(mNetShared));
-	}
-
-	public static final Creator<RedPacketCode> CREATOR = new Creator<RedPacketCode>() {
-
-		@Override
-		public RedPacketCode[] newArray(int size) {
-			return new RedPacketCode[size];
-		}
-
-		@Override
-		public RedPacketCode createFromParcel(Parcel source) {
-			return new RedPacketCode(source.readString(), source.readLong(), source.readByte() > 0);
-		}
-	};
 }

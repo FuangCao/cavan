@@ -194,7 +194,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 		if (mFloatMessageService != null) {
 			try {
-				mFloatMessageService.addMessage(message, code, test);
+				mFloatMessageService.addMessage(message, code.getCode(), test);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

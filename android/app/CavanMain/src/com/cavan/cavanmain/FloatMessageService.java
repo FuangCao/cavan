@@ -38,7 +38,6 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.android.FloatWidowService;
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.java.CavanString;
-import com.cavan.java.CavanTimedArray;
 
 public class FloatMessageService extends FloatWidowService {
 
@@ -65,8 +64,7 @@ public class FloatMessageService extends FloatWidowService {
 	private boolean mUserPresent;
 	private TextView mTextViewTime;
 	private TextView mTextViewAutoUnlock;
-	private CavanTimedArray<String> mCodes = new CavanTimedArray<String>(600000);
-	private HashMap<CharSequence, RedPacketCode> mMessageCodeMap = new HashMap<CharSequence, RedPacketCode>();
+	private HashMap<CharSequence, String> mMessageCodeMap = new HashMap<CharSequence, String>();
 
 	private UdpDaemonThread mUdpDaemon;
 	private TcpDaemonThread mTcpDaemon;
@@ -177,7 +175,7 @@ public class FloatMessageService extends FloatWidowService {
 
 	private IFloatMessageService.Stub mBinder = new IFloatMessageService.Stub() {
 
-		private void sendCodeUpdateBroadcast(String action, RedPacketCode code) {
+		private void sendCodeUpdateBroadcast(String action, String code) {
 			Intent intent = new Intent(action);
 			intent.putExtra("code", code);
 			sendBroadcast(intent);
@@ -194,7 +192,7 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		@Override
-		public int addMessage(CharSequence message, RedPacketCode code, boolean test) throws RemoteException {
+		public int addMessage(CharSequence message, String code, boolean test) throws RemoteException {
 			TextView view = (TextView) FloatMessageService.this.addText(message, -1);
 			if (view == null) {
 				return -1;
@@ -206,16 +204,17 @@ public class FloatMessageService extends FloatWidowService {
 				if (test) {
 					sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_TEST, code);
 				} else {
-					mMessageCodeMap.put(message, code);
+					RedPacketCode node = RedPacketCode.getInstence(code, false);
+					if (node != null) {
+						mMessageCodeMap.put(message, code);
 
-					sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_ADD, code);
+						sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_ADD, code);
 
-					if (code.isNetShared() == false && mNetSender != null) {
-						long delay = code.getTime() - System.currentTimeMillis();
-						mNetSender.sendCode(code.getCode(), delay);
+						if (node.isShared() == false && mNetSender != null) {
+							long delay = node.getTime() - System.currentTimeMillis();
+							mNetSender.sendCode(code, delay);
+						}
 					}
-
-					mCodes.addTimedValue(code.getCode());
 				}
 			}
 
@@ -231,7 +230,7 @@ public class FloatMessageService extends FloatWidowService {
 		public void removeMessage(CharSequence message) throws RemoteException {
 			FloatMessageService.this.removeText(message);
 
-			RedPacketCode code = mMessageCodeMap.get(message);
+			String code = mMessageCodeMap.get(message);
 			if (code != null) {
 				mMessageCodeMap.remove(message);
 				sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_REMOVE, code);
@@ -254,10 +253,10 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		@Override
-		public List<RedPacketCode> getCodes() throws RemoteException {
-			List<RedPacketCode> codes = new ArrayList<RedPacketCode>();
+		public List<String> getCodes() throws RemoteException {
+			List<String> codes = new ArrayList<String>();
 
-			for (RedPacketCode code : mMessageCodeMap.values()) {
+			for (String code : mMessageCodeMap.values()) {
 				codes.add(code);
 			}
 
@@ -392,12 +391,15 @@ public class FloatMessageService extends FloatWidowService {
 			if (code.equals(NET_CMD_TEST)) {
 				command = getResources().getString(R.string.text_network_test_success, type);
 				mHandler.obtainMessage(MSG_SHOW_TOAST, command).sendToTarget();
-			} else if (!mCodes.hasTimedValue(code)) {
-				Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
-				intent.putExtra("type", type);
-				intent.putExtra("code", code);
-				intent.putExtra("shared", true);
-				sendBroadcast(intent);
+			} else {
+				RedPacketCode node = RedPacketCode.getInstence(code, false);
+				if (node == null || node.isRepeatable()) {
+					Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
+					intent.putExtra("type", type);
+					intent.putExtra("code", code);
+					intent.putExtra("shared", true);
+					sendBroadcast(intent);
+				}
 			}
 		}
 	}

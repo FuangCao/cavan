@@ -51,8 +51,8 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	public static final int KEYCODE_SPACE = 13;
 
 	private GridView mCodeGridView;
-	private RedPacketCode[] mUiCodes;
-	private List<RedPacketCode> mCodes = new ArrayList<RedPacketCode>();
+	private String[] mUiCodes;
+	private List<String> mCodes = new ArrayList<String>();
 
 	private Keyboard mKeyboard;
 	private KeyboardView mKeyboardView;
@@ -90,7 +90,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 			switch (action) {
 			case MainActivity.ACTION_CODE_ADD:
-				RedPacketCode code = intent.getParcelableExtra("code");
+				String code = intent.getStringExtra("code");
 				if (code == null) {
 					break;
 				}
@@ -100,7 +100,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 				break;
 
 			case MainActivity.ACTION_CODE_REMOVE:
-				code = intent.getParcelableExtra("code");
+				code = intent.getStringExtra("code");
 				if (code == null) {
 					break;
 				}
@@ -143,7 +143,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 				}
 			}
 
-			mUiCodes = new RedPacketCode[size];
+			mUiCodes = new String[size];
 			mCodes.toArray(mUiCodes);
 
 			mCodeGridView.setNumColumns(columns);
@@ -157,7 +157,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		public View getView(int position, View convertView, ViewGroup parent) {
 			Button view = new Button(CavanInputMethod.this);
 			view.setOnClickListener(CavanInputMethod.this);
-			view.setText(mUiCodes[position].getCode());
+			view.setText(mUiCodes[position]);
 			return view;
 		}
 
@@ -195,7 +195,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	private void checkCodeArray() {
 		try {
 			if (mService != null && mService.getCodeCount() != mCodes.size()) {
-				List<RedPacketCode> codes = mService.getCodes();
+				List<String> codes = mService.getCodes();
 				if (codes != null) {
 					mCodes = codes;
 					updateInputView();
