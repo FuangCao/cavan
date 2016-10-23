@@ -1,6 +1,7 @@
 package com.cavan.cavanmain;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import android.accessibilityservice.AccessibilityService;
@@ -38,9 +39,10 @@ import com.cavan.java.CavanTimedArray;
 public class CavanAccessibilityService extends AccessibilityService {
 
 	private static final long POLL_DELAY = 500;
-	private static final long UNPACK_OVERTIME = 2000;
+	private static final long UNPACK_OVERTIME = 3000;
 	private static final long COMMIT_OVERTIME = 300000;
 	private static final long CODE_OVERTIME = 28800000;
+	private static final long REPEAT_OVERTIME = 20000;
 
 	private static final int MSG_COMMIT_TIMEOUT = 1;
 	private static final int MSG_COMMIT_COMPLETE = 2;
@@ -443,11 +445,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 			if (getWindowTimeConsume() > UNPACK_OVERTIME) {
 				if (isCurrentRedPacketCode(mCode)) {
 					mCode.setCommitCount(0);
+					if (!mCode.isValid()) {
+						mCode.updateTime();
+					}
 				}
 
 				performBackAction(root, true);
-			} else if (isCurrentRedPacketCode(mCode) && mCode.isCommitPending()) {
-				mCode.setCommitComplete();
+			} else if (isCurrentRedPacketCode(mCode)) {
+				mCode.setPostComplete();
 			}
 			break;
 
@@ -475,33 +480,38 @@ public class CavanAccessibilityService extends AccessibilityService {
 		case "com.alipay.mobile.nebulacore.ui.H5Activity":
 			if (isCurrentRedPacketCode(mCode)) {
 				if (mCode.isRepeatable()) {
-					mCode.updateTime();
+					if (mCode.getRepeatTimeout() > REPEAT_OVERTIME) {
+						setRedPacketCodeComplete();
+					} else {
+						mCode.updateTime();
+
+						long time = getWindowTimeConsume();
+
+						CavanAndroid.eLog("getWindowTimeConsume = " + time);
+
+						if (time < 800) {
+							break;
+						}
+					}
 				} else {
-					mCode.alignTime(300000, MainActivity.getCommitAhead(this) * 1000);
-					mCode.setRepeatable();
+					mCode.setRepeatable(300000, MainActivity.getCommitAhead(this) * 1000);
 				}
 			}
 
-			long time = getWindowTimeConsume();
-
-			CavanAndroid.eLog("getWindowTimeConsume = " + time);
-
-			if (time > 800) {
-				performBackActionH5(root);
-			}
+			performBackActionH5(root);
 			break;
 
 		case "com.alipay.mobile.commonui.widget.APNoticePopDialog":
 			mAutoStartAlipay = false;
 		case "com.alipay.mobile.security.login.ui.AlipayUserLoginActivity":
 			if (mCode != null) {
-				mCode.setCommitPending(false);
+				mCode.setPostPending(false);
 			}
 			break;
 
 		default:
 			if (mCode != null) {
-				mCode.setCommitPending(false);
+				mCode.setPostPending(false);
 			}
 
 			if (mClassNameAlipay.endsWith("Dialog")) {
@@ -576,6 +586,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 		long time = Long.MAX_VALUE;
 
 		for (RedPacketCode node : mCodes) {
+			if (node.isCompleted()) {
+				continue;
+			}
+
 			if (node.getTime() < time) {
 				time = node.getTime();
 				code = node;
@@ -631,19 +645,18 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 
 		String text = CavanString.fromCharSequence(node.getText());
-		boolean codeNotMatch = !text.equals(code.getCode());
 
-		if (codeNotMatch) {
+		if (!text.equals(code.getCode())) {
 			RedPacketListenerService.postRedPacketCode(this, code.getCode());
 			setAccessibilityNodeSelection(node, 0, text.length());
 			node.performAction(AccessibilityNodeInfo.ACTION_PASTE);
 		}
 
 		if (mCode != null) {
-			mCode.setCommitPending(false);
+			mCode.setPostPending(false);
 		}
 
-		code.setCommitPending(true);
+		code.setPostPending(true);
 		mCode = code;
 
 		int msgResId;
@@ -677,7 +690,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			msgResId = R.string.text_auto_commit_not_enable_please_manual_commit;
 		}
 
-		if (codeNotMatch) {
+		if (getWindowTimeConsume() < 1000) {
 			CavanAndroid.showToastLong(this, msgResId);
 		}
 
@@ -872,11 +885,27 @@ public class CavanAccessibilityService extends AccessibilityService {
 			if (info != null && CavanPackageName.ALIPAY.equals(info.getPackageName())) {
 				if (event.getAction() == KeyEvent.ACTION_DOWN) {
 					if (CavanInputMethod.isDefaultInputMethod(getApplicationContext())) {
-						if (mCodes.size() == 1) {
-							setRedPacketCodeInvalid();
+						int count = 0;
+						Iterator<RedPacketCode> iterator = mCodes.iterator();
+						while (iterator.hasNext()) {
+							RedPacketCode node = iterator.next();
+							if (node.isRepeatable()) {
+								node.setCompleted();
+								iterator.remove();
+								count++;
+							}
 						}
 
-						mCodes.clear();
+						if (count == 0) {
+							iterator = mCodes.iterator();
+							while (iterator.hasNext()) {
+								RedPacketCode node = iterator.next();
+								if (node.canRemove()) {
+									node.setCompleted();
+									iterator.remove();
+								}
+							}
+						}
 					} else if (mCodeCount > 0) {
 						setRedPacketCodeInvalid();
 					} else {

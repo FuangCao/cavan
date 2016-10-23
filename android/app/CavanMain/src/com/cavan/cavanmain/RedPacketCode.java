@@ -3,25 +3,27 @@ package com.cavan.cavanmain;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.cavan.java.CavanJava;
-
 import android.annotation.SuppressLint;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.cavan.java.CavanJava;
 
 @SuppressLint("SimpleDateFormat")
 public class RedPacketCode implements Parcelable {
 
 	private static final SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
+	private int mPostCount;
 	private int mCommitCount;
-	private boolean mCommitPending;
+	private boolean mPostPending;
 
 	private long mTime;
+	private long mRepeatTime;
+
 	private String mCode;
 	private boolean mIsValid;
 	private boolean mNetShared;
-	private boolean mRepeatable;
 	private boolean mCompleted;
 	private boolean mMaybeInvalid;
 
@@ -55,10 +57,6 @@ public class RedPacketCode implements Parcelable {
 		return 0;
 	}
 
-	public void alignTime(long align, long ahead) {
-		mTime = ((System.currentTimeMillis() + (align - 1)) / align) * align - ahead;
-	}
-
 	public String getCode() {
 		return mCode;
 	}
@@ -89,14 +87,35 @@ public class RedPacketCode implements Parcelable {
 		return 0;
 	}
 
-	public void setRepeatable() {
-		mRepeatable = true;
+	public void setValid() {
 		mIsValid = true;
-		updateTime();
+	}
+
+	public boolean isValid() {
+		return mIsValid;
+	}
+
+	public void setNetShared() {
+		mNetShared = true;
+	}
+
+	public boolean isNetShared() {
+		return mNetShared;
+	}
+
+	public void setRepeatable(long align, long ahead) {
+		mRepeatTime = System.currentTimeMillis() + align - 1;
+		mRepeatTime -= mRepeatTime % align;
+		mTime = mRepeatTime - ahead;
+		mIsValid = true;
 	}
 
 	public boolean isRepeatable() {
-		return mRepeatable;
+		return mRepeatTime > 0;
+	}
+
+	public long getRepeatTimeout() {
+		return System.currentTimeMillis() - mRepeatTime;
 	}
 
 	public void setCompleted() {
@@ -116,59 +135,37 @@ public class RedPacketCode implements Parcelable {
 	}
 
 	public void setCommitCount(int count) {
+		mPostPending = false;
 		mCommitCount = count;
-		mCommitPending = false;
-	}
-
-	public int subCommitCount() {
-		if (mCommitCount > 0) {
-			return --mCommitCount;
-		}
-
-		return 0;
 	}
 
 	public boolean canRemove() {
-		return mCommitCount > 0;
+		return mPostCount > 0;
 	}
 
-	public void setNetShared() {
-		mNetShared = true;
-	}
-
-	public boolean isNetShared() {
-		return mNetShared;
-	}
-
-	public void setValid() {
-		mIsValid = true;
-	}
-
-	public boolean isValid() {
-		return mIsValid;
-	}
-
-	public boolean isCommitPending() {
-		return mCommitPending;
-	}
-
-	public void setCommitPending(boolean pending) {
-		mCommitPending = pending;
+	public void setPostPending(boolean pending) {
+		mPostPending = pending;
 		mMaybeInvalid = false;
 	}
 
 	public boolean maybeInvalid() {
-		if (mIsValid || mCommitPending) {
+		if (mIsValid) {
 			return false;
 		}
 
-		return mMaybeInvalid && mCommitCount > 0;
+		return mMaybeInvalid;
 	}
 
-	public void setCommitComplete() {
+	public boolean setPostComplete() {
+		if (!mPostPending) {
+			return false;
+		}
+
+		setCommitCount(mCommitCount + 1);
 		mMaybeInvalid = true;
-		mCommitPending = false;
-		setCommitCount(mIsValid ? 1 : mCommitCount + 1);
+		mPostCount++;
+
+		return true;
 	}
 
 	@Override
@@ -206,7 +203,7 @@ public class RedPacketCode implements Parcelable {
 			builder.append(" Shared");
 		}
 
-		if (mRepeatable) {
+		if (mRepeatTime > 0) {
 			builder.append(" Repeatable");
 		}
 
