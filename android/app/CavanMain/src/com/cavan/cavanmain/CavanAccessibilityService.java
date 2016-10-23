@@ -84,7 +84,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				List<String> codes = mService.getCodes();
 				if (codes != null && codes.size() > 0) {
 					for (String code : codes) {
-						RedPacketCode node = RedPacketCode.getInstence(code, false);
+						RedPacketCode node = RedPacketCode.getInstence(code, false, false);
 						if (node != null) {
 							mCodes.add(node);
 						}

@@ -192,7 +192,7 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		@Override
-		public int addMessage(CharSequence message, String code, boolean test) throws RemoteException {
+		public int addMessage(CharSequence message, String code) throws RemoteException {
 			TextView view = (TextView) FloatMessageService.this.addText(message, -1);
 			if (view == null) {
 				return -1;
@@ -201,11 +201,11 @@ public class FloatMessageService extends FloatWidowService {
 			unlockScreen();
 
 			if (code != null) {
-				if (test) {
-					sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_TEST, code);
-				} else {
-					RedPacketCode node = RedPacketCode.getInstence(code, false);
-					if (node != null) {
+				RedPacketCode node = RedPacketCode.getInstence(code, false, false);
+				if (node != null) {
+					if (node.isTestOnly()) {
+						sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_TEST, code);
+					} else {
 						mMessageCodeMap.put(message, code);
 
 						sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_ADD, code);
@@ -392,7 +392,7 @@ public class FloatMessageService extends FloatWidowService {
 				command = getResources().getString(R.string.text_network_test_success, type);
 				mHandler.obtainMessage(MSG_SHOW_TOAST, command).sendToTarget();
 			} else {
-				RedPacketCode node = RedPacketCode.getInstence(code, false);
+				RedPacketCode node = RedPacketCode.getInstence(code, false, false);
 				if (node == null || node.isRepeatable()) {
 					Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
 					intent.putExtra("type", type);

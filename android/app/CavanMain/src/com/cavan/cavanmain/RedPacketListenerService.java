@@ -181,7 +181,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		return 0;
 	}
 
-	public void sendNotification(Notification notification, CharSequence message, RedPacketCode code, boolean test) {
+	public void sendNotification(Notification notification, CharSequence message, RedPacketCode code) {
 		if (mNotificationManager != null) {
 			if (code != null) {
 				notification.extras.putCharSequence(EXTRA_CODE, code.getCode());
@@ -194,7 +194,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 		if (mFloatMessageService != null) {
 			try {
-				mFloatMessageService.addMessage(message, code.getCode(), test);
+				mFloatMessageService.addMessage(message, code.getCode());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

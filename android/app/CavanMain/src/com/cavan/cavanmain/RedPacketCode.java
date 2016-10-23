@@ -4,6 +4,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -12,11 +14,13 @@ import android.content.Intent;
 @SuppressLint("SimpleDateFormat")
 public class RedPacketCode {
 
+	private static int LAST_CODE_SIZE = 8;
 	private static long CODE_OVERTIME = 28800000;
 	private static long REPEAT_TIME_ALIGN = 60000;
 
 	private static final SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	private static HashMap<String, RedPacketCode> mCodeMap = new HashMap<String, RedPacketCode>();
+	private static LinkedList<RedPacketCode> mLastCodes = new LinkedList<RedPacketCode>();
 
 	private int mPostCount;
 	private int mCommitCount;
@@ -31,8 +35,9 @@ public class RedPacketCode {
 	private boolean mShared;
 	private boolean mCompleted;
 	private boolean mMaybeInvalid;
+	private boolean mTestOnly;
 
-	public static RedPacketCode getInstence(String code, boolean create) {
+	public static RedPacketCode getInstence(String code, boolean create, boolean test) {
 		Iterator<RedPacketCode> iterator = mCodeMap.values().iterator();
 		while (iterator.hasNext()) {
 			RedPacketCode node = iterator.next();
@@ -45,6 +50,16 @@ public class RedPacketCode {
 		if (node == null && create) {
 			node = new RedPacketCode(code);
 			mCodeMap.put(code, node);
+
+			while (mLastCodes.size() >= LAST_CODE_SIZE) {
+				mLastCodes.removeLast();
+			}
+
+			if (test) {
+				node.setTestOnly();
+			} else {
+				mLastCodes.addFirst(node);
+			}
 		}
 
 		return node;
@@ -56,11 +71,16 @@ public class RedPacketCode {
 			return null;
 		}
 
-		return getInstence(code, false);
+		return getInstence(code, false, false);
+	}
+
+	public static List<RedPacketCode> getLastCodes() {
+		return mLastCodes;
 	}
 
 	private RedPacketCode(String code) {
 		mCode = code;
+		mTime = System.currentTimeMillis();
 	}
 
 	public long getTime() {
@@ -89,6 +109,14 @@ public class RedPacketCode {
 
 	public void setCode(String code) {
 		mCode = code;
+	}
+
+	public void setTestOnly() {
+		mTestOnly = true;
+	}
+
+	public boolean isTestOnly() {
+		return mTestOnly;
 	}
 
 	public void setDelay(long delay) {

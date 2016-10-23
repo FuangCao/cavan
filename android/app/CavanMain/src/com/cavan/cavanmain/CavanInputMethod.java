@@ -1,20 +1,15 @@
 package com.cavan.cavanmain;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.inputmethodservice.KeyboardView.OnKeyboardActionListener;
-import android.os.IBinder;
-import android.os.RemoteException;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.View;
@@ -51,8 +46,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	public static final int KEYCODE_SPACE = 13;
 
 	private GridView mCodeGridView;
-	private String[] mUiCodes;
-	private List<String> mCodes = new ArrayList<String>();
+	private RedPacketCode[] mUiCodes;
 
 	private Keyboard mKeyboard;
 	private KeyboardView mKeyboardView;
@@ -65,21 +59,6 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	private int mSelectionStart;
 	private int mSelectionEnd;
 
-	private IFloatMessageService mService;
-	private ServiceConnection mConnection = new ServiceConnection() {
-
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			mService = null;
-		}
-
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			mService = IFloatMessageService.Stub.asInterface(service);
-			checkCodeArray();
-		}
-	};
-
 	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
 
 		@Override
@@ -88,33 +67,11 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 			CavanAndroid.eLog("action = " + action);
 
-			switch (action) {
-			case MainActivity.ACTION_CODE_ADD:
-				String code = intent.getStringExtra("code");
-				if (code == null) {
-					break;
-				}
-
-				mCodes.add(code);
-				updateInputView();
-				break;
-
-			case MainActivity.ACTION_CODE_REMOVE:
-				code = intent.getStringExtra("code");
-				if (code == null) {
-					break;
-				}
-
-				mCodes.remove(code);
-				updateInputView();
-				break;
-
-			case MainActivity.ACTION_CODE_COMMIT:
+			if (action.equals(MainActivity.ACTION_CODE_COMMIT)) {
 				InputConnection conn = getCurrentInputConnection();
 				if (conn != null) {
 					sendFinishAction(conn);
 				}
-				break;
 			}
 		}
 	};
@@ -124,8 +81,9 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		@Override
 		public void run() {
 			int columns, size;
+			List<RedPacketCode> codes = RedPacketCode.getLastCodes();
 
-			columns = size = mCodes.size();
+			columns = size = codes.size();
 			if (size > CODE_MAX_COLUMNS) {
 				int max = 0;
 
@@ -143,8 +101,8 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 				}
 			}
 
-			mUiCodes = new String[size];
-			mCodes.toArray(mUiCodes);
+			mUiCodes = new RedPacketCode[size];
+			codes.toArray(mUiCodes);
 
 			mCodeGridView.setNumColumns(columns);
 			mAdapter.notifyDataSetChanged();
@@ -157,7 +115,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		public View getView(int position, View convertView, ViewGroup parent) {
 			Button view = new Button(CavanInputMethod.this);
 			view.setOnClickListener(CavanInputMethod.this);
-			view.setText(mUiCodes[position]);
+			view.setText(mUiCodes[position].getCode());
 			return view;
 		}
 
@@ -189,20 +147,6 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		if (mCodeGridView != null) {
 			mCodeGridView.removeCallbacks(mRunnableUpdateInputView);
 			mCodeGridView.postDelayed(mRunnableUpdateInputView, 500);
-		}
-	}
-
-	private void checkCodeArray() {
-		try {
-			if (mService != null && mService.getCodeCount() != mCodes.size()) {
-				List<String> codes = mService.getCodes();
-				if (codes != null) {
-					mCodes = codes;
-					updateInputView();
-				}
-			}
-		} catch (RemoteException e) {
-			e.printStackTrace();
 		}
 	}
 
@@ -251,11 +195,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	public void onCreate() {
 		mManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
 
-		bindService(FloatMessageService.startService(this), mConnection, 0);
-
 		IntentFilter filter = new IntentFilter();
-		filter.addAction(MainActivity.ACTION_CODE_ADD);
-		filter.addAction(MainActivity.ACTION_CODE_REMOVE);
 		filter.addAction(MainActivity.ACTION_CODE_COMMIT);
 		registerReceiver(mReceiver, filter);
 
@@ -264,9 +204,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 	@Override
 	public void onDestroy() {
-		unbindService(mConnection);
 		unregisterReceiver(mReceiver);
-
 		super.onDestroy();
 	}
 
@@ -301,8 +239,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	public void onStartInput(EditorInfo attribute, boolean restarting) {
 		mAutoCommitEnable = false;
 		mIsAlipay = CavanPackageName.ALIPAY.equals(getCurrentInputEditorInfo().packageName);
-
-		checkCodeArray();
+		updateInputView();
 
 		super.onStartInput(attribute, restarting);
 	}
