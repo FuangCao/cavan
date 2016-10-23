@@ -42,7 +42,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private static final long UNPACK_OVERTIME = 3000;
 	private static final long COMMIT_OVERTIME = 300000;
 	private static final long CODE_OVERTIME = 28800000;
-	private static final long REPEAT_OVERTIME = 20000;
+	private static final long REPEAT_OVERTIME = 10000;
 
 	private static final int MSG_COMMIT_TIMEOUT = 1;
 	private static final int MSG_COMMIT_COMPLETE = 2;
@@ -586,10 +586,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 		long time = Long.MAX_VALUE;
 
 		for (RedPacketCode node : mCodes) {
-			if (node.isCompleted()) {
-				continue;
-			}
-
 			if (node.getTime() < time) {
 				time = node.getTime();
 				code = node;
@@ -645,8 +641,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 
 		String text = CavanString.fromCharSequence(node.getText());
+		boolean changed = !text.equals(code.getCode());
 
-		if (!text.equals(code.getCode())) {
+		if (changed) {
 			RedPacketListenerService.postRedPacketCode(this, code.getCode());
 			setAccessibilityNodeSelection(node, 0, text.length());
 			node.performAction(AccessibilityNodeInfo.ACTION_PASTE);
@@ -662,11 +659,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 		int msgResId;
 		int maxCommitCount = MainActivity.getAutoCommitCount(this);
 
-		if (maxCommitCount > 0) {
+		if (code.isCompleted()) {
+			code.updateTime();
+			msgResId = R.string.text_completed_please_manual_commit;
+		} else if (maxCommitCount > 0) {
 			if (CavanInputMethod.isDefaultInputMethod(this)) {
-				if (code.isCompleted()) {
-					msgResId = R.string.text_completed_please_manual_commit;
-				} else if (code.getCommitCount() < maxCommitCount) {
+				if (code.getCommitCount() < maxCommitCount) {
 					long delay = code.getDelay() / 1000;
 					if (delay > 0) {
 						if (delay != mDelay) {
@@ -690,7 +688,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			msgResId = R.string.text_auto_commit_not_enable_please_manual_commit;
 		}
 
-		if (getWindowTimeConsume() < 1000) {
+		if (changed || getWindowTimeConsume() < 500) {
 			CavanAndroid.showToastLong(this, msgResId);
 		}
 
