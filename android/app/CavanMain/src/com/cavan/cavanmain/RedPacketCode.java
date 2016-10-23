@@ -7,12 +7,13 @@ import java.util.Iterator;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 
 @SuppressLint("SimpleDateFormat")
 public class RedPacketCode {
 
 	private static long CODE_OVERTIME = 28800000;
-	private static long REPEAT_TIME_ALIGN = 300000;
+	private static long REPEAT_TIME_ALIGN = 60000;
 
 	private static final SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	private static HashMap<String, RedPacketCode> mCodeMap = new HashMap<String, RedPacketCode>();
@@ -47,6 +48,15 @@ public class RedPacketCode {
 		}
 
 		return node;
+	}
+
+	public static RedPacketCode getInstence(Intent intent) {
+		String code = intent.getStringExtra("code");
+		if (code == null) {
+			return null;
+		}
+
+		return getInstence(code, false);
 	}
 
 	private RedPacketCode(String code) {
@@ -136,7 +146,7 @@ public class RedPacketCode {
 	}
 
 	public void setRepeatable(Context context) {
-		mRepeatTime = System.currentTimeMillis() + REPEAT_TIME_ALIGN - 1;
+		mRepeatTime = System.currentTimeMillis() + REPEAT_TIME_ALIGN; // - 1;
 		mRepeatTime -= mRepeatTime % REPEAT_TIME_ALIGN;
 		mTime = mRepeatTime - MainActivity.getCommitAhead(context);
 		mValid = true;
@@ -185,7 +195,7 @@ public class RedPacketCode {
 			return false;
 		}
 
-		return mMaybeInvalid;
+		return mMaybeInvalid && mPostPending;
 	}
 
 	public boolean setPostComplete() {

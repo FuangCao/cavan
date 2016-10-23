@@ -40,7 +40,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private static final long POLL_DELAY = 500;
 	private static final long UNPACK_OVERTIME = 3000;
 	private static final long COMMIT_OVERTIME = 300000;
-	private static final long REPEAT_OVERTIME = 10000;
+	private static final long REPEAT_OVERTIME = 8000;
 
 	private static final int MSG_COMMIT_TIMEOUT = 1;
 	private static final int MSG_COMMIT_COMPLETE = 2;
@@ -65,7 +65,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private String mInputtedCode;
 	private String mLastContent;
 	private Dialog mCheckContentDialog;
-	private List<RedPacketCode> mCodes = new ArrayList<RedPacketCode>();
+	private ArrayList<RedPacketCode> mCodes = new ArrayList<RedPacketCode>();
 
 	private IFloatMessageService mService;
 	private ServiceConnection mConnection = new ServiceConnection() {
@@ -246,25 +246,19 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 			switch (action) {
 			case MainActivity.ACTION_CODE_TEST:
-				String code = intent.getStringExtra("code");
-				if (code != null) {
+				if (intent.getStringExtra("code") != null) {
 					CavanAndroid.showToast(getApplicationContext(), R.string.text_test_sucess);
 				}
 				break;
 
 			case MainActivity.ACTION_CODE_ADD:
-				code = intent.getStringExtra("code");
-				if (code == null) {
-					break;
-				}
-
-				RedPacketCode node = RedPacketCode.getInstence(code, false);
+				RedPacketCode node = RedPacketCode.getInstence(intent);
 				if (node == null) {
 					break;
 				}
 
 				if (node.isInvalid()) {
-					CavanAndroid.eLog("skip invalid code: " + code);
+					CavanAndroid.eLog("skip invalid code: " + node.getCode());
 					break;
 				}
 
@@ -277,9 +271,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 				break;
 
 			case MainActivity.ACTION_CODE_REMOVE:
-				code = intent.getStringExtra("code");
-				if (code != null) {
-					mCodes.remove(code);
+				node = RedPacketCode.getInstence(intent);
+				if (node != null) {
+					mCodes.remove(node);
 				}
 				break;
 
@@ -503,15 +497,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 				} else {
 					mCode.setRepeatable(this);
 				}
-			} else if (mInputtedCode != null && mCodes.contains(mInputtedCode) == false) {
-				code = RedPacketCode.getInstence(mInputtedCode, true);
-				code.setRepeatable(this);
-
-				Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
-				intent.putExtra("type", "支付宝输入");
-				intent.putExtra("code", code.getCode());
-				intent.putExtra("shared", false);
-				sendBroadcast(intent);
 			}
 
 			performBackActionH5(root);
