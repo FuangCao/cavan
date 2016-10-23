@@ -406,6 +406,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	private boolean postRedPacketCode(RedPacketCode code) {
+		CavanAndroid.eLog("code = " + code);
+
 		AccessibilityNodeInfo root = getRootInActiveWindow();
 		if (root == null) {
 			return false;

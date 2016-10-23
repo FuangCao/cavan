@@ -195,20 +195,20 @@ public class RedPacketCode implements Parcelable {
 		StringBuilder builder = new StringBuilder(mCode);
 
 		if (mTime > 0) {
-			builder.append(" ");
+			builder.append(", ");
 			builder.append(sDateFormat.format(new Date(mTime)));
 		}
 
 		if (mNetShared) {
-			builder.append(" Shared");
+			builder.append(", Shared");
 		}
 
-		if (mRepeatTime > 0) {
-			builder.append(" Repeatable");
-		}
-
-		if (mIsValid) {
-			builder.append(" Valid");
+		if (mCompleted) {
+			builder.append(", Completed");
+		} else if (mRepeatTime > 0) {
+			builder.append(", Repeatable");
+		} else if (mIsValid) {
+			builder.append(", Valid");
 		}
 
 		return builder.toString();
