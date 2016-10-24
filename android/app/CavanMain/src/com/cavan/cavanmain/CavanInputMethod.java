@@ -81,15 +81,14 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 		@Override
 		public void run() {
-			long time = RedPacketCode.getLastCreateTime();
-			if (mLastTime == time) {
+			List<RedPacketCode> codes = RedPacketCode.getLastCodes(mLastTime);
+			if (codes == null) {
 				return;
 			}
 
-			mLastTime = time;
+			mLastTime = RedPacketCode.getLastCreateTime();
 
 			int columns, size;
-			List<RedPacketCode> codes = RedPacketCode.getLastCodes();
 
 			columns = size = codes.size();
 			if (size > CODE_MAX_COLUMNS) {
@@ -124,6 +123,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 			Button view = new Button(CavanInputMethod.this);
 			view.setOnClickListener(CavanInputMethod.this);
 			view.setText(mUiCodes[position].getCode());
+			view.setSingleLine();
 			return view;
 		}
 

@@ -15,6 +15,7 @@ import android.content.Intent;
 public class RedPacketCode {
 
 	private static int LAST_CODE_SIZE = 8;
+	private static long LAST_CODE_OVERTIME = 300000;
 	private static long CODE_OVERTIME = 28800000;
 	private static long REPEAT_TIME_ALIGN = 60000;
 
@@ -51,18 +52,15 @@ public class RedPacketCode {
 		RedPacketCode node = mCodeMap.get(code);
 		if (node == null && create) {
 			node = new RedPacketCode(code);
+
 			mLastCreateTime = node.getTime();
-
 			mCodeMap.put(code, node);
-
-			while (mLastCodes.size() >= LAST_CODE_SIZE) {
-				mLastCodes.removeLast();
-			}
 
 			if (test) {
 				node.setTestOnly();
 			} else {
 				mLastCodes.addFirst(node);
+				updateLastCodes();
 			}
 		}
 
@@ -78,8 +76,23 @@ public class RedPacketCode {
 		return getInstence(code, false, false);
 	}
 
-	public static List<RedPacketCode> getLastCodes() {
-		return mLastCodes;
+	public static List<RedPacketCode> getLastCodes(long time) {
+		if (updateLastCodes() > 0 || (mLastCreateTime > time)) {
+			return mLastCodes;
+		}
+
+		return null;
+	}
+
+	public static int updateLastCodes() {
+		int count = 0;
+
+		while (mLastCodes.size() > LAST_CODE_SIZE && mLastCodes.getLast().getTimeout() > LAST_CODE_OVERTIME) {
+			mLastCodes.removeLast();
+			count++;
+		}
+
+		return count;
 	}
 
 	public static long getLastCreateTime() {

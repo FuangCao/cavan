@@ -40,7 +40,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private static final long POLL_DELAY = 500;
 	private static final long UNPACK_OVERTIME = 3000;
 	private static final long COMMIT_OVERTIME = 300000;
-	private static final long REPEAT_OVERTIME = 8000;
+	private static final long REPEAT_OVERTIME = 20000;
 
 	private static final int MSG_COMMIT_TIMEOUT = 1;
 	private static final int MSG_COMMIT_COMPLETE = 2;
