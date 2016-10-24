@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace JwaooOtpProgrammer {
 
-    public partial class Form1 : Form {
+    public partial class Programmer : Form {
 
         private static String[] sProgramFiles = {
             "C:\\Program Files (x86)", "C:\\Program Files", "D:\\Program Files (x86)", "D:\\Program Files"
@@ -17,18 +17,52 @@ namespace JwaooOtpProgrammer {
         private static String sFileHeaderTxt = Path.Combine(Application.StartupPath, "header.txt");
         private static String sFileFirmwareTxt = Path.Combine(Application.StartupPath, "firmware.txt");
         private static String sFileProgrammerBin = Path.Combine(Application.StartupPath, "jtag_programmer.bin");
-        private static String[] sOtpCommandArgs = { "-type", "otp", "-chip", "DA14580-01", "-jtag", "123456", "-baudrate", "57600", "-firmware", sFileProgrammerBin };
+        private static String[] sOtpCommandArgs = { "-type", "otp", "-chip", "DA14580-01", "-jtag", "123456", "-baudrate", "57600" };
 
         private UInt64 mBdAddress;
         private String mFileSmartSnippetsExe;
+        private FileStream mFileStreamLog;
 
         delegate void Process_OutputDataReceivedDelegate(object sender, DataReceivedEventArgs e);
 
-        public Form1() {
+        public Programmer() {
             InitializeComponent();
+
+            mFileStreamLog = File.Open(Path.Combine(Application.StartupPath, "log.txt"), FileMode.Append, FileAccess.Write, FileShare.Read);
             openFileDialogFirmware.InitialDirectory = Application.StartupPath;
             openFileDialogSmartSnippets.InitialDirectory = Application.StartupPath;
             setBdAddress(readBdAddressFile());
+        }
+
+        ~Programmer() {
+            if (mFileStreamLog != null) {
+                mFileStreamLog.Close();
+                mFileStreamLog = null;
+            }
+        }
+
+        public bool writeLogFile(String text) {
+            if (mFileStreamLog == null) {
+                return false;
+            }
+
+            try {
+                byte[] bytes = Encoding.UTF8.GetBytes(text);
+                mFileStreamLog.Write(bytes, 0, bytes.Length);
+                mFileStreamLog.Flush();
+                return true;
+            } catch {
+                return false;
+            }
+        }
+
+        public bool writeLog(String line) {
+            return writeLogFile(line) && writeLogFile("\r\n");
+        }
+
+        public void appendLog(String line) {
+            textBoxLog.AppendText(line);
+            textBoxLog.AppendText("\r\n");
         }
 
         private void setBdAddress(UInt64 addr) {
@@ -192,41 +226,36 @@ namespace JwaooOtpProgrammer {
             return mFileSmartSnippetsExe;
         }
 
-        private ShellCommandRunner doRunCommand(ShellCommandRunner runner) {
+        private String doRunCommand(ShellCommandRunner runner) {
             if (runner.execute()) {
-                foreach (String line in runner.OutputLines) {
-                    textBoxLog.AppendText(line);
-                    textBoxLog.AppendText("\r\n");
-                }
-
-                textBoxLog.AppendText("============================================================\r\n");
-
-                return runner;
+                return runner.LastOutputLine;
             }
 
             return null;
         }
 
-        private ShellCommandRunner runSmartSnippetsCommand(params String[] args) {
-            ShellCommandRunner runner = new ShellCommandRunner(getSmartSnippetsPath());
+        private String runSmartSnippetsCommand(params String[] args) {
+            ShellCommandRunner runner = new ShellCommandRunner(getSmartSnippetsPath(), this);
             runner.addArguments(args);
             return doRunCommand(runner);
         }
 
-        private ShellCommandRunner runOtpCommand(params String[] args) {
-            ShellCommandRunner runner = new ShellCommandRunner(getSmartSnippetsPath());
+        private String runOtpCommand(bool withFirmware, params String[] args) {
+            ShellCommandRunner runner = new ShellCommandRunner(getSmartSnippetsPath(), this);
             runner.addArguments(sOtpCommandArgs);
+
+            if (withFirmware) {
+                runner.addArguments("-firmware", sFileProgrammerBin);
+            }
+
             runner.addArguments(args);
             return doRunCommand(runner);
         }
 
         private bool writeOtpData(String offset, String data) {
-            ShellCommandRunner runner = runOtpCommand("-cmd", "write_field", "-offset", offset, "-data", data);
-            if (runner == null) {
-                return false;
-            }
+            appendLog("写裸数据: " + data + " => " + offset);
 
-            String line = runner.LastOutputLine;
+            String line = runOtpCommand(false, "-cmd", "write_field", "-offset", offset, "-data", data);
             if (line == null) {
                 return false;
             }
@@ -274,12 +303,9 @@ namespace JwaooOtpProgrammer {
         }
 
         private bool readOtpHeader(String pathname) {
-            ShellCommandRunner runner = runOtpCommand("-cmd", "read_header", "-file", pathname);
-            if (runner == null) {
-                return false;
-            }
+            appendLog("读取OTP头部到：" + pathname);
 
-            String line = runner.LastOutputLine;
+            String line = runOtpCommand(true, "-cmd", "read_header", "-file", pathname);
             if (line == null) {
                 return false;
             }
@@ -292,12 +318,9 @@ namespace JwaooOtpProgrammer {
         }
 
         private bool readOtpFirmware(String pathname) {
-            ShellCommandRunner runner = runOtpCommand("-cmd", "read_custom_code", "-file", pathname);
-            if (runner == null) {
-                return false;
-            }
+            appendLog("从OTP读取固件到：" + pathname);
 
-            String line = runner.LastOutputLine;
+            String line = runOtpCommand(true, "-cmd", "read_custom_code", "-file", pathname);
             if (line == null) {
                 return false;
             }
@@ -310,12 +333,9 @@ namespace JwaooOtpProgrammer {
         }
 
         private bool writeOtpFirmware(String pathname) {
-            ShellCommandRunner runner = runOtpCommand("-cmd", "write_custom_code", "-y", "-file", pathname);
-            if (runner == null) {
-                return false;
-            }
+            appendLog("写固件文件到OTP：" + pathname);
 
-            String line = runner.LastOutputLine;
+            String line = runOtpCommand(false, "-cmd", "write_custom_code", "-y", "-file", pathname);
             if (line == null) {
                 return false;
             }
@@ -327,6 +347,49 @@ namespace JwaooOtpProgrammer {
             return line.StartsWith("OTP Memory burning completed successfully");
         }
 
+        private bool burnOtpFirmwareAll() {
+            String pathname = textBoxFirmware.Text;
+            if (pathname == null || pathname.Length == 0) {
+                MessageBox.Show("请选择固件文件");
+                return false;
+            }
+
+            if (!File.Exists(pathname)) {
+                MessageBox.Show("固件文件不存在：" + pathname);
+                return false;
+            }
+
+            if (!readOtpFirmware(sFileFirmwareTxt)) {
+                MessageBox.Show("读取固件失败");
+                return false;
+            }
+
+            appendLog("成功");
+
+            if (!writeOtpFirmware(pathname)) {
+                MessageBox.Show("写固件失败: " + pathname);
+                return false;
+            }
+
+            appendLog("成功");
+
+            if (!writeBdAddress()) {
+                MessageBox.Show("写MAC地址失败");
+                return false;
+            }
+
+            appendLog("成功");
+
+            if (!setOtpBootEnable()) {
+                MessageBox.Show("设置从OTP启动失败");
+                return false;
+            }
+
+            appendLog("成功");
+
+            return true;
+        }
+
         private void buttonFirmware_Click(object sender, EventArgs e) {
             if (openFileDialogFirmware.ShowDialog() == DialogResult.OK) {
                 textBoxFirmware.Text = openFileDialogFirmware.FileName;
@@ -334,46 +397,35 @@ namespace JwaooOtpProgrammer {
         }
 
         private void buttonConnect_Click(object sender, EventArgs e) {
+            buttonConnect.Enabled = false;
+            buttonBurn.Enabled = false;
+
             if (readOtpHeader(sFileHeaderTxt)) {
                 MessageBox.Show("连接成功");
+                appendLog("成功");
+                buttonConnect.Enabled = true;
+                buttonBurn.Enabled = true;
             } else {
                 MessageBox.Show("连接失败");
+                appendLog("失败！！！");
+                buttonConnect.Enabled = true;
             }
         }
 
         private void buttonBurn_Click(object sender, EventArgs e) {
-            String pathname = textBoxFirmware.Text;
-            if (pathname == null || pathname.Length == 0) {
-                MessageBox.Show("请选择固件文件");
-                return;
+            buttonConnect.Enabled = false;
+            buttonBurn.Enabled = false;
+            buttonFirmware.Enabled = false;
+
+            if (burnOtpFirmwareAll()) {
+                MessageBox.Show("恭喜，烧录成功");
+            } else {
+                appendLog("失败！！！");
             }
 
-            if (!File.Exists(pathname)) {
-                MessageBox.Show("固件文件不存在：" + pathname);
-                return;
-            }
-
-            if (!readOtpFirmware(sFileFirmwareTxt)) {
-                MessageBox.Show("读取固件失败");
-                return;
-            }
-
-            if (!writeOtpFirmware(pathname)) {
-                MessageBox.Show("写固件失败: " + pathname);
-                return;
-            }
-
-            if (!setOtpBootEnable()) {
-                MessageBox.Show("设置从OTP启动失败");
-                return;
-            }
-
-            if (!writeBdAddress()) {
-                MessageBox.Show("写MAC地址失败");
-                return;
-            }
-
-            MessageBox.Show("恭喜，烧录成功");
+            buttonConnect.Enabled = true;
+            buttonBurn.Enabled = true;
+            buttonFirmware.Enabled = true;
         }
 
         private void buttonClearLog_Click(object sender, EventArgs e) {
@@ -384,12 +436,14 @@ namespace JwaooOtpProgrammer {
     public class ShellCommandRunner {
 
         private String mCommand;
+        private Programmer mProgrammer;
         private List<String> mErrLines = new List<string>();
         private List<String> mOutLines = new List<string>();
         private List<String> mArgumants = new List<string>();
 
-        public ShellCommandRunner(String command) {
+        public ShellCommandRunner(String command, Programmer programmer) {
             mCommand = command;
+            mProgrammer = programmer;
         }
 
         public void setArguments(List<String> args) {
@@ -432,6 +486,9 @@ namespace JwaooOtpProgrammer {
         }
 
         public bool execute() {
+            mProgrammer.writeLog("================================================================================");
+            mProgrammer.writeLog("command = " + mCommand);
+
             if (mCommand == null) {
                 return false;
             }
@@ -465,9 +522,7 @@ namespace JwaooOtpProgrammer {
             process.OutputDataReceived += Process_OutputDataReceived;
             process.ErrorDataReceived += Process_ErrorDataReceived;
 
-#if true
-            MessageBox.Show("Arguments = " + process.StartInfo.Arguments);
-#endif
+            mProgrammer.writeLog("arguments = " + process.StartInfo.Arguments);
 
             mOutLines.Clear();
             mErrLines.Clear();
@@ -481,12 +536,6 @@ namespace JwaooOtpProgrammer {
                     if (process.ExitCode != 0) {
                         return false;
                     }
-
-#if false
-                    if (mOutLines.Count > 0) {
-                        MessageBox.Show(linesToString(mOutLines));
-                    }
-#endif
 
                     return true;
                 }
@@ -535,12 +584,16 @@ namespace JwaooOtpProgrammer {
         }
 
         private void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e) {
-            mErrLines.Add(e.Data);
+            if (e.Data != null) {
+                mErrLines.Add(e.Data);
+                mProgrammer.writeLog(e.Data);
+            }
         }
 
         private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e) {
             if (e.Data != null) {
                 mOutLines.Add(e.Data);
+                mProgrammer.writeLog(e.Data);
             }
         }
     }

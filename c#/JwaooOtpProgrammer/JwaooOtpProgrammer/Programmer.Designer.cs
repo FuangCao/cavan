@@ -1,5 +1,5 @@
 ﻿namespace JwaooOtpProgrammer {
-    partial class Form1 {
+    partial class Programmer {
         /// <summary>
         /// 必需的设计器变量。
         /// </summary>
@@ -83,6 +83,7 @@
             // 
             // buttonBurn
             // 
+            this.buttonBurn.Enabled = false;
             this.buttonBurn.Location = new System.Drawing.Point(322, 402);
             this.buttonBurn.Name = "buttonBurn";
             this.buttonBurn.Size = new System.Drawing.Size(75, 23);
@@ -95,6 +96,7 @@
             // 
             this.textBoxBdAddress.Location = new System.Drawing.Point(85, 322);
             this.textBoxBdAddress.Name = "textBoxBdAddress";
+            this.textBoxBdAddress.ReadOnly = true;
             this.textBoxBdAddress.Size = new System.Drawing.Size(312, 21);
             this.textBoxBdAddress.TabIndex = 4;
             // 
@@ -115,9 +117,11 @@
             this.textBoxLog.Location = new System.Drawing.Point(14, 12);
             this.textBoxLog.Multiline = true;
             this.textBoxLog.Name = "textBoxLog";
+            this.textBoxLog.ReadOnly = true;
             this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.textBoxLog.Size = new System.Drawing.Size(383, 285);
             this.textBoxLog.TabIndex = 7;
+            this.textBoxLog.WordWrap = false;
             // 
             // buttonClearLog
             // 
@@ -129,7 +133,7 @@
             this.buttonClearLog.UseVisualStyleBackColor = true;
             this.buttonClearLog.Click += new System.EventHandler(this.buttonClearLog_Click);
             // 
-            // Form1
+            // Programmer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -143,7 +147,7 @@
             this.Controls.Add(this.buttonFirmware);
             this.Controls.Add(this.textBoxFirmware);
             this.Controls.Add(this.label1);
-            this.Name = "Form1";
+            this.Name = "Programmer";
             this.Text = "Form1";
             this.ResumeLayout(false);
             this.PerformLayout();
