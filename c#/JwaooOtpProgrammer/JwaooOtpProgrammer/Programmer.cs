@@ -70,7 +70,7 @@ namespace JwaooOtpProgrammer {
 
         private void setBdAddress(UInt64 addr) {
             mBdAddress = addr;
-            textBoxBdAddress.Text = getBdAddressString(addr);
+            textBoxBdAddressNext.Text = getBdAddressString(addr);
         }
 
         private bool addBdAddress() {
@@ -92,6 +92,22 @@ namespace JwaooOtpProgrammer {
                 builder.Append(valueToChar((int) ((value >> offset) & 0x0F)));
 
                 if (offset > 0) {
+                    builder.Append(':');
+                }
+            }
+
+            return builder.ToString();
+        }
+
+        private String getBdAddressString(byte[] bytes, int offset) {
+            StringBuilder builder = new StringBuilder();
+
+            for (int i = offset + 5; i >= offset; i--) {
+                byte value = bytes[i];
+                builder.Append(valueToChar((value >> 4) & 0x0F));
+                builder.Append(valueToChar(value & 0x0F));
+
+                if (i > offset) {
                     builder.Append(':');
                 }
             }
@@ -298,7 +314,14 @@ namespace JwaooOtpProgrammer {
                 return false;
             }
 
-            return writeOtpData("0x7FD4", getBdAddressBytes(mBdAddress)) && addBdAddress();
+            byte[] bytes = getBdAddressBytes(mBdAddress);
+            if (!writeOtpData("0x7FD4", bytes)) {
+                return false;
+            }
+
+            textBoxBdAddressCurrent.Text = getBdAddressString(bytes, 0);
+
+            return addBdAddress();
         }
 
         private bool setOtpBootEnable() {
@@ -386,18 +409,7 @@ namespace JwaooOtpProgrammer {
             return true;
         }
 
-        private bool burnOtpFirmwareAll() {
-            String pathname = textBoxFirmware.Text;
-            if (pathname == null || pathname.Length == 0) {
-                MessageBox.Show("请选择固件文件");
-                return false;
-            }
-
-            if (!File.Exists(pathname)) {
-                MessageBox.Show("固件文件不存在：" + pathname);
-                return false;
-            }
-
+        private bool burnOtpFirmwareAll(String pathname) {
             byte[] bytes = readOtpFirmware();
             if (bytes == null) {
                 MessageBox.Show("读取固件失败");
@@ -405,6 +417,8 @@ namespace JwaooOtpProgrammer {
             }
 
             appendLog("成功");
+
+            textBoxBdAddressCurrent.Text = getBdAddressString(bytes, 0x7FD4);
 
             if (isMemoryEmpty(bytes, 0, 0x7F00)) {
                 if (!writeOtpFirmware(pathname)) {
@@ -457,9 +471,11 @@ namespace JwaooOtpProgrammer {
             buttonConnect.Enabled = false;
             buttonBurn.Enabled = false;
 
-            if (readOtpHeader(sFileOtpHeaderBin)) {
+            byte[] bytes = readOtpHeader();
+            if (bytes != null) {
                 MessageBox.Show("连接成功");
                 appendLog("连接成功");
+                textBoxBdAddressCurrent.Text = getBdAddressString(bytes, 0xD4);
                 buttonConnect.Enabled = true;
                 buttonBurn.Enabled = true;
             } else {
@@ -470,11 +486,22 @@ namespace JwaooOtpProgrammer {
         }
 
         private void buttonBurn_Click(object sender, EventArgs e) {
+            String pathname = textBoxFirmware.Text;
+            if (pathname == null || pathname.Length == 0) {
+                MessageBox.Show("请选择固件文件");
+                return;
+            }
+
+            if (!File.Exists(pathname)) {
+                MessageBox.Show("固件文件不存在：" + pathname);
+                return;
+            }
+
             buttonConnect.Enabled = false;
             buttonBurn.Enabled = false;
             buttonFirmware.Enabled = false;
 
-            if (burnOtpFirmwareAll()) {
+            if (burnOtpFirmwareAll(pathname)) {
                 MessageBox.Show("恭喜，烧录成功");
             } else {
                 appendLog("烧录失败！！！");
