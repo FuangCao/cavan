@@ -304,7 +304,7 @@ public class RedPacketNotification extends CavanNotification {
 					node.setShared();
 				}
 
-				mService.sendNotification(notification, "支付宝口令@" + getUserDescription() + ": " + code, node);
+				mService.sendNotification(notification, "支付宝口令@" + getUserDescription() + ": " + code, code);
 			}
 		}
 

@@ -19,6 +19,8 @@ public class RedPacketCode {
 	private static long REPEAT_TIME_ALIGN = 60000;
 
 	private static final SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+	private static long mLastCreateTime;
 	private static HashMap<String, RedPacketCode> mCodeMap = new HashMap<String, RedPacketCode>();
 	private static LinkedList<RedPacketCode> mLastCodes = new LinkedList<RedPacketCode>();
 
@@ -49,6 +51,8 @@ public class RedPacketCode {
 		RedPacketCode node = mCodeMap.get(code);
 		if (node == null && create) {
 			node = new RedPacketCode(code);
+			mLastCreateTime = node.getTime();
+
 			mCodeMap.put(code, node);
 
 			while (mLastCodes.size() >= LAST_CODE_SIZE) {
@@ -76,6 +80,10 @@ public class RedPacketCode {
 
 	public static List<RedPacketCode> getLastCodes() {
 		return mLastCodes;
+	}
+
+	public static long getLastCreateTime() {
+		return mLastCreateTime;
 	}
 
 	private RedPacketCode(String code) {

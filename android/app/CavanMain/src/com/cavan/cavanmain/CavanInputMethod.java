@@ -45,6 +45,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	public static final int KEYCODE_ENTER = 12;
 	public static final int KEYCODE_SPACE = 13;
 
+	private long mLastTime;
 	private GridView mCodeGridView;
 	private RedPacketCode[] mUiCodes;
 
@@ -80,6 +81,13 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 		@Override
 		public void run() {
+			long time = RedPacketCode.getLastCreateTime();
+			if (mLastTime == time) {
+				return;
+			}
+
+			mLastTime = time;
+
 			int columns, size;
 			List<RedPacketCode> codes = RedPacketCode.getLastCodes();
 
@@ -146,7 +154,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	public void updateInputView() {
 		if (mCodeGridView != null) {
 			mCodeGridView.removeCallbacks(mRunnableUpdateInputView);
-			mCodeGridView.postDelayed(mRunnableUpdateInputView, 500);
+			mCodeGridView.postDelayed(mRunnableUpdateInputView, 100);
 		}
 	}
 
