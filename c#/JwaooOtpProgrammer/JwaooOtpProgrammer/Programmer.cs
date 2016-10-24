@@ -13,11 +13,14 @@ namespace JwaooOtpProgrammer {
             "C:\\Program Files (x86)", "C:\\Program Files", "D:\\Program Files (x86)", "D:\\Program Files"
         };
 
+        private static String sFileOtpHeaderBin = Path.Combine(Application.LocalUserAppDataPath, "otp_header.bin");
+        private static String sFileOtpFirmwareBin = Path.Combine(Application.LocalUserAppDataPath, "otp_firmware.bin");
+
         private static String sFileBdAddrTxt = Path.Combine(Application.StartupPath, "mac.txt");
-        private static String sFileHeaderTxt = Path.Combine(Application.StartupPath, "header.txt");
-        private static String sFileFirmwareTxt = Path.Combine(Application.StartupPath, "firmware.txt");
         private static String sFileProgrammerBin = Path.Combine(Application.StartupPath, "jtag_programmer.bin");
         private static String[] sOtpCommandArgs = { "-type", "otp", "-chip", "DA14580-01", "-jtag", "123456", "-baudrate", "57600" };
+
+        private static byte[] sOtpBootMagic = { 0x12, 0x34, 0xA5, 0xA5, 0xA5, 0xA5, 0x12, 0x34 };
 
         private UInt64 mBdAddress;
         private String mFileSmartSnippetsExe;
@@ -317,6 +320,14 @@ namespace JwaooOtpProgrammer {
             return line.StartsWith("Reading is complete");
         }
 
+        private byte[] readOtpHeader() {
+            if (!readOtpHeader(sFileOtpHeaderBin)) {
+                return null;
+            }
+
+            return File.ReadAllBytes(sFileOtpHeaderBin);
+        }
+
         private bool readOtpFirmware(String pathname) {
             appendLog("从OTP读取固件到：" + pathname);
 
@@ -330,6 +341,14 @@ namespace JwaooOtpProgrammer {
             }
 
             return line.StartsWith("OTP memory reading has finished");
+        }
+
+        private byte[] readOtpFirmware() {
+            if (!readOtpFirmware(sFileOtpFirmwareBin)) {
+                return null;
+            }
+
+            return File.ReadAllBytes(sFileOtpFirmwareBin);
         }
 
         private bool writeOtpFirmware(String pathname) {
@@ -347,6 +366,26 @@ namespace JwaooOtpProgrammer {
             return line.StartsWith("OTP Memory burning completed successfully");
         }
 
+        private bool isMemoryEmpty(byte[] bytes, int offset, int length) {
+            for (int end = offset + length; offset < end; offset++) {
+                if (bytes[offset] != 0x00) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool isMemeoryMatch(byte[] mem1, int off1, byte[] mem2, int off2, int length) {
+            for (int i = 0; i < length; i++) {
+                if (mem1[off1 + i] != mem2[off2 + i]) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         private bool burnOtpFirmwareAll() {
             String pathname = textBoxFirmware.Text;
             if (pathname == null || pathname.Length == 0) {
@@ -359,33 +398,51 @@ namespace JwaooOtpProgrammer {
                 return false;
             }
 
-            if (!readOtpFirmware(sFileFirmwareTxt)) {
+            byte[] bytes = readOtpFirmware();
+            if (bytes == null) {
                 MessageBox.Show("读取固件失败");
                 return false;
             }
 
             appendLog("成功");
 
-            if (!writeOtpFirmware(pathname)) {
-                MessageBox.Show("写固件失败: " + pathname);
-                return false;
+            if (isMemoryEmpty(bytes, 0, 0x7F00)) {
+                if (!writeOtpFirmware(pathname)) {
+                    MessageBox.Show("写固件失败: " + pathname);
+                    return false;
+                }
+
+                appendLog("成功");
+            } else {
+                MessageBox.Show("OTP中的固件不为空，可能已经写过了");
+                appendLog("已经写过固件了，直接跳过");
             }
 
-            appendLog("成功");
+            if (isMemoryEmpty(bytes, 0x7FD4, 6)) {
+                if (!writeBdAddress()) {
+                    MessageBox.Show("写MAC地址失败");
+                    return false;
+                }
 
-            if (!writeBdAddress()) {
-                MessageBox.Show("写MAC地址失败");
-                return false;
+                appendLog("成功");
+            } else {
+                MessageBox.Show("OTP中的MAC地址不为空，可能已经写过了");
+                appendLog("已经写过MAC地址了，直接跳过");
             }
 
-            appendLog("成功");
+            if (isMemoryEmpty(bytes, 0x7F00, 8)) {
+                if (!setOtpBootEnable()) {
+                    MessageBox.Show("设置从OTP启动失败");
+                    return false;
+                }
 
-            if (!setOtpBootEnable()) {
-                MessageBox.Show("设置从OTP启动失败");
+                appendLog("成功");
+            } else if (isMemeoryMatch(bytes, 0x7F00, sOtpBootMagic, 0, sOtpBootMagic.Length)) {
+                appendLog("已经设置从OTP启动了，直接跳过");
+            } else {
+                MessageBox.Show("OTP启动标志位不匹配！！！");
                 return false;
             }
-
-            appendLog("成功");
 
             return true;
         }
@@ -400,14 +457,14 @@ namespace JwaooOtpProgrammer {
             buttonConnect.Enabled = false;
             buttonBurn.Enabled = false;
 
-            if (readOtpHeader(sFileHeaderTxt)) {
+            if (readOtpHeader(sFileOtpHeaderBin)) {
                 MessageBox.Show("连接成功");
-                appendLog("成功");
+                appendLog("连接成功");
                 buttonConnect.Enabled = true;
                 buttonBurn.Enabled = true;
             } else {
                 MessageBox.Show("连接失败");
-                appendLog("失败！！！");
+                appendLog("连接失败！！！");
                 buttonConnect.Enabled = true;
             }
         }
@@ -420,7 +477,7 @@ namespace JwaooOtpProgrammer {
             if (burnOtpFirmwareAll()) {
                 MessageBox.Show("恭喜，烧录成功");
             } else {
-                appendLog("失败！！！");
+                appendLog("烧录失败！！！");
             }
 
             buttonConnect.Enabled = true;
