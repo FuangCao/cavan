@@ -54,6 +54,7 @@ public class JwaooToyActivity extends Activity {
 	}
 
 	protected void onSensorDataReceived(byte[] data) {}
+	protected void onBatteryStateChanged(int state, int level, double voltage) {}
 
 	protected JwaooBleToy createJwaooBleToy(BluetoothDevice device) {
 		return new JwaooBleToy(device) {
@@ -83,6 +84,11 @@ public class JwaooToyActivity extends Activity {
 			protected void onSensorDataReceived(byte[] data) {
 				super.onSensorDataReceived(data);
 				JwaooToyActivity.this.onSensorDataReceived(data);
+			}
+
+			@Override
+			protected void onBatteryStateChanged(int state, int level, double voltage) {
+				JwaooToyActivity.this.onBatteryStateChanged(state, level, voltage);
 			}
 		};
 	}

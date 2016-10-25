@@ -40,5 +40,6 @@
     </string-array>
         <string name="text_shutdown">关机</string>
         <string name="text_moto_event_enable">允许马达事件</string>
+        <string name="text_key_lock">键盘锁</string>
 
 </resources>

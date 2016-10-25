@@ -19,6 +19,7 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanProgressListener;
@@ -35,6 +36,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private static final int EVENT_DEPTH_CHANGED = 8;
 	private static final int EVENT_CONNECTED = 9;
 	private static final int EVENT_DISCONNECTED = 10;
+	private static final int EVENT_BATTERY_INFO = 11;
 
 	private double mFreq;
 	private double mDepth;
@@ -55,11 +57,13 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private CheckBox mCheckBoxBatteryEvent;
 	private CheckBox mCheckBoxFactoryMode;
 	private CheckBox mCheckBoxMotoEvent;
+	private CheckBox mCheckBoxKeyLock;
 
 	private ProgressBar mProgressBar;
 	private EditText mEditTextBdAddr;
 	private Spinner mSpinnerMotoMode;
 	private Spinner mSpinnerMotoLevel;
+	private TextView mTextViewBatteryInfo;
 
 	private int mMotoMode;
 	private int mMotoLevel;
@@ -102,6 +106,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			case EVENT_DISCONNECTED:
 				updateUI(false);
 				showScanActivity();
+				break;
+
+			case EVENT_BATTERY_INFO:
+				mTextViewBatteryInfo.setText((CharSequence) msg.obj);
 				break;
 			}
 		}
@@ -154,8 +162,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		mCheckBoxFactoryMode = (CheckBox) findViewById(R.id.checkBoxFactoryMode);
 		mCheckBoxFactoryMode.setOnCheckedChangeListener(this);
 
+		mCheckBoxKeyLock = (CheckBox) findViewById(R.id.checkBoxKeyLock);
+		mCheckBoxKeyLock.setOnCheckedChangeListener(this);
+
 		mProgressBar = (ProgressBar) findViewById(R.id.progressBarUpgrade);
 		mEditTextBdAddr = (EditText) findViewById(R.id.editTextBdAddr);
+		mTextViewBatteryInfo = (TextView) findViewById(R.id.textViewBatteryInfo);
 
 		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.text_moto_modes, android.R.layout.simple_spinner_item);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -348,6 +360,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			return false;
 		}
 
+		mBleToy.setKeyLock(mCheckBoxKeyLock.isChecked());
+
 		if (mMotoMode > 0 || mMotoLevel > 0) {
 			if (setMotoMode() == false && mBleToy.isCommandTimeout()) {
 				return false;
@@ -399,6 +413,22 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		case R.id.checkBoxMotoEvent:
 			mBleToy.setMotoEventEnable(isChecked);
 			break;
+
+		case R.id.checkBoxKeyLock:
+			mBleToy.setKeyLock(isChecked);
+			break;
 		}
+	}
+
+	@Override
+	protected void onBatteryStateChanged(int state, int level, double voltage) {
+		StringBuilder builder = new StringBuilder();
+		builder.append("level = ");
+		builder.append(level);
+		builder.append(", voltage = ");
+		builder.append(voltage);
+		builder.append(", state = ");
+		builder.append(mBleToy.getBatteryStateString(state));
+		mHandler.obtainMessage(EVENT_BATTERY_INFO, builder.toString()).sendToTarget();
 	}
 }

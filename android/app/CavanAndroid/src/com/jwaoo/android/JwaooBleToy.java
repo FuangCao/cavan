@@ -24,6 +24,16 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final double JWAOO_TOY_ACCEL_VALUE_FUZZ = 2.0;
 	public static final double JWAOO_TOY_DEPTH_VALUE_FUZZ = 6.0;
 
+	public static final int KEYCODE_UP = 0;
+	public static final int KEYCODE_O = 1;
+	public static final int KEYCODE_DOWN = 2;
+	public static final int KEYCODE_MAX = 3;
+
+	public static final int BATTERY_STATE_NORMAL = 0;
+	public static final int BATTERY_STATE_LOW = 1;
+	public static final int BATTERY_STATE_CHARGING = 2;
+	public static final int BATTERY_STATE_FULL = 3;
+
 	public static final String DEVICE_NAME_COMMON = "JwaooToy";
 	public static final String DEVICE_NAME_K100 = "K100";
 	public static final String DEVICE_NAME_K101 = "K101";
@@ -53,6 +63,8 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_REBOOT = 4;
 	public static final byte JWAOO_TOY_CMD_SHUTDOWN = 5;
 	public static final byte JWAOO_TOY_CMD_I2C_RW = 6;
+	public static final byte JWAOO_TOY_CMD_SUSPEND_DELAY = 7;
+	public static final byte JWAOO_TOY_CMD_APP_DATA = 8;
 	public static final byte JWAOO_TOY_CMD_FLASH_ID = 30;
 	public static final byte JWAOO_TOY_CMD_FLASH_SIZE = 31;
 	public static final byte JWAOO_TOY_CMD_FLASH_PAGE_SIZE = 32;
@@ -71,6 +83,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_WRITE_TEST_RESULT = 53;
 	public static final byte JWAOO_TOY_CMD_BATT_INFO = 60;
 	public static final byte JWAOO_TOY_CMD_BATT_EVENT_ENABLE = 61;
+	public static final byte JWAOO_TOY_CMD_BATT_SHUTDOWN_VOLTAGE = 62;
 	public static final byte JWAOO_TOY_CMD_SENSOR_ENABLE = 70;
 	public static final byte JWAOO_TOY_CMD_MOTO_SET_MODE = 80;
 	public static final byte JWAOO_TOY_CMD_MOTO_GET_MODE = 81;
@@ -78,6 +91,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_KEY_CLICK_ENABLE = 90;
 	public static final byte JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE = 91;
 	public static final byte JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE = 92;
+	public static final byte JWAOO_TOY_CMD_KEY_LOCK = 93;
 	public static final byte JWAOO_TOY_CMD_GPIO_GET = 100;
 	public static final byte JWAOO_TOY_CMD_GPIO_SET = 101;
 	public static final byte JWAOO_TOY_CMD_GPIO_CFG = 102;
@@ -615,6 +629,62 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public int getDepthSteps() {
 		return mDepthSteps;
+	}
+
+	public boolean getKeyLockState() {
+		return mCommand.readValue8(JWAOO_TOY_CMD_KEY_LOCK, (byte) 0) > 0;
+	}
+
+	public boolean setKeyLock(boolean enable) {
+		return mCommand.readBool(JWAOO_TOY_CMD_KEY_LOCK, enable);
+	}
+
+	public boolean writeAppData(byte[] bytes) {
+		byte[] command = new byte[bytes.length + 1];
+
+		command[0] = JWAOO_TOY_CMD_APP_DATA;
+		CavanJava.ArrayCopy(bytes, 0, command, 1, bytes.length);
+
+		return mCommand.readBool(command);
+	}
+
+	public byte[] readAppData() {
+		return mCommand.readData(JWAOO_TOY_CMD_APP_DATA);
+	}
+
+	public boolean setSuspendDelay(int delay) {
+		return mCommand.readBool(JWAOO_TOY_CMD_SUSPEND_DELAY, (short) delay);
+	}
+
+	public int getSuspendDelay() {
+		return mCommand.readValue16(JWAOO_TOY_CMD_SUSPEND_DELAY, (short) -1);
+	}
+
+	public boolean setShutdownVoltage(int voltage) {
+		return mCommand.readBool(JWAOO_TOY_CMD_BATT_SHUTDOWN_VOLTAGE, (short) voltage);
+	}
+
+	public int getShutdownVoltage() {
+		return mCommand.readValue16(JWAOO_TOY_CMD_BATT_SHUTDOWN_VOLTAGE, (short) -1);
+	}
+
+	public String getBatteryStateString(int state) {
+		switch (state) {
+		case BATTERY_STATE_NORMAL:
+			return "Discharging";
+
+		case BATTERY_STATE_LOW:
+			return "Low";
+
+		case BATTERY_STATE_CHARGING:
+			return "Charging";
+
+		case BATTERY_STATE_FULL:
+			return "Full";
+
+		default:
+			return "Unknown";
+		}
 	}
 
 	@Override

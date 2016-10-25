@@ -64,7 +64,7 @@
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/progressBarUpgrade"
+        android:layout_below="@+id/textViewBatteryInfo"
         android:spinnerMode="dialog" />
 
     <Button
@@ -157,5 +157,21 @@
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/checkBoxBattEvent"
         android:text="@string/text_moto_event_enable" />
+
+    <TextView
+        android:id="@+id/textViewBatteryInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/progressBarUpgrade" />
+
+    <CheckBox
+        android:id="@+id/checkBoxKeyLock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonWriteBdAddr"
+        android:layout_alignLeft="@+id/checkBoxFactoryMode"
+        android:text="@string/text_key_lock" />
 
 </RelativeLayout>
