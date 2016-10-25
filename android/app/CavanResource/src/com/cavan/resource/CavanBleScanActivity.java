@@ -7,12 +7,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MotionEvent;
+import android.view.View;
 import android.widget.ListView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleDevice;
 import com.cavan.android.CavanBleDeviceAdapter;
-import com.cavan.android.CavanBleDeviceView;
 import com.cavan.android.CavanBleScanner;
 
 public class CavanBleScanActivity extends Activity {
@@ -52,8 +52,8 @@ public class CavanBleScanActivity extends Activity {
 		mAdapter = new CavanBleDeviceAdapter(view) {
 
 			@Override
-			protected void onItemClicked(CavanBleDeviceView view) {
-				onScanComplete(view.getDevice());
+			protected void selectDevice(View view, CavanBleDevice device) {
+				onScanComplete(device);
 			}
 		};
 
