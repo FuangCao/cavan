@@ -405,9 +405,26 @@ public class CavanAndroid {
 		return sActivityManager.getRunningTasks(1).get(0).topActivity;
 	}
 
-	public static boolean isTopActivity(Context context, String pkgName) {
+	public static String getTopActivieyPackageName(Context context) {
 		ComponentName info = getTopActivityInfo(context);
-		return (info != null && pkgName.equals(info.getPackageName()));
+		if (info != null) {
+			return info.getPackageName();
+		}
+
+		return null;
+	}
+
+	public static String getTopActivityClassName(Context context) {
+		ComponentName info = getTopActivityInfo(context);
+		if (info != null) {
+			return info.getClassName();
+		}
+
+		return null;
+	}
+
+	public static boolean isTopActivity(Context context, String pkgName) {
+		return pkgName.equals(getTopActivieyPackageName(context));
 	}
 
 	public static WifiManager getWifiManager(Context context) {

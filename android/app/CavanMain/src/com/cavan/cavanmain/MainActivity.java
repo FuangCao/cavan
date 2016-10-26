@@ -79,6 +79,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_WEB_PROXY = "web_proxy";
 	public static final String KEY_TCP_REPEATER = "tcp_repeater";
 
+	private static boolean mAutoOpenAppEnable = true;
+
 	static {
 		CavanAndroid.TAG = "CavanMain";
 	}
@@ -143,8 +145,13 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		return -1;
 	}
 
+	public static void setAutoOpenAppEnable(boolean enable) {
+		mAutoOpenAppEnable = enable;
+		CavanAndroid.eLog("mAutoOpenAppEnable = " + enable);
+	}
+
 	public static boolean isAutoOpenAppEnabled(Context context) {
-		return CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_OPEN_APP);
+		return mAutoOpenAppEnable && CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_OPEN_APP);
 	}
 
 	public static int getCommitAhead(Context context) {

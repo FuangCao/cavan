@@ -36,9 +36,10 @@ public class RedPacketCode {
 	private boolean mValid;
 	private boolean mInvalid;
 	private boolean mShared;
-	private boolean mCompleted;
-	private boolean mMaybeInvalid;
 	private boolean mTestOnly;
+	private boolean mCompleted;
+	private boolean mRepeatable;
+	private boolean mMaybeInvalid;
 
 	public static RedPacketCode getInstence(String code, boolean create, boolean test) {
 		Iterator<RedPacketCode> iterator = mCodeMap.values().iterator();
@@ -193,14 +194,23 @@ public class RedPacketCode {
 	}
 
 	synchronized public boolean isRepeatable() {
-		return mRepeatTime > 0;
+		return mRepeatable;
 	}
 
-	synchronized public void setRepeatable(Context context) {
-		mRepeatTime = System.currentTimeMillis() + REPEAT_TIME_ALIGN; // - 1;
+	synchronized public void setRepeatable() {
+		mRepeatable = true;
+	}
+
+	synchronized public void updateRepeatTime(Context context) {
+		mValid = true;
+		mRepeatable = true;
+		mRepeatTime = System.currentTimeMillis() + REPEAT_TIME_ALIGN;
 		mRepeatTime -= mRepeatTime % REPEAT_TIME_ALIGN;
 		mTime = mRepeatTime - MainActivity.getCommitAhead(context);
-		mValid = true;
+	}
+
+	synchronized public long getRepeatTime() {
+		return mRepeatTime;
 	}
 
 	synchronized public long getRepeatTimeout() {

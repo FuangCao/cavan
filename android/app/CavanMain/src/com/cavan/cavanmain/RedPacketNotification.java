@@ -32,7 +32,7 @@ public class RedPacketNotification extends CavanNotification {
 		"m4a", "ogg", "wav", "mp3", "ac3", "wma"
 	};
 
-	private static final String[] sFindTitlePackages = {
+	private static final String[] sTimerPackages = {
 		CavanPackageName.CALENDAR,
 		CavanPackageName.DESKCLOCK,
 	};
@@ -54,6 +54,7 @@ public class RedPacketNotification extends CavanNotification {
 
 	private boolean mIsCode;
 	private boolean mNetShared;
+	private boolean mIsTimedCode;
 	private String mDescription;
 	private RedPacketListenerService mService;
 	private StatusBarNotification mNotification;
@@ -64,14 +65,14 @@ public class RedPacketNotification extends CavanNotification {
 		mTestOnly = test;
 		mService = service;
 		mNotification = sbn;
+		mIsTimedCode = CavanJava.ArrayContains(sTimerPackages, mPackageName);
 
-		boolean needFindTitle = CavanJava.ArrayContains(sFindTitlePackages, mPackageName);
-		if (mTitle != null && needFindTitle) {
+		if (mTitle != null && mIsTimedCode) {
 			mFinder.addLine(mTitle);
 		}
 
 		mNeedSave = CavanJava.ArrayContains(sSavePackages, mPackageName);
-		if (mNeedSave || needFindTitle || mService.getPackageName().equals(getPackageName())) {
+		if (mNeedSave || mIsTimedCode || mService.getPackageName().equals(getPackageName())) {
 			mFinder.split(mContent);
 		}
 	}
@@ -204,7 +205,6 @@ public class RedPacketNotification extends CavanNotification {
 		sCodeTimeMap.remove(code);
 	}
 
-
 	public Notification buildNotification(CharSequence content, PendingIntent intent) {
 		CavanAndroid.setSuspendEnable(mService, false, 5000);
 
@@ -304,6 +304,10 @@ public class RedPacketNotification extends CavanNotification {
 					node.setShared();
 				}
 
+				if (mIsTimedCode) {
+					node.setRepeatable();
+				}
+
 				mService.sendNotification(notification, "支付宝口令@" + getUserDescription() + ": " + code, code);
 			}
 		}
@@ -315,7 +319,7 @@ public class RedPacketNotification extends CavanNotification {
 		PendingIntent intent = mNotification.getNotification().contentIntent;
 		Notification notification = buildNotification(content, intent);
 
-		if (mService.getCodeCount() == 0 && intent != null) {
+		if (intent != null && MainActivity.isAutoOpenAppEnabled(mService) && mService.getCodeCount() == 0) {
 			try {
 				intent.send();
 			} catch (CanceledException e) {

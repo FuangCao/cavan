@@ -45,6 +45,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private static final int MSG_COMMIT_TIMEOUT = 1;
 	private static final int MSG_COMMIT_COMPLETE = 2;
 	private static final int MSG_CHECK_CONTENT = 3;
+	private static final int MSG_CHECK_AUTO_OPEN_APP = 4;
 
 	private static final String[] PACKAGE_NAMES = {
 		CavanPackageName.ALIPAY,
@@ -155,6 +156,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 						String text = editText.getText().toString();
 						CheckBox checkBox = (CheckBox) view.findViewById(R.id.checkBoxAsCode);
 
+						MainActivity.setAutoOpenAppEnable(true);
+
 						if (checkBox != null && checkBox.isChecked()) {
 							if (text != null) {
 								for (String line : text.split("\n")) {
@@ -190,6 +193,19 @@ public class CavanAccessibilityService extends AccessibilityService {
 				Window win = mCheckContentDialog.getWindow();
 				win.setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
 				mCheckContentDialog.show();
+				break;
+
+			case MSG_CHECK_AUTO_OPEN_APP:
+				String clsName = CavanAndroid.getTopActivityClassName(getApplicationContext());
+				CavanAndroid.eLog("ClassName = " + clsName);
+				if (clsName == null) {
+					sendEmptyMessageDelayed(MSG_CHECK_AUTO_OPEN_APP, 1000);
+				} else if (clsName.startsWith("com.sogou.ocrplugin") || clsName.contains("gallery")) {
+					MainActivity.setAutoOpenAppEnable(false);
+					sendEmptyMessageDelayed(MSG_CHECK_AUTO_OPEN_APP, 2000);
+				} else {
+					MainActivity.setAutoOpenAppEnable(true);
+				}
 				break;
 			}
 		}
@@ -263,7 +279,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				}
 
 				if (node.isRepeatable()) {
-					node.setRepeatable(getApplicationContext());
+					node.updateRepeatTime(getApplicationContext());
 				}
 
 				mCodes.add(node);
@@ -382,6 +398,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	private boolean onWindowStateChangedSogouIME(AccessibilityEvent event) {
+		mHandler.sendEmptyMessage(MSG_CHECK_AUTO_OPEN_APP);
+
 		AccessibilityNodeInfo source = event.getSource();
 		if (source == null) {
 			return false;
@@ -470,7 +488,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 		case "com.alipay.mobile.nebulacore.ui.H5Activity":
 			if (mCodeCount > 0 && isCurrentRedPacketCode(mCode)) {
-				if (mCode.isRepeatable()) {
+				if (mCode.getRepeatTime() > 0) {
 					if (mCode.getRepeatTimeout() > REPEAT_OVERTIME) {
 						setRedPacketCodeComplete();
 					} else {
@@ -485,7 +503,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 						}
 					}
 				} else {
-					mCode.setRepeatable(this);
+					mCode.updateRepeatTime(this);
 				}
 			}
 
