@@ -137,18 +137,10 @@ int directory_copy_main(const char *src, const char *dest)
 		text_copy(src_p, dt->d_name);
 		text_copy(dest_p, dt->d_name);
 
-		if (dt->d_type == DT_DIR) {
-			ret = directory_copy_main(tmp_dirname_src, tmp_dirname_dest);
-			if (ret < 0) {
-				pr_red_info("directory_copy_main");
-				goto out_close_dir;
-			}
-		} else {
-			ret = file_copy_main(tmp_dirname_src, tmp_dirname_dest);
-			if (ret < 0) {
-				pr_red_info("file_copy_main");
-				goto out_close_dir;
-			}
+		ret = file_copy_main(tmp_dirname_src, tmp_dirname_dest);
+		if (ret < 0) {
+			pr_red_info("file_copy_main");
+			goto out_close_dir;
 		}
 	}
 

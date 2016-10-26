@@ -169,7 +169,7 @@ out_close_src:
 	return ret;
 }
 
-int ffile_copy_simple(int src_fd, int dest_fd)
+ssize_t ffile_copy_simple(int src_fd, int dest_fd)
 {
 	ssize_t cpylen = 0;
 
@@ -199,7 +199,7 @@ int ffile_copy_simple(int src_fd, int dest_fd)
 	return cpylen;
 }
 
-int ffile_copy(int src_fd, int dest_fd)
+ssize_t ffile_copy(int src_fd, int dest_fd)
 {
 	ssize_t cpylen = 0;
 	struct progress_bar bar;
@@ -235,7 +235,7 @@ int ffile_copy(int src_fd, int dest_fd)
 	return cpylen;
 }
 
-int file_append(const char *file_src, const char *file_dest)
+ssize_t file_append(const char *file_src, const char *file_dest)
 {
 	ssize_t res;
 	int fd_src, fd_dest;
@@ -318,7 +318,7 @@ out_close_src_fd:
 	return ret;
 }
 
-int file_copy(const char *src_file, const char *dest_file, int flags)
+ssize_t file_copy(const char *src_file, const char *dest_file, int flags)
 {
 	int ret;
 	ssize_t cpylen;
@@ -340,7 +340,7 @@ int file_copy(const char *src_file, const char *dest_file, int flags)
 	return cpylen;
 }
 
-int file_copy2(int src_fd, const char *dest_file, int flags, mode_t mode)
+ssize_t file_copy2(int src_fd, const char *dest_file, int flags, mode_t mode)
 {
 	int dest_fd;
 	ssize_t cpylen;
@@ -360,7 +360,7 @@ int file_copy2(int src_fd, const char *dest_file, int flags, mode_t mode)
 	return cpylen;
 }
 
-int file_copy3(const char *src_file, int dest_fd)
+ssize_t file_copy3(const char *src_file, int dest_fd)
 {
 	int src_fd;
 	ssize_t cpylen;
