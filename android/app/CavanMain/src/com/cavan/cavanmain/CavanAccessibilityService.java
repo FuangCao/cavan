@@ -446,6 +446,15 @@ public class CavanAccessibilityService extends AccessibilityService {
 				break;
 			}
 
+			if (code.maybeInvalid()) {
+				if (getWindowTimeConsume() > 1000) {
+					setRedPacketCodeInvalid(code);
+					startAutoCommitRedPacketCode(0);
+				}
+
+				break;
+			}
+
 			postRedPacketCode(root, code);
 
 			if (!mHandler.hasMessages(MSG_COMMIT_TIMEOUT, code)) {
@@ -599,10 +608,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 		long time = Long.MAX_VALUE;
 
 		for (RedPacketCode node : mCodes) {
-			if (node.isInvalid()) {
-				continue;
-			}
-
 			if (node.getTime() < time) {
 				time = node.getTime();
 				code = node;
@@ -758,12 +763,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 				switch (mClassNameAlipay) {
 				case "com.alipay.mobile.framework.app.ui.DialogHelper$APGenericProgressDialog":
 					mCode.setPostComplete();
-					break;
-
-				case "com.alipay.android.phone.discovery.envelope.HomeActivity":
-					if (mCode.maybeInvalid()) {
-						mCode.setInvalid();
-					}
 					break;
 
 				case "com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity":

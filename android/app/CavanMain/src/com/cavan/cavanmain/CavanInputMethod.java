@@ -88,24 +88,14 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 			mLastTime = RedPacketCode.getLastCreateTime();
 
-			int columns, size;
+			int columns;
+			int size = codes.size();
 
-			columns = size = codes.size();
 			if (size > CODE_MAX_COLUMNS) {
-				int max = 0;
-
-				for (int i = CODE_MAX_COLUMNS; i > 1; i--) {
-					int remain = size % i;
-					if (remain == 0) {
-						columns = i;
-						break;
-					}
-
-					if (remain >= max) {
-						columns = i;
-						max = remain;
-					}
-				}
+				int lines = (size + CODE_MAX_COLUMNS - 1) / CODE_MAX_COLUMNS;
+				columns = (size + lines - 1) / lines;
+			} else {
+				columns = size;
 			}
 
 			mUiCodes = new RedPacketCode[size];
