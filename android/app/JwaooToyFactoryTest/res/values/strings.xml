@@ -45,5 +45,6 @@
             <item >正在充电</item>
             <item >已充满电</item>
         </string-array>
+            <string name="text_disconnect">断开</string>
 
 </resources>

@@ -42,6 +42,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	private Button mButtonPass;
 	private Button mButtonFail;
 	private Button mButtonStart;
+	private Button mButtonDisconnect;
 
 	private Drawable mDrawablePass;
 	private Drawable mDrawableFail;
@@ -55,11 +56,11 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 	private TestItemFragment[] mTestItemFragmanets = {
 		new ButtonTestFragment(0),
-		new DepthSensorTestFragment(1),
 		new GsensorTestFragment(2),
-		new ChargeTestFragment(3),
-		new LedTestFragment(4),
-		new MotoTestFragment(5),
+		new LedTestFragment(3),
+		new MotoTestFragment(4),
+		new ChargeTestFragment(5),
+		// new DepthSensorTestFragment(6),
 	};
 
 	public void setTestItem(int item) {
@@ -140,6 +141,9 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		mButtonStart = (Button) findViewById(R.id.buttonStart);
 		mButtonStart.setVisibility(View.INVISIBLE);
 		mButtonStart.setOnClickListener(this);
+
+		mButtonDisconnect = (Button) findViewById(R.id.buttonDisconnect);
+		mButtonDisconnect.setOnClickListener(this);
 
 		showScanActivity();
 	}
@@ -284,6 +288,14 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		case R.id.buttonStart:
 			mAutoTestEnable = true;
 			setTestItem(0);
+			break;
+
+		case R.id.buttonDisconnect:
+			if (mBleToy != null && mBleToy.isConnected()) {
+				mBleToy.disconnect();
+			} else {
+				showScanActivity();
+			}
 			break;
 		}
 	}
@@ -698,6 +710,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		protected void handleMessage(Message msg) {
 			if (msg.what == MSG_BATTERY_STATE) {
 				int state = msg.arg1;
+				double voltage = (double) msg.obj;
 
 				if (state >= 0 && state < mBatteryStates.length) {
 					mTextViewBatteryState.setText(mBatteryStates[state]);
@@ -705,12 +718,18 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 					mTextViewBatteryState.setText(Integer.toString(msg.arg1));
 				}
 
-				if ((state & 2) != 0) {
-					setPassEnable();
-				}
-
-				mTextViewBatteryVoltage.setText(msg.obj + " (v)");
+				mTextViewBatteryVoltage.setText(voltage + " (v)");
 				mTextViewBatteryCapacity.setText(msg.arg2 + "%");
+
+				if (voltage > 2.5 && voltage < 4.5) {
+					mTextViewBatteryVoltage.setTextColor(Color.BLACK);
+
+					if ((state & 2) != 0) {
+						setPassEnable();
+					}
+				} else {
+					mTextViewBatteryVoltage.setTextColor(Color.RED);
+				}
 			}
 		}
 	}

@@ -118,7 +118,8 @@ function cavan-apk-sign()
 
 	KEYSTORE="${CAVAN_HOME}/build/core/cavan.keystore"
 
-	jarsigner -digestalg "SHA1" -sigalg "MD5withRSA" -tsa "https://timestamp.geotrust.com/tsa" -storepass "CFA8888" -keystore "${KEYSTORE}" -signedjar "${APK_SIGNED}" "${APK_UNSIGNED}" "${KEYSTORE}"
+	# jarsigner -digestalg "SHA1" -sigalg "MD5withRSA" -tsa "https://timestamp.geotrust.com/tsa" -storepass "CFA8888" -keystore "${KEYSTORE}" -signedjar "${APK_SIGNED}" "${APK_UNSIGNED}" "${KEYSTORE}"
+	jarsigner -verbose -digestalg "SHA1" -sigalg "MD5withRSA" -storepass "CFA8888" -keystore "${KEYSTORE}" -signedjar "${APK_SIGNED}" "${APK_UNSIGNED}" "${KEYSTORE}"
 }
 
 function cavan-apktool()

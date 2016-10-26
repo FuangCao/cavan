@@ -42,8 +42,7 @@ public class RedPacketFinder {
 		Pattern.compile("口\\s*令\\s*红\\s*包\\D*" + DIGIT_PATTERN),
 		Pattern.compile("红\\s*包\\s*[:：]?\\s*" + DIGIT_PATTERN),
 		Pattern.compile("口\\s*令\\s*[:：]?\\s*" + DIGIT_PATTERN),
-		Pattern.compile("[:：" + SEPARATOR + "]\\s*" + DIGIT_PATTERN),
-		Pattern.compile("\\b" + DIGIT_PATTERN + "[" + SEPARATOR + "]"),
+		Pattern.compile("[:：]\\s*" + DIGIT_PATTERN),
 		Pattern.compile("\\b" + DIGIT_PATTERN + "走起"),
 		Pattern.compile("\\b" + DIGIT_PATTERN + "\\s*$"),
 	};
