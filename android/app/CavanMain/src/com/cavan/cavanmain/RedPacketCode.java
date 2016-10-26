@@ -104,15 +104,15 @@ public class RedPacketCode {
 		mTime = System.currentTimeMillis();
 	}
 
-	public long getTime() {
+	synchronized public long getTime() {
 		return mTime;
 	}
 
-	public void setTime(long time) {
+	synchronized public void setTime(long time) {
 		mTime = time;
 	}
 
-	public long updateTime() {
+	synchronized public long updateTime() {
 		long time = System.currentTimeMillis();
 
 		if (mTime > time) {
@@ -124,27 +124,27 @@ public class RedPacketCode {
 		return 0;
 	}
 
-	public String getCode() {
+	synchronized public String getCode() {
 		return mCode;
 	}
 
-	public void setCode(String code) {
+	synchronized public void setCode(String code) {
 		mCode = code;
 	}
 
-	public void setTestOnly() {
+	synchronized public void setTestOnly() {
 		mTestOnly = true;
 	}
 
-	public boolean isTestOnly() {
+	synchronized public boolean isTestOnly() {
 		return mTestOnly;
 	}
 
-	public void setDelay(long delay) {
+	synchronized public void setDelay(long delay) {
 		mTime = System.currentTimeMillis() + delay;
 	}
 
-	public long getDelay() {
+	synchronized public long getDelay() {
 		long time = System.currentTimeMillis();
 		if (mTime > time) {
 			return mTime - time;
@@ -153,7 +153,7 @@ public class RedPacketCode {
 		return 0;
 	}
 
-	public long getTimeout() {
+	synchronized public long getTimeout() {
 		long time = System.currentTimeMillis();
 		if (mTime < time) {
 			return time - mTime;
@@ -162,19 +162,21 @@ public class RedPacketCode {
 		return 0;
 	}
 
-	public void setValid() {
+	synchronized public void setValid() {
 		mValid = true;
+		mInvalid = false;
+		mMaybeInvalid = false;
 	}
 
-	public boolean isValid() {
+	synchronized public boolean isValid() {
 		return mValid;
 	}
 
-	public void setInvalid() {
+	synchronized public void setInvalid() {
 		mInvalid = true;
 	}
 
-	public boolean isInvalid() {
+	synchronized public boolean isInvalid() {
 		if (mValid) {
 			return false;
 		}
@@ -182,34 +184,34 @@ public class RedPacketCode {
 		return mInvalid;
 	}
 
-	public void setShared() {
+	synchronized public void setShared() {
 		mShared = true;
 	}
 
-	public boolean isShared() {
+	synchronized public boolean isShared() {
 		return mShared;
 	}
 
-	public boolean isRepeatable() {
+	synchronized public boolean isRepeatable() {
 		return mRepeatTime > 0;
 	}
 
-	public void setRepeatable(Context context) {
+	synchronized public void setRepeatable(Context context) {
 		mRepeatTime = System.currentTimeMillis() + REPEAT_TIME_ALIGN; // - 1;
 		mRepeatTime -= mRepeatTime % REPEAT_TIME_ALIGN;
 		mTime = mRepeatTime - MainActivity.getCommitAhead(context);
 		mValid = true;
 	}
 
-	public long getRepeatTimeout() {
+	synchronized public long getRepeatTimeout() {
 		return System.currentTimeMillis() - mRepeatTime;
 	}
 
-	public void setCompleted() {
+	synchronized public void setCompleted() {
 		mCompleted = true;
 	}
 
-	public boolean isCompleted() {
+	synchronized public boolean isCompleted() {
 		if (mRepeatTime > 0) {
 			return false;
 		}
@@ -217,7 +219,7 @@ public class RedPacketCode {
 		return mCompleted;
 	}
 
-	public int getCommitCount() {
+	synchronized public int getCommitCount() {
 		if (mValid) {
 			return 0;
 		}
@@ -225,29 +227,31 @@ public class RedPacketCode {
 		return mCommitCount;
 	}
 
-	public void setCommitCount(int count) {
+	synchronized public void setCommitCount(int count) {
 		mPostPending = false;
+		mInvalid = false;
+		mMaybeInvalid = false;
 		mCommitCount = count;
 	}
 
-	public boolean canRemove() {
+	synchronized public boolean canRemove() {
 		return mPostCount > 0;
 	}
 
-	public void setPostPending(boolean pending) {
+	synchronized public void setPostPending(boolean pending) {
 		mPostPending = pending;
 		mMaybeInvalid = false;
 	}
 
-	public boolean maybeInvalid() {
+	synchronized public boolean maybeInvalid() {
 		if (mValid) {
 			return false;
 		}
 
-		return mMaybeInvalid && mPostPending;
+		return mMaybeInvalid;
 	}
 
-	public boolean setPostComplete() {
+	synchronized public boolean setPostComplete() {
 		if (!mPostPending) {
 			return false;
 		}
@@ -300,6 +304,10 @@ public class RedPacketCode {
 			builder.append(", Repeatable");
 		} else if (mValid) {
 			builder.append(", Valid");
+		} else if (mInvalid) {
+			builder.append(", Invalid");
+		} else if (mMaybeInvalid) {
+			builder.append(", MaybeInvalid");
 		}
 
 		return builder.toString();

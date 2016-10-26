@@ -38,7 +38,7 @@ import com.cavan.java.CavanString;
 public class CavanAccessibilityService extends AccessibilityService {
 
 	private static final long POLL_DELAY = 500;
-	private static final long UNPACK_OVERTIME = 3000;
+	private static final long UNPACK_OVERTIME = 2000;
 	private static final long COMMIT_OVERTIME = 300000;
 	private static final long REPEAT_OVERTIME = 20000;
 
@@ -412,8 +412,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 			return false;
 		}
 
-		CavanAndroid.eLog("mClassNameAlipay = " + mClassNameAlipay);
-
 		switch (mClassNameAlipay) {
 		case "com.eg.android.AlipayGphone.AlipayLogin":
 			if (mCodeCount > 0) {
@@ -430,30 +428,22 @@ public class CavanAccessibilityService extends AccessibilityService {
 				break;
 			}
 
-			if (code == mCode && code.maybeInvalid()) {
-				setRedPacketCodeInvalid(code);
-				startAutoCommitRedPacketCode(100);
-			} else {
-				postRedPacketCode(root, code);
-				if (!mHandler.hasMessages(MSG_COMMIT_TIMEOUT, code)) {
-					Message message = mHandler.obtainMessage(MSG_COMMIT_TIMEOUT, code);
-					mHandler.sendMessageDelayed(message, COMMIT_OVERTIME);
-				}
+			postRedPacketCode(root, code);
+
+			if (!mHandler.hasMessages(MSG_COMMIT_TIMEOUT, code)) {
+				Message message = mHandler.obtainMessage(MSG_COMMIT_TIMEOUT, code);
+				mHandler.sendMessageDelayed(message, COMMIT_OVERTIME);
 			}
 			break;
 
 		case "com.alipay.mobile.framework.app.ui.DialogHelper$APGenericProgressDialog":
-			if (isCurrentRedPacketCode(mCode)) {
-				if (getWindowTimeConsume() > UNPACK_OVERTIME) {
-					mCode.setCommitCount(0);
-					if (!mCode.isValid()) {
-						mCode.updateTime();
-					}
-
-					performBackAction(root, true);
-				} else {
-					mCode.setPostComplete();
+			if (getWindowTimeConsume() > UNPACK_OVERTIME && isCurrentRedPacketCode(mCode)) {
+				mCode.setCommitCount(0);
+				if (!mCode.isValid()) {
+					mCode.updateTime();
 				}
+
+				performBackAction(root, true);
 			}
 			break;
 
@@ -538,7 +528,11 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	private boolean isCurrentRedPacketCode(RedPacketCode code) {
-		return code != null && mInputtedCode != null && mInputtedCode.equals(code.getCode());
+		if (code == null) {
+			return false;
+		}
+
+		return mInputtedCode != null && mInputtedCode.equals(code.getCode());
 	}
 
 	private boolean setRedPacketCodeComplete() {
@@ -587,6 +581,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 		long time = Long.MAX_VALUE;
 
 		for (RedPacketCode node : mCodes) {
+			if (node.isInvalid()) {
+				continue;
+			}
+
 			if (node.getTime() < time) {
 				time = node.getTime();
 				code = node;
@@ -643,6 +641,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 		String text = CavanString.fromCharSequence(node.getText());
 		boolean changed = !text.equals(code.getCode());
+
+		mInputtedCode = code.getCode();
 
 		if (changed) {
 			RedPacketListenerService.postRedPacketCode(this, code.getCode());
@@ -731,10 +731,32 @@ public class CavanAccessibilityService extends AccessibilityService {
 		mPackageName = event.getPackageName().toString();
 		mClassName = event.getClassName().toString();
 
+		CavanAndroid.eLog("mClassName = " + mClassName);
+
 		switch (mPackageName) {
 		case CavanPackageName.ALIPAY:
 			mClassNameAlipay = mClassName;
-			startAutoCommitRedPacketCode(100);
+			if (isCurrentRedPacketCode(mCode)) {
+				switch (mClassNameAlipay) {
+				case "com.alipay.mobile.framework.app.ui.DialogHelper$APGenericProgressDialog":
+					mCode.setPostComplete();
+					break;
+
+				case "com.alipay.android.phone.discovery.envelope.HomeActivity":
+					if (mCode.maybeInvalid()) {
+						mCode.setInvalid();
+					}
+					break;
+
+				case "com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity":
+				case "com.alipay.android.phone.discovery.envelope.crowd.CrowdHostActivity":
+				case "com.alipay.mobile.nebulacore.ui.H5Activity":
+					mCode.setValid();
+					break;
+				}
+			}
+
+			startAutoCommitRedPacketCode(500);
 			break;
 
 		case CavanPackageName.QQ:
