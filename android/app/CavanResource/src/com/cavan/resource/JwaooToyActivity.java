@@ -24,20 +24,14 @@ public class JwaooToyActivity extends Activity implements OnCancelListener {
 		"JwaooToy", "SenseTube"
 	};
 
+	private final int MSG_UPDATE_UI = 1;
+	private final int MSG_SHOW_PROGRESS_DIALOG = 2;
+
 	public static final int SENSOR_DELAY = 30;
 
 	protected JwaooBleToy mBleToy;
 	protected ProgressDialog mProgressDialog;
 	protected List<View> mListViews = new ArrayList<View>();
-
-	private boolean mUiEnable;
-	private Runnable mRunnableUpdateUi = new Runnable() {
-
-		@Override
-		public void run() {
-			updateUI(mUiEnable);
-		}
-	};
 
 	protected void handleMessage(Message msg) {}
 
@@ -45,7 +39,18 @@ public class JwaooToyActivity extends Activity implements OnCancelListener {
 
 		@Override
 		public void handleMessage(Message msg) {
-			JwaooToyActivity.this.handleMessage(msg);
+			switch (msg.what) {
+			case MSG_UPDATE_UI:
+				updateUI((boolean) msg.obj);
+				break;
+
+			case MSG_SHOW_PROGRESS_DIALOG:
+				showProgressDialog((boolean) msg.obj);
+				break;
+
+			default:
+				JwaooToyActivity.this.handleMessage(msg);
+			}
 		}
 	};
 
@@ -105,24 +110,27 @@ public class JwaooToyActivity extends Activity implements OnCancelListener {
 				view.setEnabled(enable);
 			}
 		} else {
-			mUiEnable = enable;
-			mHandler.post(mRunnableUpdateUi);
+			mHandler.obtainMessage(MSG_UPDATE_UI, enable).sendToTarget();
 		}
 	}
 
 	synchronized public void showProgressDialog(boolean show) {
-		CavanAndroid.eLog("showProgressDialog: " + show);
+		if (CavanAndroid.isMainThread()) {
+			CavanAndroid.eLog("showProgressDialog: " + show);
 
-		if (show) {
-			if (mProgressDialog == null) {
-				String message = getResources().getString(R.string.text_connect_inprogress);
-				mProgressDialog = ProgressDialog.show(this, null, message, false, true, this);
-			} else if (!mProgressDialog.isShowing()) {
-				mProgressDialog.show();
+			if (show) {
+				if (mProgressDialog == null) {
+					String message = getResources().getString(R.string.text_connect_inprogress);
+					mProgressDialog = ProgressDialog.show(this, null, message, true, true, this);
+				} else if (!mProgressDialog.isShowing()) {
+					mProgressDialog.show();
+				}
+			} else if (mProgressDialog != null) {
+				mProgressDialog.dismiss();
+				mProgressDialog = null;
 			}
-		} else if (mProgressDialog != null) {
-			mProgressDialog.dismiss();
-			mProgressDialog = null;
+		} else {
+			mHandler.obtainMessage(MSG_SHOW_PROGRESS_DIALOG, show).sendToTarget();
 		}
 	}
 
