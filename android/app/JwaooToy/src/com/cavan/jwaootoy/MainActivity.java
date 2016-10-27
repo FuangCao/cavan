@@ -34,8 +34,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private static final int EVENT_PROGRESS_UPDATED = 6;
 	private static final int EVENT_FREQ_CHANGED = 7;
 	private static final int EVENT_DEPTH_CHANGED = 8;
-	private static final int EVENT_CONNECTED = 9;
-	private static final int EVENT_DISCONNECTED = 10;
 	private static final int EVENT_BATTERY_INFO = 11;
 
 	private double mFreq;
@@ -97,15 +95,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			case EVENT_DEPTH_CHANGED:
 				setTitle(String.format("depth = %3.2f, freq = %3.2f", mDepth, mFreq));
 				mProgressBar.setProgress((int) (mBleToy.getDepth() * 100));
-				break;
-
-			case EVENT_CONNECTED:
-				updateUI(true);
-				break;
-
-			case EVENT_DISCONNECTED:
-				updateUI(false);
-				showScanActivity();
 				break;
 
 			case EVENT_BATTERY_INFO:
@@ -297,11 +286,11 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			break;
 
 		case R.id.buttonDisconnect:
-			if (mBleToy != null && mBleToy.isConnected()) {
+			if (mBleToy != null) {
 				mBleToy.disconnect();
-			} else {
-				showScanActivity();
 			}
+
+			showScanActivity();
 			break;
 
 		case R.id.buttonReadBdAddr:
@@ -369,11 +358,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		}
 
 		return true;
-	}
-
-	@Override
-	protected void onConnected() {
-		mHandler.sendEmptyMessage(EVENT_CONNECTED);
 	}
 
 	@Override

@@ -9,8 +9,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
         android:layout_alignParentTop="true" >
-
     </FrameLayout>
 
     <Button
@@ -25,34 +25,23 @@
         android:textSize="30sp" />
 
     <Button
-        android:id="@+id/buttonFail"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:background="#ff0000"
-        android:text="@string/text_fail"
-        android:textColor="#000000"
-        android:textSize="30sp" />
+		android:id="@+id/buttonFail"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_alignParentBottom="true"
+		android:layout_alignParentRight="true"
+		android:background="#ff0000"
+		android:text="@string/text_fail"
+		android:textColor="#000000"
+		android:textSize="30sp" />
 
     <Button
         android:id="@+id/buttonStart"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:text="@string/text_start"
-        android:textColor="#000000"
-        android:textSize="30sp" />
-
-    <Button
-        android:id="@+id/buttonDisconnect"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:text="@string/text_disconnect"
-        android:textColor="#000000"
+        android:text="@string/text_start"
         android:textSize="30sp" />
 
 </RelativeLayout>

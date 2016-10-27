@@ -713,8 +713,6 @@ public class JwaooBleToy extends CavanBleGatt {
 			return false;
 		}
 
-		setAutoConnectAllow(true);
-
 		if (!mCharEvent.setDataListener(mEventListener)) {
 			CavanAndroid.eLog("Failed to mCharEvent.setDataListener");
 			return false;

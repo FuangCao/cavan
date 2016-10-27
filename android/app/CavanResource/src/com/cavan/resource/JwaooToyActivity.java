@@ -49,8 +49,9 @@ public class JwaooToyActivity extends Activity {
 		return true;
 	}
 
-	protected void onConnected() {
-		updateUI(true);
+	protected void onConnectionStateChange(boolean connected) {
+		CavanAndroid.eLog("onConnectionStateChange: connected = " + connected);
+		updateUI(connected);
 	}
 
 	protected void onSensorDataReceived(byte[] data) {}
@@ -71,13 +72,13 @@ public class JwaooToyActivity extends Activity {
 
 			@Override
 			protected void onConnectionStateChange(boolean connected) {
-				CavanAndroid.eLog("onConnectionStateChange: connected = " + connected);
+				CavanAndroid.eLog("JwaooBleToy.onConnectionStateChange: connected = " + connected);
+				JwaooToyActivity.this.onConnectionStateChange(connected);
+			}
 
-				if (connected) {
-					JwaooToyActivity.this.onConnected();
-				} else {
-					showScanActivity();
-				}
+			@Override
+			protected void onConnectFailed() {
+				showScanActivity();
 			}
 
 			@Override
@@ -118,7 +119,7 @@ public class JwaooToyActivity extends Activity {
 				finish();
 			} else {
 				mBleToy = createJwaooBleToy(device);
-				if (mBleToy == null || mBleToy.connect(true) == false) {
+				if (mBleToy == null || mBleToy.connect() == false) {
 					showScanActivity();
 				}
 			}

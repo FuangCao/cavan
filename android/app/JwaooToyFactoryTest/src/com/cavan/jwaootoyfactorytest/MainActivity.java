@@ -29,8 +29,8 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanJava;
 import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
-import com.jwaoo.android.JwaooToySensor;
 import com.jwaoo.android.JwaooBleToy.JwaooToyTestResult;
+import com.jwaoo.android.JwaooToySensor;
 
 public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
@@ -42,7 +42,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	private Button mButtonPass;
 	private Button mButtonFail;
 	private Button mButtonStart;
-	private Button mButtonDisconnect;
 
 	private Drawable mDrawablePass;
 	private Drawable mDrawableFail;
@@ -74,7 +73,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 			mButtonFail.setVisibility(View.INVISIBLE);
 			mButtonStart.setVisibility(View.VISIBLE);
-
 		} else {
 			if (mBleToy == null || mBleToy.isConnected() == false) {
 				return;
@@ -142,9 +140,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		mButtonStart.setVisibility(View.INVISIBLE);
 		mButtonStart.setOnClickListener(this);
 
-		mButtonDisconnect = (Button) findViewById(R.id.buttonDisconnect);
-		mButtonDisconnect.setOnClickListener(this);
-
 		showScanActivity();
 	}
 
@@ -157,6 +152,15 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		}
 
 		super.onDestroy();
+	}
+
+	@Override
+	public void onBackPressed() {
+		if (mBleToy != null) {
+			mBleToy.disconnect();
+		}
+
+		showScanActivity();
 	}
 
 	@Override
@@ -184,11 +188,14 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 			@Override
 			protected void onConnectionStateChange(boolean connected) {
-				if (!connected) {
-					showScanActivity();
-				} else {
-					updateUI(true);
-				}
+				CavanAndroid.eLog("onConnectionStateChange: connected = " + connected);
+				updateUI(connected);
+			}
+
+			@Override
+			protected void onConnectFailed() {
+				CavanAndroid.eLog("onAutoConnectFailed");
+				showScanActivity();
 			}
 
 			@Override
@@ -288,14 +295,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		case R.id.buttonStart:
 			mAutoTestEnable = true;
 			setTestItem(0);
-			break;
-
-		case R.id.buttonDisconnect:
-			if (mBleToy != null && mBleToy.isConnected()) {
-				mBleToy.disconnect();
-			} else {
-				showScanActivity();
-			}
 			break;
 		}
 	}
