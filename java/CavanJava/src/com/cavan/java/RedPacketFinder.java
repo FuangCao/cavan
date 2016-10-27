@@ -133,6 +133,8 @@ public class RedPacketFinder {
 	}
 
 	public static boolean isRedPacketWordCode(String code) {
+		char prev = 0;
+		int same_count = 0;
 		int number_count = 0;
 		int chinese_count = 0;
 
@@ -150,6 +152,16 @@ public class RedPacketFinder {
 					chinese_count++;
 				}
 			}
+
+			if (c == prev) {
+				if (++same_count > 4) {
+					return false;
+				}
+			} else {
+				same_count = 0;
+			}
+
+			prev = c;
 		}
 
 		return (chinese_count > 0);
