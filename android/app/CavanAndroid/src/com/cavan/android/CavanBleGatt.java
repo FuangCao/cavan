@@ -29,8 +29,8 @@ public class CavanBleGatt {
 	public static final long WRITE_CHAR_TIMEOUT = 5000;
 	public static final long WRITE_DESC_TIMEOUT = 3000;
 	public static final long COMMAND_TIMEOUT = 2000;
-	public static final long CONN_WAIT_TIME_SHORT = 500;
-	public static final long CONN_WAIT_TIME_LONG = 2000;
+	public static final long CONN_WAIT_TIME_SHORT = 1000;
+	public static final long CONN_WAIT_TIME_LONG = 3000;
 
 	public static final int PROPERTY_NOTIFY_ALL = BluetoothGattCharacteristic.PROPERTY_NOTIFY;
 	public static final int PROPERTY_READ_ALL = BluetoothGattCharacteristic.PROPERTY_READ;
@@ -475,13 +475,7 @@ public class CavanBleGatt {
 						setConnectStatus(true);
 					} else {
 						mConnectCount++;
-
 						mGatt.disconnect();
-
-						if (mConnectCount == (MAX_CONN_COUNT / 2)) {
-							mGatt.close();
-							mGatt = null;
-						}
 					}
 				} else {
 					mConnEnable = false;

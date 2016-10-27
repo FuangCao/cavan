@@ -155,15 +155,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	}
 
 	@Override
-	public void onBackPressed() {
-		if (mBleToy != null) {
-			mBleToy.disconnect();
-		}
-
-		showScanActivity();
-	}
-
-	@Override
 	protected void handleMessage(Message msg) {
 		switch (msg.what) {
 		case MSG_SET_TEST_ITEM:
@@ -190,6 +181,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 			protected void onConnectionStateChange(boolean connected) {
 				CavanAndroid.eLog("onConnectionStateChange: connected = " + connected);
 				updateUI(connected);
+				showProgressDialog(!connected);
 			}
 
 			@Override

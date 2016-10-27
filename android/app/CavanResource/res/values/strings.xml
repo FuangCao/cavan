@@ -11,5 +11,6 @@
     <string name="text_stop">停止</string>
     <string name="text_scanning">正在扫描</string>
     <string name="text_sample_rate">采样率</string>
+    <string name="text_connect_inprogress">正在连接，请稍候&#8230;</string>
 
 </resources>

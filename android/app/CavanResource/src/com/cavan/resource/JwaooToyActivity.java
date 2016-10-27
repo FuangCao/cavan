@@ -5,7 +5,10 @@ import java.util.List;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothDevice;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
@@ -15,7 +18,7 @@ import com.cavan.android.CavanAndroid;
 import com.jwaoo.android.JwaooBleToy;
 
 @SuppressLint("HandlerLeak")
-public class JwaooToyActivity extends Activity {
+public class JwaooToyActivity extends Activity implements OnCancelListener {
 
 	public static final String[] DEVICE_NAMES = {
 		"JwaooToy", "SenseTube"
@@ -24,6 +27,7 @@ public class JwaooToyActivity extends Activity {
 	public static final int SENSOR_DELAY = 30;
 
 	protected JwaooBleToy mBleToy;
+	protected ProgressDialog mProgressDialog;
 	protected List<View> mListViews = new ArrayList<View>();
 
 	private boolean mUiEnable;
@@ -73,6 +77,7 @@ public class JwaooToyActivity extends Activity {
 			@Override
 			protected void onConnectionStateChange(boolean connected) {
 				CavanAndroid.eLog("JwaooBleToy.onConnectionStateChange: connected = " + connected);
+				showProgressDialog(!connected);
 				JwaooToyActivity.this.onConnectionStateChange(connected);
 			}
 
@@ -105,9 +110,34 @@ public class JwaooToyActivity extends Activity {
 		}
 	}
 
+	synchronized public void showProgressDialog(boolean show) {
+		CavanAndroid.eLog("showProgressDialog: " + show);
+
+		if (show) {
+			if (mProgressDialog == null) {
+				String message = getResources().getString(R.string.text_connect_inprogress);
+				mProgressDialog = ProgressDialog.show(this, null, message, false, true, this);
+			} else if (!mProgressDialog.isShowing()) {
+				mProgressDialog.show();
+			}
+		} else if (mProgressDialog != null) {
+			mProgressDialog.dismiss();
+			mProgressDialog = null;
+		}
+	}
+
 	public void showScanActivity() {
 		updateUI(false);
+		showProgressDialog(false);
 		CavanBleScanActivity.show(this, DEVICE_NAMES);
+	}
+
+	public void disconnect() {
+		if (mBleToy != null) {
+			mBleToy.disconnect();
+		}
+
+		showScanActivity();
 	}
 
 	@Override
@@ -119,6 +149,9 @@ public class JwaooToyActivity extends Activity {
 				finish();
 			} else {
 				mBleToy = createJwaooBleToy(device);
+
+				showProgressDialog(true);
+
 				if (mBleToy == null || mBleToy.connect() == false) {
 					showScanActivity();
 				}
@@ -147,5 +180,15 @@ public class JwaooToyActivity extends Activity {
 		System.exit(0);
 
 		super.onDestroy();
+	}
+
+	@Override
+	public void onCancel(DialogInterface dialog) {
+		disconnect();
+	}
+
+	@Override
+	public void onBackPressed() {
+		disconnect();
 	}
 }
