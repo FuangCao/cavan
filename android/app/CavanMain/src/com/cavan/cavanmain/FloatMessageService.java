@@ -63,7 +63,6 @@ public class FloatMessageService extends FloatWidowService {
 	private int mLastSecond;
 	private boolean mUserPresent;
 	private TextView mTextViewTime;
-	private TextView mTextViewAutoUnlock;
 	private HashMap<CharSequence, String> mMessageCodeMap = new HashMap<CharSequence, String>();
 
 	private UdpDaemonThread mUdpDaemon;
@@ -162,7 +161,7 @@ public class FloatMessageService extends FloatWidowService {
 				break;
 
 			case Intent.ACTION_USER_PRESENT:
-				mTextViewAutoUnlock.setVisibility(View.INVISIBLE);
+				mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_bg);
 				mUserPresent = true;
 				break;
 
@@ -329,7 +328,7 @@ public class FloatMessageService extends FloatWidowService {
 			return false;
 		}
 
-		mTextViewAutoUnlock.setVisibility(View.VISIBLE);
+		mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_unlock_bg);
 		CavanAndroid.setLockScreenEnable(FloatMessageService.this, false);
 
 		return true;
@@ -374,7 +373,6 @@ public class FloatMessageService extends FloatWidowService {
 
 		view.setMaxLines(1);
 		view.setPadding(TEXT_PADDING, 0, TEXT_PADDING, 0);
-		view.setBackgroundResource(R.drawable.desktop_timer_bg);
 	}
 
 	private void onNetworkCommandReceived(String type, String command) {
@@ -481,6 +479,7 @@ public class FloatMessageService extends FloatWidowService {
 		TextView view = new TextView(getApplicationContext());
 
 		initTextView(view, text);
+		view.setBackgroundResource(R.drawable.desktop_timer_unlock_bg);
 
 		view.setTextSize(TEXT_SIZE_MESSAGE);
 		view.setTextColor(TEXT_COLOR_MESSAGE);
@@ -505,6 +504,7 @@ public class FloatMessageService extends FloatWidowService {
 		mTextViewTime = (TextView) findViewById(R.id.textViewTime);
 
 		initTextView(mTextViewTime, getTimeText());
+		mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_bg);
 		mTextViewTime.setTextSize(TEXT_SIZE_TIME);
 		mTextViewTime.setTextColor(TEXT_COLOR_TIME);
 
@@ -513,12 +513,6 @@ public class FloatMessageService extends FloatWidowService {
 		} else {
 			setTimerEnable(false);
 		}
-
-		mTextViewAutoUnlock = (TextView) findViewById(R.id.textViewAutoUnlock);
-
-		initTextView(mTextViewAutoUnlock, null);
-		mTextViewAutoUnlock.setTextSize(TEXT_SIZE_TIME);
-		mTextViewAutoUnlock.setTextColor(TEXT_COLOR_TIME);
 
 		return super.doInitialize();
 	}

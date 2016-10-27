@@ -41,11 +41,11 @@ public class JwaooToyActivity extends Activity implements OnCancelListener {
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case MSG_UPDATE_UI:
-				updateUI((boolean) msg.obj);
+				updateUI((Boolean) msg.obj);
 				break;
 
 			case MSG_SHOW_PROGRESS_DIALOG:
-				showProgressDialog((boolean) msg.obj);
+				showProgressDialog((Boolean) msg.obj);
 				break;
 
 			default:

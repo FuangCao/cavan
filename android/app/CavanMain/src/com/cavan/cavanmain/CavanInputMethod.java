@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
@@ -110,10 +111,20 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
-			Button view = new Button(CavanInputMethod.this);
+			Button view;
+			RedPacketCode code = mUiCodes[position];
+
+			if (convertView != null) {
+				view = (Button) convertView;
+			} else {
+				view = new Button(CavanInputMethod.this);
+			}
+
+			view.setTextColor(code.isInvalid() ? Color.RED : Color.BLACK);
 			view.setOnClickListener(CavanInputMethod.this);
-			view.setText(mUiCodes[position].getCode());
+			view.setText(code.getCode());
 			view.setSingleLine();
+
 			return view;
 		}
 

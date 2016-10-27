@@ -10,14 +10,6 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true" />
 
-    <TextView
-        android:id="@+id/textViewAutoUnlock"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_toLeftOf="@+id/textViewTime"
-        android:text="@string/text_auto_unlock" />
-
     <LinearLayout
         android:id="@+id/layoutMessage"
         android:layout_width="match_parent"
