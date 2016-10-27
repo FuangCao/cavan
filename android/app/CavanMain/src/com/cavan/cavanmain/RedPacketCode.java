@@ -21,7 +21,6 @@ public class RedPacketCode {
 
 	private static final SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-	private static long mLastCreateTime;
 	private static HashMap<String, RedPacketCode> mCodeMap = new HashMap<String, RedPacketCode>();
 	private static LinkedList<RedPacketCode> mLastCodes = new LinkedList<RedPacketCode>();
 
@@ -54,7 +53,6 @@ public class RedPacketCode {
 		if (node == null && create) {
 			node = new RedPacketCode(code);
 
-			mLastCreateTime = node.getTime();
 			mCodeMap.put(code, node);
 
 			if (test) {
@@ -77,12 +75,9 @@ public class RedPacketCode {
 		return getInstence(code, false, false);
 	}
 
-	public static List<RedPacketCode> getLastCodes(long time) {
-		if (updateLastCodes() > 0 || (mLastCreateTime > time)) {
-			return mLastCodes;
-		}
-
-		return null;
+	public static List<RedPacketCode> getLastCodes() {
+		updateLastCodes();
+		return mLastCodes;
 	}
 
 	public static int updateLastCodes() {
@@ -94,10 +89,6 @@ public class RedPacketCode {
 		}
 
 		return count;
-	}
-
-	public static long getLastCreateTime() {
-		return mLastCreateTime;
 	}
 
 	private RedPacketCode(String code) {

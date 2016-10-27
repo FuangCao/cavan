@@ -447,7 +447,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			}
 
 			if (code.maybeInvalid()) {
-				if (getWindowTimeConsume() > 1000) {
+				if (getWindowTimeConsume() > 500) {
 					setRedPacketCodeInvalid(code);
 					startAutoCommitRedPacketCode(0);
 				}
@@ -502,18 +502,18 @@ public class CavanAccessibilityService extends AccessibilityService {
 						setRedPacketCodeComplete();
 					} else {
 						mCode.updateTime();
-
-						long time = getWindowTimeConsume();
-
-						CavanAndroid.eLog("getWindowTimeConsume = " + time);
-
-						if (time < 800) {
-							break;
-						}
 					}
 				} else {
 					mCode.updateRepeatTime(this);
 				}
+			}
+
+			long time = getWindowTimeConsume();
+
+			CavanAndroid.eLog("getWindowTimeConsume = " + time);
+
+			if (time < 800) {
+				break;
 			}
 
 			performBackActionH5(root);
