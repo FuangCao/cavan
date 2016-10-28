@@ -4,10 +4,14 @@ using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
 using System.Diagnostics;
+using System.Configuration;
 
 namespace JwaooOtpProgrammer {
 
     public partial class Programmer : Form {
+
+        private const String KEY_SMATR_SNIPPETS_PATH = "SmartSnippet";
+        private const String KEY_FIRMWARE_PATH = "Firmware";
 
         private static String[] sProgramFiles = {
             "C:\\Program Files (x86)", "C:\\Program Files", "D:\\Program Files (x86)", "D:\\Program Files"
@@ -31,16 +35,65 @@ namespace JwaooOtpProgrammer {
         public Programmer() {
             InitializeComponent();
 
+            loadConfigFile();
+
             mFileStreamLog = File.Open(Path.Combine(Application.StartupPath, "log.txt"), FileMode.Append, FileAccess.Write, FileShare.Read);
             openFileDialogFirmware.InitialDirectory = Application.StartupPath;
             openFileDialogSmartSnippets.InitialDirectory = Application.StartupPath;
             setBdAddress(readBdAddressFile());
         }
 
-        ~Programmer() {
+        private void Programmer_FormClosed(object sender, FormClosedEventArgs e) {
             if (mFileStreamLog != null) {
                 mFileStreamLog.Close();
                 mFileStreamLog = null;
+            }
+
+            saveConfigFile();
+        }
+
+        public void loadConfigFile() {
+            String pathname = ConfigurationManager.AppSettings[KEY_FIRMWARE_PATH];
+            if (File.Exists(pathname)) {
+                textBoxFirmware.Text = pathname;
+            } else {
+                pathname = Path.Combine(Application.StartupPath, "jwaoo-toy.hex");
+                if (File.Exists(pathname)) {
+                    textBoxFirmware.Text = pathname;
+                }
+            }
+
+            pathname = ConfigurationManager.AppSettings[KEY_SMATR_SNIPPETS_PATH];
+            if (File.Exists(pathname)) {
+                mFileSmartSnippetsExe = pathname;
+            }
+        }
+
+        public bool saveConfigFile() {
+            try {
+                Configuration config = ConfigurationManager.OpenExeConfiguration(Application.ExecutablePath);
+                if (config == null) {
+                    return false;
+                }
+
+                KeyValueConfigurationCollection settings = config.AppSettings.Settings;
+                settings.Clear();
+
+                if (File.Exists(mFileSmartSnippetsExe)) {
+                    settings.Add(KEY_SMATR_SNIPPETS_PATH, mFileSmartSnippetsExe);
+                }
+
+                String pathname = textBoxFirmware.Text;
+                if (File.Exists(pathname)) {
+                    settings.Add(KEY_FIRMWARE_PATH, pathname);
+                }
+
+                config.Save(ConfigurationSaveMode.Full);
+
+                return true;
+            } catch (Exception e) {
+                MessageBox.Show("保存配置出错: " + e);
+                return false;
             }
         }
 
@@ -624,7 +677,7 @@ namespace JwaooOtpProgrammer {
                     return true;
                 }
             } catch (Exception e) {
-                MessageBox.Show("Error: " + e);
+                MessageBox.Show("运行命令出错: " + e);
             }
 
             return false;

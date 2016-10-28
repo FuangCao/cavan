@@ -51,16 +51,16 @@
             // 
             this.textBoxFirmware.Location = new System.Drawing.Point(87, 400);
             this.textBoxFirmware.Name = "textBoxFirmware";
-            this.textBoxFirmware.Size = new System.Drawing.Size(259, 21);
+            this.textBoxFirmware.Size = new System.Drawing.Size(269, 21);
             this.textBoxFirmware.TabIndex = 1;
             // 
             // buttonFirmware
             // 
-            this.buttonFirmware.Location = new System.Drawing.Point(350, 398);
+            this.buttonFirmware.Location = new System.Drawing.Point(362, 398);
             this.buttonFirmware.Name = "buttonFirmware";
-            this.buttonFirmware.Size = new System.Drawing.Size(47, 23);
+            this.buttonFirmware.Size = new System.Drawing.Size(35, 23);
             this.buttonFirmware.TabIndex = 2;
-            this.buttonFirmware.Text = "浏览";
+            this.buttonFirmware.Text = "...";
             this.buttonFirmware.UseVisualStyleBackColor = true;
             this.buttonFirmware.Click += new System.EventHandler(this.buttonFirmware_Click);
             // 
@@ -96,10 +96,10 @@
             // 
             // textBoxBdAddressNext
             // 
-            this.textBoxBdAddressNext.Location = new System.Drawing.Point(115, 322);
+            this.textBoxBdAddressNext.Location = new System.Drawing.Point(105, 322);
             this.textBoxBdAddressNext.Name = "textBoxBdAddressNext";
             this.textBoxBdAddressNext.ReadOnly = true;
-            this.textBoxBdAddressNext.Size = new System.Drawing.Size(282, 21);
+            this.textBoxBdAddressNext.Size = new System.Drawing.Size(292, 21);
             this.textBoxBdAddressNext.TabIndex = 4;
             // 
             // openFileDialogFirmware
@@ -146,10 +146,10 @@
             // 
             // textBoxBdAddressCurrent
             // 
-            this.textBoxBdAddressCurrent.Location = new System.Drawing.Point(115, 360);
+            this.textBoxBdAddressCurrent.Location = new System.Drawing.Point(105, 360);
             this.textBoxBdAddressCurrent.Name = "textBoxBdAddressCurrent";
             this.textBoxBdAddressCurrent.ReadOnly = true;
-            this.textBoxBdAddressCurrent.Size = new System.Drawing.Size(282, 21);
+            this.textBoxBdAddressCurrent.Size = new System.Drawing.Size(292, 21);
             this.textBoxBdAddressCurrent.TabIndex = 10;
             // 
             // Programmer
@@ -170,6 +170,7 @@
             this.Controls.Add(this.label1);
             this.Name = "Programmer";
             this.Text = "Form1";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Programmer_FormClosed);
             this.ResumeLayout(false);
             this.PerformLayout();
 
