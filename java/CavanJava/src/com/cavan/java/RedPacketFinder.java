@@ -40,11 +40,10 @@ public class RedPacketFinder {
 		Pattern.compile("支\\s*付\\s*宝.*口\\s*令\\D*" + DIGIT_PATTERN),
 		Pattern.compile("红\\s*包\\s*口\\s*令\\D*" + DIGIT_PATTERN),
 		Pattern.compile("口\\s*令\\s*红\\s*包\\D*" + DIGIT_PATTERN),
-		Pattern.compile("红\\s*包\\s*[:：]?\\s*" + DIGIT_PATTERN),
-		Pattern.compile("口\\s*令\\s*[:：]?\\s*" + DIGIT_PATTERN),
-		Pattern.compile("[:：]\\s*" + DIGIT_PATTERN),
+		Pattern.compile("红\\s*包[\\s\\d]*[:：]?\\s*" + DIGIT_PATTERN),
+		Pattern.compile("口\\s*令[\\s\\d]*[:：]?\\s*" + DIGIT_PATTERN),
 		Pattern.compile("\\b" + DIGIT_PATTERN + "走起"),
-		Pattern.compile("\\b" + DIGIT_PATTERN + "\\s*$"),
+		Pattern.compile("\\b" + DIGIT_PATTERN + "go", Pattern.CASE_INSENSITIVE),
 	};
 
 	private static final Pattern[] sMultiLineDigitPatterns = {
@@ -52,8 +51,13 @@ public class RedPacketFinder {
 		Pattern.compile("支\\s*付\\s*宝.*口\\s*令" + DIGIT_MULTI_LINE_PATTERN),
 		Pattern.compile("红\\s*包\\s*口\\s*令" + DIGIT_MULTI_LINE_PATTERN),
 		Pattern.compile("口\\s*令\\s*红\\s*包" + DIGIT_MULTI_LINE_PATTERN),
-		Pattern.compile("红\\s*包\\s*[:：]" + DIGIT_MULTI_LINE_PATTERN),
-		Pattern.compile("口\\s*令\\s*[:：]" + DIGIT_MULTI_LINE_PATTERN),
+		Pattern.compile("红\\s*包[\\s\\d]*[:：]" + DIGIT_MULTI_LINE_PATTERN),
+		Pattern.compile("口\\s*令[\\s\\d]*[:：]" + DIGIT_MULTI_LINE_PATTERN),
+	};
+
+	private static final Pattern[] sUnsafeDigitPatterns = {
+		Pattern.compile("[:：]\\s*" + DIGIT_PATTERN),
+		Pattern.compile("\\b" + DIGIT_PATTERN + "\\s*$"),
 	};
 
 	private static final Pattern[] sWordPatterns = {
@@ -80,9 +84,10 @@ public class RedPacketFinder {
 
 	public static final Pattern[] sExcludePatterns = {
 		Pattern.compile("[a-z]+://\\S+", Pattern.CASE_INSENSITIVE),
-		Pattern.compile("(?:(?:Q\\s*Q)|(?:扣\\s*扣)|群|(?:手\\s*机)|(?:电\\s*话)|(?:微\\s*信)|码|号)(?:(?:[\\W\\d]*[:：])|(?:\\W*[:：]?))\\s*\\d+", Pattern.CASE_INSENSITIVE),
-		Pattern.compile("领\\s*取\\s*方\\s*法\\s*[:：].*$"),
-		Pattern.compile("领\\s*取\\s*方\\s*法.*口\\s*令"),
+	};
+
+	public static final String[] sUnsafeWords = {
+		"qq", "QQ", "扣扣", "群", "手机", "电话", "微信", "号码", "领取方法", "联系", "客服", "咨询"
 	};
 
 	public static HashMap<String, String> sPackageCodeMap = new HashMap<String, String>();
@@ -94,6 +99,7 @@ public class RedPacketFinder {
 
 	private String mJoinedLines = CavanString.EMPTY_STRING;
 	private ArrayList<String> mLines = new ArrayList<String>();
+	private ArrayList<String> mSafeLines = new ArrayList<String>();
 
 	public void split(String content) {
 		if (content == null) {
@@ -111,11 +117,16 @@ public class RedPacketFinder {
 			line = CavanString.strip(line);
 			mLines.add(line);
 
-			if (builder.length() > 0) {
-				builder.append(' ');
-			}
+			if (isSafeLine(line)) {
+				mSafeLines.add(line);
 
-			builder.append(line);
+				if (builder.length() > 0) {
+					builder.append(' ');
+				}
+
+				builder.append(line);
+
+			}
 		}
 
 		mJoinedLines = builder.toString();
@@ -125,11 +136,25 @@ public class RedPacketFinder {
 		line = CavanString.strip(line);
 		mLines.add(line);
 
-		if (mJoinedLines.length() > 0) {
-			mJoinedLines += ' ';
+		if (isSafeLine(line)) {
+			mSafeLines.add(line);
+
+			if (mJoinedLines.length() > 0) {
+				mJoinedLines += ' ';
+			}
+
+			mJoinedLines += line;
+		}
+	}
+
+	public boolean isSafeLine(String line) {
+		for (String word : sUnsafeWords) {
+			if (line.contains(word)) {
+				return false;
+			}
 		}
 
-		mJoinedLines += line;
+		return true;
 	}
 
 	public static boolean isRedPacketWordCode(String code) {
@@ -167,7 +192,7 @@ public class RedPacketFinder {
 		return (chinese_count > 0);
 	}
 
-	public List<String> getRedPacketCodes(String line, Pattern[] patterns, List<String> codes, boolean strip) {
+	private List<String> getRedPacketCodes(String line, Pattern[] patterns, List<String> codes, boolean strip) {
 		for (Pattern pattern : patterns) {
 			Matcher matcher = pattern.matcher(line);
 
@@ -198,12 +223,12 @@ public class RedPacketFinder {
 		return codes;
 	}
 
-	public List<String> getRedPacketCodes(String line, Pattern[] patterns, boolean strip) {
+	private List<String> getRedPacketCodes(String line, Pattern[] patterns, boolean strip) {
 		return getRedPacketCodes(line, patterns, new ArrayList<String>(), strip);
 	}
 
-	public List<String> getRedPacketCodes(Pattern[] patterns, List<String> codes, boolean strip, boolean multiLine) {
-		for (String line : mLines) {
+	private List<String> getRedPacketCodes(List<String> lines, Pattern[] patterns, List<String> codes, boolean strip, boolean multiLine) {
+		for (String line : lines) {
 			getRedPacketCodes(line, patterns, codes, strip);
 		}
 
@@ -214,18 +239,14 @@ public class RedPacketFinder {
 		return codes;
 	}
 
-	public List<String> getRedPacketCodes(Pattern[] patterns, boolean strip, boolean multiLine) {
-		return getRedPacketCodes(patterns, new ArrayList<String>(), strip, multiLine);
-	}
-
-	public List<String> getRedPacketWordCodes() {
+	private List<String> getRedPacketWordCodes() {
 		List<String> codes = new ArrayList<String>();
-		getRedPacketCodes(sWordPatterns, codes, true, false);
+		getRedPacketCodes(mLines, sWordPatterns, codes, true, false);
 		getRedPacketCodes(mJoinedLines, sMultiLineWordPatterns, codes, false);
 		return codes;
 	}
 
-	public boolean addRedPacketCode(List<String> codes, String code) {
+	private boolean addRedPacketCode(List<String> codes, String code) {
 		for (String a : codes) {
 			if (code.indexOf(a) >= 0) {
 				return false;
@@ -237,13 +258,13 @@ public class RedPacketFinder {
 		return true;
 	}
 
-	public void addRedPacketCodes(List<String> codes, String code) {
+	private void addRedPacketCodes(List<String> codes, String code) {
 		for (int end = 8; end <= code.length(); end += 8) {
 			addRedPacketCode(codes, code.substring(end - 8, end));
 		}
 	}
 
-	public String getRedPacketDigitCode(String text) {
+	private String getRedPacketDigitCode(String text) {
 		StringBuilder builder = new StringBuilder();
 		int length = text.length();
 
@@ -266,10 +287,17 @@ public class RedPacketFinder {
 		return builder.toString();
 	}
 
+	private List<String> getRedPacketDigitCodes() {
+		List<String> codes = new ArrayList<String>();
+		getRedPacketCodes(mLines, sDigitPatterns, codes, false, true);
+		getRedPacketCodes(mSafeLines, sUnsafeDigitPatterns, codes, false, false);
+		return codes;
+	}
+
 	public List<String> getRedPacketCodes() {
 		List<String> codes = new ArrayList<String>();
 
-		for (String text : getRedPacketCodes(sDigitPatterns, false, true)) {
+		for (String text : getRedPacketDigitCodes()) {
 			String code = getRedPacketDigitCode(text);
 			if (code != null && code.length() % 8 == 0) {
 				addRedPacketCodes(codes, code);
@@ -325,7 +353,11 @@ public class RedPacketFinder {
 	public String getNormalCode(String pkgName) {
 		String code = sPackageCodeMap.get(pkgName);
 		if (code != null) {
-			if (mJoinedLines.startsWith("[" + code + "]")) {
+			if (mLines.size() != 1) {
+				return null;
+			}
+
+			if (mLines.get(0).contains("[" + code + "]")) {
 				return code;
 			}
 
