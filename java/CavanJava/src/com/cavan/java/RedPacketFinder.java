@@ -119,14 +119,13 @@ public class RedPacketFinder {
 
 			if (isSafeLine(line)) {
 				mSafeLines.add(line);
-
-				if (builder.length() > 0) {
-					builder.append(' ');
-				}
-
-				builder.append(line);
-
 			}
+
+			if (builder.length() > 0) {
+				builder.append(' ');
+			}
+
+			builder.append(line);
 		}
 
 		mJoinedLines = builder.toString();
@@ -138,13 +137,14 @@ public class RedPacketFinder {
 
 		if (isSafeLine(line)) {
 			mSafeLines.add(line);
-
-			if (mJoinedLines.length() > 0) {
-				mJoinedLines += ' ';
-			}
-
-			mJoinedLines += line;
 		}
+
+		if (mJoinedLines.length() > 0) {
+			mJoinedLines += ' ';
+		}
+
+		mJoinedLines += line;
+
 	}
 
 	public boolean isSafeLine(String line) {
