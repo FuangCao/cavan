@@ -30,7 +30,7 @@
     <string name="text_batt_event_enable">允许电池事件</string>
     <string name="text_factory_mode">工厂模式</string>
     <string-array name="text_moto_modes">
-        <item >手动调节</item>
+        <item >停止震动</item>
         <item >持续震动</item>
         <item >强弱交替（慢速）</item>
         <item >强弱交替（快速）</item>

@@ -11,6 +11,7 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.os.Handler;
+import android.os.Handler.Callback;
 import android.os.Message;
 import android.view.View;
 
@@ -18,7 +19,7 @@ import com.cavan.android.CavanAndroid;
 import com.jwaoo.android.JwaooBleToy;
 
 @SuppressLint("HandlerLeak")
-public class JwaooToyActivity extends Activity implements OnCancelListener {
+public class JwaooToyActivity extends Activity implements OnCancelListener, Callback {
 
 	public static final String[] DEVICE_NAMES = {
 		"JwaooToy", "SenseTube"
@@ -31,28 +32,24 @@ public class JwaooToyActivity extends Activity implements OnCancelListener {
 
 	protected JwaooBleToy mBleToy;
 	protected ProgressDialog mProgressDialog;
+	protected Handler mHandler = new Handler(this);
 	protected List<View> mListViews = new ArrayList<View>();
 
-	protected void handleMessage(Message msg) {}
+	@Override
+	public boolean handleMessage(Message msg) {
+		switch (msg.what) {
+		case MSG_UPDATE_UI:
+			updateUI((Boolean) msg.obj);
+			return true;
 
-	protected Handler mHandler = new Handler() {
+		case MSG_SHOW_PROGRESS_DIALOG:
+			showProgressDialog((Boolean) msg.obj);
+			return true;
 
-		@Override
-		public void handleMessage(Message msg) {
-			switch (msg.what) {
-			case MSG_UPDATE_UI:
-				updateUI((Boolean) msg.obj);
-				break;
-
-			case MSG_SHOW_PROGRESS_DIALOG:
-				showProgressDialog((Boolean) msg.obj);
-				break;
-
-			default:
-				JwaooToyActivity.this.handleMessage(msg);
-			}
+		default:
+			return false;
 		}
-	};
+	}
 
 	protected boolean onInitialize() {
 		return true;
@@ -114,13 +111,17 @@ public class JwaooToyActivity extends Activity implements OnCancelListener {
 		}
 	}
 
+	protected String buildProgressDialogMessage() {
+		return getResources().getString(R.string.text_connect_inprogress);
+	}
+
 	synchronized public void showProgressDialog(boolean show) {
 		if (CavanAndroid.isMainThread()) {
 			CavanAndroid.eLog("showProgressDialog: " + show);
 
 			if (show) {
 				if (mProgressDialog == null) {
-					String message = getResources().getString(R.string.text_connect_inprogress);
+					String message = buildProgressDialogMessage();
 					mProgressDialog = ProgressDialog.show(this, null, message, true, true, this);
 				} else if (!mProgressDialog.isShowing()) {
 					mProgressDialog.show();

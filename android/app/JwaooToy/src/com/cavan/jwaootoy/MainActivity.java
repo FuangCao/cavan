@@ -189,9 +189,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 				mMotoLevel = position;
-				if (mMotoMode == 0) {
-					setMotoMode();
-				}
+				setMotoMode();
 			}
 
 			@Override

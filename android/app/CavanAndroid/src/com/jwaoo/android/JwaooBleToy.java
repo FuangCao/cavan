@@ -34,6 +34,14 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final int BATTERY_STATE_CHARGING = 2;
 	public static final int BATTERY_STATE_FULL = 3;
 
+	public static final int MOTO_MODE_IDLE = 0;
+	public static final int MOTO_MODE_LINE = 1;
+	public static final int MOTO_MODE_SAWTOOTH = 2;
+	public static final int MOTO_MODE_SAWTOOTH_FAST = 3;
+	public static final int MOTO_MODE_SQUARE = 4;
+	public static final int MOTO_MODE_SQUARE_FAST = 5;
+	public static final int MOTO_MODE_RAND = 6;
+
 	public static final String DEVICE_NAME_COMMON = "JwaooToy";
 	public static final String DEVICE_NAME_K100 = "K100";
 	public static final String DEVICE_NAME_K101 = "K101";
@@ -65,6 +73,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_I2C_RW = 6;
 	public static final byte JWAOO_TOY_CMD_SUSPEND_DELAY = 7;
 	public static final byte JWAOO_TOY_CMD_APP_DATA = 8;
+	public static final byte JWAOO_TOY_CMD_APP_SETTINGS = 9;
 	public static final byte JWAOO_TOY_CMD_FLASH_ID = 30;
 	public static final byte JWAOO_TOY_CMD_FLASH_SIZE = 31;
 	public static final byte JWAOO_TOY_CMD_FLASH_PAGE_SIZE = 32;
@@ -619,6 +628,19 @@ public class JwaooBleToy extends CavanBleGatt {
 		return true;
 	}
 
+	public JwaooToyAppSettings readAppSettings() {
+		JwaooToyResponse response = mCommand.send(JWAOO_TOY_CMD_APP_SETTINGS);
+		if (response == null) {
+			return null;
+		}
+
+		return response.getAppSettings();
+	}
+
+	public boolean writeAppSettings(JwaooToyAppSettings settings) {
+		return mCommand.readBool(settings.buildCommand());
+	}
+
 	public int getDeviveId() {
 		return mDeviceId;
 	}
@@ -754,6 +776,79 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		return true;
+	}
+
+	// ================================================================================
+
+	public static class JwaooToyAppSettings {
+
+		private int mSuspendDelay;
+		private int mShutdownVoltage;
+		private int mBtLedOpenTime;
+		private int mBtLedCloseTime;
+
+		public JwaooToyAppSettings(byte[] response) {
+			mSuspendDelay = CavanJava.buildValue16(response, 2);
+			mShutdownVoltage = CavanJava.buildValue16(response, 4);
+			mBtLedOpenTime = CavanJava.buildValue16(response, 6);
+			mBtLedCloseTime = CavanJava.buildValue16(response, 8);
+		}
+
+		public byte[] buildCommand() {
+			CavanByteCache cache = new CavanByteCache(9);
+			cache.writeValue8(JWAOO_TOY_CMD_APP_SETTINGS);
+			cache.writeValue16((short) mSuspendDelay);
+			cache.writeValue16((short) mShutdownVoltage);
+			cache.writeValue16((short) mBtLedOpenTime);
+			cache.writeValue16((short) mBtLedCloseTime);
+			return cache.getBytes();
+		}
+
+		public int getSuspendDelay() {
+			return mSuspendDelay;
+		}
+
+		public void setSuspendDelay(int delay) {
+			mSuspendDelay = delay;
+		}
+
+		public int getShutdownVoltage() {
+			return mShutdownVoltage;
+		}
+
+		public void setShutdownVoltage(int voltage) {
+			mShutdownVoltage = voltage;
+		}
+
+		public int getBtLedOpenTime() {
+			return mBtLedOpenTime;
+		}
+
+		public void setBtLedOpenTime(int time) {
+			mBtLedOpenTime = time;
+		}
+
+		public int getBtLedCloseTime() {
+			return mBtLedCloseTime;
+		}
+
+		public void setBtLedCloseTime(int time) {
+			mBtLedCloseTime = time;
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+			builder.append("suspend_delay: ");
+			builder.append(mSuspendDelay);
+			builder.append(", shutdown_voltage: ");
+			builder.append(mShutdownVoltage);
+			builder.append(", bt_led_open_time: ");
+			builder.append(mBtLedOpenTime);
+			builder.append(", bt_led_close_time: ");
+			builder.append(mBtLedCloseTime);
+			return builder.toString();
+		}
 	}
 
 	// ================================================================================
@@ -932,6 +1027,14 @@ public class JwaooBleToy extends CavanBleGatt {
 			}
 
 			return new JwaooToyMotoMode(mBytes[2], mBytes[3]);
+		}
+
+		public JwaooToyAppSettings getAppSettings() {
+			if (getType() != JWAOO_TOY_RSP_DATA || length() != 10) {
+				return null;
+			}
+
+			return new JwaooToyAppSettings(mBytes);
 		}
 
 		public static boolean getBool(JwaooToyResponse response) {

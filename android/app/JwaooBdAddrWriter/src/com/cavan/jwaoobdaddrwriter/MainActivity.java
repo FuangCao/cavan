@@ -159,7 +159,11 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	}
 
 	@Override
-	protected void handleMessage(Message msg) {
+	public boolean handleMessage(Message msg) {
+		if (super.handleMessage(msg)) {
+			return true;
+		}
+
 		switch (msg.what) {
 		case MSG_UPDATE_VIEW:
 			if (mBdAddrBytes == null) {
@@ -209,6 +213,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 			mButtonRequest.setEnabled(true);
 			break;
 		}
+
+		return true;
 	}
 
 	@Override

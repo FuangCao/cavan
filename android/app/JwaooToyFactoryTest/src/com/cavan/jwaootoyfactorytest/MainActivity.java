@@ -34,10 +34,10 @@ import com.jwaoo.android.JwaooToySensor;
 
 public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
-	private static final int MSG_SET_TEST_ITEM = 10;
-	private static final int MSG_SENSOR_DATA = 11;
-	private static final int MSG_KEY_STATE = 12;
-	private static final int MSG_BATTERY_STATE = 13;
+	private static final int MSG_SET_TEST_ITEM = 100;
+	private static final int MSG_SENSOR_DATA = 101;
+	private static final int MSG_KEY_STATE = 102;
+	private static final int MSG_BATTERY_STATE = 103;
 
 	private Button mButtonPass;
 	private Button mButtonFail;
@@ -155,7 +155,11 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	}
 
 	@Override
-	protected void handleMessage(Message msg) {
+	public boolean handleMessage(Message msg) {
+		if (super.handleMessage(msg)) {
+			return true;
+		}
+
 		switch (msg.what) {
 		case MSG_SET_TEST_ITEM:
 			setTestItem(msg.arg1);
@@ -171,6 +175,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				fragment.handleMessage(msg);
 			}
 		}
+
+		return true;
 	}
 
 	@Override
@@ -802,7 +808,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 			@Override
 			public void run() {
-				if (mBleToy.setMotoMode(0, mLevel)) {
+				if (mBleToy.setMotoMode(JwaooBleToy.MOTO_MODE_LINE, mLevel)) {
 					if (mLevel > mSeekBar.getMax() / 2) {
 						setPassEnable();
 					}
@@ -849,7 +855,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		@Override
 		public void onStop() {
 			mHandler.removeCallbacks(mRunnableSetLevel);
-			mBleToy.setMotoMode(0, 0);
+			mBleToy.setMotoMode(JwaooBleToy.MOTO_MODE_IDLE, 0);
 
 			super.onStop();
 		}
