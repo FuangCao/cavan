@@ -1406,7 +1406,7 @@ int ffile_ncrc32_seek(int fd, off_t offset, int whence, size_t size, u32 *crc)
 	s64 offset_bak;
 
 	offset_bak = lseek(fd, offset, whence);
-	if (offset_bak != offset_bak) {
+	if (offset_bak != offset) {
 		pr_error_info("lseek");
 		return -EFAULT;
 	}
