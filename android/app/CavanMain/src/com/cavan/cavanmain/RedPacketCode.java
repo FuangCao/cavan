@@ -41,29 +41,37 @@ public class RedPacketCode {
 	private boolean mMaybeInvalid;
 
 	public static RedPacketCode getInstence(String code, boolean create, boolean test) {
-		Iterator<RedPacketCode> iterator = mCodeMap.values().iterator();
-		while (iterator.hasNext()) {
-			RedPacketCode node = iterator.next();
-			if (node.getTimeout() > CODE_OVERTIME) {
-				iterator.remove();
+		synchronized (mCodeMap) {
+			Iterator<RedPacketCode> iterator = mCodeMap.values().iterator();
+			while (iterator.hasNext()) {
+				RedPacketCode node = iterator.next();
+				if (node.getTimeout() > CODE_OVERTIME) {
+					iterator.remove();
+				}
 			}
-		}
 
-		RedPacketCode node = mCodeMap.get(code);
-		if (node == null && create) {
-			node = new RedPacketCode(code);
-
-			mCodeMap.put(code, node);
+			RedPacketCode node = mCodeMap.get(code);
+			if (node == null) {
+				if (create) {
+					node = new RedPacketCode(code);
+					mCodeMap.put(code, node);
+				} else {
+					return null;
+				}
+			}
 
 			if (test) {
 				node.setTestOnly();
-			} else {
-				mLastCodes.addFirst(node);
-				updateLastCodes();
+			} else if (create) {
+				synchronized (mLastCodes) {
+					mLastCodes.remove(node);
+					mLastCodes.addFirst(node);
+					updateLastCodes();
+				}
 			}
-		}
 
-		return node;
+			return node;
+		}
 	}
 
 	public static RedPacketCode getInstence(Intent intent) {
@@ -76,16 +84,20 @@ public class RedPacketCode {
 	}
 
 	public static List<RedPacketCode> getLastCodes() {
-		updateLastCodes();
-		return mLastCodes;
+		synchronized (mLastCodes) {
+			updateLastCodes();
+			return mLastCodes;
+		}
 	}
 
 	public static int updateLastCodes() {
 		int count = 0;
 
-		while (mLastCodes.size() > LAST_CODE_SIZE && mLastCodes.getLast().getTimeout() > LAST_CODE_OVERTIME) {
-			mLastCodes.removeLast();
-			count++;
+		synchronized (mLastCodes) {
+			while (mLastCodes.size() > LAST_CODE_SIZE && mLastCodes.getLast().getTimeout() > LAST_CODE_OVERTIME) {
+				mLastCodes.removeLast();
+				count++;
+			}
 		}
 
 		return count;
