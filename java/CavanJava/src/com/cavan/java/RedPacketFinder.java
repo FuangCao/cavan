@@ -8,6 +8,9 @@ import java.util.regex.Pattern;
 
 public class RedPacketFinder {
 
+	private static final int MIN_CODE_SIZE = 2;
+	private static final int MAX_CODE_SIZE = 30;
+
 	private static final String SEPARATOR = "~\\-_+=";
 	private static final String NORMAL_PATTERN = "(\\w+红包)";
 	private static final String DIGIT_PATTERN = "([\\d\\s" + SEPARATOR + "]+)";
@@ -18,6 +21,10 @@ public class RedPacketFinder {
 	private static final Pattern[] sNormalPatterns = {
 		Pattern.compile("^\\[" + NORMAL_PATTERN + "\\]"),
 		Pattern.compile("^【" + NORMAL_PATTERN + "】"),
+	};
+
+	private static final String[] sInvalidCodes = {
+		"感谢亲们长期以来的支持与信任"
 	};
 
 	private static final Pattern[] sPicturePatterns = {
@@ -32,7 +39,11 @@ public class RedPacketFinder {
 		Pattern.compile("红\\s*包.*准\\s*备"),
 		Pattern.compile("突\\s*袭.*红\\s*包"),
 		Pattern.compile("红\\s*包.*突\\s*袭"),
-		Pattern.compile("红包.*发.*空间"),
+		Pattern.compile("红\\s*包.*空\\s*间"),
+		Pattern.compile("提\\s*前.*红\\s*包"),
+		Pattern.compile("红\\s*包.*提\\s*前"),
+		Pattern.compile("马\\s*上.*红\\s*包"),
+		Pattern.compile("红\\s*包.*马\\s*上"),
 	};
 
 	private static final Pattern[] sDigitPatterns = {
@@ -42,6 +53,8 @@ public class RedPacketFinder {
 		Pattern.compile("口\\s*令\\s*红\\s*包\\D*" + DIGIT_PATTERN),
 		Pattern.compile("红\\s*包[\\s\\d]*[:：]?\\s*" + DIGIT_PATTERN),
 		Pattern.compile("口\\s*令[\\s\\d]*[:：]?\\s*" + DIGIT_PATTERN),
+		Pattern.compile("红\\s*包\\s*\\w?\\s*[:：]\\s*" + DIGIT_PATTERN),
+		Pattern.compile("口\\s*令\\s*\\w?\\s*[:：]\\s*" + DIGIT_PATTERN),
 		Pattern.compile("\\b" + DIGIT_PATTERN + "走起"),
 		Pattern.compile("\\b" + DIGIT_PATTERN + "go", Pattern.CASE_INSENSITIVE),
 	};
@@ -71,6 +84,8 @@ public class RedPacketFinder {
 		Pattern.compile("支\\s*付\\s*宝.*红\\s*包[\\s\\d:：]*【" + WORD_PATTERN + "】"),
 		Pattern.compile("红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
 		Pattern.compile("口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
+		Pattern.compile("红\\s*包\\s*\\w?\\s*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
+		Pattern.compile("口\\s*令\\s*\\w?\\s*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
 	};
 
 	private static final Pattern[] sMultiLineWordPatterns = {
@@ -86,8 +101,16 @@ public class RedPacketFinder {
 		Pattern.compile("[a-z]+://\\S+", Pattern.CASE_INSENSITIVE),
 	};
 
+	public static final String[] sExcludeWords = {
+		"领取方法",
+	};
+
+	public static final Pattern[] sUnsafePatterns = {
+		Pattern.compile("Q\\s*Q", Pattern.CASE_INSENSITIVE),
+	};
+
 	public static final String[] sUnsafeWords = {
-		"qq", "QQ", "扣扣", "群", "手机", "电话", "微信", "号码", "领取方法", "联系", "客服", "咨询"
+		"扣扣", "群", "手机", "电话", "微信", "号码", "联系", "客服", "咨询"
 	};
 
 	public static HashMap<String, String> sPackageCodeMap = new HashMap<String, String>();
@@ -109,6 +132,10 @@ public class RedPacketFinder {
 		StringBuilder builder = new StringBuilder(mJoinedLines);
 
 		for (String line : content.split("\n")) {
+			if (isExcludeLine(line)) {
+				continue;
+			}
+
 			for (Pattern pattern : sExcludePatterns) {
 				Matcher matcher = pattern.matcher(line);
 				line = matcher.replaceAll(CavanString.EMPTY_STRING);
@@ -144,12 +171,44 @@ public class RedPacketFinder {
 		}
 
 		mJoinedLines += line;
-
 	}
 
-	public boolean isSafeLine(String line) {
+	public static boolean isInvalidCode(String code) {
+		int length = code.length();
+
+		if (length < MIN_CODE_SIZE || length > MAX_CODE_SIZE) {
+			return true;
+		}
+
+		for (String value : sInvalidCodes) {
+			if (value.equals(code)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public static boolean isExcludeLine(String line) {
+		for (String word : sExcludeWords) {
+			if (line.contains(word)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public static boolean isSafeLine(String line) {
 		for (String word : sUnsafeWords) {
 			if (line.contains(word)) {
+				return false;
+			}
+		}
+
+		for (Pattern pattern : sUnsafePatterns) {
+			Matcher matcher = pattern.matcher(line);
+			if (matcher.find()) {
 				return false;
 			}
 		}
@@ -193,6 +252,7 @@ public class RedPacketFinder {
 	}
 
 	private List<String> getRedPacketCodes(String line, Pattern[] patterns, List<String> codes, boolean strip) {
+
 		for (Pattern pattern : patterns) {
 			Matcher matcher = pattern.matcher(line);
 
@@ -214,6 +274,7 @@ public class RedPacketFinder {
 					continue;
 				}
 
+				// CavanAndroid.eLog("line = " + line);
 				// CavanAndroid.eLog("code = " + code + ", pattern = " + pattern.pattern());
 
 				codes.add(code);
@@ -227,13 +288,9 @@ public class RedPacketFinder {
 		return getRedPacketCodes(line, patterns, new ArrayList<String>(), strip);
 	}
 
-	private List<String> getRedPacketCodes(List<String> lines, Pattern[] patterns, List<String> codes, boolean strip, boolean multiLine) {
+	private List<String> getRedPacketCodes(List<String> lines, Pattern[] patterns, List<String> codes, boolean strip) {
 		for (String line : lines) {
 			getRedPacketCodes(line, patterns, codes, strip);
-		}
-
-		if (multiLine) {
-			getRedPacketCodes(mJoinedLines, patterns, codes, strip);
 		}
 
 		return codes;
@@ -241,12 +298,16 @@ public class RedPacketFinder {
 
 	private List<String> getRedPacketWordCodes() {
 		List<String> codes = new ArrayList<String>();
-		getRedPacketCodes(mLines, sWordPatterns, codes, true, false);
+		getRedPacketCodes(mLines, sWordPatterns, codes, true);
 		getRedPacketCodes(mJoinedLines, sMultiLineWordPatterns, codes, false);
 		return codes;
 	}
 
 	private boolean addRedPacketCode(List<String> codes, String code) {
+		if (isInvalidCode(code)) {
+			return false;
+		}
+
 		for (String a : codes) {
 			if (code.indexOf(a) >= 0) {
 				return false;
@@ -289,8 +350,8 @@ public class RedPacketFinder {
 
 	private List<String> getRedPacketDigitCodes() {
 		List<String> codes = new ArrayList<String>();
-		getRedPacketCodes(mLines, sDigitPatterns, codes, false, true);
-		getRedPacketCodes(mSafeLines, sUnsafeDigitPatterns, codes, false, false);
+		getRedPacketCodes(mLines, sDigitPatterns, codes, false);
+		getRedPacketCodes(mSafeLines, sUnsafeDigitPatterns, codes, false);
 		return codes;
 	}
 
