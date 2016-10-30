@@ -68,8 +68,9 @@
             android:keyOutputText="0"
             android:keyLabel="0" />
 	    <Key
-            android:keyOutputText=":"
-            android:keyLabel=":" />
+            android:codes="13"
+            android:keyOutputText=" "
+            android:keyIcon="@drawable/key_space" />
         <Key
             android:codes="4"
             android:keyLabel="选择" />
@@ -82,18 +83,19 @@
             android:codes="8"
             android:keyLabel="输入法" />
         <Key
-	        android:codes="13"
-            android:keyOutputText=" "
-            android:keyIcon="@drawable/key_space" />
+            android:codes="14"
+            android:keyLabel="图片识别" />
         <Key
 	        android:codes="12"
             android:keyOutputText="\n"
             android:keyIcon="@drawable/key_enter" />
         <Key
             android:codes="6"
+            android:isRepeatable="true"
             android:keyIcon="@drawable/key_qwerty_left" />
         <Key
             android:codes="7"
+            android:isRepeatable="true"
             android:keyIcon="@drawable/key_qwerty_right" />
     </Row>
 </Keyboard>

@@ -45,6 +45,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	public static final int KEYCODE_DONE = 11;
 	public static final int KEYCODE_ENTER = 12;
 	public static final int KEYCODE_SPACE = 13;
+	public static final int KEYCODE_OCR = 14;
 
 	private GridView mCodeGridView;
 	private RedPacketCode[] mUiCodes;
@@ -380,6 +381,10 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 			} else {
 				conn.setSelection(mSelection + 1, mSelection + 1);
 			}
+			break;
+
+		case KEYCODE_OCR:
+			MainActivity.startSogouOcrActivity(getApplicationContext());
 			break;
 		}
 	}

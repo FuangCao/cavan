@@ -168,6 +168,19 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		return 5;
 	}
 
+	public static boolean startSogouOcrActivity(Context context) {
+		try {
+			Intent intent = new Intent();
+			intent.setClassName("com.sohu.inputmethod.sogou", "com.sogou.ocrplugin.CameraActivity");
+			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			context.startActivity(intent);
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
 	private File mFileBin;
 	private Preference mPreferenceIpAddress;
 	private Preference mPreferenceInputMethodSelect;

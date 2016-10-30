@@ -22,6 +22,8 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Environment;
+import android.os.FileObserver;
 import android.os.Handler;
 import android.os.Handler.Callback;
 import android.os.HandlerThread;
@@ -45,6 +47,8 @@ public class FloatMessageService extends FloatWidowService {
 	public static final String NET_CMD_TEST = "CavanNetworkTest";
 	public static final String NET_CMD_KEEP_LIVE = "CavanKeepLive";
 
+	public static final String PATH_QQ_IMAGES = Environment.getExternalStorageDirectory().getPath() + "/Tencent/QQ_Images";
+
 	public static final int UDP_PORT = 9898;
 	public static final String UDP_ADDR = "224.0.0.1";
 
@@ -59,6 +63,7 @@ public class FloatMessageService extends FloatWidowService {
 	private static final int MSG_TCP_SERVICE_UPDATED = 3;
 	private static final int MSG_TCP_BRIDGE_STATE_CHANGED = 5;
 	private static final int MSG_TCP_BRIDGE_UPDATED = 6;
+	private static final int MSG_START_OCR = 7;
 
 	private int mLastSecond;
 	private boolean mUserPresent;
@@ -136,6 +141,10 @@ public class FloatMessageService extends FloatWidowService {
 					CavanAndroid.showToast(getApplicationContext(), (int) msg.obj);
 				}
 				break;
+
+			case MSG_START_OCR:
+				MainActivity.startSogouOcrActivity(getApplicationContext());
+				break;
 			}
 		}
 	};
@@ -169,6 +178,24 @@ public class FloatMessageService extends FloatWidowService {
 				updateNetworkConnState();
 				break;
 			}
+		}
+	};
+
+	private FileObserver mFileObserverQQ = new FileObserver(PATH_QQ_IMAGES, FileObserver.CLOSE_WRITE) {
+
+		private String mPath;
+
+		@Override
+		public void onEvent(int event, String path) {
+			if (path.equals(mPath)) {
+				path = mPath;
+			} else {
+				mPath = path;
+			}
+
+			mHandler.removeMessages(MSG_START_OCR, path);
+			Message message = mHandler.obtainMessage(MSG_START_OCR, path);
+			mHandler.sendMessageDelayed(message, 200);
 		}
 	};
 
@@ -438,6 +465,8 @@ public class FloatMessageService extends FloatWidowService {
 		filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
 		registerReceiver(mReceiver, filter );
 
+		mFileObserverQQ.startWatching();
+
 		mNetSender = new NetworkSendThread();
 		mNetSender.start();
 
@@ -463,6 +492,7 @@ public class FloatMessageService extends FloatWidowService {
 			mNetSender.quit();
 		}
 
+		mFileObserverQQ.stopWatching();
 		unregisterReceiver(mReceiver);
 		setTimerEnable(false);
 
