@@ -83,8 +83,8 @@
             android:codes="8"
             android:keyLabel="输入法" />
         <Key
-            android:codes="14"
-            android:keyLabel="图片识别" />
+            android:keyOutputText=":"
+            android:keyLabel=":" />
         <Key
 	        android:codes="12"
             android:keyOutputText="\n"

@@ -50,7 +50,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private static final String[] PACKAGE_NAMES = {
 		CavanPackageName.ALIPAY,
 		CavanPackageName.QQ,
-		CavanPackageName.SOGOU_IME,
+		CavanPackageName.SOGOU_OCR,
 	};
 
 	private long mDelay;
@@ -196,11 +196,15 @@ public class CavanAccessibilityService extends AccessibilityService {
 				break;
 
 			case MSG_CHECK_AUTO_OPEN_APP:
+				removeMessages(MSG_CHECK_AUTO_OPEN_APP);
+
 				String clsName = CavanAndroid.getTopActivityClassName(getApplicationContext());
 				CavanAndroid.eLog("ClassName = " + clsName);
 				if (clsName == null) {
 					sendEmptyMessageDelayed(MSG_CHECK_AUTO_OPEN_APP, 1000);
-				} else if (clsName.startsWith("com.sogou.ocrplugin") || clsName.contains("gallery")) {
+				} else if (clsName.startsWith("com.sogou.ocrplugin") || clsName.contains("gallery") ||
+						clsName.equals("com.tencent.mobileqq.activity.aio.photo.AIOGalleryActivity") ||
+						clsName.equals("android.app.Dialog")) {
 					MainActivity.setAutoOpenAppEnable(false);
 					sendEmptyMessageDelayed(MSG_CHECK_AUTO_OPEN_APP, 2000);
 				} else {
@@ -394,10 +398,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	private boolean onWindowStateChangedQQ(AccessibilityEvent event) {
+		if ("com.tencent.mobileqq.activity.aio.photo.AIOGalleryActivity".equals(mClassName)) {
+			mHandler.sendEmptyMessage(MSG_CHECK_AUTO_OPEN_APP);
+		}
+
 		return false;
 	}
 
-	private boolean onWindowStateChangedSogouIME(AccessibilityEvent event) {
+	private boolean onWindowStateChangedSogouOcr(AccessibilityEvent event) {
 		mHandler.sendEmptyMessage(MSG_CHECK_AUTO_OPEN_APP);
 
 		AccessibilityNodeInfo source = event.getSource();
@@ -784,8 +792,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 			onWindowStateChangedMM(event);
 			break;
 
-		case CavanPackageName.SOGOU_IME:
-			onWindowStateChangedSogouIME(event);
+		case CavanPackageName.SOGOU_OCR:
+			onWindowStateChangedSogouOcr(event);
 			break;
 		}
 	}

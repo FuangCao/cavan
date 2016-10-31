@@ -213,7 +213,11 @@ public class RedPacketCode {
 	}
 
 	synchronized public long getRepeatTime() {
-		return mRepeatTime;
+		if (mRepeatable) {
+			return mRepeatTime;
+		}
+
+		return 0;
 	}
 
 	synchronized public long getRepeatTimeout() {

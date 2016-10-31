@@ -33,6 +33,7 @@ import android.preference.RingtonePreference;
 import android.text.InputType;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanPackageName;
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.cavanjni.CavanServicePreference;
 import com.cavan.java.CavanJava;
@@ -171,7 +172,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static boolean startSogouOcrActivity(Context context) {
 		try {
 			Intent intent = new Intent();
-			intent.setClassName("com.sohu.inputmethod.sogou", "com.sogou.ocrplugin.CameraActivity");
+			intent.setClassName(CavanPackageName.SOGOU_OCR, "com.sogou.ocrplugin.CameraActivity");
 			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			context.startActivity(intent);
 			return true;
