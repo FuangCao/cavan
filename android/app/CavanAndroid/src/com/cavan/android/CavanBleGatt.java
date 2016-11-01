@@ -36,6 +36,7 @@ public class CavanBleGatt {
 	private static final int MSG_DISCOVER_TIMEOUT = 1;
 	public static final int MSG_CONNECT_TIMEOUT = 2;
 	public static final int MSG_DISCOVER_COMPLETE = 3;
+	public static final int MSG_DISCONNECTED = 4;
 
 	public static final int PROPERTY_NOTIFY_ALL = BluetoothGattCharacteristic.PROPERTY_NOTIFY;
 	public static final int PROPERTY_READ_ALL = BluetoothGattCharacteristic.PROPERTY_READ;
@@ -81,14 +82,12 @@ public class CavanBleGatt {
 				mGattState = newState;
 
 				if (mGattState == BluetoothProfile.STATE_CONNECTED) {
+					mConnThread.remove(MSG_DISCONNECTED);
 					mConnThread.post(MSG_DISCOVER_TIMEOUT, DISCOVER_WAIT_TIME);
 					gatt.discoverServices();
 				} else {
 					setConnectStatus(false);
-
-					if (mConnEnable && mGattState == BluetoothProfile.STATE_DISCONNECTED) {
-						connectInternal();
-					}
+					mConnThread.post(MSG_DISCONNECTED, 1000);
 				}
 			}
 		}
@@ -513,6 +512,12 @@ public class CavanBleGatt {
 
 				if (mGatt != null) {
 					mGatt.disconnect();
+				}
+				break;
+
+			case MSG_DISCONNECTED:
+				if (mConnEnable && mGattState == BluetoothProfile.STATE_DISCONNECTED) {
+					connectInternal();
 				}
 				break;
 			}

@@ -755,9 +755,11 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		@Override
 		protected boolean doInitialize() {
 			mCheckBoxLedBatt = (CheckBox) findViewById(R.id.checkBoxLedBattery);
+			mCheckBoxLedBatt.setChecked(false);
 			mCheckBoxLedBatt.setOnCheckedChangeListener(this);
 
 			mCheckBoxLedBt = (CheckBox) findViewById(R.id.checkBoxLedBluetooth);
+			mCheckBoxLedBt.setChecked(true);
 			mCheckBoxLedBt.setOnCheckedChangeListener(this);
 
 			return true;
@@ -774,13 +776,13 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 			switch (buttonView.getId()) {
 			case R.id.checkBoxLedBattery:
-				if (mBleToy.setLedEnable(1, isChecked)) {
+				if (mBleToy.setLedEnable(JwaooBleToy.LED_BATT, isChecked)) {
 					mLedCountBatt++;
 				}
 				break;
 
 			case R.id.checkBoxLedBluetooth:
-				if (mBleToy.setLedEnable(2, isChecked)) {
+				if (mBleToy.setLedEnable(JwaooBleToy.LED_BT, isChecked)) {
 					mLedCountBt++;
 				}
 				break;
@@ -793,8 +795,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		@Override
 		public void onStop() {
-			mBleToy.setLedEnable(1, false);
-			mBleToy.setLedEnable(2, true);
+			mBleToy.setLedEnable(JwaooBleToy.LED_BATT, false);
+			mBleToy.setLedEnable(JwaooBleToy.LED_BT, true);
 
 			super.onStop();
 		}

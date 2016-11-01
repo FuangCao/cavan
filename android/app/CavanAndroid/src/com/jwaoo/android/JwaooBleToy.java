@@ -24,6 +24,9 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final double JWAOO_TOY_ACCEL_VALUE_FUZZ = 2.0;
 	public static final double JWAOO_TOY_DEPTH_VALUE_FUZZ = 6.0;
 
+	public static final int LED_BATT = 1;
+	public static final int LED_BT = 2;
+
 	public static final int KEYCODE_UP = 0;
 	public static final int KEYCODE_O = 1;
 	public static final int KEYCODE_DOWN = 2;
