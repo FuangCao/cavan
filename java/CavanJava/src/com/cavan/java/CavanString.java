@@ -163,6 +163,24 @@ public class CavanString {
 		return c == ':' || c == '：';
 	}
 
+	public static int getLineCount(String text) {
+		int length = text.length();
+
+		if (length > 0) {
+			int count = 1;
+
+			for (int i = length - 1; i >= 0; i--) {
+				if (text.charAt(i) == '\n') {
+					count++;
+				}
+			}
+
+			return count;
+		} else {
+			return 0;
+		}
+	}
+
 	@Override
 	public String toString() {
 		return mContent;

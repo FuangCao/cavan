@@ -35,15 +35,17 @@ public class RedPacketFinder {
 	};
 
 	private static final Pattern[] sPredictPatterns = {
-		Pattern.compile("准\\s*备.*红\\s*包"),
-		Pattern.compile("红\\s*包.*准\\s*备"),
-		Pattern.compile("突\\s*袭.*红\\s*包"),
-		Pattern.compile("红\\s*包.*突\\s*袭"),
-		Pattern.compile("红\\s*包.*空\\s*间"),
-		Pattern.compile("提\\s*前.*红\\s*包"),
-		Pattern.compile("红\\s*包.*提\\s*前"),
-		Pattern.compile("马\\s*上.*红\\s*包"),
-		Pattern.compile("红\\s*包.*马\\s*上"),
+		Pattern.compile("准备.*红包"),
+		Pattern.compile("红包.*准备"),
+		Pattern.compile("突袭.*红包"),
+		Pattern.compile("红包.*突袭"),
+		Pattern.compile("提前.*红包"),
+		Pattern.compile("红包.*提前"),
+		Pattern.compile("马上.*红包"),
+		Pattern.compile("红包.*马上"),
+		Pattern.compile("红包.*空间"),
+		Pattern.compile("红包.*说说"),
+		Pattern.compile("红包.*朋友圈"),
 	};
 
 	private static final Pattern[] sDigitPatterns = {
@@ -251,7 +253,7 @@ public class RedPacketFinder {
 		return (chinese_count > 0);
 	}
 
-	private List<String> getRedPacketCodes(String line, Pattern[] patterns, List<String> codes, boolean strip) {
+	private List<String> getRedPacketCodes(String line, Pattern[] patterns, List<String> codes, boolean strip, boolean unsafe) {
 
 		for (Pattern pattern : patterns) {
 			Matcher matcher = pattern.matcher(line);
@@ -260,6 +262,10 @@ public class RedPacketFinder {
 				if (patterns == sMultiLineWordPatterns) {
 					int end = matcher.end();
 					if (end < line.length() && CavanString.isColon(line.charAt(end))) {
+						continue;
+					}
+				} else if (unsafe) {
+					if (!isSafeLine(matcher.group())) {
 						continue;
 					}
 				}
@@ -284,13 +290,13 @@ public class RedPacketFinder {
 		return codes;
 	}
 
-	private List<String> getRedPacketCodes(String line, Pattern[] patterns, boolean strip) {
-		return getRedPacketCodes(line, patterns, new ArrayList<String>(), strip);
+	private List<String> getRedPacketCodes(String line, Pattern[] patterns, boolean strip, boolean unsafe) {
+		return getRedPacketCodes(line, patterns, new ArrayList<String>(), strip, unsafe);
 	}
 
-	private List<String> getRedPacketCodes(List<String> lines, Pattern[] patterns, List<String> codes, boolean strip) {
+	private List<String> getRedPacketCodes(List<String> lines, Pattern[] patterns, List<String> codes, boolean strip, boolean unsafe) {
 		for (String line : lines) {
-			getRedPacketCodes(line, patterns, codes, strip);
+			getRedPacketCodes(line, patterns, codes, strip, unsafe);
 		}
 
 		return codes;
@@ -298,8 +304,8 @@ public class RedPacketFinder {
 
 	private List<String> getRedPacketWordCodes() {
 		List<String> codes = new ArrayList<String>();
-		getRedPacketCodes(mLines, sWordPatterns, codes, true);
-		getRedPacketCodes(mJoinedLines, sMultiLineWordPatterns, codes, false);
+		getRedPacketCodes(mLines, sWordPatterns, codes, true, false);
+		getRedPacketCodes(mJoinedLines, sMultiLineWordPatterns, codes, false, false);
 		return codes;
 	}
 
@@ -350,8 +356,8 @@ public class RedPacketFinder {
 
 	private List<String> getRedPacketDigitCodes() {
 		List<String> codes = new ArrayList<String>();
-		getRedPacketCodes(mLines, sDigitPatterns, codes, false);
-		getRedPacketCodes(mSafeLines, sUnsafeDigitPatterns, codes, false);
+		getRedPacketCodes(mLines, sDigitPatterns, codes, false, true);
+		getRedPacketCodes(mSafeLines, sUnsafeDigitPatterns, codes, false, false);
 		return codes;
 	}
 
@@ -365,7 +371,7 @@ public class RedPacketFinder {
 			}
 		}
 
-		for (String text : getRedPacketCodes(mJoinedLines, sMultiLineDigitPatterns, false)) {
+		for (String text : getRedPacketCodes(mJoinedLines, sMultiLineDigitPatterns, false, true)) {
 			String code = getRedPacketDigitCode(text);
 			if (code != null) {
 				addRedPacketCodes(codes, code);

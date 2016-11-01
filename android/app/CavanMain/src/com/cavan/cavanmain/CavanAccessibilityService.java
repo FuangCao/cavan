@@ -22,6 +22,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
@@ -135,26 +136,28 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 				String content = (String) msg.obj;
 
-				if (mLastContent != null && mLastContent.equals(content)) {
+				if (msg.arg1 == 0 && mLastContent != null && mLastContent.equals(content)) {
 					break;
 				}
 
 				mLastContent = content;
 
+				AlertDialog.Builder builder = new AlertDialog.Builder(CavanAccessibilityService.this, R.style.DialogStyle);
+
 				final View view = View.inflate(CavanAccessibilityService.this, R.layout.red_packet_check, null);
+
 				final EditText editText = (EditText) view.findViewById(R.id.editTextContent);
 				editText.setText(content);
 
-				AlertDialog.Builder builder = new AlertDialog.Builder(CavanAccessibilityService.this);
+				final CheckBox checkBox = (CheckBox) view.findViewById(R.id.checkBoxAsCode);
+
 				builder.setView(view);
-				builder.setCancelable(false);
 				builder.setNegativeButton(android.R.string.cancel, null);
 				builder.setPositiveButton(R.string.text_send, new OnClickListener() {
 
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						String text = editText.getText().toString();
-						CheckBox checkBox = (CheckBox) view.findViewById(R.id.checkBoxAsCode);
 
 						MainActivity.setAutoOpenAppEnable(true);
 
@@ -191,7 +194,16 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 				mCheckContentDialog = builder.create();
 				Window win = mCheckContentDialog.getWindow();
+
 				win.setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+				if (msg.arg1 > 0) {
+					win.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.TOP);
+					checkBox.setChecked(true);
+					mCheckContentDialog.setCanceledOnTouchOutside(true);
+				} else {
+					mCheckContentDialog.setCancelable(false);
+				}
+
 				mCheckContentDialog.show();
 				break;
 
@@ -867,10 +879,17 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 		if (MainActivity.isListenClickEnabled(this)) {
 			if (id.equals("com.tencent.mobileqq:id/chat_item_content_layout")) {
+				String text = CavanString.fromCharSequence(source.getText());
+
+				int lines = CavanString.getLineCount(text);
+				if (lines > 0 && lines < 3) {
+					mHandler.obtainMessage(MSG_CHECK_CONTENT, 1, 0, text).sendToTarget();
+				}
+
 				Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
 				intent.putExtra("package", source.getPackageName());
 				intent.putExtra("desc", "用户点击");
-				intent.putExtra("content", CavanString.fromCharSequence(source.getText()));
+				intent.putExtra("content", text);
 				sendBroadcast(intent);
 			}
 		}
