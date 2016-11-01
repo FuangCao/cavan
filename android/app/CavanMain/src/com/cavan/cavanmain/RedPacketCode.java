@@ -318,7 +318,8 @@ public class RedPacketCode {
 		if (mCompleted) {
 			builder.append(", Completed");
 		} else if (mRepeatTime > 0) {
-			builder.append(", Repeatable");
+			builder.append(", Repeatable: ");
+			builder.append(sDateFormat.format(new Date(mRepeatTime)));
 		} else if (mValid) {
 			builder.append(", Valid");
 		} else if (mInvalid) {
