@@ -18,15 +18,14 @@ public class CavanMessageAdapter extends BaseAdapter {
 
 	private int mCount;
 	private Cursor mCursor;
-	private List<Cursor> mCursors = new ArrayList<Cursor>();
+	private List<CavanNotification> mNotifications = new ArrayList<CavanNotification>();
 
-	private CavanNotification mNotification = new CavanNotification();
 	private Runnable mRunnableUpdate = new Runnable() {
 
 		@Override
 		public void run() {
 			boolean isBottom = isSelectionBottom();
-			int count = mCursors.size();
+			int count = mNotifications.size();
 
 			if (mCursor != null) {
 				count += mCursor.getCount();
@@ -79,21 +78,28 @@ public class CavanMessageAdapter extends BaseAdapter {
 		return true;
 	}
 
-	public void updateData(Uri uri, String selection, String[] selectionArgs, boolean bottom) {
+	public boolean updateData(Uri uri, String selection, String[] selectionArgs, boolean bottom) {
 		if (uri == null) {
 			mCursor = CavanNotification.query(mActivity.getContentResolver(), selection, selectionArgs, null);
-			mCursors.clear();
+			mNotifications.clear();
 		} else {
 			Cursor cursor = CavanNotification.query(mActivity.getContentResolver(), uri, selection, selectionArgs, null);
 			if (cursor.moveToFirst()) {
-				mCursors.add(cursor);
+				try {
+					mNotifications.add(new CavanNotification(cursor));
+				} catch (Exception e) {
+					e.printStackTrace();
+					return false;
+				}
 			} else {
-				return;
+				return false;
 			}
 		}
 
 		mSelectionBottom = bottom;
 		mView.post(mRunnableUpdate);
+
+		return true;
 	}
 
 	@Override
@@ -113,16 +119,17 @@ public class CavanMessageAdapter extends BaseAdapter {
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup viewGroup) {
-		Cursor cursor;
+		CavanNotification notification;
 
 		if (mCursor.moveToPosition(position)) {
-			cursor = mCursor;
+			try {
+				notification = new CavanNotification(mCursor);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
 		} else {
-			cursor = mCursors.get(position - mCursor.getCount());
-		}
-
-		if (!mNotification.parse(cursor)) {
-			return null;
+			notification = mNotifications.get(position - mCursor.getCount());
 		}
 
 		CavanMessageView view;
@@ -133,11 +140,11 @@ public class CavanMessageAdapter extends BaseAdapter {
 			view = (CavanMessageView) convertView;
 		}
 
-		view.setTitle(mNotification.buildTitle());
+		view.setTitle(notification.buildTitle());
 
-		String content = mNotification.getContent();
+		String content = notification.getContent();
 		if (content != null) {
-			view.setContent(content, mNotification.getPackageName(), mActivity.getFilterPatterns());
+			view.setContent(content, notification.getPackageName(), mActivity.getFilterPatterns());
 		}
 
 		return view;

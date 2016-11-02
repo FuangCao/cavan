@@ -18,7 +18,7 @@ public class RedPacketCode {
 	private static long LAST_CODE_OVERTIME = 300000;
 	private static long CODE_OVERTIME = 28800000;
 	private static long REPEAT_TIME_ALIGN = 60000;
-	private static long TIME_MISTAKE = 5000;
+	private static long TIME_MISTAKE = 10000;
 
 	private static final SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
