@@ -209,6 +209,14 @@ public class CavanBleGatt {
 		super.finalize();
 	}
 
+	public BluetoothDevice getDevice() {
+		return mDevice;
+	}
+
+	public String getAddress() {
+		return mDevice.getAddress();
+	}
+
 	synchronized public void setReady(boolean ready) {
 		mReady = ready;
 	}

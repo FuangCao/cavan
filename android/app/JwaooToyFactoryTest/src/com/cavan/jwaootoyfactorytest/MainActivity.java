@@ -5,6 +5,7 @@ import android.app.FragmentTransaction;
 import android.bluetooth.BluetoothDevice;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Message;
 import android.view.Gravity;
@@ -26,10 +27,8 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
-import com.cavan.java.CavanJava;
 import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
-import com.jwaoo.android.JwaooBleToy.JwaooToyTestResult;
 import com.jwaoo.android.JwaooToySensor;
 
 public class MainActivity extends JwaooToyActivity implements OnClickListener {
@@ -50,7 +49,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	private int mTestItem;
 	private boolean mAutoTestEnable;
 
-	private JwaooToyTestResult mTestResult;
+	private TestResult mTestResult;
 	private TestResultFragment mTestResultFragment = new TestResultFragment();
 
 	private TestItemFragment[] mTestItemFragmanets = {
@@ -95,7 +94,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 	public void gotoNextTest(boolean pass) {
 		if (mTestItem >= 0) {
-			mTestItemFragmanets[mTestItem].setTestResult(CavanJava.getBoolValueInt(pass));
+			mTestItemFragmanets[mTestItem].setTestResult(pass);
 		}
 
 		setTestItem(mAutoTestEnable ? (mTestItem + 1) : -1);
@@ -181,6 +180,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 	@Override
 	protected JwaooBleToy createJwaooBleToy(BluetoothDevice device) {
+		mTestResult = new TestResult(getContentResolver(), device.getAddress());
+
 		return new JwaooBleToy(device) {
 
 			@Override
@@ -200,12 +201,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 			protected boolean onInitialize() {
 				if (!mBleToy.setFactoryModeEnable(true)) {
 					CavanAndroid.eLog("Failed to setFactoryModeEnable");
-					return false;
-				}
-
-				mTestResult = mBleToy.readTestResult();
-				if (mTestResult == null) {
-					CavanAndroid.eLog("Failed to readTestResult");
 					return false;
 				}
 
@@ -431,21 +426,20 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				return -1;
 			}
 
-			return mTestResult.getResult(mIndex);
+			return mTestResult.get(mIndex);
 		}
 
-		public boolean setTestResult(int result) {
+		public boolean setTestResult(boolean result) {
 			if (mTestResult == null) {
 				return false;
 			}
 
-			mTestResult.setResult(mIndex, result);
-
-			if (mBleToy == null) {
+			Uri uri = mTestResult.put(getContentResolver(), mIndex, result);
+			if (uri == null) {
 				return false;
 			}
 
-			return mBleToy.writeTestResult(mTestResult);
+			return true;
 		}
 
 		public Drawable getIcon() {

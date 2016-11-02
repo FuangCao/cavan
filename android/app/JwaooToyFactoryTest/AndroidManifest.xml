@@ -10,6 +10,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -27,6 +29,7 @@
             </intent-filter>
         </activity>
         <activity android:name="com.cavan.resource.CavanBleScanActivity"></activity>
+        <provider android:name="DatabaseProvider" android:authorities="com.cavan.jwaootoyfactorytest" android:exported="false"></provider>
     </application>
 
 </manifest>
