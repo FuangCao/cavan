@@ -31,7 +31,7 @@ public class CavanBleGatt {
 	public static final long COMMAND_TIMEOUT = 2000;
 
 	public static final long CONNECT_OVERTIME = 1000;
-	public static final long DISCOVER_OVERTIME = 1000;
+	public static final long DISCOVER_OVERTIME = 2000;
 	public static final long CONNECT_WAIT_TIME = 1000;
 	public static final long DISCONNECT_WAIT_TIME = 3000;
 
@@ -210,6 +210,11 @@ public class CavanBleGatt {
 	@Override
 	protected void finalize() throws Throwable {
 		disconnect();
+
+		if (mConnThread != null) {
+			mConnThread.quit();
+		}
+
 		super.finalize();
 	}
 
@@ -251,6 +256,8 @@ public class CavanBleGatt {
 	synchronized private boolean connectInternal() {
 		CavanAndroid.dLog("connectInternal");
 
+		mConnThread.updateConnState(CONNECT_OVERTIME);
+
 		if (mGatt == null) {
 			mGatt = mDevice.connectGatt(mContext, false, mCallback);
 			if (mGatt == null) {
@@ -262,14 +269,8 @@ public class CavanBleGatt {
 			return true;
 		} else {
 			mGatt.disconnect();
-
-			if (!mGatt.connect()) {
-				CavanAndroid.eLog("Failed to mGatt.connect");
-				return false;
-			}
+			return  mGatt.connect();
 		}
-
-		mConnThread.setConnState(STATE_GATT_DISCONNECTED, CONNECT_OVERTIME);
 
 		return true;
 	}
@@ -437,19 +438,12 @@ public class CavanBleGatt {
 			mHandler = new Handler(getLooper(), this);
 		}
 
-		synchronized private void updateConnState(long delay) {
+		private void updateConnState(long delay) {
 			mHandler.removeMessages(0);
-
-			if (delay > 0) {
-				mHandler.sendEmptyMessageDelayed(0, delay);
-			} else {
-				mHandler.sendEmptyMessage(0);
-			}
+			mHandler.sendEmptyMessageDelayed(0, delay);
 		}
 
-		synchronized public void setConnState(int state, long delay) {
-			CavanAndroid.eLog("setConnState: state = " + state + ", delay = " + delay);
-
+		public void setConnState(int state, long delay) {
 			mConnState = state;
 
 			if (state == STATE_SERVICE_CONNECTED) {
@@ -460,18 +454,20 @@ public class CavanBleGatt {
 			}
 		}
 
-		synchronized public int getConnState() {
+		public int getConnState() {
 			return mConnState;
 		}
 
-		synchronized private void setConnectFailed() {
+		private void setConnectFailed() {
 			mConnEnable = false;
 			disconnectInternal(false, true);
 			onConnectFailed();
 		}
 
 		@Override
-		synchronized public boolean handleMessage(Message msg) {
+		public boolean handleMessage(Message msg) {
+			CavanAndroid.dLog("handleMessage: mConnState = " + mConnState);
+
 			mHandler.removeMessages(0);
 
 			switch (mConnState) {

@@ -75,6 +75,8 @@ public class CavanBleScanActivity extends Activity {
 		}
 
 		mScanner.startScan(uuids, names);
+
+		CavanAndroid.showToast(this, R.string.text_scanning);
 	}
 
 	@Override

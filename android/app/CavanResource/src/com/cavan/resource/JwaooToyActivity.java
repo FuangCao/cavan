@@ -22,7 +22,7 @@ import com.jwaoo.android.JwaooBleToy;
 public class JwaooToyActivity extends Activity implements OnCancelListener, Callback {
 
 	public static final String[] DEVICE_NAMES = {
-		"JwaooToy", "SenseTube"
+		"JwaooToy", "SenseTube", "CavanTest"
 	};
 
 	private final int MSG_UPDATE_UI = 1;
