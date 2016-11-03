@@ -129,6 +129,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				CavanAndroid.dLog("code = " + code);
 
 				RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, type, code, true, shared);
+				notification.setPriority(1);
 				mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
 				break;
 
@@ -137,12 +138,14 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				String content = intent.getStringExtra("content");
 				String pkgName = intent.getStringExtra("package");
 				boolean hasPrefix = intent.getBooleanExtra("hasPrefix", false);
+				int priority = intent.getIntExtra("priority", 0);
 
 				if (pkgName == null) {
 					pkgName = getPackageName();
 				}
 
 				notification = new RedPacketNotification(RedPacketListenerService.this, pkgName, content, desc, hasPrefix);
+				notification.setPriority(priority);
 				mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
 				break;
 			}

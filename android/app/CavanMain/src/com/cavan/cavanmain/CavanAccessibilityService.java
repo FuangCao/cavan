@@ -51,6 +51,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private static final String[] PACKAGE_NAMES = {
 		CavanPackageName.ALIPAY,
 		CavanPackageName.QQ,
+		CavanPackageName.SOGOU_IME,
 		CavanPackageName.SOGOU_OCR,
 	};
 
@@ -86,7 +87,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				List<String> codes = mService.getCodes();
 				if (codes != null && codes.size() > 0) {
 					for (String code : codes) {
-						RedPacketCode node = RedPacketCode.getInstence(code, false, false);
+						RedPacketCode node = RedPacketCode.getInstence(code);
 						if (node != null) {
 							mCodes.add(node);
 						}
@@ -178,6 +179,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 						} else {
 							Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
 							intent.putExtra("desc", "图片识别");
+							intent.putExtra("priority", 1);
 							intent.putExtra("content", editText.getText().toString());
 							sendBroadcast(intent);
 						}
@@ -625,11 +627,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	private RedPacketCode getNextCode() {
 		RedPacketCode code = null;
-		long time = Long.MAX_VALUE;
 
 		for (RedPacketCode node : mCodes) {
-			if (node.getTime() < time) {
-				time = node.getTime();
+			if (node.compareTo(code) > 0) {
 				code = node;
 			}
 		}
@@ -804,6 +804,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			onWindowStateChangedMM(event);
 			break;
 
+		case CavanPackageName.SOGOU_IME:
 		case CavanPackageName.SOGOU_OCR:
 			onWindowStateChangedSogouOcr(event);
 			break;

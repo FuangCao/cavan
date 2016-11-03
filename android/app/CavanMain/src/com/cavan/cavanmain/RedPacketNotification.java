@@ -52,6 +52,7 @@ public class RedPacketNotification extends CavanNotification {
 	private boolean mNeedSave;
 	private RedPacketFinder mFinder = new RedPacketFinder();
 
+	private int mPriority;
 	private boolean mIsCode;
 	private boolean mNetShared;
 	private boolean mIsTimedCode;
@@ -97,6 +98,10 @@ public class RedPacketNotification extends CavanNotification {
 		mDescription = desc;
 		mService = service;
 		mFinder.split(mContent);
+	}
+
+	public void setPriority(int priority) {
+		mPriority = priority;
 	}
 
 	public void setNetShared() {
@@ -297,7 +302,7 @@ public class RedPacketNotification extends CavanNotification {
 		for (String code : codes) {
 			Notification notification = buildRedPacketNotifyAlipay(code);
 			if (notification != null) {
-				RedPacketCode node = RedPacketCode.getInstence(code, true, mTestOnly);
+				RedPacketCode node = RedPacketCode.getInstence(code, mPriority, true, mTestOnly);
 				node.setTime(time);
 
 				if (mNetShared) {

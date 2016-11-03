@@ -14,7 +14,7 @@ import android.content.Context;
 import android.content.Intent;
 
 @SuppressLint("SimpleDateFormat")
-public class RedPacketCode {
+public class RedPacketCode implements Comparable<RedPacketCode> {
 
 	private static int LAST_CODE_SIZE = 8;
 	private static long LAST_CODE_OVERTIME = 300000;
@@ -36,6 +36,7 @@ public class RedPacketCode {
 	private long mRepeatTime;
 
 	private String mCode;
+	private int mPriority;
 	private boolean mValid;
 	private boolean mInvalid;
 	private boolean mShared;
@@ -54,7 +55,7 @@ public class RedPacketCode {
 		return builder.toString();
 	}
 
-	public static RedPacketCode getInstence(String code, boolean create, boolean test) {
+	public static RedPacketCode getInstence(String code, int priority, boolean create, boolean test) {
 		synchronized (mCodeMap) {
 			Iterator<RedPacketCode> iterator = mCodeMap.values().iterator();
 			while (iterator.hasNext()) {
@@ -67,7 +68,7 @@ public class RedPacketCode {
 			RedPacketCode node = mCodeMap.get(code);
 			if (node == null) {
 				if (create) {
-					node = new RedPacketCode(code);
+					node = new RedPacketCode(code, priority);
 					mCodeMap.put(code, node);
 				} else {
 					return null;
@@ -88,13 +89,17 @@ public class RedPacketCode {
 		}
 	}
 
+	public static RedPacketCode getInstence(String code) {
+		return getInstence(code, 0, false, false);
+	}
+
 	public static RedPacketCode getInstence(Intent intent) {
 		String code = intent.getStringExtra("code");
 		if (code == null) {
 			return null;
 		}
 
-		return getInstence(code, false, false);
+		return getInstence(code, 0, false, false);
 	}
 
 	public static List<RedPacketCode> getLastCodes() {
@@ -117,9 +122,18 @@ public class RedPacketCode {
 		return count;
 	}
 
-	private RedPacketCode(String code) {
+	private RedPacketCode(String code, int priority) {
 		mCode = code;
+		mPriority = priority;
 		mTime = System.currentTimeMillis();
+	}
+
+	synchronized public int getPriority() {
+		return mPriority;
+	}
+
+	synchronized public int setPriority(int priority) {
+		return mPriority;
 	}
 
 	synchronized public long getTime() {
@@ -287,6 +301,10 @@ public class RedPacketCode {
 			return false;
 		}
 
+		if (mPriority > 0 && mCommitCount > 0) {
+			mPriority--;
+		}
+
 		setCommitCount(mCommitCount + 1);
 		mMaybeInvalid = true;
 		mPostCount++;
@@ -320,6 +338,10 @@ public class RedPacketCode {
 	public String toString() {
 		StringBuilder builder = new StringBuilder(mCode);
 
+		if (mPriority > 0) {
+			builder.append(", Priority = " + mPriority);
+		}
+
 		if (mTime > 0) {
 			builder.append(", ");
 			builder.append(sDateFormat.format(new Date(mTime)));
@@ -343,5 +365,18 @@ public class RedPacketCode {
 		}
 
 		return builder.toString();
+	}
+
+	@Override
+	public int compareTo(RedPacketCode another) {
+		if (another == null) {
+			return 1;
+		}
+
+		if (mPriority != another.getPriority()) {
+			return mPriority - another.getPriority();
+		}
+
+		return (int) (another.getTime() - mTime);
 	}
 }

@@ -227,7 +227,7 @@ public class FloatMessageService extends FloatWidowService {
 			unlockScreen();
 
 			if (code != null) {
-				RedPacketCode node = RedPacketCode.getInstence(code, false, false);
+				RedPacketCode node = RedPacketCode.getInstence(code);
 				if (node != null) {
 					if (node.isTestOnly()) {
 						sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_TEST, code);
@@ -417,7 +417,7 @@ public class FloatMessageService extends FloatWidowService {
 				command = getResources().getString(R.string.text_network_test_success, type);
 				mHandler.obtainMessage(MSG_SHOW_TOAST, command).sendToTarget();
 			} else {
-				RedPacketCode node = RedPacketCode.getInstence(code, false, false);
+				RedPacketCode node = RedPacketCode.getInstence(code);
 				if (node == null || node.isRepeatable()) {
 					Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
 					intent.putExtra("type", type);
