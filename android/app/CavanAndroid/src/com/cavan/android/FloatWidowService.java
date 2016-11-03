@@ -303,7 +303,7 @@ public abstract class FloatWidowService extends Service {
 		LayoutParams params = new LayoutParams();
 
 		params.x = params.y = 0;
-		params.type = LayoutParams.TYPE_PHONE;
+		params.type = LayoutParams.TYPE_TOAST;
 		params.format = PixelFormat.RGBA_8888;
 		params.gravity = Gravity.RIGHT | Gravity.TOP;
 		params.width = WindowManager.LayoutParams.WRAP_CONTENT;
