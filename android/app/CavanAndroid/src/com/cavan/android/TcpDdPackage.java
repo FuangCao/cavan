@@ -45,27 +45,27 @@ public class TcpDdPackage {
 
 	protected byte[] encode(CavanByteCache cache) {
 		if (!cache.writeValue32(TcpDdClient.TCP_DD_VERSION)) {
-			CavanAndroid.eLog("Failed to writeValue32(TCP_DD_VERSION)");
+			CavanAndroid.dLog("Failed to writeValue32(TCP_DD_VERSION)");
 			return null;
 		}
 
 		if (!cache.writeValue16(mType)) {
-			CavanAndroid.eLog("Failed to writeValue16(mType)");
+			CavanAndroid.dLog("Failed to writeValue16(mType)");
 			return null;
 		}
 
 		if (!cache.writeValue16((short) ~mType)) {
-			CavanAndroid.eLog("Failed to writeValue16(mType)");
+			CavanAndroid.dLog("Failed to writeValue16(mType)");
 			return null;
 		}
 
 		if (!cache.writeValue32(mFlags)) {
-			CavanAndroid.eLog("Failed to writeValue32(mFlags)");
+			CavanAndroid.dLog("Failed to writeValue32(mFlags)");
 			return null;
 		}
 
 		if (!encodeBody(cache)) {
-			CavanAndroid.eLog("Failed to encodeBody");
+			CavanAndroid.dLog("Failed to encodeBody");
 			return null;
 		}
 
@@ -88,7 +88,7 @@ public class TcpDdPackage {
 	protected boolean decode(CavanByteCache cache) {
 		int version = cache.readValue32();
 		if (version != TcpDdClient.TCP_DD_VERSION) {
-			CavanAndroid.eLog(String.format("Invalid version: 0x%08x", version));
+			CavanAndroid.dLog(String.format("Invalid version: 0x%08x", version));
 			return false;
 		}
 
@@ -96,7 +96,7 @@ public class TcpDdPackage {
 		short type_inverse = cache.readValue16();
 
 		if ((mType ^ type_inverse) != 0xFFFF) {
-			CavanAndroid.eLog(String.format("Invalid type = %d, type_inversion = %d", mType, type_inverse));
+			CavanAndroid.dLog(String.format("Invalid type = %d, type_inversion = %d", mType, type_inverse));
 			return false;
 		}
 

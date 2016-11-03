@@ -109,7 +109,7 @@ public class CavanMessageActivity extends Activity {
 
 		Uri uri = getIntent().getData();
 		if (uri != null) {
-			CavanAndroid.eLog("uri = " + uri);
+			CavanAndroid.dLog("uri = " + uri);
 
 			try {
 				List<String> paths = uri.getPathSegments();

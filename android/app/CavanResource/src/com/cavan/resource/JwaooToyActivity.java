@@ -56,7 +56,7 @@ public class JwaooToyActivity extends Activity implements OnCancelListener, Call
 	}
 
 	protected void onConnectionStateChange(boolean connected) {
-		CavanAndroid.eLog("onConnectionStateChange: connected = " + connected);
+		CavanAndroid.dLog("onConnectionStateChange: connected = " + connected);
 		updateUI(connected);
 	}
 
@@ -69,7 +69,7 @@ public class JwaooToyActivity extends Activity implements OnCancelListener, Call
 			@Override
 			protected boolean onInitialize() {
 				if (!JwaooToyActivity.this.onInitialize()) {
-					CavanAndroid.eLog("Failed to JwaooToyActivity.this.onInitialize");
+					CavanAndroid.dLog("Failed to JwaooToyActivity.this.onInitialize");
 					return false;
 				}
 
@@ -78,7 +78,7 @@ public class JwaooToyActivity extends Activity implements OnCancelListener, Call
 
 			@Override
 			protected void onConnectionStateChange(boolean connected) {
-				CavanAndroid.eLog("JwaooBleToy.onConnectionStateChange: connected = " + connected);
+				CavanAndroid.dLog("JwaooBleToy.onConnectionStateChange: connected = " + connected);
 				showProgressDialog(!connected);
 				JwaooToyActivity.this.onConnectionStateChange(connected);
 			}
@@ -117,7 +117,7 @@ public class JwaooToyActivity extends Activity implements OnCancelListener, Call
 
 	synchronized public void showProgressDialog(boolean show) {
 		if (CavanAndroid.isMainThread()) {
-			CavanAndroid.eLog("showProgressDialog: " + show);
+			CavanAndroid.dLog("showProgressDialog: " + show);
 
 			if (show) {
 				if (mProgressDialog == null) {
@@ -151,7 +151,7 @@ public class JwaooToyActivity extends Activity implements OnCancelListener, Call
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		CavanAndroid.eLog("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
+		CavanAndroid.dLog("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
 		if (resultCode == RESULT_OK && data != null) {
 			BluetoothDevice device = data.getParcelableExtra("device");
 			if (device == null) {

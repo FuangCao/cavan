@@ -52,7 +52,7 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 
 		@Override
 		public void onDeviceAttributesChanged() {
-			CavanAndroid.eLog("onDeviceAttributesChanged");
+			CavanAndroid.dLog("onDeviceAttributesChanged");
 
 			String name = mDevice.getDevice().getName();
 			String address = mDevice.getDevice().getAddress();
@@ -159,14 +159,14 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 
 		@Override
 		public void onClick(View v) {
-			CavanAndroid.eLog("onClick: view = " + v);
+			CavanAndroid.dLog("onClick: view = " + v);
 
 			((DeviceView) v).onClick();
 		}
 
 		@Override
 		public boolean onLongClick(View v) {
-			CavanAndroid.eLog("onLongClick: view = " + v);
+			CavanAndroid.dLog("onLongClick: view = " + v);
 
 			return ((DeviceView) v).onLongClick();
 		}
@@ -223,37 +223,37 @@ public class MainActivity extends Activity implements BluetoothCallback, OnClick
 
 	@Override
 	public void onBluetoothStateChanged(int state) {
-		CavanAndroid.eLog("onBluetoothStateChanged: state = " + state);
+		CavanAndroid.dLog("onBluetoothStateChanged: state = " + state);
 		updateContent(state);
 	}
 
 	@Override
 	public void onDeviceAdded(CachedBluetoothDevice device) {
-		CavanAndroid.eLog("onDeviceAdded: device = " + device);
+		CavanAndroid.dLog("onDeviceAdded: device = " + device);
 		updateContent(-1);
 	}
 
 	@Override
 	public void onDeviceBondStateChanged(CachedBluetoothDevice device, int state) {
-		CavanAndroid.eLog("onDeviceBondStateChanged: device = " + device + ", state = " + state);
+		CavanAndroid.dLog("onDeviceBondStateChanged: device = " + device + ", state = " + state);
 		updateContent(-1);
 
 	}
 
 	@Override
 	public void onDeviceDeleted(CachedBluetoothDevice device) {
-		CavanAndroid.eLog("onDeviceDeleted: device = " + device);
+		CavanAndroid.dLog("onDeviceDeleted: device = " + device);
 		updateContent(-1);
 	}
 
 	@Override
 	public void onScanningStateChanged(boolean state) {
-		CavanAndroid.eLog("onScanningStateChanged: state = " + state);
+		CavanAndroid.dLog("onScanningStateChanged: state = " + state);
 	}
 
 	@Override
 	public void onClick(View v) {
-		CavanAndroid.eLog("onClick: view = " + v);
+		CavanAndroid.dLog("onClick: view = " + v);
 		startScan();
 	}
 }

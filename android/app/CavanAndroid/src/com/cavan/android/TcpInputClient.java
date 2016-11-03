@@ -24,18 +24,18 @@ public abstract class TcpInputClient extends TcpDdClient {
 	public boolean sendRequest() {
 		TcpDdPackage req = new TcpDdPackage(mType);
 		if (!sendPackage(req)) {
-			eLog("Failed to sendPackage " + mType);
+			dLog("Failed to sendPackage " + mType);
 			return false;
 		}
 
 		TcpDdResponse response = new TcpDdResponse();
 		if (!recvPackage(response)) {
-			eLog("Failed to recvPackage TcpDdResponse");
+			dLog("Failed to recvPackage TcpDdResponse");
 			return false;
 		}
 
 		if (response.getCode() < 0) {
-			eLog("Invalid code = " + response.getCode());
+			dLog("Invalid code = " + response.getCode());
 			return false;
 		}
 

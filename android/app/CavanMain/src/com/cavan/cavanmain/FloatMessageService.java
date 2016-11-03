@@ -155,7 +155,7 @@ public class FloatMessageService extends FloatWidowService {
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 
-			CavanAndroid.eLog("action = " + action);
+			CavanAndroid.dLog("action = " + action);
 
 			switch (action) {
 			case Intent.ACTION_SCREEN_OFF:
@@ -403,7 +403,7 @@ public class FloatMessageService extends FloatWidowService {
 	}
 
 	private void onNetworkCommandReceived(String type, String command) {
-		CavanAndroid.eLog("receive = " + command);
+		CavanAndroid.dLog("receive = " + command);
 
 		if (command.equals(NET_CMD_TEST)) {
 			command = getResources().getString(R.string.text_network_test_success, type);
@@ -411,7 +411,7 @@ public class FloatMessageService extends FloatWidowService {
 		} else if (command.startsWith(NET_CMD_RDPKG)) {
 			String code = CavanString.deleteSpace(command.substring(NET_CMD_RDPKG.length()));
 
-			CavanAndroid.eLog("code = " + code);
+			CavanAndroid.dLog("code = " + code);
 
 			if (code.equals(NET_CMD_TEST)) {
 				command = getResources().getString(R.string.text_network_test_success, type);
@@ -631,7 +631,7 @@ public class FloatMessageService extends FloatWidowService {
 					String command = (String) msg.obj;
 
 					if (mTcpDaemon.sendCommand(command)) {
-						CavanAndroid.eLog("tcp success send: " + command);
+						CavanAndroid.dLog("tcp success send: " + command);
 					}
 				}
 
@@ -649,7 +649,7 @@ public class FloatMessageService extends FloatWidowService {
 					DatagramPacket pack = new DatagramPacket(bytes, bytes.length, InetAddress.getByName(UDP_ADDR), UDP_PORT);
 
 					mUdpSocket.send(pack);
-					CavanAndroid.eLog("udp success send: " + command);
+					CavanAndroid.dLog("udp success send: " + command);
 				} catch (Exception e) {
 					e.printStackTrace();
 
@@ -717,7 +717,7 @@ public class FloatMessageService extends FloatWidowService {
 					continue;
 				}
 
-				CavanAndroid.eLog("UdpServiceThread running");
+				CavanAndroid.dLog("UdpServiceThread running");
 
 				byte[] bytes = new byte[128];
 				DatagramPacket pack = new DatagramPacket(bytes, bytes.length);
@@ -736,7 +736,7 @@ public class FloatMessageService extends FloatWidowService {
 					}
 				}
 
-				CavanAndroid.eLog("UdpServiceThread stopping");
+				CavanAndroid.dLog("UdpServiceThread stopping");
 			}
 
 			mUdpDaemon = null;
@@ -873,7 +873,7 @@ public class FloatMessageService extends FloatWidowService {
 					synchronized (this) {
 						try {
 							mConnDelay = mConnDelay * 2 + 500;
-							CavanAndroid.eLog("mConnDelay = " + mConnDelay);
+							CavanAndroid.dLog("mConnDelay = " + mConnDelay);
 							wait(mConnDelay);
 						} catch (InterruptedException e1) {
 							e1.printStackTrace();

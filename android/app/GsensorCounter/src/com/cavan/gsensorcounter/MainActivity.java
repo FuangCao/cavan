@@ -30,7 +30,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 			String text = String.format("freq = %2.2f, count = %d", mFreq, mCount);
 
 			setTitle(text);
-			CavanAndroid.eLog(text);
+			CavanAndroid.dLog(text);
 		}
 	};
 
@@ -70,7 +70,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
 	@Override
 	public void onAccuracyChanged(Sensor sensor, int arg1) {
-		CavanAndroid.eLog("onAccuracyChanged: sensor = " + sensor);
+		CavanAndroid.dLog("onAccuracyChanged: sensor = " + sensor);
 	}
 
 	@Override
@@ -91,7 +91,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
 		long count = mCounter.getCount();
 		if (count != mCount) {
-			CavanAndroid.eLog("range = " + counter.getValueRange());
+			CavanAndroid.dLog("range = " + counter.getValueRange());
 			mCount = count;
 			mFreq = counter.getFreq();
 			runOnUiThread(mRunnableUpdateTitle);

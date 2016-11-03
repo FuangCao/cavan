@@ -148,7 +148,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 	public static void setAutoOpenAppEnable(boolean enable) {
 		mAutoOpenAppEnable = enable;
-		CavanAndroid.eLog("mAutoOpenAppEnable = " + enable);
+		CavanAndroid.dLog("mAutoOpenAppEnable = " + enable);
 	}
 
 	public static boolean isAutoOpenAppEnabled(Context context) {
@@ -229,7 +229,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 
-			CavanAndroid.eLog("action = " + action);
+			CavanAndroid.dLog("action = " + action);
 
 			switch (action) {
 			case ACTION_WAN_UPDATED:
@@ -360,7 +360,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 		mFileBin = getDir("bin", 0777);
 		if (mFileBin == null) {
-			CavanAndroid.eLog("Failed to getDir bin");
+			CavanAndroid.dLog("Failed to getDir bin");
 		} else {
 			CavanJni.appendPathEnv(mFileBin.getPath());
 
@@ -546,7 +546,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			String text = (String) object;
 			if (text != null) {
 				for (String line : text.split("\n")) {
-					String code = line.replaceAll("\\W+", CavanString.EMPTY_STRING);
+					String code = RedPacketCode.filtration(line);
 
 					if (code.length() > 0) {
 						Intent intent = new Intent(ACTION_CODE_RECEIVED);

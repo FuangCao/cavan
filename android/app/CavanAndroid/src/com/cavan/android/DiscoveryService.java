@@ -50,7 +50,7 @@ public abstract class DiscoveryService extends Service {
 	};
 
 	synchronized public void addScanResult(ScanResult result) {
-		CavanAndroid.eLog("result = " + result);
+		CavanAndroid.dLog("result = " + result);
 
 		mScanResults.add(result);
 

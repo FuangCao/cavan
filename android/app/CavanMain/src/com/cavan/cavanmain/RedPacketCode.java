@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -20,6 +22,7 @@ public class RedPacketCode {
 	private static long REPEAT_TIME_ALIGN = 60000;
 	private static long TIME_MISTAKE = 10000;
 
+	private static final Pattern sRedPacketCodePattern = Pattern.compile("[\\w￥]+");
 	private static final SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	private static HashMap<String, RedPacketCode> mCodeMap = new HashMap<String, RedPacketCode>();
@@ -40,6 +43,16 @@ public class RedPacketCode {
 	private boolean mCompleted;
 	private boolean mRepeatable;
 	private boolean mMaybeInvalid;
+
+	public static String filtration(String text) {
+		StringBuilder builder = new StringBuilder();
+		Matcher matcher = sRedPacketCodePattern.matcher(text);
+		while (matcher.find()) {
+			builder.append(matcher.group());
+		}
+
+		return builder.toString();
+	}
 
 	public static RedPacketCode getInstence(String code, boolean create, boolean test) {
 		synchronized (mCodeMap) {

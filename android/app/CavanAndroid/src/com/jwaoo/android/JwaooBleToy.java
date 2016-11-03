@@ -151,27 +151,27 @@ public class JwaooBleToy extends CavanBleGatt {
 	};
 
 	protected void onBatteryStateChanged(int state, int level, double voltage) {
-		CavanAndroid.eLog("state = " + state + ", level = " + level + ", voltage = " + voltage);
+		CavanAndroid.dLog("state = " + state + ", level = " + level + ", voltage = " + voltage);
 	}
 
 	protected void onKeyStateChanged(int code, int state) {
-		CavanAndroid.eLog("onKeyStateChanged: code = " + code + ", state = " + state);
+		CavanAndroid.dLog("onKeyStateChanged: code = " + code + ", state = " + state);
 	}
 
 	protected void onKeyClicked(int code, int count) {
-		CavanAndroid.eLog("onKeyClicked: code = " + code + ", count = " + count);
+		CavanAndroid.dLog("onKeyClicked: code = " + code + ", count = " + count);
 	}
 
 	protected void onKeyLongClicked(int code) {
-		CavanAndroid.eLog("onKeyLongClicked: code = " + code);
+		CavanAndroid.dLog("onKeyLongClicked: code = " + code);
 	}
 
 	protected void onMotoStateChanged(int mode, int level) {
-		CavanAndroid.eLog("onMotoStateChanged: mode = " + mode + ", level = " + level);
+		CavanAndroid.dLog("onMotoStateChanged: mode = " + mode + ", level = " + level);
 	}
 
 	protected void onUpgradeComplete(boolean success) {
-		CavanAndroid.eLog("onUpgradeComplete: success = " + success);
+		CavanAndroid.dLog("onUpgradeComplete: success = " + success);
 	}
 
 	protected void onEventReceived(byte[] event) {
@@ -235,7 +235,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	}
 
 	protected void onDebugDataReceived(byte[] data) {
-		CavanAndroid.eLog("Debug: " + new String(data));
+		CavanAndroid.dLog("Debug: " + new String(data));
 	}
 
 	public JwaooBleToy(BluetoothDevice device, UUID uuid) {
@@ -391,13 +391,13 @@ public class JwaooBleToy extends CavanBleGatt {
 			return false;
 		}
 
-		CavanAndroid.eLog("Firmware size = " + bytes.length);
+		CavanAndroid.dLog("Firmware size = " + bytes.length);
 
-		CavanAndroid.eLog("Flash id = " + Integer.toHexString(getFlashId()));
-		CavanAndroid.eLog("Flash size = " + getFlashSize());
-		CavanAndroid.eLog("Flash page size = " + getFlashPageSize());
+		CavanAndroid.dLog("Flash id = " + Integer.toHexString(getFlashId()));
+		CavanAndroid.dLog("Flash size = " + getFlashSize());
+		CavanAndroid.dLog("Flash page size = " + getFlashPageSize());
 
-		CavanAndroid.eLog("setFlashWriteEnable");
+		CavanAndroid.dLog("setFlashWriteEnable");
 
 		listener.addProgress();
 
@@ -408,7 +408,7 @@ public class JwaooBleToy extends CavanBleGatt {
 
 		listener.addProgress();
 
-		CavanAndroid.eLog("startFlashWrite");
+		CavanAndroid.dLog("startFlashWrite");
 
 		if (!startFlashWrite()) {
 			CavanAndroid.eLog("Failed to startFlashWrite");
@@ -417,7 +417,7 @@ public class JwaooBleToy extends CavanBleGatt {
 
 		listener.addProgress();
 
-		CavanAndroid.eLog("eraseFlash");
+		CavanAndroid.dLog("eraseFlash");
 
 		if (!eraseFlash()) {
 			CavanAndroid.eLog("Failed to eraseFlash");
@@ -428,7 +428,7 @@ public class JwaooBleToy extends CavanBleGatt {
 
 		mFlashCrc = (byte) 0xFF;
 
-		CavanAndroid.eLog("writeFlashHeader");
+		CavanAndroid.dLog("writeFlashHeader");
 
 		if (!writeFlashHeader(bytes.length)) {
 			CavanAndroid.eLog("Failed to writeFlashHeader");
@@ -437,14 +437,14 @@ public class JwaooBleToy extends CavanBleGatt {
 
 		listener.addProgress();
 
-		CavanAndroid.eLog("writeFlash body");
+		CavanAndroid.dLog("writeFlash body");
 
 		if (!writeFlash(bytes, listener)) {
 			CavanAndroid.eLog("Failed to writeFlash body");
 			return false;
 		}
 
-		CavanAndroid.eLog("finishWriteFlash");
+		CavanAndroid.dLog("finishWriteFlash");
 
 		if (!finishWriteFlash(bytes.length + 8)) {
 			CavanAndroid.eLog("Failed to finishWriteFlash");
@@ -452,7 +452,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		for (int i = 0; i < 10; i++) {
-			CavanAndroid.eLog("wait upgrade complete" + i);
+			CavanAndroid.dLog("wait upgrade complete" + i);
 
 			if (setFlashWriteEnable(false)) {
 				listener.setProgressMax(100);
@@ -756,7 +756,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			return false;
 		}
 
-		CavanAndroid.eLog("identify = " + identify);
+		CavanAndroid.dLog("identify = " + identify);
 
 		if (identify.equals(DEVICE_NAME_COMMON) || identify.equals(DEVICE_NAME_K100)) {
 			mSensor = new JwaooToySensorK100();
@@ -785,25 +785,44 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public static class JwaooToyAppSettings {
 
+		public static final int RESPONSE_LENGTH = 12;
+
 		private int mSuspendDelay;
 		private int mShutdownVoltage;
-		private int mBtLedOpenTime;
 		private int mBtLedCloseTime;
+		private int mBtLedOpenTime;
+		private int mMotoRandMax;
+		private int mMotoRandDelay;
+		private int mMotoSpeedMin;
 
-		public JwaooToyAppSettings(byte[] response) {
+		private static JwaooToyAppSettings getInstance(byte[] response) {
+			if (response.length != RESPONSE_LENGTH) {
+				return null;
+			}
+
+			return new JwaooToyAppSettings(response);
+		}
+
+		private JwaooToyAppSettings(byte[] response) {
 			mSuspendDelay = CavanJava.buildValue16(response, 2);
 			mShutdownVoltage = CavanJava.buildValue16(response, 4);
-			mBtLedOpenTime = CavanJava.buildValue16(response, 6);
-			mBtLedCloseTime = CavanJava.buildValue16(response, 8);
+			mBtLedCloseTime = CavanJava.buildValue16(response, 6);
+			mBtLedOpenTime = response[8];
+			mMotoRandDelay = response[9];
+			mMotoRandMax = response[10];
+			mMotoSpeedMin = response[11];
 		}
 
 		public byte[] buildCommand() {
-			CavanByteCache cache = new CavanByteCache(9);
+			CavanByteCache cache = new CavanByteCache(RESPONSE_LENGTH - 1);
 			cache.writeValue8(JWAOO_TOY_CMD_APP_SETTINGS);
 			cache.writeValue16((short) mSuspendDelay);
 			cache.writeValue16((short) mShutdownVoltage);
-			cache.writeValue16((short) mBtLedOpenTime);
 			cache.writeValue16((short) mBtLedCloseTime);
+			cache.writeValue8((byte) mBtLedOpenTime);
+			cache.writeValue8((byte) mMotoRandDelay);
+			cache.writeValue8((byte) mMotoRandMax);
+			cache.writeValue8((byte) mMotoSpeedMin);
 			return cache.getBytes();
 		}
 
@@ -842,6 +861,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		@Override
 		public String toString() {
 			StringBuilder builder = new StringBuilder();
+
 			builder.append("suspend_delay: ");
 			builder.append(mSuspendDelay);
 			builder.append(", shutdown_voltage: ");
@@ -850,6 +870,13 @@ public class JwaooBleToy extends CavanBleGatt {
 			builder.append(mBtLedOpenTime);
 			builder.append(", bt_led_close_time: ");
 			builder.append(mBtLedCloseTime);
+			builder.append(", moto_rand_delay: ");
+			builder.append(mMotoRandDelay);
+			builder.append(", moto_rand_max: ");
+			builder.append(mMotoRandMax);
+			builder.append(", moto_speed_min: ");
+			builder.append(mMotoSpeedMin);
+
 			return builder.toString();
 		}
 	}
@@ -1033,11 +1060,11 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		public JwaooToyAppSettings getAppSettings() {
-			if (getType() != JWAOO_TOY_RSP_DATA || length() != 10) {
+			if (getType() != JWAOO_TOY_RSP_DATA) {
 				return null;
 			}
 
-			return new JwaooToyAppSettings(mBytes);
+			return JwaooToyAppSettings.getInstance(mBytes);
 		}
 
 		public static boolean getBool(JwaooToyResponse response) {
@@ -1107,7 +1134,7 @@ public class JwaooBleToy extends CavanBleGatt {
 				}
 
 				if (response[0] == command[0]) {
-					CavanAndroid.eLog("response: command = " + response[0] + ", type = " + response[1] + ", length = " + response.length);
+					CavanAndroid.dLog("response: command = " + response[0] + ", type = " + response[1] + ", length = " + response.length);
 					return new JwaooToyResponse(response);
 				}
 
@@ -1466,7 +1493,7 @@ public class JwaooBleToy extends CavanBleGatt {
 
 			value |= (valueOld & (~mask));
 
-			CavanAndroid.eLog(String.format("updateBits8: addr = 0x%02x, value: 0x%02x => 0x%02x", addr, valueOld, value));
+			CavanAndroid.dLog(String.format("updateBits8: addr = 0x%02x, value: 0x%02x => 0x%02x", addr, valueOld, value));
 
 			if (value == valueOld) {
 				return true;
@@ -1480,7 +1507,7 @@ public class JwaooBleToy extends CavanBleGatt {
 
 			value |= (valueOld & (~mask));
 
-			CavanAndroid.eLog(String.format("updateBits16: addr = 0x%02x, value: 0x%04x => 0x%04x", addr, valueOld, value));
+			CavanAndroid.dLog(String.format("updateBits16: addr = 0x%02x, value: 0x%04x => 0x%04x", addr, valueOld, value));
 
 			if (value == valueOld) {
 				return true;
@@ -1494,7 +1521,7 @@ public class JwaooBleToy extends CavanBleGatt {
 
 			value |= (valueOld & (~mask));
 
-			CavanAndroid.eLog(String.format("updateBits32: addr = 0x%02x, value: 0x%08x => 0x%08x", addr, valueOld, value));
+			CavanAndroid.dLog(String.format("updateBits32: addr = 0x%02x, value: 0x%08x => 0x%08x", addr, valueOld, value));
 
 			if (value == valueOld) {
 				return true;
@@ -1508,7 +1535,7 @@ public class JwaooBleToy extends CavanBleGatt {
 
 			value |= (valueOld & (~mask));
 
-			CavanAndroid.eLog(String.format("updateBitsBe16: addr = 0x%02x, value: 0x%04x => 0x%04x", addr, valueOld, value));
+			CavanAndroid.dLog(String.format("updateBitsBe16: addr = 0x%02x, value: 0x%04x => 0x%04x", addr, valueOld, value));
 
 			if (value == valueOld) {
 				return true;
@@ -1522,7 +1549,7 @@ public class JwaooBleToy extends CavanBleGatt {
 
 			value |= (valueOld & (~mask));
 
-			CavanAndroid.eLog(String.format("updateBits32: addr = 0x%02x, value: 0x%08x => 0x%08x", addr, valueOld, value));
+			CavanAndroid.dLog(String.format("updateBits32: addr = 0x%02x, value: 0x%08x => 0x%08x", addr, valueOld, value));
 
 			if (value == valueOld) {
 				return true;
@@ -1536,7 +1563,7 @@ public class JwaooBleToy extends CavanBleGatt {
 
 			value |= (valueOld & (~mask));
 
-			CavanAndroid.eLog(String.format("updateRegister: addr = 0x%02x, value: 0x%08x => 0x%08x", addr, valueOld, value));
+			CavanAndroid.dLog(String.format("updateRegister: addr = 0x%02x, value: 0x%08x => 0x%08x", addr, valueOld, value));
 
 			if (value == valueOld) {
 				return true;
@@ -1605,7 +1632,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		public boolean doInitialize() {
 			int id = readChipId();
 
-			CavanAndroid.eLog(String.format("MPU6050: Chip ID = 0x%02x", id));
+			CavanAndroid.dLog(String.format("MPU6050: Chip ID = 0x%02x", id));
 
 			if (id != 0x68) {
 				CavanAndroid.eLog("Invalid chip id");
@@ -1658,7 +1685,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		public boolean doInitialize() {
 			int id = readChipId();
 
-			CavanAndroid.eLog(String.format("BMI160: Chip ID = 0x%02x", id));
+			CavanAndroid.dLog(String.format("BMI160: Chip ID = 0x%02x", id));
 
 			if (id != 0xd3) {
 				CavanAndroid.eLog("Invalid chip id");
@@ -1722,7 +1749,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			int id;
 
 			id = readDeviceId();
-			CavanAndroid.eLog(String.format("FDC1004: Device ID = 0x%04x", id));
+			CavanAndroid.dLog(String.format("FDC1004: Device ID = 0x%04x", id));
 
 			if (id != 0x1004) {
 				CavanAndroid.eLog("Invalid device id");
@@ -1730,7 +1757,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			}
 
 			id = readManufacturerId();
-			CavanAndroid.eLog(String.format("FDC1004: Manufacturer ID = 0x%04x", id));
+			CavanAndroid.dLog(String.format("FDC1004: Manufacturer ID = 0x%04x", id));
 
 			if (id != 0x5449) {
 				CavanAndroid.eLog("Invalid manufacturer id");
@@ -1753,7 +1780,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		public boolean setOffset(int offset) {
-			CavanAndroid.eLog("setOffset = " + offset);
+			CavanAndroid.dLog("setOffset = " + offset);
 
 			int value = (offset & 0x1F) << 11;
 
@@ -1767,7 +1794,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		public boolean setGain(int gain) {
-			CavanAndroid.eLog("setGain = " + gain);
+			CavanAndroid.dLog("setGain = " + gain);
 
 			int value = (gain & 0x03) << 14;
 
@@ -1781,7 +1808,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		public boolean setCapacityDac(int offset) {
-			CavanAndroid.eLog("setCapacityDac = " + offset);
+			CavanAndroid.dLog("setCapacityDac = " + offset);
 
 			for (int i = 0; i < 4; i++) {
 				int value = i << 13 | 4 << 10 | offset;

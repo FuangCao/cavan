@@ -18,11 +18,11 @@ public abstract class CavanService extends Service {
 
 		@Override
 		public void run() {
-			CavanAndroid.eLog("Enter: service " + getServiceName());
+			CavanAndroid.dLog("Enter: service " + getServiceName());
 			setState(true);
 			mainServiceLoop(mPort);
 			setState(false);
-			CavanAndroid.eLog("Exit: service " + getServiceName());
+			CavanAndroid.dLog("Exit: service " + getServiceName());
 		}
 	}
 

@@ -101,6 +101,7 @@ public class RedPacketFinder {
 
 	public static final Pattern[] sExcludePatterns = {
 		Pattern.compile("[a-z]+://\\S+", Pattern.CASE_INSENSITIVE),
+		Pattern.compile("=\\d+"),
 	};
 
 	public static final String[] sExcludeWords = {

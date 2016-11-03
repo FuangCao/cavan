@@ -70,7 +70,7 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 		CavanHexFile file = new CavanHexFile("/data/local/tmp/dialog.hex");
 		byte[] bytes = file.parse();
 		if (bytes == null) {
-			CavanAndroid.eLog("Failed to parse hex file");
+			CavanAndroid.dLog("Failed to parse hex file");
 			return false;
 		}
 
@@ -114,7 +114,7 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		CavanAndroid.eLog("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
+		CavanAndroid.dLog("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
 		if (requestCode == BLE_SCAN_RESULT && resultCode == RESULT_OK && data != null) {
 			BluetoothDevice device = data.getParcelableExtra("device");
 			if (device == null) {
@@ -142,7 +142,7 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 					@Override
 					public void onDataReceived(byte[] data) {
 						String text = new String(data);
-						CavanAndroid.eLog("onDataReceived: " + text);
+						CavanAndroid.dLog("onDataReceived: " + text);
 						mHandler.obtainMessage(EVENT_DATA_RECEIVED, text).sendToTarget();
 					}
 				});

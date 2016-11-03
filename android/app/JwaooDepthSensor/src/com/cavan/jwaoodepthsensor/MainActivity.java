@@ -127,7 +127,7 @@ public class MainActivity extends JwaooToyActivity {
 				super.onSensorDataReceived(arg0);
 
 				double capacitys[] = mSensor.getCapacitys();
-				CavanAndroid.eLog("capacity: " + mSensor.getCapacityText());
+				CavanAndroid.dLog("capacity: " + mSensor.getCapacityText());
 
 				mParser.putCapacityValue(capacitys);
 				JwaooDepthSquareWaveGenerator[] generators = mParser.getGenerators();

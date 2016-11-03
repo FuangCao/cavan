@@ -111,7 +111,7 @@ public class CavanNotification {
 			mTitle = title.toString();
 		}
 
-		CavanAndroid.eLog("[" + mTitle + "@" + mPackageName + "] ================================================================================");
+		CavanAndroid.dLog("[" + mTitle + "@" + mPackageName + "] ================================================================================");
 
 		CharSequence text = notification.tickerText;
 		if (text == null) {
@@ -121,7 +121,7 @@ public class CavanNotification {
 		if (text != null) {
 			String content = text.toString();
 
-			CavanAndroid.eLog(content);
+			CavanAndroid.dLog(content);
 
 			if (CavanPackageName.QQ.equals(mPackageName)) {
 				String[] contents = content.split(":", 2);

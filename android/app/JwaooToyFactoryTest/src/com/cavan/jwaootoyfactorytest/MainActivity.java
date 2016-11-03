@@ -186,21 +186,21 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 			@Override
 			protected void onConnectionStateChange(boolean connected) {
-				CavanAndroid.eLog("onConnectionStateChange: connected = " + connected);
+				CavanAndroid.dLog("onConnectionStateChange: connected = " + connected);
 				updateUI(connected);
 				showProgressDialog(!connected);
 			}
 
 			@Override
 			protected void onConnectFailed() {
-				CavanAndroid.eLog("onAutoConnectFailed");
+				CavanAndroid.dLog("onAutoConnectFailed");
 				showScanActivity();
 			}
 
 			@Override
 			protected boolean onInitialize() {
 				if (!mBleToy.setFactoryModeEnable(true)) {
-					CavanAndroid.eLog("Failed to setFactoryModeEnable");
+					CavanAndroid.dLog("Failed to setFactoryModeEnable");
 					return false;
 				}
 
@@ -507,7 +507,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				int code = msg.arg1;
 				int value = msg.arg2;
 
-				CavanAndroid.eLog("code = " + code + ", value = " + value);
+				CavanAndroid.dLog("code = " + code + ", value = " + value);
 
 				if (code >= 0 && code < mButtons.length) {
 					mButtons[code].setPressState(value > 0);

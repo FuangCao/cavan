@@ -62,12 +62,12 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 
 	public void setAutoSelect(long delay) {
 		mAutoSelectDelay = delay;
-		CavanAndroid.eLog("mAutoSelectDelay = " + mAutoSelectDelay);
+		CavanAndroid.dLog("mAutoSelectDelay = " + mAutoSelectDelay);
 	}
 
 	@SuppressWarnings("deprecation")
 	private boolean startScanInternal() {
-		CavanAndroid.eLog("startLeScan: enable = " + mScanEnable);
+		CavanAndroid.dLog("startLeScan: enable = " + mScanEnable);
 
 		mHandler.removeMessages(MSG_START_SCAN);
 

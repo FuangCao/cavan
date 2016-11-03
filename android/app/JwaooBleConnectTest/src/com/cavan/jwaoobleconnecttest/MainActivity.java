@@ -65,7 +65,7 @@ public class MainActivity extends JwaooToyActivity {
 
 			@Override
 			protected void onConnectionStateChange(boolean connected) {
-				CavanAndroid.eLog("JwaooBleToy.onConnectionStateChange: connected = " + connected);
+				CavanAndroid.dLog("JwaooBleToy.onConnectionStateChange: connected = " + connected);
 				showProgressDialog(!connected);
 
 				if (connected) {

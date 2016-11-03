@@ -118,7 +118,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 
-			CavanAndroid.eLog("action = " + action);
+			CavanAndroid.dLog("action = " + action);
 
 			switch (action) {
 			case MainActivity.ACTION_CODE_RECEIVED:
@@ -126,7 +126,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				String code = intent.getStringExtra("code");
 				boolean shared = intent.getBooleanExtra("shared", false);
 
-				CavanAndroid.eLog("code = " + code);
+				CavanAndroid.dLog("code = " + code);
 
 				RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, type, code, true, shared);
 				mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
@@ -208,7 +208,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 		ClipData data = ClipData.newPlainText(CLIP_LABEL, code);
 
-		CavanAndroid.eLog("ClipData = " + data);
+		CavanAndroid.dLog("ClipData = " + data);
 		manager.setPrimaryClip(data);
 
 		return true;
@@ -301,7 +301,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				return;
 			}
 
-			CavanAndroid.eLog("clip = " + text);
+			CavanAndroid.dLog("clip = " + text);
 
 			RedPacketNotification notification = new RedPacketNotification(this, "剪切板", text.toString(), false, false);
 			mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();

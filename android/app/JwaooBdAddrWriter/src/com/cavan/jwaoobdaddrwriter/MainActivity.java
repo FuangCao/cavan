@@ -65,7 +65,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 			}
 
 			String text = new String(bytes, 0, length);
-			CavanAndroid.eLog("text = " + text);
+			CavanAndroid.dLog("text = " + text);
 
 			if (!text.equals("JwaooBdAddrServer")) {
 				return null;

@@ -67,7 +67,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 
-			CavanAndroid.eLog("action = " + action);
+			CavanAndroid.dLog("action = " + action);
 
 			if (action.equals(MainActivity.ACTION_CODE_COMMIT)) {
 				InputConnection conn = getCurrentInputConnection();

@@ -340,7 +340,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 
 			@Override
 			protected void OnDisconnected() {
-				CavanAndroid.eLog("OnDisconnected");
+				CavanAndroid.dLog("OnDisconnected");
 				mHandler.sendEmptyMessage(EVENT_LINK_CHANGED);
 			}
 		};

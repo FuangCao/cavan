@@ -185,7 +185,7 @@ public class RedPacketNotification extends CavanNotification {
 				Uri uri = Uri.parse(value);
 				Ringtone ringtone = RingtoneManager.getRingtone(mService, uri);
 				if (ringtone != null) {
-					CavanAndroid.eLog("ringtone: title = " + ringtone.getTitle(mService));
+					CavanAndroid.dLog("ringtone: title = " + ringtone.getTitle(mService));
 					return uri;
 				}
 			}
@@ -218,7 +218,7 @@ public class RedPacketNotification extends CavanNotification {
 		if (ringtone == null) {
 			builder.setDefaults(Notification.DEFAULT_ALL);
 		} else {
-			CavanAndroid.eLog("ringtone: uri = " + ringtone);
+			CavanAndroid.dLog("ringtone: uri = " + ringtone);
 
 			builder.setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE);
 			builder.setSound(ringtone);
@@ -229,7 +229,7 @@ public class RedPacketNotification extends CavanNotification {
 
 	public Notification buildRedPacketNotifyAlipay(String code) {
 		if (sExcludeCodes.indexOf(code) >= 0) {
-			CavanAndroid.eLog("exclude code = " + code);
+			CavanAndroid.dLog("exclude code = " + code);
 			return null;
 		}
 
@@ -237,7 +237,7 @@ public class RedPacketNotification extends CavanNotification {
 		Long time = sCodeTimeMap.get(code);
 
 		if (time != null && timeNow - time < OVER_TIME) {
-			CavanAndroid.eLog("skip time = " + time);
+			CavanAndroid.dLog("skip time = " + time);
 			return null;
 		}
 
