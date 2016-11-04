@@ -54,9 +54,12 @@ public class MainActivity extends JwaooToyActivity {
 
 			@Override
 			protected void onConnectionStateChange(boolean connected) {
-				if (!connected) {
-					showScanActivity();
-				}
+				showProgressDialog(!connected);
+			}
+
+			@Override
+			protected void onConnectFailed() {
+				showScanActivity();
 			}
 
 			@Override
@@ -71,8 +74,6 @@ public class MainActivity extends JwaooToyActivity {
 				mWaveViewX.addValue(mSensor.getAxisX());
 				mWaveViewY.addValue(mSensor.getAxisY());
 				mWaveViewZ.addValue(mSensor.getAxisZ());
-
-				CavanAndroid.dLog(mSensor.getCapacityText());
 			}
 		};
 	}
