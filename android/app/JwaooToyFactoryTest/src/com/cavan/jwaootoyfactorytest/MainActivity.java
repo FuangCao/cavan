@@ -180,7 +180,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 	@Override
 	protected JwaooBleToy createJwaooBleToy(BluetoothDevice device) {
-		mTestResult = new TestResult(getContentResolver(), device.getAddress());
+		mTestResult = new TestResult(this, device.getAddress());
 
 		return new JwaooBleToy(device) {
 
@@ -434,7 +434,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				return false;
 			}
 
-			Uri uri = mTestResult.put(getContentResolver(), mIndex, result);
+			Uri uri = mTestResult.put(MainActivity.this, mIndex, result);
 			if (uri == null) {
 				return false;
 			}

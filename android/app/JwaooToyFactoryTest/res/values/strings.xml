@@ -2,7 +2,6 @@
 <resources>
 
     <string name="app_name">井蛙工厂测试</string>
-
     <string name="text_moto">震动开关</string>
     <string name="test_item_button">按键测试</string>
     <string name="test_item_moto">马达测试</string>
@@ -10,41 +9,47 @@
     <string name="test_item_accel_sensor">加速度传感器测试</string>
     <string name="test_item_led">LED灯测试</string>
     <string name="test_item_charge">充电测试</string>
+
     <string-array name="text_keys">
-        <item >震动增强键</item>
-        <item >震动模式键</item>
-        <item >震动减弱键</item>
-        <item >高潮键</item>
+        <item>震动增强键</item>
+        <item>震动模式键</item>
+        <item>震动减弱键</item>
+        <item>高潮键</item>
     </string-array>
     <string-array name="text_items">
-        <item >按键</item>
-        <item >马达</item>
-        <item >充电</item>
-        <item >LED灯</item>
-        <item >电容传感器</item>
-        <item >重力传感器</item>
+        <item>按键</item>
+        <item>马达</item>
+        <item>充电</item>
+        <item>LED灯</item>
+        <item>电容传感器</item>
+        <item>重力传感器</item>
     </string-array>
     <string-array name="text_depths">
-        <item >深度1</item>
-        <item >深度2</item>
-        <item >深度3</item>
-        <item >深度4</item>
+        <item>深度1</item>
+        <item>深度2</item>
+        <item>深度3</item>
+        <item>深度4</item>
     </string-array>
-        <string name="text_pass">通过</string>
-        <string name="text_fail">失败</string>
-        <string name="battery_voltage">电池电压：</string>
-        <string name="battery_capacity">电池电量：</string>
-        <string name="battery_state">电池状态：</string>
-        <string name="led_battery_state">电池状态灯开关</string>
-        <string name="led_bluetooth_state">蓝牙状态灯开关</string>
-        <string name="auto_test">自动测试</string>
-        <string name="text_start">开始</string>
-        <string-array name="battery_states">
-            <item >正在放电</item>
-            <item >电量低</item>
-            <item >正在充电</item>
-            <item >已充满电</item>
-        </string-array>
-            <string name="text_disconnect">断开</string>
+
+    <string name="text_pass">通过</string>
+    <string name="text_fail">失败</string>
+    <string name="battery_voltage">电池电压：</string>
+    <string name="battery_capacity">电池电量：</string>
+    <string name="battery_state">电池状态：</string>
+    <string name="led_battery_state">电池状态灯开关</string>
+    <string name="led_bluetooth_state">蓝牙状态灯开关</string>
+    <string name="auto_test">自动测试</string>
+    <string name="text_start">开始</string>
+
+    <string-array name="battery_states">
+        <item>正在放电</item>
+        <item>电量低</item>
+        <item>正在充电</item>
+        <item>已充满电</item>
+    </string-array>
+
+    <string name="text_disconnect">断开</string>
+    <string name="read_test_result_failed">读测试结果失败</string>
+    <string name="write_test_result_failed">写测试结果失败</string>
 
 </resources>

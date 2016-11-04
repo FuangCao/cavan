@@ -2,9 +2,11 @@ package com.cavan.jwaootoyfactorytest;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
+import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanDatabaseProvider.CavanDatabaseTable;
 
 public class TestResult {
@@ -35,14 +37,21 @@ public class TestResult {
 		table.setColumn(KEY_MASK, "integer");
 	}
 
-	public TestResult(ContentResolver resolver, String address) {
+	public TestResult(Context context, String address) {
 		mAddress = address.toUpperCase();
 
-		Cursor cursor = resolver.query(CONTENT_URI, PROJECTION, "address=?", new String[] { mAddress }, null);
-		if (cursor != null && cursor.moveToFirst()) {
-			mTime = cursor.getLong(0);
-			mValue = cursor.getInt(1);
-			mMask = cursor.getInt(2);
+		try {
+			ContentResolver resolver = context.getContentResolver();
+
+			Cursor cursor = resolver.query(CONTENT_URI, PROJECTION, "address=?", new String[] { mAddress }, null);
+			if (cursor != null && cursor.moveToFirst()) {
+				mTime = cursor.getLong(0);
+				mValue = cursor.getInt(1);
+				mMask = cursor.getInt(2);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			CavanAndroid.showToast(context, R.string.read_test_result_failed);
 		}
 	}
 
@@ -57,20 +66,29 @@ public class TestResult {
 		return values;
 	}
 
-	public Uri save(ContentResolver resolver) {
+	public Uri save(Context context) {
 		mTime = System.currentTimeMillis();
 		ContentValues values = getContentValues();
 
-		return resolver.insert(CONTENT_URI, values);
+		try {
+			ContentResolver resolver = context.getContentResolver();
+
+			return resolver.insert(CONTENT_URI, values);
+		} catch (Exception e) {
+			e.printStackTrace();
+			CavanAndroid.showToast(context, R.string.write_test_result_failed);
+		}
+
+		return null;
 	}
 
-	public Uri put(ContentResolver resolver, int index, boolean pass) {
+	public Uri put(Context context, int index, boolean pass) {
 		int mask = 1 << index;
 
 		mValue = pass ? (mValue | mask) : (mValue & (~mask));
 		mMask |= mask;
 
-		return save(resolver);
+		return save(context);
 	}
 
 	public int get(int index) {
