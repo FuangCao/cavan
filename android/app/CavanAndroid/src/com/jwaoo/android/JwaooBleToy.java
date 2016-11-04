@@ -104,6 +104,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE = 91;
 	public static final byte JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE = 92;
 	public static final byte JWAOO_TOY_CMD_KEY_LOCK = 93;
+	public static final byte JWAOO_TOY_CMD_KEY_REPORT_ENABLE = 94;
 	public static final byte JWAOO_TOY_CMD_GPIO_GET = 100;
 	public static final byte JWAOO_TOY_CMD_GPIO_SET = 101;
 	public static final byte JWAOO_TOY_CMD_GPIO_CFG = 102;
@@ -662,6 +663,10 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public boolean setKeyLock(boolean enable) {
 		return mCommand.readBool(JWAOO_TOY_CMD_KEY_LOCK, enable);
+	}
+
+	public boolean setKeyReportEnable(int mask) {
+		return mCommand.readBool(JWAOO_TOY_CMD_KEY_REPORT_ENABLE, (byte) mask);
 	}
 
 	public boolean writeAppData(byte[] bytes) {
