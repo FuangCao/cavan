@@ -88,6 +88,23 @@ public class CavanString {
 		return builder.toString();
 	}
 
+	public static String fromArray(Object[] array) {
+		StringBuilder builder = new StringBuilder("[ ");
+
+		if (array != null && array.length > 0) {
+			builder.append(array[0]);
+
+			for (int i = 1; i < array.length; i++) {
+				builder.append(" | ");
+				builder.append(array[i]);
+			}
+		}
+
+		builder.append(" ]");
+
+		return builder.toString();
+	}
+
 	public static String deleteSpace(String text) {
 		Matcher matcher = PATTERN_SPACE.matcher(text);
 

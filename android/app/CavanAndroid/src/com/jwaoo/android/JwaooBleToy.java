@@ -100,6 +100,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_MOTO_SET_MODE = 80;
 	public static final byte JWAOO_TOY_CMD_MOTO_GET_MODE = 81;
 	public static final byte JWAOO_TOY_CMD_MOTO_EVENT_ENABLE = 82;
+	public static final byte JWAOO_TOY_CMD_MOTO_SPEED_TABLE = 83;
 	public static final byte JWAOO_TOY_CMD_KEY_CLICK_ENABLE = 90;
 	public static final byte JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE = 91;
 	public static final byte JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE = 92;
@@ -581,6 +582,36 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mCommand.readBool(JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE, enable, delay);
 	}
 
+	public boolean readSpeedTable(int index, short[] table, int offset) {
+		return mCommand.readArray16(new byte[] { JWAOO_TOY_CMD_MOTO_SPEED_TABLE, (byte) index }, table, offset, 9);
+	}
+
+	public short[] readSpeedTable() {
+		short[] table = new short[18];
+
+		if (readSpeedTable(1, table, 0) && readSpeedTable(10, table, 9)) {
+			return table;
+		}
+
+		return null;
+	}
+
+	public boolean writeSpeedTable(int index, short[] array, int offset) {
+		CavanByteCache cache = new CavanByteCache(20);
+		cache.writeValue8(JWAOO_TOY_CMD_MOTO_SPEED_TABLE);
+		cache.writeValue8((byte) index);
+
+		for (int end = offset + 9; offset < end; offset++) {
+			cache.writeValue16(array[offset]);
+		}
+
+		return mCommand.readBool(cache.getBytes());
+	}
+
+	public boolean writeSpeedTable(short[] table) {
+		return writeSpeedTable(1, table, 0) && writeSpeedTable(10, table, 9);
+	}
+
 	public JwaooToyMpu6050 createMpu6050() {
 		return new JwaooToyMpu6050();
 	}
@@ -1032,6 +1063,18 @@ public class JwaooBleToy extends CavanBleGatt {
 			return CavanJava.buildValue32(mBytes, 2);
 		}
 
+		public boolean getArray16(short[] array, int offset, int count) {
+			if (getType() != JWAOO_TOY_RSP_DATA || length() != (count * 2 + 2)) {
+				return false;
+			}
+
+			for (int i = 2; i < mBytes.length; i += 2, offset++) {
+				array[offset] = CavanJava.buildValue16(mBytes, i);
+			}
+
+			return true;
+		}
+
 		public String getText() {
 			if (getType() != JWAOO_TOY_RSP_TEXT) {
 				return null;
@@ -1114,6 +1157,14 @@ public class JwaooBleToy extends CavanBleGatt {
 			}
 
 			return response.getData();
+		}
+
+		public static boolean getArray16(JwaooToyResponse response, short[] array, int offset, int count) {
+			if (response == null) {
+				return false;
+			}
+
+			return response.getArray16(array, offset, count);
 		}
 	}
 
@@ -1292,6 +1343,10 @@ public class JwaooBleToy extends CavanBleGatt {
 
 		public byte[] readData(byte type) {
 			return JwaooToyResponse.getData(send(type));
+		}
+
+		public boolean readArray16(byte[] command, short[] array, int offset, int count) {
+			return JwaooToyResponse.getArray16(send(command), array, offset, count);
 		}
 	}
 

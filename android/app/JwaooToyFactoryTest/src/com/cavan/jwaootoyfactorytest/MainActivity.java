@@ -645,7 +645,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				(JwaooSensorTestView) findViewById(R.id.gsensorView3),
 			};
 
-			setDifferenceMin(18);
+			setDifferenceMin(4);
 
 			return super.doInitialize();
 		}
@@ -805,7 +805,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 			@Override
 			public void run() {
 				if (mBleToy.setMotoMode(JwaooBleToy.MOTO_MODE_LINE, mLevel)) {
-					if (mLevel > mSeekBar.getMax() / 2) {
+					if (mLevel > 0) {
 						setPassEnable();
 					}
 				}
@@ -829,6 +829,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		@Override
 		protected boolean doInitialize() {
 			mSeekBar = (SeekBar) findViewById(R.id.seekBarMotoLevel);
+			mSeekBar.setProgress(0);
 			mSeekBar.setOnSeekBarChangeListener(this);
 
 			return true;
@@ -836,7 +837,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		@Override
 		public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-			mLevel = progress;
+			if (progress > 0) {
+				mLevel = progress + 5;
+			} else {
+				mLevel = 0;
+			}
+
 			mHandler.post(mRunnableSetLevel);
 		}
 
