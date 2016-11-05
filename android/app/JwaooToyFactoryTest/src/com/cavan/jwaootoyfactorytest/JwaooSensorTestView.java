@@ -47,8 +47,8 @@ public class JwaooSensorTestView extends TextView {
 
 	public void initValues() {
 		mPassed = false;
-		mValueMin = Double.MAX_VALUE;
-		mValueMax = Double.MIN_VALUE;
+		mValueMin = Double.POSITIVE_INFINITY;
+		mValueMax = Double.NEGATIVE_INFINITY;
 	}
 
 	public boolean putValueValue(double value) {
