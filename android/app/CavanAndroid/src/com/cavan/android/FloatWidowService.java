@@ -300,15 +300,14 @@ public abstract class FloatWidowService extends Service {
 	}
 
 	protected LayoutParams createRootViewLayoutParams() {
-		LayoutParams params = new LayoutParams();
+		LayoutParams params = new LayoutParams(
+				WindowManager.LayoutParams.WRAP_CONTENT,
+				WindowManager.LayoutParams.WRAP_CONTENT,
+				LayoutParams.TYPE_TOAST,
+				LayoutParams.FLAG_NOT_FOCUSABLE | LayoutParams.FLAG_NOT_TOUCHABLE,
+				PixelFormat.RGBA_8888);
 
-		params.x = params.y = 0;
-		params.type = LayoutParams.TYPE_TOAST;
-		params.format = PixelFormat.RGBA_8888;
 		params.gravity = Gravity.RIGHT | Gravity.TOP;
-		params.width = WindowManager.LayoutParams.WRAP_CONTENT;
-		params.height = WindowManager.LayoutParams.WRAP_CONTENT;
-		params.flags = LayoutParams.FLAG_NOT_FOCUSABLE | LayoutParams.FLAG_NOT_TOUCHABLE;
 
 		return params;
 	}

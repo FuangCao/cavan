@@ -180,7 +180,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 							Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
 							intent.putExtra("desc", "图片识别");
 							intent.putExtra("priority", 1);
-							intent.putExtra("content", editText.getText().toString());
+							intent.putExtra("content", text);
 							sendBroadcast(intent);
 						}
 					}
