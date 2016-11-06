@@ -884,7 +884,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 				int lines = CavanString.getLineCount(text);
 				if (lines > 0 && lines < 3) {
-					mHandler.obtainMessage(MSG_CHECK_CONTENT, 1, 0, text).sendToTarget();
+					FloatEditorDialog dialog = new FloatEditorDialog(this, text, true);
+					dialog.show(6000);
 				}
 
 				Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);

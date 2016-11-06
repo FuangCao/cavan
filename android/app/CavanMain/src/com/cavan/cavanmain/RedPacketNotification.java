@@ -264,6 +264,10 @@ public class RedPacketNotification extends CavanNotification {
 			if (mGroupName.equals("【小六04】内部VIP群")) {
 				return 10000;
 			}
+
+			if (mGroupName.equals("11-VIP客户内部福利群")) {
+				return 5000;
+			}
 		}
 
 		if (mContent != null) {

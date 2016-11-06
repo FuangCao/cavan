@@ -110,10 +110,11 @@ public class RedPacketFinder {
 
 	public static final Pattern[] sUnsafePatterns = {
 		Pattern.compile("Q\\s*Q", Pattern.CASE_INSENSITIVE),
+		Pattern.compile("\\d+\\W*w", Pattern.CASE_INSENSITIVE),
 	};
 
 	public static final String[] sUnsafeWords = {
-		"扣扣", "群", "手机", "电话", "微信", "号码", "联系", "客服", "咨询"
+		"扣扣", "群", "手机", "电话", "微信", "号码", "联系", "客服", "咨询", "功", "价", "元"
 	};
 
 	public static HashMap<String, String> sPackageCodeMap = new HashMap<String, String>();

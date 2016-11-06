@@ -25,7 +25,8 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 	private boolean mAutoDismiss;
 
 	private View mRootView;
-	private Button mButton;
+	private Button mButtonCopy;
+	private Button mButtonSend;
 	private CheckBox mCheckBox;
 	private EditText mEditText;
 	private WindowManager mWindowManager;
@@ -33,12 +34,14 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 	public FloatEditorDialog(Context context, CharSequence text, boolean checked) {
 		mContext = context;
 
-		CavanAndroid.eLog("getTheme = " + context.getTheme());
 		mRootView = View.inflate(context, R.layout.float_editor, null);
 		mRootView.setOnTouchListener(this);
 
-		mButton = (Button) findViewById(R.id.buttonSend);
-		mButton.setOnClickListener(this);
+		mButtonSend = (Button) findViewById(R.id.buttonSend);
+		mButtonSend.setOnClickListener(this);
+
+		mButtonCopy = (Button) findViewById(R.id.buttonCopy);
+		mButtonCopy.setOnClickListener(this);
 
 		mCheckBox = (CheckBox) findViewById(R.id.checkBoxAsCode);
 		mCheckBox.setChecked(checked);
@@ -111,7 +114,10 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 
 	@Override
 	public void onClick(View v) {
-		if (v == mButton) {
+		if (v == mButtonCopy) {
+			CavanAndroid.postClipboardText(mContext, mEditText.getText());
+			dismiss();
+		} else if (v == mButtonSend) {
 			String text = mEditText.getText().toString();
 
 			MainActivity.setAutoOpenAppEnable(true);

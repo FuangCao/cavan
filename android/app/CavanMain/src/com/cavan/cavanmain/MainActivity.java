@@ -515,6 +515,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
 		if (preference == mPreferenceIpAddress) {
 			updateIpAddressStatus();
+			FloatEditorDialog dialog = new FloatEditorDialog(getApplicationContext(), "AAAAAAAAAAAAAAAAAAAAAAAAA", false);
+			dialog.show(6000);
 		} else if (preference == mPreferenceInputMethodSelect) {
 			CavanAndroid.showInputMethodPicker(this);
 		} else if (preference == mPreferenceLanTest) {
