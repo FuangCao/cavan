@@ -24,6 +24,7 @@ import android.widget.TextView;
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanProgressListener;
 import com.cavan.resource.JwaooToyActivity;
+import com.jwaoo.android.JwaooBleToy.JwaooToyAppSettings;
 
 @SuppressLint("HandlerLeak")
 public class MainActivity extends JwaooToyActivity implements OnClickListener, OnCheckedChangeListener {
@@ -348,13 +349,15 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		}
 
 		mBleToy.setKeyLock(mCheckBoxKeyLock.isChecked());
-		CavanAndroid.dLog("readAppSettings = " + mBleToy.readAppSettings());
 
 		if (mMotoMode > 0 || mMotoLevel > 0) {
 			if (setMotoMode() == false && mBleToy.isCommandTimeout()) {
 				return false;
 			}
 		}
+
+		JwaooToyAppSettings settings = mBleToy.readAppSettings();
+		CavanAndroid.dLog("readAppSettings = " + settings);
 
 		return true;
 	}

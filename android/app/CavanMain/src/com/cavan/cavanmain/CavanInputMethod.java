@@ -176,9 +176,13 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 			return false;
 		}
 
-		conn.performContextMenuAction(android.R.id.selectAll);
-		conn.commitText(code, 0);
-		sendFinishAction(conn);
+		if (mIsAlipay) {
+			conn.performContextMenuAction(android.R.id.selectAll);
+			conn.commitText(code, 0);
+			sendFinishAction(conn);
+		} else {
+			conn.commitText(code, 0);
+		}
 
 		return true;
 	}
@@ -280,13 +284,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	@Override
 	public void onClick(View v) {
 		Button button = (Button) v;
-		CharSequence text = button.getText();
-
-		if (!mIsAlipay) {
-			text = "支付宝红包口令：" + text;
-		}
-
-		sendRedPacketCode(text);
+		sendRedPacketCode(button.getText());
 	}
 
 	@Override
