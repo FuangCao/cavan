@@ -23,6 +23,7 @@
 
 	<EditTextPreference android:key="red_packet_notify_test"
 	    android:persistent="true"
+	    android:defaultValue="支付宝红包口令：12345678"
 	    android:title="@string/red_packet_notify_test" />
 
 	<EditTextPreference android:key="red_packet_code_send"
@@ -35,6 +36,7 @@
 
 	<CheckBoxPreference android:key="auto_open_app"
 	    android:persistent="true"
+	    android:defaultValue="true"
 	    android:title="@string/text_auto_open_app" />
 
 	<ListPreference android:key="commit_ahead"
@@ -53,18 +55,22 @@
 
 	<CheckBoxPreference android:key="auto_unlock"
 	    android:persistent="true"
+	    android:defaultValue="true"
 	    android:title="@string/text_auto_unlock" />
 
 	<CheckBoxPreference android:key="auto_unpack"
 	    android:persistent="true"
+	    android:defaultValue="true"
 	    android:title="@string/text_auto_unpack" />
 
 	<CheckBoxPreference android:key="listen_click"
 	    android:persistent="true"
+	    android:defaultValue="true"
 	    android:title="@string/text_listen_click" />
 
 	<CheckBoxPreference android:key="listen_clip"
 	    android:persistent="true"
+	    android:defaultValue="true"
 	    android:title="@string/text_listen_clip" />
 
 	<Preference android:key="lan_test"
@@ -72,25 +78,30 @@
 
 	<CheckBoxPreference android:key="lan_share"
 	    android:persistent="true"
+	    android:defaultValue="true"
 	    android:title="@string/text_lan_share" />
 
 	<Preference android:key="wan_test"
 	    android:title="@string/text_wan_test" />
 
+	<CheckBoxPreference android:key="wan_receive"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/text_wan_receive" />
+
 	<CheckBoxPreference android:key="wan_share"
 	    android:persistent="true"
+	    android:defaultValue="true"
 	    android:title="@string/text_wan_share" />
 
-	<EditTextPreference android:key="wan_ip"
+	<EditTextPreference android:key="wan_server"
 	    android:persistent="true"
-	    android:title="@string/text_wan_ip" />
-
-	<EditTextPreference android:key="wan_port"
-	    android:persistent="true"
-	    android:title="@string/text_wan_port" />
+	    android:defaultValue="192.168.88.88"
+	    android:title="@string/text_wan_server" />
 
 	<CheckBoxPreference android:key="float_timer"
 	    android:persistent="true"
+	    android:defaultValue="true"
 	    android:title="@string/desktop_float_timer" />
 
 	<CheckBoxPreference android:key="tcp_bridge"

@@ -819,6 +819,10 @@ public class FloatMessageService extends FloatWidowService {
 			}
 		}
 
+		synchronized private boolean isRunEnable() {
+			return mActive && MainActivity.isWanShareEnabled(getApplicationContext());
+		}
+
 		@Override
 		public synchronized void start() {
 			setActive(true);
@@ -827,44 +831,66 @@ public class FloatMessageService extends FloatWidowService {
 
 		@Override
 		public void run() {
-			while (mActive && MainActivity.isWanShareEnabled(getApplicationContext())) {
-				String host = MainActivity.getWanShareIpAddress(getApplicationContext());
-				if (host == null) {
+			while (isRunEnable()) {
+				String text = MainActivity.getWanShareServer(getApplicationContext());
+				if (text == null || text.isEmpty()) {
 					break;
 				}
 
-				int port = MainActivity.getWanSharePort(getApplicationContext());
-				if (port < 0) {
+				String[] lines = text.split("\\s*\\n\\s*");
+				if (lines.length < 1) {
 					break;
 				}
 
-				try {
-					mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_connecting, 0).sendToTarget();
+				try_all_server: for (int i = 0; isRunEnable() && i < lines.length; i++) {
+					try {
+						int port;
+						String host;
 
-					mSocket = new Socket();
-					mSocket.connect(new InetSocketAddress(host, port), 6000);
-
-					mInputStream = mSocket.getInputStream();
-					mOutputStream = mSocket.getOutputStream();
-
-					mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_connected, 0).sendToTarget();
-					mNetSender.restartKeepLive();
-					mConnDelay = 0;
-
-					BufferedReader reader = new BufferedReader(new InputStreamReader(mInputStream));
-
-					while (true) {
-						try {
-							onNetworkCommandReceived("外网分享", reader.readLine());
-						} catch (IOException e) {
-							e.printStackTrace();
-							break;
+						String[] nodes = lines[i].split("\\s*:\\s*");
+						if (nodes.length > 1) {
+							port = Integer.parseInt(nodes[1].trim());
+						} else {
+							port = 8864;
 						}
+
+						host = nodes[0].trim();
+						if (host.isEmpty()) {
+							continue;
+						}
+
+						CavanAndroid.dLog("host = " + host + ", port = " + port);
+
+						mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_connecting, 0).sendToTarget();
+
+						mSocket = new Socket();
+						mSocket.connect(new InetSocketAddress(host, port), 6000);
+
+						mInputStream = mSocket.getInputStream();
+						mOutputStream = mSocket.getOutputStream();
+
+						mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_connected, 0).sendToTarget();
+						mNetSender.restartKeepLive();
+						mConnDelay = 0;
+
+						BufferedReader reader = new BufferedReader(new InputStreamReader(mInputStream));
+
+						while (true) {
+							try {
+								String line = reader.readLine();
+								if (line != null && MainActivity.isWanReceiveEnabled(getApplicationContext())) {
+									onNetworkCommandReceived("外网分享", line);
+								}
+							} catch (IOException e) {
+								e.printStackTrace();
+								break try_all_server;
+							}
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					} finally {
+						closeSocket();
 					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				} finally {
-					closeSocket();
 				}
 
 				mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_disconnected, 0).sendToTarget();

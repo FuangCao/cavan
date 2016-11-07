@@ -956,8 +956,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 						}
 					} else if (mCodeCount > 0) {
 						setRedPacketCodeInvalid();
-					} else {
-						CavanAndroid.showInputMethodPicker(getApplicationContext());
 					}
 				}
 

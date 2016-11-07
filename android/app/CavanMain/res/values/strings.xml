@@ -59,9 +59,9 @@
     <string name="text_lan_share">内网分享</string>
     <string name="text_lan_test">内网测试</string>
     <string name="text_wan_share">外网分享</string>
+    <string name="text_wan_receive">外网接收</string>
     <string name="text_wan_test">外网测试</string>
-    <string name="text_wan_ip">外网IP地址</string>
-    <string name="text_wan_port">外网端口号</string>
+    <string name="text_wan_server">外网服务器</string>
     <string name="text_wan_connecting">正在连接到外网服务器</string>
     <string name="text_wan_connected">已连接到外网服务器</string>
     <string name="text_wan_disconnected">外网服务器已断开连接</string>

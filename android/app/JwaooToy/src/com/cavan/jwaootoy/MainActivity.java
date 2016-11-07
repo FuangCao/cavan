@@ -359,6 +359,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		JwaooToyAppSettings settings = mBleToy.readAppSettings();
 		CavanAndroid.dLog("readAppSettings = " + settings);
 
+		mBleToy.setKeyReportEnable(0x0f);
+
 		return true;
 	}
 

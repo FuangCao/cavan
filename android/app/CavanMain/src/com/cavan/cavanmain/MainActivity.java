@@ -30,7 +30,6 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.preference.RingtonePreference;
-import android.text.InputType;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
@@ -61,9 +60,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_LAN_SHARE = "lan_share";
 	public static final String KEY_LAN_TEST = "lan_test";
 	public static final String KEY_WAN_SHARE = "wan_share";
+	public static final String KEY_WAN_RECEIVE = "wan_receive";
 	public static final String KEY_WAN_TEST = "wan_test";
-	public static final String KEY_WAN_IP = "wan_ip";
-	public static final String KEY_WAN_PORT = "wan_port";
+	public static final String KEY_WAN_SERVER = "wan_server";
 	public static final String KEY_MESSAGE_SHOW = "message_show";
 	public static final String KEY_COMMIT_AHEAD = "commit_ahead";
 	public static final String KEY_AUTO_OPEN_APP = "auto_open_app";
@@ -120,8 +119,12 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		return CavanAndroid.isPreferenceEnabled(context, KEY_WAN_SHARE);
 	}
 
-	public static String getWanShareIpAddress(Context context) {
-		return CavanAndroid.getPreference(context, KEY_WAN_IP, null);
+	public static boolean isWanReceiveEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_WAN_RECEIVE);
+	}
+
+	public static String getWanShareServer(Context context) {
+		return CavanAndroid.getPreference(context, KEY_WAN_SERVER, null);
 	}
 
 	public static boolean isTcpBridgeEnabled(Context context) {
@@ -130,20 +133,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 	public static String getTcpBridgeSetting(Context context) {
 		return CavanAndroid.getPreference(context, KEY_TCP_BRIDGE_SETTING, null);
-	}
-
-	public static int getWanSharePort(Context context) {
-		String text = CavanAndroid.getPreference(context, KEY_WAN_PORT, null);
-
-		try {
-			if (text != null) {
-				return Integer.parseInt(text);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return -1;
 	}
 
 	public static void setAutoOpenAppEnable(boolean enable) {
@@ -200,8 +189,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private CavanServicePreference mPreferenceWebProxy;
 	private CavanServicePreference mPreferenceTcpRepeater;
 	private CheckBoxPreference mPreferenceWanShare;
-	private EditTextPreference mPreferenceWanIp;
-	private EditTextPreference mPreferenceWanPort;
+	private CheckBoxPreference mPreferenceWanReceive;
+	private EditTextPreference mPreferenceWanServer;
 	private Preference mPreferenceLanTest;
 	private Preference mPreferenceWanTest;
 	private CheckBoxPreference mPreferenceTcpBridge;
@@ -298,29 +287,14 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceWanShare = (CheckBoxPreference) findPreference(KEY_WAN_SHARE);
 		mPreferenceWanShare.setOnPreferenceChangeListener(this);
 
-		mPreferenceWanIp = (EditTextPreference) findPreference(KEY_WAN_IP);
-		String text = mPreferenceWanIp.getText();
-		if (text == null || text.isEmpty()) {
-			mPreferenceWanIp.setText("127.0.0.1");
-		}
-		mPreferenceWanIp.setSummary(mPreferenceWanIp.getText());
-		mPreferenceWanIp.setOnPreferenceChangeListener(this);
+		mPreferenceWanReceive = (CheckBoxPreference) findPreference(KEY_WAN_RECEIVE);
 
-		mPreferenceWanPort = (EditTextPreference) findPreference(KEY_WAN_PORT);
-		mPreferenceWanPort.getEditText().setInputType(InputType.TYPE_CLASS_NUMBER);
-		text = mPreferenceWanPort.getText();
-		if (text == null || text.isEmpty()) {
-			mPreferenceWanPort.setText("8864");
-		}
-		mPreferenceWanPort.setSummary(mPreferenceWanPort.getText());
-		mPreferenceWanPort.setOnPreferenceChangeListener(this);
+		mPreferenceWanServer = (EditTextPreference) findPreference(KEY_WAN_SERVER);
+		mPreferenceWanServer.setSummary(mPreferenceWanServer.getText());
+		mPreferenceWanServer.setOnPreferenceChangeListener(this);
 
 		mPreferenceRedPacketNotifyTest = (EditTextPreference) findPreference(KEY_RED_PACKET_NOTIFY_TEST);
 		mPreferenceRedPacketNotifyTest.setPositiveButtonText(R.string.text_test);
-		text = mPreferenceRedPacketNotifyTest.getText();
-		if (text == null || text.isEmpty()) {
-			mPreferenceRedPacketNotifyTest.setText("支付宝红包口令：12345678");
-		}
 		mPreferenceRedPacketNotifyTest.setOnPreferenceChangeListener(this);
 
 		mPreferenceRedPacketCodeSend = (EditTextPreference) findPreference(KEY_RED_PACKET_CODE_SEND);
@@ -332,7 +306,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceRedPacketCodeRecognize.setOnPreferenceChangeListener(this);
 
 		mPreferenceRedPacketNotifyRingtone = (RingtonePreference) findPreference(KEY_RED_PACKET_NOTIFY_RINGTONE);
-		text = mPreferenceRedPacketNotifyRingtone.getPreferenceManager().getSharedPreferences().getString(KEY_RED_PACKET_NOTIFY_RINGTONE, null);
+		String text = mPreferenceRedPacketNotifyRingtone.getPreferenceManager().getSharedPreferences().getString(KEY_RED_PACKET_NOTIFY_RINGTONE, null);
 		if (text != null) {
 			updateRingtoneSummary(text);
 		}
@@ -515,8 +489,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
 		if (preference == mPreferenceIpAddress) {
 			updateIpAddressStatus();
-			FloatEditorDialog dialog = new FloatEditorDialog(getApplicationContext(), "AAAAAAAAAAAAAAAAAAAAAAAAA", false);
-			dialog.show(6000);
 		} else if (preference == mPreferenceInputMethodSelect) {
 			CavanAndroid.showInputMethodPicker(this);
 		} else if (preference == mPreferenceLanTest) {
@@ -528,6 +500,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 				}
 			}
 		} else if (preference == mPreferenceWanTest) {
+			mPreferenceWanReceive.setChecked(true);
+
 			if (mFloatMessageService != null) {
 				try {
 					mFloatMessageService.sendTcpCommand(FloatMessageService.NET_CMD_TEST);
@@ -535,6 +509,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 					e.printStackTrace();
 				}
 			}
+		} else if (preference == mPreferenceRedPacketNotifyTest) {
+			mPreferenceAutoOpenApp.setChecked(true);
+			mPreferenceWanReceive.setChecked(true);
 		}
 
 		return super.onPreferenceTreeClick(preferenceScreen, preference);
@@ -545,6 +522,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		if (preference == mPreferenceFloatTime) {
 			return setDesktopFloatTimerEnable((boolean) object);
 		} else if (preference == mPreferenceRedPacketCodeSend) {
+			mPreferenceAutoOpenApp.setChecked(true);
+
 			String text = (String) object;
 			if (text != null) {
 				for (String line : text.split("\n")) {
@@ -560,6 +539,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 				}
 			}
 		} else if (preference == mPreferenceRedPacketCodeRecognize) {
+			mPreferenceAutoOpenApp.setChecked(true);
+
 			String text = (String) object;
 			if (text != null) {
 				Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
@@ -568,8 +549,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 				sendBroadcast(intent);
 			}
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
-			mPreferenceAutoOpenApp.setChecked(true);
-
 			if (!CavanAndroid.isNotificationListenerEnabled(this, RedPacketListenerService.class)) {
 				PermissionSettingsActivity.startNotificationListenerSettingsActivity(this);
 				CavanAndroid.showToastLong(this, "请打开通知读取权限");
@@ -595,7 +574,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			}
 		} else if (preference == mPreferenceRedPacketNotifyRingtone) {
 			updateRingtoneSummary((String) object);
-		} else if (preference == mPreferenceWanIp || preference == mPreferenceWanPort || preference == mPreferenceWanShare) {
+		} else if (preference == mPreferenceWanServer || preference == mPreferenceWanShare) {
 			if (object instanceof CharSequence) {
 				preference.setSummary((CharSequence) object);
 			}
