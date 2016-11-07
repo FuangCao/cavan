@@ -49,6 +49,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String ACTION_TEXT_RECEIVED = "cavan.intent.action.ACTION_TEXT_RECEIVED";
 	public static final String ACTION_WAN_UPDATED = "cavan.intent.action.ACTION_WAN_UPDATED";
 	public static final String ACTION_BRIDGE_UPDATED = "cavan.intent.action.ACTION_BRIDGE_UPDATED";
+	public static final String ACTION_SEND_WAN_COMMAN = "cavan.intent.action.ACTION_SEND_WAN_COMMAN";
 
 	public static final String KEY_IP_ADDRESS = "ip_address";
 	public static final String KEY_AUTO_UNLOCK = "auto_unlock";

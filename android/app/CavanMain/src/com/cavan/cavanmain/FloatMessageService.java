@@ -46,6 +46,7 @@ public class FloatMessageService extends FloatWidowService {
 	public static final String NET_CMD_RDPKG = "RedPacketCode: ";
 	public static final String NET_CMD_TEST = "CavanNetworkTest";
 	public static final String NET_CMD_KEEP_LIVE = "CavanKeepLive";
+	public static final String NET_CMD_TM_CODE = "SecretOrder: ";
 
 	public static final String PATH_QQ_IMAGES = Environment.getExternalStorageDirectory().getPath() + "/Tencent/QQ_Images";
 
@@ -64,6 +65,7 @@ public class FloatMessageService extends FloatWidowService {
 	private static final int MSG_TCP_BRIDGE_STATE_CHANGED = 5;
 	private static final int MSG_TCP_BRIDGE_UPDATED = 6;
 	private static final int MSG_START_OCR = 7;
+	private static final int MSG_TM_CODE_RECEIVED = 8;
 
 	private int mLastSecond;
 	private boolean mUserPresent;
@@ -145,6 +147,13 @@ public class FloatMessageService extends FloatWidowService {
 			case MSG_START_OCR:
 				MainActivity.startSogouOcrActivity(getApplicationContext());
 				break;
+
+			case MSG_TM_CODE_RECEIVED:
+				String code = (String) msg.obj;
+				String text = getResources().getString(R.string.text_secret_order_received, code);
+				CavanAndroid.showToast(getApplicationContext(), text);
+				RedPacketListenerService.postSecretOrder(getApplicationContext(), code);
+				break;
 			}
 		}
 	};
@@ -176,6 +185,13 @@ public class FloatMessageService extends FloatWidowService {
 
 			case ConnectivityManager.CONNECTIVITY_ACTION:
 				updateNetworkConnState();
+				break;
+
+			case MainActivity.ACTION_SEND_WAN_COMMAN:
+				if (mNetSender != null) {
+					String command = intent.getStringExtra("command");
+					mNetSender.sendTcpCommand(command, 0);
+				}
 				break;
 			}
 		}
@@ -306,20 +322,28 @@ public class FloatMessageService extends FloatWidowService {
 
 		@Override
 		public boolean sendRedPacketCode(String code) throws RemoteException {
-			if (mNetSender != null) {
-				return mNetSender.sendCode(code, 0);
+			if (mNetSender == null) {
+				return false;
 			}
 
-			return false;
+			return mNetSender.sendCode(code, 0);
 		}
 
 		@Override
 		public boolean sendUdpCommand(String command) throws RemoteException {
+			if (mNetSender == null) {
+				return false;
+			}
+
 			return mNetSender.sendUdpCommand(command, 0, 0);
 		}
 
 		@Override
 		public boolean sendTcpCommand(String command) throws RemoteException {
+			if (mNetSender == null) {
+				return false;
+			}
+
 			return mNetSender.sendTcpCommand(command, 0);
 		}
 	};
@@ -426,6 +450,9 @@ public class FloatMessageService extends FloatWidowService {
 					sendBroadcast(intent);
 				}
 			}
+		} else if (command.startsWith(NET_CMD_TM_CODE)) {
+			String code = CavanString.deleteSpace(command.substring(NET_CMD_TM_CODE.length()));
+			mHandler.obtainMessage(MSG_TM_CODE_RECEIVED, code).sendToTarget();
 		}
 	}
 
@@ -463,6 +490,7 @@ public class FloatMessageService extends FloatWidowService {
 		filter.addAction(Intent.ACTION_SCREEN_ON);
 		filter.addAction(Intent.ACTION_USER_PRESENT);
 		filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+		filter.addAction(MainActivity.ACTION_SEND_WAN_COMMAN);
 		registerReceiver(mReceiver, filter );
 
 		mFileObserverQQ.startWatching();

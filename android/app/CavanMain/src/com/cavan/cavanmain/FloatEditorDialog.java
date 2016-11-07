@@ -27,6 +27,8 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 	private View mRootView;
 	private Button mButtonCopy;
 	private Button mButtonSend;
+	private Button mButtonSecretOrder;
+
 	private CheckBox mCheckBox;
 	private EditText mEditText;
 	private WindowManager mWindowManager;
@@ -42,6 +44,9 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 
 		mButtonCopy = (Button) findViewById(R.id.buttonCopy);
 		mButtonCopy.setOnClickListener(this);
+
+		mButtonSecretOrder = (Button) findViewById(R.id.buttonSecretOrder);
+		mButtonSecretOrder.setOnClickListener(this);
 
 		mCheckBox = (CheckBox) findViewById(R.id.checkBoxAsCode);
 		mCheckBox.setChecked(checked);
@@ -114,7 +119,15 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 
 	@Override
 	public void onClick(View v) {
-		if (v == mButtonCopy) {
+		if (v == mButtonSecretOrder) {
+			String code = mEditText.getText().toString();
+			RedPacketListenerService.postSecretOrder(mContext, code);
+
+			Intent intent = new Intent(MainActivity.ACTION_SEND_WAN_COMMAN);
+			intent.putExtra("command", FloatMessageService.NET_CMD_TM_CODE + code);
+			mContext.sendBroadcast(intent);
+			dismiss();
+		} else if (v == mButtonCopy) {
 			CavanAndroid.postClipboardText(mContext, mEditText.getText());
 			dismiss();
 		} else if (v == mButtonSend) {

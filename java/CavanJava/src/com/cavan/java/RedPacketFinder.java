@@ -27,6 +27,10 @@ public class RedPacketFinder {
 		"感谢亲们长期以来的支持与信任"
 	};
 
+	private static final String[] sExcludePredicts = {
+		"电脑抢红包", "复制本条消息"
+	};
+
 	private static final Pattern[] sPicturePatterns = {
 		Pattern.compile("支\\s*付\\s*宝\\s*红\\s*包"),
 		Pattern.compile("支\\s*付\\s*宝\\s*口\\s*令"),
@@ -101,7 +105,7 @@ public class RedPacketFinder {
 
 	public static final Pattern[] sExcludePatterns = {
 		Pattern.compile("[a-z]+://\\S+", Pattern.CASE_INSENSITIVE),
-		Pattern.compile("=\\d+"),
+		Pattern.compile("=\\d{8,}"),
 	};
 
 	public static final String[] sExcludeWords = {
@@ -220,19 +224,23 @@ public class RedPacketFinder {
 		return true;
 	}
 
-	public static boolean isRedPacketWordCode(String code) {
+	public static boolean isRedPacketWordCode(List<String> codes, String text) {
 		char prev = 0;
 		int same_count = 0;
 		int number_count = 0;
 		int chinese_count = 0;
+		int length = text.length();
+		StringBuilder builder = new StringBuilder();
 
-		for (int i = code.length() - 1; i >= 0; i--) {
-			char c = code.charAt(i);
+		for (int i = 0; i < length; i++) {
+			char c = text.charAt(i);
 
 			if (CavanJava.isDigit(c)) {
 				if (++number_count > 6) {
 					return false;
 				}
+
+				builder.append(c);
 			} else {
 				number_count = 0;
 
@@ -252,11 +260,24 @@ public class RedPacketFinder {
 			prev = c;
 		}
 
-		return (chinese_count > 0);
+		if (chinese_count <= 0) {
+			return false;
+		}
+
+		if (builder.length() > 0) {
+			String numStr = builder.toString();
+
+			for (String code : codes) {
+				if (code.startsWith(numStr)) {
+					return false;
+				}
+			}
+		}
+
+		return true;
 	}
 
 	private List<String> getRedPacketCodes(String line, Pattern[] patterns, List<String> codes, boolean strip, boolean unsafe) {
-
 		for (Pattern pattern : patterns) {
 			Matcher matcher = pattern.matcher(line);
 
@@ -341,15 +362,13 @@ public class RedPacketFinder {
 			char c = text.charAt(i);
 
 			if (CavanString.isColon(c)) {
-				builder.setLength(0);
+				builder.setLength(builder.length() & (~7));
 			} else if (CavanJava.isDigit(c)) {
 				if (builder.length() % 8 == 0 && i > 0 && CavanJava.isDigit(text.charAt(i - 1))) {
 					return null;
 				}
 
 				builder.append(c);
-			} else if (CavanString.isChineseChar(c)) {
-				break;
 			}
 		}
 
@@ -381,7 +400,7 @@ public class RedPacketFinder {
 		}
 
 		for (String code : getRedPacketWordCodes()) {
-			if (isRedPacketWordCode(code)) {
+			if (isRedPacketWordCode(codes, code)) {
 				addRedPacketCode(codes, code);
 			}
 		}
@@ -409,6 +428,12 @@ public class RedPacketFinder {
 	}
 
 	public boolean isPredictCode() {
+		for (String word : sExcludePredicts) {
+			if (mJoinedLines.contains(word)) {
+				return false;
+			}
+		}
+
 		for (Pattern pattern : sPredictPatterns) {
 			Matcher matcher = pattern.matcher(mJoinedLines);
 			if (matcher.find()) {

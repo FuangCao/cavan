@@ -21,6 +21,7 @@ import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanIndexGenerator;
 
 public class RedPacketListenerService extends NotificationListenerService implements OnPrimaryClipChangedListener {
@@ -231,7 +232,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			return false;
 		}
 
-		Intent intent = context.getPackageManager().getLaunchIntentForPackage("com.eg.android.AlipayGphone");
+		Intent intent = context.getPackageManager().getLaunchIntentForPackage(CavanPackageName.ALIPAY);
 		if (intent == null) {
 			return false;
 		}
@@ -247,6 +248,21 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 	public boolean startAlipayActivity() {
 		return startAlipayActivity(this);
+	}
+
+	public static boolean postSecretOrder(Context context, String code) {
+		CavanAndroid.dLog("postSecretOrder: " + code);
+
+		CavanAndroid.postClipboardText(context, code);
+
+		Intent intent = context.getPackageManager().getLaunchIntentForPackage(CavanPackageName.TMALL);
+		if (intent == null) {
+			return false;
+		}
+
+		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK); //  | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+		context.startActivity(intent);
+		return true;
 	}
 
 	@Override

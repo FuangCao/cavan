@@ -135,6 +135,8 @@
         <item>9</item>
         <item>10</item>
     </string-array>
-        <string name="text_as_code">每行都是一条完整的口令</string>
+        <string name="text_as_code">每行一条完整的口令</string>
+        <string name="text_secret_order">密令</string>
+        <string name="text_secret_order_received">收到密令：<xliff:g>%1$s</xliff:g></string>
 
 </resources>
