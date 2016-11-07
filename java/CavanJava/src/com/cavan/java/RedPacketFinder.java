@@ -114,7 +114,7 @@ public class RedPacketFinder {
 	};
 
 	public static final String[] sUnsafeWords = {
-		"扣扣", "群", "手机", "电话", "微信", "号码", "联系", "客服", "咨询", "功", "价", "元"
+		"扣扣", "群", "手机", "电话", "微信", "号码", "联系", "客服", "咨询", "功", "价", "元", "好友", "机器人", "查找", "加"
 	};
 
 	public static HashMap<String, String> sPackageCodeMap = new HashMap<String, String>();
