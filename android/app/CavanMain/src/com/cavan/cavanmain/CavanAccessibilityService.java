@@ -44,9 +44,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private static final long REPEAT_OVERTIME = 20000;
 
 	private static final int MSG_COMMIT_TIMEOUT = 1;
-	private static final int MSG_COMMIT_COMPLETE = 2;
-	private static final int MSG_CHECK_CONTENT = 3;
-	private static final int MSG_CHECK_AUTO_OPEN_APP = 4;
+	private static final int MSG_CHECK_CONTENT = 2;
+	private static final int MSG_CHECK_AUTO_OPEN_APP = 3;
 
 	private static final String[] PACKAGE_NAMES = {
 		CavanPackageName.ALIPAY,
@@ -113,21 +112,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 				}
 
 				removeRedPacketCode((RedPacketCode) msg.obj);
-				break;
-
-			case MSG_COMMIT_COMPLETE:
-				try {
-					if (mService != null && mService.getCodeCount() > 0) {
-						Message message = obtainMessage(msg.what, msg.obj);
-						sendMessageDelayed(message, 5000);
-					} else {
-						code = (RedPacketCode) msg.obj;
-						String text = getResources().getString(R.string.text_complete_code, code.getCode());
-						CavanAndroid.showToast(CavanAccessibilityService.this, text);
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
 				break;
 
 			case MSG_CHECK_CONTENT:
@@ -571,9 +555,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private void removeRedPacketCode(RedPacketCode code) {
 		code.setCompleted();
 		mCodes.remove(code);
-
-		Message message = mHandler.obtainMessage(MSG_COMMIT_COMPLETE, code);
-		mHandler.sendMessageDelayed(message, 10000);
 	}
 
 	private boolean isCurrentRedPacketCode(RedPacketCode code) {

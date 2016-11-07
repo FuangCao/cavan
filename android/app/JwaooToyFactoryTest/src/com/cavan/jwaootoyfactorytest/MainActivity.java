@@ -118,6 +118,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		CavanAndroid.setSuspendEnable(this, false);
+
 		mDrawableNoTest = getResources().getDrawable(R.drawable.no_test);
 		mDrawableNoTest.setBounds(0, 0, mDrawableNoTest.getMinimumWidth(), mDrawableNoTest.getMinimumHeight());
 
