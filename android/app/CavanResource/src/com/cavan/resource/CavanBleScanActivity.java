@@ -3,7 +3,11 @@ package com.cavan.resource;
 import java.util.UUID;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MotionEvent;
@@ -15,8 +19,10 @@ import com.cavan.android.CavanBleDevice;
 import com.cavan.android.CavanBleDeviceAdapter;
 import com.cavan.android.CavanBleScanner;
 
-public class CavanBleScanActivity extends Activity {
+public class CavanBleScanActivity extends Activity implements OnClickListener {
 
+	private UUID[] mUuids;
+	private String[] mNames;
 	private CavanBleScanner mScanner;
 	private CavanBleDeviceAdapter mAdapter;
 
@@ -28,6 +34,13 @@ public class CavanBleScanActivity extends Activity {
 		intent.putExtra("device", device.getDevice());
 		setResult(RESULT_OK, intent);
 		finish();
+	}
+
+	public void startScan() {
+		if (mScanner != null) {
+			mScanner.startScan(mUuids, mNames);
+			CavanAndroid.showToast(this, R.string.text_scanning);
+		}
 	}
 
 	@Override
@@ -45,8 +58,8 @@ public class CavanBleScanActivity extends Activity {
 		setContentView(R.layout.ble_scanner);
 
 		Intent intent = getIntent();
-		String[] names = intent.getStringArrayExtra("names");
-		UUID[] uuids = (UUID[]) intent.getSerializableExtra("uuids");
+		mNames = intent.getStringArrayExtra("names");
+		mUuids = (UUID[]) intent.getSerializableExtra("uuids");
 
 		ListView view = (ListView) findViewById(R.id.listViewDevices);
 		mAdapter = new CavanBleDeviceAdapter(view) {
@@ -70,13 +83,22 @@ public class CavanBleScanActivity extends Activity {
 			}
 		};
 
-		if (uuids != null || names != null) {
+		if (mUuids != null || mNames != null) {
 			mScanner.setAutoSelect(3000);
 		}
 
-		mScanner.startScan(uuids, names);
+		if (mScanner.isAdapterEnabled()) {
+			startScan();
+		} else {
+			AlertDialog.Builder builder = new AlertDialog.Builder(CavanBleScanActivity.this);
+			builder.setMessage(R.string.text_bluetooth_open_prompt);
+			builder.setCancelable(false);
+			builder.setPositiveButton(R.string.open, CavanBleScanActivity.this);
+			builder.setNegativeButton(R.string.exit, CavanBleScanActivity.this);
 
-		CavanAndroid.showToast(this, R.string.text_scanning);
+			Dialog dialog = builder.create();
+			dialog.show();
+		}
 	}
 
 	@Override
@@ -129,5 +151,15 @@ public class CavanBleScanActivity extends Activity {
 
 	public static void show(Activity activity, int requestCode) {
 		show(activity, requestCode, null, null);
+	}
+
+	@Override
+	public void onClick(DialogInterface dialog, int which) {
+		if (which == DialogInterface.BUTTON_POSITIVE) {
+			mScanner.setAdapterEnable(true);
+			startScan();
+		} else {
+			finish();
+		}
 	}
 }

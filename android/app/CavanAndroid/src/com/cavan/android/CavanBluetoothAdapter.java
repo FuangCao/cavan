@@ -38,12 +38,9 @@ public class CavanBluetoothAdapter {
 		}
 	}
 
-
 	public CavanBluetoothAdapter(Context context) {
 		mContext = context;
-
 		mAdapter = BluetoothAdapter.getDefaultAdapter();
-		mAdapter.enable();
 
 		IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
 		context.registerReceiver(mReceiver, filter);
@@ -55,6 +52,18 @@ public class CavanBluetoothAdapter {
 
 	public BluetoothAdapter getAdapter() {
 		return mAdapter;
+	}
+
+	public boolean setAdapterEnable(boolean enable) {
+		if (enable) {
+			return mAdapter.enable();
+		}
+
+		return mAdapter.disable();
+	}
+
+	public boolean isAdapterEnabled() {
+		return mAdapter.isEnabled();
 	}
 
 	public void cleaup() {

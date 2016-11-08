@@ -13,5 +13,11 @@
     <string name="text_sample_rate">采样率</string>
     <string name="text_connect_inprogress">正在连接，请稍候&#8230;</string>
     <string name="text_bluetooth_open_prompt">蓝牙没有打开，要打开吗？</string>
+    <string name="open">打开</string>
+    <string name="no_open">不打开</string>
+    <string name="close">关闭</string>
+    <string name="no_close">不关闭</string>
+    <string name="exit">退出</string>
+    <string name="no_exit">不退出</string>
 
 </resources>

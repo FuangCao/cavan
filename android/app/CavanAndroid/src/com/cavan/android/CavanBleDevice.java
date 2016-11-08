@@ -6,6 +6,7 @@ public class CavanBleDevice implements Comparable<CavanBleDevice> {
 
 	private int mRssi;
 	private int mIndex;
+	private byte[] mScanRecord;
 	private BluetoothDevice mDevice;
 
 	public CavanBleDevice(BluetoothDevice device) {
@@ -36,6 +37,14 @@ public class CavanBleDevice implements Comparable<CavanBleDevice> {
 
 	public BluetoothDevice getDevice() {
 		return mDevice;
+	}
+
+	public byte[] getScanRecord() {
+		return mScanRecord;
+	}
+
+	public void setScanRecord(byte[] scanRecord) {
+		mScanRecord = scanRecord;
 	}
 
 	@Override

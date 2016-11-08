@@ -31,6 +31,10 @@ import com.cavan.java.CavanJava;
 public class CavanAndroid {
 
 	public static String TAG = "Cavan";
+	public static boolean DLOG_ENABLE = true;
+	public static boolean WLOG_ENABLE = true;
+	public static boolean ELOG_ENABLE = true;
+	public static boolean PLOG_ENABLE = true;
 
 	public static final String ENABLED_NOTIFICATION_LISTENERS = "enabled_notification_listeners";
 
@@ -55,39 +59,57 @@ public class CavanAndroid {
 	private static WifiManager sWifiManager;
 
 	public static void eLog(String message) {
-		Log.e(TAG, message);
+		if (ELOG_ENABLE) {
+			Log.e(TAG, message);
+		}
 	}
 
 	public static void eLog(String message, Throwable throwable) {
-		Log.e(TAG, message, throwable);
+		if (ELOG_ENABLE) {
+			Log.e(TAG, message, throwable);
+		}
 	}
 
 	public static void wLog(String message) {
-		Log.w(TAG, message);
+		if (WLOG_ENABLE) {
+			Log.w(TAG, message);
+		}
 	}
 
 	public static void wLog(Throwable throwable) {
-		Log.w(TAG, throwable);
+		if (WLOG_ENABLE) {
+			Log.w(TAG, throwable);
+		}
 	}
 
 	public static void wLog(String message, Throwable throwable) {
-		Log.w(TAG, message, throwable);
+		if (WLOG_ENABLE) {
+			Log.w(TAG, message, throwable);
+		}
 	}
 
 	public static void dLog(String message) {
-		Log.d(TAG, message);
+		if (DLOG_ENABLE) {
+			Log.d(TAG, message);
+		}
 	}
 
-	public static int dLog(String message, Throwable throwable) {
-		return Log.d(TAG, message, throwable);
+	public static void dLog(String message, Throwable throwable) {
+		if (DLOG_ENABLE) {
+			Log.d(TAG, message, throwable);
+		}
 	}
 
 	public static void pLog() {
-		eLog(CavanJava.buildPosMessage());
+		if (PLOG_ENABLE) {
+			eLog(CavanJava.buildPosMessage());
+		}
 	}
 
 	public static void pLog(String message) {
-		eLog(CavanJava.buildPosMessage(message));
+		if (PLOG_ENABLE) {
+			eLog(CavanJava.buildPosMessage(message));
+		}
 	}
 
 	public static void efLog(String format, Object... args) {
