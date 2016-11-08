@@ -28,7 +28,7 @@ public class RedPacketFinder {
 	};
 
 	private static final String[] sExcludePredicts = {
-		"电脑抢红包", "特价清单", "双11抢红包"
+		"电脑抢红包", "特价清单", "双11抢红包", "电脑入口"
 	};
 
 	private static final Pattern[] sPicturePatterns = {
@@ -428,9 +428,11 @@ public class RedPacketFinder {
 	}
 
 	public boolean isPredictCode() {
-		for (String word : sExcludePredicts) {
-			if (mJoinedLines.contains(word)) {
-				return false;
+		if (mJoinedLines.contains("双11") || mJoinedLines.contains("双十一")) {
+			for (String word : sExcludePredicts) {
+				if (mJoinedLines.contains(word)) {
+					return false;
+				}
 			}
 		}
 
