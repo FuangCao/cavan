@@ -874,15 +874,20 @@ public class FloatMessageService extends FloatWidowService {
 					try {
 						int port;
 						String host;
+						String line = lines[i].trim();
 
-						String[] nodes = lines[i].split("\\s*:\\s*");
-						if (nodes.length > 1) {
-							port = Integer.parseInt(nodes[1].trim());
+						if (line.startsWith("#")) {
+							continue;
+						}
+
+						String[] segs = line.split("\\s*:\\s*");
+						if (segs.length > 1) {
+							port = Integer.parseInt(segs[1].trim());
 						} else {
 							port = 8864;
 						}
 
-						host = nodes[0].trim();
+						host = segs[0].trim();
 						if (host.isEmpty()) {
 							continue;
 						}
@@ -905,13 +910,22 @@ public class FloatMessageService extends FloatWidowService {
 
 						while (true) {
 							try {
-								String line = reader.readLine();
-								if (line != null && MainActivity.isWanReceiveEnabled(getApplicationContext())) {
-									onNetworkCommandReceived("外网分享", line);
-								}
+								line = reader.readLine();
 							} catch (IOException e) {
 								e.printStackTrace();
+								line = null;
+							}
+
+							if (line == null) {
 								break try_all_server;
+							}
+
+							try {
+								if (MainActivity.isWanReceiveEnabled(getApplicationContext())) {
+									onNetworkCommandReceived("外网分享", line);
+								}
+							} catch (Exception e) {
+								e.printStackTrace();
 							}
 						}
 					} catch (Exception e) {

@@ -513,6 +513,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
 			mPreferenceAutoOpenApp.setChecked(true);
 			mPreferenceWanReceive.setChecked(true);
+
+			if (!CavanInputMethod.isDefaultInputMethod(this)) {
+				CavanAndroid.showInputMethodPicker(this);
+			}
 		}
 
 		return super.onPreferenceTreeClick(preferenceScreen, preference);
@@ -556,8 +560,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			} else if (!CavanAndroid.isAccessibilityServiceEnabled(this, CavanAccessibilityService.class)) {
 				PermissionSettingsActivity.startAccessibilitySettingsActivity(this);
 				CavanAndroid.showToast(this, "请打开辅助功能");
-			} else if (!CavanInputMethod.isDefaultInputMethod(this)) {
-				CavanAndroid.showInputMethodPicker(this);
 			} else {
 				NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 				if (manager != null) {

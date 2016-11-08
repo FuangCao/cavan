@@ -28,7 +28,7 @@ public class RedPacketFinder {
 	};
 
 	private static final String[] sExcludePredicts = {
-		"电脑抢红包", "复制本条消息"
+		"电脑抢红包", "特价清单", "双11抢红包"
 	};
 
 	private static final Pattern[] sPicturePatterns = {
