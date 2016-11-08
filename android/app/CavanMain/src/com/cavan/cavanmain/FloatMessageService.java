@@ -152,7 +152,7 @@ public class FloatMessageService extends FloatWidowService {
 				String code = (String) msg.obj;
 				String text = getResources().getString(R.string.text_secret_order_received, code);
 				CavanAndroid.showToast(getApplicationContext(), text);
-				RedPacketListenerService.postSecretOrder(getApplicationContext(), code);
+				CavanAndroid.postClipboardText(getApplicationContext(), code);
 				break;
 			}
 		}
@@ -252,7 +252,7 @@ public class FloatMessageService extends FloatWidowService {
 
 						sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_ADD, code);
 
-						if (node.isShared() == false && mNetSender != null) {
+						if ((node.isShared() == false || node.isRepeatable()) && mNetSender != null) {
 							long delay = node.getTime() - System.currentTimeMillis();
 							mNetSender.sendCode(code, delay);
 						}

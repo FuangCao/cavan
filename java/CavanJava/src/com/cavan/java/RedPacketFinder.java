@@ -66,10 +66,10 @@ public class RedPacketFinder {
 	};
 
 	private static final Pattern[] sMultiLineDigitPatterns = {
-		Pattern.compile("支\\s*付\\s*宝.*红\\s*包" + DIGIT_MULTI_LINE_PATTERN),
-		Pattern.compile("支\\s*付\\s*宝.*口\\s*令" + DIGIT_MULTI_LINE_PATTERN),
-		Pattern.compile("红\\s*包\\s*口\\s*令" + DIGIT_MULTI_LINE_PATTERN),
-		Pattern.compile("口\\s*令\\s*红\\s*包" + DIGIT_MULTI_LINE_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝.*红\\s*包.*[:：]" + DIGIT_MULTI_LINE_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝.*口\\s*令.*[:：]" + DIGIT_MULTI_LINE_PATTERN),
+		Pattern.compile("红\\s*包\\s*口\\s*令.*[:：]" + DIGIT_MULTI_LINE_PATTERN),
+		Pattern.compile("口\\s*令\\s*红\\s*包.*[:：]" + DIGIT_MULTI_LINE_PATTERN),
 		Pattern.compile("红\\s*包[\\s\\d]*[:：]" + DIGIT_MULTI_LINE_PATTERN),
 		Pattern.compile("口\\s*令[\\s\\d]*[:：]" + DIGIT_MULTI_LINE_PATTERN),
 	};
@@ -118,7 +118,7 @@ public class RedPacketFinder {
 	};
 
 	public static final String[] sUnsafeWords = {
-		"扣扣", "群", "手机", "电话", "微信", "号码", "联系", "客服", "咨询", "功", "价", "元", "好友", "机器人", "查找", "加"
+		"扣扣", "群", "手机", "电话", "微信", "号码", "联系", "客服", "咨询", "功", "价", "元", "好友", "机器人", "查找", "加", "点"
 	};
 
 	public static HashMap<String, String> sPackageCodeMap = new HashMap<String, String>();
