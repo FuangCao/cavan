@@ -71,6 +71,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_PERMISSION_SETTINGS = "permission_settings";
 	public static final String KEY_RED_PACKET_CODE_SEND = "red_packet_code_send";
 	public static final String KEY_RED_PACKET_CODE_RECOGNIZE = "red_packet_code_recognize";
+	public static final String KEY_RED_PACKET_CODE_SPLIT = "red_packet_code_split";
 	public static final String KEY_RED_PACKET_NOTIFY_TEST = "red_packet_notify_test";
 	public static final String KEY_RED_PACKET_NOTIFY_RINGTONE = "red_packet_notify_ringtone";
 	public static final String KEY_TCP_BRIDGE = "tcp_bridge";
@@ -183,6 +184,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private CheckBoxPreference mPreferenceAutoOpenApp;
 	private EditTextPreference mPreferenceRedPacketCodeSend;
 	private EditTextPreference mPreferenceRedPacketCodeRecognize;
+	private EditTextPreference mPreferenceRedPacketCodeSplit;
 	private EditTextPreference mPreferenceRedPacketNotifyTest;
 	private RingtonePreference mPreferenceRedPacketNotifyRingtone;
 	private CavanServicePreference mPreferenceTcpDd;
@@ -305,6 +307,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceRedPacketCodeRecognize = (EditTextPreference) findPreference(KEY_RED_PACKET_CODE_RECOGNIZE);
 		mPreferenceRedPacketCodeRecognize.setPositiveButtonText(R.string.text_recognize);
 		mPreferenceRedPacketCodeRecognize.setOnPreferenceChangeListener(this);
+
+		mPreferenceRedPacketCodeSplit = (EditTextPreference) findPreference(KEY_RED_PACKET_CODE_SPLIT);
+		mPreferenceRedPacketCodeSplit.setPositiveButtonText(R.string.text_split);
+		mPreferenceRedPacketCodeSplit.setOnPreferenceChangeListener(this);
 
 		mPreferenceRedPacketNotifyRingtone = (RingtonePreference) findPreference(KEY_RED_PACKET_NOTIFY_RINGTONE);
 		String text = mPreferenceRedPacketNotifyRingtone.getPreferenceManager().getSharedPreferences().getString(KEY_RED_PACKET_NOTIFY_RINGTONE, null);
@@ -552,6 +558,18 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 				intent.putExtra("desc", "手动输入");
 				intent.putExtra("content", CavanString.fromCharSequence(text));
 				sendBroadcast(intent);
+			}
+		} else if (preference == mPreferenceRedPacketCodeSplit) {
+			String text = (String) object;
+			if (text != null) {
+				for (String line : text.split("\n")) {
+					String code = line.trim();
+					if (code.isEmpty()) {
+						continue;
+					}
+
+					RedPacketCode.getInstence(code, 0, true, false);
+				}
 			}
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
 			if (!CavanAndroid.isNotificationListenerEnabled(this, RedPacketListenerService.class)) {

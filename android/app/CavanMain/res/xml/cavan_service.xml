@@ -34,6 +34,10 @@
 	    android:persistent="true"
 	    android:title="@string/text_red_packet_code_recognize" />
 
+	<EditTextPreference android:key="red_packet_code_split"
+	    android:persistent="true"
+	    android:title="@string/text_red_packet_code_split" />
+
 	<CheckBoxPreference android:key="auto_open_app"
 	    android:persistent="true"
 	    android:defaultValue="true"

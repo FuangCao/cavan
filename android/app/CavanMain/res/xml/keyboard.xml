@@ -38,8 +38,8 @@
             android:codes="10"
             android:keyLabel="清空" />
         <Key
-            android:codes="3"
-            android:keyLabel="剪切" />
+            android:codes="2"
+            android:keyLabel="粘贴" />
     </Row>
 
     <Row>
@@ -53,11 +53,11 @@
             android:keyOutputText="9"
             android:keyLabel="9" />
         <Key
+            android:codes="3"
+            android:keyLabel="剪切" />
+        <Key
             android:codes="1"
             android:keyLabel="复制" />
-        <Key
-            android:codes="2"
-            android:keyLabel="粘贴" />
     </Row>
 
 	<Row>

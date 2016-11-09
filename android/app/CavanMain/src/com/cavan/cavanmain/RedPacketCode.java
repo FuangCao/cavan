@@ -17,7 +17,7 @@ import android.content.Intent;
 public class RedPacketCode implements Comparable<RedPacketCode> {
 
 	private static int LAST_CODE_SIZE = 8;
-	private static long LAST_CODE_OVERTIME = 300000;
+	private static long LAST_CODE_OVERTIME = 1800000;
 	private static long CODE_OVERTIME = 28800000;
 	private static long REPEAT_TIME_ALIGN = 60000;
 	private static long TIME_MISTAKE = 10000;

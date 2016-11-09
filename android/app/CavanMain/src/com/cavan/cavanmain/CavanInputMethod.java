@@ -28,7 +28,7 @@ import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
 
-public class CavanInputMethod extends InputMethodService implements OnClickListener, OnKeyboardActionListener {
+public class CavanInputMethod extends InputMethodService implements OnKeyboardActionListener {
 
 	private static final int CODE_MAX_COLUMNS = 4;
 
@@ -55,6 +55,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 	private InputMethodManager mManager;
 
 	private boolean mIsAlipay;
+	private boolean mNeedPrefix;
 	private boolean mAutoCommitEnable;
 	private boolean mSelectioActive;
 	private int mSelection;
@@ -111,19 +112,15 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
-			Button view;
-			RedPacketCode code = mUiCodes[position];
+			RedPacketView view;
 
 			if (convertView != null) {
-				view = (Button) convertView;
+				view = (RedPacketView) convertView;
 			} else {
-				view = new Button(CavanInputMethod.this);
+				view = new RedPacketView(CavanInputMethod.this);
 			}
 
-			view.setTextColor(code.isInvalid() ? Color.RED : Color.BLACK);
-			view.setOnClickListener(CavanInputMethod.this);
-			view.setText(code.getCode());
-			view.setSingleLine();
+			view.setRedPacketCode(mUiCodes[position]);
 
 			return view;
 		}
@@ -170,7 +167,7 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		conn.performEditorAction(action);
 	}
 
-	public boolean sendRedPacketCode(CharSequence code) {
+	public boolean sendRedPacketCode(CharSequence code, boolean execute) {
 		InputConnection conn = getCurrentInputConnection();
 		if (conn == null) {
 			return false;
@@ -178,10 +175,14 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 		if (mIsAlipay) {
 			conn.performContextMenuAction(android.R.id.selectAll);
-			conn.commitText(code, 0);
+		} else if (mNeedPrefix) {
+			code = "支付宝红包口令： " + code;
+		}
+
+		conn.commitText(code, 0);
+
+		if (mIsAlipay && execute) {
 			sendFinishAction(conn);
-		} else {
-			conn.commitText(code, 0);
 		}
 
 		return true;
@@ -250,7 +251,18 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 	@Override
 	public void onStartInput(EditorInfo attribute, boolean restarting) {
-		mIsAlipay = CavanPackageName.ALIPAY.equals(getCurrentInputEditorInfo().packageName);
+		String pkgName = getCurrentInputEditorInfo().packageName;
+		CavanAndroid.dLog("package = " + pkgName);
+
+		mIsAlipay = CavanPackageName.ALIPAY.equals(pkgName);
+		if (mIsAlipay) {
+			mNeedPrefix = false;
+		} else if (CavanPackageName.CALENDAR.equals(pkgName)) {
+			mNeedPrefix = true;
+		} else {
+			mNeedPrefix = false;
+		}
+
 		mAutoCommitEnable = false;
 		super.onStartInput(attribute, restarting);
 	}
@@ -283,12 +295,6 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 		mKeyboardView.setOnKeyboardActionListener(this);
 
 		return view;
-	}
-
-	@Override
-	public void onClick(View v) {
-		Button button = (Button) v;
-		sendRedPacketCode(button.getText());
 	}
 
 	@Override
@@ -416,5 +422,32 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 	@Override
 	public void swipeUp() {
+	}
+
+	public class RedPacketView extends Button implements OnClickListener {
+
+		private RedPacketCode mCode;
+
+		public RedPacketView(Context context) {
+			super(context);
+		}
+
+		public void setRedPacketCode(RedPacketCode code) {
+			mCode = code;
+
+			setTextColor(code.isInvalid() ? Color.RED : Color.BLACK);
+			setOnClickListener(this);
+			setText(code.getCode());
+			setSingleLine();
+		}
+
+		public RedPacketCode getPacketCode() {
+			return mCode;
+		}
+
+		@Override
+		public void onClick(View v) {
+			sendRedPacketCode(mCode.getCode(), !mCode.isInvalid());
+		}
 	}
 }
