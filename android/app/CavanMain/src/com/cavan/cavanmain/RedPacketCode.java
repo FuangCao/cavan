@@ -16,7 +16,7 @@ import android.content.Intent;
 @SuppressLint("SimpleDateFormat")
 public class RedPacketCode implements Comparable<RedPacketCode> {
 
-	private static int LAST_CODE_SIZE = 8;
+	private static int LAST_CODE_SIZE = 9;
 	private static long LAST_CODE_OVERTIME = 1800000;
 	private static long CODE_OVERTIME = 28800000;
 	private static long REPEAT_TIME_ALIGN = 60000;

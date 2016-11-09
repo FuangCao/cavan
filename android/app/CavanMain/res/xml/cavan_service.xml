@@ -38,6 +38,9 @@
 	    android:persistent="true"
 	    android:title="@string/text_red_packet_code_split" />
 
+	<Preference android:key="red_packet_code_clear"
+	    android:title="@string/text_red_packet_code_clear" />
+
 	<CheckBoxPreference android:key="auto_open_app"
 	    android:persistent="true"
 	    android:defaultValue="true"

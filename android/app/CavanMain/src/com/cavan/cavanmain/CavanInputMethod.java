@@ -30,7 +30,7 @@ import com.cavan.java.CavanString;
 
 public class CavanInputMethod extends InputMethodService implements OnKeyboardActionListener {
 
-	private static final int CODE_MAX_COLUMNS = 4;
+	private static final int CODE_MAX_COLUMNS = 3;
 
 	public static final int KEYCODE_COPY = 1;
 	public static final int KEYCODE_PASTE = 2;
@@ -103,7 +103,13 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			mUiCodes = new RedPacketCode[size];
 			codes.toArray(mUiCodes);
 
-			mCodeGridView.setNumColumns(columns);
+			if (size > 0) {
+				mCodeGridView.setVisibility(View.VISIBLE);
+				mCodeGridView.setNumColumns(columns);
+			} else {
+				mCodeGridView.setVisibility(View.GONE);
+			}
+
 			mAdapter.notifyDataSetChanged();
 		}
 	};

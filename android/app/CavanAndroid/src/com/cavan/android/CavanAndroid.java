@@ -22,6 +22,7 @@ import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
@@ -153,6 +154,9 @@ public class CavanAndroid {
 		dLog(text);
 
 		Toast toast = Toast.makeText(context, text, duration);
+
+		toast.setGravity(Gravity.CENTER, 0, 0);
+
 		synchronized (sToastLock) {
 			cancelToastLocked();
 

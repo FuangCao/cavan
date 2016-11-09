@@ -81,9 +81,11 @@
     <string name="text_send">发送</string>
     <string name="text_recognize">识别</string>
     <string name="text_split">拆分</string>
+    <string name="text_already_clear">已清空</string>
     <string name="text_red_packet_code_send">红包口令发送</string>
     <string name="text_red_packet_code_recognize">红包口令识别</string>
     <string name="text_red_packet_code_split">红包口令拆分</string>
+    <string name="text_red_packet_code_clear">红包口令清空</string>
 
     <string-array name="text_auto_entries">
         <item>关闭</item>

@@ -72,6 +72,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_RED_PACKET_CODE_SEND = "red_packet_code_send";
 	public static final String KEY_RED_PACKET_CODE_RECOGNIZE = "red_packet_code_recognize";
 	public static final String KEY_RED_PACKET_CODE_SPLIT = "red_packet_code_split";
+	public static final String KEY_RED_PACKET_CODE_CLEAR = "red_packet_code_clear";
 	public static final String KEY_RED_PACKET_NOTIFY_TEST = "red_packet_notify_test";
 	public static final String KEY_RED_PACKET_NOTIFY_RINGTONE = "red_packet_notify_ringtone";
 	public static final String KEY_TCP_BRIDGE = "tcp_bridge";
@@ -175,6 +176,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 	private File mFileBin;
 	private Preference mPreferenceIpAddress;
+	private Preference mPreferenceRedPacketClear;
 	private Preference mPreferenceInputMethodSelect;
 	private CheckBoxPreference mPreferenceFloatTime;
 	private CheckBoxPreference mPreferenceAutoUnlock;
@@ -269,6 +271,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceInputMethodSelect = findPreference(KEY_INPUT_METHOD_SELECT);
 		mPreferenceLanTest = findPreference(KEY_LAN_TEST);
 		mPreferenceWanTest = findPreference(KEY_WAN_TEST);
+		mPreferenceRedPacketClear = findPreference(KEY_RED_PACKET_CODE_CLEAR);
 		mPreferenceAutoOpenApp = (CheckBoxPreference) findPreference(KEY_AUTO_OPEN_APP);
 
 		mPreferenceAutoUnlock = (CheckBoxPreference) findPreference(KEY_AUTO_UNLOCK);
@@ -523,6 +526,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			if (!CavanInputMethod.isDefaultInputMethod(this)) {
 				CavanAndroid.showInputMethodPicker(this);
 			}
+		} else if (preference == mPreferenceRedPacketClear) {
+			RedPacketCode.getLastCodes().clear();
+			CavanAndroid.showToast(this, R.string.text_already_clear);
 		}
 
 		return super.onPreferenceTreeClick(preferenceScreen, preference);
