@@ -24,7 +24,7 @@ namespace JwaooOtpProgrammer {
         private static String sFileProgrammerBin = Path.Combine(Application.StartupPath, "jtag_programmer.bin");
         private static String[] sOtpCommandArgs = { "-type", "otp", "-chip", "DA14580-01", "-jtag", "123456", "-baudrate", "57600" };
 
-        private static byte[] sOtpBootMagic = { 0x12, 0x34, 0xA5, 0xA5, 0xA5, 0xA5, 0x12, 0x34 };
+        private static byte[] sOtpBootMagic = { 0xA5, 0xA5, 0x34, 0x12, 0x34, 0x12, 0xA5, 0xA5 };
 
         private UInt64 mBdAddress;
         private String mFileSmartSnippetsExe;
