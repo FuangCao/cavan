@@ -30,6 +30,14 @@
 #define JWAOO_TOY_ACCEL_FUZZ        2.0
 #define JWAOO_TOY_CAPACITY_FUZZ     6.0
 
+#define JWAOO_TOY_KEY_UP            0
+#define JWAOO_TOY_KEY_DOWN          2
+#define JWAOO_TOY_KEY_O             1
+#define JWAOO_TOY_KEY_MAX           3
+
+#define JWAOO_TOY_LED_BATT          1
+#define JWAOO_TOY_LED_BT            2
+
 @class JwaooBleToy;
 
 @protocol JwaooBleToyDelegate <NSObject>
@@ -42,9 +50,24 @@
 - (void)didKeyClicked:(uint8_t)code
                 count:(uint8_t)count;
 - (void)didKeyLongClicked:(uint8_t)code;
+- (void)didMotoStateChanged:(uint8_t)mode
+                      speed:(uint8_t)speed;
 - (void)didSensorDataReceived:(nonnull NSData *)data;
 - (void)didDebugDataReceived:(nonnull NSData *)data;
 - (void)didConnectStateChanged:(BOOL)connected;
+
+@end
+
+@interface JwaooToyMotoMode : NSObject {
+    uint8_t mMode;
+    uint8_t mSpeed;
+}
+
+@property uint8_t mode;
+@property uint8_t speed;
+
+- (nonnull JwaooToyMotoMode *)initWithMode:(uint8_t)mode
+                                 withSpeed:(uint8_t)speed;
 
 @end
 
@@ -104,5 +127,13 @@
 - (BOOL)setKeyMultiClickEnable:(BOOL)enable;
 - (BOOL)setKeyMultiClickEnable:(BOOL)enable
                   withDelay:(uint16_t)delay;
+- (BOOL)setKeyLock:(BOOL)enable;
+- (BOOL)setKeyReportEnable:(uint8_t)mask;
+- (BOOL)setLedEnable:(uint8_t)index
+              enable:(BOOL)enable;
+- (BOOL)setMotoEventEnable:(BOOL)enable;
+- (nonnull JwaooToyMotoMode *)getMotoMode;
+- (BOOL)setMotoMode:(uint8_t)mode
+          withSpeed:(uint8_t)speed;
 
 @end

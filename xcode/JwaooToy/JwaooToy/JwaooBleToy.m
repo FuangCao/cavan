@@ -11,6 +11,27 @@
 #import "JwaooToySensorDefault.h"
 #import "JwaooToySensorModel6.h"
 
+@implementation JwaooToyMotoMode
+
+@synthesize mode = mMode;
+@synthesize speed = mSpeed;
+
+- (JwaooToyMotoMode *)initWithMode:(uint8_t)mode
+                         withSpeed:(uint8_t)speed {
+    if (self = [super init]) {
+        mMode = mode;
+        mSpeed = speed;
+    }
+
+    return self;
+}
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"mode: %d, speed: %d", mMode, mSpeed];
+}
+
+@end
+
 @implementation JwaooBleToy
 
 @synthesize sensor = mSensor;
@@ -66,8 +87,20 @@
                 }
                 break;
 
+            case JWAOO_TOY_EVT_MOTO_STATE_CHANGED:
+                if (length < 3) {
+                    break;
+                }
+
+                if ([mDelegate respondsToSelector:@selector(didMotoStateChanged:speed:)]) {
+                    [mDelegate didMotoStateChanged:bytes[1] speed:bytes[2]];
+                } else {
+                    NSLog(@"didMotoStateChanged: mode = %d, speed = %d", bytes[1], bytes[2]);
+                }
+                break;
+
             default:
-                NSLog(@"unknown event%d", bytes[0]);
+                NSLog(@"unknown event%d, length = %lu", bytes[0], (unsigned long)length);
         }
     }
 }
@@ -438,6 +471,42 @@
 - (BOOL)setKeyMultiClickEnable:(BOOL)enable
                   withDelay:(uint16_t)delay {
     return [mCommand readBoolWithType:JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE withBool:enable withDelay16:delay];
+}
+
+- (BOOL)setKeyLock:(BOOL)enable {
+    return [mCommand readBoolWithType:JWAOO_TOY_CMD_KEY_LOCK withBool:enable];
+}
+
+- (BOOL)setKeyReportEnable:(uint8_t)mask {
+    return [mCommand readBoolWithType:JWAOO_TOY_CMD_KEY_REPORT_ENABLE withValue8:mask];
+}
+
+- (BOOL)setLedEnable:(uint8_t)index
+              enable:(BOOL)enable {
+    uint8_t command[] = { JWAOO_TOY_CMD_LED_ENABLE, index, enable };
+    return [mCommand readBoolWithBytes:command length:sizeof(command)];
+}
+
+- (BOOL)setMotoEventEnable:(BOOL)enable {
+    return [mCommand readBoolWithType:JWAOO_TOY_CMD_MOTO_EVENT_ENABLE withBool:enable];
+}
+
+- (JwaooToyMotoMode *)getMotoMode {
+    NSData *response = [mCommand readDataWithType:JWAOO_TOY_CMD_MOTO_GET_MODE];
+    if (response == nil || response.length != 2) {
+        return nil;
+    }
+
+    const uint8_t *bytes = response.bytes;
+
+    return [[JwaooToyMotoMode alloc] initWithMode:bytes[0] withSpeed:bytes[1]];
+}
+
+- (BOOL)setMotoMode:(uint8_t)mode
+          withSpeed:(uint8_t)speed {
+    uint8_t command[] = { JWAOO_TOY_CMD_MOTO_SET_MODE, mode, speed };
+
+    return [mCommand readBoolWithBytes:command length:sizeof(command)];
 }
 
 @end

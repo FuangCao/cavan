@@ -11,6 +11,42 @@
 
 enum
 {
+	JWAOO_TOY_UUID_SVC = 0x1888,
+	JWAOO_TOY_UUID_COMMAND,
+	JWAOO_TOY_UUID_EVENT,
+	JWAOO_TOY_UUID_FLASH,
+	JWAOO_TOY_UUID_SENSOR,
+	JWAOO_TOY_UUID_DEBUG,
+	JWAOO_TOY_UUID_MAX
+};
+
+enum
+{
+	JWAOO_TOY_ATTR_SVC,
+
+	JWAOO_TOY_ATTR_COMMAND_CHAR,
+	JWAOO_TOY_ATTR_COMMAND_DATA,
+
+	JWAOO_TOY_ATTR_EVENT_CHAR,
+	JWAOO_TOY_ATTR_EVENT_DATA,
+	JWAOO_TOY_ATTR_EVENT_CFG,
+
+	JWAOO_TOY_ATTR_FLASH_CHAR,
+	JWAOO_TOY_ATTR_FLASH_DATA,
+
+	JWAOO_TOY_ATTR_SENSOR_CHAR,
+	JWAOO_TOY_ATTR_SENSOR_DATA,
+	JWAOO_TOY_ATTR_SENSOR_CFG,
+
+	JWAOO_TOY_ATTR_DEBUG_CHAR,
+	JWAOO_TOY_ATTR_DEBUG_DATA,
+	JWAOO_TOY_ATTR_DEBUG_CFG,
+
+	JWAOO_TOY_ATTR_COUNT,
+};
+
+enum
+{
 	JWAOO_TOY_RSP_BOOL,
 	JWAOO_TOY_RSP_U8,
 	JWAOO_TOY_RSP_U16,
@@ -28,6 +64,9 @@ enum
 	JWAOO_TOY_CMD_REBOOT,
 	JWAOO_TOY_CMD_SHUTDOWN,
 	JWAOO_TOY_CMD_I2C_RW,
+	JWAOO_TOY_CMD_SUSPEND_DELAY,
+	JWAOO_TOY_CMD_APP_DATA,
+	JWAOO_TOY_CMD_APP_SETTINGS,
 	JWAOO_TOY_CMD_FLASH_ID = 30,
 	JWAOO_TOY_CMD_FLASH_SIZE,
 	JWAOO_TOY_CMD_FLASH_PAGE_SIZE,
@@ -42,13 +81,21 @@ enum
 	JWAOO_TOY_CMD_FLASH_WRITE_BD_ADDR,
 	JWAOO_TOY_CMD_FACTORY_ENABLE = 50,
 	JWAOO_TOY_CMD_LED_ENABLE,
+	JWAOO_TOY_CMD_READ_TEST_RESULT,
+	JWAOO_TOY_CMD_WRITE_TEST_RESULT,
 	JWAOO_TOY_CMD_BATT_INFO = 60,
 	JWAOO_TOY_CMD_BATT_EVENT_ENABLE,
+	JWAOO_TOY_CMD_BATT_SHUTDOWN_VOLTAGE,
 	JWAOO_TOY_CMD_SENSOR_ENABLE = 70,
 	JWAOO_TOY_CMD_MOTO_SET_MODE = 80,
+	JWAOO_TOY_CMD_MOTO_GET_MODE,
+	JWAOO_TOY_CMD_MOTO_EVENT_ENABLE,
+	JWAOO_TOY_CMD_MOTO_SPEED_TABLE,
 	JWAOO_TOY_CMD_KEY_CLICK_ENABLE = 90,
 	JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE,
 	JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE,
+	JWAOO_TOY_CMD_KEY_LOCK,
+	JWAOO_TOY_CMD_KEY_REPORT_ENABLE,
 	JWAOO_TOY_CMD_GPIO_GET = 100,
 	JWAOO_TOY_CMD_GPIO_SET,
 	JWAOO_TOY_CMD_GPIO_CFG,
@@ -62,6 +109,7 @@ enum
 	JWAOO_TOY_EVT_KEY_CLICK,
 	JWAOO_TOY_EVT_KEY_LONG_CLICK,
 	JWAOO_TOY_EVT_UPGRADE_COMPLETE,
+	JWAOO_TOY_EVT_MOTO_STATE_CHANGED,
 };
 
 enum
@@ -89,6 +137,8 @@ struct jwaoo_toy_command
 	union {
 		char text[1];
 		uint8_t bytes[1];
+		uint16_t words[1];
+		uint32_t dwords[1];
 		uint8_t value8;
 		uint16_t value16;
 		uint32_t value32;
@@ -109,6 +159,11 @@ struct jwaoo_toy_command
 		} enable;
 
 		struct {
+			uint8_t index;
+			uint8_t value;
+		} node;
+
+		struct {
 			uint8_t slave;
 			uint8_t rdlen;
 			uint8_t data[];
@@ -118,6 +173,11 @@ struct jwaoo_toy_command
 			uint8_t mode;
 			uint8_t level;
 		} moto;
+
+		struct {
+			uint8_t index;
+			uint8_t data[9];
+		} speed_table;
 
 		struct {
 			uint8_t index;
@@ -143,6 +203,11 @@ struct jwaoo_toy_command
 			uint8_t function;
 			uint8_t high;
 		} gpio_config;
+
+		struct {
+			uint16_t valid;
+			uint16_t result;
+		} test_result;
 	};
 };
 
@@ -154,17 +219,29 @@ struct jwaoo_toy_response
 	union {
 		char text[1];
 		uint8_t bytes[1];
+		uint16_t words[1];
+		uint32_t dwords[1];
 		uint8_t value8;
 		uint16_t value16;
 		uint32_t value32;
+
+		struct {
+			uint16_t valid;
+			uint16_t result;
+		} test_result;
+
+		struct {
+			uint8_t state;
+			uint8_t level;
+			uint16_t voltage;
+		} battery;
+
+		struct {
+			uint8_t mode;
+			uint8_t level;
+		} moto;
 	};
 };
-
-struct jwaoo_toy_device_data_tag
-{
-	uint8_t bd_addr[6];
-};
-
 #pragma pack()
 
 @class JwaooToyResponse;

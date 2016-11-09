@@ -211,4 +211,12 @@
     [mBleToy setKeyMultiClickEnable:sender.state];
 }
 
+- (IBAction)buttonMotoEventClick:(NSButton *)sender {
+    [mBleToy setMotoEventEnable:sender.state];
+}
+
+- (IBAction)buttonKeyLockClick:(NSButton *)sender {
+    [mBleToy setKeyLock:sender.state];
+}
+
 @end
