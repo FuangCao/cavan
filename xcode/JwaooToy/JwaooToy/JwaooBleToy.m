@@ -8,24 +8,16 @@
 
 #import "JwaooBleToy.h"
 #import "CavanHexFile.h"
-#import "Mpu6050Sensor.h"
+#import "JwaooToySensorDefault.h"
+#import "JwaooToySensorModel6.h"
 
 @implementation JwaooBleToy
 
-- (double) freq {
-    return mParser.freq;
-}
-
-- (double) depth {
-    return mParser.depth;
-}
+@synthesize sensor = mSensor;
 
 - (JwaooBleToy *)initWithDelegate:(id<JwaooBleToyDelegate>)delegate {
-    if (self = [super initWithName:@"JwaooToy" uuid:JWAOO_TOY_UUID_SERVICE]) {
+    if (self = [super initWithNames:@[@"JwaooToy", @"SenseTube"] uuid:JWAOO_TOY_UUID_SERVICE]) {
         mDelegate = delegate;
-        mSensor = [Mpu6050Sensor new];
-
-        mParser = [[JwaooToyParser alloc] initWithFuzz:JWAOO_TOY_CAPACITY_FUZZ];
     }
 
     return self;
@@ -82,7 +74,6 @@
 
 - (void)onSensorDataReceived:(NSData *)data {
     [mSensor putBytes:data.bytes];
-    [mParser putSensorData:mSensor];
 
     if ([mDelegate respondsToSelector:@selector(didSensorDataReceived:)]) {
         [mDelegate didSensorDataReceived:data];
@@ -171,7 +162,13 @@
 
     NSLog(@"identify = %@", identify);
 
-    if (![identify isEqualToString:JWAOO_TOY_IDENTIFY]) {
+    if ([identify isEqualToString:JWAOO_TOY_ID_DEFAULT]) {
+        mSensor = [JwaooToySensorDefault new];
+    } else if ([identify isEqualToString:JWAOO_TOY_ID_K100]) {
+        mSensor = [JwaooToySensorDefault new];
+    } else if ([identify isEqualToString:JWAOO_TOY_ID_MODEL6]) {
+        mSensor = [JwaooToySensorModel6 new];
+    } else {
         NSLog(@"Invalid identify");
         return false;
     }

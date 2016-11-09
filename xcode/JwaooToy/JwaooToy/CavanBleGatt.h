@@ -15,7 +15,7 @@
 
 @interface CavanBleGatt : CBCentralManager <CBCentralManagerDelegate, CBPeripheralDelegate> {
     CBUUID *mUUID;
-    NSString *mName;
+    NSArray *mNames;
     CBService *mService;
     CBPeripheral *mPeripheral;
     dispatch_queue_t mQueue;
@@ -35,8 +35,8 @@
 @property (nullable) CBService *service;
 @property (nullable) CBPeripheral *peripheral;
 
-- (nullable CavanBleGatt *)initWithName:(nullable NSString *)name
-                          uuid:(nullable CBUUID *)uuid;
+- (nullable CavanBleGatt *)initWithNames:(nullable NSArray *)names
+                          uuid:(nullable CBUUID *)uuids;
 
 - (void)startScan;
 - (void)addBleChar:(nonnull CavanBleChar *)bleChar

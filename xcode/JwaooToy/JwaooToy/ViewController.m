@@ -58,9 +58,7 @@
 
 - (void)didSensorDataReceived:(nonnull NSData *)data {
     mCount++;
-    mFreq = mBleToy.freq;
-    mDepth = mBleToy.depth;
-    [self performSelectorOnMainThread:@selector(updateFreqDepth) withObject:nil waitUntilDone:NO];
+    [self performSelectorOnMainThread:@selector(updateSensorData) withObject:nil waitUntilDone:NO];
 }
 
 - (void)dataSpeedTimer {
@@ -115,9 +113,8 @@
     }
 }
 
-- (void)updateFreqDepth {
-    _mLabelFreq.doubleValue = mFreq;
-    _mLabelDepth.doubleValue = mDepth;
+- (void)updateSensorData {
+    _mLabelSensorData.stringValue = [mBleToy.sensor description];
 }
 
 - (void)onProgressUpdated:(NSNumber *)progress {

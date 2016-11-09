@@ -23,7 +23,7 @@
 }
 
 - (NSString *)description {
-    return [NSString stringWithFormat:@"[%f, %f, %f]", mAxisX, mAxisY, mAxisZ];
+    return [NSString stringWithFormat:@"[%7.2f, %7.2f, %7.2f]", mAxisX, mAxisY, mAxisZ];
 }
 
 - (void)putBytes:(const void *)bytes {

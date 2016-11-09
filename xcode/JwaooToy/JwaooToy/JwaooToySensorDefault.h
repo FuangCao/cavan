@@ -7,9 +7,9 @@
 //
 
 #import <Foundation/Foundation.h>
-#include "JwaooToySensor.h"
+#import "CavanAccelSensor.h"
 
-@interface Mpu6050Sensor : JwaooToySensor
+@interface JwaooToySensorDefault : CavanAccelSensor
 
 + (double)buildAxisWithValue8:(int8_t)value;
 + (double)buildAxisWithValue16:(int16_t)value;

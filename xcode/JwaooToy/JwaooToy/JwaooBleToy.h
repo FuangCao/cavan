@@ -10,13 +10,14 @@
 #import "CavanBleChar.h"
 #import "CavanBleGatt.h"
 #import "CavanHexFile.h"
-#import "JwaooToySensor.h"
-#import "JwaooToyParser.h"
+#import "CavanAccelSensor.h"
 #import "JwaooToyCommand.h"
 #import "JwaooToyResponse.h"
 #import "CavanProgressManager.h"
 
-#define JWAOO_TOY_IDENTIFY          @"JwaooToy"
+#define JWAOO_TOY_ID_DEFAULT          @"JwaooToy"
+#define JWAOO_TOY_ID_K100             @"K100"
+#define JWAOO_TOY_ID_MODEL6           @"MODEL-06"
 
 #define JWAOO_TOY_UUID_SERVICE      [CBUUID UUIDWithString:@"1888"]
 #define JWAOO_TOY_UUID_COMMAND      [CBUUID UUIDWithString:@"1889"]
@@ -55,16 +56,15 @@
     CavanBleChar *mCharDebug;
     JwaooToyCommand *mCommand;
 
-    JwaooToySensor *mSensor;
-    JwaooToyParser *mParser;
+    CavanAccelSensor *mSensor;
     id<JwaooBleToyDelegate> mDelegate;
 
     BOOL mUpgradeBusy;
     uint8_t mFlashCrc;
+    uint8_t mDeviceId;
 }
 
-@property (readonly) double freq;
-@property (readonly) double depth;
+@property (readonly, nonnull) CavanAccelSensor *sensor;
 
 - (nonnull JwaooBleToy *)initWithDelegate:(nullable id<JwaooBleToyDelegate>)delegate;
 

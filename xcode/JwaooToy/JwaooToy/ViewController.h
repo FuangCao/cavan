@@ -12,8 +12,6 @@
 @interface ViewController : NSViewController <JwaooBleToyDelegate> {
     BOOL mSensorEnable;
     JwaooBleToy *mBleToy;
-    double mFreq;
-    double mDepth;
     int mCount;
 }
 
@@ -24,8 +22,6 @@
 @property (weak) IBOutlet NSButton *mButtonUpgrade;
 @property (weak) IBOutlet NSTextField *mLabelDataCount;
 @property (weak) IBOutlet NSTextField *mLabelDataSpeed;
-@property (weak) IBOutlet NSTextField *mLabelFreq;
-@property (weak) IBOutlet NSTextField *mLabelDepth;
 @property (weak) IBOutlet NSTextField *mTextFieldBdAddr;
 @property (weak) IBOutlet NSButton *mButtonSensor;
 @property (weak) IBOutlet NSButton *mButtonLongClick;
@@ -33,6 +29,7 @@
 @property (weak) IBOutlet NSButton *mButtonClick;
 @property (weak) IBOutlet NSButton *mButtonReadBdAddr;
 @property (weak) IBOutlet NSButton *mButtonWriteBdAddr;
+@property (weak) IBOutlet NSTextField *mLabelSensorData;
 
 @end
 

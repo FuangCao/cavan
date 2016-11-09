@@ -12,15 +12,12 @@
 		8643ECD81D78064A00FD213B /* CavanWaveArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 8643ECD71D78064A00FD213B /* CavanWaveArray.m */; };
 		8643ECDB1D780F1E00FD213B /* CavanSquareWaveGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 8643ECDA1D780F1E00FD213B /* CavanSquareWaveGenerator.m */; };
 		8643ECDE1D78238A00FD213B /* CavanSquareWaveCounter.m in Sources */ = {isa = PBXBuildFile; fileRef = 8643ECDD1D78238A00FD213B /* CavanSquareWaveCounter.m */; };
-		8643ECE11D782AFC00FD213B /* JwaooDepthSquareWaveGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 8643ECE01D782AFC00FD213B /* JwaooDepthSquareWaveGenerator.m */; };
-		8643ECE41D782B1400FD213B /* JwaooDepthDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 8643ECE31D782B1400FD213B /* JwaooDepthDecoder.m */; };
-		86677C101D3772BD0018A17B /* JwaooToyParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 86677C0F1D3772BD0018A17B /* JwaooToyParser.m */; };
-		86677C131D3775860018A17B /* JwaooToySensor.m in Sources */ = {isa = PBXBuildFile; fileRef = 86677C121D3775860018A17B /* JwaooToySensor.m */; };
 		86685CF01D31176300C1BD37 /* CavanProgressManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 86685CEF1D31176300C1BD37 /* CavanProgressManager.m */; };
+		866974E01DD31AF500AEE5B9 /* JwaooToySensorModel6.m in Sources */ = {isa = PBXBuildFile; fileRef = 866974DF1DD31AF500AEE5B9 /* JwaooToySensorModel6.m */; };
 		86D82B381D365E8200FD2D46 /* CavanAccelSensor.m in Sources */ = {isa = PBXBuildFile; fileRef = 86D82B371D365E8200FD2D46 /* CavanAccelSensor.m */; };
 		86E4B14B1D2F9C6700F2B897 /* CavanPeakValleyValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E4B14A1D2F9C6700F2B897 /* CavanPeakValleyValue.m */; };
 		86E4B14E1D2F9C8900F2B897 /* CavanPeakValleyFinder.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E4B14D1D2F9C8900F2B897 /* CavanPeakValleyFinder.m */; };
-		86E4B1511D2FE38A00F2B897 /* Mpu6050Sensor.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E4B1501D2FE38A00F2B897 /* Mpu6050Sensor.m */; };
+		86E4B1511D2FE38A00F2B897 /* JwaooToySensorDefault.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E4B1501D2FE38A00F2B897 /* JwaooToySensorDefault.m */; };
 		86E4B1541D2FF99900F2B897 /* CavanAccelFreqParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E4B1531D2FF99900F2B897 /* CavanAccelFreqParser.m */; };
 		86E90B1E1D2E71D400FB82B6 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E90B1D1D2E71D400FB82B6 /* AppDelegate.m */; };
 		86E90B211D2E71D400FB82B6 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 86E90B201D2E71D400FB82B6 /* main.m */; };
@@ -66,24 +63,18 @@
 		8643ECDA1D780F1E00FD213B /* CavanSquareWaveGenerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CavanSquareWaveGenerator.m; sourceTree = "<group>"; };
 		8643ECDC1D78238A00FD213B /* CavanSquareWaveCounter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CavanSquareWaveCounter.h; sourceTree = "<group>"; };
 		8643ECDD1D78238A00FD213B /* CavanSquareWaveCounter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CavanSquareWaveCounter.m; sourceTree = "<group>"; };
-		8643ECDF1D782AFC00FD213B /* JwaooDepthSquareWaveGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JwaooDepthSquareWaveGenerator.h; sourceTree = "<group>"; };
-		8643ECE01D782AFC00FD213B /* JwaooDepthSquareWaveGenerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JwaooDepthSquareWaveGenerator.m; sourceTree = "<group>"; };
-		8643ECE21D782B1400FD213B /* JwaooDepthDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JwaooDepthDecoder.h; sourceTree = "<group>"; };
-		8643ECE31D782B1400FD213B /* JwaooDepthDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JwaooDepthDecoder.m; sourceTree = "<group>"; };
-		86677C0E1D3772BD0018A17B /* JwaooToyParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JwaooToyParser.h; sourceTree = "<group>"; };
-		86677C0F1D3772BD0018A17B /* JwaooToyParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JwaooToyParser.m; sourceTree = "<group>"; };
-		86677C111D3775860018A17B /* JwaooToySensor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JwaooToySensor.h; sourceTree = "<group>"; };
-		86677C121D3775860018A17B /* JwaooToySensor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JwaooToySensor.m; sourceTree = "<group>"; };
 		86685CEE1D31176300C1BD37 /* CavanProgressManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CavanProgressManager.h; sourceTree = "<group>"; };
 		86685CEF1D31176300C1BD37 /* CavanProgressManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CavanProgressManager.m; sourceTree = "<group>"; };
+		866974DE1DD31AF500AEE5B9 /* JwaooToySensorModel6.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JwaooToySensorModel6.h; sourceTree = "<group>"; };
+		866974DF1DD31AF500AEE5B9 /* JwaooToySensorModel6.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JwaooToySensorModel6.m; sourceTree = "<group>"; };
 		86D82B361D365E8200FD2D46 /* CavanAccelSensor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CavanAccelSensor.h; sourceTree = "<group>"; };
 		86D82B371D365E8200FD2D46 /* CavanAccelSensor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CavanAccelSensor.m; sourceTree = "<group>"; };
 		86E4B1491D2F9C6700F2B897 /* CavanPeakValleyValue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CavanPeakValleyValue.h; sourceTree = "<group>"; };
 		86E4B14A1D2F9C6700F2B897 /* CavanPeakValleyValue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CavanPeakValleyValue.m; sourceTree = "<group>"; };
 		86E4B14C1D2F9C8900F2B897 /* CavanPeakValleyFinder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CavanPeakValleyFinder.h; sourceTree = "<group>"; };
 		86E4B14D1D2F9C8900F2B897 /* CavanPeakValleyFinder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CavanPeakValleyFinder.m; sourceTree = "<group>"; };
-		86E4B14F1D2FE38A00F2B897 /* Mpu6050Sensor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mpu6050Sensor.h; sourceTree = "<group>"; };
-		86E4B1501D2FE38A00F2B897 /* Mpu6050Sensor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Mpu6050Sensor.m; sourceTree = "<group>"; };
+		86E4B14F1D2FE38A00F2B897 /* JwaooToySensorDefault.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JwaooToySensorDefault.h; sourceTree = "<group>"; };
+		86E4B1501D2FE38A00F2B897 /* JwaooToySensorDefault.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JwaooToySensorDefault.m; sourceTree = "<group>"; };
 		86E4B1521D2FF99900F2B897 /* CavanAccelFreqParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CavanAccelFreqParser.h; sourceTree = "<group>"; };
 		86E4B1531D2FF99900F2B897 /* CavanAccelFreqParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CavanAccelFreqParser.m; sourceTree = "<group>"; };
 		86E90B191D2E71D400FB82B6 /* JwaooToy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JwaooToy.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -176,24 +167,18 @@
 				8643ECDA1D780F1E00FD213B /* CavanSquareWaveGenerator.m */,
 				8643ECDC1D78238A00FD213B /* CavanSquareWaveCounter.h */,
 				8643ECDD1D78238A00FD213B /* CavanSquareWaveCounter.m */,
-				8643ECDF1D782AFC00FD213B /* JwaooDepthSquareWaveGenerator.h */,
-				8643ECE01D782AFC00FD213B /* JwaooDepthSquareWaveGenerator.m */,
-				8643ECE21D782B1400FD213B /* JwaooDepthDecoder.h */,
-				8643ECE31D782B1400FD213B /* JwaooDepthDecoder.m */,
 				86D82B361D365E8200FD2D46 /* CavanAccelSensor.h */,
 				86D82B371D365E8200FD2D46 /* CavanAccelSensor.m */,
-				86677C111D3775860018A17B /* JwaooToySensor.h */,
-				86677C121D3775860018A17B /* JwaooToySensor.m */,
-				86E4B14F1D2FE38A00F2B897 /* Mpu6050Sensor.h */,
-				86E4B1501D2FE38A00F2B897 /* Mpu6050Sensor.m */,
+				86E4B14F1D2FE38A00F2B897 /* JwaooToySensorDefault.h */,
+				86E4B1501D2FE38A00F2B897 /* JwaooToySensorDefault.m */,
+				866974DE1DD31AF500AEE5B9 /* JwaooToySensorModel6.h */,
+				866974DF1DD31AF500AEE5B9 /* JwaooToySensorModel6.m */,
 				86E4B1491D2F9C6700F2B897 /* CavanPeakValleyValue.h */,
 				86E4B14A1D2F9C6700F2B897 /* CavanPeakValleyValue.m */,
 				86E4B14C1D2F9C8900F2B897 /* CavanPeakValleyFinder.h */,
 				86E4B14D1D2F9C8900F2B897 /* CavanPeakValleyFinder.m */,
 				86E4B1521D2FF99900F2B897 /* CavanAccelFreqParser.h */,
 				86E4B1531D2FF99900F2B897 /* CavanAccelFreqParser.m */,
-				86677C0E1D3772BD0018A17B /* JwaooToyParser.h */,
-				86677C0F1D3772BD0018A17B /* JwaooToyParser.m */,
 				86E90B4E1D2E724600FB82B6 /* CavanBleChar.h */,
 				86E90B4F1D2E724600FB82B6 /* CavanBleChar.m */,
 				86E90B501D2E724600FB82B6 /* CavanBleGatt.h */,
@@ -375,13 +360,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				86677C101D3772BD0018A17B /* JwaooToyParser.m in Sources */,
 				86E90B241D2E71D400FB82B6 /* ViewController.m in Sources */,
 				86E4B14E1D2F9C8900F2B897 /* CavanPeakValleyFinder.m in Sources */,
 				86E90B211D2E71D400FB82B6 /* main.m in Sources */,
 				86E90B1E1D2E71D400FB82B6 /* AppDelegate.m in Sources */,
 				86E90B561D2E725200FB82B6 /* JwaooBleToy.m in Sources */,
-				86677C131D3775860018A17B /* JwaooToySensor.m in Sources */,
 				86F711511D3F5716000D5802 /* JwaooToyCommand.m in Sources */,
 				86685CF01D31176300C1BD37 /* CavanProgressManager.m in Sources */,
 				8643ECDB1D780F1E00FD213B /* CavanSquareWaveGenerator.m in Sources */,
@@ -392,13 +375,12 @@
 				8643ECDE1D78238A00FD213B /* CavanSquareWaveCounter.m in Sources */,
 				86F500DA1D30C09B00BADEB8 /* CavanHexFile.m in Sources */,
 				86F711541D3F572B000D5802 /* JwaooToyResponse.m in Sources */,
-				8643ECE41D782B1400FD213B /* JwaooDepthDecoder.m in Sources */,
-				8643ECE11D782AFC00FD213B /* JwaooDepthSquareWaveGenerator.m in Sources */,
 				8643ECD21D77E44A00FD213B /* CavanTimedArray.m in Sources */,
 				8643ECD11D77E44A00FD213B /* CavanCountedArray.m in Sources */,
+				866974E01DD31AF500AEE5B9 /* JwaooToySensorModel6.m in Sources */,
 				86E4B14B1D2F9C6700F2B897 /* CavanPeakValleyValue.m in Sources */,
 				86D82B381D365E8200FD2D46 /* CavanAccelSensor.m in Sources */,
-				86E4B1511D2FE38A00F2B897 /* Mpu6050Sensor.m in Sources */,
+				86E4B1511D2FE38A00F2B897 /* JwaooToySensorDefault.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,14 +1,15 @@
 //
-//  Mpu6050Sensor.m
+//  JwaooToySensorModel6.m
 //  JwaooToy
 //
-//  Created by 曹福昂 on 16/7/8.
+//  Created by 曹福昂 on 16/11/9.
 //  Copyright © 2016年 曹福昂. All rights reserved.
 //
 
-#import "Mpu6050Sensor.h"
+#import "JwaooToySensorModel6.h"
 
-@implementation Mpu6050Sensor
+@implementation JwaooToySensorModel6
+
 
 + (double)buildAxisWithValue8:(int8_t)value {
     return value * 9.8 / 64;
@@ -19,20 +20,11 @@
 }
 
 - (void)putBytes:(const void *)bytes {
-#if 0
     const uint16_t *values = bytes;
 
     mAxisX = [self.class buildAxisWithValue16:values[0]];
     mAxisY = [self.class buildAxisWithValue16:values[1]];
     mAxisZ = [self.class buildAxisWithValue16:values[2]];
-#else
-    const uint8_t *values = bytes;
-
-    mAxisX = [self.class buildAxisWithValue8:values[0]];
-    mAxisY = [self.class buildAxisWithValue8:values[1]];
-    mAxisZ = [self.class buildAxisWithValue8:values[2]];
-    [self setCapacitysWithBytes16:(values + 3)];
-#endif
 }
 
 @end

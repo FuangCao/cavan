@@ -16,13 +16,13 @@
 
 // ================================================================================
 
-- (CavanBleGatt *)initWithName:(NSString *)name
-                          uuid:(CBUUID *)uuid {
+- (CavanBleGatt *)initWithNames:(NSArray *)names
+                          uuid:(CBUUID *)uuids {
     mQueue = dispatch_queue_create("com.cavan.bluetooth.gatt", DISPATCH_QUEUE_SERIAL);
 
     if (self = [super initWithDelegate:self queue:mQueue]) {
-        mName = name;
-        mUUID = uuid;
+        mNames = names;
+        mUUID = uuids;
         mDictChars = [NSMutableDictionary new];
     }
 
@@ -30,18 +30,8 @@
 }
 
 - (void)startScan {
-    NSArray *services;
-
-    if (mUUID == nil) {
-        services = nil;
-    } else {
-        services = nil; // [NSArray arrayWithObject:mUUID];
-    }
-
-    NSLog(@"services = %@", services);
-
     mPeripheral = nil;
-    [self scanForPeripheralsWithServices:services options:nil];
+    [self scanForPeripheralsWithServices:nil options:nil];
 }
 
 - (void)addBleChar:(CavanBleChar *)bleChar
@@ -146,6 +136,24 @@
 
 }
 
+- (BOOL)isValidPeripheral:(CBPeripheral *)peripheral {
+    if (mNames == nil) {
+        return true;
+    }
+
+    for (NSString *node in mNames) {
+        if ([node isEqualToString:peripheral.name]) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+- (BOOL)isValidService:(CBService *)service {
+    return mUUID == nil || [mUUID isEqual:service.UUID];
+}
+
 // ================================================================================
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central {
@@ -198,7 +206,7 @@
 
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *, id> *)advertisementData RSSI:(NSNumber *)RSSI {
     NSLog(@"didDiscoverPeripheral: %@, rssi = %@", peripheral, RSSI);
-    if (mName == nil || [peripheral.name isEqualToString:mName]) {
+    if ([self isValidPeripheral:peripheral]) {
         if (mPeripheral == nil || RSSI.intValue > mRssi.intValue) {
             NSLog(@"Modify peripheral: %@ => %@", mPeripheral, peripheral);
             mPeripheral = peripheral;
@@ -255,7 +263,7 @@
 
     for (CBService *service in peripheral.services) {
         NSLog(@"service = %@", service.UUID);
-        if (mUUID == nil || [service.UUID isEqualTo:mUUID]) {
+        if ([self isValidService:service]) {
             [peripheral discoverCharacteristics:nil forService:service];
         }
     }
