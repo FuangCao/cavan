@@ -152,13 +152,13 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 		try {
 			if (text != null) {
-				return Integer.parseInt(text);
+				return Integer.parseInt(text) * 1000;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-		return 5;
+		return 5000;
 	}
 
 	public static boolean startSogouOcrActivity(Context context) {
