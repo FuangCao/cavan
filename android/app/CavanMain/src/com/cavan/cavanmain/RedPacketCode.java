@@ -274,7 +274,6 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 
 	synchronized public void setCommitCount(int count) {
 		mPostPending = false;
-		mInvalid = false;
 		mMaybeInvalid = false;
 		mCommitCount = count;
 	}
@@ -353,7 +352,9 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 
 		if (mCompleted) {
 			builder.append(", Completed");
-		} else if (mRepeatTime > 0) {
+		}
+
+		if (mRepeatTime > 0) {
 			builder.append(", Repeatable: ");
 			builder.append(sDateFormat.format(new Date(mRepeatTime)));
 		} else if (mValid) {

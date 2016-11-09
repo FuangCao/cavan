@@ -250,11 +250,15 @@ public class CavanInputMethod extends InputMethodService implements OnClickListe
 
 	@Override
 	public void onStartInput(EditorInfo attribute, boolean restarting) {
-		mAutoCommitEnable = false;
 		mIsAlipay = CavanPackageName.ALIPAY.equals(getCurrentInputEditorInfo().packageName);
-		updateInputView();
-
+		mAutoCommitEnable = false;
 		super.onStartInput(attribute, restarting);
+	}
+
+	@Override
+	public void onStartInputView(EditorInfo info, boolean restarting) {
+		updateInputView();
+		super.onStartInputView(info, restarting);
 	}
 
 	@Override
