@@ -55,6 +55,15 @@ public class CavanByteCache {
 		mOffset = offset;
 	}
 
+	public int getDataRemain() {
+		return mLength - mOffset;
+	}
+
+	public int seek(int offset) {
+		mOffset += offset;
+		return mOffset;
+	}
+
 	public boolean writeValue8(byte value) {
 		if (mOffset < mLength) {
 			mBytes[mOffset++] = value;
@@ -151,18 +160,26 @@ public class CavanByteCache {
 	}
 
 	public short readValue16() {
-		return (short) ((readValue8() & 0xFF) | ((readValue8() & 0xFF) << 8));
+		return (short) ((readValue8() & 0xFF) | (((short) (readValue8() & 0xFF)) << 8));
 	}
 
 	public int readValue32() {
-		return (readValue16() & 0xFFFF) | ((readValue16() & 0xFFFF) << 16);
+		return (readValue16() & 0xFFFF) | (((int) (readValue16() & 0xFFFF)) << 16);
+	}
+
+	public long readValue64() {
+		return (readValue32() & 0xFFFFFFFF) | (((long) (readValue32() & 0xFFFFFFFF)) << 32);
 	}
 
 	public short readValueBe16() {
-		return (short) (((readValue8() & 0xFF) << 8) | (readValue8() & 0xFF));
+		return (short) ((readValue8() << 8) | (readValue8() & 0xFF));
 	}
 
 	public int readValueBe32() {
-		return ((readValueBe16() & 0xFFFF) << 16) | (readValueBe16() & 0xFFFF);
+		return (((int) readValueBe16()) << 16) | (readValueBe16() & 0xFFFF);
+	}
+
+	public long readValueBe64() {
+		return (((long) readValueBe32()) << 32) | (readValueBe32() & 0xFFFFFFFF);
 	}
 }

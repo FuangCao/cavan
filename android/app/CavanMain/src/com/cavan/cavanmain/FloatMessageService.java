@@ -47,6 +47,7 @@ public class FloatMessageService extends FloatWidowService {
 	public static final String NET_CMD_TEST = "CavanNetworkTest";
 	public static final String NET_CMD_KEEP_LIVE = "CavanKeepLive";
 	public static final String NET_CMD_TM_CODE = "SecretOrder: ";
+	public static final String NET_CMD_CLIPBOARD = "Clipboard: ";
 
 	public static final String PATH_QQ_IMAGES = Environment.getExternalStorageDirectory().getPath() + "/Tencent/QQ_Images";
 
@@ -65,12 +66,12 @@ public class FloatMessageService extends FloatWidowService {
 	private static final int MSG_TCP_BRIDGE_STATE_CHANGED = 5;
 	private static final int MSG_TCP_BRIDGE_UPDATED = 6;
 	private static final int MSG_START_OCR = 7;
-	private static final int MSG_TM_CODE_RECEIVED = 8;
+	private static final int MSG_CLIPBOARD_RECEIVED = 8;
 
 	private int mLastSecond;
 	private boolean mUserPresent;
 	private TextView mTextViewTime;
-	private HashMap<CharSequence, String> mMessageCodeMap = new HashMap<CharSequence, String>();
+	private HashMap<CharSequence, RedPacketCode> mMessageCodeMap = new HashMap<CharSequence, RedPacketCode>();
 
 	private UdpDaemonThread mUdpDaemon;
 	private TcpDaemonThread mTcpDaemon;
@@ -148,9 +149,9 @@ public class FloatMessageService extends FloatWidowService {
 				MainActivity.startSogouOcrActivity(getApplicationContext());
 				break;
 
-			case MSG_TM_CODE_RECEIVED:
+			case MSG_CLIPBOARD_RECEIVED:
 				String code = (String) msg.obj;
-				String text = getResources().getString(R.string.text_secret_order_received, code);
+				String text = getResources().getString(R.string.clipboard_updated, code);
 				CavanAndroid.showToast(getApplicationContext(), text);
 				CavanAndroid.postClipboardText(getApplicationContext(), code);
 				break;
@@ -248,7 +249,7 @@ public class FloatMessageService extends FloatWidowService {
 					if (node.isTestOnly()) {
 						sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_TEST, code);
 					} else {
-						mMessageCodeMap.put(message, code);
+						mMessageCodeMap.put(message, node);
 
 						sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_ADD, code);
 
@@ -272,11 +273,17 @@ public class FloatMessageService extends FloatWidowService {
 		public void removeMessage(CharSequence message) throws RemoteException {
 			FloatMessageService.this.removeText(message);
 
-			String code = mMessageCodeMap.get(message);
+			RedPacketCode code = mMessageCodeMap.get(message);
 			if (code != null) {
 				mMessageCodeMap.remove(message);
-				sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_REMOVE, code);
+				sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_REMOVE, code.getCode());
 			}
+		}
+
+		@Override
+		public void removeMessageAll() throws RemoteException {
+			FloatMessageService.this.removeTextAll();
+			mMessageCodeMap.clear();
 		}
 
 		@Override
@@ -298,8 +305,8 @@ public class FloatMessageService extends FloatWidowService {
 		public List<String> getCodes() throws RemoteException {
 			List<String> codes = new ArrayList<String>();
 
-			for (String code : mMessageCodeMap.values()) {
-				codes.add(code);
+			for (RedPacketCode code : mMessageCodeMap.values()) {
+				codes.add(code.getCode());
 			}
 
 			return codes;
@@ -308,6 +315,19 @@ public class FloatMessageService extends FloatWidowService {
 		@Override
 		public int getCodeCount() throws RemoteException {
 			return mMessageCodeMap.size();
+		}
+
+		@Override
+		public int getCodePending() throws RemoteException {
+			int count = 0;
+
+			for (RedPacketCode code : mMessageCodeMap.values()) {
+				if (!code.isCompleted()) {
+					count++;
+				}
+			}
+
+			return count;
 		}
 
 		@Override
@@ -452,7 +472,10 @@ public class FloatMessageService extends FloatWidowService {
 			}
 		} else if (command.startsWith(NET_CMD_TM_CODE)) {
 			String code = CavanString.deleteSpace(command.substring(NET_CMD_TM_CODE.length()));
-			mHandler.obtainMessage(MSG_TM_CODE_RECEIVED, code).sendToTarget();
+			mHandler.obtainMessage(MSG_CLIPBOARD_RECEIVED, code).sendToTarget();
+		} else if (command.startsWith(NET_CMD_CLIPBOARD)) {
+			String code = CavanString.deleteSpace(command.substring(NET_CMD_CLIPBOARD.length()));
+			mHandler.obtainMessage(MSG_CLIPBOARD_RECEIVED, code).sendToTarget();
 		}
 	}
 

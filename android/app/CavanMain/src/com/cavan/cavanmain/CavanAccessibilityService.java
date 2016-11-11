@@ -35,6 +35,7 @@ import android.widget.EditText;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanString;
+import com.cavan.java.RedPacketFinder;
 
 public class CavanAccessibilityService extends AccessibilityService {
 
@@ -863,8 +864,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			if (id.equals("com.tencent.mobileqq:id/chat_item_content_layout")) {
 				String text = CavanString.fromCharSequence(source.getText());
 
-				int lines = CavanString.getLineCount(text);
-				if (lines > 0 && lines < 3) {
+				if (text.length() > 0 && RedPacketFinder.containsUrl(text) == false) {
 					FloatEditorDialog dialog = new FloatEditorDialog(this, text, true);
 					dialog.show(6000);
 				}

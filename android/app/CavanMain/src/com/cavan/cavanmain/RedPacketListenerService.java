@@ -123,15 +123,27 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 			switch (action) {
 			case MainActivity.ACTION_CODE_RECEIVED:
+				String[] codes = intent.getStringArrayExtra("codes");
+				if (codes == null) {
+					String code = intent.getStringExtra("code");
+
+					if (code == null) {
+						break;
+					}
+
+					codes = new String[] { code };
+				}
+
 				String type = intent.getStringExtra("type");
-				String code = intent.getStringExtra("code");
 				boolean shared = intent.getBooleanExtra("shared", false);
 
-				CavanAndroid.dLog("code = " + code);
+				for (String code : codes) {
+					CavanAndroid.dLog("code = " + code);
 
-				RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, type, code, true, shared);
-				notification.setPriority(1);
-				mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
+					RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, type, code, true, shared);
+					notification.setPriority(1);
+					mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
+				}
 				break;
 
 			case MainActivity.ACTION_CONTENT_RECEIVED:
@@ -145,7 +157,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 					pkgName = getPackageName();
 				}
 
-				notification = new RedPacketNotification(RedPacketListenerService.this, pkgName, content, desc, hasPrefix);
+				RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, pkgName, content, desc, hasPrefix);
 				notification.setPriority(priority);
 				mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
 				break;
@@ -177,6 +189,18 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		if (mFloatMessageService != null) {
 			try {
 				return mFloatMessageService.getCodeCount();
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return 0;
+	}
+
+	public int getCodePending() {
+		if (mFloatMessageService != null) {
+			try {
+				return mFloatMessageService.getCodePending();
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
@@ -228,7 +252,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	}
 
 	public static boolean startAlipayActivity(Context context) {
-		if (!MainActivity.isAutoOpenAppEnabled(context)) {
+		if (!MainActivity.isAutoOpenAlipayEnabled(context)) {
 			return false;
 		}
 

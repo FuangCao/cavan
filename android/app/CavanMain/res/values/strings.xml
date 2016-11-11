@@ -142,5 +142,8 @@
         <string name="text_as_code">每行一条完整的口令</string>
         <string name="text_secret_order">密令</string>
         <string name="text_secret_order_received">收到密令：<xliff:g>%1$s</xliff:g></string>
+        <string name="extract">提取</string>
+        <string name="clipboard_updated">剪切板已更新：</string>
+        <string name="auto_open_alipay">自动打开支付宝</string>
 
 </resources>

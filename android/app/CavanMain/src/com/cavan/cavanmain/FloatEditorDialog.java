@@ -1,7 +1,5 @@
 package com.cavan.cavanmain;
 
-import com.cavan.android.CavanAndroid;
-
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
@@ -18,6 +16,9 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
+import com.cavan.android.CavanAndroid;
+import com.cavan.java.RedPacketFinder;
+
 public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListener, OnTouchListener {
 
 	private Context mContext;
@@ -27,7 +28,7 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 	private View mRootView;
 	private Button mButtonCopy;
 	private Button mButtonSend;
-	private Button mButtonSecretOrder;
+	private Button mButtonExtract;
 
 	private CheckBox mCheckBox;
 	private EditText mEditText;
@@ -45,8 +46,8 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 		mButtonCopy = (Button) findViewById(R.id.buttonCopy);
 		mButtonCopy.setOnClickListener(this);
 
-		mButtonSecretOrder = (Button) findViewById(R.id.buttonSecretOrder);
-		mButtonSecretOrder.setOnClickListener(this);
+		mButtonExtract = (Button) findViewById(R.id.buttonExtract);
+		mButtonExtract.setOnClickListener(this);
 
 		mCheckBox = (CheckBox) findViewById(R.id.checkBoxAsCode);
 		mCheckBox.setChecked(checked);
@@ -119,16 +120,36 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 
 	@Override
 	public void onClick(View v) {
-		if (v == mButtonSecretOrder) {
-			String code = mEditText.getText().toString();
-			RedPacketListenerService.postSecretOrder(mContext, code);
+		setAutoDismiss(0);
+
+		if (v == mButtonExtract) {
+			String text = RedPacketFinder.getRedPacketDigitCode(mEditText.getText().toString(), false);
+			if (text == null) {
+				dismiss();
+				return;
+			}
+
+			int length = text.length();
+
+			CavanAndroid.dLog("text[" + length + "] = " + text);
+
+			if (length > 0) {
+				if (length % 8 == 0) {
+					Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
+					intent.putExtra("codes", RedPacketFinder.splitRedPacketCodes(text));
+					mContext.sendBroadcast(intent);
+					dismiss();
+				} else {
+					mEditText.setText(text);
+				}
+			}
+		} else if (v == mButtonCopy) {
+			String text = mEditText.getText().toString();
+			CavanAndroid.postClipboardText(mContext, text);
 
 			Intent intent = new Intent(MainActivity.ACTION_SEND_WAN_COMMAN);
-			intent.putExtra("command", FloatMessageService.NET_CMD_TM_CODE + code);
+			intent.putExtra("command", FloatMessageService.NET_CMD_CLIPBOARD + text);
 			mContext.sendBroadcast(intent);
-			dismiss();
-		} else if (v == mButtonCopy) {
-			CavanAndroid.postClipboardText(mContext, mEditText.getText());
 			dismiss();
 		} else if (v == mButtonSend) {
 			String text = mEditText.getText().toString();
@@ -158,8 +179,6 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 			}
 
 			dismiss();
-		} else {
-			setAutoDismiss(0);
 		}
 	}
 

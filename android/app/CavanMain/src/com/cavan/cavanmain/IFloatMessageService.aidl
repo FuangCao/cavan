@@ -6,11 +6,13 @@ interface IFloatMessageService {
 	int addMessage(CharSequence message, String code);
 	boolean hasMessage(CharSequence message);
 	void removeMessage(CharSequence message);
+	void removeMessageAll();
 	List<String> getMessages();
 	int getMessageCount();
 
 	List<String> getCodes();
 	int getCodeCount();
+	int getCodePending();
 
 	boolean sendRedPacketCode(String code);
 	boolean sendUdpCommand(String command);

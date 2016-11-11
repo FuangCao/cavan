@@ -11,12 +11,14 @@ public class RedPacketFinder {
 	private static final int MIN_CODE_SIZE = 2;
 	private static final int MAX_CODE_SIZE = 30;
 
-	private static final String SEPARATOR = "~\\-_+=";
+	private static final String SEPARATOR = "~\\-_+=\\s";
 	private static final String NORMAL_PATTERN = "(\\w+红包)";
-	private static final String DIGIT_PATTERN = "([\\d\\s" + SEPARATOR + "]+)";
-	private static final String DIGIT_MULTI_LINE_PATTERN = "((?:\\D*\\d)+)";
+	private static final String DIGIT_PATTERN = "([\\d" + SEPARATOR + "]+)";
+	private static final String DIGIT_MULTI_LINE_PATTERN = "((?:[" + SEPARATOR + "]*\\D?[" + SEPARATOR + "]*\\d)+)";
 	private static final String WORD_PATTERN = "(\\w+)";
 	private static final String WORD_MULTI_LINE_PATTERN = "([\\w\\s]+)";
+
+	private static final Pattern PATTERN_URL = Pattern.compile("[a-z]+://\\S+", Pattern.CASE_INSENSITIVE);
 
 	private static final Pattern[] sNormalPatterns = {
 		Pattern.compile("^\\[" + NORMAL_PATTERN + "\\]"),
@@ -28,7 +30,11 @@ public class RedPacketFinder {
 	};
 
 	private static final String[] sExcludePredicts = {
-		"电脑抢红包", "特价清单", "双11抢红包", "电脑入口"
+		"严禁使用红包", "红包不返现"
+	};
+
+	private static final String[] sExcludePredicts11 = {
+		"电脑抢红包", "特价清单", "双11抢红包", "电脑入口", "购物车", "优惠券", "免单"
 	};
 
 	private static final Pattern[] sPicturePatterns = {
@@ -104,7 +110,7 @@ public class RedPacketFinder {
 	};
 
 	public static final Pattern[] sExcludePatterns = {
-		Pattern.compile("[a-z]+://\\S+", Pattern.CASE_INSENSITIVE),
+		PATTERN_URL,
 		Pattern.compile("=\\d{8,}"),
 	};
 
@@ -277,6 +283,11 @@ public class RedPacketFinder {
 		return true;
 	}
 
+	public static boolean containsUrl(CharSequence text) {
+		Matcher matcher = PATTERN_URL.matcher(text);
+		return matcher.find();
+	}
+
 	private List<String> getRedPacketCodes(String line, Pattern[] patterns, List<String> codes, boolean strip, boolean unsafe) {
 		for (Pattern pattern : patterns) {
 			Matcher matcher = pattern.matcher(line);
@@ -332,7 +343,7 @@ public class RedPacketFinder {
 		return codes;
 	}
 
-	private boolean addRedPacketCode(List<String> codes, String code) {
+	public static boolean addRedPacketCode(List<String> codes, String code) {
 		if (isInvalidCode(code)) {
 			return false;
 		}
@@ -348,13 +359,29 @@ public class RedPacketFinder {
 		return true;
 	}
 
-	private void addRedPacketCodes(List<String> codes, String code) {
+	public static void addRedPacketCodes(List<String> codes, String code) {
 		for (int end = 8; end <= code.length(); end += 8) {
 			addRedPacketCode(codes, code.substring(end - 8, end));
 		}
 	}
 
-	private String getRedPacketDigitCode(String text) {
+	public static List<String> addRedPacketCodes(String text) {
+		List<String> codes = new ArrayList<String>();
+		addRedPacketCodes(codes, text);
+		return codes;
+	}
+
+	public static String[] splitRedPacketCodes(String text) {
+		List<String> list = new ArrayList<String>();
+		addRedPacketCodes(list, text);
+
+		String[] codes = new String[list.size()];
+		list.toArray(codes);
+
+		return codes;
+	}
+
+	public static String getRedPacketDigitCode(String text, boolean unsafe) {
 		StringBuilder builder = new StringBuilder();
 		int length = text.length();
 
@@ -364,7 +391,7 @@ public class RedPacketFinder {
 			if (CavanString.isColon(c)) {
 				builder.setLength(builder.length() & (~7));
 			} else if (CavanJava.isDigit(c)) {
-				if (builder.length() % 8 == 0 && i > 0 && CavanJava.isDigit(text.charAt(i - 1))) {
+				if (unsafe && builder.length() % 8 == 0 && i > 0 && CavanJava.isDigit(text.charAt(i - 1))) {
 					return null;
 				}
 
@@ -386,14 +413,14 @@ public class RedPacketFinder {
 		List<String> codes = new ArrayList<String>();
 
 		for (String text : getRedPacketDigitCodes()) {
-			String code = getRedPacketDigitCode(text);
+			String code = getRedPacketDigitCode(text, true);
 			if (code != null && code.length() % 8 == 0) {
 				addRedPacketCodes(codes, code);
 			}
 		}
 
 		for (String text : getRedPacketCodes(mJoinedLines, sMultiLineDigitPatterns, false, true)) {
-			String code = getRedPacketDigitCode(text);
+			String code = getRedPacketDigitCode(text, true);
 			if (code != null) {
 				addRedPacketCodes(codes, code);
 			}
@@ -428,8 +455,14 @@ public class RedPacketFinder {
 	}
 
 	public boolean isPredictCode() {
+		for (String word : sExcludePredicts) {
+			if (mJoinedLines.contains(word)) {
+				return false;
+			}
+		}
+
 		if (mJoinedLines.contains("双11") || mJoinedLines.contains("双十一")) {
-			for (String word : sExcludePredicts) {
+			for (String word : sExcludePredicts11) {
 				if (mJoinedLines.contains(word)) {
 					return false;
 				}

@@ -46,6 +46,11 @@
 	    android:defaultValue="true"
 	    android:title="@string/text_auto_open_app" />
 
+	<CheckBoxPreference android:key="auto_open_alipay"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/auto_open_alipay" />
+
 	<ListPreference android:key="commit_ahead"
 	    android:persistent="true"
 		android:entries="@array/text_ahead_entries"

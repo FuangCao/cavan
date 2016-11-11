@@ -59,7 +59,15 @@ public class CavanBleScanActivity extends Activity implements OnClickListener {
 
 		Intent intent = getIntent();
 		mNames = intent.getStringArrayExtra("names");
-		mUuids = (UUID[]) intent.getSerializableExtra("uuids");
+
+		Object[] objects = (Object[]) intent.getSerializableExtra("uuids");
+		if (objects != null && objects.length > 0) {
+			mUuids = new UUID[objects.length];
+
+			for (int i = 0; i < objects.length; i++) {
+				mUuids[i] = (UUID) objects[i];
+			}
+		}
 
 		ListView view = (ListView) findViewById(R.id.listViewDevices);
 		mAdapter = new CavanBleDeviceAdapter(view) {

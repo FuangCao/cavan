@@ -257,6 +257,10 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 	}
 
 	synchronized public boolean isCompleted() {
+		if (mInvalid) {
+			return true;
+		}
+
 		if (mRepeatTime > 0) {
 			return false;
 		}

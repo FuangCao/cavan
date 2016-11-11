@@ -67,6 +67,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_MESSAGE_SHOW = "message_show";
 	public static final String KEY_COMMIT_AHEAD = "commit_ahead";
 	public static final String KEY_AUTO_OPEN_APP = "auto_open_app";
+	public static final String KEY_AUTO_OPEN_ALIPAY = "auto_open_alipay";
 	public static final String KEY_INPUT_METHOD_SELECT = "input_method_select";
 	public static final String KEY_PERMISSION_SETTINGS = "permission_settings";
 	public static final String KEY_RED_PACKET_CODE_SEND = "red_packet_code_send";
@@ -147,6 +148,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		return mAutoOpenAppEnable && CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_OPEN_APP);
 	}
 
+	public static boolean isAutoOpenAlipayEnabled(Context context) {
+		return mAutoOpenAppEnable && CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_OPEN_ALIPAY);
+	}
+
 	public static int getCommitAhead(Context context) {
 		String text = CavanAndroid.getPreference(context, KEY_COMMIT_AHEAD, null);
 
@@ -184,6 +189,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private Preference mPreferenceMessageShow;
 	private ListPreference mPreferenceAutoCommit;
 	private CheckBoxPreference mPreferenceAutoOpenApp;
+	private CheckBoxPreference mPreferenceAutoOpenAlipay;
 	private EditTextPreference mPreferenceRedPacketCodeSend;
 	private EditTextPreference mPreferenceRedPacketCodeRecognize;
 	private EditTextPreference mPreferenceRedPacketCodeSplit;
@@ -273,6 +279,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceWanTest = findPreference(KEY_WAN_TEST);
 		mPreferenceRedPacketClear = findPreference(KEY_RED_PACKET_CODE_CLEAR);
 		mPreferenceAutoOpenApp = (CheckBoxPreference) findPreference(KEY_AUTO_OPEN_APP);
+		mPreferenceAutoOpenAlipay = (CheckBoxPreference) findPreference(KEY_AUTO_OPEN_ALIPAY);
 
 		mPreferenceAutoUnlock = (CheckBoxPreference) findPreference(KEY_AUTO_UNLOCK);
 		mPreferenceAutoUnlock.setOnPreferenceChangeListener(this);
@@ -521,12 +528,21 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			}
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
 			mPreferenceAutoOpenApp.setChecked(true);
+			mPreferenceAutoOpenAlipay.setChecked(true);
 			mPreferenceWanReceive.setChecked(true);
 
 			if (!CavanInputMethod.isDefaultInputMethod(this)) {
 				CavanAndroid.showInputMethodPicker(this);
 			}
 		} else if (preference == mPreferenceRedPacketClear) {
+			if (mFloatMessageService != null) {
+				try {
+					mFloatMessageService.removeMessageAll();
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			}
+
 			RedPacketCode.getLastCodes().clear();
 			CavanAndroid.showToast(this, R.string.text_already_clear);
 		}
@@ -540,6 +556,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			return setDesktopFloatTimerEnable((boolean) object);
 		} else if (preference == mPreferenceRedPacketCodeSend) {
 			mPreferenceAutoOpenApp.setChecked(true);
+			mPreferenceAutoOpenAlipay.setChecked(true);
 
 			String text = (String) object;
 			if (text != null) {
@@ -557,6 +574,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			}
 		} else if (preference == mPreferenceRedPacketCodeRecognize) {
 			mPreferenceAutoOpenApp.setChecked(true);
+			mPreferenceAutoOpenAlipay.setChecked(true);
 
 			String text = (String) object;
 			if (text != null) {

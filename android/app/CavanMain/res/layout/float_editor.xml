@@ -41,12 +41,12 @@
         android:textSize="@dimen/float_editor_text_size" />
 
     <Button
-        android:id="@+id/buttonSecretOrder"
+        android:id="@+id/buttonExtract"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/editTextContent"
         android:layout_toLeftOf="@+id/buttonCopy"
-        android:text="@string/text_secret_order"
+        android:text="@string/extract"
         android:textSize="@dimen/float_editor_text_size" />
 
 </RelativeLayout>
