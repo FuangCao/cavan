@@ -113,9 +113,9 @@ public class CavanByteCache {
 		return writeValueBe16((short) ((value >> 16) & 0xFFFF)) && writeValueBe16((short) (value & 0xFFFF));
 	}
 
-	public byte readValue8() {
+	public int readValue8() {
 		if (mOffset < mLength) {
-			return mBytes[mOffset++];
+			return mBytes[mOffset++] & 0xFF;
 		}
 
 		return 0;
@@ -159,12 +159,12 @@ public class CavanByteCache {
 		return null;
 	}
 
-	public short readValue16() {
-		return (short) ((readValue8() & 0xFF) | (((short) (readValue8() & 0xFF)) << 8));
+	public int readValue16() {
+		return (readValue8() & 0xFF) | ((readValue8() & 0xFF) << 8);
 	}
 
 	public int readValue32() {
-		return (readValue16() & 0xFFFF) | (((int) (readValue16() & 0xFFFF)) << 16);
+		return (readValue16() & 0xFFFF) | ((readValue16() & 0xFFFF) << 16);
 	}
 
 	public long readValue64() {

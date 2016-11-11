@@ -1,7 +1,9 @@
 package com.cavan.java;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 public class CavanBluetoothScanRecord {
@@ -74,7 +76,10 @@ public class CavanBluetoothScanRecord {
 	public static final int GAP_AD_TYPE_MANU_SPECIFIC_DATA = 0xFF;
 
 	private byte mFlags;
+	private String mName;
+	private String mShortenedName;
 	private List<UUID> mUuids = new ArrayList<UUID>();
+	private HashMap<Integer, byte[]> mVendorData = new HashMap<Integer, byte[]>();
 
 	public static UUID buildUuidShort(long value) {
 		return new UUID(BASE_UUID.getMostSignificantBits() | value << 32, BASE_UUID.getLeastSignificantBits());
@@ -97,7 +102,7 @@ public class CavanBluetoothScanRecord {
 					break;
 				}
 
-				mFlags = cache.readValue8();
+				mFlags = (byte) cache.readValue8();
 				length--;
 				break;
 
@@ -131,6 +136,27 @@ public class CavanBluetoothScanRecord {
 				long msb = cache.readValue64();
 				mUuids.add(new UUID(msb, lsb));
 				length -= 16;
+
+			case GAP_AD_TYPE_SHORTENED_NAME:
+				mShortenedName = new String(cache.readBytes(length - 1));
+				length = 1;
+				break;
+
+			case GAP_AD_TYPE_COMPLETE_NAME:
+				mName = new String(cache.readBytes(length - 1));
+				length = 1;
+				break;
+
+			case GAP_AD_TYPE_MANU_SPECIFIC_DATA:
+				if (length < 3) {
+					break;
+				}
+
+				int vendor = cache.readValue16();
+				byte[] data = cache.readBytes(length - 3);
+				mVendorData.put(vendor, data);
+				length = 1;
+				break;
 			}
 
 			if (length > 1) {
@@ -145,5 +171,68 @@ public class CavanBluetoothScanRecord {
 
 	public List<UUID> getUuids() {
 		return mUuids;
+	}
+
+	public String getShortenedName() {
+		return mShortenedName;
+	}
+
+	public String getName() {
+		return mName;
+	}
+
+	public boolean contains(UUID uuid) {
+		return mUuids.contains(uuid);
+	}
+
+	public boolean contains(UUID[] uuids) {
+		for (UUID uuid : uuids) {
+			if (contains(uuid)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public HashMap<Integer, byte[]> getVendorData() {
+		return mVendorData;
+	}
+
+	public byte[] getVendorData(int vendor) {
+		return mVendorData.get(vendor);
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+
+		builder.append(String.format("flags:%02x", mFlags));
+
+		if (mName != null) {
+			builder.append(", name:");
+			builder.append(mName);
+		}
+
+		if (mShortenedName != null) {
+			builder.append(", short_name:");
+			builder.append(mShortenedName);
+		}
+
+		for (UUID uuid : mUuids) {
+			builder.append(", uuid:");
+			builder.append(uuid);
+		}
+
+		for (Entry<Integer, byte[]> entry : mVendorData.entrySet()) {
+			builder.append(String.format(", vendor:%04x", entry.getKey()));
+			builder.append("@data:");
+
+			for (byte value : entry.getValue()) {
+				builder.append(String.format("%02x", value));
+			}
+		}
+
+		return builder.toString();
 	}
 }

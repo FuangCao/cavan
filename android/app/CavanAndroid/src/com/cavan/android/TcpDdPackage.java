@@ -92,8 +92,8 @@ public class TcpDdPackage {
 			return false;
 		}
 
-		mType = cache.readValue16();
-		short type_inverse = cache.readValue16();
+		mType = (short) cache.readValue16();
+		short type_inverse = (short) cache.readValue16();
 
 		if ((mType ^ type_inverse) != 0xFFFF) {
 			CavanAndroid.dLog(String.format("Invalid type = %d, type_inversion = %d", mType, type_inverse));

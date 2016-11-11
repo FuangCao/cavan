@@ -342,7 +342,7 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 		StringBuilder builder = new StringBuilder(mCode);
 
 		if (mPriority > 0) {
-			builder.append(", Priority = " + mPriority);
+			builder.append(", Priority:" + mPriority);
 		}
 
 		if (mTime > 0) {
@@ -359,7 +359,7 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 		}
 
 		if (mRepeatTime > 0) {
-			builder.append(", Repeatable: ");
+			builder.append(", Repeatable:");
 			builder.append(sDateFormat.format(new Date(mRepeatTime)));
 		} else if (mValid) {
 			builder.append(", Valid");
