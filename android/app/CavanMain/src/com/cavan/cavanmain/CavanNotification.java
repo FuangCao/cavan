@@ -124,7 +124,17 @@ public class CavanNotification {
 			CavanAndroid.dLog(content);
 
 			if (CavanPackageName.QQ.equals(mPackageName)) {
-				String[] contents = content.split(":", 2);
+				String[] contents;
+
+				int index = content.indexOf("):");
+				if (index < 0) {
+					contents = content.split(":", 2);
+				} else {
+					contents = new String[] {
+						content.substring(0, index + 1),
+						content.substring(index + 2)
+					};
+				}
 
 				if (contents.length < 2) {
 					mContent = content.trim();
