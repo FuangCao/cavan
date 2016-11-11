@@ -328,7 +328,8 @@ public class RedPacketNotification extends CavanNotification {
 		PendingIntent intent = mNotification.getNotification().contentIntent;
 		Notification notification = buildNotification(content, intent);
 
-		if (intent != null && MainActivity.isAutoOpenAppEnabled(mService) && mService.getCodePending() == 0) {
+		if (intent != null && MainActivity.isAutoOpenAppEnabled(mService) &&
+				(MainActivity.isAutoOpenAlipayEnabled(mService) == false || mService.getCodePending() == 0)) {
 			try {
 				intent.send();
 			} catch (CanceledException e) {
