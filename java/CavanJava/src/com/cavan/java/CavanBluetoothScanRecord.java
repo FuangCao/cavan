@@ -82,7 +82,7 @@ public class CavanBluetoothScanRecord {
 
 	public CavanBluetoothScanRecord(byte[] bytes) {
 		CavanByteCache cache = new CavanByteCache(bytes);
-		
+
 		while (true) {
 			int length = cache.readValue8();
 			if (length == 0) {

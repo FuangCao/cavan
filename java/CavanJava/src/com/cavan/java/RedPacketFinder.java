@@ -235,6 +235,7 @@ public class RedPacketFinder {
 		int same_count = 0;
 		int number_count = 0;
 		int chinese_count = 0;
+		boolean invalid = true;
 		int length = text.length();
 		StringBuilder builder = new StringBuilder();
 
@@ -242,16 +243,25 @@ public class RedPacketFinder {
 			char c = text.charAt(i);
 
 			if (CavanJava.isDigit(c)) {
+				if (i == 0) {
+					return false;
+				}
+
 				if (++number_count > 6) {
 					return false;
 				}
 
 				builder.append(c);
+				chinese_count = 0;
 			} else {
 				number_count = 0;
 
 				if (CavanString.isChineseChar(c)) {
-					chinese_count++;
+					if (++chinese_count > 2) {
+						invalid = false;
+					}
+				} else {
+					chinese_count = 0;
 				}
 			}
 
@@ -266,7 +276,7 @@ public class RedPacketFinder {
 			prev = c;
 		}
 
-		if (chinese_count <= 0) {
+		if (invalid) {
 			return false;
 		}
 
