@@ -18,17 +18,28 @@ public class CavanMessageAdapter extends BaseAdapter {
 
 	private int mCount;
 	private Cursor mCursor;
+	private Cursor mCursorPending;
 	private List<CavanNotification> mNotifications = new ArrayList<CavanNotification>();
 
 	private Runnable mRunnableUpdate = new Runnable() {
 
 		@Override
 		public void run() {
+			int count;
 			boolean isBottom = isSelectionBottom();
-			int count = mNotifications.size();
 
-			if (mCursor != null) {
-				count += mCursor.getCount();
+			if (mCursorPending != null) {
+				mCursorPending = null;
+				mCursor = mCursorPending;
+
+				mNotifications.clear();
+				count = mCursor.getCount();
+			} else {
+				count = mNotifications.size();
+
+				if (mCursor != null) {
+					count += mCursor.getCount();
+				}
 			}
 
 			mCount = count;
@@ -80,8 +91,7 @@ public class CavanMessageAdapter extends BaseAdapter {
 
 	public boolean updateData(Uri uri, String selection, String[] selectionArgs, boolean bottom) {
 		if (uri == null) {
-			mCursor = CavanNotification.query(mActivity.getContentResolver(), selection, selectionArgs, null);
-			mNotifications.clear();
+			mCursorPending = CavanNotification.query(mActivity.getContentResolver(), selection, selectionArgs, null);
 		} else {
 			Cursor cursor = CavanNotification.query(mActivity.getContentResolver(), uri, selection, selectionArgs, null);
 			if (cursor.moveToFirst()) {
@@ -121,15 +131,15 @@ public class CavanMessageAdapter extends BaseAdapter {
 	public View getView(int position, View convertView, ViewGroup viewGroup) {
 		CavanNotification notification;
 
-		if (mCursor.moveToPosition(position)) {
-			try {
+		try {
+			if (mCursor.moveToPosition(position)) {
 				notification = new CavanNotification(mCursor);
-			} catch (Exception e) {
-				e.printStackTrace();
-				return null;
+			} else {
+				notification = mNotifications.get(position - mCursor.getCount());
 			}
-		} else {
-			notification = mNotifications.get(position - mCursor.getCount());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
 		}
 
 		CavanMessageView view;

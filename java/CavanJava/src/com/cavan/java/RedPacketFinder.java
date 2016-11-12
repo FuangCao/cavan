@@ -26,7 +26,7 @@ public class RedPacketFinder {
 	};
 
 	private static final String[] sInvalidCodes = {
-		"感谢亲们长期以来的支持与信任"
+		"感谢亲们长期以来的支持与信任", "领券下单二合一"
 	};
 
 	private static final String[] sExcludePredicts = {
@@ -124,7 +124,7 @@ public class RedPacketFinder {
 	};
 
 	public static final String[] sUnsafeWords = {
-		"扣扣", "群", "手机", "电话", "微信", "号码", "联系", "客服", "咨询", "功", "价", "元", "好友", "机器人", "查找", "加", "点"
+		"扣扣", "群", "手机", "电话", "微信", "号码", "联系", "客服", "咨询", "功", "价", "元", "好友", "机器人", "查找", "加", "点", "时", "年"
 	};
 
 	public static HashMap<String, String> sPackageCodeMap = new HashMap<String, String>();
@@ -346,6 +346,10 @@ public class RedPacketFinder {
 		return codes;
 	}
 
+	private List<String> getRedPacketCodes(List<String> lines, Pattern[] patterns, boolean strip, boolean unsafe) {
+		return getRedPacketCodes(lines, patterns, new ArrayList<String>(), strip, unsafe);
+	}
+
 	private List<String> getRedPacketWordCodes() {
 		List<String> codes = new ArrayList<String>();
 		getRedPacketCodes(mLines, sWordPatterns, codes, true, false);
@@ -369,21 +373,36 @@ public class RedPacketFinder {
 		return true;
 	}
 
-	public static void addRedPacketCodes(List<String> codes, String code) {
-		for (int end = 8; end <= code.length(); end += 8) {
-			addRedPacketCode(codes, code.substring(end - 8, end));
+	public static void addRedPacketDigitCodes(List<String> codes, String text, boolean unsafe) {
+		for (int end = 8; end <= text.length(); end += 8) {
+			String code = text.substring(end - 8, end);
+
+			if (unsafe && code.startsWith("201") && code.charAt(3) >= '6') {
+				continue;
+			}
+
+			addRedPacketCode(codes, code);
 		}
 	}
 
-	public static List<String> addRedPacketCodes(String text) {
+	public static void addRedPacketDigitCodes(List<String> codes, List<String> texts, boolean unsafe) {
+		for (String text : texts) {
+			String code = getRedPacketDigitCode(text, true);
+			if (code != null && code.length() % 8 == 0) {
+				addRedPacketDigitCodes(codes, code, unsafe);
+			}
+		}
+	}
+
+	public static List<String> addRedPacketDigitCodes(String text) {
 		List<String> codes = new ArrayList<String>();
-		addRedPacketCodes(codes, text);
+		addRedPacketDigitCodes(codes, text, false);
 		return codes;
 	}
 
-	public static String[] splitRedPacketCodes(String text) {
+	public static String[] splitRedPacketDigitCodes(String text) {
 		List<String> list = new ArrayList<String>();
-		addRedPacketCodes(list, text);
+		addRedPacketDigitCodes(list, text, false);
 
 		String[] codes = new String[list.size()];
 		list.toArray(codes);
@@ -412,29 +431,12 @@ public class RedPacketFinder {
 		return builder.toString();
 	}
 
-	private List<String> getRedPacketDigitCodes() {
-		List<String> codes = new ArrayList<String>();
-		getRedPacketCodes(mLines, sDigitPatterns, codes, false, true);
-		getRedPacketCodes(mSafeLines, sUnsafeDigitPatterns, codes, false, false);
-		return codes;
-	}
-
 	public List<String> getRedPacketCodes() {
 		List<String> codes = new ArrayList<String>();
 
-		for (String text : getRedPacketDigitCodes()) {
-			String code = getRedPacketDigitCode(text, true);
-			if (code != null && code.length() % 8 == 0) {
-				addRedPacketCodes(codes, code);
-			}
-		}
-
-		for (String text : getRedPacketCodes(mJoinedLines, sMultiLineDigitPatterns, false, true)) {
-			String code = getRedPacketDigitCode(text, true);
-			if (code != null) {
-				addRedPacketCodes(codes, code);
-			}
-		}
+		addRedPacketDigitCodes(codes, getRedPacketCodes(mLines, sDigitPatterns, false, true), false);
+		addRedPacketDigitCodes(codes, getRedPacketCodes(mSafeLines, sUnsafeDigitPatterns, false, false), true);
+		addRedPacketDigitCodes(codes, getRedPacketCodes(mJoinedLines, sMultiLineDigitPatterns, false, true), false);
 
 		for (String code : getRedPacketWordCodes()) {
 			if (isRedPacketWordCode(codes, code)) {

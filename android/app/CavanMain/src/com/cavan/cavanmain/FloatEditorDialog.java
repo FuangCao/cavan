@@ -136,7 +136,7 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 			if (length > 0) {
 				if (length % 8 == 0) {
 					Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
-					intent.putExtra("codes", RedPacketFinder.splitRedPacketCodes(text));
+					intent.putExtra("codes", RedPacketFinder.splitRedPacketDigitCodes(text));
 					mContext.sendBroadcast(intent);
 					dismiss();
 				} else {
