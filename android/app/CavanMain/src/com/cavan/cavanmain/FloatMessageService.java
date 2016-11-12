@@ -177,10 +177,15 @@ public class FloatMessageService extends FloatWidowService {
 				if (getTextCount() > 0 || CavanAndroid.isPreferenceEnabled(FloatMessageService.this, MainActivity.KEY_AUTO_UNLOCK)) {
 					unlockScreen();
 				}
+
+				mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_unlock_bg);
 				break;
 
 			case Intent.ACTION_USER_PRESENT:
-				mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_bg);
+				if (CavanAndroid.isPreferenceEnabled(FloatMessageService.this, MainActivity.KEY_AUTO_UNLOCK)) {
+					mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_bg);
+				}
+
 				mUserPresent = true;
 				break;
 
@@ -399,7 +404,6 @@ public class FloatMessageService extends FloatWidowService {
 			return false;
 		}
 
-		mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_unlock_bg);
 		CavanAndroid.setLockScreenEnable(FloatMessageService.this, false);
 
 		return true;

@@ -294,16 +294,21 @@ public abstract class FloatWidowService extends Service {
 			return false;
 		}
 
-		mManager.addView(view, params);
+		try {
+			mManager.addView(view, params);
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
-		return true;
+		return false;
 	}
 
 	protected LayoutParams createRootViewLayoutParams() {
 		LayoutParams params = new LayoutParams(
 				WindowManager.LayoutParams.WRAP_CONTENT,
 				WindowManager.LayoutParams.WRAP_CONTENT,
-				LayoutParams.TYPE_TOAST,
+				LayoutParams.TYPE_PHONE, // LayoutParams.TYPE_TOAST,
 				LayoutParams.FLAG_NOT_FOCUSABLE | LayoutParams.FLAG_NOT_TOUCHABLE,
 				PixelFormat.RGBA_8888);
 
@@ -338,6 +343,10 @@ public abstract class FloatWidowService extends Service {
 	}
 
 	public View findViewById(int id) {
+		if (mRootView == null) {
+			return null;
+		}
+
 		return mRootView.findViewById(id);
 	}
 
@@ -348,6 +357,11 @@ public abstract class FloatWidowService extends Service {
 		mManager = (WindowManager) getApplicationContext().getSystemService(WINDOW_SERVICE);
 
 		mRootView = addRootView();
+		if (mRootView == null) {
+			stopSelf();
+			return;
+		}
+
 		mViewGroup = findViewGroup();
 
 		doInitialize();

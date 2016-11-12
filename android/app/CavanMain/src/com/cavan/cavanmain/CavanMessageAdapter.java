@@ -29,10 +29,11 @@ public class CavanMessageAdapter extends BaseAdapter {
 			boolean isBottom = isSelectionBottom();
 
 			if (mCursorPending != null) {
-				mCursorPending = null;
 				mCursor = mCursorPending;
+				mCursorPending = null;
 
 				mNotifications.clear();
+
 				count = mCursor.getCount();
 			} else {
 				count = mNotifications.size();

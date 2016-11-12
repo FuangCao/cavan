@@ -172,9 +172,14 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 				builder.appendWhere(uri.getPathSegments().get(1));
 			}
 
-			SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
+			try {
+				SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
+				return builder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 
-			return builder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
+			return null;
 		}
 
 		public long insert(Uri uri, int code, ContentValues values) {
@@ -182,9 +187,14 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 				return -1;
 			}
 
-			SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+			try {
+				SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+				return db.insert(mName, null, values);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 
-			return db.insert(mName, null, values);
+			return -1;
 		}
 
 		public int delete(Uri uri, int code, String selection, String[] selectionArgs) {
@@ -193,9 +203,15 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 				selectionArgs = null;
 			}
 
-			SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+			try {
+				SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
 
-			return db.delete(mName, selection, selectionArgs);
+				return db.delete(mName, selection, selectionArgs);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			return 0;
 		}
 
 		public int update(Uri uri, int code, ContentValues values, String selection, String[] selectionArgs) {
@@ -204,9 +220,14 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 				selectionArgs = null;
 			}
 
-			SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+			try {
+				SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+				return db.update(mName, values, selection, selectionArgs);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 
-			return db.update(mName, values, selection, selectionArgs);
+			return 0;
 		}
 	}
 
