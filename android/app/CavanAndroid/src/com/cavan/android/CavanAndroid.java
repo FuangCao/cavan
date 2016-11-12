@@ -1,6 +1,10 @@
 package com.cavan.android;
 
+import java.lang.reflect.Field;
+import java.util.List;
+
 import android.app.ActivityManager;
+import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.KeyguardManager;
 import android.app.KeyguardManager.KeyguardLock;
 import android.app.Notification;
@@ -16,6 +20,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.MulticastLock;
+import android.os.Build;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
@@ -53,6 +58,7 @@ public class CavanAndroid {
 	private static ClipboardManager sClipboardManager;
 	private static NotificationManager sNotificationManager;
 
+	private static PackageManager sPackageManager;
 	private static ActivityManager sActivityManager;
 	public static InputMethodManager sInputMethodManager;
 
@@ -420,30 +426,95 @@ public class CavanAndroid {
 		return preferences.getBoolean(key, false);
 	}
 
-	public static ComponentName getTopActivityInfo(Context context) {
+	public static ActivityManager getActivityManager(Context context) {
 		if (sActivityManager == null) {
 			sActivityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-			if (sActivityManager == null) {
+		}
+
+		return sActivityManager;
+	}
+
+	public static PackageManager getPackageManager(Context context) {
+		if (sPackageManager == null) {
+			sPackageManager = context.getPackageManager();
+		}
+
+		return sPackageManager;
+	}
+
+	public static ComponentName getTopActivityInfo(Context context) {
+		ActivityManager manager = getActivityManager(context);
+		if (manager == null) {
+			return null;
+		}
+
+		return manager.getRunningTasks(1).get(0).topActivity;
+	}
+
+	public static RunningAppProcessInfo getTopAppProcessInfo(Context context) {
+		ActivityManager manager = getActivityManager(context);
+		if (manager == null) {
+			return null;
+		}
+
+		List<RunningAppProcessInfo> infos = manager.getRunningAppProcesses();
+		if (infos == null) {
+			return null;
+		}
+
+		Field field;
+
+		try {
+			field = RunningAppProcessInfo.class.getDeclaredField("processState");
+		} catch (Exception e) {
+			return null;
+		}
+
+		for (RunningAppProcessInfo info : infos) {
+			if (info == null || info.importance != ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+				continue;
+			}
+
+			try {
+				Integer state = field.getInt(info);
+				if (state != null && state == 2) {
+					return info;
+				}
+			} catch (Exception e) {
 				return null;
 			}
 		}
 
-		return sActivityManager.getRunningTasks(1).get(0).topActivity;
+		return null;
 	}
 
 	public static String getTopActivieyPackageName(Context context) {
-		ComponentName info = getTopActivityInfo(context);
-		if (info != null) {
-			return info.getPackageName();
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+			ComponentName info = getTopActivityInfo(context);
+			if (info != null) {
+				return info.getPackageName();
+			}
+		} else {
+			RunningAppProcessInfo info = getTopAppProcessInfo(context);
+			if (info != null && info.pkgList.length > 0) {
+				return info.pkgList[0];
+			}
 		}
 
 		return null;
 	}
 
 	public static String getTopActivityClassName(Context context) {
-		ComponentName info = getTopActivityInfo(context);
-		if (info != null) {
-			return info.getClassName();
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+			ComponentName info = getTopActivityInfo(context);
+			if (info != null) {
+				return info.getClassName();
+			}
+		} else {
+			RunningAppProcessInfo info = getTopAppProcessInfo(context);
+			if (info != null) {
+				return info.processName;
+			}
 		}
 
 		return null;

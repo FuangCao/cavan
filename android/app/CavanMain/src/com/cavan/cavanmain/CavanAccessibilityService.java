@@ -61,7 +61,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	private long mWindowStartTime;
 	private String mClassName = CavanString.EMPTY_STRING;
-	private String mPackageName = CavanString.EMPTY_STRING;
 
 	private int mCodeCount;
 	private RedPacketCode mCode;
@@ -197,13 +196,11 @@ public class CavanAccessibilityService extends AccessibilityService {
 			case MSG_CHECK_AUTO_OPEN_APP:
 				removeMessages(MSG_CHECK_AUTO_OPEN_APP);
 
-				String clsName = CavanAndroid.getTopActivityClassName(getApplicationContext());
-				CavanAndroid.dLog("ClassName = " + clsName);
-				if (clsName == null) {
-					sendEmptyMessageDelayed(MSG_CHECK_AUTO_OPEN_APP, 1000);
-				} else if (clsName.startsWith("com.sogou.ocrplugin") || clsName.contains("gallery") ||
-						clsName.equals("com.tencent.mobileqq.activity.aio.photo.AIOGalleryActivity") ||
-						clsName.equals("android.app.Dialog")) {
+				if (getWindowTimeConsume() > 30000) {
+					MainActivity.setAutoOpenAppEnable(true);
+				} else if (mClassName.startsWith("com.sogou.ocrplugin") || mClassName.contains("gallery") ||
+						mClassName.equals("com.tencent.mobileqq.activity.aio.photo.AIOGalleryActivity") ||
+						mClassName.equals("android.app.Dialog")) {
 					MainActivity.setAutoOpenAppEnable(false);
 					sendEmptyMessageDelayed(MSG_CHECK_AUTO_OPEN_APP, 2000);
 				} else {
@@ -223,22 +220,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 			// CavanAndroid.dLog("getRedPacketCodeCount = " + mCodeCount);
 
-			ComponentName info = CavanAndroid.getTopActivityInfo(CavanAccessibilityService.this);
-			if (info != null) {
-				mPackageName = info.getPackageName();
-			}
-
-			CavanAndroid.dLog("mPackageName = " + mPackageName);
-
-			if (CavanPackageName.ALIPAY.equals(mPackageName)) {
-				if (mClassNameAlipay == CavanString.EMPTY_STRING && info != null) {
-					String clsName = info.getClassName();
-					if (clsName != null) {
-						mClassNameAlipay = clsName;
-					}
-				}
-
-				postRedPacketCode(getNextCode());
+			AccessibilityNodeInfo root = getRootInActiveWindow();
+			if (root != null && CavanPackageName.ALIPAY.equals(root.getPackageName())) {
+				postRedPacketCode(getNextCode(), root);
 
 				if (mCodeCount > 0) {
 					startAutoCommitRedPacketCode(POLL_DELAY);
@@ -429,13 +413,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return false;
 	}
 
-	private boolean postRedPacketCode(RedPacketCode code) {
+	private boolean postRedPacketCode(RedPacketCode code, AccessibilityNodeInfo root) {
 		CavanAndroid.dLog("count = " + mCodeCount + ", code = " + code);
-
-		AccessibilityNodeInfo root = getRootInActiveWindow();
-		if (root == null) {
-			return false;
-		}
 
 		switch (mClassNameAlipay) {
 		case "com.eg.android.AlipayGphone.AlipayLogin":
@@ -753,12 +732,11 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	private void onWindowStateChanged(AccessibilityEvent event) {
 		mWindowStartTime = System.currentTimeMillis();
-		mPackageName = event.getPackageName().toString();
 		mClassName = event.getClassName().toString();
 
 		CavanAndroid.dLog("mClassName = " + mClassName);
 
-		switch (mPackageName) {
+		switch (event.getPackageName().toString()) {
 		case CavanPackageName.ALIPAY:
 			mClassNameAlipay = mClassName;
 			if (isCurrentRedPacketCode(mCode)) {
@@ -929,8 +907,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 		switch (event.getKeyCode()) {
 		case KeyEvent.KEYCODE_VOLUME_UP:
 		case KeyEvent.KEYCODE_VOLUME_DOWN:
-			ComponentName info = CavanAndroid.getTopActivityInfo(this);
-			if (info != null && CavanPackageName.ALIPAY.equals(info.getPackageName())) {
+			AccessibilityNodeInfo root = getRootInActiveWindow();
+			if (root != null && CavanPackageName.ALIPAY.equals(root.getPackageName())) {
 				if (event.getAction() == KeyEvent.ACTION_DOWN) {
 					if (CavanInputMethod.isDefaultInputMethod(getApplicationContext())) {
 						int count = 0;
