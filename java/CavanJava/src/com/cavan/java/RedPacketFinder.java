@@ -115,7 +115,7 @@ public class RedPacketFinder {
 	};
 
 	public static final String[] sExcludeWords = {
-		"领取方法",
+		"领取方法", "红牛"
 	};
 
 	public static final Pattern[] sUnsafePatterns = {
@@ -373,15 +373,26 @@ public class RedPacketFinder {
 		return true;
 	}
 
+	public static boolean isValidDigitCode(String code, boolean unsafe) {
+		if (unsafe && code.startsWith("201") && code.charAt(3) >= '6') {
+			return false;
+		}
+
+		for (int i = code.length() - 1; i > 0; i--) {
+			if (code.charAt(i) != code.charAt(i - 1)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public static void addRedPacketDigitCodes(List<String> codes, String text, boolean unsafe) {
 		for (int end = 8; end <= text.length(); end += 8) {
 			String code = text.substring(end - 8, end);
-
-			if (unsafe && code.startsWith("201") && code.charAt(3) >= '6') {
-				continue;
+			if (isValidDigitCode(code, unsafe)) {
+				addRedPacketCode(codes, code);
 			}
-
-			addRedPacketCode(codes, code);
 		}
 	}
 

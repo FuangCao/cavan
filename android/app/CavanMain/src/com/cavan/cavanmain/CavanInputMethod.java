@@ -16,6 +16,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
@@ -90,25 +91,46 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 				return;
 			}
 
+			int lines;
 			int columns;
 			int size = codes.size();
 
 			if (size > CODE_MAX_COLUMNS) {
-				int lines = (size + CODE_MAX_COLUMNS - 1) / CODE_MAX_COLUMNS;
+				lines = (size + CODE_MAX_COLUMNS - 1) / CODE_MAX_COLUMNS;
 				columns = (size + lines - 1) / lines;
+
+				if (lines > 2) {
+					lines = 2;
+				}
 			} else {
+				if (size > 0) {
+					lines = 1;
+				} else {
+					lines = 0;
+				}
+
 				columns = size;
 			}
 
-			mUiCodes = new RedPacketCode[size];
-			codes.toArray(mUiCodes);
+			int height;
 
-			if (size > 0) {
-				mCodeGridView.setVisibility(View.VISIBLE);
+			if (lines > 0) {
+				View view = mCodeGridView.getChildAt(0);
+				if (view != null) {
+					height = view.getHeight() * lines;
+				} else {
+					height = LayoutParams.WRAP_CONTENT;
+				}
+
 				mCodeGridView.setNumColumns(columns);
 			} else {
-				mCodeGridView.setVisibility(View.GONE);
+				height = LayoutParams.WRAP_CONTENT;
 			}
+
+			mCodeGridView.getLayoutParams().height = height;
+
+			mUiCodes = new RedPacketCode[size];
+			codes.toArray(mUiCodes);
 
 			mAdapter.notifyDataSetChanged();
 		}
