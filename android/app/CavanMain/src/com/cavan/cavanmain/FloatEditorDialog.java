@@ -3,6 +3,7 @@ package com.cavan.cavanmain;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
+import android.os.Handler;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -21,6 +22,8 @@ import com.cavan.java.RedPacketFinder;
 
 public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListener, OnTouchListener {
 
+	private static FloatEditorDialog mInstance;
+
 	private Context mContext;
 	private boolean mShowing;
 	private boolean mAutoDismiss;
@@ -33,8 +36,19 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 	private CheckBox mCheckBox;
 	private EditText mEditText;
 	private WindowManager mWindowManager;
+	private Handler mHandler = new Handler();
 
-	public FloatEditorDialog(Context context, CharSequence text, boolean checked) {
+	public static FloatEditorDialog getInstance(Context context, CharSequence text, boolean checked) {
+		if (mInstance == null) {
+			mInstance = new FloatEditorDialog(context);
+		}
+
+		mInstance.updateContent(text, checked);
+
+		return mInstance;
+	}
+
+	private FloatEditorDialog(Context context) {
 		mContext = context;
 
 		mRootView = View.inflate(context, R.layout.float_editor, null);
@@ -50,14 +64,17 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 		mButtonExtract.setOnClickListener(this);
 
 		mCheckBox = (CheckBox) findViewById(R.id.checkBoxAsCode);
-		mCheckBox.setChecked(checked);
 
 		mEditText = (EditText) findViewById(R.id.editTextContent);
-		mEditText.setText(text);
 		mEditText.setOnKeyListener(this);
 		mEditText.setOnClickListener(this);
 
 		mWindowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+	}
+
+	public void updateContent(CharSequence text, boolean checked) {
+		mCheckBox.setChecked(checked);
+		mEditText.setText(text);
 	}
 
 	private View findViewById(int id) {
@@ -65,22 +82,24 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 	}
 
 	public void show(long dismissDelay) {
-		LayoutParams params = new LayoutParams(
-				WindowManager.LayoutParams.MATCH_PARENT,
-				WindowManager.LayoutParams.WRAP_CONTENT,
-				LayoutParams.TYPE_TOAST,
-				LayoutParams.FLAG_NOT_TOUCH_MODAL | LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
-				PixelFormat.RGBA_8888);
+		if (!mShowing) {
+			mShowing = true;
 
-		params.gravity = Gravity.CENTER_HORIZONTAL | Gravity.TOP;
+			LayoutParams params = new LayoutParams(
+					WindowManager.LayoutParams.MATCH_PARENT,
+					WindowManager.LayoutParams.WRAP_CONTENT,
+					LayoutParams.TYPE_TOAST,
+					LayoutParams.FLAG_NOT_TOUCH_MODAL | LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+					PixelFormat.RGBA_8888);
 
-		try {
-			mWindowManager.addView(mRootView, params);
-		} catch (Exception e) {
-			e.printStackTrace();
+			params.gravity = Gravity.CENTER_HORIZONTAL | Gravity.TOP;
+
+			try {
+				mWindowManager.addView(mRootView, params);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
-
-		mShowing = true;
 
 		setAutoDismiss(dismissDelay);
 	}
@@ -102,12 +121,13 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 	}
 
 	public void setAutoDismiss(long delayMillis) {
+		mHandler.removeCallbacks(this);
+
 		if (delayMillis > 0) {
 			mAutoDismiss = true;
-			mRootView.postDelayed(this, delayMillis);
+			mHandler.postDelayed(this, delayMillis);
 		} else {
 			mAutoDismiss = false;
-			mRootView.removeCallbacks(this);
 		}
 	}
 

@@ -14,12 +14,11 @@
         android:textSize="@dimen/float_editor_text_size" />
 
     <Button
-        android:id="@+id/buttonSend"
+        android:id="@+id/buttonExtract"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/editTextContent"
-        android:text="@string/text_send"
+        android:layout_below="@+id/checkBoxAsCode"
+        android:text="@string/extract"
         android:textSize="@dimen/float_editor_text_size" />
 
     <CheckBox
@@ -27,26 +26,28 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_alignTop="@+id/buttonSend"
+        android:layout_below="@+id/editTextContent"
         android:text="@string/text_as_code"
+        android:textSize="@dimen/float_editor_text_size" />
+
+    <Button
+        android:id="@+id/buttonSend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonExtract"
+        android:layout_alignBottom="@+id/buttonExtract"
+        android:layout_alignParentRight="true"
+        android:text="@string/text_send"
         android:textSize="@dimen/float_editor_text_size" />
 
     <Button
         android:id="@+id/buttonCopy"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/editTextContent"
-        android:layout_toLeftOf="@+id/buttonSend"
+        android:layout_alignBaseline="@+id/buttonExtract"
+        android:layout_alignBottom="@+id/buttonExtract"
+        android:layout_centerHorizontal="true"
         android:text="@string/text_copy"
-        android:textSize="@dimen/float_editor_text_size" />
-
-    <Button
-        android:id="@+id/buttonExtract"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/editTextContent"
-        android:layout_toLeftOf="@+id/buttonCopy"
-        android:text="@string/extract"
         android:textSize="@dimen/float_editor_text_size" />
 
 </RelativeLayout>

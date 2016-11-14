@@ -17,6 +17,8 @@ import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -31,6 +33,7 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
@@ -48,6 +51,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private static final int MSG_CHECK_CONTENT = 2;
 	private static final int MSG_CHECK_AUTO_OPEN_APP = 3;
 
+	private static final String CLASS_NAME_TEXTVIEW = TextView.class.getName();
+
 	private static final String[] PACKAGE_NAMES = {
 		CavanPackageName.ALIPAY,
 		CavanPackageName.QQ,
@@ -59,6 +64,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private boolean mAutoStartAlipay;
 	private String mClassNameAlipay = CavanString.EMPTY_STRING;
 
+	private Point mDisplaySize = new Point();
 	private long mWindowStartTime;
 	private String mClassName = CavanString.EMPTY_STRING;
 
@@ -790,22 +796,33 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 	}
 
-	private void onWindowContentChanged(AccessibilityEvent event) {
+	private CharSequence mQQMsgBoxText;
+
+	private void onWindowContentChangedQQ(AccessibilityEvent event) {
 		final AccessibilityNodeInfo source = event.getSource();
-		if (source == null) {
+		if (source == null || source.isMultiLine()) {
 			return;
 		}
 
-		String id = source.getViewIdResourceName();
-		if (id == null) {
-			return;
-		}
+		if (CLASS_NAME_TEXTVIEW.equals(source.getClassName())) {
+			Rect bounds = new Rect();
 
-		if (id.equals("com.tencent.mobileqq:id/msgbox")) {
+			source.getBoundsInScreen(bounds);
+			if (bounds.width() < mDisplaySize.x) {
+				return;
+			}
+
+			source.getBoundsInParent(bounds);
+			if (bounds.top != 0) {
+				return;
+			}
+
 			CharSequence sequence = source.getText();
-			if (sequence != null) {
+			if (sequence != null && sequence != mQQMsgBoxText) {
+				mQQMsgBoxText = sequence;
+
 				String text = sequence.toString();
-				if (text.indexOf("[QQ红包]") >= 0) {
+				if (text.contains("[QQ红包]")) {
 					source.performAction(AccessibilityNodeInfo.ACTION_CLICK);
 				}
 
@@ -819,31 +836,35 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 	}
 
-	private void onViewClicked(AccessibilityEvent event) {
+	private void onWindowContentChanged(AccessibilityEvent event) {
+		if (CavanPackageName.QQ.equals(event.getPackageName())) {
+			onWindowContentChangedQQ(event);
+		}
+	}
+
+	private void onViewClickedQQ(AccessibilityEvent event) {
 		AccessibilityNodeInfo source = event.getSource();
 		if (source == null) {
 			return;
 		}
 
-		String id = source.getViewIdResourceName();
-		if (id == null) {
+		if (CLASS_NAME_TEXTVIEW.equals(source.getClassName().toString())) {
 			AccessibilityNodeInfo parent = source.getParent();
 			if (parent == null) {
 				return;
 			}
 
-			id = parent.getViewIdResourceName();
+			String id = parent.getViewIdResourceName();
 			if (id == null) {
 				return;
 			}
-		}
 
-		if (MainActivity.isListenClickEnabled(this)) {
-			if (id.equals("com.tencent.mobileqq:id/chat_item_content_layout")) {
+			if (id.equals("com.tencent.mobileqq:id/chat_item_content_layout") ||
+					id.equals("com.tencent.mobileqq:id/name")) {
 				String text = CavanString.fromCharSequence(source.getText());
 
 				if (text.length() > 0 && RedPacketFinder.containsUrl(text) == false) {
-					FloatEditorDialog dialog = new FloatEditorDialog(this, text, true);
+					FloatEditorDialog dialog = FloatEditorDialog.getInstance(this, text, true);
 					dialog.show(6000);
 				}
 
@@ -852,6 +873,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 				intent.putExtra("desc", "用户点击");
 				intent.putExtra("content", text);
 				sendBroadcast(intent);
+			}
+		}
+	}
+
+	private void onViewClicked(AccessibilityEvent event) {
+		if (CavanPackageName.QQ.equals(event.getPackageName())) {
+			if (MainActivity.isListenClickEnabled(this)) {
+				onViewClickedQQ(event);
 			}
 		}
 	}
@@ -980,6 +1009,11 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	@Override
 	public void onCreate() {
+		WindowManager manager = (WindowManager) getSystemService(WINDOW_SERVICE);
+		if (manager != null) {
+			manager.getDefaultDisplay().getSize(mDisplaySize);
+		}
+
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(MainActivity.ACTION_CODE_TEST);
 		filter.addAction(MainActivity.ACTION_CODE_ADD);
