@@ -28,6 +28,8 @@ import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.Window;
+import android.view.WindowManager.LayoutParams;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
@@ -35,6 +37,8 @@ import com.cavan.java.CavanJava;
 
 @SuppressWarnings("deprecation")
 public class CavanAndroid {
+
+	public static final int FLAG_NEEDS_MENU_KEY = 0x40000000;
 
 	public static String TAG = "Cavan";
 	public static boolean DLOG_ENABLE = true;
@@ -581,5 +585,29 @@ public class CavanAndroid {
 		manager.showInputMethodPicker();
 
 		return true;
+	}
+
+	public static boolean setMenuKeyVisibility(LayoutParams params, boolean visibility) {
+		try {
+			Field field = LayoutParams.class.getField("needsMenuKey");
+			field.setInt(params, visibility ? 1 : 2);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return false;
+	}
+
+	public static boolean setMenuKeyVisibility(Window window, boolean visibility) {
+		LayoutParams params = window.getAttributes();
+
+		if (params != null && setMenuKeyVisibility(params, visibility)) {
+			window.setAttributes(params);
+			return true;
+		}
+
+		window.setFlags(FLAG_NEEDS_MENU_KEY, FLAG_NEEDS_MENU_KEY);
+
+		return false;
 	}
 }

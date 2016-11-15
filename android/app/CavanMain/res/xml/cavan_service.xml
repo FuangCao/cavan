@@ -55,14 +55,14 @@
 	    android:persistent="true"
 		android:entries="@array/text_ahead_entries"
 		android:entryValues="@array/text_ahead_values"
-		android:defaultValue="5"
+		android:defaultValue="3"
 	    android:title="@string/text_commit_ahead" />
 
 	<ListPreference android:key="auto_commit"
 	    android:persistent="true"
 		android:entries="@array/text_auto_entries"
 		android:entryValues="@array/text_auto_values"
-		android:defaultValue="2"
+		android:defaultValue="1"
 	    android:title="@string/text_auto_commit" />
 
 	<CheckBoxPreference android:key="auto_unlock"

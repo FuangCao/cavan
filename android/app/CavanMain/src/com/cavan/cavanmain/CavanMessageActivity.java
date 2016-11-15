@@ -34,8 +34,6 @@ import com.cavan.android.CavanAndroid;
 
 public class CavanMessageActivity extends Activity {
 
-	public static final int FLAG_NEEDS_MENU_KEY = 0x40000000;
-
 	private CavanMessageAdapter mAdapter;
 	private CavanMessageFilter mMessageFinder = new CavanMessageFilter();
 	private ContentObserver mContentObserverMessage = new ContentObserver(new Handler()) {
@@ -136,7 +134,7 @@ public class CavanMessageActivity extends Activity {
 			finish();
 		} else {
 			setContentView(R.layout.notification_activity);
-			getWindow().setFlags(FLAG_NEEDS_MENU_KEY, FLAG_NEEDS_MENU_KEY);
+			CavanAndroid.setMenuKeyVisibility(getWindow(), true);
 
 			mAdapter = new CavanMessageAdapter(this);
 			updateData(null, true);
