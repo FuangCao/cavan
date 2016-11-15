@@ -3,8 +3,6 @@ package com.cavan.cavanmain;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import android.app.Notification;
 import android.content.ContentResolver;
@@ -29,8 +27,6 @@ public class CavanNotification {
 	public static final String KEY_USER_NAME = "user_name";
 	public static final String KEY_GROUP_NAME = "group_name";
 	public static final String KEY_CONTENT = "content";
-
-	public static final Pattern sGroupPattern = Pattern.compile("([^\\(]+)\\((.+)\\)\\s*$");
 
 	public static final String[] PROJECTION = {
 		KEY_TIMESTAMP, KEY_PACKAGE, KEY_TITLE, KEY_USER_NAME, KEY_GROUP_NAME, KEY_CONTENT
@@ -124,45 +120,52 @@ public class CavanNotification {
 			CavanAndroid.dLog(content);
 
 			if (CavanPackageName.QQ.equals(mPackageName)) {
-				String[] contents;
-
 				int index = content.indexOf("):");
 				if (index < 0) {
-					contents = content.split(":", 2);
-				} else {
-					contents = new String[] {
-						content.substring(0, index + 1),
-						content.substring(index + 2)
-					};
-				}
-
-				if (contents.length < 2) {
-					mContent = content.trim();
-				} else {
-					String name = contents[0].trim();
-					Matcher matcher = sGroupPattern.matcher(name);
-					if (matcher.find()) {
-						mUserName = matcher.group(1);
-						mGroupName = matcher.group(2);
+					index = content.indexOf(':');
+					if (index < 0) {
+						mContent = content;
 					} else {
-						mUserName = name;
+						mUserName = content.substring(0, index);
+						mContent = content.substring(index + 1);
+					}
+				} else {
+					int group = index - 1;
+
+					for (int count = 1; group >= 0; group--){
+						char c = content.charAt(group);
+
+						if (c == ')') {
+							count++;
+						} else if (c == '(') {
+							if (--count <= 0) {
+								break;
+							}
+						}
 					}
 
-					mContent = contents[1].trim();
+					if (group < 0) {
+						mUserName = content.substring(0, index);
+					} else {
+						mUserName = content.substring(0, group);
+						mGroupName = content.substring(group + 1, index);
+					}
+
+					mContent = content.substring(index + 2);
 				}
 			} else if (CavanPackageName.MM.equals(mPackageName)) {
-				String[] contents = content.split(":", 2);
+				int index = content.indexOf(':');
 
-				if (contents.length < 2) {
-					mContent = content.trim();
+				if (index < 0) {
+					mContent = content;
 				} else {
-					mUserName = contents[0].trim();
-					mContent = contents[1].trim();
+					mUserName = content.substring(0, index);
+					mContent = content.substring(index + 1);
 				}
 
 				mGroupName = mTitle;
 			} else {
-				mContent = content.trim();
+				mContent = content;
 			}
 		}
 	}

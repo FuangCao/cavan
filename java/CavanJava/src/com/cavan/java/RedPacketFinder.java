@@ -26,7 +26,7 @@ public class RedPacketFinder {
 	};
 
 	private static final String[] sInvalidCodes = {
-		"感谢亲们长期以来的支持与信任", "领券下单二合一"
+		"感谢亲们长期以来的支持与信任", "领券下单二合一", "复制这条消息"
 	};
 
 	private static final String[] sExcludePredicts = {
@@ -115,7 +115,7 @@ public class RedPacketFinder {
 	};
 
 	public static final String[] sExcludeWords = {
-		"领取方法", "红牛"
+		"领取方法", "红牛口令", "下单口令"
 	};
 
 	public static final Pattern[] sUnsafePatterns = {
