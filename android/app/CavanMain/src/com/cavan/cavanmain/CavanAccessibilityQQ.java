@@ -14,10 +14,34 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 
 	private static final String CLASS_NAME_TEXTVIEW = TextView.class.getName();
 
-	private CharSequence mMsgBoxText;
+	private String mMessageBoxText;
 
 	public CavanAccessibilityQQ(CavanAccessibilityService service) {
 		super(service);
+	}
+
+	public boolean isMessageBoxNode(AccessibilityNodeInfo node) {
+		if (node == null || node.isMultiLine()) {
+			return false;
+		}
+
+		if (CLASS_NAME_TEXTVIEW.equals(node.getClassName())) {
+			Rect bounds = new Rect();
+
+			node.getBoundsInScreen(bounds);
+			if (bounds.width() < mService.getDisplayWidth()) {
+				return false;
+			}
+
+			node.getBoundsInParent(bounds);
+			if (bounds.top != 0) {
+				return false;
+			}
+
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override
@@ -34,40 +58,30 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 
 	@Override
 	public void onWindowContentChanged(AccessibilityEvent event) {
-		final AccessibilityNodeInfo source = event.getSource();
-		if (source == null || source.isMultiLine()) {
-			return;
-		}
-
-		if (CLASS_NAME_TEXTVIEW.equals(source.getClassName())) {
-			Rect bounds = new Rect();
-
-			source.getBoundsInScreen(bounds);
-			if (bounds.width() < mService.getDisplayWidth()) {
-				return;
-			}
-
-			source.getBoundsInParent(bounds);
-			if (bounds.top != 0) {
-				return;
-			}
-
+		AccessibilityNodeInfo source = event.getSource();
+		if (isMessageBoxNode(source)) {
 			CharSequence sequence = source.getText();
-			if (sequence != null && sequence != mMsgBoxText) {
-				mMsgBoxText = sequence;
-
-				String text = sequence.toString();
-				if (text.contains("[QQ红包]")) {
-					source.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-				}
-
-				Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
-				intent.putExtra("package", source.getPackageName());
-				intent.putExtra("desc", "QQ消息盒子");
-				intent.putExtra("content", text);
-				intent.putExtra("hasPrefix", true);
-				mService.sendBroadcast(intent);
+			if (sequence == null) {
+				return;
 			}
+
+			String text = sequence.toString();
+			if (text.equals(mMessageBoxText)) {
+				return;
+			}
+
+			mMessageBoxText = text;
+
+			if (text.contains("[QQ红包]")) {
+				source.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+			}
+
+			Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
+			intent.putExtra("package", source.getPackageName());
+			intent.putExtra("desc", "QQ消息盒子");
+			intent.putExtra("content", text);
+			intent.putExtra("hasPrefix", true);
+			mService.sendBroadcast(intent);
 		}
 	}
 
