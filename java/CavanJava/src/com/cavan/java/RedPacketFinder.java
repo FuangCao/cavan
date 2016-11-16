@@ -11,7 +11,7 @@ public class RedPacketFinder {
 	private static final int MIN_CODE_SIZE = 2;
 	private static final int MAX_CODE_SIZE = 30;
 
-	private static final String SEPARATOR = "~\\-_+=\\s";
+	private static final String SEPARATOR = "～~\\-_+=\\s";
 	private static final String NORMAL_PATTERN = "(\\w+红包)";
 	private static final String DIGIT_PATTERN = "([\\d" + SEPARATOR + "]+)";
 	private static final String DIGIT_MULTI_LINE_PATTERN = "((?:[" + SEPARATOR + "]*\\D?[" + SEPARATOR + "]*\\d)+)";
@@ -35,6 +35,24 @@ public class RedPacketFinder {
 
 	private static final String[] sExcludePredicts11 = {
 		"电脑抢红包", "特价清单", "双11抢红包", "电脑入口", "购物车", "优惠券", "免单"
+	};
+
+	public static final Pattern[] sExcludePatterns = {
+		PATTERN_URL,
+		Pattern.compile("=\\d{8,}"),
+	};
+
+	public static final String[] sExcludeWords = {
+		"领取方法", "红牛口令", "下单口令", "新口令"
+	};
+
+	public static final Pattern[] sUnsafePatterns = {
+		Pattern.compile("Q\\s*Q", Pattern.CASE_INSENSITIVE),
+		Pattern.compile("\\d+\\W*w", Pattern.CASE_INSENSITIVE),
+	};
+
+	public static final String[] sUnsafeWords = {
+		"扣扣", "群", "手机", "电话", "微信", "号码", "联系", "客服", "咨询", "功", "价", "元", "好友", "机器人", "查找", "加", "点", "时", "年"
 	};
 
 	private static final Pattern[] sPicturePatterns = {
@@ -78,11 +96,12 @@ public class RedPacketFinder {
 		Pattern.compile("口\\s*令\\s*红\\s*包.*[:：]" + DIGIT_MULTI_LINE_PATTERN),
 		Pattern.compile("红\\s*包[\\s\\d]*[:：]" + DIGIT_MULTI_LINE_PATTERN),
 		Pattern.compile("口\\s*令[\\s\\d]*[:：]" + DIGIT_MULTI_LINE_PATTERN),
+		Pattern.compile("^" + DIGIT_PATTERN + "$"),
 	};
 
 	private static final Pattern[] sUnsafeDigitPatterns = {
 		Pattern.compile("[:：]\\s*" + DIGIT_PATTERN),
-		Pattern.compile("\\b" + DIGIT_PATTERN + "\\s*$"),
+		Pattern.compile("\\b" + DIGIT_PATTERN + "$"),
 	};
 
 	private static final Pattern[] sWordPatterns = {
@@ -107,24 +126,6 @@ public class RedPacketFinder {
 		Pattern.compile("口\\s*令\\s*红\\s*包\\s*[:：]\\s*" + WORD_MULTI_LINE_PATTERN),
 		Pattern.compile("中\\s*文\\s*口\\s*令\\s*[:：]\\s*" + WORD_MULTI_LINE_PATTERN),
 		Pattern.compile("中\\s*文\\s*红\\s*包\\s*[:：]\\s*" + WORD_MULTI_LINE_PATTERN),
-	};
-
-	public static final Pattern[] sExcludePatterns = {
-		PATTERN_URL,
-		Pattern.compile("=\\d{8,}"),
-	};
-
-	public static final String[] sExcludeWords = {
-		"领取方法", "红牛口令", "下单口令"
-	};
-
-	public static final Pattern[] sUnsafePatterns = {
-		Pattern.compile("Q\\s*Q", Pattern.CASE_INSENSITIVE),
-		Pattern.compile("\\d+\\W*w", Pattern.CASE_INSENSITIVE),
-	};
-
-	public static final String[] sUnsafeWords = {
-		"扣扣", "群", "手机", "电话", "微信", "号码", "联系", "客服", "咨询", "功", "价", "元", "好友", "机器人", "查找", "加", "点", "时", "年"
 	};
 
 	public static HashMap<String, String> sPackageCodeMap = new HashMap<String, String>();
