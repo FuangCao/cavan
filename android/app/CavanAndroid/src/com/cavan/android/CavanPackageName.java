@@ -11,4 +11,5 @@ public class CavanPackageName {
 	public static final String ALIPAY = "com.eg.android.AlipayGphone";
 	public static final String SOGOU_IME = "com.sohu.inputmethod.sogou";
 	public static final String SOGOU_OCR = "com.cavan.sogou.ocrplugin";
+	public static final String GALLERY3D = "com.android.gallery3d";
 }

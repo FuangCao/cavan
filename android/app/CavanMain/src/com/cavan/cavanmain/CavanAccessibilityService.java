@@ -5,24 +5,40 @@ import java.util.List;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.DialogInterface.OnClickListener;
+import android.content.DialogInterface.OnDismissListener;
 import android.graphics.Point;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.RemoteException;
+import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.CheckBox;
+import android.widget.EditText;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
+import com.cavan.java.CavanString;
 
 public class CavanAccessibilityService extends AccessibilityService {
+
+	private static final int MSG_CHECK_CONTENT = 1;
+	private static final int MSG_CHECK_AUTO_OPEN_APP = 2;
 
 	private static final String[] PACKAGE_NAMES = {
 		CavanPackageName.QQ,
@@ -31,10 +47,17 @@ public class CavanAccessibilityService extends AccessibilityService {
 		CavanPackageName.SOGOU_OCR,
 	};
 
+	private String mLastContent;
+	private Dialog mCheckContentDialog;
+
+	private long mWindowStartTime;
+	private String mClassName = CavanString.EMPTY_STRING;
+	private String mPackageName = CavanString.EMPTY_STRING;
+
 	private CavanAccessibilityQQ mAccessibilityQQ = new CavanAccessibilityQQ(this);
 	private CavanAccessibilitySogou mAccessibilitySogou = new CavanAccessibilitySogou(this);
 	private CavanAccessibilityAlipay mAccessibilityAlipay = new CavanAccessibilityAlipay(this);
-	private HashMap<CharSequence, CavanAccessibilityBase> mAccessibilityMap = new HashMap<CharSequence, CavanAccessibilityBase>();
+	private HashMap<String, CavanAccessibilityBase> mAccessibilityMap = new HashMap<String, CavanAccessibilityBase>();
 
 	private Point mDisplaySize = new Point();
 
@@ -106,6 +129,106 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 	};
 
+	private Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case MSG_CHECK_CONTENT:
+				if (mCheckContentDialog != null && mCheckContentDialog.isShowing()) {
+					break;
+				}
+
+				String content = (String) msg.obj;
+
+				if (msg.arg1 == 0 && mLastContent != null && mLastContent.equals(content)) {
+					break;
+				}
+
+				mLastContent = content;
+
+				AlertDialog.Builder builder = new AlertDialog.Builder(CavanAccessibilityService.this, R.style.DialogStyle);
+
+				final View view = View.inflate(CavanAccessibilityService.this, R.layout.red_packet_check, null);
+				final EditText editText = (EditText) view.findViewById(R.id.editTextContent);
+				editText.setText(content);
+
+				final CheckBox checkBox = (CheckBox) view.findViewById(R.id.checkBoxAsCode);
+
+				builder.setView(view);
+				builder.setNegativeButton(android.R.string.cancel, null);
+				builder.setPositiveButton(R.string.text_send, new OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						String text = editText.getText().toString();
+
+						MainActivity.setAutoOpenAppEnable(true);
+
+						if (checkBox != null && checkBox.isChecked()) {
+							if (text != null) {
+								for (String line : text.split("\n")) {
+									String code = RedPacketCode.filtration(line);
+
+									if (code.length() > 0) {
+										Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
+										intent.putExtra("type", "图片识别");
+										intent.putExtra("code", code);
+										intent.putExtra("shared", false);
+										sendBroadcast(intent);
+									}
+								}
+							}
+						} else {
+							Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
+							intent.putExtra("desc", "图片识别");
+							intent.putExtra("priority", 1);
+							intent.putExtra("content", text);
+							sendBroadcast(intent);
+						}
+					}
+				});
+
+				builder.setOnDismissListener(new OnDismissListener() {
+
+					@Override
+					public void onDismiss(DialogInterface dialog) {
+						mCheckContentDialog = null;
+						mLastContent = null;
+					}
+				});
+
+				mCheckContentDialog = builder.create();
+				Window win = mCheckContentDialog.getWindow();
+
+				win.setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+				if (msg.arg1 > 0) {
+					win.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.TOP);
+					checkBox.setChecked(true);
+					mCheckContentDialog.setCanceledOnTouchOutside(true);
+				} else {
+					mCheckContentDialog.setCancelable(false);
+				}
+
+				mCheckContentDialog.show();
+				break;
+
+			case MSG_CHECK_AUTO_OPEN_APP:
+				removeMessages(MSG_CHECK_AUTO_OPEN_APP);
+
+				if (getWindowTimeConsume() > 30000) {
+					MainActivity.setAutoOpenAppEnable(true);
+				} else if (needDisableAutoOpenApp()) {
+					MainActivity.setAutoOpenAppEnable(false);
+					sendEmptyMessageDelayed(MSG_CHECK_AUTO_OPEN_APP, 2000);
+				} else {
+					MainActivity.setAutoOpenAppEnable(true);
+				}
+				break;
+			}
+		}
+	};
+
 	public CavanAccessibilityService() {
 		super();
 
@@ -113,6 +236,46 @@ public class CavanAccessibilityService extends AccessibilityService {
 		mAccessibilityMap.put(CavanPackageName.ALIPAY, mAccessibilityAlipay);
 		mAccessibilityMap.put(CavanPackageName.SOGOU_IME, mAccessibilitySogou);
 		mAccessibilityMap.put(CavanPackageName.SOGOU_OCR, mAccessibilitySogou);
+	}
+
+	public long getWindowTimeConsume() {
+		return System.currentTimeMillis() - mWindowStartTime;
+	}
+
+	public void startCheckAutoOpenApp() {
+		mHandler.sendEmptyMessage(MSG_CHECK_AUTO_OPEN_APP);
+	}
+
+	public void doCheckContent(String content) {
+		Message message = mHandler.obtainMessage(MSG_CHECK_CONTENT, content);
+		mHandler.sendMessageDelayed(message, 500);
+	}
+
+	public boolean needDisableAutoOpenApp() {
+		AccessibilityNodeInfo root = getRootInActiveWindow();
+		if (root == null) {
+			return false;
+		}
+
+		CharSequence sequence = root.getPackageName();
+		if (sequence == null) {
+			return false;
+		}
+
+		String packageName = sequence.toString();
+
+		CavanAndroid.dLog("package = " + packageName);
+		CavanAndroid.dLog("class = " + mClassName);
+
+		if (packageName.equals(CavanPackageName.SOGOU_IME) || packageName.equals(CavanPackageName.SOGOU_OCR)) {
+			return mClassName.startsWith("com.sogou.ocrplugin");
+		} else if (packageName.equals(CavanPackageName.QQ)) {
+			return mClassName.equals("android.app.Dialog") || mClassName.equals("com.tencent.mobileqq.activity.aio.photo.AIOGalleryActivity");
+		} else if (packageName.equals(CavanPackageName.GALLERY3D)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public Point getDisplaySize() {
@@ -127,10 +290,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return mDisplaySize.y;
 	}
 
-	public void startCheckAutoOpenApp() {
-		mAccessibilitySogou.startCheckAutoOpenApp();
-	}
-
 	public String getRootPackageName() {
 		AccessibilityNodeInfo info = getRootInActiveWindow();
 		if (info == null) {
@@ -142,6 +301,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	public boolean isRootActivity(String pkgName) {
 		return pkgName.equals(getRootPackageName());
+	}
+
+	public String getActivityClassName() {
+		return mClassName;
+	}
+
+	public String getActivityPackageName() {
+		return mPackageName;
 	}
 
 	public static AccessibilityNodeInfo findAccessibilityNodeInfoByText(AccessibilityNodeInfo root, String text) {
@@ -212,9 +379,44 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	@Override
 	public void onAccessibilityEvent(AccessibilityEvent event) {
-		CavanAccessibilityBase accessibility = mAccessibilityMap.get(event.getPackageName());
-		if (accessibility != null) {
-			accessibility.dispatchAccessibilityEvent(event);
+		CharSequence sequence = event.getPackageName();
+		if (sequence != null) {
+			mPackageName = sequence.toString();
+		}
+
+		CavanAccessibilityBase accessibility = mAccessibilityMap.get(mPackageName);
+		if (accessibility == null) {
+			return;
+		}
+
+		switch (event.getEventType()) {
+		case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
+			mWindowStartTime = System.currentTimeMillis();
+
+			sequence = event.getClassName();
+			if (sequence != null) {
+				mClassName = sequence.toString();
+			}
+
+			CavanAndroid.dLog("package = " + mPackageName);
+			CavanAndroid.dLog("class = " + mClassName);
+
+			accessibility.onWindowStateChanged(event, mPackageName, mClassName, mWindowStartTime);
+			break;
+
+		case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
+			accessibility.onWindowContentChanged(event);
+			break;
+
+		case AccessibilityEvent.TYPE_VIEW_CLICKED:
+			if (MainActivity.isListenClickEnabled(CavanAccessibilityService.this)) {
+				accessibility.onViewClicked(event);
+			}
+			break;
+
+		case AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED:
+			accessibility.onViewTextChanged(event);
+			break;
 		}
 	}
 
@@ -225,7 +427,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 			return false;
 		}
 
-		CavanAccessibilityBase accessibility = mAccessibilityMap.get(root.getPackageName());
+		CharSequence sequence = root.getPackageName();
+		if (sequence == null) {
+			return false;
+		}
+
+		CavanAccessibilityBase accessibility = mAccessibilityMap.get(sequence.toString());
 		if (accessibility == null) {
 			return false;
 		}

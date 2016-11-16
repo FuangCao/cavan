@@ -1,5 +1,8 @@
 package com.cavan.cavanmain;
 
+import com.cavan.android.CavanAndroid;
+import com.cavan.java.CavanString;
+
 import android.os.Handler;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
@@ -7,8 +10,10 @@ import android.view.accessibility.AccessibilityNodeInfo;
 
 public abstract class CavanAccessibilityBase extends Handler {
 
-	protected String mClassName;
-	private long mWindowStartTime;
+	protected String mClassName = CavanString.EMPTY_STRING;
+	protected String mPackageName = CavanString.EMPTY_STRING;
+
+	protected long mWindowStartTime;
 	protected CavanAccessibilityService mService;
 
 	public CavanAccessibilityBase(CavanAccessibilityService service) {
@@ -26,28 +31,15 @@ public abstract class CavanAccessibilityBase extends Handler {
 		return false;
 	}
 
-	public void dispatchAccessibilityEvent(AccessibilityEvent event) {
-		switch (event.getEventType()) {
-		case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
-			mWindowStartTime = System.currentTimeMillis();
-			mClassName = event.getClassName().toString();
-			onWindowStateChanged(event);
-			break;
+	public void onWindowStateChanged(AccessibilityEvent event, String packageName, String className, long startTime) {
+		mWindowStartTime = startTime;
+		mPackageName = packageName;
+		mClassName = className;
 
-		case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
-			onWindowContentChanged(event);
-			break;
+		CavanAndroid.dLog("package = " + mPackageName);
+		CavanAndroid.dLog("class = " + mClassName);
 
-		case AccessibilityEvent.TYPE_VIEW_CLICKED:
-			if (MainActivity.isListenClickEnabled(mService)) {
-				onViewClicked(event);
-			}
-			break;
-
-		case AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED:
-			onViewTextChanged(event);
-			break;
-		}
+		onWindowStateChanged(event);
 	}
 
 	public AccessibilityNodeInfo getRootInActiveWindow() {
