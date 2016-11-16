@@ -10,12 +10,15 @@ import android.os.Message;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.EditText;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanString;
 
 public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
+
+	private static final String CLASS_NAME_EDIT_TEXT = EditText.class.getName();
 
 	private static final long POLL_DELAY = 500;
 	private static final long UNPACK_OVERTIME = 2000;
@@ -500,6 +503,27 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 		}
 	}
 
+	private boolean isRedPacketEditText(AccessibilityNodeInfo node) {
+		String id = node.getViewIdResourceName();
+		if (id != null) {
+			return id.equals("com.alipay.android.phone.discovery.envelope:id/solitaire_edit");
+		}
+
+		CharSequence desc = node.getContentDescription();
+		if (desc != null) {
+			return desc.toString().equals("点击输入口令");
+		}
+
+		if ("com.alipay.android.phone.discovery.envelope.HomeActivity".equals(mClassName)) {
+			CharSequence className = node.getClassName();
+			if (className != null) {
+				return className.toString().equals(CLASS_NAME_EDIT_TEXT);
+			}
+		}
+
+		return false;
+	}
+
 	@Override
 	public void handleMessage(Message msg) {
 		switch (msg.what) {
@@ -541,18 +565,15 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 	@Override
 	public void onViewTextChanged(AccessibilityEvent event) {
 		AccessibilityNodeInfo source = event.getSource();
-		if (source == null) {
-			return;
-		}
+		if (source != null && isRedPacketEditText(source)) {
+			List<CharSequence> sequences = event.getText();
+			if (sequences != null && sequences.size() > 0) {
+				mInputtedCode = sequences.get(0).toString();
+			} else {
+				mInputtedCode = null;
+			}
 
-		String id = source.getViewIdResourceName();
-		if (id == null || id.equals("com.alipay.android.phone.discovery.envelope:id/solitaire_edit") == false) {
-			return;
-		}
-
-		List<CharSequence> sequences = event.getText();
-		if (sequences != null && sequences.size() > 0) {
-			mInputtedCode = sequences.get(0).toString();
+			CavanAndroid.dLog("mInputtedCode = " + mInputtedCode);
 		}
 	}
 

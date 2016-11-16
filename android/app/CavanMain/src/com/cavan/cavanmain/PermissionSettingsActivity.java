@@ -1,12 +1,12 @@
 package com.cavan.cavanmain;
 
-import com.cavan.android.CavanAndroid;
-
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+
+import com.cavan.android.CavanAndroid;
 
 public class PermissionSettingsActivity extends PreferenceActivity {
 

@@ -1,12 +1,12 @@
 package com.cavan.cavanmain;
 
-import com.cavan.android.CavanAndroid;
-import com.cavan.java.CavanString;
-
 import android.os.Handler;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+
+import com.cavan.android.CavanAndroid;
+import com.cavan.java.CavanString;
 
 public abstract class CavanAccessibilityBase extends Handler {
 

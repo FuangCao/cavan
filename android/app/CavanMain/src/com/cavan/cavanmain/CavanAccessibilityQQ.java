@@ -21,7 +21,12 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 	}
 
 	public boolean isMessageBoxNode(AccessibilityNodeInfo node) {
-		if (node == null || node.isMultiLine()) {
+		String id = node.getViewIdResourceName();
+		if (id != null) {
+			return id.equals("com.tencent.mobileqq:id/msgbox");
+		}
+
+		if (node.isMultiLine()) {
 			return false;
 		}
 
@@ -59,7 +64,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 	@Override
 	public void onWindowContentChanged(AccessibilityEvent event) {
 		AccessibilityNodeInfo source = event.getSource();
-		if (isMessageBoxNode(source)) {
+		if (source != null && isMessageBoxNode(source)) {
 			CharSequence sequence = source.getText();
 			if (sequence == null) {
 				return;
