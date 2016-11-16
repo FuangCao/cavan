@@ -116,14 +116,15 @@ public class CavanNotification {
 
 		if (text != null) {
 			String content = text.toString();
+			int endLine = CavanString.findLineEnd(content);
 
 			CavanAndroid.dLog(content);
 
 			if (CavanPackageName.QQ.equals(mPackageName)) {
 				int index = content.indexOf("):");
-				if (index < 0) {
+				if (index < 0 || index > endLine) {
 					index = content.indexOf(':');
-					if (index < 0) {
+					if (index < 0 || index > endLine) {
 						mContent = content;
 					} else {
 						mUserName = content.substring(0, index);
@@ -156,7 +157,7 @@ public class CavanNotification {
 			} else if (CavanPackageName.MM.equals(mPackageName)) {
 				int index = content.indexOf(':');
 
-				if (index < 0) {
+				if (index < 0 || index > endLine) {
 					mContent = content;
 				} else {
 					mUserName = content.substring(0, index);

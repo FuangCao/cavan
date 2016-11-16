@@ -198,6 +198,15 @@ public class CavanString {
 		}
 	}
 
+	public static int findLineEnd(String text) {
+		int index = text.indexOf('\n');
+		if (index < 0) {
+			return text.length();
+		}
+
+		return index;
+	}
+
 	@Override
 	public String toString() {
 		return mContent;

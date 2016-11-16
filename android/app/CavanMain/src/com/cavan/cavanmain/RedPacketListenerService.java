@@ -93,7 +93,11 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 			case MSG_RED_PACKET_NOTIFICATION:
 				notification = (RedPacketNotification) msg.obj;
-				notification.sendRedPacketNotifyAlipay();
+				if (notification.sendRedPacketNotifyAlipay() > 0) {
+					break;
+				}
+
+				notification.sendRedPacketNotifyNormal();
 				break;
 			}
 		}
@@ -149,15 +153,15 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			case MainActivity.ACTION_CONTENT_RECEIVED:
 				String desc = intent.getStringExtra("desc");
 				String content = intent.getStringExtra("content");
-				String pkgName = intent.getStringExtra("package");
+				String packageName = intent.getStringExtra("package");
 				boolean hasPrefix = intent.getBooleanExtra("hasPrefix", false);
 				int priority = intent.getIntExtra("priority", 0);
 
-				if (pkgName == null) {
-					pkgName = getPackageName();
+				if (packageName == null) {
+					packageName = getPackageName();
 				}
 
-				RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, pkgName, content, desc, hasPrefix);
+				RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, packageName, content, desc, hasPrefix);
 				notification.setPriority(priority);
 				mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
 				break;

@@ -92,8 +92,8 @@ public class RedPacketNotification extends CavanNotification {
 		}
 	}
 
-	public RedPacketNotification(RedPacketListenerService service, String pkgName, String content, String desc, boolean hasPrefix) {
-		super(pkgName, content, hasPrefix);
+	public RedPacketNotification(RedPacketListenerService service, String packageName, String content, String desc, boolean hasPrefix) {
+		super(packageName, content, hasPrefix);
 
 		mDescription = desc;
 		mService = service;
@@ -141,12 +141,12 @@ public class RedPacketNotification extends CavanNotification {
 	}
 
 	public CharSequence getApplicationName() {
-		String pkgName = getPackageName();
-		if (pkgName == null) {
+		String packageName = getPackageName();
+		if (packageName == null) {
 			return null;
 		}
 
-		return CavanAndroid.getApplicationLabel(mService, pkgName);
+		return CavanAndroid.getApplicationLabel(mService, packageName);
 	}
 
 	public CharSequence getUserDescription() {
@@ -325,18 +325,25 @@ public class RedPacketNotification extends CavanNotification {
 	}
 
 	public boolean sendRedPacketNotifyNormal(String content, String message) {
-		PendingIntent intent = mNotification.getNotification().contentIntent;
-		Notification notification = buildNotification(content, intent);
+		PendingIntent intent;
+		Notification notification;
 
-		if (intent != null && MainActivity.isAutoOpenAppEnabled(mService) &&
-				(MainActivity.isAutoOpenAlipayEnabled(mService) == false || mService.getCodePending() == 0)) {
-			try {
-				intent.send();
-			} catch (CanceledException e) {
-				e.printStackTrace();
+		if (mNotification != null) {
+			intent = mNotification.getNotification().contentIntent;
+
+			if (intent != null && MainActivity.isAutoOpenAppEnabled(mService) &&
+					(MainActivity.isAutoOpenAlipayEnabled(mService) == false || mService.getCodePending() == 0)) {
+				try {
+					intent.send();
+				} catch (CanceledException e) {
+					e.printStackTrace();
+				}
 			}
+		} else {
+			intent = null;
 		}
 
+		notification = buildNotification(content, intent);
 		mService.sendNotification(notification, message, null);
 
 		return true;
