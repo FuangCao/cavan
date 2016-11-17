@@ -124,6 +124,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 			case Intent.ACTION_CLOSE_SYSTEM_DIALOGS:
 				mAccessibilityAlipay.setAutoStartAlipayEnable(false);
+				CavanAndroid.dLog("reason = " + intent.getStringExtra("reason"));
 				break;
 			}
 		}

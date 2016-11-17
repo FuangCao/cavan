@@ -15,6 +15,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 
+import android.app.KeyguardManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -67,6 +68,7 @@ public class FloatMessageService extends FloatWidowService {
 	private static final int MSG_TCP_BRIDGE_UPDATED = 6;
 	private static final int MSG_START_OCR = 7;
 	private static final int MSG_CLIPBOARD_RECEIVED = 8;
+	private static final int MSG_CHECK_KEYGUARD = 9;
 
 	private int mLastSecond;
 	private boolean mUserPresent;
@@ -80,6 +82,7 @@ public class FloatMessageService extends FloatWidowService {
 
 	private boolean mNetworkConnected;
 	private ConnectivityManager mConnectivityManager;
+	private KeyguardManager mKeyguardManager;
 
 	private Handler mHandler = new Handler() {
 
@@ -155,6 +158,18 @@ public class FloatMessageService extends FloatWidowService {
 				CavanAndroid.showToast(getApplicationContext(), text);
 				CavanAndroid.postClipboardText(getApplicationContext(), code);
 				break;
+
+			case MSG_CHECK_KEYGUARD:
+				removeMessages(MSG_CHECK_KEYGUARD);
+
+				if (mUserPresent) {
+					if (mKeyguardManager.inKeyguardRestrictedInputMode()) {
+						sendEmptyMessageDelayed(MSG_CHECK_KEYGUARD, 2000);
+					} else {
+						mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_bg);
+					}
+				}
+				break;
 			}
 		}
 	};
@@ -182,11 +197,11 @@ public class FloatMessageService extends FloatWidowService {
 				break;
 
 			case Intent.ACTION_USER_PRESENT:
-				if (CavanAndroid.isPreferenceEnabled(FloatMessageService.this, MainActivity.KEY_AUTO_UNLOCK)) {
-					mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_bg);
-				}
-
 				mUserPresent = true;
+
+				if (CavanAndroid.isPreferenceEnabled(FloatMessageService.this, MainActivity.KEY_AUTO_UNLOCK)) {
+					mHandler.sendEmptyMessage(MSG_CHECK_KEYGUARD);
+				}
 				break;
 
 			case ConnectivityManager.CONNECTIVITY_ACTION:
@@ -510,6 +525,7 @@ public class FloatMessageService extends FloatWidowService {
 
 	@Override
 	public void onCreate() {
+		mKeyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
 		mConnectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
 
 		IntentFilter filter = new IntentFilter();
