@@ -149,7 +149,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 			}
 
 			if (code.maybeInvalid()) {
-				if (getWindowTimeConsume() > 500) {
+				if (getWindowTimeConsume() > 1000) {
 					setRedPacketCodeInvalid(code);
 					startAutoCommitRedPacketCode(0);
 				}

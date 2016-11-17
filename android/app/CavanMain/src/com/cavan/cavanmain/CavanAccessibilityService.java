@@ -402,7 +402,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			CavanAndroid.dLog("package = " + mPackageName);
 			CavanAndroid.dLog("class = " + mClassName);
 
-			accessibility.onWindowStateChanged(event, mPackageName, mClassName, mWindowStartTime);
+			accessibility.onWindowStateChanged(event, mPackageName, mClassName);
 			break;
 
 		case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:

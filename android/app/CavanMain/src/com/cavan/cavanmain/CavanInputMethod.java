@@ -280,7 +280,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	@Override
 	public void onStartInput(EditorInfo attribute, boolean restarting) {
 		String pkgName = getCurrentInputEditorInfo().packageName;
-		CavanAndroid.dLog("package = " + pkgName);
+		CavanAndroid.dLog("onStartInput: package = " + pkgName);
 
 		mIsAlipay = CavanPackageName.ALIPAY.equals(pkgName);
 		if (mIsAlipay) {

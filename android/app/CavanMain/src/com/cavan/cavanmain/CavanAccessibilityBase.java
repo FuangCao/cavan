@@ -5,16 +5,13 @@ import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
-import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanString;
 
 public abstract class CavanAccessibilityBase extends Handler {
 
+	protected CavanAccessibilityService mService;
 	protected String mClassName = CavanString.EMPTY_STRING;
 	protected String mPackageName = CavanString.EMPTY_STRING;
-
-	protected long mWindowStartTime;
-	protected CavanAccessibilityService mService;
 
 	public CavanAccessibilityBase(CavanAccessibilityService service) {
 		mService = service;
@@ -31,13 +28,9 @@ public abstract class CavanAccessibilityBase extends Handler {
 		return false;
 	}
 
-	public void onWindowStateChanged(AccessibilityEvent event, String packageName, String className, long startTime) {
-		mWindowStartTime = startTime;
+	public void onWindowStateChanged(AccessibilityEvent event, String packageName, String className) {
 		mPackageName = packageName;
 		mClassName = className;
-
-		CavanAndroid.dLog("package = " + mPackageName);
-		CavanAndroid.dLog("class = " + mClassName);
 
 		onWindowStateChanged(event);
 	}
@@ -51,7 +44,7 @@ public abstract class CavanAccessibilityBase extends Handler {
 	}
 
 	public long getWindowTimeConsume() {
-		return System.currentTimeMillis() - mWindowStartTime;
+		return mService.getWindowTimeConsume();
 	}
 
 	public boolean isRootActivity(AccessibilityNodeInfo root) {
