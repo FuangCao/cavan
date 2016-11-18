@@ -430,6 +430,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 				if (node == null) {
 					node = RedPacketCode.getInstence(mInputtedCode, 0, true, false);
 					node.setShared();
+
+					mCodes.add(node);
 					mCode = node;
 				}
 
