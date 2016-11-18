@@ -208,9 +208,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			case MSG_CHECK_AUTO_OPEN_APP:
 				removeMessages(MSG_CHECK_AUTO_OPEN_APP);
 
-				if (getWindowTimeConsume() > 30000) {
-					MainActivity.setAutoOpenAppEnable(true);
-				} else if (needDisableAutoOpenApp()) {
+				if (needDisableAutoOpenApp()) {
 					MainActivity.setAutoOpenAppEnable(false);
 					sendEmptyMessageDelayed(MSG_CHECK_AUTO_OPEN_APP, 2000);
 				} else {
@@ -250,10 +248,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public boolean needDisableAutoOpenApp() {
-		if (mClassName.startsWith("com.sogou.ocrplugin")) {
-			return true;
-		}
-
 		AccessibilityNodeInfo root = getRootInActiveWindow();
 		if (root == null) {
 			return false;
@@ -269,7 +263,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 		CavanAndroid.dLog("package = " + packageName);
 		CavanAndroid.dLog("class = " + mClassName);
 
-		if (packageName.equals(CavanPackageName.QQ)) {
+		if (mClassName.startsWith("com.sogou.ocrplugin")) {
+			return packageName.contains("sogou") || packageName.contains("cavanmain");
+		} else if (packageName.equals(CavanPackageName.QQ)) {
 			return mClassName.equals("android.app.Dialog") || mClassName.equals("com.tencent.mobileqq.activity.aio.photo.AIOGalleryActivity");
 		} else if (packageName.equals(CavanPackageName.GALLERY3D)) {
 			return true;

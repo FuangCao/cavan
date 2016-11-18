@@ -426,6 +426,13 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 			}
 
 			if (mInputtedCode != null) {
+				RedPacketCode node = RedPacketCode.get(mInputtedCode);
+				if (node == null) {
+					node = RedPacketCode.getInstence(mInputtedCode, 0, true, false);
+					node.setShared();
+					mCode = node;
+				}
+
 				mService.sendRedPacketCode(mInputtedCode);
 			}
 
@@ -479,6 +486,10 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 	}
 
 	public boolean addCode(RedPacketCode code) {
+		if (mCodes.contains(code)) {
+			return true;
+		}
+
 		if (code.isInvalid()) {
 			CavanAndroid.dLog("skip invalid code: " + code.getCode());
 			return false;

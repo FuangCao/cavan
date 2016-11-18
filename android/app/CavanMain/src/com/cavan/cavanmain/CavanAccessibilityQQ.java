@@ -6,6 +6,7 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.TextView;
 
+import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanString;
 import com.cavan.java.RedPacketFinder;
@@ -81,12 +82,14 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 				source.performAction(AccessibilityNodeInfo.ACTION_CLICK);
 			}
 
-			Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
-			intent.putExtra("package", source.getPackageName());
-			intent.putExtra("desc", "QQ消息盒子");
-			intent.putExtra("content", text);
-			intent.putExtra("hasPrefix", true);
-			mService.sendBroadcast(intent);
+			if (!CavanAndroid.inKeyguardRestrictedInputMode(mService)) {
+				Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
+				intent.putExtra("package", source.getPackageName());
+				intent.putExtra("desc", "QQ消息盒子");
+				intent.putExtra("content", text);
+				intent.putExtra("hasPrefix", true);
+				mService.sendBroadcast(intent);
+			}
 		}
 	}
 

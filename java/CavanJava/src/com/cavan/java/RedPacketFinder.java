@@ -43,7 +43,7 @@ public class RedPacketFinder {
 	};
 
 	public static final String[] sExcludeWords = {
-		"领取方法", "红牛口令", "下单口令", "新口令"
+		"领取方法", "红牛口令", "下单口令", "新口令", "淘口令"
 	};
 
 	public static final Pattern[] sUnsafePatterns = {

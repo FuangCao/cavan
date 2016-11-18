@@ -97,9 +97,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 					break;
 				}
 
-				if (!CavanAndroid.inKeyguardRestrictedInputMode(RedPacketListenerService.this)) {
-					notification.sendRedPacketNotifyNormal();
-				}
+				notification.sendRedPacketNotifyNormal();
 				break;
 			}
 		}

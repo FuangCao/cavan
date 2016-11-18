@@ -55,6 +55,12 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 		return builder.toString();
 	}
 
+	public static RedPacketCode get(String code) {
+		synchronized (mCodeMap) {
+			return mCodeMap.get(code);
+		}
+	}
+
 	public static RedPacketCode getInstence(String code, int priority, boolean create, boolean test) {
 		synchronized (mCodeMap) {
 			Iterator<RedPacketCode> iterator = mCodeMap.values().iterator();
@@ -65,7 +71,7 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 				}
 			}
 
-			RedPacketCode node = mCodeMap.get(code);
+			RedPacketCode node = get(code);
 			if (node == null) {
 				if (create) {
 					node = new RedPacketCode(code, priority);

@@ -24,13 +24,13 @@ public class CavanAccessibilitySogou extends CavanAccessibilityBase {
 
 	@Override
 	public void onWindowStateChanged(AccessibilityEvent event) {
+		mService.setAutoOpenAppEnable(false);
+
 		if (mLastClassName.equals(mClassName)) {
 			return;
 		}
 
 		mLastClassName = mClassName;
-
-		mService.setAutoOpenAppEnable(false);
 
 		AccessibilityNodeInfo source = event.getSource();
 		if (source == null) {
