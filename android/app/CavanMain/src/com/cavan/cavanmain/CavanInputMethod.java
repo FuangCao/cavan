@@ -204,7 +204,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		if (mIsAlipay) {
 			conn.performContextMenuAction(android.R.id.selectAll);
 		} else if (mNeedPrefix) {
-			code = "支付宝红包口令： " + code;
+			code = "支付宝红包口令：" + code;
 		}
 
 		conn.commitText(code, 0);
