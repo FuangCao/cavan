@@ -47,7 +47,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 		CavanPackageName.SOGOU_OCR,
 	};
 
-	private String mLastContent;
 	private Dialog mCheckContentDialog;
 
 	private long mWindowStartTime;
@@ -123,7 +122,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				break;
 
 			case Intent.ACTION_CLOSE_SYSTEM_DIALOGS:
-				mAccessibilityAlipay.setAutoStartAlipayEnable(false);
+				mAccessibilityAlipay.setAutoOpenAlipayEnable(false);
 				CavanAndroid.dLog("reason = " + intent.getStringExtra("reason"));
 				break;
 			}
@@ -141,13 +140,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 				}
 
 				String content = (String) msg.obj;
-
-				if (msg.arg1 == 0 && mLastContent != null && mLastContent.equals(content)) {
-					break;
-				}
-
-				mLastContent = content;
-
 				AlertDialog.Builder builder = new AlertDialog.Builder(CavanAccessibilityService.this, R.style.DialogStyle);
 
 				final View view = View.inflate(CavanAccessibilityService.this, R.layout.red_packet_check, null);
@@ -164,7 +156,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 					public void onClick(DialogInterface dialog, int which) {
 						String text = editText.getText().toString();
 
-						MainActivity.setAutoOpenAppEnable(true);
+						setAutoOpenAppEnable(true);
 
 						if (checkBox != null && checkBox.isChecked()) {
 							if (text != null) {
@@ -195,7 +187,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 					@Override
 					public void onDismiss(DialogInterface dialog) {
 						mCheckContentDialog = null;
-						mLastContent = null;
 					}
 				});
 
@@ -239,12 +230,18 @@ public class CavanAccessibilityService extends AccessibilityService {
 		mAccessibilityMap.put(CavanPackageName.SOGOU_OCR, mAccessibilitySogou);
 	}
 
-	public long getWindowTimeConsume() {
-		return System.currentTimeMillis() - mWindowStartTime;
+	public void setAutoOpenAppEnable(boolean enable) {
+		if (enable) {
+			mHandler.removeMessages(MSG_CHECK_AUTO_OPEN_APP);
+			MainActivity.setAutoOpenAppEnable(true);
+			mAccessibilityAlipay.setAutoOpenAlipayEnable(true);
+		} else {
+			mHandler.sendEmptyMessage(MSG_CHECK_AUTO_OPEN_APP);
+		}
 	}
 
-	public void startCheckAutoOpenApp() {
-		mHandler.sendEmptyMessage(MSG_CHECK_AUTO_OPEN_APP);
+	public long getWindowTimeConsume() {
+		return System.currentTimeMillis() - mWindowStartTime;
 	}
 
 	public void doCheckContent(String content) {
@@ -253,6 +250,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public boolean needDisableAutoOpenApp() {
+		if (mClassName.startsWith("com.sogou.ocrplugin")) {
+			return true;
+		}
+
 		AccessibilityNodeInfo root = getRootInActiveWindow();
 		if (root == null) {
 			return false;
@@ -268,9 +269,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		CavanAndroid.dLog("package = " + packageName);
 		CavanAndroid.dLog("class = " + mClassName);
 
-		if (packageName.equals(CavanPackageName.SOGOU_IME) || packageName.equals(CavanPackageName.SOGOU_OCR)) {
-			return mClassName.startsWith("com.sogou.ocrplugin");
-		} else if (packageName.equals(CavanPackageName.QQ)) {
+		if (packageName.equals(CavanPackageName.QQ)) {
 			return mClassName.equals("android.app.Dialog") || mClassName.equals("com.tencent.mobileqq.activity.aio.photo.AIOGalleryActivity");
 		} else if (packageName.equals(CavanPackageName.GALLERY3D)) {
 			return true;

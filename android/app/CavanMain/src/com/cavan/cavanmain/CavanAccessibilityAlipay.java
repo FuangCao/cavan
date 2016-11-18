@@ -31,7 +31,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 	private RedPacketCode mCode;
 	private String mInputtedCode;
 	private long mDelay;
-	private boolean mAutoStartAlipay;
+	private boolean mAutoOpenAlipay;
 	private LinkedList<RedPacketCode> mCodes = new LinkedList<RedPacketCode>();
 
 	private Runnable mRunnableAlipay = new Runnable() {
@@ -50,12 +50,12 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 				if (mCodeCount > 0) {
 					startAutoCommitRedPacketCode(POLL_DELAY);
 				} else {
-					mAutoStartAlipay = false;
+					mAutoOpenAlipay = false;
 				}
 			} else {
 				mClassName = CavanString.EMPTY_STRING;
 
-				if (mAutoStartAlipay && mCodeCount > 0) {
+				if (mAutoOpenAlipay && mCodeCount > 0) {
 					RedPacketListenerService.startAlipayActivity(mService);
 				}
 			}
@@ -79,7 +79,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 		if (delayMillis > 0) {
 			postDelayed(mRunnableAlipay, delayMillis);
 		} else {
-			mAutoStartAlipay = true;
+			mAutoOpenAlipay = true;
 			post(mRunnableAlipay);
 		}
 
@@ -120,7 +120,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 	}
 
 	public void startAlipayActivity() {
-		mAutoStartAlipay = true;
+		mAutoOpenAlipay = true;
 
 		if (isRootActivity()) {
 			startAutoCommitRedPacketCode(500);
@@ -222,7 +222,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 			break;
 
 		case "com.alipay.mobile.commonui.widget.APNoticePopDialog":
-			mAutoStartAlipay = false;
+			mAutoOpenAlipay = false;
 		case "com.alipay.mobile.security.login.ui.AlipayUserLoginActivity":
 			if (mCode != null) {
 				mCode.setPostPending(false);
@@ -493,8 +493,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 		return true;
 	}
 
-	public void setAutoStartAlipayEnable(boolean enable) {
-		mAutoStartAlipay = enable;
+	public void setAutoOpenAlipayEnable(boolean enable) {
+		mAutoOpenAlipay = enable;
 	}
 
 	public void setCommitCount(int count) {

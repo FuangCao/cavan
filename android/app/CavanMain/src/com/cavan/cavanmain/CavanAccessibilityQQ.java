@@ -57,7 +57,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 	@Override
 	public void onWindowStateChanged(AccessibilityEvent event) {
 		if ("com.tencent.mobileqq.activity.aio.photo.AIOGalleryActivity".equals(mClassName)) {
-			mService.startCheckAutoOpenApp();
+			mService.setAutoOpenAppEnable(false);
 		}
 	}
 

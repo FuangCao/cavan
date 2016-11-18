@@ -15,14 +15,12 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 
-import android.app.KeyguardManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Environment;
 import android.os.FileObserver;
 import android.os.Handler;
@@ -81,8 +79,6 @@ public class FloatMessageService extends FloatWidowService {
 	private NetworkSendThread mNetSender;
 
 	private boolean mNetworkConnected;
-	private ConnectivityManager mConnectivityManager;
-	private KeyguardManager mKeyguardManager;
 
 	private Handler mHandler = new Handler() {
 
@@ -163,7 +159,7 @@ public class FloatMessageService extends FloatWidowService {
 				removeMessages(MSG_CHECK_KEYGUARD);
 
 				if (mUserPresent) {
-					if (mKeyguardManager.inKeyguardRestrictedInputMode()) {
+					if (CavanAndroid.inKeyguardRestrictedInputMode(FloatMessageService.this)) {
 						sendEmptyMessageDelayed(MSG_CHECK_KEYGUARD, 2000);
 					} else {
 						mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_bg);
@@ -499,9 +495,7 @@ public class FloatMessageService extends FloatWidowService {
 	}
 
 	public void updateNetworkConnState() {
-		NetworkInfo info = mConnectivityManager.getActiveNetworkInfo();
-
-		mNetworkConnected = (info != null && info.isAvailable());
+		mNetworkConnected = CavanAndroid.isNetworkAvailable(this);
 		mHandler.sendEmptyMessage(MSG_TCP_SERVICE_UPDATED);
 		mHandler.sendEmptyMessage(MSG_TCP_BRIDGE_UPDATED);
 	}
@@ -525,9 +519,6 @@ public class FloatMessageService extends FloatWidowService {
 
 	@Override
 	public void onCreate() {
-		mKeyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
-		mConnectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Intent.ACTION_SCREEN_OFF);
 		filter.addAction(Intent.ACTION_SCREEN_ON);

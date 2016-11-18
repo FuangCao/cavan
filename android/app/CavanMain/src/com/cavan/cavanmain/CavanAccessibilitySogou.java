@@ -2,12 +2,16 @@ package com.cavan.cavanmain;
 
 import java.util.List;
 
+import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.cavan.android.CavanPackageName;
+import com.cavan.java.CavanString;
 
 public class CavanAccessibilitySogou extends CavanAccessibilityBase {
+
+	private String mLastClassName = CavanString.EMPTY_STRING;
 
 	public CavanAccessibilitySogou(CavanAccessibilityService service) {
 		super(service);
@@ -20,7 +24,13 @@ public class CavanAccessibilitySogou extends CavanAccessibilityBase {
 
 	@Override
 	public void onWindowStateChanged(AccessibilityEvent event) {
-		mService.startCheckAutoOpenApp();
+		if (mLastClassName.equals(mClassName)) {
+			return;
+		}
+
+		mLastClassName = mClassName;
+
+		mService.setAutoOpenAppEnable(false);
 
 		AccessibilityNodeInfo source = event.getSource();
 		if (source == null) {
@@ -36,5 +46,18 @@ public class CavanAccessibilitySogou extends CavanAccessibilityBase {
 				}
 			}
 		}
+	}
+
+	@Override
+	protected boolean onKeyEvent(KeyEvent event) {
+		if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP) {
+			if (event.getAction() == KeyEvent.ACTION_DOWN) {
+				mService.setAutoOpenAppEnable(true);
+			}
+
+			return true;
+		}
+
+		return false;
 	}
 }

@@ -1,6 +1,7 @@
 package com.cavan.android;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.List;
 
 import android.app.ActivityManager;
@@ -18,6 +19,8 @@ import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.MulticastLock;
 import android.os.Build;
@@ -50,24 +53,16 @@ public class CavanAndroid {
 
 	public static final int EVENT_CLEAR_TOAST = 1;
 
+	private static HashMap<String, Object> mSystemServiceMap = new HashMap<String, Object>();
+
 	private static Toast sToast;
 	private static final Object sToastLock = new Object();
 
 	private static WakeLock sWakeLock;
-	private static PowerManager sPowerManager;
-
 	private static KeyguardLock sKeyguardLock;
-	private static KeyguardManager sKeyguardManager;
-
 	private static ClipboardManager sClipboardManager;
-	private static NotificationManager sNotificationManager;
-
-	private static PackageManager sPackageManager;
 	private static ActivityManager sActivityManager;
-	public static InputMethodManager sInputMethodManager;
-
 	private static MulticastLock sMulticastLock;
-	private static WifiManager sWifiManager;
 
 	public static void eLog(String message) {
 		if (ELOG_ENABLE) {
@@ -145,6 +140,26 @@ public class CavanAndroid {
 
 	public static void dumpstack() {
 		wLog(new Throwable());
+	}
+
+	public static void putCachedSystemService(String name, Object service) {
+		mSystemServiceMap.put(name, service);
+	}
+
+	public static Object getCachedSystemService(Context context, String name) {
+		Object service = mSystemServiceMap.get(name);
+		if (service != null) {
+			return service;
+		}
+
+		service = context.getSystemService(name);
+		if (service == null) {
+			return null;
+		}
+
+		putCachedSystemService(name, service);
+
+		return service;
 	}
 
 	public static void cancelToastLocked() {
@@ -226,14 +241,12 @@ public class CavanAndroid {
 	}
 
 	public static boolean setLockScreenEnable(Context context, boolean enable) {
-		if (sKeyguardManager == null) {
-			sKeyguardManager = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
-			if (sKeyguardManager == null) {
-				return false;
-			}
+		KeyguardManager manager = (KeyguardManager) getCachedSystemService(context, Context.KEYGUARD_SERVICE);
+		if (manager == null) {
+			return false;
 		}
 
-		return setLockScreenEnable(sKeyguardManager, enable);
+		return setLockScreenEnable(manager, enable);
 	}
 
 	public static boolean setSuspendEnable(PowerManager manager, boolean enable, long timeout) {
@@ -264,14 +277,12 @@ public class CavanAndroid {
 	}
 
 	public static boolean setSuspendEnable(Context context, boolean enable, long timeout) {
-		if (sPowerManager == null) {
-			sPowerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-			if (sPowerManager == null) {
-				return false;
-			}
+		PowerManager manager = (PowerManager) getCachedSystemService(context, Context.POWER_SERVICE);
+		if (manager == null) {
+			return false;
 		}
 
-		return setSuspendEnable(sPowerManager, enable, timeout);
+		return setSuspendEnable(manager, enable, timeout);
 	}
 
 	public static boolean setSuspendEnable(Context context, boolean enable) {
@@ -304,14 +315,12 @@ public class CavanAndroid {
 	}
 
 	public static boolean sendNotification(Context context, int id, Notification notification) {
-		if (sNotificationManager == null) {
-			sNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-			if (sNotificationManager == null) {
-				return false;
-			}
+		NotificationManager manager = (NotificationManager) getCachedSystemService(context, Context.NOTIFICATION_SERVICE);
+		if (manager == null) {
+			return false;
 		}
 
-		sNotificationManager.notify(id, notification);
+		manager.notify(id, notification);
 
 		return true;
 	}
@@ -438,14 +447,6 @@ public class CavanAndroid {
 		return sActivityManager;
 	}
 
-	public static PackageManager getPackageManager(Context context) {
-		if (sPackageManager == null) {
-			sPackageManager = context.getPackageManager();
-		}
-
-		return sPackageManager;
-	}
-
 	public static ComponentName getTopActivityInfo(Context context) {
 		ActivityManager manager = getActivityManager(context);
 		if (manager == null) {
@@ -528,22 +529,12 @@ public class CavanAndroid {
 		return pkgName.equals(getTopActivieyPackageName(context));
 	}
 
-	public static WifiManager getWifiManager(Context context) {
-		if (sWifiManager != null) {
-			return sWifiManager;
-		}
-
-		sWifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-
-		return sWifiManager;
-	}
-
 	public static MulticastLock getMulticastLock(Context context) {
 		if (sMulticastLock != null) {
 			return sMulticastLock;
 		}
 
-		WifiManager manager = getWifiManager(context);
+		WifiManager manager = (WifiManager) getCachedSystemService(context, Context.WIFI_SERVICE);
 		if (manager == null) {
 			return null;
 		}
@@ -568,16 +559,8 @@ public class CavanAndroid {
 		return true;
 	}
 
-	public static InputMethodManager getInputMethodManager(Context context) {
-		if (sInputMethodManager == null) {
-			sInputMethodManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-		}
-
-		return sInputMethodManager;
-	}
-
 	public static boolean showInputMethodPicker(Context context) {
-		InputMethodManager manager = getInputMethodManager(context);
+		InputMethodManager manager = (InputMethodManager) getCachedSystemService(context, Context.INPUT_METHOD_SERVICE);
 		if (manager == null) {
 			return false;
 		}
@@ -609,5 +592,32 @@ public class CavanAndroid {
 		window.setFlags(FLAG_NEEDS_MENU_KEY, FLAG_NEEDS_MENU_KEY);
 
 		return false;
+	}
+
+	public static boolean inKeyguardRestrictedInputMode(Context context) {
+		KeyguardManager manager = (KeyguardManager) getCachedSystemService(context, Context.KEYGUARD_SERVICE);
+		if (manager == null) {
+			return false;
+		}
+
+		return manager.inKeyguardRestrictedInputMode();
+	}
+
+	public static NetworkInfo getActiveNetworkInfo(Context context) {
+		ConnectivityManager manager = (ConnectivityManager) getCachedSystemService(context, Context.CONNECTIVITY_SERVICE);
+		if (manager == null) {
+			return null;
+		}
+
+		return manager.getActiveNetworkInfo();
+	}
+
+	public static boolean isNetworkAvailable(Context context) {
+		NetworkInfo info = getActiveNetworkInfo(context);
+		if (info == null) {
+			return false;
+		}
+
+		return info.isAvailable();
 	}
 }
