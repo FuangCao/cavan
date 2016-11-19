@@ -30,11 +30,7 @@ public class RedPacketFinder {
 	};
 
 	private static final String[] sExcludePredicts = {
-		"严禁使用红包", "红包不返现"
-	};
-
-	private static final String[] sExcludePredicts11 = {
-		"电脑抢红包", "特价清单", "双11抢红包", "电脑入口", "购物车", "优惠券", "免单"
+		"严禁使用红包", "红包不返现", "红包专员", "预告", "早知道"
 	};
 
 	public static final Pattern[] sExcludePatterns = {
@@ -131,8 +127,8 @@ public class RedPacketFinder {
 	public static HashMap<String, String> sPackageCodeMap = new HashMap<String, String>();
 
 	static {
-		sPackageCodeMap.put("com.tencent.mobileqq", "QQ红包");
-		sPackageCodeMap.put("com.tencent.mm", "微信红包");
+		sPackageCodeMap.put("com.tencent.mobileqq", "QQ");
+		sPackageCodeMap.put("com.tencent.mm", "微信");
 	}
 
 	private String mJoinedLines = CavanString.EMPTY_STRING;
@@ -478,6 +474,17 @@ public class RedPacketFinder {
 		return false;
 	}
 
+	public boolean isPredictCode(String line) {
+		for (Pattern pattern : sPredictPatterns) {
+			Matcher matcher = pattern.matcher(line);
+			if (matcher.find()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public boolean isPredictCode() {
 		for (String word : sExcludePredicts) {
 			if (mJoinedLines.contains(word)) {
@@ -485,17 +492,8 @@ public class RedPacketFinder {
 			}
 		}
 
-		if (mJoinedLines.contains("双11") || mJoinedLines.contains("双十一")) {
-			for (String word : sExcludePredicts11) {
-				if (mJoinedLines.contains(word)) {
-					return false;
-				}
-			}
-		}
-
-		for (Pattern pattern : sPredictPatterns) {
-			Matcher matcher = pattern.matcher(mJoinedLines);
-			if (matcher.find()) {
+		for (String line : mLines) {
+			if (isPredictCode(line)) {
 				return true;
 			}
 		}
@@ -510,7 +508,7 @@ public class RedPacketFinder {
 				return null;
 			}
 
-			if (mLines.get(0).contains("[" + code + "]")) {
+			if (mLines.get(0).contains("[" + code + "红包]")) {
 				return code;
 			}
 

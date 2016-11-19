@@ -317,7 +317,7 @@ public class RedPacketNotification extends CavanNotification {
 					node.setRepeatable();
 				}
 
-				mService.sendNotification(notification, "支付宝口令@" + getUserDescription() + ": " + code, code);
+				mService.sendNotification(notification, "支付宝@" + getUserDescription() + ": " + code, code);
 			}
 		}
 
@@ -351,7 +351,7 @@ public class RedPacketNotification extends CavanNotification {
 
 	public boolean sendRedPacketNotifyAlipayPicture() {
 		if (mFinder.isPictureCode()) {
-			return sendRedPacketNotifyNormal("支付宝口令图片", "支付宝口令图片@" + getUserDescription());
+			return sendRedPacketNotifyNormal("支付宝口令图片", "图片@" + getUserDescription());
 		}
 
 		return false;
@@ -359,11 +359,7 @@ public class RedPacketNotification extends CavanNotification {
 
 	public boolean sendRedPacketNotifyAlipayPredict() {
 		if (mFinder.isPredictCode()) {
-			if (mFinder.contains("预告") || mFinder.contains("早知道")) {
-				return false;
-			}
-
-			return sendRedPacketNotifyNormal("准备抢红包", "准备抢红包@" + getUserDescription());
+			return sendRedPacketNotifyNormal("准备抢红包", "准备@" + getUserDescription());
 		}
 
 		return false;
@@ -379,7 +375,7 @@ public class RedPacketNotification extends CavanNotification {
 			return false;
 		}
 
-		return sendRedPacketNotifyNormal(code, code + "@" + getUserDescription());
+		return sendRedPacketNotifyNormal(code + "红包", code + "@" + getUserDescription());
 	}
 
 	public boolean sendRedPacketNotifyAuto() {
