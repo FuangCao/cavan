@@ -177,7 +177,11 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 			break;
 
 		case "com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity":
-			setRedPacketCodeValid();
+			if (setRedPacketCodeValid() && mCode.isAutoCreated()) {
+				mCode.setAutoCreated(false);
+				mCode.setRecvDisable();
+				mService.sendRedPacketCode(mCode.getCode());
+			}
 
 			if (MainActivity.isAutoUnpackEnabled(mService)) {
 				unpackRedPacket(root);
@@ -425,19 +429,6 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 				node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
 			}
 
-			if (mInputtedCode != null) {
-				RedPacketCode node = RedPacketCode.get(mInputtedCode);
-				if (node == null) {
-					node = RedPacketCode.getInstence(mInputtedCode, 0, true, false);
-					node.setShared();
-
-					mCodes.add(node);
-					mCode = node;
-				}
-
-				mService.sendRedPacketCode(mInputtedCode);
-			}
-
 			return true;
 		}
 
@@ -570,6 +561,9 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 				mCode.setValid();
 				break;
 			}
+		} else if (mInputtedCode != null && mClassName.equals("com.alipay.mobile.framework.app.ui.DialogHelper$APGenericProgressDialog")) {
+			RedPacketCode node = RedPacketCode.getInstence(mInputtedCode, 0, true, false, true);
+			mCode = node;
 		}
 
 		startAutoCommitRedPacketCode(500);

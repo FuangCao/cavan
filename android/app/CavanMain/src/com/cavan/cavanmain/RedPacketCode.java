@@ -39,7 +39,9 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 	private int mPriority;
 	private boolean mValid;
 	private boolean mInvalid;
-	private boolean mShared;
+	private boolean mSendDisable;
+	private boolean mRecvDisable;
+	private boolean mAutoCreated;
 	private boolean mTestOnly;
 	private boolean mCompleted;
 	private boolean mRepeatable;
@@ -55,13 +57,7 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 		return builder.toString();
 	}
 
-	public static RedPacketCode get(String code) {
-		synchronized (mCodeMap) {
-			return mCodeMap.get(code);
-		}
-	}
-
-	public static RedPacketCode getInstence(String code, int priority, boolean create, boolean test) {
+	public static RedPacketCode getInstence(String code, int priority, boolean create, boolean test, boolean auto) {
 		synchronized (mCodeMap) {
 			Iterator<RedPacketCode> iterator = mCodeMap.values().iterator();
 			while (iterator.hasNext()) {
@@ -71,23 +67,26 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 				}
 			}
 
-			RedPacketCode node = get(code);
+			RedPacketCode node = mCodeMap.get(code);
 			if (node == null) {
 				if (create) {
 					node = new RedPacketCode(code, priority);
+					node.setAutoCreated(auto);
 					mCodeMap.put(code, node);
 				} else {
 					return null;
 				}
 			}
 
-			if (test) {
-				node.setTestOnly();
-			} else if (create) {
-				synchronized (mLastCodes) {
-					mLastCodes.remove(node);
-					mLastCodes.addFirst(node);
-					updateLastCodes();
+			if (create) {
+				if (test) {
+					node.setTestOnly();
+				} else {
+					synchronized (mLastCodes) {
+						mLastCodes.remove(node);
+						mLastCodes.addFirst(node);
+						updateLastCodes();
+					}
 				}
 			}
 
@@ -96,7 +95,7 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 	}
 
 	public static RedPacketCode getInstence(String code) {
-		return getInstence(code, 0, false, false);
+		return getInstence(code, 0, false, false, false);
 	}
 
 	public static RedPacketCode getInstence(Intent intent) {
@@ -105,7 +104,7 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 			return null;
 		}
 
-		return getInstence(code, 0, false, false);
+		return getInstence(code, 0, false, false, false);
 	}
 
 	public static List<RedPacketCode> getLastCodes() {
@@ -178,6 +177,14 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 		return mTestOnly;
 	}
 
+	synchronized void setAutoCreated(boolean auto) {
+		mAutoCreated = auto;
+	}
+
+	synchronized boolean isAutoCreated() {
+		return mAutoCreated;
+	}
+
 	synchronized public void setDelay(long delay) {
 		mTime = System.currentTimeMillis() + delay;
 	}
@@ -222,12 +229,36 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 		return mInvalid;
 	}
 
-	synchronized public void setShared() {
-		mShared = true;
+	synchronized public void setSendDisable() {
+		mSendDisable = true;
 	}
 
-	synchronized public boolean isShared() {
-		return mShared;
+	synchronized public boolean isSendDisabled() {
+		return mSendDisable;
+	}
+
+	synchronized public boolean isSendEnabled() {
+		if (mRepeatable) {
+			return true;
+		}
+
+		return !mSendDisable;
+	}
+
+	synchronized public void setRecvDisable() {
+		mRecvDisable = true;
+	}
+
+	synchronized public boolean isRecvDisabled() {
+		return mRecvDisable;
+	}
+
+	synchronized public boolean isRecvEnabled() {
+		if (mRepeatable) {
+			return true;
+		}
+
+		return !mRecvDisable;
 	}
 
 	synchronized public boolean isRepeatable() {
@@ -356,8 +387,16 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 			builder.append(sDateFormat.format(new Date(mTime)));
 		}
 
-		if (mShared) {
-			builder.append(", Shared");
+		if (mSendDisable) {
+			builder.append(", SendDisabled");
+		}
+
+		if (mRecvDisable) {
+			builder.append(", RecvDisabled");
+		}
+
+		if (mAutoCreated) {
+			builder.append(", AutoCreated");
 		}
 
 		if (mCompleted) {

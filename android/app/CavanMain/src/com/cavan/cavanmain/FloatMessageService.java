@@ -269,7 +269,7 @@ public class FloatMessageService extends FloatWidowService {
 
 						sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_ADD, code);
 
-						if ((node.isShared() == false || node.isRepeatable()) && mNetSender != null) {
+						if (node.isSendEnabled() && mNetSender != null) {
 							long delay = node.getTime() - System.currentTimeMillis();
 							mNetSender.sendCode(code, delay);
 						}
@@ -477,7 +477,7 @@ public class FloatMessageService extends FloatWidowService {
 				mHandler.obtainMessage(MSG_SHOW_TOAST, command).sendToTarget();
 			} else {
 				RedPacketCode node = RedPacketCode.getInstence(code);
-				if (node == null || node.isRepeatable()) {
+				if (node == null || node.isRecvEnabled()) {
 					Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
 					intent.putExtra("type", type);
 					intent.putExtra("code", code);

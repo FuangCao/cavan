@@ -306,11 +306,11 @@ public class RedPacketNotification extends CavanNotification {
 		for (String code : codes) {
 			Notification notification = buildRedPacketNotifyAlipay(code);
 			if (notification != null) {
-				RedPacketCode node = RedPacketCode.getInstence(code, mPriority, true, mTestOnly);
+				RedPacketCode node = RedPacketCode.getInstence(code, mPriority, true, mTestOnly, false);
 				node.setTime(time);
 
 				if (mNetShared) {
-					node.setShared();
+					node.setSendDisable();
 				}
 
 				if (mIsTimedCode) {

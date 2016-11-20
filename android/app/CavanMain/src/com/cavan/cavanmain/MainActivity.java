@@ -592,7 +592,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 						continue;
 					}
 
-					RedPacketCode.getInstence(code, 0, true, false);
+					RedPacketCode.getInstence(code, 0, true, false, false);
 				}
 			}
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
