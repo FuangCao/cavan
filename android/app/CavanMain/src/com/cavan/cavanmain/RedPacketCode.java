@@ -76,6 +76,12 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 				} else {
 					return null;
 				}
+			} else if (auto) {
+				synchronized (mLastCodes) {
+					if (mLastCodes.contains(node)) {
+						return node;
+					}
+				}
 			}
 
 			if (create) {
