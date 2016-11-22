@@ -52,7 +52,7 @@ endif
 
 CFLAGS +=	-Wall -Wundef -Wextra -Werror -Wsign-compare -Winit-self -Wpointer-arith -Wa,--noexecstack -Wstrict-aliasing=2 -Wno-unused-parameter \
 			-fno-strict-aliasing -fno-exceptions -ffunction-sections -funwind-tables -fstack-protector -fomit-frame-pointer \
-			-g -Os -I$(INCLUDE_PATH) -DCAVAN -DCAVAN_ARCH=\"$(ARCH)\" -DCAVAN_PLAT=\"$(CAVAN_PLAT)\" -include cavan/config.h
+			-g -I$(INCLUDE_PATH) -DCAVAN -DCAVAN_ARCH=\"$(ARCH)\" -DCAVAN_PLAT=\"$(CAVAN_PLAT)\" -include cavan/config.h
 
 CFLAGS += -DCAVAN_ARCH_$(shell echo $(ARCH) | tr '[a-z]' '[A-Z]')
 

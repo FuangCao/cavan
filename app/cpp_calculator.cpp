@@ -73,7 +73,6 @@ int main(int argc, char *argv[])
 			0, 0, 0, 0
 		},
 	};
-	int ret;
 	char buff[1024];
 	int base = 0;
 	int length[2];
@@ -135,7 +134,7 @@ int main(int argc, char *argv[])
 	Calculator calculator;
 	if (!calculator.execute(buff, result)) {
 		pr_red_info("%s", calculator.getErrMsg());
-		return ret;
+		return -EFAULT;
 	}
 
 	if (base < 2 || base == 10) {

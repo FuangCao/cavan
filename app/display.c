@@ -561,7 +561,6 @@ out_close_fd:
 
 static int cavan_display_blank_main(int argc, char *argv[])
 {
-	int ret;
 	bool blank;
 	struct cavan_display_device *display;
 
@@ -576,7 +575,7 @@ static int cavan_display_blank_main(int argc, char *argv[])
 
 	display->destroy(display);
 
-	return ret;
+	return 0;
 }
 CAVAN_COMMAND_MAP_START {
 	{ "draw_rect", cavan_display_rect_main },
