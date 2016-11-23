@@ -11,6 +11,8 @@ import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.inputmethodservice.KeyboardView.OnKeyboardActionListener;
+import android.os.Handler;
+import android.os.Message;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.View;
@@ -50,6 +52,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 	private GridView mCodeGridView;
 	private RedPacketCode[] mUiCodes;
+	private RedPacketViewAdapter mAdapter = new RedPacketViewAdapter();
 
 	private Keyboard mKeyboard;
 	private KeyboardView mKeyboardView;
@@ -80,108 +83,8 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		}
 	};
 
-	private Runnable mRunnableUpdateInputView = new Runnable() {
-
-		@Override
-		public void run() {
-			mCodeGridView.removeCallbacks(this);
-
-			List<RedPacketCode> codes = RedPacketCode.getLastCodes();
-			if (codes == null) {
-				return;
-			}
-
-			int lines;
-			int columns;
-			int size = codes.size();
-
-			if (size > CODE_MAX_COLUMNS) {
-				lines = (size + CODE_MAX_COLUMNS - 1) / CODE_MAX_COLUMNS;
-				columns = (size + lines - 1) / lines;
-
-				if (lines > 2) {
-					lines = 2;
-				}
-			} else {
-				if (size > 0) {
-					lines = 1;
-				} else {
-					lines = 0;
-				}
-
-				columns = size;
-			}
-
-			int height;
-
-			if (lines > 0) {
-				View view = mCodeGridView.getChildAt(0);
-				if (view != null) {
-					height = view.getHeight() * lines;
-				} else {
-					height = LayoutParams.WRAP_CONTENT;
-				}
-
-				mCodeGridView.setNumColumns(columns);
-			} else {
-				height = LayoutParams.WRAP_CONTENT;
-			}
-
-			mCodeGridView.getLayoutParams().height = height;
-
-			mUiCodes = new RedPacketCode[size];
-			codes.toArray(mUiCodes);
-
-			mAdapter.notifyDataSetChanged();
-		}
-	};
-
-	private BaseAdapter mAdapter = new BaseAdapter() {
-
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			RedPacketView view;
-
-			if (convertView != null) {
-				view = (RedPacketView) convertView;
-			} else {
-				view = new RedPacketView(CavanInputMethod.this);
-			}
-
-			view.setRedPacketCode(mUiCodes[position]);
-
-			return view;
-		}
-
-		@Override
-		public long getItemId(int position) {
-			return 0;
-		}
-
-		@Override
-		public Object getItem(int position) {
-			return null;
-		}
-
-		@Override
-		public int getCount() {
-			if (mUiCodes != null) {
-				return mUiCodes.length;
-			}
-
-			return 0;
-		}
-	};
-
 	public static boolean isDefaultInputMethod(Context context) {
 		return "com.cavan.cavanmain/.CavanInputMethod".equals(CavanAndroid.getDefaultInputMethod(context));
-	}
-
-	public void updateInputView() {
-		if (mCodeGridView != null) {
-			mCodeGridView.removeCallbacks(mRunnableUpdateInputView);
-			mCodeGridView.postDelayed(mRunnableUpdateInputView, 100);
-		}
 	}
 
 	public void sendFinishAction(InputConnection conn) {
@@ -297,7 +200,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 	@Override
 	public void onStartInputView(EditorInfo info, boolean restarting) {
-		updateInputView();
+		mAdapter.updateInputView();
 		super.onStartInputView(info, restarting);
 	}
 
@@ -313,7 +216,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 		mCodeGridView = (GridView) view.findViewById(R.id.gridViewCodes);
 		mCodeGridView.setAdapter(mAdapter);
-		updateInputView();
+		mAdapter.updateInputView();
 
 		mKeyboardView = (KeyboardView) view.findViewById(R.id.keyboardView);
 		mKeyboard = new Keyboard(this, R.xml.keyboard);
@@ -458,15 +361,14 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 		public RedPacketView(Context context) {
 			super(context);
+			setSingleLine();
+			setOnClickListener(this);
 		}
 
 		public void setRedPacketCode(RedPacketCode code) {
 			mCode = code;
-
-			setTextColor(code.isInvalid() ? Color.RED : Color.BLACK);
-			setOnClickListener(this);
 			setText(code.getCode());
-			setSingleLine();
+			setTextColor(code.isInvalid() ? Color.RED : Color.BLACK);
 		}
 
 		public RedPacketCode getPacketCode() {
@@ -478,4 +380,101 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			sendRedPacketCode(mCode.getCode(), !mCode.isInvalid());
 		}
 	}
+
+	public class RedPacketViewAdapter extends BaseAdapter {
+
+		private Handler mHandler = new Handler() {
+
+			@Override
+			public void handleMessage(Message msg) {
+				mHandler.removeMessages(0);
+
+				List<RedPacketCode> codes = RedPacketCode.getLastCodes();
+				if (codes == null) {
+					return;
+				}
+
+				int lines;
+				int columns;
+				int size = codes.size();
+
+				if (size > CODE_MAX_COLUMNS) {
+					lines = (size + CODE_MAX_COLUMNS - 1) / CODE_MAX_COLUMNS;
+					columns = (size + lines - 1) / lines;
+
+					if (lines > 2) {
+						lines = 2;
+					}
+				} else {
+					if (size > 0) {
+						lines = 1;
+					} else {
+						lines = 0;
+					}
+
+					columns = size;
+				}
+
+				int height;
+
+				if (lines > 0) {
+					View view = mCodeGridView.getChildAt(0);
+					if (view != null) {
+						height = view.getHeight() * lines;
+					} else {
+						height = LayoutParams.WRAP_CONTENT;
+					}
+
+					mCodeGridView.setNumColumns(columns);
+				} else {
+					height = LayoutParams.WRAP_CONTENT;
+				}
+
+				mCodeGridView.getLayoutParams().height = height;
+
+				mUiCodes = new RedPacketCode[size];
+				codes.toArray(mUiCodes);
+
+				notifyDataSetChanged();
+			}
+		};
+
+		public void updateInputView() {
+			mHandler.sendEmptyMessageDelayed(0, 200);
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			RedPacketView view;
+
+			if (convertView != null) {
+				view = (RedPacketView) convertView;
+			} else {
+				view = new RedPacketView(CavanInputMethod.this);
+			}
+
+			view.setRedPacketCode(mUiCodes[position]);
+
+			return view;
+		}
+
+		@Override
+		public long getItemId(int position) {
+			return 0;
+		}
+
+		@Override
+		public Object getItem(int position) {
+			return null;
+		}
+
+		@Override
+		public int getCount() {
+			if (mUiCodes != null) {
+				return mUiCodes.length;
+			}
+
+			return 0;
+		}
+	};
 }

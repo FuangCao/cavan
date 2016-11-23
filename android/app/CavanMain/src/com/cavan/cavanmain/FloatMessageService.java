@@ -91,7 +91,7 @@ public class FloatMessageService extends FloatWidowService {
 				intent.putExtra("state", msg.arg1);
 				sendStickyBroadcast(intent);
 
-				CavanAndroid.showToast(getApplicationContext(), msg.arg1);
+				// CavanAndroid.showToast(getApplicationContext(), msg.arg1);
 				break;
 
 			case MSG_TCP_SERVICE_UPDATED:
@@ -116,7 +116,7 @@ public class FloatMessageService extends FloatWidowService {
 				intent.putExtra("state", msg.arg1);
 				sendStickyBroadcast(intent);
 
-				CavanAndroid.showToast(getApplicationContext(), msg.arg1);
+				// CavanAndroid.showToast(getApplicationContext(), msg.arg1);
 				break;
 
 			case MSG_TCP_BRIDGE_UPDATED:
