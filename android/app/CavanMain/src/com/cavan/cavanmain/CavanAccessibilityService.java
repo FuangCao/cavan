@@ -30,18 +30,23 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanString;
+import com.cavan.java.RedPacketFinder;
 
 public class CavanAccessibilityService extends AccessibilityService {
+
+	public static final String CLASS_NAME_TEXTVIEW = TextView.class.getName();
 
 	private static final int MSG_CHECK_CONTENT = 1;
 	private static final int MSG_CHECK_AUTO_OPEN_APP = 2;
 
 	private static final String[] PACKAGE_NAMES = {
 		CavanPackageName.QQ,
+		CavanPackageName.MM,
 		CavanPackageName.ALIPAY,
 		CavanPackageName.SOGOU_IME,
 		CavanPackageName.SOGOU_OCR,
@@ -54,6 +59,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private String mPackageName = CavanString.EMPTY_STRING;
 
 	private CavanAccessibilityQQ mAccessibilityQQ = new CavanAccessibilityQQ(this);
+	private CavanAccessibilityMM mAccessibilityMM = new CavanAccessibilityMM(this);
 	private CavanAccessibilitySogou mAccessibilitySogou = new CavanAccessibilitySogou(this);
 	private CavanAccessibilityAlipay mAccessibilityAlipay = new CavanAccessibilityAlipay(this);
 	private HashMap<String, CavanAccessibilityBase> mAccessibilityMap = new HashMap<String, CavanAccessibilityBase>();
@@ -219,10 +225,15 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 	};
 
+	public static boolean isTextView(AccessibilityNodeInfo node) {
+		return CLASS_NAME_TEXTVIEW.equals(node.getClassName().toString());
+	}
+
 	public CavanAccessibilityService() {
 		super();
 
 		mAccessibilityMap.put(CavanPackageName.QQ, mAccessibilityQQ);
+		mAccessibilityMap.put(CavanPackageName.MM, mAccessibilityMM);
 		mAccessibilityMap.put(CavanPackageName.ALIPAY, mAccessibilityAlipay);
 		mAccessibilityMap.put(CavanPackageName.SOGOU_IME, mAccessibilitySogou);
 		mAccessibilityMap.put(CavanPackageName.SOGOU_OCR, mAccessibilitySogou);
@@ -339,10 +350,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return -1;
 	}
 
-	public boolean sendRedPacketCode(String code) {
+	public boolean sendRedPacketCode(RedPacketCode code) {
 		try {
 			if (mService != null) {
-				mService.sendRedPacketCode(code);
+				code.setSendPending(false);
+				code.setRecvDisable();
+				mService.sendRedPacketCode(code.getCode());
 				return true;
 			}
 		} catch (RemoteException e) {

@@ -41,7 +41,7 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 	private boolean mInvalid;
 	private boolean mSendDisable;
 	private boolean mRecvDisable;
-	private boolean mAutoCreated;
+	private boolean mSendPending;
 	private boolean mTestOnly;
 	private boolean mCompleted;
 	private boolean mRepeatable;
@@ -57,7 +57,7 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 		return builder.toString();
 	}
 
-	public static RedPacketCode getInstence(String code, int priority, boolean create, boolean test, boolean auto) {
+	public static RedPacketCode getInstence(String code, int priority, boolean create, boolean test, boolean send) {
 		synchronized (mCodeMap) {
 			Iterator<RedPacketCode> iterator = mCodeMap.values().iterator();
 			while (iterator.hasNext()) {
@@ -71,12 +71,12 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 			if (node == null) {
 				if (create) {
 					node = new RedPacketCode(code, priority);
-					node.setAutoCreated(auto);
+					node.setSendPending(send);
 					mCodeMap.put(code, node);
 				} else {
 					return null;
 				}
-			} else if (auto) {
+			} else if (send) {
 				synchronized (mLastCodes) {
 					if (mLastCodes.contains(node)) {
 						return node;
@@ -183,12 +183,12 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 		return mTestOnly;
 	}
 
-	synchronized void setAutoCreated(boolean auto) {
-		mAutoCreated = auto;
+	synchronized void setSendPending(boolean pending) {
+		mSendPending = pending;
 	}
 
-	synchronized boolean isAutoCreated() {
-		return mAutoCreated;
+	synchronized boolean isSendPending() {
+		return mSendPending;
 	}
 
 	synchronized public void setDelay(long delay) {
@@ -401,8 +401,8 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 			builder.append(", RecvDisabled");
 		}
 
-		if (mAutoCreated) {
-			builder.append(", AutoCreated");
+		if (mSendPending) {
+			builder.append(", SendPending");
 		}
 
 		if (mCompleted) {

@@ -4,16 +4,11 @@ import android.content.Intent;
 import android.graphics.Rect;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
-import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
-import com.cavan.java.CavanString;
-import com.cavan.java.RedPacketFinder;
 
 public class CavanAccessibilityQQ extends CavanAccessibilityBase {
-
-	private static final String CLASS_NAME_TEXTVIEW = TextView.class.getName();
 
 	private String mMessageBoxText;
 
@@ -31,7 +26,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 			return false;
 		}
 
-		if (CLASS_NAME_TEXTVIEW.equals(node.getClassName())) {
+		if (CavanAccessibilityService.isTextView(node)) {
 			Rect bounds = new Rect();
 
 			node.getBoundsInScreen(bounds);
@@ -100,7 +95,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 			return;
 		}
 
-		if (CLASS_NAME_TEXTVIEW.equals(source.getClassName().toString())) {
+		if (CavanAccessibilityService.isTextView(source)) {
 			AccessibilityNodeInfo parent = source.getParent();
 			if (parent == null) {
 				return;
@@ -113,18 +108,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 
 			if (id.equals("com.tencent.mobileqq:id/chat_item_content_layout") ||
 					id.equals("com.tencent.mobileqq:id/name")) {
-				String text = CavanString.fromCharSequence(source.getText());
-
-				if (text.length() > 0 && RedPacketFinder.containsUrl(text) == false) {
-					FloatEditorDialog dialog = FloatEditorDialog.getInstance(mService, text, true);
-					dialog.show(6000);
-				}
-
-				Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
-				intent.putExtra("package", source.getPackageName());
-				intent.putExtra("desc", "用户点击");
-				intent.putExtra("content", text);
-				mService.sendBroadcast(intent);
+				postMessageNode(source);
 			}
 		}
 	}

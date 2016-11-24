@@ -144,6 +144,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 			break;
 
 		case "com.alipay.android.phone.discovery.envelope.HomeActivity":
+			MainActivity.setWanReceiveEnabled(true);
+
 			if (code == null) {
 				break;
 			}
@@ -177,10 +179,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 			break;
 
 		case "com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity":
-			if (setRedPacketCodeValid() && mCode.isAutoCreated()) {
-				mCode.setAutoCreated(false);
-				mCode.setRecvDisable();
-				mService.sendRedPacketCode(mCode.getCode());
+			if (setRedPacketCodeValid() && mCode.isSendPending()) {
+				mService.sendRedPacketCode(mCode);
 			}
 
 			if (MainActivity.isAutoUnpackEnabled(mService)) {
@@ -202,15 +202,21 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 			break;
 
 		case "com.alipay.mobile.nebulacore.ui.H5Activity":
-			if (mCodeCount > 0 && isCurrentRedPacketCode(mCode)) {
-				if (mCode.getRepeatTime() > 0) {
-					if (mCode.getRepeatTimeout() > REPEAT_OVERTIME) {
-						setRedPacketCodeComplete();
+			if (isCurrentRedPacketCode(mCode)) {
+				if (mCode.isSendPending()) {
+					mService.sendRedPacketCode(mCode);
+				}
+
+				if (mCodeCount > 0) {
+					if (mCode.getRepeatTime() > 0) {
+						if (mCode.getRepeatTimeout() > REPEAT_OVERTIME) {
+							setRedPacketCodeComplete();
+						} else {
+							mCode.updateTime();
+						}
 					} else {
-						mCode.updateTime();
+						mCode.updateRepeatTime(mService);
 					}
-				} else {
-					mCode.updateRepeatTime(mService);
 				}
 			}
 
@@ -227,6 +233,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 
 		case "com.alipay.mobile.commonui.widget.APNoticePopDialog":
 			mAutoOpenAlipay = false;
+			MainActivity.setWanReceiveEnabled(false);
 		case "com.alipay.mobile.security.login.ui.AlipayUserLoginActivity":
 			if (mCode != null) {
 				mCode.setPostPending(false);

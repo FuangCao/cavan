@@ -1,11 +1,13 @@
 package com.cavan.cavanmain;
 
+import android.content.Intent;
 import android.os.Handler;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.cavan.java.CavanString;
+import com.cavan.java.RedPacketFinder;
 
 public abstract class CavanAccessibilityBase extends Handler {
 
@@ -57,5 +59,20 @@ public abstract class CavanAccessibilityBase extends Handler {
 
 	public boolean isRootActivity() {
 		return isRootActivity(getRootInActiveWindow());
+	}
+
+	public void postMessageNode(AccessibilityNodeInfo node) {
+		String text = CavanString.fromCharSequence(node.getText());
+
+		if (text.length() > 0 && RedPacketFinder.containsUrl(text) == false) {
+			FloatEditorDialog dialog = FloatEditorDialog.getInstance(mService, text, true);
+			dialog.show(6000);
+		}
+
+		Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
+		intent.putExtra("package", node.getPackageName());
+		intent.putExtra("desc", "用户点击");
+		intent.putExtra("content", text);
+		mService.sendBroadcast(intent);
 	}
 }

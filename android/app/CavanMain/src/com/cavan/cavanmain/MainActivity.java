@@ -83,7 +83,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_WEB_PROXY = "web_proxy";
 	public static final String KEY_TCP_REPEATER = "tcp_repeater";
 
-	private static boolean mAutoOpenAppEnable = true;
+	private static boolean sAutoOpenAppEnable = true;
+	private static boolean sWanReceiveEnabled = true;
 
 	static {
 		CavanAndroid.TAG = "CavanMain";
@@ -123,8 +124,15 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		return CavanAndroid.isPreferenceEnabled(context, KEY_WAN_SHARE);
 	}
 
+	public static void setWanReceiveEnabled(boolean enable) {
+		if (sWanReceiveEnabled != enable) {
+			sWanReceiveEnabled = enable;
+			CavanAndroid.dLog("sWanReceiveEnabled = " + enable);
+		}
+	}
+
 	public static boolean isWanReceiveEnabled(Context context) {
-		return CavanAndroid.isPreferenceEnabled(context, KEY_WAN_RECEIVE);
+		return sWanReceiveEnabled && CavanAndroid.isPreferenceEnabled(context, KEY_WAN_RECEIVE);
 	}
 
 	public static String getWanShareServer(Context context) {
@@ -140,16 +148,16 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	}
 
 	public static void setAutoOpenAppEnable(boolean enable) {
-		mAutoOpenAppEnable = enable;
-		CavanAndroid.dLog("mAutoOpenAppEnable = " + enable);
+		sAutoOpenAppEnable = enable;
+		CavanAndroid.dLog("sAutoOpenAppEnable = " + enable);
 	}
 
 	public static boolean isAutoOpenAppEnabled(Context context) {
-		return mAutoOpenAppEnable && CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_OPEN_APP);
+		return sAutoOpenAppEnable && CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_OPEN_APP);
 	}
 
 	public static boolean isAutoOpenAlipayEnabled(Context context) {
-		return mAutoOpenAppEnable && CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_OPEN_ALIPAY);
+		return sAutoOpenAppEnable && CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_OPEN_ALIPAY);
 	}
 
 	public static int getCommitAhead(Context context) {
