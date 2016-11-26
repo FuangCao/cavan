@@ -84,7 +84,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_TCP_REPEATER = "tcp_repeater";
 
 	private static boolean sAutoOpenAppEnable = true;
-	private static boolean sWanReceiveEnabled = true;
+	private static boolean sRedPacketCodeReceiveEnabled = true;
 
 	static {
 		CavanAndroid.TAG = "CavanMain";
@@ -124,15 +124,19 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		return CavanAndroid.isPreferenceEnabled(context, KEY_WAN_SHARE);
 	}
 
-	public static void setWanReceiveEnabled(boolean enable) {
-		if (sWanReceiveEnabled != enable) {
-			sWanReceiveEnabled = enable;
-			CavanAndroid.dLog("sWanReceiveEnabled = " + enable);
+	public static void setRedPacketCodeReceiveEnabled(boolean enable) {
+		if (sRedPacketCodeReceiveEnabled != enable) {
+			sRedPacketCodeReceiveEnabled = enable;
+			CavanAndroid.dLog("sRedPacketCodeReceiveEnabled = " + enable);
 		}
 	}
 
+	public static boolean isRedPacketCodeReceiveEnabled() {
+		return sRedPacketCodeReceiveEnabled;
+	}
+
 	public static boolean isWanReceiveEnabled(Context context) {
-		return sWanReceiveEnabled && CavanAndroid.isPreferenceEnabled(context, KEY_WAN_RECEIVE);
+		return CavanAndroid.isPreferenceEnabled(context, KEY_WAN_RECEIVE);
 	}
 
 	public static String getWanShareServer(Context context) {
@@ -280,6 +284,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.cavan_service);
+
+		setAutoOpenAppEnable(true);
+		setRedPacketCodeReceiveEnabled(true);
 
 		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
 		mPreferenceInputMethodSelect = findPreference(KEY_INPUT_METHOD_SELECT);

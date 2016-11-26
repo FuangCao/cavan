@@ -144,7 +144,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 			break;
 
 		case "com.alipay.android.phone.discovery.envelope.HomeActivity":
-			MainActivity.setWanReceiveEnabled(true);
+			MainActivity.setRedPacketCodeReceiveEnabled(true);
 
 			if (code == null) {
 				break;
@@ -233,7 +233,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 
 		case "com.alipay.mobile.commonui.widget.APNoticePopDialog":
 			mAutoOpenAlipay = false;
-			MainActivity.setWanReceiveEnabled(false);
+			MainActivity.setRedPacketCodeReceiveEnabled(false);
 		case "com.alipay.mobile.security.login.ui.AlipayUserLoginActivity":
 			if (mCode != null) {
 				mCode.setPostPending(false);

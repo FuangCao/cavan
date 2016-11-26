@@ -475,7 +475,7 @@ public class FloatMessageService extends FloatWidowService {
 			if (code.equals(NET_CMD_TEST)) {
 				command = getResources().getString(R.string.text_network_test_success, type);
 				mHandler.obtainMessage(MSG_SHOW_TOAST, command).sendToTarget();
-			} else {
+			} else if (MainActivity.isRedPacketCodeReceiveEnabled()) {
 				RedPacketCode node = RedPacketCode.getInstence(code);
 				if (node == null || node.isRecvEnabled()) {
 					Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);

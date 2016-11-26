@@ -35,7 +35,6 @@ import android.widget.TextView;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanString;
-import com.cavan.java.RedPacketFinder;
 
 public class CavanAccessibilityService extends AccessibilityService {
 
