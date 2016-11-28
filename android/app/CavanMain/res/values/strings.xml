@@ -86,6 +86,13 @@
     <string name="text_red_packet_code_recognize">红包口令识别</string>
     <string name="text_red_packet_code_split">红包口令拆分</string>
     <string name="text_red_packet_code_clear">红包口令清空</string>
+    <string name="text_as_code">每行一条完整的口令</string>
+    <string name="text_secret_order">密令</string>
+    <string name="text_secret_order_received">收到密令：<xliff:g>%1$s</xliff:g></string>
+    <string name="extract">提取</string>
+    <string name="clipboard_updated">剪切板已更新：<xliff:g>%1$s</xliff:g></string>
+    <string name="auto_open_alipay">自动打开支付宝</string>
+    <string name="red_packet_notify_setting">红包提醒设置</string>
 
     <string-array name="text_auto_entries">
         <item>关闭</item>
@@ -139,11 +146,17 @@
         <item>9</item>
         <item>10</item>
     </string-array>
-        <string name="text_as_code">每行一条完整的口令</string>
-        <string name="text_secret_order">密令</string>
-        <string name="text_secret_order_received">收到密令：<xliff:g>%1$s</xliff:g></string>
-        <string name="extract">提取</string>
-        <string name="clipboard_updated">剪切板已更新：<xliff:g>%1$s</xliff:g></string>
-        <string name="auto_open_alipay">自动打开支付宝</string>
+    <string-array name="text_notify_entries">
+        <item>不提醒</item>
+        <item>仅声音</item>
+        <item>仅震动</item>
+        <item>声音和震动</item>
+    </string-array>
+    <string-array name="text_notify_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
 
 </resources>

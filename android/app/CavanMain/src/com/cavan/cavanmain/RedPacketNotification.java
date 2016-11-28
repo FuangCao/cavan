@@ -219,15 +219,24 @@ public class RedPacketNotification extends CavanNotification {
 			.setContentText(content)
 			.setContentIntent(intent);
 
-		Uri ringtone = getRingtoneUri();
-		if (ringtone == null) {
-			builder.setDefaults(Notification.DEFAULT_ALL);
-		} else {
-			CavanAndroid.dLog("ringtone: uri = " + ringtone);
+		int defaluts = Notification.DEFAULT_LIGHTS;
+		int setting = MainActivity.getNotifySetting(mService);
 
-			builder.setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE);
-			builder.setSound(ringtone);
+		if ((setting & 1) != 0) {
+			Uri ringtone = getRingtoneUri();
+			if (ringtone != null) {
+				CavanAndroid.dLog("ringtone: uri = " + ringtone);
+				builder.setSound(ringtone);
+			} else {
+				defaluts |= Notification.DEFAULT_SOUND;
+			}
 		}
+
+		if ((setting & 2) != 0) {
+			defaluts |= Notification.DEFAULT_VIBRATE;
+		}
+
+		builder.setDefaults(defaluts);
 
 		return builder.build();
 	}

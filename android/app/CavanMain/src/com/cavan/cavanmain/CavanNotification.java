@@ -123,8 +123,8 @@ public class CavanNotification {
 			if (CavanPackageName.QQ.equals(mPackageName)) {
 				int index = content.indexOf("):");
 				if (index < 0 || index > endLine) {
-					index = content.indexOf(':');
-					if (index < 0 || index > endLine) {
+					index = CavanString.lastIndexOf(content, endLine, ':');
+					if (index < 0) {
 						mContent = content;
 					} else {
 						mUserName = content.substring(0, index);
@@ -155,9 +155,8 @@ public class CavanNotification {
 					mContent = content.substring(index + 2);
 				}
 			} else if (CavanPackageName.MM.equals(mPackageName)) {
-				int index = content.indexOf(':');
-
-				if (index < 0 || index > endLine) {
+				int index = CavanString.lastIndexOf(content, endLine, ':');
+				if (index < 0) {
 					mContent = content;
 				} else {
 					mUserName = content.substring(0, index);

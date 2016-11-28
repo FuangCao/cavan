@@ -21,6 +21,13 @@
 	    android:persistent="true"
 	    android:title="@string/red_packet_notify_ringtone" />
 
+	<ListPreference android:key="red_packet_notify_setting"
+	    android:persistent="true"
+		android:entries="@array/text_notify_entries"
+		android:entryValues="@array/text_notify_values"
+		android:defaultValue="3"
+	    android:title="@string/red_packet_notify_setting" />
+
 	<EditTextPreference android:key="red_packet_notify_test"
 	    android:persistent="true"
 	    android:defaultValue="支付宝红包口令：12345678"

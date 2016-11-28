@@ -207,6 +207,22 @@ public class CavanString {
 		return index;
 	}
 
+	public static int lastIndexOf(String content, int end, int c) {
+		int start = 0;
+		int index = -1;
+
+		while (true) {
+			start = content.indexOf(c, start);
+			if (start < 0 || start > end) {
+				break;
+			}
+
+			index = start++;
+		}
+
+		return index;
+	}
+
 	@Override
 	public String toString() {
 		return mContent;

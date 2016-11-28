@@ -75,6 +75,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_RED_PACKET_CODE_SPLIT = "red_packet_code_split";
 	public static final String KEY_RED_PACKET_CODE_CLEAR = "red_packet_code_clear";
 	public static final String KEY_RED_PACKET_NOTIFY_TEST = "red_packet_notify_test";
+	public static final String KEY_RED_PACKET_NOTIFY_SETTING = "red_packet_notify_setting";
 	public static final String KEY_RED_PACKET_NOTIFY_RINGTONE = "red_packet_notify_ringtone";
 	public static final String KEY_TCP_BRIDGE = "tcp_bridge";
 	public static final String KEY_TCP_BRIDGE_SETTING = "tcp_bridge_setting";
@@ -178,6 +179,20 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		return 5000;
 	}
 
+	public static int getNotifySetting(Context context) {
+		String text = CavanAndroid.getPreference(context, KEY_RED_PACKET_NOTIFY_SETTING, null);
+
+		try {
+			if (text != null) {
+				return Integer.parseInt(text);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return 3;
+	}
+
 	public static boolean startSogouOcrActivity(Context context) {
 		try {
 			Intent intent = new Intent();
@@ -199,7 +214,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private CheckBoxPreference mPreferenceAutoUnlock;
 	private Preference mPreferencePermissionSettings;
 	private Preference mPreferenceMessageShow;
-	private ListPreference mPreferenceAutoCommit;
 	private CheckBoxPreference mPreferenceAutoOpenApp;
 	private CheckBoxPreference mPreferenceAutoOpenAlipay;
 	private EditTextPreference mPreferenceRedPacketCodeSend;
@@ -218,7 +232,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private Preference mPreferenceWanTest;
 	private CheckBoxPreference mPreferenceTcpBridge;
 	private EditTextPreference mPreferenceTcpBridgeSetting;
-	private ListPreference mPreferenceCommitAhead;
 
 	private IFloatMessageService mFloatMessageService;
 	private ServiceConnection mFloatMessageConnection = new ServiceConnection() {
@@ -280,6 +293,14 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	};
 
 	@SuppressWarnings("deprecation")
+	private ListPreference findListPreference(String key) {
+		ListPreference preference = (ListPreference) findPreference(key);
+		preference.setSummary(preference.getEntry());
+		preference.setOnPreferenceChangeListener(this);
+		return preference;
+	}
+
+	@SuppressWarnings("deprecation")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -298,10 +319,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 		mPreferenceMessageShow = findPreference(KEY_MESSAGE_SHOW);
 		mPreferenceMessageShow.setIntent(CavanMessageActivity.getIntent(this));
-
-		mPreferenceAutoCommit = (ListPreference) findPreference(KEY_AUTO_COMMIT);
-		mPreferenceAutoCommit.setSummary(mPreferenceAutoCommit.getEntry());
-		mPreferenceAutoCommit.setOnPreferenceChangeListener(this);
 
 		mPreferencePermissionSettings = findPreference(KEY_PERMISSION_SETTINGS);
 		mPreferencePermissionSettings.setIntent(PermissionSettingsActivity.getIntent(this));
@@ -355,9 +372,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceWebProxy = (CavanServicePreference) findPreference(KEY_WEB_PROXY);
 		mPreferenceTcpRepeater = (CavanServicePreference) findPreference(KEY_TCP_REPEATER);
 
-		mPreferenceCommitAhead = (ListPreference) findPreference(KEY_COMMIT_AHEAD);
-		mPreferenceCommitAhead.setSummary(mPreferenceCommitAhead.getEntry());
-		mPreferenceCommitAhead.setOnPreferenceChangeListener(this);
+		findListPreference(KEY_AUTO_COMMIT);
+		findListPreference(KEY_COMMIT_AHEAD);
+		findListPreference(KEY_RED_PACKET_NOTIFY_SETTING);
 
 		updateIpAddressStatus();
 
@@ -658,7 +675,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 					e.printStackTrace();
 				}
 			}
-		} else if (preference == mPreferenceAutoCommit || preference == mPreferenceCommitAhead) {
+		} else if (preference instanceof ListPreference) {
 			ListPreference listPreference = (ListPreference) preference;
 			int index = listPreference.findIndexOfValue((String) object);
 			if (index >= 0) {
