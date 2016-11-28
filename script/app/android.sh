@@ -1,5 +1,8 @@
 #!/bin/bash
 
+alias shell="adb shell"
+alias logcat="adb logcat -v threadtime"
+
 export FILE_APK_RENAME_JAR="${CAVAN_HOME}/java/bin/apkrename.jar"
 
 function cavan-android-get-root()

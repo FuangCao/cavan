@@ -233,8 +233,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 
 		case "com.alipay.mobile.commonui.widget.APNoticePopDialog":
 			mAutoOpenAlipay = false;
-			MainActivity.setRedPacketCodeReceiveEnabled(false);
 		case "com.alipay.mobile.security.login.ui.AlipayUserLoginActivity":
+			MainActivity.setRedPacketCodeReceiveEnabled(false);
 			if (mCode != null) {
 				mCode.setPostPending(false);
 			}

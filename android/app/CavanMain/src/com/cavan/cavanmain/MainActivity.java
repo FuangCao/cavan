@@ -285,9 +285,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.cavan_service);
 
-		setAutoOpenAppEnable(true);
-		setRedPacketCodeReceiveEnabled(true);
-
 		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
 		mPreferenceInputMethodSelect = findPreference(KEY_INPUT_METHOD_SELECT);
 		mPreferenceLanTest = findPreference(KEY_LAN_TEST);
@@ -542,6 +539,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 				}
 			}
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
+			setRedPacketCodeReceiveEnabled(true);
+			setAutoOpenAppEnable(true);
+
 			mPreferenceAutoOpenApp.setChecked(true);
 			mPreferenceAutoOpenAlipay.setChecked(true);
 			mPreferenceWanReceive.setChecked(true);
