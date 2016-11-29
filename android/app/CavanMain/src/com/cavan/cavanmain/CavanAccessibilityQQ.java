@@ -2,6 +2,7 @@ package com.cavan.cavanmain;
 
 import android.content.Intent;
 import android.graphics.Rect;
+import android.os.Build;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -17,9 +18,9 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 	}
 
 	public boolean isMessageBoxNode(AccessibilityNodeInfo node) {
-		String id = node.getViewIdResourceName();
-		if (id != null) {
-			return id.equals("com.tencent.mobileqq:id/msgbox");
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+			String id = node.getViewIdResourceName();
+			return "com.tencent.mobileqq:id/msgbox".equals(id);
 		}
 
 		if (node.isMultiLine()) {

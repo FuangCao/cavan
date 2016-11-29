@@ -1,5 +1,6 @@
 package com.cavan.cavanmain;
 
+import android.os.Build;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -11,6 +12,15 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase {
 		super(service);
 	}
 
+	private boolean isMessageItemNode(AccessibilityNodeInfo node) {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+			String id = node.getViewIdResourceName();
+			return "com.tencent.mm:id/ib".equals(id);
+		}
+
+		return node.isMultiLine() && CavanAccessibilityService.isTextView(node);
+	}
+
 	@Override
 	public String getPackageName() {
 		return CavanPackageName.MM;
@@ -19,8 +29,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase {
 	@Override
 	protected void onViewClicked(AccessibilityEvent event) {
 		AccessibilityNodeInfo source = event.getSource();
-
-		if (source != null && source.isMultiLine() && CavanAccessibilityService.isTextView(source)) {
+		if (source != null && isMessageItemNode(source)) {
 			postMessageNode(source);
 		}
 	}
