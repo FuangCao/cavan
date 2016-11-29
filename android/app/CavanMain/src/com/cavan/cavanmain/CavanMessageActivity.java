@@ -162,9 +162,21 @@ public class CavanMessageActivity extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.action_message_clean:
-			int count = CavanNotification.deleteAll(getContentResolver());
-			CavanAndroid.showToast(this, String.format("成功清除 %d 条消息", count));
-			updateData(null, true);
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setMessage(R.string.clean_message_confirm);
+			builder.setCancelable(true);
+			builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					int count = CavanNotification.deleteAll(getContentResolver());
+					CavanAndroid.showToast(getApplicationContext(), String.format("成功清除 %d 条消息", count));
+					updateData(null, true);
+				}
+			});
+			builder.setNegativeButton(android.R.string.cancel, null);
+			builder.create().show();
+
 			break;
 
 		case R.id.action_message_finder:
