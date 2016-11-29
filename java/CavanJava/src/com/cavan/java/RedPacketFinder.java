@@ -11,6 +11,11 @@ public class RedPacketFinder {
 	private static final int MIN_CODE_SIZE = 2;
 	private static final int MAX_CODE_SIZE = 30;
 
+	private static final String COLON = "：:";
+	private static final String COLON_EXT = COLON + "是为";
+	private static final String COLON_PATTERN = "\\s*[" + COLON_EXT + "]";
+	private static final String COLON_PATTERN_LESS = COLON_PATTERN + "?\\s*";
+	private static final String COLON_PATTERN_MORE = COLON_PATTERN + "+\\s*";
 	private static final String SEPARATOR = "～~\\-_+=\\s";
 	private static final String NORMAL_PATTERN = "(\\w+红包)";
 	private static final String DIGIT_PATTERN = "([\\d" + SEPARATOR + "]+)";
@@ -77,51 +82,52 @@ public class RedPacketFinder {
 		Pattern.compile("支\\s*付\\s*宝.*口\\s*令\\D*" + DIGIT_PATTERN),
 		Pattern.compile("红\\s*包\\s*口\\s*令\\D*" + DIGIT_PATTERN),
 		Pattern.compile("口\\s*令\\s*红\\s*包\\D*" + DIGIT_PATTERN),
-		Pattern.compile("红\\s*包[\\s\\d]*[:：]?\\s*" + DIGIT_PATTERN),
-		Pattern.compile("口\\s*令[\\s\\d]*[:：]?\\s*" + DIGIT_PATTERN),
-		Pattern.compile("红\\s*包\\s*\\w?\\s*[:：]\\s*" + DIGIT_PATTERN),
-		Pattern.compile("口\\s*令\\s*\\w?\\s*[:：]\\s*" + DIGIT_PATTERN),
+		Pattern.compile("红\\s*包[\\s\\d]*" + COLON_PATTERN_LESS + DIGIT_PATTERN),
+		Pattern.compile("口\\s*令[\\s\\d]*" + COLON_PATTERN_LESS + DIGIT_PATTERN),
+		Pattern.compile("红\\s*包\\s*\\w?" + COLON_PATTERN_MORE + DIGIT_PATTERN),
+		Pattern.compile("口\\s*令\\s*\\w?" + COLON_PATTERN_MORE + DIGIT_PATTERN),
 		Pattern.compile("\\b" + DIGIT_PATTERN + "走起"),
 		Pattern.compile("\\b" + DIGIT_PATTERN + "go", Pattern.CASE_INSENSITIVE),
 	};
 
 	private static final Pattern[] sMultiLineDigitPatterns = {
-		Pattern.compile("支\\s*付\\s*宝.*红\\s*包.*[:：]" + DIGIT_MULTI_LINE_PATTERN),
-		Pattern.compile("支\\s*付\\s*宝.*口\\s*令.*[:：]" + DIGIT_MULTI_LINE_PATTERN),
-		Pattern.compile("红\\s*包\\s*口\\s*令.*[:：]" + DIGIT_MULTI_LINE_PATTERN),
-		Pattern.compile("口\\s*令\\s*红\\s*包.*[:：]" + DIGIT_MULTI_LINE_PATTERN),
-		Pattern.compile("红\\s*包[\\s\\d]*[:：]" + DIGIT_MULTI_LINE_PATTERN),
-		Pattern.compile("口\\s*令[\\s\\d]*[:：]" + DIGIT_MULTI_LINE_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝.*红\\s*包.*" + COLON_PATTERN_MORE + DIGIT_MULTI_LINE_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝.*口\\s*令.*" + COLON_PATTERN_MORE + DIGIT_MULTI_LINE_PATTERN),
+		Pattern.compile("红\\s*包\\s*口\\s*令.*" + COLON_PATTERN_MORE + DIGIT_MULTI_LINE_PATTERN),
+		Pattern.compile("口\\s*令\\s*红\\s*包.*" + COLON_PATTERN_MORE + DIGIT_MULTI_LINE_PATTERN),
+		Pattern.compile("红\\s*包[\\s\\d]*" + COLON_PATTERN_MORE + DIGIT_MULTI_LINE_PATTERN),
+		Pattern.compile("口\\s*令[\\s\\d]*" + COLON_PATTERN_MORE + DIGIT_MULTI_LINE_PATTERN),
 		Pattern.compile("^" + DIGIT_PATTERN + "$"),
 	};
 
 	private static final Pattern[] sUnsafeDigitPatterns = {
-		Pattern.compile("[:：]\\s*" + DIGIT_PATTERN),
+		Pattern.compile(COLON_PATTERN_MORE + DIGIT_PATTERN),
 		Pattern.compile("\\b" + DIGIT_PATTERN + "$"),
 	};
 
 	private static final Pattern[] sWordPatterns = {
-		Pattern.compile("支\\s*付\\s*宝.*红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("支\\s*付\\s*宝.*口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("红\\s*包\\s*口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("口\\s*令\\s*红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("中\\s*文\\s*口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("中\\s*文\\s*红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN),
-		Pattern.compile("支\\s*付\\s*宝.*口\\s*令[\\s\\d:：]*【" + WORD_PATTERN + "】"),
-		Pattern.compile("支\\s*付\\s*宝.*红\\s*包[\\s\\d:：]*【" + WORD_PATTERN + "】"),
-		Pattern.compile("红\\s*包[\\s\\d]*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
-		Pattern.compile("口\\s*令[\\s\\d]*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
-		Pattern.compile("红\\s*包\\s*\\w?\\s*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
-		Pattern.compile("口\\s*令\\s*\\w?\\s*[:：]\\s*" + WORD_PATTERN + "\\s*$"),
+		Pattern.compile("支\\s*付\\s*宝.*红\\s*包[\\s\\d]*" + COLON_PATTERN_MORE + WORD_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝.*口\\s*令[\\s\\d]*" + COLON_PATTERN_MORE + WORD_PATTERN),
+		Pattern.compile("红\\s*包\\s*口\\s*令[\\s\\d]*" + COLON_PATTERN_MORE + WORD_PATTERN),
+		Pattern.compile("口\\s*令\\s*红\\s*包[\\s\\d]*" + COLON_PATTERN_MORE + WORD_PATTERN),
+		Pattern.compile("中\\s*文\\s*口\\s*令[\\s\\d]*" + COLON_PATTERN_MORE + WORD_PATTERN),
+		Pattern.compile("中\\s*文\\s*红\\s*包[\\s\\d]*" + COLON_PATTERN_MORE + WORD_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝.*口\\s*令[\\s\\d" + COLON_EXT + "]*【" + WORD_PATTERN + "】"),
+		Pattern.compile("支\\s*付\\s*宝.*红\\s*包[\\s\\d" + COLON_EXT + "]*【" + WORD_PATTERN + "】"),
+		Pattern.compile("红\\s*包[\\s\\d]*" + COLON_PATTERN_MORE + WORD_PATTERN + "\\s*$"),
+		Pattern.compile("口\\s*令[\\s\\d]*" + COLON_PATTERN_MORE + WORD_PATTERN + "\\s*$"),
+		Pattern.compile("红\\s*包\\s*\\w?" + COLON_PATTERN_MORE + WORD_PATTERN + "\\s*$"),
+		Pattern.compile("口\\s*令\\s*\\w?" + COLON_PATTERN_MORE + WORD_PATTERN + "\\s*$"),
 	};
 
 	private static final Pattern[] sMultiLineWordPatterns = {
-		Pattern.compile("支\\s*付\\s*宝\\s*红\\s*包\\s*[:：]\\s*" + WORD_MULTI_LINE_PATTERN),
-		Pattern.compile("支\\s*付\\s*宝\\s*口\\s*令\\s*[:：]\\s*" + WORD_MULTI_LINE_PATTERN),
-		Pattern.compile("红\\s*包\\s*口\\s*令\\s*[:：]\\s*" + WORD_MULTI_LINE_PATTERN),
-		Pattern.compile("口\\s*令\\s*红\\s*包\\s*[:：]\\s*" + WORD_MULTI_LINE_PATTERN),
-		Pattern.compile("中\\s*文\\s*口\\s*令\\s*[:：]\\s*" + WORD_MULTI_LINE_PATTERN),
-		Pattern.compile("中\\s*文\\s*红\\s*包\\s*[:：]\\s*" + WORD_MULTI_LINE_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝\\s*红\\s*包" + COLON_PATTERN_MORE + WORD_MULTI_LINE_PATTERN),
+		Pattern.compile("支\\s*付\\s*宝\\s*口\\s*令" + COLON_PATTERN_MORE + WORD_MULTI_LINE_PATTERN),
+		Pattern.compile("红\\s*包\\s*口\\s*令" + COLON_PATTERN_MORE + WORD_MULTI_LINE_PATTERN),
+		Pattern.compile("口\\s*令\\s*红\\s*包" + COLON_PATTERN_MORE + WORD_MULTI_LINE_PATTERN),
+		Pattern.compile("中\\s*文\\s*口\\s*令" + COLON_PATTERN_MORE + WORD_MULTI_LINE_PATTERN),
+		Pattern.compile("中\\s*文\\s*红\\s*包" + COLON_PATTERN_MORE + WORD_MULTI_LINE_PATTERN),
+		Pattern.compile("口\\s*令\\s*[为是]\\s*[" + COLON + "]?" + WORD_MULTI_LINE_PATTERN),
 	};
 
 	public static HashMap<String, String> sPackageCodeMap = new HashMap<String, String>();
@@ -254,7 +260,7 @@ public class RedPacketFinder {
 				number_count = 0;
 
 				if (CavanString.isChineseChar(c)) {
-					if (++chinese_count > 2) {
+					if (++chinese_count > 1) {
 						invalid = false;
 					}
 				} else {
