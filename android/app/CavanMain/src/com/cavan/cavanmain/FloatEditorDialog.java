@@ -90,7 +90,7 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 		LayoutParams params = new LayoutParams(
 				WindowManager.LayoutParams.MATCH_PARENT,
 				WindowManager.LayoutParams.WRAP_CONTENT,
-				LayoutParams.TYPE_TOAST,
+				LayoutParams.TYPE_SYSTEM_ALERT,
 				flags,
 				PixelFormat.RGBA_8888);
 

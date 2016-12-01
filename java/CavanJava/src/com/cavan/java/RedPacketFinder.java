@@ -25,6 +25,7 @@ public class RedPacketFinder {
 	private static final String WORD_MULTI_LINE_PATTERN = "([\\w\\s]+)";
 
 	private static final Pattern PATTERN_URL = Pattern.compile("[a-z]+://\\S+", Pattern.CASE_INSENSITIVE);
+	private static final Pattern PATTERN_FU_DAI = Pattern.compile("\\[链接\\].*福袋");
 
 	private static final Pattern[] sNormalPatterns = {
 		Pattern.compile("^\\[" + NORMAL_PATTERN + "\\]"),
@@ -49,7 +50,7 @@ public class RedPacketFinder {
 	};
 
 	public static final String[] sExcludeWords = {
-		"领取方法", "红牛口令", "下单口令", "新口令", "淘口令", "群里输入口令"
+		"领取方法", "红牛口令", "下单口令", "新口令", "淘口令", "群里输入口令", "语音口令", "语言口令"
 	};
 
 	public static final Pattern[] sUnsafePatterns = {
@@ -132,7 +133,8 @@ public class RedPacketFinder {
 		Pattern.compile("口\\s*令\\s*红\\s*包" + COLON_PATTERN_MORE + WORD_MULTI_LINE_PATTERN),
 		Pattern.compile("中\\s*文\\s*口\\s*令" + COLON_PATTERN_MORE + WORD_MULTI_LINE_PATTERN),
 		Pattern.compile("中\\s*文\\s*红\\s*包" + COLON_PATTERN_MORE + WORD_MULTI_LINE_PATTERN),
-		Pattern.compile("口\\s*令" + SUFFIX_PATTERN + "\\b\\s*[" + COLON + "]*" + WORD_MULTI_LINE_PATTERN),
+		Pattern.compile("口\\s*令\\s*为\\b\\s*" + "[" + COLON + "]*" + WORD_MULTI_LINE_PATTERN),
+		Pattern.compile("口\\s*令\\s*是\\s*" + "[" + COLON + "]+" + WORD_MULTI_LINE_PATTERN),
 	};
 
 	public static HashMap<String, String> sPackageCodeMap = new HashMap<String, String>();
@@ -525,6 +527,11 @@ public class RedPacketFinder {
 	}
 
 	public String getNormalCode(String pkgName) {
+		Matcher matcher = PATTERN_FU_DAI.matcher(mJoinedLines);
+		if (matcher.find()) {
+			return "福袋";
+		}
+
 		String code = sPackageCodeMap.get(pkgName);
 		if (code != null) {
 			if (mLines.size() != 1) {
@@ -539,7 +546,7 @@ public class RedPacketFinder {
 		}
 
 		for (Pattern pattern : sNormalPatterns) {
-			Matcher matcher = pattern.matcher(mJoinedLines);
+			matcher = pattern.matcher(mJoinedLines);
 			if (matcher.find()) {
 				return matcher.group(1);
 			}
