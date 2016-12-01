@@ -1,8 +1,11 @@
 package com.cavan.cavanmain;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
+import android.os.Build;
 import android.os.Handler;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -35,6 +38,8 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 
 	private CheckBox mCheckBox;
 	private EditText mEditText;
+
+	private Dialog mDialog;
 	private WindowManager mWindowManager;
 	private Handler mHandler = new Handler();
 
@@ -81,21 +86,35 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 		return mRootView.findViewById(id);
 	}
 
+	private LayoutParams createLayoutParams(int flags) {
+		LayoutParams params = new LayoutParams(
+				WindowManager.LayoutParams.MATCH_PARENT,
+				WindowManager.LayoutParams.WRAP_CONTENT,
+				LayoutParams.TYPE_TOAST,
+				flags,
+				PixelFormat.RGBA_8888);
+
+		params.gravity = Gravity.CENTER_HORIZONTAL | Gravity.TOP;
+
+		return params;
+	}
+
 	public void show(long dismissDelay) {
-		if (!mShowing) {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+			if (mDialog == null) {
+				AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+				builder.setView(mRootView);
+				builder.setCancelable(true);
+				mDialog = builder.create();
+				mDialog.getWindow().setAttributes(createLayoutParams(0));
+			}
+
+			mDialog.show();
+		} else if (!mShowing) {
 			mShowing = true;
 
-			LayoutParams params = new LayoutParams(
-					WindowManager.LayoutParams.MATCH_PARENT,
-					WindowManager.LayoutParams.WRAP_CONTENT,
-					LayoutParams.TYPE_TOAST,
-					LayoutParams.FLAG_NOT_TOUCH_MODAL | LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
-					PixelFormat.RGBA_8888);
-
-			params.gravity = Gravity.CENTER_HORIZONTAL | Gravity.TOP;
-
 			try {
-				mWindowManager.addView(mRootView, params);
+				mWindowManager.addView(mRootView, createLayoutParams(LayoutParams.FLAG_NOT_TOUCH_MODAL | LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -105,18 +124,24 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 	}
 
 	public void dismiss() {
-		if (mShowing) {
+		if (mDialog != null) {
+			mDialog.dismiss();
+		} else if (mShowing) {
 			try {
 				mWindowManager.removeView(mRootView);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-
-			mShowing = false;
 		}
+
+		mShowing = false;
 	}
 
 	public boolean isShowing() {
+		if (mDialog != null) {
+			return mDialog.isShowing();
+		}
+
 		return mShowing;
 	}
 
