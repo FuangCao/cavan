@@ -39,6 +39,10 @@ public class RedPacketFinder {
 		"严禁使用红包", "红包不返现", "红包专员", "预告", "早知道"
 	};
 
+	private static final String[] sExcludePictures = {
+		"不要使用支付宝红包", "购物清单", "促销清单"
+	};
+
 	public static final Pattern[] sExcludePatterns = {
 		PATTERN_URL,
 		Pattern.compile("=\\d{8,}"),
@@ -462,26 +466,20 @@ public class RedPacketFinder {
 		return codes;
 	}
 
-	public boolean isPictureCode() {
-		if (!mJoinedLines.contains("[图片]")) {
-			return false;
-		}
-
-		if (mJoinedLines.contains("不要使用支付宝红包")) {
-			return false;
-		}
-
-		for (Pattern pattern : sPicturePatterns) {
-			Matcher matcher = pattern.matcher(mJoinedLines);
-			if (matcher.find()) {
-				return true;
+	private boolean isPictureCode() {
+		if (mJoinedLines.contains("[图片]")) {
+			for (Pattern pattern : sPicturePatterns) {
+				Matcher matcher = pattern.matcher(mJoinedLines);
+				if (matcher.find()) {
+					return true;
+				}
 			}
 		}
 
 		return false;
 	}
 
-	public boolean isPredictCode(String line) {
+	private boolean isPredictCode(String line) {
 		for (Pattern pattern : sPredictPatterns) {
 			Matcher matcher = pattern.matcher(line);
 			if (matcher.find()) {
@@ -492,13 +490,7 @@ public class RedPacketFinder {
 		return false;
 	}
 
-	public boolean isPredictCode() {
-		for (String word : sExcludePredicts) {
-			if (mJoinedLines.contains(word)) {
-				return false;
-			}
-		}
-
+	private boolean isPredictCode() {
 		for (String line : mLines) {
 			if (isPredictCode(line)) {
 				return true;
@@ -506,6 +498,30 @@ public class RedPacketFinder {
 		}
 
 		return false;
+	}
+
+	public String getPredictCode() {
+		for (String word : sExcludePictures) {
+			if (mJoinedLines.contains(word)) {
+				return null;
+			}
+		}
+
+		if (isPictureCode()) {
+			return "图片";
+		}
+
+		for (String word : sExcludePredicts) {
+			if (mJoinedLines.contains(word)) {
+				return null;
+			}
+		}
+
+		if (isPredictCode()) {
+			return "准备";
+		}
+
+		return null;
 	}
 
 	public String getNormalCode(String pkgName) {
