@@ -203,6 +203,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 
 		case "com.alipay.mobile.nebulacore.ui.H5Activity":
 			if (isCurrentRedPacketCode(mCode)) {
+				mCode.setValid();
+
 				if (mCode.isSendPending()) {
 					mService.sendRedPacketCode(mCode);
 				}

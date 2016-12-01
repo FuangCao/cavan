@@ -276,7 +276,6 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 	}
 
 	synchronized public void updateRepeatTime(Context context) {
-		mValid = true;
 		mRepeatable = true;
 		mRepeatTime = System.currentTimeMillis() + REPEAT_TIME_ALIGN + TIME_MISTAKE;
 		mRepeatTime -= mRepeatTime % REPEAT_TIME_ALIGN;
