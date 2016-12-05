@@ -752,16 +752,25 @@ int inet_create_service(int type, u16 port)
 		return sockfd;
 	}
 
+	ret = socket_set_reuse_addr(sockfd);
+	if (ret < 0) {
+		pr_err_info("socket_set_reuse_addr");
+		goto out_close_sockfd;
+	}
+
 	inet_sockaddr_init(&addr, NULL, port);
 
 	ret = inet_bind(sockfd, &addr);
 	if (ret < 0) {
 		pr_err_info("bind to port %d failed", port);
-		close(sockfd);
-		return ret;
+		goto out_close_sockfd;
 	}
 
 	return sockfd;
+
+out_close_sockfd:
+	close(sockfd);
+	return ret;
 }
 
 int unix_create_service(int type, const char *pathname)

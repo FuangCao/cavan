@@ -737,3 +737,17 @@ static inline int network_client_send_file3(struct network_client *client, const
 	size64_t size = file_get_size(pathname);
 	return network_client_send_file2(client, pathname, size);
 }
+
+static inline int socket_set_reuse_addr(int sockfd)
+{
+	int reuse = 1;
+
+	return setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (void *) &reuse, sizeof(reuse));
+}
+
+static inline int socket_set_reuse_port(int sockfd)
+{
+	int reuse = 1;
+
+	return setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, (void *) &reuse, sizeof(reuse));
+}
