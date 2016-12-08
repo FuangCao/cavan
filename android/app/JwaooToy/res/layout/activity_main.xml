@@ -112,7 +112,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/checkBoxMotoEvent"
+        android:layout_below="@+id/checkBoxMotoRand"
         android:text="@string/text_read_bd_addr" />
 
     <CheckBox
@@ -167,11 +167,19 @@
         android:layout_below="@+id/progressBarUpgrade" />
 
     <CheckBox
+        android:id="@+id/checkBoxMotoRand"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/checkBoxMotoEvent"
+        android:text="@string/moto_rand" />
+
+    <CheckBox
         android:id="@+id/checkBoxKeyLock"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/buttonWriteBdAddr"
         android:layout_alignLeft="@+id/checkBoxFactoryMode"
+        android:layout_below="@+id/checkBoxFactoryMode"
         android:text="@string/text_key_lock" />
 
 </RelativeLayout>

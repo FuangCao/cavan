@@ -24,6 +24,7 @@ import android.widget.TextView;
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanProgressListener;
 import com.cavan.resource.JwaooToyActivity;
+import com.jwaoo.android.JwaooBleToy;
 import com.jwaoo.android.JwaooBleToy.JwaooToyAppSettings;
 
 @SuppressLint("HandlerLeak")
@@ -36,6 +37,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private static final int EVENT_FREQ_CHANGED = 7;
 	private static final int EVENT_DEPTH_CHANGED = 8;
 	private static final int EVENT_BATTERY_INFO = 11;
+	private static final int EVENT_MOTO_RAND = 12;
 
 	private double mFreq;
 	private double mDepth;
@@ -57,6 +59,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private CheckBox mCheckBoxFactoryMode;
 	private CheckBox mCheckBoxMotoEvent;
 	private CheckBox mCheckBoxKeyLock;
+	private CheckBox mCheckBoxMotoRand;
 
 	private ProgressBar mProgressBar;
 	private EditText mEditTextBdAddr;
@@ -100,6 +103,26 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 			case EVENT_BATTERY_INFO:
 				mTextViewBatteryInfo.setText((CharSequence) msg.obj);
+				break;
+
+			case EVENT_MOTO_RAND:
+				removeMessages(EVENT_MOTO_RAND);
+
+				if (mCheckBoxMotoRand.isChecked() && mBleToy != null) {
+					while (true) {
+						int mode = (int) (Math.random() * 100 % 6 + 1);
+						if (mode != mMotoMode) {
+							mMotoMode = mode;
+							break;
+						}
+					}
+
+					CavanAndroid.dLog("mode = " + mMotoMode);
+
+					if (mBleToy.setMotoMode(mMotoMode, JwaooBleToy.MOTO_LEVEL_MAX)) {
+						sendEmptyMessageDelayed(EVENT_MOTO_RAND, 5000);
+					}
+				}
 				break;
 			}
 		}
@@ -148,6 +171,9 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 		mCheckBoxMotoEvent = (CheckBox) findViewById(R.id.checkBoxMotoEvent);
 		mCheckBoxMotoEvent.setOnCheckedChangeListener(this);
+
+		mCheckBoxMotoRand = (CheckBox) findViewById(R.id.checkBoxMotoRand);
+		mCheckBoxMotoRand.setOnCheckedChangeListener(this);
 
 		mCheckBoxFactoryMode = (CheckBox) findViewById(R.id.checkBoxFactoryMode);
 		mCheckBoxFactoryMode.setOnCheckedChangeListener(this);
@@ -404,6 +430,14 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 		case R.id.checkBoxKeyLock:
 			mBleToy.setKeyLock(isChecked);
+			break;
+
+		case R.id.checkBoxMotoRand:
+			if (isChecked) {
+				mHandler.sendEmptyMessage(EVENT_MOTO_RAND);
+			} else if (mBleToy != null) {
+				mBleToy.setMotoMode(0, 0);
+			}
 			break;
 		}
 	}
