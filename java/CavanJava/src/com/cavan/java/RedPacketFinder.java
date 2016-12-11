@@ -37,7 +37,7 @@ public class RedPacketFinder {
 	};
 
 	private static final String[] sExcludePredicts = {
-		"严禁使用红包", "红包不返现", "红包专员", "预告", "早知道"
+		"严禁使用红包", "红包不返现", "红包专员", "预告", "早知道", "优惠券"
 	};
 
 	private static final String[] sExcludePictures = {

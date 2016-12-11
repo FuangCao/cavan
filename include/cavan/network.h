@@ -747,7 +747,11 @@ static inline int socket_set_reuse_addr(int sockfd)
 
 static inline int socket_set_reuse_port(int sockfd)
 {
+#ifdef SO_REUSEPORT
 	int reuse = 1;
 
 	return setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, (void *) &reuse, sizeof(reuse));
+#else
+	return -1;
+#endif
 }
