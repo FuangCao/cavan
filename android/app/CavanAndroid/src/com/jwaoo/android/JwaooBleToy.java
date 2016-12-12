@@ -49,10 +49,12 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final String DEVICE_NAME_K100 = "K100";
 	public static final String DEVICE_NAME_K101 = "K101";
 	public static final String DEVICE_NAME_MODEL06 = "MODEL-06";
+	public static final String DEVICE_NAME_MODEL10 = "MODEL-10";
 
 	public static final int DEVICE_ID_K100 = 100;
 	public static final int DEVICE_ID_K101 = 101;
 	public static final int DEVICE_ID_MODEL06 = 102;
+	public static final int DEVICE_ID_MODEL10 = 105;
 
 	public static final UUID UUID_SERVICE = UUID.fromString("00001888-0000-1000-8000-00805f9b34fb");
 	public static final UUID UUID_COMMAND = UUID.fromString("00001889-0000-1000-8000-00805f9b34fb");
@@ -808,6 +810,11 @@ public class JwaooBleToy extends CavanBleGatt {
 			mSensor = new JwaooToySensorK101();
 			mDeviceName = DEVICE_NAME_MODEL06;
 			mDeviceId = DEVICE_ID_MODEL06;
+			mDepthSteps = 3;
+		} else if (identify.equals(DEVICE_NAME_MODEL10)) {
+			mSensor = new JwaooToySensorK101();
+			mDeviceName = DEVICE_NAME_MODEL10;
+			mDeviceId = DEVICE_ID_MODEL10;
 			mDepthSteps = 3;
 		} else {
 			CavanAndroid.eLog("Invalid identify");
