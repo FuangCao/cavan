@@ -59,6 +59,7 @@ public class FloatMessageService extends FloatWidowService {
 	public static final int TEXT_COLOR_TIME = Color.WHITE;
 	public static final int TEXT_COLOR_MESSAGE = Color.YELLOW;
 
+	private static final int MSG_UPDATE_TIME = 0;
 	private static final int MSG_SHOW_TOAST = 1;
 	private static final int MSG_TCP_SERVICE_STATE_CHANGED = 2;
 	private static final int MSG_TCP_SERVICE_UPDATED = 3;
@@ -69,7 +70,7 @@ public class FloatMessageService extends FloatWidowService {
 	private static final int MSG_CHECK_KEYGUARD = 9;
 
 	private int mLastSecond;
-	private boolean mUserPresent;
+	private boolean mScreenClosed;
 	private TextView mTextViewTime;
 	private HashMap<CharSequence, RedPacketCode> mMessageCodeMap = new HashMap<CharSequence, RedPacketCode>();
 
@@ -86,6 +87,24 @@ public class FloatMessageService extends FloatWidowService {
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
+			case MSG_UPDATE_TIME:
+				removeMessages(MSG_UPDATE_TIME);
+
+				if (mScreenClosed || mTextViewTime.getVisibility() != View.VISIBLE) {
+					break;
+				}
+
+				Calendar calendar = Calendar.getInstance();
+				int second = calendar.get(Calendar.SECOND);
+				if (second == mLastSecond) {
+					sendEmptyMessageDelayed(MSG_UPDATE_TIME, 100);
+				} else {
+					mLastSecond = second;
+					sendEmptyMessageDelayed(MSG_UPDATE_TIME, 1000);
+					mTextViewTime.setText(getTimeText(calendar, second));
+				}
+				break;
+
 			case MSG_TCP_SERVICE_STATE_CHANGED:
 				Intent intent = new Intent(MainActivity.ACTION_WAN_UPDATED);
 				intent.putExtra("state", msg.arg1);
@@ -158,12 +177,14 @@ public class FloatMessageService extends FloatWidowService {
 			case MSG_CHECK_KEYGUARD:
 				removeMessages(MSG_CHECK_KEYGUARD);
 
-				if (mUserPresent) {
-					if (CavanAndroid.inKeyguardRestrictedInputMode(FloatMessageService.this)) {
-						sendEmptyMessageDelayed(MSG_CHECK_KEYGUARD, 2000);
-					} else {
-						mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_bg);
-					}
+				if (mScreenClosed) {
+					break;
+				}
+
+				if (CavanAndroid.inKeyguardRestrictedInputMode(FloatMessageService.this)) {
+					sendEmptyMessageDelayed(MSG_CHECK_KEYGUARD, 2000);
+				} else {
+					mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_bg);
 				}
 				break;
 			}
@@ -181,19 +202,18 @@ public class FloatMessageService extends FloatWidowService {
 			switch (action) {
 			case Intent.ACTION_SCREEN_OFF:
 				CavanAndroid.setLockScreenEnable(FloatMessageService.this, true);
-				mUserPresent = false;
+				mScreenClosed = true;
 				break;
 
 			case Intent.ACTION_SCREEN_ON:
+				mScreenClosed = false;
+				mHandler.sendEmptyMessage(MSG_UPDATE_TIME);
+
 				if (getTextCount() > 0 || CavanAndroid.isPreferenceEnabled(FloatMessageService.this, MainActivity.KEY_AUTO_UNLOCK)) {
 					unlockScreen();
 				}
 
 				mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_unlock_bg);
-				break;
-
-			case Intent.ACTION_USER_PRESENT:
-				mUserPresent = true;
 
 				if (CavanAndroid.isPreferenceEnabled(FloatMessageService.this, MainActivity.KEY_AUTO_UNLOCK)) {
 					mHandler.sendEmptyMessage(MSG_CHECK_KEYGUARD);
@@ -252,6 +272,7 @@ public class FloatMessageService extends FloatWidowService {
 
 		@Override
 		public int addMessage(CharSequence message, String code) throws RemoteException {
+			FloatMessageService.this.removeText(message);
 			TextView view = (TextView) FloatMessageService.this.addText(message, -1);
 			if (view == null) {
 				return -1;
@@ -384,22 +405,6 @@ public class FloatMessageService extends FloatWidowService {
 		}
 	};
 
-	private Runnable mRunnableTime = new Runnable() {
-
-		@Override
-		public void run() {
-			Calendar calendar = Calendar.getInstance();
-			int second = calendar.get(Calendar.SECOND);
-			if (second == mLastSecond) {
-				mTextViewTime.postDelayed(this, 100);
-			} else {
-				mLastSecond = second;
-				mTextViewTime.postDelayed(this, 1000);
-				mTextViewTime.setText(getTimeText(calendar, second));
-			}
-		}
-	};
-
 	public static Intent buildIntent(Context context) {
 		return new Intent(context, FloatMessageService.class);
 	}
@@ -411,12 +416,7 @@ public class FloatMessageService extends FloatWidowService {
 	}
 
 	public boolean unlockScreen() {
-		if (mUserPresent) {
-			return false;
-		}
-
 		CavanAndroid.setLockScreenEnable(FloatMessageService.this, false);
-
 		return true;
 	}
 
@@ -443,9 +443,8 @@ public class FloatMessageService extends FloatWidowService {
 		if (enable) {
 			mLastSecond = -1;
 			mTextViewTime.setVisibility(View.VISIBLE);
-			mTextViewTime.post(mRunnableTime);
+			mHandler.sendEmptyMessage(MSG_UPDATE_TIME);
 		} else {
-			mTextViewTime.removeCallbacks(mRunnableTime);
 			mTextViewTime.setVisibility(View.INVISIBLE);
 		}
 
@@ -522,7 +521,6 @@ public class FloatMessageService extends FloatWidowService {
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Intent.ACTION_SCREEN_OFF);
 		filter.addAction(Intent.ACTION_SCREEN_ON);
-		filter.addAction(Intent.ACTION_USER_PRESENT);
 		filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
 		filter.addAction(MainActivity.ACTION_SEND_WAN_COMMAN);
 		registerReceiver(mReceiver, filter );
