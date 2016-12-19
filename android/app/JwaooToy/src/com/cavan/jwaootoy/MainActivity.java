@@ -30,18 +30,18 @@ import com.jwaoo.android.JwaooBleToy.JwaooToyAppSettings;
 @SuppressLint("HandlerLeak")
 public class MainActivity extends JwaooToyActivity implements OnClickListener, OnCheckedChangeListener {
 
+	public static final int SENSOR_DELAY = 20;
+
 	private static final int EVENT_OTA_START = 3;
 	private static final int EVENT_OTA_FAILED = 4;
 	private static final int EVENT_OTA_SUCCESS = 5;
 	private static final int EVENT_PROGRESS_UPDATED = 6;
-	private static final int EVENT_FREQ_CHANGED = 7;
-	private static final int EVENT_DEPTH_CHANGED = 8;
 	private static final int EVENT_BATTERY_INFO = 11;
 	private static final int EVENT_MOTO_RAND = 12;
+	private static final int EVENT_UPDATE_SPEED = 13;
 
-	private double mFreq;
-	private double mDepth;
 	private boolean mOtaBusy;
+	private int mDataCount;
 
 	private Button mButtonSend;
 	private Button mButtonUpgrade;
@@ -95,12 +95,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 				mProgressBar.setProgress(msg.arg1);
 				break;
 
-			case EVENT_FREQ_CHANGED:
-			case EVENT_DEPTH_CHANGED:
-				setTitle(String.format("depth = %3.2f, freq = %3.2f", mDepth, mFreq));
-				mProgressBar.setProgress((int) (mBleToy.getDepth() * 100));
-				break;
-
 			case EVENT_BATTERY_INFO:
 				mTextViewBatteryInfo.setText((CharSequence) msg.obj);
 				break;
@@ -122,6 +116,17 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 					if (mBleToy.setMotoMode(mMotoMode, JwaooBleToy.MOTO_LEVEL_MAX)) {
 						sendEmptyMessageDelayed(EVENT_MOTO_RAND, 5000);
 					}
+				}
+				break;
+
+			case EVENT_UPDATE_SPEED:
+				sendEmptyMessageDelayed(EVENT_UPDATE_SPEED, 1000);
+
+				int count = mDataCount;
+
+				if (count > 0) {
+					mDataCount = 0;
+					setTitle(String.format("count = %d, delay = %f", count, 1000.0 / count));
 				}
 				break;
 			}
@@ -224,6 +229,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		});
 
 		showScanActivity();
+		mHandler.sendEmptyMessage(EVENT_UPDATE_SPEED);
 	}
 
 	private void setUpgradeProgress(int progress) {
@@ -392,9 +398,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 	@Override
 	protected void onSensorDataReceived(byte[] data) {
-		mDepth = mBleToy.getDepth();
-		mFreq = mBleToy.getFreq();
-		mHandler.sendEmptyMessage(EVENT_FREQ_CHANGED);
+		mDataCount++;
+		CavanAndroid.dLog("onSensorDataReceived: " + mBleToy.getSensor().getAccelText());
 	}
 
 	@Override

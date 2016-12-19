@@ -52,13 +52,22 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	private TestResult mTestResult;
 	private TestResultFragment mTestResultFragment = new TestResultFragment();
 
-	private TestItemFragment[] mTestItemFragmanets = {
+	private TestItemFragment[] mTestItemFragmanets;
+
+	private TestItemFragment[] mTestItemFragmanetsModel06 = {
 		new ButtonTestFragment(0),
 		new GsensorTestFragment(2),
 		new LedTestFragment(3),
 		new MotoTestFragment(4),
 		new ChargeTestFragment(5),
 		// new DepthSensorTestFragment(6),
+	};
+
+	private TestItemFragment[] mTestItemFragmanetsModel10 = {
+		new ButtonTestFragment(0),
+		new GsensorTestFragment(2),
+		new LedTestFragment(3),
+		new ChargeTestFragment(5),
 	};
 
 	public void setTestItem(int item) {
@@ -195,7 +204,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 			@Override
 			protected void onConnectFailed() {
-				CavanAndroid.dLog("onAutoConnectFailed");
+				CavanAndroid.eLog("onAutoConnectFailed");
 				showScanActivity();
 			}
 
@@ -204,6 +213,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				if (!mBleToy.setFactoryModeEnable(true)) {
 					CavanAndroid.dLog("Failed to setFactoryModeEnable");
 					return false;
+				}
+
+				if (mBleToy.getDeviveId() == JwaooBleToy.DEVICE_ID_MODEL10) {
+					mTestItemFragmanets = mTestItemFragmanetsModel10;
+				} else {
+					mTestItemFragmanets = mTestItemFragmanetsModel06;
 				}
 
 				mHandler.obtainMessage(MSG_SET_TEST_ITEM, -1, 0).sendToTarget();
@@ -477,17 +492,29 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		@Override
 		protected boolean doInitialize() {
-			mButtons = new JwaooKeyTestView[] {
-				(JwaooKeyTestView) findViewById(R.id.buttonKey0),
-				(JwaooKeyTestView) findViewById(R.id.buttonKey1),
-				(JwaooKeyTestView) findViewById(R.id.buttonKey2),
-				(JwaooKeyTestView) findViewById(R.id.buttonKey3),
-			};
+			if (mBleToy.getDeviveId() == JwaooBleToy.DEVICE_ID_MODEL10) {
+				findViewById(R.id.buttonKey0).setVisibility(View.INVISIBLE);
+				findViewById(R.id.buttonKey1).setVisibility(View.INVISIBLE);
+				findViewById(R.id.buttonKey3).setVisibility(View.INVISIBLE);
 
-			CharSequence[] texts = getResources().getTextArray(R.array.text_keys);
+				mButtons = new JwaooKeyTestView[] {
+					(JwaooKeyTestView) findViewById(R.id.buttonKey2),
+				};
 
-			for (int i = 0; i < mButtons.length && i < texts.length; i++) {
-				mButtons[i].setTextRaw(texts[i].toString());
+				mButtons[0].setTextRaw(R.string.text_key);
+			} else {
+				mButtons = new JwaooKeyTestView[] {
+					(JwaooKeyTestView) findViewById(R.id.buttonKey0),
+					(JwaooKeyTestView) findViewById(R.id.buttonKey1),
+					(JwaooKeyTestView) findViewById(R.id.buttonKey2),
+					(JwaooKeyTestView) findViewById(R.id.buttonKey3),
+				};
+
+				CharSequence[] texts = getResources().getTextArray(R.array.text_keys);
+
+				for (int i = 0; i < mButtons.length && i < texts.length; i++) {
+					mButtons[i].setTextRaw(texts[i].toString());
+				}
 			}
 
 			return true;
@@ -674,6 +701,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		@Override
 		protected int getNameResource() {
+			if (mBleToy.getDeviveId() == JwaooBleToy.DEVICE_ID_MODEL10) {
+				return R.string.test_item_battery;
+			}
+
 			return R.string.test_item_charge;
 		}
 
@@ -714,7 +745,14 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				mTextViewBatteryVoltage.setText(voltage + " (v)");
 				mTextViewBatteryCapacity.setText(msg.arg2 + "%");
 
-				if (voltage > 2.5 && voltage < 4.5) {
+				if (mBleToy.getDeviveId() == JwaooBleToy.DEVICE_ID_MODEL10) {
+					if (voltage > 1.8 && voltage < 3.5) {
+						mTextViewBatteryVoltage.setTextColor(Color.BLACK);
+						setPassEnable();
+					} else {
+						mTextViewBatteryVoltage.setTextColor(Color.RED);
+					}
+				} else if (voltage > 2.5 && voltage < 4.5) {
 					mTextViewBatteryVoltage.setTextColor(Color.BLACK);
 
 					if ((state & 2) != 0) {
@@ -751,8 +789,13 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		@Override
 		protected boolean doInitialize() {
 			mCheckBoxLedBatt = (CheckBox) findViewById(R.id.checkBoxLedBattery);
-			mCheckBoxLedBatt.setChecked(false);
-			mCheckBoxLedBatt.setOnCheckedChangeListener(this);
+
+			if (mBleToy.getDeviveId() == JwaooBleToy.DEVICE_ID_MODEL10) {
+				mCheckBoxLedBatt.setVisibility(View.INVISIBLE);
+			} else {
+				mCheckBoxLedBatt.setChecked(false);
+				mCheckBoxLedBatt.setOnCheckedChangeListener(this);
+			}
 
 			mCheckBoxLedBt = (CheckBox) findViewById(R.id.checkBoxLedBluetooth);
 			mCheckBoxLedBt.setChecked(true);
@@ -784,7 +827,11 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				break;
 			}
 
-			if (mLedCountBatt > 1 && mLedCountBt > 1) {
+			if (mCheckBoxLedBatt.getVisibility() == View.VISIBLE) {
+				if (mLedCountBatt > 1 && mLedCountBt > 1) {
+					setPassEnable();
+				}
+			} else if (mLedCountBt > 1) {
 				setPassEnable();
 			}
 		}

@@ -326,7 +326,7 @@ function config_aptget()
 	# echo "deb http://archive.ubuntukylin.com:10006/ubuntukylin trusty main" > "${DIR_SOURCES_LIST}/sogoupinyin.list"
 	# echo "deb http://ftp.de.debian.org/debian wheezy main" > "${DIR_SOURCES_LIST}/debian.list"
 
-	wget -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | sudo apt-key add -
+	wget -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | apt-key add -
 }
 
 function config_git()
@@ -538,8 +538,10 @@ function config_others()
 
 function config_sudo()
 {
-	cp -av "${LOCAL_CONFIG_PATH}/sudoers" "/etc/sudoers.d/cavan-sudoers"
-	chmod -v a-w /etc/sudoers.d/cavan-sudoers
+	local dest_path="/etc/sudoers.d/cavan-sudoers"
+	cp -av "${LOCAL_CONFIG_PATH}/sudoers" "${dest_path}"
+	chmod -v a-w "${dest_path}"
+	chown -v root:root "${dest_path}"
 }
 
 pr_title "${DISTRIB_ID}-${DISTRIB_RELEASE} (${DISTRIB_CODENAME})"
