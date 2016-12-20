@@ -116,6 +116,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE = 92;
 	public static final byte JWAOO_TOY_CMD_KEY_LOCK = 93;
 	public static final byte JWAOO_TOY_CMD_KEY_REPORT_ENABLE = 94;
+	public static final byte JWAOO_TOY_CMD_KEY_SETTINGS = 95;
 	public static final byte JWAOO_TOY_CMD_GPIO_GET = 100;
 	public static final byte JWAOO_TOY_CMD_GPIO_SET = 101;
 	public static final byte JWAOO_TOY_CMD_GPIO_CFG = 102;
@@ -592,6 +593,19 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mCommand.readBool(JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE, enable, delay);
 	}
 
+	public JwaooToyKeySettings readKeySettings() {
+		JwaooToyResponse response = mCommand.send(JWAOO_TOY_CMD_KEY_SETTINGS);
+		if (response == null) {
+			return null;
+		}
+
+		return response.getKeySettings();
+	}
+
+	public boolean writeKeySettings(JwaooToyKeySettings settings) {
+		return mCommand.readBool(settings.buildCommand());
+	}
+
 	public boolean readSpeedTable(int index, short[] table, int offset) {
 		return mCommand.readArray16(new byte[] { JWAOO_TOY_CMD_MOTO_SPEED_TABLE, (byte) index }, table, offset, 9);
 	}
@@ -855,13 +869,16 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		private JwaooToyAppSettings(byte[] response) {
-			mSuspendDelay = CavanJava.buildValue16(response, 2);
-			mShutdownVoltage = CavanJava.buildValue16(response, 4);
-			mBtLedCloseTime = CavanJava.buildValue16(response, 6);
-			mBtLedOpenTime = response[8];
-			mMotoRandDelay = response[9];
-			mMotoRandMax = response[10];
-			mMotoSpeedMin = response[11];
+			CavanByteCache cache = new CavanByteCache(response);
+			cache.setOffset(2);
+
+			mSuspendDelay = cache.readValue16();
+			mShutdownVoltage = cache.readValue16();
+			mBtLedCloseTime = cache.readValue16();
+			mBtLedOpenTime = cache.readValue8();
+			mMotoRandDelay = cache.readValue8();
+			mMotoRandMax = cache.readValue8();
+			mMotoSpeedMin = cache.readValue8();
 		}
 
 		public byte[] buildCommand() {
@@ -909,6 +926,10 @@ public class JwaooBleToy extends CavanBleGatt {
 			mBtLedCloseTime = time;
 		}
 
+		public boolean commit(JwaooBleToy ble) {
+			return ble.writeAppSettings(this);
+		}
+
 		@Override
 		public String toString() {
 			StringBuilder builder = new StringBuilder();
@@ -927,6 +948,121 @@ public class JwaooBleToy extends CavanBleGatt {
 			builder.append(mMotoRandMax);
 			builder.append(", moto_speed_min: ");
 			builder.append(mMotoSpeedMin);
+
+			return builder.toString();
+		}
+	}
+
+	public static class JwaooToyKeySettings {
+
+		public static final int RESPONSE_LENGTH = 9;
+
+		private boolean mClickEnable;
+		private boolean mMultiClickEnable;
+		private int mMultiClickDelay;
+		private boolean mLongClickEnable;
+		private int mLongClickDelay;
+
+		private static JwaooToyKeySettings getInstance(byte[] response) {
+			if (response.length != RESPONSE_LENGTH) {
+				return null;
+			}
+
+			return new JwaooToyKeySettings(response);
+		}
+
+		private JwaooToyKeySettings(byte[] response) {
+			CavanByteCache cache = new CavanByteCache(response);
+			cache.setOffset(2);
+
+			mClickEnable = cache.readBool();
+			mMultiClickEnable = cache.readBool();
+			mMultiClickDelay = cache.readValue16();
+			mLongClickEnable = cache.readBool();
+			mLongClickDelay = cache.readValue16();
+		}
+
+		public byte[] buildCommand() {
+			CavanByteCache cache = new CavanByteCache(RESPONSE_LENGTH - 1);
+			cache.writeValue8(JWAOO_TOY_CMD_KEY_SETTINGS);
+			cache.writeBool(mClickEnable);
+			cache.writeBool(mMultiClickEnable);
+			cache.writeValue16((short) mMultiClickDelay);
+			cache.writeBool(mLongClickEnable);
+			cache.writeValue16((short) mLongClickDelay);
+			return cache.getBytes();
+		}
+
+		public boolean isClickEnabled() {
+			return mClickEnable;
+		}
+
+		public void setClickEnable(boolean enable) {
+			mClickEnable = enable;
+		}
+
+		public void setClickEnable() {
+			mClickEnable = true;
+		}
+
+		public boolean isMultiClickEnabled() {
+			return mMultiClickEnable;
+		}
+
+		public void setMultiClickEnable(boolean enable) {
+			mMultiClickEnable = enable;
+		}
+
+		public void setMultiClickEnable() {
+			mMultiClickEnable = true;
+		}
+
+		public int getMultiClickDelay() {
+			return mMultiClickDelay;
+		}
+
+		public void setMultiClickDelay(int delay) {
+			mMultiClickDelay = delay;
+		}
+
+		public boolean isLongClickEnabled() {
+			return mLongClickEnable;
+		}
+
+		public void setLongClickEnable(boolean enable) {
+			mLongClickEnable = enable;
+		}
+
+		public void setLongClickEnable() {
+			mLongClickEnable = true;
+		}
+
+		public int getLongClickDelay() {
+			return mLongClickDelay;
+		}
+
+		public void setLongClickDelay(int delay) {
+			mLongClickDelay = delay;
+		}
+
+		public boolean commit(JwaooBleToy ble) {
+			return ble.writeKeySettings(this);
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+
+			builder.append("click_enable: ");
+			builder.append(mClickEnable);
+			builder.append(", multi_click_enable: ");
+			builder.append(mMultiClickEnable);
+			builder.append(", multi_click_delay: ");
+			builder.append(mMultiClickDelay);
+			builder.append(", long_click_enable: ");
+			builder.append(mLongClickEnable);
+			builder.append(", long_click_delay: ");
+			builder.append(mLongClickDelay);
 
 			return builder.toString();
 		}
@@ -1128,6 +1264,14 @@ public class JwaooBleToy extends CavanBleGatt {
 			}
 
 			return JwaooToyAppSettings.getInstance(mBytes);
+		}
+
+		public JwaooToyKeySettings getKeySettings() {
+			if (getType() != JWAOO_TOY_RSP_DATA) {
+				return null;
+			}
+
+			return JwaooToyKeySettings.getInstance(mBytes);
 		}
 
 		public static boolean getBool(JwaooToyResponse response) {

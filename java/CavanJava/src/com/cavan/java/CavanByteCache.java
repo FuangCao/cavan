@@ -121,6 +121,10 @@ public class CavanByteCache {
 		return 0;
 	}
 
+	public boolean readBool() {
+		return readValue8() != 0;
+	}
+
 	public boolean readBytes(byte[] bytes, int offset, int count) {
 		if (mOffset + count > mLength) {
 			return false;

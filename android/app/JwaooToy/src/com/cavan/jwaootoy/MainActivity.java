@@ -26,6 +26,7 @@ import com.cavan.java.CavanProgressListener;
 import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
 import com.jwaoo.android.JwaooBleToy.JwaooToyAppSettings;
+import com.jwaoo.android.JwaooBleToy.JwaooToyKeySettings;
 
 @SuppressLint("HandlerLeak")
 public class MainActivity extends JwaooToyActivity implements OnClickListener, OnCheckedChangeListener {
@@ -388,8 +389,11 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			}
 		}
 
-		JwaooToyAppSettings settings = mBleToy.readAppSettings();
-		CavanAndroid.dLog("readAppSettings = " + settings);
+		JwaooToyAppSettings appSettings = mBleToy.readAppSettings();
+		CavanAndroid.dLog("JwaooToyAppSettings = " + appSettings);
+
+		JwaooToyKeySettings keySettings = mBleToy.readKeySettings();
+		CavanAndroid.dLog("JwaooToyKeySettings = " + keySettings);
 
 		mBleToy.setKeyReportEnable(0x0f);
 
