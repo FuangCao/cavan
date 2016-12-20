@@ -2,7 +2,6 @@ package com.cavan.resource;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -21,14 +20,6 @@ import com.jwaoo.android.JwaooBleToy;
 
 @SuppressLint("HandlerLeak")
 public class JwaooToyActivity extends Activity implements OnCancelListener, Callback {
-
-	public static final String[] DEVICE_NAMES = {
-		"JwaooToy", "SenseTube", "CavanTest"
-	};
-
-	public static final UUID[] SERVICE_UUIDS = {
-		UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb")
-	};
 
 	private final int MSG_UPDATE_UI = 1;
 	private final int MSG_SHOW_PROGRESS_DIALOG = 2;
@@ -143,7 +134,7 @@ public class JwaooToyActivity extends Activity implements OnCancelListener, Call
 	public void showScanActivity() {
 		updateUI(false);
 		showProgressDialog(false);
-		CavanBleScanActivity.show(this, DEVICE_NAMES, SERVICE_UUIDS);
+		CavanBleScanActivity.show(this, JwaooBleToy.BT_NAMES, JwaooBleToy.BT_UUIDS);
 	}
 
 	public void disconnect() {

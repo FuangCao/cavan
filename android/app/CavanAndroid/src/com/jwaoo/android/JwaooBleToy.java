@@ -14,6 +14,14 @@ import com.cavan.java.CavanString;
 
 public class JwaooBleToy extends CavanBleGatt {
 
+	public static final String[] BT_NAMES = {
+		"JwaooToy", "SenseTube", "SenseBand"
+	};
+
+	public static final UUID[] BT_UUIDS = {
+		UUID.fromString("00001888-0000-1000-8000-00805f9b34fb")
+	};
+
 	public static final int MOTO_MODE_MAX = 6;
 	public static final int MOTO_LEVEL_MAX = 18;
 	public static final int SENSOR_DATA_SKIP = 20;
