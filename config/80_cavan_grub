@@ -1,0 +1,67 @@
+#!/bin/bash
+
+FN_INITRD="initrd.lz"
+FN_VMLINUZ="vmlinuz.efi"
+MNT_POINT="/mnt/cavan-grub-iso"
+
+function cavan_grub_config_iso()
+{
+	mkdir -p "$2" || return 1
+	mkdir -p "${MNT_POINT}" || return 1
+
+	mount -o loop "$1" "${MNT_POINT}" || return 1
+
+	for fn in ${FN_INITRD} ${FN_VMLINUZ}
+	do
+		cp "${MNT_POINT}/casper/${fn}" "$2" || return 1
+	done
+
+	umount "${MNT_POINT}"
+
+	mv "${iso}" "${dn}" || return 1
+
+	return 0
+}
+
+function cavan_grub_build_menu()
+{
+	local dn fn initrd vmlinuz
+
+	cd "$2" || return 1
+
+	for iso in $(find "os" -name "ubuntu-*.iso")
+	do
+		dn=$(dirname "${iso}")
+		fn=$(basename "${iso}")
+		initrd="${dn}/${FN_INITRD}"
+		vmlinuz="${dn}/${FN_VMLINUZ}"
+
+		[ -f "${initrd}" -a -f "${vmlinuz}" ] ||
+		{
+			dn="${dn}/${fn%\.iso}"
+			cavan_grub_config_iso "${iso}" "${dn}" || continue
+
+			iso="${dn}/${fn}"
+			initrd="${dn}/${FN_INITRD}"
+			vmlinuz="${dn}/${FN_VMLINUZ}"
+		}
+
+		cat << EOF
+menuentry '${fn}' {
+	set root='hd0,msdos${1:8}'
+	linux /${vmlinuz} boot=casper iso-scan/filename=/${iso}
+	initrd /${initrd}
+}
+EOF
+	done
+}
+
+for dev in /dev/sda[0-9]*
+do
+	mount ${dev} /mnt/$(basename ${dev})
+done 2>/dev/null > /dev/null
+
+cat /proc/mounts | awk '/\/dev\/sda/ { print $1 " " $2 }' | while read line
+do
+	(cavan_grub_build_menu $line)
+done 2>/dev/null

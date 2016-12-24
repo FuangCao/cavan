@@ -490,6 +490,8 @@ function config_grub()
 	sed 	-e 's#^\(\s*linux.*\s\+root=\).*$#\1${GRUB_DEVICE} vga=0x318#g' \
 			-e 's/^\s*printf.*\${prepare_\w*_cache}/# &/g' \
 			-i ${FILE_GRUB_LINUX} || return 1
+
+	ln -vsf "${CAVAN_HOME}/config/80_cavan_grub" "/etc/grub.d" || return 1
 	update-grub2 || return 1
 
 	return 0
