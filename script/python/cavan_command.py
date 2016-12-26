@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import sys, os, subprocess, errno
+import sys, os, subprocess, errno, glob
+from cavan_file import *
 
 def command_vision(command):
 	print command
@@ -345,6 +346,73 @@ class CavanCommandBase:
 				result.append(pathname)
 
 		return result
+
+	def doMount(self, source, target, fs = None, option = None):
+		if not self.mkdirSafe(target):
+			return False
+
+		command = ["mount"]
+
+		if fs != None:
+			command.append("-t")
+			command.append(fs)
+
+		if option != None:
+			command.append("-o")
+			command.append(option)
+
+		command.append(source)
+		command.append(target)
+
+		return self.doExecute(command, of="/dev/null", ef="/dev/null")
+
+	def doMountFile(self, source, target, fs = None):
+		return self.doMount(source, target, fs, "loop")
+
+	def doUmount(self, path, option = None):
+		command = ["umount"]
+
+		if option != None:
+			command.append(option)
+
+		command.append(path)
+
+		return self.doExecute(command, of="/dev/null", ef="/dev/null")
+
+	def glob(self, pattern, dname = None):
+		if dname != None:
+			pattern = os.path.join(dname, pattern)
+
+		return glob.glob(pattern)
+
+	def globOne(self, pattern, dname = None):
+		files = self.glob(pattern, dname)
+		if not files:
+			return None
+
+		if len(files) == 1:
+			return files[0]
+
+		return None
+
+	def readMounts(self):
+		return file_read_lines("/proc/mounts")
+
+	def parseMounts(self):
+		lines = self.readMounts()
+		if not lines:
+			return None
+
+		mounts = {}
+
+		for line in lines:
+			nodes = line.split()
+			if len(nodes) < 2:
+				continue
+
+			mounts[nodes[0]] = nodes[1]
+
+		return mounts
 
 if __name__ == "__main__":
 	if len(sys.argv) > 1:

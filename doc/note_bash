@@ -44,6 +44,7 @@ set # 查看所有的函数
 env # 查看所有的环境变量
 apt-get purge bash # 卸载
 apt-cache show bash
+apt-get -f install
 
 function test-func1 # 查看当前函数名及调用关系
 {
