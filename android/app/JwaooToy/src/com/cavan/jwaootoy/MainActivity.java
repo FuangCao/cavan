@@ -23,6 +23,7 @@ import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanProgressListener;
+import com.cavan.java.CavanString;
 import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
 import com.jwaoo.android.JwaooBleToy.JwaooToyAppSettings;
@@ -33,6 +34,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 	public static final int SENSOR_DELAY = 20;
 
+	private static final int EVENT_INIT_COMPLETE = 1;
 	private static final int EVENT_OTA_START = 3;
 	private static final int EVENT_OTA_FAILED = 4;
 	private static final int EVENT_OTA_SUCCESS = 5;
@@ -68,6 +70,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private Spinner mSpinnerMotoLevel;
 	private TextView mTextViewBatteryInfo;
 
+	private Button mButtonSuspendOvertime;
+	private EditText mEditTextSuspendOvertime;
+
+	private JwaooToyAppSettings mAppSettings;
+	private JwaooToyKeySettings mKeySettings;
+
 	private int mMotoMode;
 	private int mMotoLevel;
 
@@ -76,6 +84,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
+			case EVENT_INIT_COMPLETE:
+				if (mAppSettings != null) {
+					mEditTextSuspendOvertime.setText(Integer.toString(mAppSettings.getSuspendDelay()));
+				}
+				break;
+
 			case EVENT_OTA_START:
 				updateUI(false);
 				CavanAndroid.showToast(getApplicationContext(), R.string.text_upgrade_start);
@@ -229,6 +243,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			public void onNothingSelected(AdapterView<?> parent) {}
 		});
 
+		mEditTextSuspendOvertime = (EditText) findViewById(R.id.editTextSuspendOvertime);
+		mButtonSuspendOvertime = (Button) findViewById(R.id.buttonSuspendOvertime);
+		mButtonSuspendOvertime.setOnClickListener(this);
+
 		showScanActivity();
 		mHandler.sendEmptyMessage(EVENT_UPDATE_SPEED);
 	}
@@ -341,6 +359,26 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 				CavanAndroid.dLog("Failed to writeBdAddress");
 			}
 			break;
+
+		case R.id.buttonSuspendOvertime:
+			if (mAppSettings == null) {
+				mAppSettings = mBleToy.readAppSettings();
+				if (mAppSettings == null) {
+					mEditTextSuspendOvertime.setText(CavanString.EMPTY_STRING);
+					break;
+				}
+			}
+
+			try {
+				int delay = Integer.valueOf(mEditTextSuspendOvertime.getText().toString());
+				mAppSettings.setSuspendDelay(delay);
+				if (mBleToy.writeAppSettings(mAppSettings)) {
+					CavanAndroid.showToast(this, R.string.setting_success);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			break;
 		}
 	}
 
@@ -389,13 +427,15 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			}
 		}
 
-		JwaooToyAppSettings appSettings = mBleToy.readAppSettings();
-		CavanAndroid.dLog("JwaooToyAppSettings = " + appSettings);
+		mAppSettings = mBleToy.readAppSettings();
+		CavanAndroid.dLog("JwaooToyAppSettings = " + mAppSettings);
 
-		JwaooToyKeySettings keySettings = mBleToy.readKeySettings();
-		CavanAndroid.dLog("JwaooToyKeySettings = " + keySettings);
+		mKeySettings = mBleToy.readKeySettings();
+		CavanAndroid.dLog("JwaooToyKeySettings = " + mKeySettings);
 
 		mBleToy.setKeyReportEnable(0x0f);
+
+		mHandler.sendEmptyMessage(EVENT_INIT_COMPLETE);
 
 		return true;
 	}

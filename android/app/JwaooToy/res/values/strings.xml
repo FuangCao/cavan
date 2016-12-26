@@ -42,5 +42,7 @@
         <string name="text_moto_event_enable">允许马达事件</string>
         <string name="text_key_lock">键盘锁</string>
         <string name="moto_rand">马达随机震动</string>
+        <string name="suspend_overtime_setting">待机超时时间设置</string>
+        <string name="setting_success">设置成功</string>
 
 </resources>

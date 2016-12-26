@@ -30,7 +30,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/spinnerMotoMode"
+        android:layout_below="@+id/editTextSuspendOvertime"
         android:text="@string/text_click_enable" />
 
     <CheckBox
@@ -181,5 +181,23 @@
         android:layout_alignLeft="@+id/checkBoxFactoryMode"
         android:layout_below="@+id/checkBoxFactoryMode"
         android:text="@string/text_key_lock" />
+
+    <Button
+        android:id="@+id/buttonSuspendOvertime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/editTextSuspendOvertime"
+        android:layout_alignParentRight="true"
+        android:text="@string/suspend_overtime_setting" />
+
+    <EditText
+        android:id="@+id/editTextSuspendOvertime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/spinnerMotoMode"
+        android:layout_toLeftOf="@+id/buttonSuspendOvertime"
+        android:ems="10"
+        android:inputType="number" />
 
 </RelativeLayout>
