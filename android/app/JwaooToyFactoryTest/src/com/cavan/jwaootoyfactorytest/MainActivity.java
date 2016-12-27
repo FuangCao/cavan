@@ -68,6 +68,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		new GsensorTestFragment(2),
 		new LedTestFragment(3),
 		new ChargeTestFragment(5),
+		new SuspendTestFragment(7),
 	};
 
 	public void setTestItem(int item) {
@@ -909,6 +910,39 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 			mBleToy.setMotoMode(JwaooBleToy.MOTO_MODE_IDLE, 0);
 
 			super.onStop();
+		}
+	}
+
+	public class SuspendTestFragment extends TestItemFragment implements OnClickListener {
+
+		private Button mButtonIntoSuspend;
+
+		public SuspendTestFragment(int index) {
+			super(index);
+		}
+
+		@Override
+		protected int getNameResource() {
+			return R.string.test_item_suspend;
+		}
+
+		@Override
+		protected int getLayoutResource() {
+			return R.layout.suspend_test;
+		}
+
+		@Override
+		protected boolean doInitialize() {
+			mButtonIntoSuspend = (Button) findViewById(R.id.buttonIntoSuspend);
+			mButtonIntoSuspend.setOnClickListener(this);
+			return true;
+		}
+
+		@Override
+		public void onClick(View v) {
+			if (mBleToy.setFactoryModeEnable(false) && mBleToy.doShutdown()) {
+				setPassEnable();
+			}
 		}
 	}
 }
