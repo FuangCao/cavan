@@ -1,0 +1,9 @@
+# mysql -ujwaoo -p12345 -h127.0.0.1 teamtalk
+show databases;
+use mysql; # 选择数据库
+show tables;
+DROP USER 'jwaoo'@'%';
+CREATE USER 'jwaoo'@'%' IDENTIFIED BY '12345' # 创建用户
+GRANT ALL ON *.* TO 'jwaoo'@'%' # 不能给其他用户授权
+GRANT ALL ON *.* TO 'jwaoo'@'%' WITH GRANT OPTION # 可以给其他用户授权
+FLUSH PRIVILEGES;

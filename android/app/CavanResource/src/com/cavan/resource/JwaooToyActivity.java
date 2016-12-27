@@ -134,7 +134,7 @@ public class JwaooToyActivity extends Activity implements OnCancelListener, Call
 	public void showScanActivity() {
 		updateUI(false);
 		showProgressDialog(false);
-		CavanBleScanActivity.show(this, JwaooBleToy.BT_NAMES, JwaooBleToy.BT_UUIDS);
+		CavanBleScanActivity.show(this, JwaooBleToy.BT_NAMES); // , JwaooBleToy.BT_UUIDS);
 	}
 
 	public void disconnect() {
