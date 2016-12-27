@@ -941,7 +941,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		@Override
 		public void onClick(View v) {
 			if (mBleToy.setFactoryModeEnable(false) && mBleToy.doShutdown()) {
-				setPassEnable();
+				gotoNextTest(true);
 			}
 		}
 	}
