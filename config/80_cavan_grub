@@ -3,7 +3,6 @@
 FN_INITRD="initrd.lz"
 FN_VMLINUZ="vmlinuz.efi"
 MNT_POINT="/mnt/cavan-grub-iso"
-CAVAN_GRUB_PY="${CAVAN_HOME}/script/python/cavan_grub.py"
 
 function cavan_grub_config_iso()
 {
@@ -57,17 +56,12 @@ EOF
 	done
 }
 
-if [ -f "${CAVAN_GRUB_PY}" ]
-then
-	python "${CAVAN_GRUB_PY}"
-else
-	for dev in /dev/sda[0-9]*
-	do
-		mount ${dev} /mnt/$(basename ${dev})
-	done 2>/dev/null > /dev/null
+for dev in /dev/sda[0-9]*
+do
+	mount ${dev} /mnt/$(basename ${dev})
+done 2>/dev/null > /dev/null
 
-	cat /proc/mounts | awk '/\/dev\/sda/ { print $1 " " $2 }' | while read line
-	do
-		(cavan_grub_build_menu $line)
-	done 2>/dev/null
-fi
+cat /proc/mounts | awk '/\/dev\/sda/ { print $1 " " $2 }' | while read line
+do
+	(cavan_grub_build_menu $line)
+done 2>/dev/null

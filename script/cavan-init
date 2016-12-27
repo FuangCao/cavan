@@ -14,12 +14,15 @@ FILE_CAVAN_SERVICE_CONF="/etc/init/cavan.conf"
 FILE_GIT_DAEMON_CONF="/etc/init/git-daemon.conf"
 FILE_GIT_DAEMON_RUN="/etc/sv/git-daemon/run"
 FILE_GRUB_LINUX="/etc/grub.d/10_linux"
+FILE_GRUB_CAVAN="/etc/grub.d/80_cavan"
 FILE_APP_FEILED="/tmp/cavan-app-failed.txt"
 DIR_SYSTEMD_CONFIG="/etc/systemd/system/multi-user.target.wants"
 DIR_SOURCES_LIST="/etc/apt/sources.list.d"
 
 CAVAN_HOME="/cavan"
 SCRIPT_PATH="${CAVAN_HOME}/script"
+SCRIPT_CAVAN_GRUB="${CAVAN_HOME}/config/80_cavan_grub"
+SCRIPT_CAVAN_GRUB_PY="${CAVAN_HOME}/script/python/cavan_grub.py"
 
 CPAN_PATH="/mnt/sda1"
 DPAN_PATH="/mnt/sda5"
@@ -491,7 +494,19 @@ function config_grub()
 			-e 's/^\s*printf.*\${prepare_\w*_cache}/# &/g' \
 			-i ${FILE_GRUB_LINUX} || return 1
 
-	ln -vsf "${CAVAN_HOME}/config/80_cavan_grub" "/etc/grub.d" || return 1
+	cat > "${FILE_GRUB_CAVAN}" << EOF
+#!/bin/sh
+
+if [ -f "${SCRIPT_CAVAN_GRUB_PY}" ]
+then
+	python "${SCRIPT_CAVAN_GRUB_PY}"
+elif [ -f "${SCRIPT_CAVAN_GRUB}" ]
+then
+	bash "${SCRIPT_CAVAN_GRUB}"
+fi
+EOF
+
+	chmod a+x "${FILE_GRUB_CAVAN}" || return 1
 	update-grub2 || return 1
 
 	return 0
