@@ -293,7 +293,7 @@ function config_single_home()
 
 	cd $1 || return 1
 
-	for dir in Desktop Documents Downloads Music Pictures .stardict .VirtualBox "VirtualBox VMs"
+	for dir in Desktop Documents Downloads Music Pictures .stardict .gradle .VirtualBox "VirtualBox VMs"
 	do
 		cavan-symlink "${UBUNTU_HOME}/${dir}" "${dir}" || return 1
 	done

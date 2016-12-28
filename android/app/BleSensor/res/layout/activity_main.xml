@@ -7,24 +7,18 @@
         android:id="@+id/waveViewX"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="0.25" />
+        android:layout_weight="0.33" />
 
     <com.cavan.android.CavanWaveView
         android:id="@+id/waveViewY"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="0.25" />
+        android:layout_weight="0.33" />
 
     <com.cavan.android.CavanWaveView
         android:id="@+id/waveViewZ"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="0.25" />
-
-    <com.cavan.android.CavanWaveView
-        android:id="@+id/waveViewDepth"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="0.25" />
+        android:layout_weight="0.33" />
 
 </LinearLayout>

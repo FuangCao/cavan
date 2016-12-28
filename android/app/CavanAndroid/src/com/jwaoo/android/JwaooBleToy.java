@@ -128,7 +128,6 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_EVT_UPGRADE_COMPLETE = 5;
 	public static final byte JWAOO_TOY_EVT_MOTO_STATE_CHANGED = 6;
 
-	private int mDepthSteps;
 	private byte mFlashCrc;
 	private int mDeviceId;
 	private String mDeviceName;
@@ -709,7 +708,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	}
 
 	public int getDepthSteps() {
-		return mDepthSteps;
+		return mSensor.getCapacityValueCount();
 	}
 
 	public boolean getKeyLockState() {
@@ -822,22 +821,18 @@ public class JwaooBleToy extends CavanBleGatt {
 			mSensor = new JwaooToySensorK100();
 			mDeviceName = DEVICE_NAME_K100;
 			mDeviceId = DEVICE_ID_K100;
-			mDepthSteps = 4;
 		} else if (identify.equals(DEVICE_NAME_K101)) {
 			mSensor = new JwaooToySensorK101();
 			mDeviceName = DEVICE_NAME_K101;
 			mDeviceId = DEVICE_ID_K101;
-			mDepthSteps = 3;
 		} else if (identify.equals(DEVICE_NAME_MODEL06)) {
-			mSensor = new JwaooToySensorK101();
+			mSensor = new JwaooToySensorModel06();
 			mDeviceName = DEVICE_NAME_MODEL06;
 			mDeviceId = DEVICE_ID_MODEL06;
-			mDepthSteps = 3;
 		} else if (identify.equals(DEVICE_NAME_MODEL10)) {
-			mSensor = new JwaooToySensorK101();
+			mSensor = new JwaooToySensorModel10();
 			mDeviceName = DEVICE_NAME_MODEL10;
 			mDeviceId = DEVICE_ID_MODEL10;
-			mDepthSteps = 3;
 		} else {
 			CavanAndroid.eLog("Invalid identify");
 			return false;

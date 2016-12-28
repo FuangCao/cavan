@@ -7,14 +7,12 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanWaveView;
 import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
-import com.jwaoo.android.JwaooToySensor;
 
 public class MainActivity extends JwaooToyActivity {
 
 	private CavanWaveView mWaveViewX;
 	private CavanWaveView mWaveViewY;
 	private CavanWaveView mWaveViewZ;
-	private CavanWaveView mWaveViewDepth;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -34,10 +32,6 @@ public class MainActivity extends JwaooToyActivity {
 		mWaveViewZ = (CavanWaveView) findViewById(R.id.waveViewZ);
 		mWaveViewZ.setValueRange(-19.6, 19.6);
 		mWaveViewZ.setZoom(3);
-
-		mWaveViewDepth = (CavanWaveView) findViewById(R.id.waveViewDepth);
-		mWaveViewDepth.setValueRange(JwaooToySensor.CAPACITY_MIN, JwaooToySensor.CAPACITY_MAX);
-		mWaveViewDepth.setZoom(3);
 
 		showScanActivity();
 	}
