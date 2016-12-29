@@ -51,6 +51,7 @@
             // 
             this.textBoxFirmware.Location = new System.Drawing.Point(87, 400);
             this.textBoxFirmware.Name = "textBoxFirmware";
+            this.textBoxFirmware.ReadOnly = true;
             this.textBoxFirmware.Size = new System.Drawing.Size(269, 21);
             this.textBoxFirmware.TabIndex = 1;
             // 
@@ -104,8 +105,7 @@
             // 
             // openFileDialogFirmware
             // 
-            this.openFileDialogFirmware.FileName = "jwaoo-toy.hex";
-            this.openFileDialogFirmware.Filter = "固件文件|*.hex";
+            this.openFileDialogFirmware.Filter = "固件文件|JwaooFwModel*.hex";
             this.openFileDialogFirmware.Title = "选择固件文件";
             // 
             // openFileDialogSmartSnippets
@@ -169,7 +169,7 @@
             this.Controls.Add(this.textBoxFirmware);
             this.Controls.Add(this.label1);
             this.Name = "Programmer";
-            this.Text = "Form1";
+            this.Text = "井蛙蓝牙烧录器";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Programmer_FormClosed);
             this.ResumeLayout(false);
             this.PerformLayout();

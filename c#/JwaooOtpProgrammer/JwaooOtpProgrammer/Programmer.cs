@@ -20,15 +20,20 @@ namespace JwaooOtpProgrammer {
         private static String sFileOtpHeaderBin = Path.Combine(Application.LocalUserAppDataPath, "otp_header.bin");
         private static String sFileOtpFirmwareBin = Path.Combine(Application.LocalUserAppDataPath, "otp_firmware.bin");
 
-        private static String sFileBdAddrTxt = Path.Combine(Application.StartupPath, "mac.txt");
         private static String sFileProgrammerBin = Path.Combine(Application.StartupPath, "jtag_programmer.bin");
         private static String[] sOtpCommandArgs = { "-type", "otp", "-chip", "DA14580-01", "-jtag", "123456", "-baudrate", "57600" };
 
         private static byte[] sOtpBootMagic = { 0xA5, 0xA5, 0x34, 0x12, 0x34, 0x12, 0xA5, 0xA5 };
 
-        private UInt64 mBdAddress;
         private String mFileSmartSnippetsExe;
         private FileStream mFileStreamLog;
+        private MacAddressManager mMacAddressManager;
+        private UInt64 mBdAddress;
+
+        private MacAddressManager[] mMacAddressManagers = {
+            new MacAddressManager("JwaooMacModel06.txt", "JwaooFwModel06", 0x88EA00000000),
+            new MacAddressManager("JwaooMacModel10.txt", "JwaooFwModel10", 0x88EB00000000),
+        };
 
         delegate void Process_OutputDataReceivedDelegate(object sender, DataReceivedEventArgs e);
 
@@ -40,7 +45,6 @@ namespace JwaooOtpProgrammer {
             mFileStreamLog = File.Open(Path.Combine(Application.StartupPath, "log.txt"), FileMode.Append, FileAccess.Write, FileShare.Read);
             openFileDialogFirmware.InitialDirectory = Application.StartupPath;
             openFileDialogSmartSnippets.InitialDirectory = Application.StartupPath;
-            setBdAddress(readBdAddressFile());
         }
 
         private void Programmer_FormClosed(object sender, FormClosedEventArgs e) {
@@ -52,15 +56,37 @@ namespace JwaooOtpProgrammer {
             saveConfigFile();
         }
 
+        private MacAddressManager getMacAddressManager(String pathname) {
+            String name = Path.GetFileName(pathname);
+
+            foreach (MacAddressManager manager in mMacAddressManagers) {
+                if (name.StartsWith(manager.FwPrefix)) {
+                    return manager;
+                }
+            }
+
+            return null;
+        }
+
+        private bool setFwFilePath(String pathname) {
+            MacAddressManager manager = getMacAddressManager(pathname);
+            if (manager == null) {
+                MessageBox.Show("固件文件名不正确，请重新选择！");
+                return false;
+            }
+
+            mMacAddressManager = manager;
+            setBdAddress(manager.readFromFile());
+
+            textBoxFirmware.Text = pathname;
+
+            return true;
+        }
+
         public void loadConfigFile() {
             String pathname = ConfigurationManager.AppSettings[KEY_FIRMWARE_PATH];
             if (File.Exists(pathname)) {
-                textBoxFirmware.Text = pathname;
-            } else {
-                pathname = Path.Combine(Application.StartupPath, "jwaoo-toy.hex");
-                if (File.Exists(pathname)) {
-                    textBoxFirmware.Text = pathname;
-                }
+                setFwFilePath(pathname);
             }
 
             pathname = ConfigurationManager.AppSettings[KEY_SMATR_SNIPPETS_PATH];
@@ -123,143 +149,7 @@ namespace JwaooOtpProgrammer {
 
         private void setBdAddress(UInt64 addr) {
             mBdAddress = addr;
-            textBoxBdAddressNext.Text = getBdAddressString(addr);
-        }
-
-        private bool addBdAddress() {
-            UInt64 addr = mBdAddress + 1;
-
-            if (writeBdAddressFile(addr)) {
-                setBdAddress(addr);
-                return true;
-            }
-
-            return false;
-        }
-
-        private String getBdAddressString(UInt64 value) {
-            StringBuilder builder = new StringBuilder();
-
-            for (int offset = 40; offset >= 0; offset -= 8) {
-                builder.Append(valueToChar((int) ((value >> (offset + 4)) & 0x0F)));
-                builder.Append(valueToChar((int) ((value >> offset) & 0x0F)));
-
-                if (offset > 0) {
-                    builder.Append(':');
-                }
-            }
-
-            return builder.ToString();
-        }
-
-        private String getBdAddressString(byte[] bytes, int offset) {
-            StringBuilder builder = new StringBuilder();
-
-            for (int i = offset + 5; i >= offset; i--) {
-                byte value = bytes[i];
-                builder.Append(valueToChar((value >> 4) & 0x0F));
-                builder.Append(valueToChar(value & 0x0F));
-
-                if (i > offset) {
-                    builder.Append(':');
-                }
-            }
-
-            return builder.ToString();
-        }
-
-        private UInt64 getBdAddressValue(String text) {
-            if (text == null) {
-                return 0;
-            }
-
-            String[] texts = text.Split(':', '-');
-            if (texts.Length != 6) {
-                return 0;
-            }
-
-            UInt64 value = 0;
-
-            try {
-                foreach (String node in texts) {
-                    if (node.Length != 2) {
-                        return 0;
-                    }
-
-                    value = (value << 8) | Convert.ToByte(node, 16);
-                }
-            } catch {
-                return 0;
-            }
-
-            return value;
-        }
-
-        private byte[] getBdAddressBytes(UInt64 addr) {
-            byte[] bytes = new byte[6];
-
-            for (int i = bytes.Length - 1; i >= 0;  i--) {
-                bytes[i] = (byte)(addr >> (i * 8));
-            }
-
-            return bytes;
-        }
-
-        private UInt64 readBdAddressFile() {
-            FileStream stream = null;
-
-            try {
-                stream = File.OpenRead(sFileBdAddrTxt);
-
-                byte[] buff = new byte[32];
-                int length = stream.Read(buff, 0, buff.Length);
-                String text = Encoding.ASCII.GetString(buff, 0, length);
-                UInt64 addr = getBdAddressValue(text);
-                if (addr != 0) {
-                    return addr;
-                }
-
-                if (text.Length > 0) {
-                    MessageBox.Show("MAC地址文件：" + sFileBdAddrTxt + "\r\n格式错误：" + text);
-                } else {
-                    MessageBox.Show("MAC地址文件为空：" + sFileBdAddrTxt);
-                }
-            } catch (FileNotFoundException) {
-                UInt64 addr = 0x88EA00000000;
-                writeBdAddressFile(addr);
-                return addr;
-            } catch (Exception e) {
-                MessageBox.Show("读取MAC地址文件失败：\r\n" + e);
-            } finally {
-                if (stream != null) {
-                    stream.Close();
-                }
-            }
-
-            return 0;
-        }
-
-        private bool writeBdAddressFile(UInt64 addr) {
-            String text = getBdAddressString(addr);
-            if (text == null) {
-                return false;
-            }
-
-            byte[] bytes = Encoding.ASCII.GetBytes(text);
-
-            FileStream stream = null;
-
-            try {
-                stream = File.OpenWrite(sFileBdAddrTxt);
-                stream.Write(bytes, 0, bytes.Length);
-                return true;
-            } catch (Exception) {
-                return false;
-            } finally {
-                if (stream != null) {
-                    stream.Close();
-                }
-            }
+            textBoxBdAddressNext.Text = MacAddressManager.getBdAddressString(addr);
         }
 
         private String findSmartSnippetsPath() {
@@ -317,10 +207,16 @@ namespace JwaooOtpProgrammer {
             runner.addArguments(sOtpCommandArgs);
 
             if (withFirmware) {
+                if (!File.Exists(sFileProgrammerBin)) {
+                    MessageBox.Show("找不到文件：" + sFileProgrammerBin);
+                    return null;
+                }
+
                 runner.addArguments("-firmware", sFileProgrammerBin);
             }
 
             runner.addArguments(args);
+
             return doRunCommand(runner);
         }
 
@@ -339,7 +235,7 @@ namespace JwaooOtpProgrammer {
             return line.StartsWith("Burned");
         }
 
-        private char valueToChar(int value) {
+        public static char valueToChar(int value) {
             if (value < 10) {
                 return (char)('0' + value);
             } else {
@@ -362,17 +258,28 @@ namespace JwaooOtpProgrammer {
             return writeOtpData(offset, getBytesHexString(data));
         }
 
+        public bool addBdAddress() {
+            UInt64 addr = mBdAddress + 1;
+
+            if (mMacAddressManager != null && mMacAddressManager.writeToFile(addr)) {
+                setBdAddress(addr);
+                return true;
+            }
+
+            return false;
+        }
+
         private bool writeBdAddress() {
             if (mBdAddress == 0) {
                 return false;
             }
 
-            byte[] bytes = getBdAddressBytes(mBdAddress);
+            byte[] bytes = MacAddressManager.getBdAddressBytes(mBdAddress);
             if (!writeOtpData("0x7FD4", bytes)) {
                 return false;
             }
 
-            textBoxBdAddressCurrent.Text = getBdAddressString(bytes, 0);
+            textBoxBdAddressCurrent.Text = MacAddressManager.getBdAddressString(bytes, 0);
 
             return addBdAddress();
         }
@@ -463,6 +370,16 @@ namespace JwaooOtpProgrammer {
         }
 
         private bool burnOtpFirmwareAll(String pathname) {
+            if (mMacAddressManager == null) {
+                MessageBox.Show("请选择正确的固件文件：" + pathname);
+                return false;
+            }
+
+            if (mMacAddressManager.isInvalidAddress(mBdAddress)) {
+                MessageBox.Show("MAC地址配置文件错误，应该类似：" + MacAddressManager.getBdAddressString(mMacAddressManager.StartValue));
+                return false;
+            }
+
             byte[] bytes = readOtpFirmware();
             if (bytes == null) {
                 MessageBox.Show("读取固件失败");
@@ -471,7 +388,7 @@ namespace JwaooOtpProgrammer {
 
             appendLog("成功");
 
-            textBoxBdAddressCurrent.Text = getBdAddressString(bytes, 0x7FD4);
+            textBoxBdAddressCurrent.Text = MacAddressManager.getBdAddressString(bytes, 0x7FD4);
 
             if (isMemoryEmpty(bytes, 0, 0x7F00)) {
                 if (!writeOtpFirmware(pathname)) {
@@ -516,7 +433,7 @@ namespace JwaooOtpProgrammer {
 
         private void buttonFirmware_Click(object sender, EventArgs e) {
             if (openFileDialogFirmware.ShowDialog() == DialogResult.OK) {
-                textBoxFirmware.Text = openFileDialogFirmware.FileName;
+                setFwFilePath(openFileDialogFirmware.FileName);
             }
         }
 
@@ -528,7 +445,7 @@ namespace JwaooOtpProgrammer {
             if (bytes != null) {
                 MessageBox.Show("连接成功");
                 appendLog("连接成功");
-                textBoxBdAddressCurrent.Text = getBdAddressString(bytes, 0xD4);
+                textBoxBdAddressCurrent.Text = MacAddressManager.getBdAddressString(bytes, 0xD4);
                 buttonConnect.Enabled = true;
                 buttonBurn.Enabled = true;
             } else {
@@ -732,6 +649,174 @@ namespace JwaooOtpProgrammer {
                 mOutLines.Add(e.Data);
                 mProgrammer.writeLog(e.Data);
             }
+        }
+    }
+
+    public class MacAddressManager {
+
+        private String mFilePath;
+        private String mFwPrefix;
+        private UInt64 mStartValue;
+
+        public MacAddressManager(String fileName, String fwPrefix, UInt64 startValue) {
+            mFilePath = Path.Combine(Application.StartupPath, fileName);
+            mFwPrefix = fwPrefix;
+            mStartValue = startValue;
+        }
+
+        public String FilePath {
+            get {
+                return mFilePath;
+            }
+
+            set {
+                mFilePath = value;
+            }
+        }
+
+        public String FwPrefix {
+            get {
+                return mFwPrefix;
+            }
+
+            set {
+                mFwPrefix = value;
+            }
+        }
+
+        public UInt64 StartValue {
+            get {
+                return mStartValue;
+            }
+        }
+
+        public bool isInvalidAddress(UInt64 address) {
+            return (address & 0xFFFF00000000) != mStartValue;
+        }
+
+        public UInt64 readFromFile() {
+            FileStream stream = null;
+
+            try {
+                stream = File.OpenRead(mFilePath);
+
+                byte[] buff = new byte[32];
+                int length = stream.Read(buff, 0, buff.Length);
+                String text = Encoding.ASCII.GetString(buff, 0, length);
+                UInt64 addr = getBdAddressValue(text);
+                if (addr != 0) {
+                    return addr;
+                }
+
+                if (text.Length > 0) {
+                    MessageBox.Show("MAC地址文件：" + mFilePath + "\r\n格式错误：" + text);
+                } else {
+                    MessageBox.Show("MAC地址文件为空：" + mFilePath);
+                }
+            } catch (FileNotFoundException) {
+                UInt64 addr = mStartValue;
+                writeToFile(addr);
+                return addr;
+            } catch (Exception e) {
+                MessageBox.Show("读取MAC地址文件失败：\r\n" + e);
+            } finally {
+                if (stream != null) {
+                    stream.Close();
+                }
+            }
+
+            return 0;
+        }
+
+        public bool writeToFile(UInt64 addr) {
+            String text = getBdAddressString(addr);
+            if (text == null) {
+                return false;
+            }
+
+            byte[] bytes = Encoding.ASCII.GetBytes(text);
+
+            FileStream stream = null;
+
+            try {
+                stream = File.OpenWrite(mFilePath);
+                stream.Write(bytes, 0, bytes.Length);
+                return true;
+            } catch (Exception) {
+                return false;
+            } finally {
+                if (stream != null) {
+                    stream.Close();
+                }
+            }
+        }
+
+        public static String getBdAddressString(UInt64 value) {
+            StringBuilder builder = new StringBuilder();
+
+            for (int offset = 40; offset >= 0; offset -= 8) {
+                builder.Append(Programmer.valueToChar((int)((value >> (offset + 4)) & 0x0F)));
+                builder.Append(Programmer.valueToChar((int)((value >> offset) & 0x0F)));
+
+                if (offset > 0) {
+                    builder.Append(':');
+                }
+            }
+
+            return builder.ToString();
+        }
+
+        public static String getBdAddressString(byte[] bytes, int offset) {
+            StringBuilder builder = new StringBuilder();
+
+            for (int i = offset + 5; i >= offset; i--) {
+                byte value = bytes[i];
+                builder.Append(Programmer.valueToChar((value >> 4) & 0x0F));
+                builder.Append(Programmer.valueToChar(value & 0x0F));
+
+                if (i > offset) {
+                    builder.Append(':');
+                }
+            }
+
+            return builder.ToString();
+        }
+
+        public static UInt64 getBdAddressValue(String text) {
+            if (text == null) {
+                return 0;
+            }
+
+            String[] texts = text.Split(':', '-');
+            if (texts.Length != 6) {
+                return 0;
+            }
+
+            UInt64 value = 0;
+
+            try {
+                foreach (String node in texts) {
+                    if (node.Length != 2) {
+                        return 0;
+                    }
+
+                    value = (value << 8) | Convert.ToByte(node, 16);
+                }
+            } catch {
+                return 0;
+            }
+
+            return value;
+        }
+
+        public static byte[] getBdAddressBytes(UInt64 addr) {
+            byte[] bytes = new byte[6];
+
+            for (int i = bytes.Length - 1; i >= 0; i--) {
+                bytes[i] = (byte)(addr >> (i * 8));
+            }
+
+            return bytes;
         }
     }
 }
