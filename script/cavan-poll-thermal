@@ -1,0 +1,9 @@
+#!/bin/bash
+
+FILES=$(find /sys/devices/virtual/thermal -type f -name temp)
+
+while :
+do
+	cat ${FILES}
+	sleep 0.5
+done
