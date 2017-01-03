@@ -15,9 +15,10 @@
 #import "JwaooToyResponse.h"
 #import "CavanProgressManager.h"
 
-#define JWAOO_TOY_ID_DEFAULT          @"JwaooToy"
-#define JWAOO_TOY_ID_K100             @"K100"
-#define JWAOO_TOY_ID_MODEL6           @"MODEL-06"
+#define JWAOO_TOY_NAME_DEFAULT          @"JwaooToy"
+#define JWAOO_TOY_NAME_K100             @"K100"
+#define JWAOO_TOY_NAME_MODEL06          @"MODEL-06"
+#define JWAOO_TOY_NAME_MODEL10          @"MODEL-10"
 
 #define JWAOO_TOY_UUID_SERVICE      [CBUUID UUIDWithString:@"1888"]
 #define JWAOO_TOY_UUID_COMMAND      [CBUUID UUIDWithString:@"1889"]
@@ -37,6 +38,12 @@
 
 #define JWAOO_TOY_LED_BATT          1
 #define JWAOO_TOY_LED_BT            2
+
+typedef NS_ENUM(NSUInteger, JwaooToyDeviceId) {
+    JWAOO_TOY_DEVICE_ID_COMMON,
+    JWAOO_TOY_DEVICE_ID_MODEL06,
+    JWAOO_TOY_DEVICE_ID_MODEL10,
+};
 
 @class JwaooBleToy;
 
@@ -84,10 +91,11 @@
 
     BOOL mUpgradeBusy;
     uint8_t mFlashCrc;
-    uint8_t mDeviceId;
+    JwaooToyDeviceId mDeviceId;
 }
 
 @property (readonly, nonnull) CavanAccelSensor *sensor;
+@property (readonly) JwaooToyDeviceId deviceId;
 
 - (nonnull JwaooBleToy *)initWithDelegate:(nullable id<JwaooBleToyDelegate>)delegate;
 

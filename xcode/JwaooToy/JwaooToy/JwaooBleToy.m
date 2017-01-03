@@ -10,6 +10,7 @@
 #import "CavanHexFile.h"
 #import "JwaooToySensorDefault.h"
 #import "JwaooToySensorModel6.h"
+#import "JwaooToySensorModel10.h"
 
 @implementation JwaooToyMotoMode
 
@@ -35,9 +36,10 @@
 @implementation JwaooBleToy
 
 @synthesize sensor = mSensor;
+@synthesize deviceId = mDeviceId;
 
 - (JwaooBleToy *)initWithDelegate:(id<JwaooBleToyDelegate>)delegate {
-    if (self = [super initWithNames:@[@"JwaooToy", @"SenseTube"] uuid:JWAOO_TOY_UUID_SERVICE]) {
+    if (self = [super initWithNames:@[@"JwaooToy", @"SenseTube", @"SenseBand"] uuid:JWAOO_TOY_UUID_SERVICE]) {
         mDelegate = delegate;
     }
 
@@ -195,12 +197,18 @@
 
     NSLog(@"identify = %@", identify);
 
-    if ([identify isEqualToString:JWAOO_TOY_ID_DEFAULT]) {
+    if ([identify isEqualToString:JWAOO_TOY_NAME_DEFAULT]) {
+        mDeviceId = JWAOO_TOY_DEVICE_ID_COMMON;
         mSensor = [JwaooToySensorDefault new];
-    } else if ([identify isEqualToString:JWAOO_TOY_ID_K100]) {
+    } else if ([identify isEqualToString:JWAOO_TOY_NAME_K100]) {
+        mDeviceId = JWAOO_TOY_DEVICE_ID_COMMON;
         mSensor = [JwaooToySensorDefault new];
-    } else if ([identify isEqualToString:JWAOO_TOY_ID_MODEL6]) {
+    } else if ([identify isEqualToString:JWAOO_TOY_NAME_MODEL06]) {
+        mDeviceId = JWAOO_TOY_DEVICE_ID_MODEL06;
         mSensor = [JwaooToySensorModel6 new];
+    } else if ([identify isEqualToString:JWAOO_TOY_NAME_MODEL10]) {
+        mDeviceId = JWAOO_TOY_DEVICE_ID_MODEL10;
+        mSensor = [JwaooToySensorModel10 new];
     } else {
         NSLog(@"Invalid identify");
         return false;
