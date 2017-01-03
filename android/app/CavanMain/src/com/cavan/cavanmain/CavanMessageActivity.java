@@ -12,7 +12,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.ContentObserver;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -254,7 +253,7 @@ public class CavanMessageActivity extends Activity {
 			View view = getLayoutInflater().inflate(R.layout.message_filter, null);
 
 			mCheckBoxSelectAll = (CheckBox) view.findViewById(R.id.checkBoxSelectAll);
-			mCheckBoxSelectAll.setTextColor(Color.WHITE);
+			// mCheckBoxSelectAll.setTextColor(Color.WHITE);
 			mCheckBoxSelectAll.setOnCheckedChangeListener(this);
 
 			mButtonAdd = (Button) view.findViewById(R.id.buttonAdd);
@@ -336,7 +335,7 @@ public class CavanMessageActivity extends Activity {
 		public CavanFilterView(Context context, CavanFilter filter) {
 			super(context);
 
-			setTextColor(Color.WHITE);
+			// setTextColor(Color.WHITE);
 			setFilter(filter);
 
 			setOnCheckedChangeListener(this);

@@ -372,6 +372,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 			return false;
 		}
 
+		node.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+
 		String text = CavanString.fromCharSequence(node.getText());
 		boolean changed = !text.equals(code.getCode());
 
