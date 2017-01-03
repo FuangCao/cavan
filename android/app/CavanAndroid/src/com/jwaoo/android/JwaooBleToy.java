@@ -845,7 +845,7 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public static class JwaooToyAppSettings {
 
-		public static final int RESPONSE_LENGTH = 12;
+		public static final int COMMAND_LENGTH = 11;
 
 		private int mSuspendDelay;
 		private int mShutdownVoltage;
@@ -856,10 +856,6 @@ public class JwaooBleToy extends CavanBleGatt {
 		private int mMotoSpeedMin;
 
 		private static JwaooToyAppSettings getInstance(byte[] response) {
-			if (response.length != RESPONSE_LENGTH) {
-				return null;
-			}
-
 			return new JwaooToyAppSettings(response);
 		}
 
@@ -877,7 +873,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		public byte[] buildCommand() {
-			CavanByteCache cache = new CavanByteCache(RESPONSE_LENGTH - 1);
+			CavanByteCache cache = new CavanByteCache(COMMAND_LENGTH);
 			cache.writeValue8(JWAOO_TOY_CMD_APP_SETTINGS);
 			cache.writeValue16((short) mSuspendDelay);
 			cache.writeValue16((short) mShutdownVoltage);
@@ -950,19 +946,16 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public static class JwaooToyKeySettings {
 
-		public static final int RESPONSE_LENGTH = 9;
+		public static final int COMMAND_LENGTH = 10;
 
 		private boolean mClickEnable;
 		private boolean mMultiClickEnable;
 		private int mMultiClickDelay;
 		private boolean mLongClickEnable;
 		private int mLongClickDelay;
+		private int mLedBlinkDelay;
 
 		private static JwaooToyKeySettings getInstance(byte[] response) {
-			if (response.length != RESPONSE_LENGTH) {
-				return null;
-			}
-
 			return new JwaooToyKeySettings(response);
 		}
 
@@ -975,16 +968,18 @@ public class JwaooBleToy extends CavanBleGatt {
 			mMultiClickDelay = cache.readValue16();
 			mLongClickEnable = cache.readBool();
 			mLongClickDelay = cache.readValue16();
+			mLedBlinkDelay = cache.readValue16();
 		}
 
 		public byte[] buildCommand() {
-			CavanByteCache cache = new CavanByteCache(RESPONSE_LENGTH - 1);
+			CavanByteCache cache = new CavanByteCache(COMMAND_LENGTH);
 			cache.writeValue8(JWAOO_TOY_CMD_KEY_SETTINGS);
 			cache.writeBool(mClickEnable);
 			cache.writeBool(mMultiClickEnable);
 			cache.writeValue16((short) mMultiClickDelay);
 			cache.writeBool(mLongClickEnable);
 			cache.writeValue16((short) mLongClickDelay);
+			cache.writeValue16((short) mLedBlinkDelay);
 			return cache.getBytes();
 		}
 
@@ -1044,6 +1039,14 @@ public class JwaooBleToy extends CavanBleGatt {
 			return ble.writeKeySettings(this);
 		}
 
+		public void setLedBlinkDelay(int delay) {
+			mLedBlinkDelay = delay;
+		}
+
+		public int getLedBlinkDelay() {
+			return mLedBlinkDelay;
+		}
+
 		@Override
 		public String toString() {
 			StringBuilder builder = new StringBuilder();
@@ -1058,6 +1061,8 @@ public class JwaooBleToy extends CavanBleGatt {
 			builder.append(mLongClickEnable);
 			builder.append(", long_click_delay: ");
 			builder.append(mLongClickDelay);
+			builder.append(", blink_delay: ");
+			builder.append(mLedBlinkDelay);
 
 			return builder.toString();
 		}
