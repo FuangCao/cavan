@@ -630,6 +630,10 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 
 	@Override
 	protected boolean onKeyEvent(KeyEvent event) {
+		if (mXiuXiu) {
+			return false;
+		}
+
 		switch (event.getKeyCode()) {
 		case KeyEvent.KEYCODE_VOLUME_UP:
 		case KeyEvent.KEYCODE_VOLUME_DOWN:
