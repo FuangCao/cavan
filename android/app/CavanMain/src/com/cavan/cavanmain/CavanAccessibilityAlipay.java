@@ -31,6 +31,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 	private RedPacketCode mCode;
 	private String mInputtedCode;
 	private long mDelay;
+	private boolean mXiuXiu;
 	private boolean mAutoOpenAlipay;
 	private LinkedList<RedPacketCode> mCodes = new LinkedList<RedPacketCode>();
 
@@ -87,7 +88,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 	}
 
 	private boolean performBackAction(AccessibilityNodeInfo root, String backViewId, boolean force) {
-		if (mCodeCount <= 0) {
+		if (mCodeCount <= 0 && mXiuXiu == false) {
 			return false;
 		}
 
@@ -130,6 +131,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 	}
 
 	private boolean postRedPacketCode(RedPacketCode code, AccessibilityNodeInfo root) {
+		CavanAndroid.dLog("xiuxiu = " + mXiuXiu);
 		CavanAndroid.dLog("count = " + mCodeCount + ", code = " + code);
 
 		switch (mClassName) {
@@ -220,6 +222,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 						mCode.updateRepeatTime(mService);
 					}
 				}
+			} else if (mXiuXiu) {
+				startAutoCommitRedPacketCode(3000);
 			}
 
 			long time = getWindowTimeConsume();
@@ -240,6 +244,10 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 			if (mCode != null) {
 				mCode.setPostPending(false);
 			}
+			break;
+
+		case "com.alipay.mobile.xiuxiu.ui.MainActivity":
+			startXiuXiu(root);
 			break;
 
 		default:
@@ -453,6 +461,19 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 		return false;
 	}
 
+	private boolean startXiuXiu(AccessibilityNodeInfo root) {
+		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId("com.alipay.mobile.xiuxiu:id/button1");
+		if (nodes == null || nodes.isEmpty()) {
+			return false;
+		}
+
+		for (AccessibilityNodeInfo node : nodes) {
+			node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+		}
+
+		return true;
+	}
+
 	public void removeCodeAll() {
 		mCodes.clear();
 	}
@@ -572,9 +593,21 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 				mCode.setValid();
 				break;
 			}
-		} else if (mInputtedCode != null && mClassName.equals("com.alipay.mobile.framework.app.ui.DialogHelper$APGenericProgressDialog")) {
-			RedPacketCode node = RedPacketCode.getInstence(mInputtedCode, 0, true, false, true);
-			mCode = node;
+		} else {
+			switch (mClassName) {
+			case "com.alipay.mobile.xiuxiu.ui.MainActivity":
+				mXiuXiu = true;
+			case "com.alipay.mobile.nebulacore.ui.H5Activity":
+				break;
+
+			case "com.alipay.mobile.framework.app.ui.DialogHelper$APGenericProgressDialog":
+				if (mInputtedCode != null) {
+					RedPacketCode node = RedPacketCode.getInstence(mInputtedCode, 0, true, false, true);
+					mCode = node;
+				}
+			default:
+				mXiuXiu = false;
+			}
 		}
 
 		startAutoCommitRedPacketCode(500);
