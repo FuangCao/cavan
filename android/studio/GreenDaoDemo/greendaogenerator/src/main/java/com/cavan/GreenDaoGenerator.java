@@ -13,7 +13,8 @@ public class GreenDaoGenerator {
 
     public GreenDaoGenerator(String outDir) {
         mOutDir = new File(outDir);
-        mSchema = new Schema(0, "com.cavan.greendao");
+        mSchema = new Schema(1, "com.cavan.greendao");
+        mSchema.enableKeepSectionsByDefault();
     }
 
     private void addEntities() {
