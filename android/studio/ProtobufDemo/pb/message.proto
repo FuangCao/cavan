@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+option java_package = "com.cavan.pb";
+option java_outer_classname = "TestMessage";
+
+message Message {
+	required uint32 id = 1;
+	required uint32 from_user = 2;
+	required uint32 to_user = 3;
+	optional string content = 20;
+}
