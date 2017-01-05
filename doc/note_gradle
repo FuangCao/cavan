@@ -1,0 +1,9 @@
+配置gradle有时会用一些路径相关的环境变量，常用的几个定义如下:
+projectDir
+	The directory containing the project build file.
+
+rootDir
+	The root directory of this project. The root directory is the project directory of the root project.
+
+buildDir
+	The build directory of this project. The build directory is the directory which all artifacts are generated into. The default value for the build directory is projectDir/build
