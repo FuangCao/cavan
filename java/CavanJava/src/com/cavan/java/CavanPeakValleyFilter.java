@@ -1,6 +1,7 @@
 package com.cavan.java;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 public class CavanPeakValleyFilter extends CavanPeakValleyFinder {
 
@@ -10,8 +11,8 @@ public class CavanPeakValleyFilter extends CavanPeakValleyFinder {
 	private CavanPeakValleyValue mRiseNode;
 	private CavanPeakValleyValue mFallNode;
 
-	protected ArrayList<CavanPeakValleyValue> mRiseNodes = new ArrayList<CavanPeakValleyValue>();
-	protected ArrayList<CavanPeakValleyValue> mFallNodes = new ArrayList<CavanPeakValleyValue>();
+	protected List<CavanPeakValleyValue> mRiseNodes = new LinkedList<CavanPeakValleyValue>();
+	protected List<CavanPeakValleyValue> mFallNodes = new LinkedList<CavanPeakValleyValue>();
 
 	public CavanPeakValleyFilter(double fuzz, long overtime) {
 		mValueFuzz = fuzz;
@@ -26,7 +27,7 @@ public class CavanPeakValleyFilter extends CavanPeakValleyFinder {
 		mOverTime = time;
 	}
 
-	private void addNode(ArrayList<CavanPeakValleyValue> nodes, CavanPeakValleyValue node) {
+	private void addNode(List<CavanPeakValleyValue> nodes, CavanPeakValleyValue node) {
 		nodes.add(node);
 
 		long time = node.getTime();
@@ -36,7 +37,7 @@ public class CavanPeakValleyFilter extends CavanPeakValleyFinder {
 		}
 	}
 
-	public CavanRangeValue getExtremeValue(ArrayList<CavanPeakValleyValue> nodes) {
+	public CavanRangeValue getExtremeValue(List<CavanPeakValleyValue> nodes) {
 		double min, max;
 		CavanPeakValleyValue node;
 

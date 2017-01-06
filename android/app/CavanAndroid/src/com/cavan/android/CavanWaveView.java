@@ -1,6 +1,6 @@
 package com.cavan.android;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import android.content.Context;
@@ -18,7 +18,7 @@ public class CavanWaveView extends View {
 	private int mZoom = 1;
 	private double mValueMin;
 	private double mValueRange;
-	private List<Integer> mPoints = new ArrayList<Integer>();
+	private List<Integer> mPoints = new LinkedList<Integer>();
 
 	public CavanWaveView(Context context) {
 		super(context);

@@ -324,6 +324,10 @@ public class CavanBleGatt {
 		return mConnected;
 	}
 
+	synchronized public boolean isConnectEnabled() {
+		return mConnEnable;
+	}
+
 	public static String getPropertyName(int property) {
 		switch (property) {
 		case BluetoothGattCharacteristic.PROPERTY_BROADCAST:

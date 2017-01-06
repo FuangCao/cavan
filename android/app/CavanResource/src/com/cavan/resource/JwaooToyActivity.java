@@ -26,10 +26,16 @@ public class JwaooToyActivity extends Activity implements OnCancelListener, Call
 
 	public static final int SENSOR_DELAY = 30;
 
+	private boolean mUserCancel;
+
 	protected JwaooBleToy mBleToy;
 	protected ProgressDialog mProgressDialog;
 	protected Handler mHandler = new Handler(this);
 	protected List<View> mListViews = new ArrayList<View>();
+
+	public boolean isUserCanceled() {
+		return mUserCancel;
+	}
 
 	@Override
 	public boolean handleMessage(Message msg) {
@@ -138,6 +144,8 @@ public class JwaooToyActivity extends Activity implements OnCancelListener, Call
 	}
 
 	public void disconnect() {
+		mUserCancel = true;
+
 		if (mBleToy != null) {
 			mBleToy.disconnect();
 		}
@@ -153,6 +161,7 @@ public class JwaooToyActivity extends Activity implements OnCancelListener, Call
 			if (device == null) {
 				finish();
 			} else {
+				mUserCancel = false;
 				mBleToy = createJwaooBleToy(device);
 
 				showProgressDialog(true);

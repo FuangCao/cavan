@@ -1,6 +1,7 @@
 package com.cavan.jwaooblesensortest;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.bluetooth.BluetoothDevice;
 import android.os.Bundle;
 import android.os.Message;
@@ -26,6 +27,8 @@ public class MainActivity extends JwaooToyActivity {
 	private TextView mTextViewState;
 	private TextView mTextViewBattery;
 
+	private Dialog mDialogDisconnected;
+
 	private int mBatteryLevel;
 	private double mBatteryVoltage;
 
@@ -39,11 +42,15 @@ public class MainActivity extends JwaooToyActivity {
 	public boolean handleMessage(Message msg) {
 		switch (msg.what) {
 		case MSG_DISCONNECTED:
-			AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-			builder.setCancelable(false);
-			builder.setMessage(R.string.disconnected);
-			builder.setPositiveButton(android.R.string.ok, null);
-			builder.create().show();
+			if (mDialogDisconnected == null) {
+				AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+				builder.setCancelable(false);
+				builder.setMessage(R.string.disconnected);
+				builder.setPositiveButton(android.R.string.ok, null);
+				mDialogDisconnected = builder.create();
+			}
+
+			mDialogDisconnected.show();
 			break;
 
 		case MSG_UPDATE_SPEED:
@@ -158,6 +165,10 @@ public class MainActivity extends JwaooToyActivity {
 	protected JwaooBleToy createJwaooBleToy(BluetoothDevice device) {
 		mConnStartTime = 0;
 
+		if (mDialogDisconnected != null) {
+			mDialogDisconnected.dismiss();
+		}
+
 		return new JwaooBleToy(device) {
 
 			@Override
@@ -171,7 +182,7 @@ public class MainActivity extends JwaooToyActivity {
 					mHandler.sendEmptyMessage(MSG_UPDATE_SPEED);
 				} else if (mConnStartTime == 0 || mCheckBoxReConn.isChecked()) {
 					showProgressDialog(true);
-				} else {
+				} else if (!isUserCanceled()) {
 					disconnect();
 					mHandler.sendEmptyMessage(MSG_DISCONNECTED);
 				}

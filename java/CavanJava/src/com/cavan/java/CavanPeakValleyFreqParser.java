@@ -1,6 +1,6 @@
 package com.cavan.java;
 
-import java.util.ArrayList;
+import java.util.List;
 
 
 public class CavanPeakValleyFreqParser extends CavanPeakValleyFilter {
@@ -26,7 +26,7 @@ public class CavanPeakValleyFreqParser extends CavanPeakValleyFilter {
 		return mRange.getRange();
 	}
 
-	private double calculateFreq(ArrayList<CavanPeakValleyValue> nodes) {
+	private double calculateFreq(List<CavanPeakValleyValue> nodes) {
 		mRange = getExtremeValue(nodes);
 		if (mRange == null) {
 			return 0;
