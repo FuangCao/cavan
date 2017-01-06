@@ -21,6 +21,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 	private static final String CLASS_NAME_EDIT_TEXT = EditText.class.getName();
 
 	private static final long POLL_DELAY = 500;
+	private static final long POLL_DELAY_XIUXIU = 2000;
 	private static final long UNPACK_OVERTIME = 2000;
 	private static final long COMMIT_OVERTIME = 300000;
 	private static final long REPEAT_OVERTIME = 20000;
@@ -32,6 +33,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 	private String mInputtedCode;
 	private long mDelay;
 	private boolean mXiuXiu;
+	private boolean mXiuXiuPending;
 	private boolean mAutoOpenAlipay;
 	private LinkedList<RedPacketCode> mCodes = new LinkedList<RedPacketCode>();
 
@@ -50,6 +52,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 
 				if (mCodeCount > 0) {
 					startAutoCommitRedPacketCode(POLL_DELAY);
+				} else if (mXiuXiu) {
+					startAutoCommitRedPacketCode(POLL_DELAY_XIUXIU);
 				} else {
 					mAutoOpenAlipay = false;
 				}
@@ -131,7 +135,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 	}
 
 	private boolean postRedPacketCode(RedPacketCode code, AccessibilityNodeInfo root) {
-		CavanAndroid.dLog("xiuxiu = " + mXiuXiu);
+		CavanAndroid.dLog("xiuxiu = " + mXiuXiu + ", pending = " + mXiuXiuPending);
 		CavanAndroid.dLog("count = " + mCodeCount + ", code = " + code);
 
 		switch (mClassName) {
@@ -222,8 +226,6 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 						mCode.updateRepeatTime(mService);
 					}
 				}
-			} else if (mXiuXiu) {
-				startAutoCommitRedPacketCode(3000);
 			}
 
 			long time = getWindowTimeConsume();
@@ -247,7 +249,9 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 			break;
 
 		case "com.alipay.mobile.xiuxiu.ui.MainActivity":
-			startXiuXiu(root);
+			if (mXiuXiuPending && startXiuXiu(root)) {
+				mXiuXiuPending = false;
+			}
 			break;
 
 		default:
@@ -597,6 +601,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 			switch (mClassName) {
 			case "com.alipay.mobile.xiuxiu.ui.MainActivity":
 				mXiuXiu = true;
+				mXiuXiuPending = true;
 			case "com.alipay.mobile.nebulacore.ui.H5Activity":
 				break;
 
