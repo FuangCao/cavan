@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <string name="app_name">井蛙传感器测试</string>
+    <string name="action_settings">设置</string>
+    <string name="auto_reconnect">断开后自动重连</string>
+    <string name="disconnected">连接已断开</string>
+    <string name="battery_info">电池电量: <xliff:g>%1$d</xliff:g>, 电池电压: <xliff:g>%2$3.2f</xliff:g></string>
+    <string name="speed_info">数据包总数: <xliff:g>%1$d</xliff:g>, 上报速度: <xliff:g>%2$3.2f</xliff:g> (毫秒/次)</string>
+	<string name="link_time">连接持续时间: <xliff:g>%1$s</xliff:g></string>
+
+</resources>
