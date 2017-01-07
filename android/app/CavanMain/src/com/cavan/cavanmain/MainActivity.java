@@ -110,6 +110,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		return CavanAndroid.isPreferenceEnabled(context, KEY_DISABLE_KEYGUARD);
 	}
 
+	public static boolean isAutoUnlockEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_UNLOCK);
+	}
+
 	public static boolean isAutoUnpackEnabled(Context context) {
 		return CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_UNPACK);
 	}

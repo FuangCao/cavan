@@ -15,7 +15,9 @@ public class CavanKeyguardActivity extends Activity {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			finish();
+			if (MainActivity.isAutoUnlockEnabled(getApplicationContext())) {
+				finish();
+			}
 		}
 	};
 

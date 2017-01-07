@@ -216,7 +216,7 @@ public class FloatMessageService extends FloatWidowService {
 				mHandler.sendEmptyMessage(MSG_UPDATE_TIME);
 
 
-				if (getTextCount() > 0 || CavanAndroid.isPreferenceEnabled(FloatMessageService.this, MainActivity.KEY_AUTO_UNLOCK)) {
+				if (getTextCount() > 0 || MainActivity.isAutoUnlockEnabled(getApplicationContext())) {
 					unlockScreen();
 				}
 
