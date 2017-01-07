@@ -134,6 +134,20 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 		}
 	}
 
+	private boolean isUnpakComplete(AccessibilityNodeInfo root) {
+		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId("com.alipay.android.phone.discovery.envelope:id/list");
+		if (nodes != null && nodes.size() > 0) {
+			return true;
+		}
+
+		nodes = root.findAccessibilityNodeInfosByText("领取成功");
+		if (nodes != null && nodes.size() > 0) {
+			return true;
+		}
+
+		return false;
+	}
+
 	private boolean postRedPacketCode(RedPacketCode code, AccessibilityNodeInfo root) {
 		CavanAndroid.dLog("xiuxiu = " + mXiuXiu + ", pending = " + mXiuXiuPending);
 		CavanAndroid.dLog("count = " + mCodeCount + ", code = " + code);
@@ -196,8 +210,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 			break;
 
 		case "com.alipay.android.phone.discovery.envelope.crowd.CrowdHostActivity":
-			List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText("领取成功");
-			if (nodes != null && nodes.size() > 0) {
+			if (isUnpakComplete(root)) {
 				setRedPacketCodeComplete();
 			} else if (setRedPacketCodeValid()) {
 				mCode.updateTime();

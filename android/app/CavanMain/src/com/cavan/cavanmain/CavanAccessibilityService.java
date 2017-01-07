@@ -1,5 +1,6 @@
 package com.cavan.cavanmain;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -317,6 +318,22 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return mPackageName;
 	}
 
+	public static List<AccessibilityNodeInfo> findAccessibilityNodeInfosByTexts(AccessibilityNodeInfo root, String... texts) {
+		List<AccessibilityNodeInfo> infos = new ArrayList<AccessibilityNodeInfo>();
+		for (String text : texts) {
+			List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(text);
+			if (nodes == null) {
+				continue;
+			}
+
+			for (AccessibilityNodeInfo node : nodes) {
+				infos.add(node);
+			}
+		}
+
+		return infos;
+	}
+
 	public static AccessibilityNodeInfo findAccessibilityNodeInfoByText(AccessibilityNodeInfo root, String text) {
 		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(text);
 		if (nodes == null) {
@@ -383,6 +400,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 		StringBuilder builder = new StringBuilder();
 		dumpAccessibilityNodeInfo(builder, "", node);
 		return builder.toString();
+	}
+
+	public static void showAccessibilityNodeInfo(AccessibilityNodeInfo node) {
+		CavanAndroid.dLog(dumpAccessibilityNodeInfo(node));
 	}
 
 	@Override
