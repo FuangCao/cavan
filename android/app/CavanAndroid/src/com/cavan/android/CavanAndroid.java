@@ -60,8 +60,6 @@ public class CavanAndroid {
 
 	private static WakeLock sWakeLock;
 	private static KeyguardLock sKeyguardLock;
-	private static ClipboardManager sClipboardManager;
-	private static ActivityManager sActivityManager;
 	private static MulticastLock sMulticastLock;
 
 	public static void eLog(String message) {
@@ -298,16 +296,13 @@ public class CavanAndroid {
 	}
 
 	public static boolean postClipboardText(Context context, CharSequence label, CharSequence text) {
-		if (sClipboardManager == null) {
-			sClipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-			if (sClipboardManager == null) {
-				return false;
-			}
+		ClipboardManager manager = (ClipboardManager) getCachedSystemService(context, Context.CLIPBOARD_SERVICE);
+		if (manager != null) {
+			postClipboardText(manager, label, text);
+			return true;
 		}
 
-		postClipboardText(sClipboardManager, label, text);
-
-		return true;
+		return false;
 	}
 
 	public static boolean postClipboardText(Context context, CharSequence text) {
@@ -440,11 +435,7 @@ public class CavanAndroid {
 	}
 
 	public static ActivityManager getActivityManager(Context context) {
-		if (sActivityManager == null) {
-			sActivityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-		}
-
-		return sActivityManager;
+		return (ActivityManager) getCachedSystemService(context, Context.ACTIVITY_SERVICE);
 	}
 
 	public static ComponentName getTopActivityInfo(Context context) {
