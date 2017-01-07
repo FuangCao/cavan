@@ -83,6 +83,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_TCP_DD = "tcp_dd";
 	public static final String KEY_WEB_PROXY = "web_proxy";
 	public static final String KEY_TCP_REPEATER = "tcp_repeater";
+	public static final String KEY_DISABLE_KEYGUARD = "disable_keyguard";
 
 	private static boolean sAutoOpenAppEnable = true;
 	private static boolean sRedPacketCodeReceiveEnabled = true;
@@ -103,6 +104,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		} catch (Exception e) {
 			return 1;
 		}
+	}
+
+	public static boolean isDisableKeyguardEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_DISABLE_KEYGUARD);
 	}
 
 	public static boolean isAutoUnpackEnabled(Context context) {

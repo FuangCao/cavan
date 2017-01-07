@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="com.cavan.cavanmain"
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.cavan.cavanmain"
     android:versionCode="1"
-    android:versionName="1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+    android:versionName="1.0" >
 
     <uses-sdk
         android:minSdkVersion="7"
@@ -21,11 +22,11 @@
     <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
-    <uses-permission android:name="android.permission.GET_TASKS"/>
-    <uses-permission android:name="android.permission.BROADCAST_STICKY"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.GET_TASKS" />
+    <uses-permission android:name="android.permission.BROADCAST_STICKY" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
     <application
         android:allowBackup="true"
@@ -35,8 +36,10 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".MainActivity"
+            android:excludeFromRecents="true"
             android:label="@string/app_name"
-            android:excludeFromRecents="true" >
+            android:launchMode="singleInstance"
+            android:multiprocess="false" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -78,28 +81,53 @@
             android:exported="false" >
         </provider>
 
-        <activity android:name="CavanMessageActivity"
-            android:excludeFromRecents="true" >
+        <activity
+            android:name="CavanMessageActivity"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:multiprocess="false" >
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT"/>
-                <data android:scheme="cavan"/>
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="cavan" />
             </intent-filter>
         </activity>
-        <activity android:name="PermissionSettingsActivity"></activity>
-        <service android:name="CavanInputMethod" android:permission="android.permission.BIND_INPUT_METHOD" android:label="@string/cavan_input_method">
+        <activity android:name="PermissionSettingsActivity" >
+        </activity>
+
+        <service
+            android:name="CavanInputMethod"
+            android:label="@string/cavan_input_method"
+            android:permission="android.permission.BIND_INPUT_METHOD" >
             <intent-filter>
-                <action android:name="android.view.InputMethod"/>
+                <action android:name="android.view.InputMethod" />
             </intent-filter>
 
-            <meta-data android:resource="@xml/inputmethod" android:name="android.view.im"/>
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/inputmethod" />
         </service>
-        <service android:name="CavanAccessibilityService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:label="@string/cavan_red_packet_notify">
-            <meta-data android:resource="@xml/accessibility" android:name="android.accessibilityservice"/>
+        <service
+            android:name="CavanAccessibilityService"
+            android:label="@string/cavan_red_packet_notify"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" >
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility" />
+
             <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService"/>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
         </service>
+
+        <activity
+            android:name="CavanKeyguardActivity"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:multiprocess="false" >
+        </activity>
     </application>
 
 </manifest>

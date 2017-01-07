@@ -201,6 +201,12 @@ public class FloatMessageService extends FloatWidowService {
 
 			switch (action) {
 			case Intent.ACTION_SCREEN_OFF:
+				if (MainActivity.isDisableKeyguardEnabled(getApplicationContext())) {
+					Intent activity = new Intent(getApplicationContext(), CavanKeyguardActivity.class);
+					activity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					startActivity(activity);
+				}
+
 				CavanAndroid.setLockScreenEnable(FloatMessageService.this, true);
 				mScreenClosed = true;
 				break;
@@ -208,6 +214,7 @@ public class FloatMessageService extends FloatWidowService {
 			case Intent.ACTION_SCREEN_ON:
 				mScreenClosed = false;
 				mHandler.sendEmptyMessage(MSG_UPDATE_TIME);
+
 
 				if (getTextCount() > 0 || CavanAndroid.isPreferenceEnabled(FloatMessageService.this, MainActivity.KEY_AUTO_UNLOCK)) {
 					unlockScreen();

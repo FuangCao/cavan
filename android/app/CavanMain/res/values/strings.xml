@@ -159,5 +159,7 @@
         <item>3</item>
     </string-array>
     <string name="clean_message_confirm">确定要清除所有消息吗？</string>
+    <string name="keyguard_disabled">已禁止锁屏</string>
+    <string name="disable_keyguard">禁止锁屏</string>
 
 </resources>

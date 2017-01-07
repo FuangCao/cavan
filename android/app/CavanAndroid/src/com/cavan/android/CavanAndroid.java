@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 
+import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.KeyguardManager;
@@ -610,5 +611,19 @@ public class CavanAndroid {
 		}
 
 		return info.isAvailable();
+	}
+
+	public static void setWindowKeyguardEnable(Window window, boolean enable) {
+		int flags = LayoutParams.FLAG_DISMISS_KEYGUARD | LayoutParams.FLAG_SHOW_WHEN_LOCKED;
+
+		if (enable) {
+			window.clearFlags(flags);
+		} else {
+			window.addFlags(flags);
+		}
+	}
+
+	public static void setActivityKeyguardEnable(Activity activity, boolean enable) {
+		setWindowKeyguardEnable(activity.getWindow(), enable);
 	}
 }
