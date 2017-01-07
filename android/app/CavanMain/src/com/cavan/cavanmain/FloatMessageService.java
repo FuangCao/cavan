@@ -207,7 +207,7 @@ public class FloatMessageService extends FloatWidowService {
 					startActivity(activity);
 				}
 
-				CavanAndroid.setLockScreenEnable(FloatMessageService.this, true);
+				setLockScreenEnable(true);
 				mScreenClosed = true;
 				break;
 
@@ -217,7 +217,7 @@ public class FloatMessageService extends FloatWidowService {
 
 
 				if (getTextCount() > 0 || MainActivity.isAutoUnlockEnabled(getApplicationContext())) {
-					unlockScreen();
+					setLockScreenEnable(false);
 				}
 
 				mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_unlock_bg);
@@ -285,7 +285,7 @@ public class FloatMessageService extends FloatWidowService {
 				return -1;
 			}
 
-			unlockScreen();
+			setLockScreenEnable(false);
 
 			if (code != null) {
 				RedPacketCode node = RedPacketCode.getInstence(code);
@@ -422,8 +422,13 @@ public class FloatMessageService extends FloatWidowService {
 		return intent;
 	}
 
-	public boolean unlockScreen() {
-		CavanAndroid.setLockScreenEnable(FloatMessageService.this, false);
+	public boolean setLockScreenEnable(boolean enable) {
+		if (MainActivity.isDisableKeyguardEnabled(this)) {
+			enable = true;
+		}
+
+		CavanAndroid.setLockScreenEnable(this, enable);
+
 		return true;
 	}
 
