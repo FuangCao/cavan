@@ -199,7 +199,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 				}
 
 				if (not_found) {
-					CavanAndroid.dLog("not found");
+					CavanAndroid.dLog("not found: " + name);
 					mQueue.remove();
 				}
 			} else {
