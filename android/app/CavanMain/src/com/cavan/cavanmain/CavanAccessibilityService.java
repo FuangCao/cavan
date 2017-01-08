@@ -389,7 +389,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		builder.append(prefix);
 		builder.append(node);
 		builder.append('\n');
-		prefix += '\t';
+		prefix += "  ";
 
 		for (int i = 0, count = node.getChildCount(); i < count; i++) {
 			dumpAccessibilityNodeInfo(builder, prefix, node.getChild(i));
@@ -404,6 +404,36 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	public static void showAccessibilityNodeInfo(AccessibilityNodeInfo node) {
 		CavanAndroid.dLog(dumpAccessibilityNodeInfo(node));
+	}
+
+	public static void dumpAccessibilityNodeInfoSimple(StringBuilder builder, String prefix, AccessibilityNodeInfo node) {
+		if (node == null) {
+			return;
+		}
+
+		builder.append(prefix);
+		builder.append("├─ ");
+		builder.append(node.getClassName());
+		builder.append(node.getViewIdResourceName());
+		builder.append(node.hashCode());
+		builder.append(": ");
+		builder.append(node.getText());
+		builder.append('\n');
+		prefix += "├──";
+
+		for (int i = 0, count = node.getChildCount(); i < count; i++) {
+			dumpAccessibilityNodeInfoSimple(builder, prefix, node.getChild(i));
+		}
+	}
+
+	public static String dumpAccessibilityNodeInfoSimple(AccessibilityNodeInfo node) {
+		StringBuilder builder = new StringBuilder();
+		dumpAccessibilityNodeInfoSimple(builder, "", node);
+		return builder.toString();
+	}
+
+	public static void showAccessibilityNodeInfoSimple(AccessibilityNodeInfo node) {
+		CavanAndroid.dLog(dumpAccessibilityNodeInfoSimple(node));
 	}
 
 	@Override
