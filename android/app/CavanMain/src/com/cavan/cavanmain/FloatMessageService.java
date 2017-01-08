@@ -500,7 +500,7 @@ public class FloatMessageService extends FloatWidowService {
 			String code = CavanString.deleteSpace(command.substring(NET_CMD_TM_CODE.length()));
 			mHandler.obtainMessage(MSG_CLIPBOARD_RECEIVED, code).sendToTarget();
 		} else if (command.startsWith(NET_CMD_CLIPBOARD)) {
-			String code = CavanString.deleteSpace(command.substring(NET_CMD_CLIPBOARD.length()));
+			String code = command.substring(NET_CMD_CLIPBOARD.length());
 			mHandler.obtainMessage(MSG_CLIPBOARD_RECEIVED, code).sendToTarget();
 		}
 	}
