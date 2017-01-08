@@ -50,6 +50,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String ACTION_WAN_UPDATED = "cavan.intent.action.ACTION_WAN_UPDATED";
 	public static final String ACTION_BRIDGE_UPDATED = "cavan.intent.action.ACTION_BRIDGE_UPDATED";
 	public static final String ACTION_SEND_WAN_COMMAN = "cavan.intent.action.ACTION_SEND_WAN_COMMAN";
+	public static final String ACTION_UNPACK_QQ = "cavan.intent.action.ACTION_UNPACK_QQ";
+	public static final String ACTION_UNPACK_MM = "cavan.intent.action.ACTION_UNPACK_MM";
 
 	public static final String KEY_IP_ADDRESS = "ip_address";
 	public static final String KEY_AUTO_UNLOCK = "auto_unlock";
@@ -84,6 +86,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_WEB_PROXY = "web_proxy";
 	public static final String KEY_TCP_REPEATER = "tcp_repeater";
 	public static final String KEY_DISABLE_KEYGUARD = "disable_keyguard";
+	public static final String KEY_QQ_AUTO_UNPACK = "qq_auto_unpack";
+	public static final String KEY_MM_AUTO_UNPACK = "mm_auto_unpack";
 
 	private static boolean sAutoOpenAppEnable = true;
 	private static boolean sRedPacketCodeReceiveEnabled = true;
@@ -172,6 +176,34 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 	public static boolean isAutoOpenAlipayEnabled(Context context) {
 		return sAutoOpenAppEnable && CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_OPEN_ALIPAY);
+	}
+
+	public static int getAutoUnpackQQ(Context context) {
+		String text = CavanAndroid.getPreference(context, KEY_QQ_AUTO_UNPACK, null);
+
+		try {
+			if (text != null) {
+				return Integer.parseInt(text);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return -1;
+	}
+
+	public static int getAutoUnpackMM(Context context) {
+		String text = CavanAndroid.getPreference(context, KEY_MM_AUTO_UNPACK, null);
+
+		try {
+			if (text != null) {
+				return Integer.parseInt(text);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return -1;
 	}
 
 	public static int getCommitAhead(Context context) {
@@ -384,6 +416,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		findListPreference(KEY_AUTO_COMMIT);
 		findListPreference(KEY_COMMIT_AHEAD);
 		findListPreference(KEY_RED_PACKET_NOTIFY_SETTING);
+		findListPreference(KEY_QQ_AUTO_UNPACK);
+		findListPreference(KEY_MM_AUTO_UNPACK);
 
 		updateIpAddressStatus();
 

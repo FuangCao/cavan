@@ -5,7 +5,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import android.content.Intent;
-import android.os.Bundle;
 import android.os.Message;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
@@ -371,17 +370,6 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 		return true;
 	}
 
-	private void setAccessibilityNodeSelection(AccessibilityNodeInfo node, int start, int length) {
-		if (length > 0) {
-			Bundle arguments = new Bundle();
-			arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, start);
-			arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, start + length);
-			node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, arguments);
-		} else {
-			node.performAction(AccessibilityNodeInfo.ACTION_SELECT);
-		}
-	}
-
 	private AccessibilityNodeInfo findRedPacketInputNode(AccessibilityNodeInfo root) {
 		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId("com.alipay.android.phone.discovery.envelope:id/solitaire_edit");
 		if (nodes != null && nodes.size() > 0) {
@@ -397,18 +385,9 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 			return false;
 		}
 
-		node.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
-
-		String text = CavanString.fromCharSequence(node.getText());
-		boolean changed = !text.equals(code.getCode());
-
 		mInputtedCode = code.getCode();
 
-		if (changed) {
-			RedPacketListenerService.postRedPacketCode(mService, code.getCode());
-			setAccessibilityNodeSelection(node, 0, text.length());
-			node.performAction(AccessibilityNodeInfo.ACTION_PASTE);
-		}
+		boolean changed = mService.setAccessibilityNodeText(node, code.getCode());
 
 		if (mCode != null) {
 			mCode.setPostPending(false);

@@ -18,6 +18,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Point;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -130,6 +131,16 @@ public class CavanAccessibilityService extends AccessibilityService {
 			case Intent.ACTION_CLOSE_SYSTEM_DIALOGS:
 				mAccessibilityAlipay.setAutoOpenAlipayEnable(false);
 				CavanAndroid.dLog("reason = " + intent.getStringExtra("reason"));
+				break;
+
+			case MainActivity.ACTION_UNPACK_MM:
+				break;
+
+			case MainActivity.ACTION_UNPACK_QQ:
+				String chat = intent.getStringExtra("chat");
+				if (chat != null) {
+					mAccessibilityQQ.addRedPacket(chat);
+				}
 				break;
 			}
 		}
@@ -354,6 +365,41 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return null;
 	}
 
+	public static AccessibilityNodeInfo findAccessibilityNodeInfoByViewId(AccessibilityNodeInfo root, String viewId) {
+		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(viewId);
+		if (nodes == null || nodes.isEmpty()) {
+			return null;
+		}
+
+		return nodes.get(0);
+	}
+
+	public static void setAccessibilityNodeSelection(AccessibilityNodeInfo node, int start, int length) {
+		if (length > 0) {
+			Bundle arguments = new Bundle();
+			arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, start);
+			arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, start + length);
+			node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, arguments);
+		} else {
+			node.performAction(AccessibilityNodeInfo.ACTION_SELECT);
+		}
+	}
+
+	public boolean setAccessibilityNodeText(AccessibilityNodeInfo node, String text) {
+		node.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+
+		String oldText = CavanString.fromCharSequence(node.getText());
+		if (text.equals(oldText)) {
+			return false;
+		}
+
+		setAccessibilityNodeSelection(node, 0, oldText.length());
+		RedPacketListenerService.postRedPacketCode(this, text);
+		node.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+
+		return true;
+	}
+
 	public int getRedPacketCodeCount() {
 		try {
 			if (mService != null) {
@@ -414,8 +460,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 		builder.append(prefix);
 		builder.append("├─ ");
 		builder.append(node.getClassName());
+		builder.append("@");
 		builder.append(node.getViewIdResourceName());
-		builder.append(node.hashCode());
+		// builder.append(node.hashCode());
 		builder.append(": ");
 		builder.append(node.getText());
 		builder.append('\n');
@@ -538,6 +585,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 		filter.addAction(MainActivity.ACTION_CODE_ADD);
 		filter.addAction(MainActivity.ACTION_CODE_REMOVE);
 		filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
+		filter.addAction(MainActivity.ACTION_UNPACK_MM);
+		filter.addAction(MainActivity.ACTION_UNPACK_QQ);
 
 		registerReceiver(mReceiver, filter);
 

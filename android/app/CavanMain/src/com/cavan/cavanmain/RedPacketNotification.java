@@ -333,14 +333,14 @@ public class RedPacketNotification extends CavanNotification {
 		return count;
 	}
 
-	public boolean sendRedPacketNotifyNormal(String content, String message) {
+	public boolean sendRedPacketNotifyNormal(String content, String message, boolean send) {
 		PendingIntent intent;
 		Notification notification;
 
 		if (mNotification != null) {
 			intent = mNotification.getNotification().contentIntent;
 
-			if (intent != null && MainActivity.isAutoOpenAppEnabled(mService) &&
+			if (send && intent != null && MainActivity.isAutoOpenAppEnabled(mService) &&
 					(MainActivity.isAutoOpenAlipayEnabled(mService) == false || mService.getCodePending() == 0)) {
 				try {
 					intent.send();
@@ -361,7 +361,7 @@ public class RedPacketNotification extends CavanNotification {
 	public boolean sendRedPacketNotifyAlipayPredict() {
 		String code = mFinder.getPredictCode();
 		if (code != null) {
-			return sendRedPacketNotifyNormal(code, code + "@" + getUserDescription());
+			return sendRedPacketNotifyNormal(code, code + "@" + getUserDescription(), false);
 		}
 
 		return false;
@@ -377,7 +377,13 @@ public class RedPacketNotification extends CavanNotification {
 			return false;
 		}
 
-		return sendRedPacketNotifyNormal(code + "红包", code + "@" + getUserDescription());
+		if (code.equals("QQ")) {
+			Intent intent = new Intent(MainActivity.ACTION_UNPACK_QQ);
+			intent.putExtra("chat", getUserDescription().toString());
+			mService.sendBroadcast(intent);
+		}
+
+		return sendRedPacketNotifyNormal(code + "红包", code + "@" + getUserDescription(), true);
 	}
 
 	public boolean sendRedPacketNotifyAuto() {

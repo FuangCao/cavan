@@ -58,6 +58,20 @@
 	    android:defaultValue="true"
 	    android:title="@string/auto_open_alipay" />
 
+	<ListPreference android:key="qq_auto_unpack"
+	    android:persistent="true"
+		android:entries="@array/text_delay_entries"
+		android:entryValues="@array/text_delay_values"
+		android:defaultValue="0"
+	    android:title="@string/qq_auto_unpack" />
+
+	<ListPreference android:key="mm_auto_unpack"
+	    android:persistent="true"
+		android:entries="@array/text_delay_entries"
+		android:entryValues="@array/text_delay_values"
+		android:defaultValue="0"
+	    android:title="@string/mm_auto_unpack" />
+
 	<ListPreference android:key="commit_ahead"
 	    android:persistent="true"
 		android:entries="@array/text_ahead_entries"

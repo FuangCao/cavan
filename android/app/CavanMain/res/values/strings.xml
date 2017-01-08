@@ -105,7 +105,6 @@
         <item>提交7次</item>
         <item>提交8次</item>
         <item>提交9次</item>
-        <item>提交10次</item>
     </string-array>
     <string-array name="text_auto_values">
         <item>0</item>
@@ -118,7 +117,6 @@
         <item>7</item>
         <item>8</item>
         <item>9</item>
-        <item>10</item>
     </string-array>
     <string-array name="text_ahead_entries">
         <item>准点</item>
@@ -131,7 +129,6 @@
         <item>提前7秒</item>
         <item>提前8秒</item>
         <item>提前9秒</item>
-        <item>提前10秒</item>
     </string-array>
     <string-array name="text_ahead_values">
         <item>0</item>
@@ -144,7 +141,6 @@
         <item>7</item>
         <item>8</item>
         <item>9</item>
-        <item>10</item>
     </string-array>
     <string-array name="text_notify_entries">
         <item>不提醒</item>
@@ -158,8 +154,36 @@
         <item>2</item>
         <item>3</item>
     </string-array>
+    <string-array name="text_delay_entries">
+        <item>关闭</item>
+        <item>不延时</item>
+        <item>延时1秒</item>
+        <item>延时2秒</item>
+        <item>延时3秒</item>
+        <item>延时4秒</item>
+        <item>延时5秒</item>
+        <item>延时6秒</item>
+        <item>延时7秒</item>
+        <item>延时8秒</item>
+        <item>延时9秒</item>
+    </string-array>
+    <string-array name="text_delay_values">
+        <item>-1</item>
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+    </string-array>
     <string name="clean_message_confirm">确定要清除所有消息吗？</string>
     <string name="keyguard_disabled">已禁止锁屏</string>
     <string name="disable_keyguard">禁止锁屏</string>
+    <string name="qq_auto_unpack">QQ自动抢</string>
+    <string name="mm_auto_unpack">微信自动抢</string>
 
 </resources>
