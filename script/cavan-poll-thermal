@@ -4,6 +4,12 @@ FILES=$(find /sys/devices/virtual/thermal -type f -name temp)
 
 while :
 do
-	cat ${FILES}
+	date
+
+	for fn in ${FILES}
+	do
+		echo "${fn}: $(cat ${fn})"
+	done
+
 	sleep 0.5
 done
