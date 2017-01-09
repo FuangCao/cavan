@@ -27,6 +27,8 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 
 		@Override
 		public void run() {
+			long delay = POLL_DELAY;
+
 			removeCallbacks(this);
 
 			AccessibilityNodeInfo root = getRootInActiveWindow();
@@ -43,18 +45,19 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 							if (!mService.startNextPendingActivity()) {
 								mService.startIdleActivity();
 							}
-						} else {
-							doAutoUnpack(root, name);
+						} else if (doAutoUnpack(root, name)) {
+							delay = POLL_DELAY_BACK;
 						}
 					} else {
-						performGlobalActionBack();
+						performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+						delay = POLL_DELAY_BACK;
 					}
 				} else {
 					return;
 				}
 			}
 
-			startAutoUnpack();
+			startAutoUnpack(delay);
 		}
 	};
 
@@ -97,14 +100,6 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 
 	private void startAutoUnpack() {
 		startAutoUnpack(POLL_DELAY);
-	}
-
-	private void performGlobalActionBack() {
-		CavanAndroid.dLog("performGlobalActionBack");
-
-		removeCallbacks(mRunnablePoll);
-		postDelayed(mRunnablePoll, POLL_DELAY_BACK);
-		performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
 	}
 
 	public void addRedPacket(String name) {
@@ -189,7 +184,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 		return null;
 	}
 
-	private void doAutoUnpack(AccessibilityNodeInfo root, String name) {
+	private boolean doAutoUnpack(AccessibilityNodeInfo root, String name) {
 		AccessibilityNodeInfo backNode = CavanAccessibilityService.findAccessibilityNodeInfoByViewId(root, "com.tencent.mobileqq:id/ivTitleBtnLeft");
 		if (backNode != null) {
 			AccessibilityNodeInfo titleNode = CavanAccessibilityService.findAccessibilityNodeInfoByViewId(root, "com.tencent.mobileqq:id/title");
@@ -201,7 +196,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 
 					if (CavanChatNode.isMatch(title, name)) {
 						if (doAutoUnpack(root)) {
-							return;
+							return true;
 						}
 
 						CavanAndroid.dLog("complete: " + name);
@@ -226,9 +221,12 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 					mQueue.remove();
 				}
 			} else {
-				performGlobalActionBack();
+				performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+				return true;
 			}
 		}
+
+		return false;
 	}
 
 	@Override
@@ -262,7 +260,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 
 		case "cooperation.qwallet.plugin.QWalletPluginProxyActivity":
 			if (getRedPacketCount() > 0) {
-				performGlobalActionBack();
+				performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
 			}
 			break;
 
