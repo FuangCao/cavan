@@ -563,10 +563,10 @@ public class CavanFile extends File {
 		return replaceText(handler, this);
 	}
 
-	public static boolean deleteDir(File dir) {
+	public static boolean deleteDir(File dir, boolean subOnly) {
 		for (File file : dir.listFiles()) {
 			if (file.isDirectory()) {
-				if (!deleteDir(file)) {
+				if (!deleteDir(file, false)) {
 					return false;
 				}
 			} else if (!file.delete()) {
@@ -574,12 +574,16 @@ public class CavanFile extends File {
 			}
 		}
 
+		if (subOnly) {
+			return true;
+		}
+
 		return dir.delete();
 	}
 
-	public static boolean deleteAll(File file) {
+	public static boolean deleteAll(File file, boolean subOnly) {
 		if (file.isDirectory()) {
-			return deleteDir(file);
+			return deleteDir(file, subOnly);
 		}
 
 		if (file.delete()) {
@@ -589,13 +593,47 @@ public class CavanFile extends File {
 		return !file.exists();
 	}
 
+	public boolean deleteAll(boolean subOnly) {
+		return deleteAll(this, subOnly);
+	}
+
 	public boolean deleteAll() {
-		return deleteAll(this);
+		return deleteAll(this, false);
+	}
+
+	public boolean clear() {
+		if (isDirectory()) {
+			return deleteAll(true);
+		}
+
+		if (exists()) {
+			return delete();
+		}
+
+		return true;
 	}
 
 	public static boolean copy(File inFile, File outFile) {
+		if (inFile.isDirectory()) {
+			if (!outFile.isDirectory()) {
+				if (outFile.exists()) {
+					return false;
+				}
+
+				if (!outFile.mkdir()) {
+					return false;
+				}
+			}
+
+			for (String name : inFile.list()) {
+				return copy(new File(inFile, name), new File(outFile, name));
+			}
+		} else if (outFile.isDirectory()) {
+			outFile = new File(outFile, inFile.getName());
+		}
+
 		FileInputStream inStream = null;
-		OutputStream outStream = null;
+		FileOutputStream outStream = null;
 
 		try {
 			inStream = new FileInputStream(inFile);
@@ -618,7 +656,7 @@ public class CavanFile extends File {
 					outStream.write(bytes, 0, length);
 				}
 			} else {
-				outStream.write(buffer.array());
+				outStream.getChannel().write(buffer);
 			}
 
 			return true;
@@ -644,12 +682,24 @@ public class CavanFile extends File {
 		}
 	}
 
+	public static boolean copy(String inPath, String outPath) {
+		return copy(new File(inPath), new File(outPath));
+	}
+
 	public boolean copyFrom(File file) {
 		return copy(file, this);
 	}
 
+	public boolean copyFrom(String pathname) {
+		return copyFrom(new File(pathname));
+	}
+
 	public boolean copyTo(File file) {
 		return copy(this, file);
+	}
+
+	public boolean copyTo(String pathname) {
+		return copyTo(new File(pathname));
 	}
 
 	public boolean mkdirSafe() {
@@ -658,6 +708,22 @@ public class CavanFile extends File {
 
 	public boolean mkdirsSafe() {
 		return mkdirs() || isDirectory();
+	}
+
+	public boolean isNewThen(File file) {
+		return lastModified() > file.lastModified();
+	}
+
+	public boolean isNewOrEqualThen(File file) {
+		return lastModified() >= file.lastModified();
+	}
+
+	public boolean isOldThen(File file) {
+		return lastModified() < file.lastModified();
+	}
+
+	public boolean isOldOrEqualThen(File file) {
+		return lastModified() <= file.lastModified();
 	}
 
 	public static String getMimeType(String pathname) {

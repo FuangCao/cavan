@@ -25,5 +25,8 @@
     <string name="hour">时</string>
     <string name="minute">分</string>
     <string name="second">秒</string>
+    <string name="start">开始</string>
+    <string name="stop">停止</string>
+    <string name="clear">清除</string>
 
 </resources>

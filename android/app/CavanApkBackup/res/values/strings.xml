@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <string name="app_name">应用备份</string>
+    <string name="action_settings">设置</string>
+    <string name="backup_file">备份文件：<xliff:g>%1$s</xliff:g></string>
+    <string name="clear_directory">清空文件夹：<xliff:g>%1$s</xliff:g></string>
+    <string name="backup_complete">备份完成</string>
+    <string name="backup_system_app">备份系统应用</string>
+    <string name="clear_before_backup">备份前先清除</string>
+
+</resources>
