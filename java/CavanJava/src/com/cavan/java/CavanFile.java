@@ -24,6 +24,10 @@ import java.util.List;
 
 public class CavanFile extends File {
 
+	public static final char[] INVALID_FILENAME_CHARS = {
+		'/', '\\', '"', ':', '|', '*', '?', '<', '>'
+	};
+
 	public static final String NEW_LINE_DOS = "\r\n";
 	public static final String NEW_LINE_UNIX = "\n";
 	public static final String NEW_LINE_DEFAULT = NEW_LINE_UNIX;
@@ -770,6 +774,18 @@ public class CavanFile extends File {
 		}
 
 		return "/";
+	}
+
+	public static String replaceInvalidFilenameChar(String filename, char newChar) {
+		for (char oldChar : INVALID_FILENAME_CHARS) {
+			if (filename.indexOf(oldChar) < 0) {
+				continue;
+			}
+
+			filename = filename.replace(oldChar, newChar);
+		}
+
+		return filename;
 	}
 
 	@Override

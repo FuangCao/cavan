@@ -5,6 +5,8 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -52,9 +54,10 @@ public class MainActivity extends Activity implements OnClickListener {
 		@Override
 		public void run() {
 			if (sOutDir.mkdirSafe()) {
-				List<ApplicationInfo> infos = getPackageManager().getInstalledApplications(0);
+				PackageManager manager = getPackageManager();
+				List<PackageInfo> pinfos = manager.getInstalledPackages(0);
 
-				Message message = mHandler.obtainMessage(MSG_BACKUP_START, infos.size(), 0);
+				Message message = mHandler.obtainMessage(MSG_BACKUP_START, pinfos.size(), 0);
 				message.sendToTarget();
 
 				if (mCheckBoxClearBeforeBackup.isChecked()) {
@@ -65,18 +68,33 @@ public class MainActivity extends Activity implements OnClickListener {
 
 				int progress = 0;
 
-				for (ApplicationInfo info : infos) {
+				for (PackageInfo pinfo : pinfos) {
 					if (mNeedStop) {
 						break;
 					}
 
-					if (mCheckBoxBackupSysApp.isChecked() || (info.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
-						CavanFile outFile = new CavanFile(sOutDir, info.packageName + ".apk");
+					ApplicationInfo ainfo = pinfo.applicationInfo;
+
+					if (mCheckBoxBackupSysApp.isChecked() || (ainfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
+						StringBuilder builder = new StringBuilder();
+
+						CharSequence name = manager.getApplicationLabel(ainfo);
+						if (name == null) {
+							builder.append(ainfo.packageName);
+						} else {
+							builder.append(CavanFile.replaceInvalidFilenameChar(name.toString(), '_'));
+						}
+
+						builder.append('-');
+						builder.append(pinfo.versionName);
+						builder.append(".apk");
+
+						CavanFile outFile = new CavanFile(sOutDir, builder.toString());
 
 						message = mHandler.obtainMessage(MSG_COPY_START, outFile.getPath());
 						message.sendToTarget();
 
-						if (!doBackupFile(new File(info.sourceDir), outFile)) {
+						if (!doBackupFile(new File(ainfo.sourceDir), outFile)) {
 							break;
 						}
 					}
