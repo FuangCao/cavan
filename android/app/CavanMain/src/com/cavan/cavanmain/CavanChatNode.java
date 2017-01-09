@@ -8,8 +8,16 @@ public class CavanChatNode {
 	private String mName;
 
 	public CavanChatNode(String name) {
+		setName(name);
+	}
+
+	public void setName(String name) {
 		mName = name;
 		updateTime();
+	}
+
+	public String getName() {
+		return mName;
 	}
 
 	public void updateTime() {
@@ -18,10 +26,6 @@ public class CavanChatNode {
 
 	public long getTime() {
 		return mTime;
-	}
-
-	public String getName() {
-		return mName;
 	}
 
 	public boolean isOvertime(long time) {

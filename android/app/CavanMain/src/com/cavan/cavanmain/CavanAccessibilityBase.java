@@ -20,6 +20,7 @@ public abstract class CavanAccessibilityBase extends Handler {
 	}
 
 	public abstract String getPackageName();
+	public abstract int getRedPacketCount();
 
 	protected void onWindowStateChanged(AccessibilityEvent event) {}
 	protected void onWindowContentChanged(AccessibilityEvent event) {}

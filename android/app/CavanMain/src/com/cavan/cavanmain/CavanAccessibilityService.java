@@ -329,6 +329,27 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return mPackageName;
 	}
 
+	public boolean startNextPendingActivity() {
+		if (MainActivity.isAutoOpenAppEnabled(this)) {
+			for (CavanAccessibilityBase node : mAccessibilityMap.values()) {
+				if (node.getRedPacketCount() > 0) {
+					CavanAndroid.startActivity(this, node.getPackageName());
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	public boolean startIdleActivity() {
+		if (CavanAndroid.startActivity(this, CavanPackageName.ALIPAY)) {
+			return true;
+		}
+
+		return CavanAndroid.startActivity(this, MainActivity.class);
+	}
+
 	public static List<AccessibilityNodeInfo> findAccessibilityNodeInfosByTexts(AccessibilityNodeInfo root, String... texts) {
 		List<AccessibilityNodeInfo> infos = new ArrayList<AccessibilityNodeInfo>();
 		for (String text : texts) {

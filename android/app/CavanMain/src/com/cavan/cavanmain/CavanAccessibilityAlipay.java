@@ -47,7 +47,12 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 
 			AccessibilityNodeInfo root = getRootInActiveWindow();
 			if (root != null && CavanPackageName.ALIPAY.equals(root.getPackageName())) {
-				postRedPacketCode(getNextCode(), root);
+				RedPacketCode node = getNextCode();
+				postRedPacketCode(node, root);
+
+				if (node == null && mService.startNextPendingActivity()) {
+					return;
+				}
 
 				if (mCodeCount > 0) {
 					startAutoCommitRedPacketCode(POLL_DELAY);
@@ -59,7 +64,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 			} else {
 				mClassName = CavanString.EMPTY_STRING;
 
-				if (mAutoOpenAlipay && mCodeCount > 0) {
+				if (mAutoOpenAlipay && mCodes.size() > 0) {
 					RedPacketListenerService.startAlipayActivity(mService);
 				}
 			}
@@ -573,6 +578,11 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 	@Override
 	public String getPackageName() {
 		return CavanPackageName.ALIPAY;
+	}
+
+	@Override
+	public int getRedPacketCount() {
+		return mCodes.size();
 	}
 
 	@Override

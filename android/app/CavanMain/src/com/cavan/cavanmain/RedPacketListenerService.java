@@ -256,18 +256,11 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	}
 
 	public static boolean startAlipayActivity(Context context) {
-		if (!MainActivity.isAutoOpenAlipayEnabled(context)) {
-			return false;
+		if (MainActivity.isAutoOpenAlipayEnabled(context)) {
+			return CavanAndroid.startActivity(context, CavanPackageName.ALIPAY);
 		}
 
-		Intent intent = context.getPackageManager().getLaunchIntentForPackage(CavanPackageName.ALIPAY);
-		if (intent == null) {
-			return false;
-		}
-
-		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK); //  | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-		context.startActivity(intent);
-		return true;
+		return false;
 	}
 
 	public static Intent buildIntent(Context context) {

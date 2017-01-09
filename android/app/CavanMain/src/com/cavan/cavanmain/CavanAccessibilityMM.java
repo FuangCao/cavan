@@ -27,6 +27,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase {
 	}
 
 	@Override
+	public int getRedPacketCount() {
+		return 0;
+	}
+
+	@Override
 	protected void onViewClicked(AccessibilityEvent event) {
 		AccessibilityNodeInfo source = event.getSource();
 		if (source != null && isMessageItemNode(source)) {

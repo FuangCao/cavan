@@ -597,6 +597,10 @@ public class CavanFile extends File {
 		return !file.exists();
 	}
 
+	public static boolean deleteAll(File file) {
+		return deleteAll(file, false);
+	}
+
 	public boolean deleteAll(boolean subOnly) {
 		return deleteAll(this, subOnly);
 	}

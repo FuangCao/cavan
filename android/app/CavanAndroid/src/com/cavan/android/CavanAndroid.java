@@ -15,6 +15,7 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
@@ -625,5 +626,30 @@ public class CavanAndroid {
 
 	public static void setActivityKeyguardEnable(Activity activity, boolean enable) {
 		setWindowKeyguardEnable(activity.getWindow(), enable);
+	}
+
+	public static boolean startActivity(Context context, Intent intent) {
+		try {
+			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+			context.startActivity(intent);
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return false;
+	}
+
+	public static boolean startActivity(Context context, String pkgName) {
+		Intent intent = context.getPackageManager().getLaunchIntentForPackage(pkgName);
+		if (intent == null) {
+			return false;
+		}
+
+		return startActivity(context, intent);
+	}
+
+	public static boolean startActivity(Context context, Class<?> cls) {
+		return startActivity(context, new Intent(context, cls));
 	}
 }
