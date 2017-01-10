@@ -2,6 +2,7 @@ package com.cavan.cavanmain;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import android.accessibilityservice.AccessibilityService;
@@ -350,10 +351,47 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return CavanAndroid.startActivity(this, MainActivity.class);
 	}
 
+	public static void recycleAccessibilityNodeInfos(List<AccessibilityNodeInfo> nodes, int start, int end) {
+		for (int i = end - 1; i >= start; i--) {
+			nodes.get(i).recycle();
+		}
+	}
+
+	public static void recycleAccessibilityNodeInfos(List<AccessibilityNodeInfo> nodes, int start) {
+		recycleAccessibilityNodeInfos(nodes, start, nodes.size());
+	}
+
+	public static void recycleAccessibilityNodeInfos(List<AccessibilityNodeInfo> nodes) {
+		recycleAccessibilityNodeInfos(nodes, 0);
+	}
+
+	public static List<AccessibilityNodeInfo> findAccessibilityNodeInfosByText(AccessibilityNodeInfo root, String text) {
+		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(text);
+		if (nodes == null) {
+			return null;
+		}
+
+		Iterator<AccessibilityNodeInfo> iterator = nodes.iterator();
+
+		while (iterator.hasNext()) {
+			AccessibilityNodeInfo node = iterator.next();
+			CharSequence sequence = node.getText();
+
+			if (sequence != null && text.equals(sequence.toString())) {
+				continue;
+			}
+
+			iterator.remove();
+			node.recycle();
+		}
+
+		return nodes;
+	}
+
 	public static List<AccessibilityNodeInfo> findAccessibilityNodeInfosByTexts(AccessibilityNodeInfo root, String... texts) {
 		List<AccessibilityNodeInfo> infos = new ArrayList<AccessibilityNodeInfo>();
 		for (String text : texts) {
-			List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(text);
+			List<AccessibilityNodeInfo> nodes = findAccessibilityNodeInfosByText(root, text);
 			if (nodes == null) {
 				continue;
 			}
@@ -366,33 +404,50 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return infos;
 	}
 
-	public static AccessibilityNodeInfo findAccessibilityNodeInfoByText(AccessibilityNodeInfo root, String text) {
-		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(text);
+	public static AccessibilityNodeInfo getFirstAccessibilityNodeInfo(List<AccessibilityNodeInfo> nodes) {
 		if (nodes == null) {
 			return null;
 		}
 
-		for (AccessibilityNodeInfo node : nodes) {
-			CharSequence sequence = node.getText();
-			if (sequence == null) {
-				continue;
-			}
-
-			if (text.equals(sequence.toString())) {
-				return node;
-			}
+		int size = nodes.size();
+		if (size > 0) {
+			recycleAccessibilityNodeInfos(nodes, 1, size);
+			return nodes.get(0);
 		}
 
 		return null;
 	}
 
+	public static AccessibilityNodeInfo findAccessibilityNodeInfoByText(AccessibilityNodeInfo root, String text) {
+		List<AccessibilityNodeInfo> nodes = findAccessibilityNodeInfosByText(root, text);
+		return getFirstAccessibilityNodeInfo(nodes);
+	}
+
 	public static AccessibilityNodeInfo findAccessibilityNodeInfoByViewId(AccessibilityNodeInfo root, String viewId) {
 		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(viewId);
-		if (nodes == null || nodes.isEmpty()) {
-			return null;
+		return getFirstAccessibilityNodeInfo(nodes);
+	}
+
+	public static String getAccessibilityNodeInfoText(AccessibilityNodeInfo node) {
+		CharSequence text = node.getText();
+		if (text != null) {
+			return text.toString();
 		}
 
-		return nodes.get(0);
+		return null;
+	}
+
+	public static String getAccessibilityNodeInfoChildText(AccessibilityNodeInfo node, int index) {
+		try {
+			AccessibilityNodeInfo child = node.getChild(index);
+			String text = getAccessibilityNodeInfoText(node);
+			child.recycle();
+			return text;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return null;
 	}
 
 	public static void setAccessibilityNodeSelection(AccessibilityNodeInfo node, int start, int length) {

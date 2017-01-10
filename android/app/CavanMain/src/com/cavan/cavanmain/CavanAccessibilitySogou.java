@@ -50,6 +50,8 @@ public class CavanAccessibilitySogou extends CavanAccessibilityBase {
 					mService.doCheckContent(sequence.toString());
 				}
 			}
+
+			CavanAccessibilityService.recycleAccessibilityNodeInfos(nodes);
 		}
 	}
 
