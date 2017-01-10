@@ -112,8 +112,8 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 		sendMessageDelayed(message, delay * 1000);
 	}
 
-	private boolean doAutoUnpack(AccessibilityNodeInfo root) {
-		for (AccessibilityNodeInfo node : root.findAccessibilityNodeInfosByText(RED_PACKET_NAME)) {
+	private boolean doAutoUnpack(AccessibilityNodeInfo root, AccessibilityNodeInfo listNode) {
+		for (AccessibilityNodeInfo node : listNode.findAccessibilityNodeInfosByText(RED_PACKET_NAME)) {
 			AccessibilityNodeInfo parent = node.getParent();
 			if (parent == null) {
 				continue;
@@ -185,6 +185,19 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 		return false;
 	}
 
+	private boolean doAutoUnpack(AccessibilityNodeInfo root) {
+		AccessibilityNodeInfo listNode = CavanAccessibility.findChildNodeByClassName(root, CavanAccessibility.CLASS_ABSLISTVIEW);
+		if (listNode == null) {
+			return false;
+		}
+
+		CavanAccessibility.scrollToBottom(listNode, 10);
+
+		boolean success = doAutoUnpack(root, listNode);
+		listNode.recycle();
+		return success;
+	}
+
 	public String findPacket(String title) {
 		for (String packet : mPackets) {
 			if (packet.contains(title) || title.contains(packet)) {
@@ -222,15 +235,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 		} else {
 			AccessibilityNodeInfo listNode = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/recent_chat_list");
 			if (listNode != null) {
-				for (int i = 0; i < 10 && listNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD); i++) {
-					CavanAndroid.dLog("ACTION_SCROLL_BACKWARD" + i);
-
-					try {
-						Thread.sleep(50);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
+				CavanAccessibility.scrollToTop(listNode, 10);
 
 				if (++mChildIndex < listNode.getChildCount()) {
 					CavanAndroid.dLog("mChildIndex = " + mChildIndex);

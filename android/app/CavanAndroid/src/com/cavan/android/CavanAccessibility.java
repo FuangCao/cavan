@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -19,6 +20,7 @@ public class CavanAccessibility {
 	public static final String CLASS_BUTTON = Button.class.getName();
 	public static final String CLASS_TEXTVIEW = TextView.class.getName();
 	public static final String CLASS_EDITTEXT = EditText.class.getName();
+	public static final String CLASS_ABSLISTVIEW = AbsListView.class.getName();
 
 	public static String getClassName(AccessibilityNodeInfo node) {
 		CharSequence sequence = node.getClassName();
@@ -105,6 +107,37 @@ public class CavanAccessibility {
 		}
 
 		return infos;
+	}
+
+	public static List<AccessibilityNodeInfo> findChildNodesByClassName(AccessibilityNodeInfo root, String clsName) {
+		List<AccessibilityNodeInfo> nodes = new ArrayList<AccessibilityNodeInfo>();
+		int count = root.getChildCount();
+
+		for (int i = 0; i < count; i++) {
+			AccessibilityNodeInfo child = root.getChild(i);
+			if (isInstanceOf(child, clsName)) {
+				nodes.add(child);
+			} else {
+				child.recycle();
+			}
+		}
+
+		return nodes;
+	}
+
+	public static AccessibilityNodeInfo findChildNodeByClassName(AccessibilityNodeInfo root, String clsName) {
+		int count = root.getChildCount();
+
+		for (int i = 0; i < count; i++) {
+			AccessibilityNodeInfo child = root.getChild(i);
+			if (isInstanceOf(child, clsName)) {
+				return child;
+			}
+
+			child.recycle();
+		}
+
+		return null;
 	}
 
 	public static AccessibilityNodeInfo getFirstNode(List<AccessibilityNodeInfo> nodes) {
@@ -215,6 +248,34 @@ public class CavanAccessibility {
 		boolean success = child.performAction(AccessibilityNodeInfo.ACTION_CLICK);
 		child.recycle();
 		return success;
+	}
+
+	public static boolean performAction(AccessibilityNodeInfo node, int action, int count) {
+		while (count > 0) {
+			CavanAndroid.dLog("action" + count + " = " + action);
+
+			if (node.performAction(action)) {
+				try {
+					Thread.sleep(50);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			} else {
+				return true;
+			}
+
+			count--;
+		}
+
+		return false;
+	}
+
+	public static boolean scrollToTop(AccessibilityNodeInfo node, int count) {
+		return performAction(node, AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD, count);
+	}
+
+	public static boolean scrollToBottom(AccessibilityNodeInfo node, int count) {
+		return performAction(node, AccessibilityNodeInfo.ACTION_SCROLL_FORWARD, count);
 	}
 
 	public static void dumpNode(StringBuilder builder, String prefix, AccessibilityNodeInfo node) {
