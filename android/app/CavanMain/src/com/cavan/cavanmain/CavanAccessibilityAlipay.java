@@ -11,6 +11,7 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.EditText;
 
+import com.cavan.android.CavanAccessibility;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanString;
@@ -364,7 +365,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 
 		root = nodes.get(0);
 
-		AccessibilityNodeInfo info = CavanAccessibilityService.findAccessibilityNodeInfoByText(root, "红包");
+		AccessibilityNodeInfo info = CavanAccessibility.findNodeByText(root, "红包");
 		if (info == null) {
 			return false;
 		}
@@ -392,7 +393,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 
 		mInputtedCode = code.getCode();
 
-		boolean changed = mService.setAccessibilityNodeText(node, code.getCode());
+		boolean changed = CavanAccessibility.setNodeText(mService, node, code.getCode());
 
 		if (mCode != null) {
 			mCode.setPostPending(false);
@@ -587,7 +588,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 
 	@Override
 	public void onWindowStateChanged(AccessibilityEvent event) {
-		if (isCurrentRedPacketCode(mCode)) {
+		if (mCodes.size() > 0 && isCurrentRedPacketCode(mCode)) {
 			switch (mClassName) {
 			case "com.alipay.mobile.framework.app.ui.DialogHelper$APGenericProgressDialog":
 				mCode.setPostComplete();

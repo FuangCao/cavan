@@ -51,6 +51,9 @@ public class CavanAndroid {
 	public static boolean ELOG_ENABLE = true;
 	public static boolean PLOG_ENABLE = true;
 
+	public static final String CLIP_LABEL_DEFAULT = "Cavan";
+	public static final String CLIP_LABEL_SKIP = "CavanSkip";
+
 	public static final String ENABLED_NOTIFICATION_LISTENERS = "enabled_notification_listeners";
 
 	public static final int EVENT_CLEAR_TOAST = 1;
@@ -294,7 +297,7 @@ public class CavanAndroid {
 	}
 
 	public static void postClipboardText(ClipboardManager manager, CharSequence text) {
-		postClipboardText(manager, "cavan", text);
+		postClipboardText(manager, CLIP_LABEL_DEFAULT, text);
 	}
 
 	public static boolean postClipboardText(Context context, CharSequence label, CharSequence text) {
@@ -308,7 +311,7 @@ public class CavanAndroid {
 	}
 
 	public static boolean postClipboardText(Context context, CharSequence text) {
-		return postClipboardText(context, "cavan", text);
+		return postClipboardText(context, CLIP_LABEL_DEFAULT, text);
 	}
 
 	public static boolean sendNotification(Context context, int id, Notification notification) {

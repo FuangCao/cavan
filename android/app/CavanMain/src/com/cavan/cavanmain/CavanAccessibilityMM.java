@@ -4,6 +4,7 @@ import android.os.Build;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import com.cavan.android.CavanAccessibility;
 import com.cavan.android.CavanPackageName;
 
 public class CavanAccessibilityMM extends CavanAccessibilityBase {
@@ -18,7 +19,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase {
 			return "com.tencent.mm:id/ib".equals(id);
 		}
 
-		return node.isMultiLine() && CavanAccessibilityService.isTextView(node);
+		return node.isMultiLine() && CavanAccessibility.isTextView(node);
 	}
 
 	@Override

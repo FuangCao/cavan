@@ -26,8 +26,6 @@ import com.cavan.java.CavanIndexGenerator;
 
 public class RedPacketListenerService extends NotificationListenerService implements OnPrimaryClipChangedListener {
 
-	public static final String CLIP_LABEL = "CavanRedPacketCode";
-
 	public static final int NOTIFY_TEST = -1;
 	public static final String EXTRA_CODE = "cavan.code";
 	public static final String EXTRA_MESSAGE = "cavan.message";
@@ -233,26 +231,12 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		}
 	}
 
-	public static boolean postRedPacketCode(ClipboardManager manager, CharSequence code) {
-		if (manager == null) {
-			return false;
-		}
-
-		ClipData data = ClipData.newPlainText(CLIP_LABEL, code);
-
-		CavanAndroid.dLog("ClipData = " + data);
-		manager.setPrimaryClip(data);
-
-		return true;
-	}
-
 	public static boolean postRedPacketCode(Context context, String code) {
-		ClipboardManager manager = (ClipboardManager) context.getSystemService(CLIPBOARD_SERVICE);
-		return postRedPacketCode(manager, code);
+		return CavanAndroid.postClipboardText(context, CavanAndroid.CLIP_LABEL_SKIP, code);
 	}
 
-	public boolean postRedPacketCode(CharSequence code) {
-		return postRedPacketCode(mClipboardManager, code);
+	public void postRedPacketCode(CharSequence code) {
+		CavanAndroid.postClipboardText(mClipboardManager, CavanAndroid.CLIP_LABEL_SKIP, code);
 	}
 
 	public static boolean startAlipayActivity(Context context) {
@@ -337,7 +321,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			mClipText = text;
 
 			ClipDescription desc = clip.getDescription();
-			if (desc != null && CLIP_LABEL.equals(desc.getLabel())) {
+			if (desc != null && CavanAndroid.CLIP_LABEL_SKIP.equals(desc.getLabel())) {
 				return;
 			}
 
