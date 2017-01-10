@@ -209,6 +209,16 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 		} else {
 			AccessibilityNodeInfo listNode = CavanAccessibilityService.findAccessibilityNodeInfoByViewId(root, "com.tencent.mobileqq:id/recent_chat_list");
 			if (listNode != null) {
+				for (int i = 0; i < 10 && listNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD); i++) {
+					CavanAndroid.dLog("ACTION_SCROLL_BACKWARD" + i);
+
+					try {
+						Thread.sleep(50);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+
 				AccessibilityNodeInfo node = findUnreadNode(listNode);
 
 				if (node != null) {
