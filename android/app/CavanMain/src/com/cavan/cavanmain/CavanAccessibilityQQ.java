@@ -186,9 +186,12 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 	}
 
 	private boolean doAutoUnpack(AccessibilityNodeInfo root) {
-		AccessibilityNodeInfo listNode = CavanAccessibility.findChildNodeByClassName(root, CavanAccessibility.CLASS_ABSLISTVIEW);
+		AccessibilityNodeInfo listNode = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/listView1");
 		if (listNode == null) {
-			return false;
+			listNode = CavanAccessibility.findChildNodeByClassName(root, CavanAccessibility.CLASS_ABSLISTVIEW);
+			if (listNode == null) {
+				return false;
+			}
 		}
 
 		CavanAccessibility.scrollToBottom(listNode, 10);
