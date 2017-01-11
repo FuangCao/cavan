@@ -1,6 +1,7 @@
 package com.cavan.cavanmain;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import android.accessibilityservice.AccessibilityService;
 import android.content.Intent;
@@ -28,7 +29,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 	private static final int MSG_ADD_PACKET = 1;
 	private static final int MSG_UNPACK_TIMEOUT = 2;
 
-	private int mChildIndex;
+	private int mChatIndex;
 	private int mRetryCount;
 	private boolean mUnpackBusy;
 	private String mMessageBoxText;
@@ -121,68 +122,90 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 		sendMessageDelayed(message, delay * 1000);
 	}
 
-	private boolean doAutoUnpack(AccessibilityNodeInfo root, AccessibilityNodeInfo listNode) {
-		for (AccessibilityNodeInfo node : CavanAccessibility.findNodesByText(listNode, RED_PACKET_NAME)) {
-			AccessibilityNodeInfo parent = node.getParent();
-			if (parent == null) {
-				continue;
+	private boolean doUnpackGeneral(AccessibilityNodeInfo root, AccessibilityNodeInfo node) {
+		if (node.getChildCount() < 2) {
+			return false;
+		}
+
+		String message = CavanAccessibility.getChildText(node, 0);
+		CavanAndroid.dLog("message = " + message);
+
+		if (message == null || message.contains("测") || message.contains("挂")) {
+			return false;
+		}
+
+		String state = CavanAccessibility.getChildText(node, 1);
+		CavanAndroid.dLog("state = " + state);
+
+		if (state == null) {
+			return false;
+		}
+
+		switch (state) {
+		case "点击拆开":
+		case "QQ红包个性版":
+			setUnpackBusy(true);
+			CavanAccessibility.performClick(node);
+			return true;
+
+		case "口令红包":
+			if (!CavanAccessibility.performClick(node)) {
+				break;
 			}
 
-			node.recycle();
-
-			if (parent.getChildCount() < 3) {
-				parent.recycle();
-				continue;
-			}
-
-			String message = CavanAccessibility.getChildText(parent, 0);
-			CavanAndroid.dLog("message = " + message);
-
-			if (message == null || message.contains("测") || message.contains("挂")) {
-				parent.recycle();
-				continue;
-			}
-
-			String state = CavanAccessibility.getChildText(parent, 1);
-			CavanAndroid.dLog("state = " + state);
-
-			if (state == null) {
-				parent.recycle();
-				continue;
-			}
-
-			switch (state) {
-			case "点击拆开":
-				setUnpackBusy(true);
-				CavanAccessibility.performClickAndRecycle(parent);
-				return true;
-
-			case "口令红包":
-				if (!CavanAccessibility.performClickAndRecycle(parent)) {
-					break;
-				}
-
-				AccessibilityNodeInfo inputBar = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/inputBar");
-				if (inputBar == null || inputBar.getChildCount() < 2) {
-					inputBar.recycle();
-					break;
-				}
-
-				if (!CavanAccessibility.setChildText(mService, inputBar, 0, message)) {
-					inputBar.recycle();
-					break;
-				}
-
-				setUnpackBusy(true);
-				CavanAccessibility.performChildClick(inputBar, 1);
+			AccessibilityNodeInfo inputBar = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/inputBar");
+			if (inputBar == null || inputBar.getChildCount() < 2) {
 				inputBar.recycle();
-				return true;
+				break;
 			}
 
-			parent.recycle();
+			if (!CavanAccessibility.setChildText(mService, inputBar, 0, message)) {
+				inputBar.recycle();
+				break;
+			}
+
+			setUnpackBusy(true);
+			CavanAccessibility.performChildClick(inputBar, 1);
+			inputBar.recycle();
+			return true;
 		}
 
 		return false;
+	}
+
+	private boolean doAutoUnpack(AccessibilityNodeInfo root, AccessibilityNodeInfo listNode) {
+		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(RED_PACKET_NAME);
+		if (nodes == null) {
+			return false;
+		}
+
+		int index;
+		boolean success = false;
+
+		for (index = nodes.size() - 1; index >= 0; index--) {
+			AccessibilityNodeInfo node = nodes.get(index);
+			String type = CavanAccessibility.getNodeText(node);
+			CavanAndroid.dLog("type = " + type);
+
+			if (type.startsWith(RED_PACKET_NAME)) {
+				AccessibilityNodeInfo parent = node.getParent();
+				if (parent != null) {
+					success = doUnpackGeneral(root, parent);
+					parent.recycle();
+					if (success) {
+						break;
+					}
+				}
+			}
+
+			node.recycle();
+		}
+
+		while (index >= 0) {
+			nodes.get(index--).recycle();
+		}
+
+		return success;
 	}
 
 	private boolean doAutoUnpack(AccessibilityNodeInfo root) {
@@ -230,6 +253,19 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 		return null;
 	}
 
+	private List<AccessibilityNodeInfo> getRecentChats(AccessibilityNodeInfo root) {
+		AccessibilityNodeInfo listNode = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/recent_chat_list");
+		if (listNode == null) {
+			return null;
+		}
+
+		CavanAccessibility.performScrollUp(listNode, 10);
+
+		List<AccessibilityNodeInfo> chats = listNode.findAccessibilityNodeInfosByViewId("com.tencent.mobileqq:id/relativeItem");
+		listNode.recycle();
+		return chats;
+	}
+
 	private long doFindAndUnpack(AccessibilityNodeInfo root) {
 		AccessibilityNodeInfo backNode = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/ivTitleBtnLeft");
 		if (backNode != null) {
@@ -242,11 +278,9 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 
 				if (packet != null) {
 					if (doAutoUnpack(root)) {
-						backNode.recycle();
-						return 0;
+						CavanAndroid.dLog("complete: " + packet);
 					}
 
-					CavanAndroid.dLog("complete: " + packet);
 					mPackets.remove(packet);
 					mRetryCount = 0;
 				}
@@ -255,47 +289,42 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 			CavanAccessibility.performClickAndRecycle(backNode);
 			return POLL_DELAY_FAST;
 		} else {
-			AccessibilityNodeInfo listNode = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/recent_chat_list");
-			if (listNode != null) {
-				int childs = listNode.getChildCount();
-				if (childs > 1) {
-					CavanAccessibility.performScrollUp(listNode, 10);
-
-					while (true) {
-						if (++mChildIndex < childs) {
-							CavanAndroid.dLog("mChildIndex = " + mChildIndex);
-							AccessibilityNodeInfo node = listNode.getChild(mChildIndex);
-
-							if (mRetryCount == 0 || CavanAccessibility.getNodeCountByViewId(node, "com.tencent.mobileqq:id/unreadmsg") > 0) {
-								CavanAccessibility.performClickAndRecycle(node);
-								break;
-							}
-
-							node.recycle();
-						} else {
-							CavanAndroid.dLog("mRetryCount = " + mRetryCount);
-
-							mChildIndex = 0;
-
-							if (++mRetryCount > MAX_RETRY_COUNT) {
-								CavanAndroid.dLog("not found: " + mPackets);
-								mPackets.clear();
-								mRetryCount = 0;
-								break;
-							}
-						}
-					}
-
-					listNode.recycle();
-
-					return POLL_DELAY_SLOW;
-				}
-
-				listNode.recycle();
+			List<AccessibilityNodeInfo> chats = getRecentChats(root);
+			if (chats == null || chats.isEmpty()) {
+				performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+				return POLL_DELAY_BACK;
 			}
 
-			performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
-			return POLL_DELAY_BACK;
+			CavanAndroid.dLog("chats = " + chats.size());
+
+			while (true) {
+				if (mChatIndex < chats.size()) {
+					CavanAndroid.dLog("mChatIndex = " + mChatIndex);
+
+					AccessibilityNodeInfo parent = chats.get(mChatIndex++).getParent();
+					if (mRetryCount == 0 || CavanAccessibility.getNodeCountByViewId(parent, "com.tencent.mobileqq:id/unreadmsg") > 0) {
+						CavanAccessibility.performClickAndRecycle(parent);
+						break;
+					}
+
+					parent.recycle();
+				} else {
+					CavanAndroid.dLog("mRetryCount = " + mRetryCount);
+
+					mChatIndex = 0;
+
+					if (++mRetryCount > MAX_RETRY_COUNT) {
+						CavanAndroid.dLog("not found: " + mPackets);
+						mPackets.clear();
+						mRetryCount = 0;
+						break;
+					}
+				}
+			}
+
+			CavanAccessibility.recycleNodes(chats);
+
+			return POLL_DELAY_SLOW;
 		}
 	}
 
@@ -343,7 +372,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 		switch (msg.what) {
 		case MSG_ADD_PACKET:
 			mPackets.add((String) msg.obj);
-			mChildIndex = 0;
+			mChatIndex = 0;
 			mRetryCount = 0;
 			startAutoUnpack();
 			break;

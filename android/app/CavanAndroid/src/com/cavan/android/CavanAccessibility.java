@@ -563,7 +563,7 @@ public class CavanAccessibility {
 					continue;
 				}
 
-				builder.append(prefix).append(' ');
+				builder.append(prefix).append(' ').append(i).append(". ");
 				dumpNodePrivate(builder, subPrefix, child, closure);
 				child.recycle();
 			}
