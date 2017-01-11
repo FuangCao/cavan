@@ -12,12 +12,17 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TabHost;
 import android.widget.TextView;
+
+import com.cavan.java.CavanJava.Closure;
+import com.cavan.java.CavanJava.ClosureVoid;
 
 public class CavanAccessibility {
 
 	public static final String CLASS_VIEW = View.class.getName();
 	public static final String CLASS_BUTTON = Button.class.getName();
+	public static final String CLASS_TABHOST = TabHost.class.getName();
 	public static final String CLASS_TEXTVIEW = TextView.class.getName();
 	public static final String CLASS_EDITTEXT = EditText.class.getName();
 	public static final String CLASS_ABSLISTVIEW = AbsListView.class.getName();
@@ -56,6 +61,10 @@ public class CavanAccessibility {
 		return isInstanceOf(node, CLASS_EDITTEXT);
 	}
 
+	public static boolean isTabHost(AccessibilityNodeInfo node) {
+		return isInstanceOf(node, CLASS_TABHOST);
+	}
+
 	public static void recycleNodes(List<AccessibilityNodeInfo> nodes, int start, int end) {
 		for (int i = end - 1; i >= start; i--) {
 			nodes.get(i).recycle();
@@ -80,9 +89,8 @@ public class CavanAccessibility {
 
 		while (iterator.hasNext()) {
 			AccessibilityNodeInfo node = iterator.next();
-			CharSequence sequence = node.getText();
 
-			if (sequence != null && text.equals(sequence.toString())) {
+			if (text.equals(getNodeText(node))) {
 				continue;
 			}
 
@@ -109,12 +117,16 @@ public class CavanAccessibility {
 		return infos;
 	}
 
-	public static List<AccessibilityNodeInfo> findChildNodesByClassName(AccessibilityNodeInfo root, String clsName) {
+	public static List<AccessibilityNodeInfo> findChildsByClassName(AccessibilityNodeInfo parent, String clsName) {
 		List<AccessibilityNodeInfo> nodes = new ArrayList<AccessibilityNodeInfo>();
-		int count = root.getChildCount();
+		int childs = parent.getChildCount();
 
-		for (int i = 0; i < count; i++) {
-			AccessibilityNodeInfo child = root.getChild(i);
+		for (int i = 0; i < childs; i++) {
+			AccessibilityNodeInfo child = parent.getChild(i);
+			if (child == null) {
+				continue;
+			}
+
 			if (isInstanceOf(child, clsName)) {
 				nodes.add(child);
 			} else {
@@ -125,11 +137,15 @@ public class CavanAccessibility {
 		return nodes;
 	}
 
-	public static AccessibilityNodeInfo findChildNodeByClassName(AccessibilityNodeInfo root, String clsName) {
-		int count = root.getChildCount();
+	public static AccessibilityNodeInfo findChildByClassName(AccessibilityNodeInfo parent, String clsName) {
+		int childs = parent.getChildCount();
 
-		for (int i = 0; i < count; i++) {
-			AccessibilityNodeInfo child = root.getChild(i);
+		for (int i = 0; i < childs; i++) {
+			AccessibilityNodeInfo child = parent.getChild(i);
+			if (child == null) {
+				continue;
+			}
+
 			if (isInstanceOf(child, clsName)) {
 				return child;
 			}
@@ -173,10 +189,32 @@ public class CavanAccessibility {
 		return null;
 	}
 
-	public static String getChildNodeText(AccessibilityNodeInfo node, int index) {
+	public static String getNodeViewId(AccessibilityNodeInfo node) {
+		CharSequence text = node.getViewIdResourceName();
+		if (text != null) {
+			return text.toString();
+		}
+
+		return null;
+	}
+
+	public static String getChildText(AccessibilityNodeInfo parent, int index) {
 		try {
-			AccessibilityNodeInfo child = node.getChild(index);
+			AccessibilityNodeInfo child = parent.getChild(index);
 			String text = getNodeText(child);
+			child.recycle();
+			return text;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	public static String getChildViewId(AccessibilityNodeInfo parent, int index) {
+		try {
+			AccessibilityNodeInfo child = parent.getChild(index);
+			String text = getNodeViewId(child);
 			child.recycle();
 			return text;
 		} catch (Exception e) {
@@ -197,19 +235,207 @@ public class CavanAccessibility {
 		return text;
 	}
 
-	public static void setNodeSelection(AccessibilityNodeInfo node, int start, int length) {
+	public static int getNodeCountAndRecycle(List<AccessibilityNodeInfo> nodes) {
+		if (nodes == null) {
+			return 0;
+		}
+
+		recycleNodes(nodes);
+
+		return nodes.size();
+	}
+
+	public static int getNodeCountByViewId(AccessibilityNodeInfo root, String viewId) {
+		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(viewId);
+		return getNodeCountAndRecycle(nodes);
+	}
+
+	public static int getNodeCountByText(AccessibilityNodeInfo root, String text) {
+		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(text);
+		return getNodeCountAndRecycle(nodes);
+	}
+
+	public static int getChildCountByViewId(AccessibilityNodeInfo parent, String viewId) {
+		int count = 0;
+
+		for (int i = parent.getChildCount() - 1; i >= 0; i--) {
+			if (viewId.equals(getChildViewId(parent, i))) {
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public static int getChildCountByText(AccessibilityNodeInfo parent, String text) {
+		int count = 0;
+
+		for (int i = parent.getChildCount() - 1; i >= 0; i--) {
+			if (text.equals(getChildText(parent, i))) {
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public static int traverseNodes(AccessibilityNodeInfo root, Closure closure) {
+		int count;
+
+		if ((Boolean) closure.call(root)) {
+			count = 1;
+		} else {
+			count = 0;
+		}
+
+		for (int i = 0, childs = root.getChildCount(); i < childs; i++) {
+			AccessibilityNodeInfo child = root.getChild(i);
+			if (child == null) {
+				continue;
+			}
+
+			count += traverseNodes(root, closure);
+			child.recycle();
+		}
+
+		return count;
+	}
+
+	public static int traverseChilds(AccessibilityNodeInfo parent, Closure closure) {
+		int count = 0;
+
+		for (int i = 0, childs = parent.getChildCount(); i < childs; i++) {
+			AccessibilityNodeInfo child = parent.getChild(i);
+			if (child == null) {
+				continue;
+			}
+
+			if ((Boolean) closure.call(child)) {
+				count++;
+			}
+
+			child.recycle();
+		}
+
+		return count;
+	}
+
+	public static int traverseChildsByViewId(AccessibilityNodeInfo root, String viewId, Closure closure) {
+		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(viewId);
+		if (nodes == null) {
+			return 0;
+		}
+
+		int count = 0;
+
+		for (AccessibilityNodeInfo node : nodes) {
+			count += traverseChilds(node, closure);
+			node.recycle();
+		}
+
+		return count;
+	}
+
+	public static int traverseChildsByText(AccessibilityNodeInfo root, String text, Closure closure) {
+		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(text);
+		if (nodes == null) {
+			return 0;
+		}
+
+		int count = 0;
+
+		for (AccessibilityNodeInfo node : nodes) {
+			if (text.equals(getNodeText(node))) {
+				count += traverseChilds(node, closure);
+			}
+
+			node.recycle();
+		}
+
+		return count;
+	}
+
+	public static int traverseNodesByViewId(AccessibilityNodeInfo root, String viewId, Closure closure) {
+		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(viewId);
+		if (nodes == null) {
+			return 0;
+		}
+
+		int count = 0;
+
+		for (AccessibilityNodeInfo node : nodes) {
+			if ((Boolean) closure.call(node)) {
+				count++;
+			}
+
+			node.recycle();
+		}
+
+		return count;
+	}
+
+	public static int traverseNodesByText(AccessibilityNodeInfo root, String text, Closure closure) {
+		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(text);
+		if (nodes == null) {
+			return 0;
+		}
+
+		int count = 0;
+
+		for (AccessibilityNodeInfo node : nodes) {
+			if (text.equals(getNodeText(node)) && (Boolean) closure.call(node)) {
+				count++;
+			}
+
+			node.recycle();
+		}
+
+		return count;
+	}
+
+	public static boolean performClick(AccessibilityNodeInfo node) {
+		return node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+	}
+
+	public static boolean performFocus(AccessibilityNodeInfo node) {
+		return node.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+	}
+
+	public static boolean performSelection(AccessibilityNodeInfo node, int start, int length) {
 		if (length > 0) {
 			Bundle arguments = new Bundle();
 			arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, start);
 			arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, start + length);
-			node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, arguments);
+			return node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, arguments);
 		} else {
-			node.performAction(AccessibilityNodeInfo.ACTION_SELECT);
+			return node.performAction(AccessibilityNodeInfo.ACTION_SELECT);
 		}
 	}
 
+	public static int performActionByViewId(AccessibilityNodeInfo root, String viewId, final int action, final Bundle arguments) {
+		return traverseNodesByViewId(root, viewId, new Closure() {
+
+			@Override
+			public Object call(Object... args) {
+				AccessibilityNodeInfo node = (AccessibilityNodeInfo) args[0];
+				return node.performAction(action, arguments);
+			}
+		});
+	}
+
+	public static int performActionByText(AccessibilityNodeInfo root, String text, final int action, final Bundle arguments) {
+		return traverseNodesByText(root, text, new Closure() {
+
+			@Override
+			public Object call(Object... args) {
+				AccessibilityNodeInfo node = (AccessibilityNodeInfo) args[0];
+				return node.performAction(action, arguments);
+			}
+		});
+	}
+
 	public static boolean setNodeText(Context context, AccessibilityNodeInfo node, String text) {
-		node.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+		performFocus(node);
 
 		String oldText = getNodeText(node);
 		if (text.equals(oldText)) {
@@ -229,32 +455,69 @@ public class CavanAccessibility {
 			return false;
 		}
 
-		setNodeSelection(node, 0, oldText.length());
+		performSelection(node, 0, oldText.length());
 		CavanAndroid.postClipboardText(context, CavanAndroid.CLIP_LABEL_SKIP, text);
-		node.performAction(AccessibilityNodeInfo.ACTION_PASTE);
 
-		return true;
+		return node.performAction(AccessibilityNodeInfo.ACTION_PASTE);
 	}
 
-	public static boolean performChildAction(AccessibilityNodeInfo node, int index, int action) {
-		AccessibilityNodeInfo child = node.getChild(index);
-		boolean success = child.performAction(action);
-		child.recycle();
+	public static boolean setNodeTextAndRecycle(Context context, AccessibilityNodeInfo node, String text) {
+		boolean success = setNodeText(context, node, text);
+		node.recycle();
 		return success;
 	}
 
-	public static boolean performChildActionClick(AccessibilityNodeInfo node, int index) {
-		AccessibilityNodeInfo child = node.getChild(index);
-		boolean success = child.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-		child.recycle();
+	public static boolean setChildText(Context context, AccessibilityNodeInfo parent, int index, String text) {
+		try {
+			AccessibilityNodeInfo child = parent.getChild(index);
+			return setNodeTextAndRecycle(context, child, text);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return false;
+	}
+
+	public static int setNodeTextByViewId(final Context context, AccessibilityNodeInfo root, String viewId, final String text) {
+		return traverseNodesByViewId(root, viewId, new Closure() {
+
+			@Override
+			public Object call(Object... args) {
+				return setNodeText(context, (AccessibilityNodeInfo) args[0], text);
+			}
+		});
+	}
+
+	public static boolean performActionAndRecycle(AccessibilityNodeInfo node, int action, Bundle arguments) {
+		boolean success = node.performAction(action, arguments);
+		node.recycle();
 		return success;
 	}
 
-	public static boolean performAction(AccessibilityNodeInfo node, int action, int count) {
+	public static boolean performClickAndRecycle(AccessibilityNodeInfo node) {
+		return performActionAndRecycle(node, AccessibilityNodeInfo.ACTION_CLICK, null);
+	}
+
+	public static boolean performChildAction(AccessibilityNodeInfo parent, int index, int action) {
+		try {
+			AccessibilityNodeInfo child = parent.getChild(index);
+			return performActionAndRecycle(child, action, null);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return false;
+	}
+
+	public static boolean performChildClick(AccessibilityNodeInfo parent, int index) {
+		return performChildAction(parent, index, AccessibilityNodeInfo.ACTION_CLICK);
+	}
+
+	public static boolean performAction(AccessibilityNodeInfo node, int action, Bundle arguments, int count) {
 		while (count > 0) {
 			CavanAndroid.dLog("action" + count + " = " + action);
 
-			if (node.performAction(action)) {
+			if (node.performAction(action, arguments)) {
 				try {
 					Thread.sleep(50);
 				} catch (InterruptedException e) {
@@ -270,59 +533,87 @@ public class CavanAccessibility {
 		return false;
 	}
 
-	public static boolean scrollToTop(AccessibilityNodeInfo node, int count) {
-		return performAction(node, AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD, count);
+	public static boolean performScrollBackward(AccessibilityNodeInfo node, int count) {
+		return performAction(node, AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD, null, count);
 	}
 
-	public static boolean scrollToBottom(AccessibilityNodeInfo node, int count) {
-		return performAction(node, AccessibilityNodeInfo.ACTION_SCROLL_FORWARD, count);
+	public static boolean performScrollUp(AccessibilityNodeInfo node, int count) {
+		return performScrollBackward(node, count);
 	}
 
-	public static void dumpNode(StringBuilder builder, String prefix, AccessibilityNodeInfo node) {
-		if (node == null) {
-			return;
-		}
+	public static boolean performScrollForward(AccessibilityNodeInfo node, int count) {
+		return performAction(node, AccessibilityNodeInfo.ACTION_SCROLL_FORWARD, null, count);
+	}
 
-		builder.append(prefix);
-		builder.append(node);
+	public static boolean performScrollDown(AccessibilityNodeInfo node, int count) {
+		return performScrollForward(node, count);
+	}
+
+	private static void dumpNodePrivate(StringBuilder builder, String prefix, AccessibilityNodeInfo node, ClosureVoid closure) {
+		closure.call(builder, node);
 		builder.append('\n');
-		prefix += "  ";
 
-		for (int i = 0, count = node.getChildCount(); i < count; i++) {
-			dumpNode(builder, prefix, node.getChild(i));
+		int childs = node.getChildCount();
+		if (childs > 0) {
+			String subPrefix = prefix + "─┼─";
+
+			for (int i = 0; i < childs; i++) {
+				AccessibilityNodeInfo child = node.getChild(i);
+				if (child == null) {
+					continue;
+				}
+
+				builder.append(prefix).append(' ');
+				dumpNodePrivate(builder, subPrefix, child, closure);
+				child.recycle();
+			}
 		}
+	}
+
+	public static void dumpNodeTo(StringBuilder builder, AccessibilityNodeInfo node, ClosureVoid closure) {
+		if (builder != null && node != null && closure != null) {
+			dumpNodePrivate(builder, "├─", node, closure);
+		}
+	}
+
+	public static String dumpNodeTo(AccessibilityNodeInfo node, ClosureVoid closure) {
+		StringBuilder builder = new StringBuilder();
+		dumpNodeTo(builder, node, closure);
+		return builder.toString();
+	}
+
+	public static void dumpNode(AccessibilityNodeInfo node, ClosureVoid closure) {
+		CavanAndroid.dLog(dumpNodeTo(node, closure));
 	}
 
 	public static void dumpNode(AccessibilityNodeInfo node) {
-		StringBuilder builder = new StringBuilder();
-		dumpNode(builder, "", node);
-		CavanAndroid.dLog(builder.toString());
-	}
+		dumpNode(node, new ClosureVoid() {
 
-	public static void dumpNodeSimple(StringBuilder builder, String prefix, AccessibilityNodeInfo node) {
-		if (node == null) {
-			return;
-		}
+			@Override
+			public void call(Object... args) {
+				StringBuilder builder = (StringBuilder) args[0];
+				AccessibilityNodeInfo node = (AccessibilityNodeInfo) args[1];
 
-		builder.append(prefix);
-		builder.append("├─ ");
-		builder.append(node.getClassName());
-		builder.append("@");
-		builder.append(node.getViewIdResourceName());
-		// builder.append(node.hashCode());
-		builder.append(": ");
-		builder.append(node.getText());
-		builder.append('\n');
-		prefix += "├──";
-
-		for (int i = 0, count = node.getChildCount(); i < count; i++) {
-			dumpNodeSimple(builder, prefix, node.getChild(i));
-		}
+				builder.append(node);
+			}
+		});
 	}
 
 	public static void dumpNodeSimple(AccessibilityNodeInfo node) {
-		StringBuilder builder = new StringBuilder();
-		dumpNodeSimple(builder, "", node);
-		CavanAndroid.dLog(builder.toString());
+		dumpNode(node, new ClosureVoid() {
+
+			@Override
+			public void call(Object... args) {
+				StringBuilder builder = (StringBuilder) args[0];
+				AccessibilityNodeInfo node = (AccessibilityNodeInfo) args[1];
+
+				builder.append(node.getClassName());
+				builder.append("@");
+				builder.append(node.getViewIdResourceName());
+				builder.append(": ");
+				builder.append(node.getText());
+
+			}
+		});
 	}
 }

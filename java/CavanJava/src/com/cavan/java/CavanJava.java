@@ -11,6 +11,14 @@ import java.util.List;
 
 public class CavanJava {
 
+	public interface Closure {
+		Object call(Object... args);
+	}
+
+	public interface ClosureVoid {
+		void call(Object... args);
+	}
+
 	public static void eLog(String message) {
 		System.err.println(message);
 	}
