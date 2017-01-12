@@ -449,4 +449,30 @@ public class CavanJava {
 
 		return true;
 	}
+
+	public static void msleep(long millis) {
+		try {
+			Thread.sleep(millis);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void msleep(long millis, int nanos) {
+		try {
+			Thread.sleep(millis, nanos);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void usleep(long usec) {
+		long millis = usec / 1000;
+		msleep(millis, (int) (usec * 1000 - millis * 1000000));
+	}
+
+	public static void nsleep(long nanos) {
+		long millis = nanos / 1000000;
+		msleep(millis, (int) (nanos - millis * 1000000));
+	}
 }

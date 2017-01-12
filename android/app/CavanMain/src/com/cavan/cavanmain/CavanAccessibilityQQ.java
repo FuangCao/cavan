@@ -15,6 +15,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import com.cavan.android.CavanAccessibility;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
+import com.cavan.java.CavanJava;
 
 public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 
@@ -22,9 +23,10 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 
 	private static final int POLL_DELAY_FAST = 200;
 	private static final int POLL_DELAY_SLOW = 500;
-	private static final int POLL_DELAY_BACK = 2000;
+	private static final int POLL_DELAY_BACK = 1000;
 	private static final int POLL_DELAY_UNPACK = 1000;
-
+	private static final int SCROLL_DELAY = 100;
+	private static final int MAX_SCROLL_COUNT = 3;
 	private static final int MAX_RETRY_COUNT = 3;
 
 	private static final int MSG_ADD_PACKET = 1;
@@ -225,26 +227,39 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 			}
 		}
 
-		CavanAccessibility.performScrollDown(listNode, 10);
+		if (mMesssages.isEmpty() && CavanAccessibility.performScrollDown(listNode, 100)) {
+			CavanJava.msleep(SCROLL_DELAY);
+		}
 
-		for (int i = 0; i < 3; i++) {
+		for (int i = 0; i < MAX_SCROLL_COUNT; i++) {
 			if (doAutoUnpack(root, listNode)) {
 				listNode.recycle();
 				return true;
 			}
 
-			if (CavanAccessibility.performScrollUp(listNode, 1)) {
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+			CavanAndroid.dLog("performScrollUp" + i);
+
+			if (CavanAccessibility.performScrollUp(listNode)) {
+				CavanJava.msleep(SCROLL_DELAY);
 			} else {
 				break;
 			}
 		}
 
-		CavanAccessibility.performScrollDown(listNode, 10);
+		for (int i = 0; i < 10; i++) {
+			CavanAndroid.dLog("performScrollDown" + i);
+
+			if (CavanAccessibility.performScrollDown(listNode)) {
+				CavanJava.msleep(SCROLL_DELAY);
+			} else {
+				break;
+			}
+
+			if (doAutoUnpack(root, listNode)) {
+				listNode.recycle();
+				return true;
+			}
+		}
 
 		listNode.recycle();
 

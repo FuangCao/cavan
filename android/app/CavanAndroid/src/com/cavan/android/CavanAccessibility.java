@@ -15,6 +15,7 @@ import android.widget.EditText;
 import android.widget.TabHost;
 import android.widget.TextView;
 
+import com.cavan.java.CavanJava;
 import com.cavan.java.CavanJava.Closure;
 import com.cavan.java.CavanJava.ClosureVoid;
 
@@ -514,39 +515,38 @@ public class CavanAccessibility {
 	}
 
 	public static boolean performAction(AccessibilityNodeInfo node, int action, Bundle arguments, int count) {
+		boolean success = false;
+
 		while (count > 0) {
 			CavanAndroid.dLog("action" + count + " = " + action);
 
 			if (node.performAction(action, arguments)) {
-				try {
-					Thread.sleep(50);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				success = true;
+				CavanJava.msleep(50);
 			} else {
-				return true;
+				break;
 			}
 
 			count--;
 		}
 
-		return false;
-	}
-
-	public static boolean performScrollBackward(AccessibilityNodeInfo node, int count) {
-		return performAction(node, AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD, null, count);
+		return success;
 	}
 
 	public static boolean performScrollUp(AccessibilityNodeInfo node, int count) {
-		return performScrollBackward(node, count);
-	}
-
-	public static boolean performScrollForward(AccessibilityNodeInfo node, int count) {
-		return performAction(node, AccessibilityNodeInfo.ACTION_SCROLL_FORWARD, null, count);
+		return performAction(node, AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD, null, count);
 	}
 
 	public static boolean performScrollDown(AccessibilityNodeInfo node, int count) {
-		return performScrollForward(node, count);
+		return performAction(node, AccessibilityNodeInfo.ACTION_SCROLL_FORWARD, null, count);
+	}
+
+	public static boolean performScrollUp(AccessibilityNodeInfo node) {
+		return node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+	}
+
+	public static boolean performScrollDown(AccessibilityNodeInfo node) {
+		return node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
 	}
 
 	private static void dumpNodePrivate(StringBuilder builder, String prefix, AccessibilityNodeInfo node, ClosureVoid closure) {
