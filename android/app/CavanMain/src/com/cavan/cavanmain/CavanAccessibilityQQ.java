@@ -1,5 +1,6 @@
 package com.cavan.cavanmain;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -34,6 +35,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 	private boolean mUnpackBusy;
 	private String mMessageBoxText;
 
+	private List<Integer> mMesssages = new ArrayList<Integer>();
 	private LinkedList<String> mPackets = new LinkedList<String>();
 	private Runnable mRunnablePoll = new Runnable() {
 
@@ -303,6 +305,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 
 					AccessibilityNodeInfo parent = chats.get(mChatIndex++).getParent();
 					if (mRetryCount == 0 || CavanAccessibility.getNodeCountByViewId(parent, "com.tencent.mobileqq:id/unreadmsg") > 0) {
+						mMesssages.clear();
 						CavanAccessibility.performClickAndRecycle(parent);
 						break;
 					}

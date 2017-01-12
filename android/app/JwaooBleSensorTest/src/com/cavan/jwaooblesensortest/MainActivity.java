@@ -6,6 +6,8 @@ import android.bluetooth.BluetoothDevice;
 import android.os.Bundle;
 import android.os.Message;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
@@ -13,7 +15,11 @@ import com.cavan.android.CavanWaveView;
 import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
 
-public class MainActivity extends JwaooToyActivity {
+public class MainActivity extends JwaooToyActivity implements OnCheckedChangeListener {
+
+	private static final int SENSOR_DELAY = 20;
+	private static final int SENSOR_DELAY_MIN = SENSOR_DELAY - 1;
+	private static final int SENSOR_DELAY_MAX = SENSOR_DELAY + 1;
 
 	private static final int MSG_DISCONNECTED = 100;
 	private static final int MSG_UPDATE_SPEED = 101;
@@ -22,7 +28,12 @@ public class MainActivity extends JwaooToyActivity {
 	private CavanWaveView mWaveViewX;
 	private CavanWaveView mWaveViewY;
 	private CavanWaveView mWaveViewZ;
+
 	private CheckBox mCheckBoxReConn;
+	private CheckBox mCheckBoxLogEnable;
+	private CheckBox mCheckBoxShowDelay;
+	private CheckBox mCheckBoxOptimizeSensorSpeed;
+
 	private TextView mTextViewTime;
 	private TextView mTextViewState;
 	private TextView mTextViewBattery;
@@ -148,6 +159,11 @@ public class MainActivity extends JwaooToyActivity {
 		mWaveViewZ.setZoom(2);
 
 		mCheckBoxReConn = (CheckBox) findViewById(R.id.checkBoxAutoReConnect);
+		mCheckBoxLogEnable = (CheckBox) findViewById(R.id.checkBoxLogEnable);
+		mCheckBoxShowDelay = (CheckBox) findViewById(R.id.checkBoxShowDelay);
+		mCheckBoxOptimizeSensorSpeed = (CheckBox) findViewById(R.id.checkBoxOptimizeSensorSpeed);
+		mCheckBoxOptimizeSensorSpeed.setOnCheckedChangeListener(this);
+
 		mTextViewBattery = (TextView) findViewById(R.id.textViewBattery);
 		mTextViewState = (TextView) findViewById(R.id.textViewSpeed);
 		mTextViewTime = (TextView) findViewById(R.id.textViewTime);
@@ -170,6 +186,8 @@ public class MainActivity extends JwaooToyActivity {
 		}
 
 		return new JwaooBleToy(device) {
+
+			private long mSensorDataTime;
 
 			@Override
 			protected void onConnectionStateChange(boolean connected) {
@@ -195,8 +213,9 @@ public class MainActivity extends JwaooToyActivity {
 
 			@Override
 			protected boolean onInitialize() {
-				mBleToy.setBatteryEventEnable(true);
-				mBleToy.setSensorEnable(true, 20);
+				setBatteryEventEnable(true);
+				setSensorEnable(true, SENSOR_DELAY);
+				setSensorSpeedOptimizeEnable(mCheckBoxOptimizeSensorSpeed.isChecked());
 				return super.onInitialize();
 			}
 
@@ -205,6 +224,20 @@ public class MainActivity extends JwaooToyActivity {
 				mPackageCount++;
 
 				mSensor.putBytes(arg0);
+
+				if (mCheckBoxShowDelay.isChecked()) {
+					long time = System.currentTimeMillis();
+					long delay = time - mSensorDataTime;
+
+					mSensorDataTime = time;
+
+					if (delay < SENSOR_DELAY_MIN || delay > SENSOR_DELAY_MAX) {
+						CavanAndroid.dLog("delay = " + delay);
+					}
+				} else if (mCheckBoxLogEnable.isChecked()) {
+					CavanAndroid.dLog(mSensor.getAccelText());
+				}
+
 				mWaveViewX.addValue(mSensor.getAxisX());
 				mWaveViewY.addValue(mSensor.getAxisY());
 				mWaveViewZ.addValue(mSensor.getAxisZ());
@@ -217,5 +250,14 @@ public class MainActivity extends JwaooToyActivity {
 				mHandler.sendEmptyMessage(MSG_BATTERY_INFO);
 			}
 		};
+	}
+
+	@Override
+	public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+		if (buttonView == mCheckBoxOptimizeSensorSpeed) {
+			if (mBleToy != null) {
+				mBleToy.setSensorSpeedOptimizeEnable(isChecked);
+			}
+		}
 	}
 }

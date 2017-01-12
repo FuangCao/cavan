@@ -18,11 +18,43 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <CheckBox
-        android:id="@+id/checkBoxAutoReConnect"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/auto_reconnect" />
+        android:layout_height="wrap_content" >
+
+        <CheckBox
+            android:id="@+id/checkBoxAutoReConnect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:text="@string/auto_reconnect" />
+
+        <CheckBox
+            android:id="@+id/checkBoxOptimizeSensorSpeed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/checkBoxAutoReConnect"
+            android:text="@string/optimize_sensor_speed" />
+
+        <CheckBox
+            android:id="@+id/checkBoxLogEnable"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignBaseline="@+id/checkBoxAutoReConnect"
+            android:text="@string/log_enable" />
+
+        <CheckBox
+            android:id="@+id/checkBoxShowDelay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/checkBoxLogEnable"
+            android:layout_alignBaseline="@+id/checkBoxOptimizeSensorSpeed"
+            android:text="@string/show_delay" />
+
+    </RelativeLayout>
 
     <com.cavan.android.CavanWaveView
         android:id="@+id/waveViewX"

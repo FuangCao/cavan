@@ -9,10 +9,16 @@ import com.cavan.android.CavanBleGatt;
 import com.cavan.java.CavanByteCache;
 import com.cavan.java.CavanHexFile;
 import com.cavan.java.CavanJava;
+import com.cavan.java.CavanOverrideQueue;
 import com.cavan.java.CavanProgressListener;
 import com.cavan.java.CavanString;
 
 public class JwaooBleToy extends CavanBleGatt {
+
+	private static final int SENSOR_QUEUE_SIZE = 10;
+	private static final int SENSOR_QUEUE_MIN = 2;
+	private static final int SENSOR_QUEUE_MAX = 3;
+	private static final int SENSOR_DELAY_STEP = 5000;
 
 	public static final String[] BT_NAMES = {
 		"JwaooToy", "SenseTube", "SenseBand"
@@ -31,6 +37,8 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final long JWAOO_TOY_TIME_MAX_FREQ = 5000;
 	public static final double JWAOO_TOY_ACCEL_VALUE_FUZZ = 2.0;
 	public static final double JWAOO_TOY_DEPTH_VALUE_FUZZ = 6.0;
+
+	public static final int SENSOR_DELAY_DEFAULT = 20;
 
 	public static final int LED_BATT = 1;
 	public static final int LED_BT = 2;
@@ -140,7 +148,11 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	protected int mSensorDataSkip;
 	protected JwaooToySensor mSensor;
-	protected JwaooToyParser mParser = new JwaooToyParser(JWAOO_TOY_DEPTH_VALUE_FUZZ);
+	protected int mSensorDelayNanos;
+	protected boolean mSensorSpeedOptimize;
+	protected long mSensorDelayMillis = SENSOR_DELAY_DEFAULT;
+	private CavanOverrideQueue<byte[]> mSensorDataQueue = new CavanOverrideQueue<byte[]>(SENSOR_QUEUE_SIZE);
+	private SensorSpeedOptimizeThread mSensorOptimizeThread;
 
 	private CavanBleDataListener mEventListener = new CavanBleDataListener() {
 
@@ -157,7 +169,11 @@ public class JwaooBleToy extends CavanBleGatt {
 			if (mSensorDataSkip > 0) {
 				mSensorDataSkip--;
 			} else if (mSensor != null) {
-				onSensorDataReceived(data);
+				if (mSensorSpeedOptimize) {
+					mSensorDataQueue.add(data.clone());
+				} else {
+					onSensorDataReceived(data);
+				}
 			}
 		}
 	};
@@ -243,7 +259,6 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	protected void onSensorDataReceived(byte[] data) {
 		mSensor.putBytes(data);
-		mParser.putData(mSensor);
 	}
 
 	protected void onDebugDataReceived(byte[] data) {
@@ -258,6 +273,12 @@ public class JwaooBleToy extends CavanBleGatt {
 		this(device, UUID_SERVICE);
 	}
 
+	@Override
+	protected void finalize() throws Throwable {
+		setSensorSpeedOptimizeEnable(false);
+		super.finalize();
+	}
+
 	public JwaooToySensor getSensor() {
 		return mSensor;
 	}
@@ -266,34 +287,6 @@ public class JwaooBleToy extends CavanBleGatt {
 		if (sensor != null) {
 			mSensor = sensor;
 		}
-	}
-
-	public void setFreqFuzz(double fuzz) {
-		mParser.setFreqFuzz(fuzz);
-	}
-
-	public void setDepthFuzz(double fuzz) {
-		mParser.setDepthFuzz(fuzz);
-	}
-
-	public void setTimeMin(long time) {
-		mParser.setTimeMin(time);
-	}
-
-	public void setTimeMax(long time) {
-		mParser.setTimeMax(time);
-	}
-
-	public double getDepth() {
-		return mParser.getDepth();
-	}
-
-	public int getDepthRaw() {
-		return mParser.getDepthRaw();
-	}
-
-	public double getFreq() {
-		return mParser.getFreq();
 	}
 
 	public boolean isCommandTimeout() {
@@ -492,8 +485,23 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mCommand.readBool(JWAOO_TOY_CMD_SENSOR_ENABLE, enable);
 	}
 
+	public void setSensorSpeedOptimizeEnable(boolean enable) {
+		mSensorSpeedOptimize = enable;
+
+		if (enable) {
+			if (mSensorOptimizeThread == null) {
+				mSensorOptimizeThread = new SensorSpeedOptimizeThread();
+				mSensorOptimizeThread.start();
+			}
+		} else if (mSensorOptimizeThread != null) {
+			mSensorDataQueue.add(null);
+		}
+	}
+
 	public boolean setSensorEnable(boolean enable, int delay) {
 		mSensorDataSkip = SENSOR_DATA_SKIP;
+		mSensorDelayMillis = delay;
+		mSensorDelayNanos = 0;
 
 		return mCommand.readBool(JWAOO_TOY_CMD_SENSOR_ENABLE, enable, delay);
 	}
@@ -2050,4 +2058,55 @@ public class JwaooBleToy extends CavanBleGatt {
 			return writeValueBe16(addr, value);
 		}
 	}
+
+	public class SensorSpeedOptimizeThread extends Thread {
+
+		@Override
+		public void run() {
+			mSensorDataQueue.clear();
+
+			while (true) {
+				byte[] bytes = mSensorDataQueue.removeBlocked();
+				if (bytes == null) {
+					break;
+				}
+
+				onSensorDataReceived(bytes);
+
+				int size = mSensorDataQueue.size();
+				if (size > SENSOR_QUEUE_MAX) {
+					mSensorDelayNanos -= SENSOR_DELAY_STEP;
+
+					if (mSensorDelayNanos < 0) {
+						if (mSensorDelayMillis > 0) {
+							mSensorDelayMillis--;
+							mSensorDelayNanos += 1000000;
+						} else {
+							mSensorDelayMillis = 0;
+							mSensorDelayNanos = 0;
+						}
+					}
+
+					if (size > 5) {
+						CavanAndroid.dLog("size = " + size + ", millis = " + mSensorDelayMillis + ", nanos = " + mSensorDelayNanos);
+					}
+				} else if (size < SENSOR_QUEUE_MIN) {
+					mSensorDelayNanos += SENSOR_DELAY_STEP;
+
+					if (mSensorDelayNanos > 999999) {
+						mSensorDelayNanos -= 1000000;
+						mSensorDelayMillis++;
+					}
+				}
+
+				try {
+					Thread.sleep(mSensorDelayMillis, mSensorDelayNanos);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+
+			mSensorOptimizeThread = null;
+		}
+	};
 }

@@ -9,5 +9,8 @@
     <string name="battery_info">电池电量: <xliff:g>%1$d</xliff:g>, 电池电压: <xliff:g>%2$3.2f</xliff:g></string>
     <string name="speed_info">数据包总数: <xliff:g>%1$d</xliff:g>, 上报速度: <xliff:g>%2$3.2f</xliff:g> (毫秒/次)</string>
 	<string name="link_time">连接持续时间: <xliff:g>%1$s</xliff:g></string>
+	<string name="log_enable">输出调试信息</string>
+	<string name="optimize_sensor_speed">优化传感器上报速度</string>
+	<string name="show_delay">输出延时时间</string>
 
 </resources>

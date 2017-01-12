@@ -76,3 +76,18 @@ function cavan-virtualbox-add-resolution()
 
 	VBoxManage setextradata "$1" CustomVideoMode1 "${2}x32"
 }
+
+function cavan-virtualbox-setup()
+{
+	for fn in /sbin/rcvboxdrv /usr/lib/virtualbox/vboxdrv.sh /etc/init.d/vboxdrv
+	do
+		[ -x "${fn}" ] &&
+		{
+			echo "Try ${fn}"
+			sudo "${fn}" "setup" && return 0
+			break
+		}
+	done
+
+	return 1
+}
