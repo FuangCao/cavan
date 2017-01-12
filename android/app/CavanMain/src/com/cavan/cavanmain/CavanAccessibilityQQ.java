@@ -186,16 +186,22 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 
 		for (index = nodes.size() - 1; index >= 0; index--) {
 			AccessibilityNodeInfo node = nodes.get(index);
-			String type = CavanAccessibility.getNodeText(node);
-			CavanAndroid.dLog("type = " + type);
+			int hash = node.hashCode();
 
-			if (type.startsWith(RED_PACKET_NAME)) {
-				AccessibilityNodeInfo parent = node.getParent();
-				if (parent != null) {
-					success = doUnpackGeneral(root, parent);
-					parent.recycle();
-					if (success) {
-						break;
+			if (!mMesssages.contains(hash)) {
+				mMesssages.add(hash);
+
+				String type = CavanAccessibility.getNodeText(node);
+				CavanAndroid.dLog("type = " + type);
+
+				if (type.startsWith(RED_PACKET_NAME)) {
+					AccessibilityNodeInfo parent = node.getParent();
+					if (parent != null) {
+						success = doUnpackGeneral(root, parent);
+						parent.recycle();
+						if (success) {
+							break;
+						}
 					}
 				}
 			}
@@ -280,9 +286,11 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 
 				if (packet != null) {
 					if (doAutoUnpack(root)) {
-						CavanAndroid.dLog("complete: " + packet);
+						backNode.recycle();
+						return POLL_DELAY_SLOW;
 					}
 
+					CavanAndroid.dLog("complete: " + packet);
 					mPackets.remove(packet);
 					mRetryCount = 0;
 				}
