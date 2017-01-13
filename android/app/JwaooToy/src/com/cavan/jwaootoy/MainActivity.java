@@ -432,6 +432,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 		mKeySettings = mBleToy.readKeySettings();
 		CavanAndroid.dLog("JwaooToyKeySettings = " + mKeySettings);
+		CavanAndroid.dLog("JwaooToyBatteryInfo = " + mBleToy.getBatteryInfo());
 
 		mBleToy.setKeyReportEnable(0x0f);
 
@@ -493,13 +494,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 	@Override
 	protected void onBatteryStateChanged(int state, int level, double voltage) {
+		CavanAndroid.dLog("capacity = " + mBleToy.getBatteryCapacityByVoltage(voltage));
+
 		StringBuilder builder = new StringBuilder();
-		builder.append("level = ");
-		builder.append(level);
-		builder.append(", voltage = ");
-		builder.append(voltage);
-		builder.append(", state = ");
-		builder.append(mBleToy.getBatteryStateString(state));
+		builder.append("level = ").append(level);
+		builder.append(", voltage = ").append(voltage);
+		builder.append(", state = ").append(JwaooBleToy.getBatteryStateString(state));
 		mHandler.obtainMessage(EVENT_BATTERY_INFO, builder.toString()).sendToTarget();
 	}
 }

@@ -12,6 +12,8 @@ import com.cavan.java.CavanJava;
 import com.cavan.java.CavanOverrideQueue;
 import com.cavan.java.CavanProgressListener;
 import com.cavan.java.CavanString;
+import com.cavan.java.VoltageCapacityTable;
+import com.cavan.java.VoltageCapacityTable.Entry;
 
 public class JwaooBleToy extends CavanBleGatt {
 
@@ -136,6 +138,14 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_EVT_UPGRADE_COMPLETE = 5;
 	public static final byte JWAOO_TOY_EVT_MOTO_STATE_CHANGED = 6;
 
+	private static final Entry[] sBatteryCapacityEntriesCR1632 = {
+		new Entry(2.0, 0),
+		new Entry(2.75, 10),
+		new Entry(2.87, 25),
+		new Entry(2.9, 85),
+		new Entry(3.0, 100),
+	};
+
 	private byte mFlashCrc;
 	private int mDeviceId;
 	private String mDeviceName;
@@ -151,6 +161,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	protected int mSensorDelayNanos;
 	protected boolean mSensorSpeedOptimize;
 	protected long mSensorDelayMillis = SENSOR_DELAY_DEFAULT;
+	protected VoltageCapacityTable mBatteryCapacityTable = new VoltageCapacityTable(3200, 4200);
 	private CavanOverrideQueue<byte[]> mSensorDataQueue = new CavanOverrideQueue<byte[]>(SENSOR_QUEUE_SIZE);
 	private SensorSpeedOptimizeThread mSensorOptimizeThread;
 
@@ -760,7 +771,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mCommand.readValue16(JWAOO_TOY_CMD_BATT_SHUTDOWN_VOLTAGE, (short) -1);
 	}
 
-	public String getBatteryStateString(int state) {
+	public static String getBatteryStateString(int state) {
 		switch (state) {
 		case BATTERY_STATE_NORMAL:
 			return "Discharging";
@@ -777,6 +788,19 @@ public class JwaooBleToy extends CavanBleGatt {
 		default:
 			return "Unknown";
 		}
+	}
+
+	public double getBatteryCapacityByVoltage(double voltage) {
+		return mBatteryCapacityTable.getCapacity(voltage);
+	}
+
+	public JwaooToyBatteryInfo getBatteryInfo() {
+		JwaooToyResponse response = mCommand.send(JWAOO_TOY_CMD_BATT_INFO);
+		if (response == null) {
+			return null;
+		}
+
+		return response.getBatteryInfo();
 	}
 
 	@Override
@@ -841,6 +865,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			mSensor = new JwaooToySensorModel10();
 			mDeviceName = DEVICE_NAME_MODEL10;
 			mDeviceId = DEVICE_ID_MODEL10;
+			mBatteryCapacityTable = new VoltageCapacityTable(sBatteryCapacityEntriesCR1632);
 		} else {
 			CavanAndroid.eLog("Invalid identify");
 			return false;
@@ -850,6 +875,51 @@ public class JwaooBleToy extends CavanBleGatt {
 	}
 
 	// ================================================================================
+
+	public static class JwaooToyBatteryInfo {
+
+		private int mState;
+		private int mCapacity;
+		private double mVoltage;
+
+		public static JwaooToyBatteryInfo getInstance(byte[] bytes, int start) {
+			return new JwaooToyBatteryInfo(bytes, start);
+		}
+
+		private JwaooToyBatteryInfo(byte[] bytes, int start) {
+			CavanByteCache cache = new CavanByteCache(bytes);
+			cache.setOffset(start);
+
+			mState = cache.readValue8();
+			mCapacity = cache.readValue8();
+			mVoltage = ((double) cache.readValue16()) / 1000;
+		}
+
+		public int getState() {
+			return mState;
+		}
+
+		public int getCapacity() {
+			return mCapacity;
+		}
+
+		public double getVoltage() {
+			return mVoltage;
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+
+			builder.append('[');
+			builder.append("state:").append(getBatteryStateString(mState)).append(", ");
+			builder.append("capacity:").append(mCapacity).append(", ");
+			builder.append("voltage:").append(mVoltage);
+			builder.append(']');
+
+			return builder.toString();
+		}
+	}
 
 	public static class JwaooToyAppSettings {
 
@@ -1280,6 +1350,14 @@ public class JwaooBleToy extends CavanBleGatt {
 			}
 
 			return JwaooToyKeySettings.getInstance(mBytes);
+		}
+
+		public JwaooToyBatteryInfo getBatteryInfo() {
+			if (getType() != JWAOO_TOY_RSP_DATA) {
+				return null;
+			}
+
+			return JwaooToyBatteryInfo.getInstance(mBytes, 2);
 		}
 
 		public static boolean getBool(JwaooToyResponse response) {

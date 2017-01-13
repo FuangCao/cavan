@@ -7,9 +7,9 @@ public class VoltageCapacityTable {
 	public static class Entry {
 
 		private int mCapacity;
-		private float mVoltage;
+		private double mVoltage;
 
-		public Entry(float voltage, int capacity) {
+		public Entry(double voltage, int capacity) {
 			mVoltage = voltage;
 			mCapacity = capacity;
 		}
@@ -22,11 +22,11 @@ public class VoltageCapacityTable {
 			mCapacity = capacity;
 		}
 
-		public float getVoltage() {
+		public double getVoltage() {
 			return mVoltage;
 		}
 
-		public void setVoltage(float voltage) {
+		public void setVoltage(double voltage) {
 			mVoltage = voltage;
 		}
 
@@ -65,14 +65,14 @@ public class VoltageCapacityTable {
 		}
 	}
 
-	public VoltageCapacityTable(float minVoltage, float maxVoltage, int maxCapacity) {
+	public VoltageCapacityTable(double minVoltage, double maxVoltage, int maxCapacity) {
 		mEntries = new Entry[] {
 			new Entry(minVoltage, 0),
 			new Entry(maxVoltage, maxCapacity)
 		};
 	}
 
-	public VoltageCapacityTable(float minVoltage, float maxVoltage) {
+	public VoltageCapacityTable(double minVoltage, double maxVoltage) {
 		this(minVoltage, maxVoltage, 100);
 	}
 
@@ -80,7 +80,7 @@ public class VoltageCapacityTable {
 		return mEntries;
 	}
 
-	public int findEntryByVoltage(float voltage, int start, int end) {
+	public int findEntryByVoltage(double voltage, int start, int end) {
 		if (start == end) {
 			return start;
 		}
@@ -95,12 +95,12 @@ public class VoltageCapacityTable {
 		return findEntryByVoltage(voltage, start, end);
 	}
 
-	public float getCapacity(float voltage) {
+	public double getCapacity(double voltage) {
 		int end = mEntries.length - 1;
 		int index = findEntryByVoltage(voltage, 0, end);
 
 		int minCapacity, maxCapacity;
-		float minVoltage, maxVoltage;
+		double minVoltage, maxVoltage;
 
 		Entry entry = mEntries[index];
 
@@ -133,7 +133,7 @@ public class VoltageCapacityTable {
 		return (voltage - minVoltage) * (maxCapacity - minCapacity) / (maxVoltage - minVoltage) + minCapacity;
 	}
 
-	public int getCapacityInt(float voltage) {
+	public int getCapacityInt(double voltage) {
 		return (int) Math.round(getCapacity(voltage));
 	}
 
