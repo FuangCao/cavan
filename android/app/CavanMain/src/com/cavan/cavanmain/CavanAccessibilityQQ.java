@@ -22,7 +22,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 	private static final String RED_PACKET_NAME = "QQ红包";
 
 	private static final int POLL_DELAY_FAST = 200;
-	private static final int POLL_DELAY_SLOW = 500;
+	private static final int POLL_DELAY_SLOW = 300;
 	private static final int POLL_DELAY_BACK = 1000;
 	private static final int POLL_DELAY_UNPACK = 1000;
 	private static final int SCROLL_DELAY = 100;
@@ -276,19 +276,6 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 		return null;
 	}
 
-	private List<AccessibilityNodeInfo> getRecentChats(AccessibilityNodeInfo root) {
-		AccessibilityNodeInfo listNode = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/recent_chat_list");
-		if (listNode == null) {
-			return null;
-		}
-
-		CavanAccessibility.performScrollUp(listNode, 10);
-
-		List<AccessibilityNodeInfo> chats = listNode.findAccessibilityNodeInfosByViewId("com.tencent.mobileqq:id/relativeItem");
-		listNode.recycle();
-		return chats;
-	}
-
 	private long doFindAndUnpack(AccessibilityNodeInfo root) {
 		AccessibilityNodeInfo backNode = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/ivTitleBtnLeft");
 		if (backNode != null) {
@@ -314,16 +301,30 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 			CavanAccessibility.performClickAndRecycle(backNode);
 			return POLL_DELAY_FAST;
 		} else {
-			List<AccessibilityNodeInfo> chats = getRecentChats(root);
-			if (chats == null || chats.isEmpty()) {
+			AccessibilityNodeInfo listNode = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/recent_chat_list");
+			if (listNode == null) {
 				performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
 				return POLL_DELAY_BACK;
 			}
 
-			CavanAndroid.dLog("chats = " + chats.size());
+			Rect bounds = CavanAccessibility.getBoundsInScreen(listNode);
+			if (bounds.left > 0) {
+				performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+				listNode.recycle();
+				return POLL_DELAY_BACK;
+			}
+
+			List<AccessibilityNodeInfo> chats = null;
 
 			while (true) {
-				if (mChatIndex < chats.size()) {
+				if (chats == null || chats.isEmpty()) {
+					CavanAccessibility.performScrollUp(listNode, 10);
+					CavanJava.msleep(POLL_DELAY_FAST);
+
+					chats = listNode.findAccessibilityNodeInfosByViewId("com.tencent.mobileqq:id/relativeItem");
+				}
+
+				if (chats != null && mChatIndex < chats.size()) {
 					CavanAndroid.dLog("mChatIndex = " + mChatIndex);
 
 					AccessibilityNodeInfo parent = chats.get(mChatIndex++).getParent();
@@ -348,7 +349,11 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 				}
 			}
 
-			CavanAccessibility.recycleNodes(chats);
+			if (chats != null) {
+				CavanAccessibility.recycleNodes(chats);
+			}
+
+			listNode.recycle();
 
 			return POLL_DELAY_SLOW;
 		}

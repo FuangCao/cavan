@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import android.content.Context;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -615,5 +616,17 @@ public class CavanAccessibility {
 
 			}
 		});
+	}
+
+	public static Rect getBoundsInParent(AccessibilityNodeInfo node) {
+		Rect bounds = new Rect();
+		node.getBoundsInParent(bounds);
+		return bounds;
+	}
+
+	public static Rect getBoundsInScreen(AccessibilityNodeInfo node) {
+		Rect bounds = new Rect();
+		node.getBoundsInScreen(bounds);
+		return bounds;
 	}
 }
