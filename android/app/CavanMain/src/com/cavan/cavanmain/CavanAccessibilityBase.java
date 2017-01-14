@@ -6,6 +6,9 @@ import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import com.cavan.android.CavanAccessibility;
+import com.cavan.android.CavanAndroid;
+import com.cavan.android.DelayedSwitch;
 import com.cavan.java.CavanString;
 import com.cavan.java.RedPacketFinder;
 
@@ -15,8 +18,35 @@ public abstract class CavanAccessibilityBase extends Handler {
 	protected String mClassName = CavanString.EMPTY_STRING;
 	protected String mPackageName = CavanString.EMPTY_STRING;
 
+	private DelayedSwitch mSwitchUnlock = new DelayedSwitch(this) {
+
+		@Override
+		protected void onSwitchStateChanged(boolean enabled) {
+			onLockStateChanged(enabled);
+		}
+
+		@Override
+		protected void handleMessage() {
+			cancel();
+		}
+	};
+
+	private DelayedSwitch mSwitchBack = new DelayedSwitch(this) {
+
+		@Override
+		protected void handleMessage() {
+			if (!isLocked()) {
+				performGlobalBack();
+			}
+		}
+	};
+
 	public CavanAccessibilityBase(CavanAccessibilityService service) {
 		mService = service;
+	}
+
+	protected void onLockStateChanged(boolean locked) {
+		CavanAndroid.dLog("onLockStateChanged: locked = " + locked);
 	}
 
 	public abstract String getPackageName();
@@ -34,7 +64,6 @@ public abstract class CavanAccessibilityBase extends Handler {
 	public void onWindowStateChanged(AccessibilityEvent event, String packageName, String className) {
 		mPackageName = packageName;
 		mClassName = className;
-
 		onWindowStateChanged(event);
 	}
 
@@ -48,6 +77,15 @@ public abstract class CavanAccessibilityBase extends Handler {
 
 	public long getWindowTimeConsume() {
 		return mService.getWindowTimeConsume();
+	}
+
+	public boolean isLocked() {
+		return mSwitchUnlock.isEnabled();
+	}
+
+	public void setLockEnable(long delay, boolean force) {
+		mSwitchBack.cancel();
+		mSwitchUnlock.post(delay, force);
 	}
 
 	public boolean isRootActivity(AccessibilityNodeInfo root) {
@@ -75,5 +113,22 @@ public abstract class CavanAccessibilityBase extends Handler {
 		intent.putExtra("desc", "用户点击");
 		intent.putExtra("content", text);
 		mService.sendBroadcast(intent);
+	}
+
+	public void performGlobalBack() {
+		CavanAccessibility.performGlobalBack(mService);
+	}
+
+	public void performGlobalBack(long delay) {
+		setLockEnable(delay, false);
+		CavanAccessibility.performGlobalBack(mService);
+	}
+
+	public void performGlobalBackDelayed(long delay) {
+		mSwitchBack.post(delay, false);
+	}
+
+	public void cancelGlobalBack() {
+		mSwitchBack.cancel();
 	}
 }

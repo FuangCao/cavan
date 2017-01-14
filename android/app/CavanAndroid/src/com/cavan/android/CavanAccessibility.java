@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import android.accessibilityservice.AccessibilityService;
 import android.content.Context;
 import android.graphics.Rect;
 import android.os.Build;
@@ -13,6 +14,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TabHost;
 import android.widget.TextView;
 
@@ -24,10 +26,11 @@ public class CavanAccessibility {
 
 	public static final String CLASS_VIEW = View.class.getName();
 	public static final String CLASS_BUTTON = Button.class.getName();
-	public static final String CLASS_TABHOST = TabHost.class.getName();
-	public static final String CLASS_TEXTVIEW = TextView.class.getName();
-	public static final String CLASS_EDITTEXT = EditText.class.getName();
-	public static final String CLASS_ABSLISTVIEW = AbsListView.class.getName();
+	public static final String CLASS_TAB_HOST = TabHost.class.getName();
+	public static final String CLASS_TEXT_VIEW = TextView.class.getName();
+	public static final String CLASS_EDIT_TEXT = EditText.class.getName();
+	public static final String CLASS_ABS_LIST_VIEW = AbsListView.class.getName();
+	public static final String CLASS_IMAGE_BUTTON = ImageButton.class.getName();
 
 	public static String getClassName(AccessibilityNodeInfo node) {
 		CharSequence sequence = node.getClassName();
@@ -56,15 +59,15 @@ public class CavanAccessibility {
 	}
 
 	public static boolean isTextView(AccessibilityNodeInfo node) {
-		return isInstanceOf(node, CLASS_TEXTVIEW);
+		return isInstanceOf(node, CLASS_TEXT_VIEW);
 	}
 
 	public static boolean isEditText(AccessibilityNodeInfo node) {
-		return isInstanceOf(node, CLASS_EDITTEXT);
+		return isInstanceOf(node, CLASS_EDIT_TEXT);
 	}
 
 	public static boolean isTabHost(AccessibilityNodeInfo node) {
-		return isInstanceOf(node, CLASS_TABHOST);
+		return isInstanceOf(node, CLASS_TAB_HOST);
 	}
 
 	public static void recycleNodes(List<AccessibilityNodeInfo> nodes, int start, int end) {
@@ -156,6 +159,29 @@ public class CavanAccessibility {
 		}
 
 		return null;
+	}
+
+	public static void findNodesByClassName(List<AccessibilityNodeInfo> list, AccessibilityNodeInfo root, String clsName) {
+		for (int i = root.getChildCount() - 1; i >= 0; i--) {
+			AccessibilityNodeInfo child = root.getChild(i);
+			if (child == null) {
+				continue;
+			}
+
+			findNodesByClassName(list, child, clsName);
+
+			if (clsName.equals(child.getClassName())) {
+				list.add(child);
+			} else {
+				child.recycle();
+			}
+		}
+	}
+
+	public static List<AccessibilityNodeInfo> findNodesByClassName(AccessibilityNodeInfo node, String clsName) {
+		List<AccessibilityNodeInfo> list = new ArrayList<AccessibilityNodeInfo>();
+		findNodesByClassName(list, node, clsName);
+		return list;
 	}
 
 	public static AccessibilityNodeInfo getFirstNode(List<AccessibilityNodeInfo> nodes) {
@@ -628,5 +654,15 @@ public class CavanAccessibility {
 		Rect bounds = new Rect();
 		node.getBoundsInScreen(bounds);
 		return bounds;
+	}
+
+	public static boolean performGlobalAction(AccessibilityService service, int action) {
+		CavanAndroid.dLog("performGlobalAction: " + action);
+		CavanAndroid.dumpstack();
+		return service.performGlobalAction(action);
+	}
+
+	public static boolean performGlobalBack(AccessibilityService service) {
+		return performGlobalAction(service, AccessibilityService.GLOBAL_ACTION_BACK);
 	}
 }
