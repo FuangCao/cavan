@@ -33,6 +33,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase {
 	}
 
 	@Override
+	public void clearRedPackets() {
+	}
+
+	@Override
 	protected void onViewClicked(AccessibilityEvent event) {
 		AccessibilityNodeInfo source = event.getSource();
 		if (source != null && isMessageItemNode(source)) {

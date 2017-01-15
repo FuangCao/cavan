@@ -427,6 +427,10 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 				} else {
 					msgResId = R.string.text_commit_too_much_please_manual_commit;
 				}
+			} else if (MainActivity.isAutoSwitchImeEnabled(mService)) {
+				String ime = mService.getResources().getString(R.string.cavan_input_method);
+				mService.setInputMethod(ime, 5);
+				return false;
 			} else {
 				msgResId = R.string.text_ime_fault_please_manual_commit;
 			}
@@ -658,5 +662,10 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 		}
 
 		return false;
+	}
+
+	@Override
+	public void clearRedPackets() {
+		mCodes.clear();
 	}
 }

@@ -29,6 +29,10 @@ public class CavanAccessibilitySogou extends CavanAccessibilityBase {
 	}
 
 	@Override
+	public void clearRedPackets() {
+	}
+
+	@Override
 	public void onWindowStateChanged(AccessibilityEvent event) {
 		mService.setAutoOpenAppEnable(false);
 

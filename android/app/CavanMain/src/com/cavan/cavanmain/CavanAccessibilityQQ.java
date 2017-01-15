@@ -449,6 +449,11 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 	}
 
 	@Override
+	public void clearRedPackets() {
+		mMesssages.clear();
+	}
+
+	@Override
 	public void handleMessage(Message msg) {
 		CavanAccessibility.dumpNode(getRootInActiveWindow());
 	}

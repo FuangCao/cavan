@@ -71,6 +71,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_AUTO_OPEN_APP = "auto_open_app";
 	public static final String KEY_AUTO_OPEN_ALIPAY = "auto_open_alipay";
 	public static final String KEY_INPUT_METHOD_SELECT = "input_method_select";
+	public static final String KEY_AUTO_SWITCH_IME = "auto_switch_ime";
 	public static final String KEY_PERMISSION_SETTINGS = "permission_settings";
 	public static final String KEY_RED_PACKET_CODE_SEND = "red_packet_code_send";
 	public static final String KEY_RED_PACKET_CODE_RECOGNIZE = "red_packet_code_recognize";
@@ -136,6 +137,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 	public static boolean isWanShareEnabled(Context context) {
 		return CavanAndroid.isPreferenceEnabled(context, KEY_WAN_SHARE);
+	}
+
+	public static boolean isAutoSwitchImeEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_SWITCH_IME);
 	}
 
 	public static void setRedPacketCodeReceiveEnabled(boolean enable) {
