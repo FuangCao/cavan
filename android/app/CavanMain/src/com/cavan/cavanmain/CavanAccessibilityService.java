@@ -368,6 +368,18 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return false;
 	}
 
+	public int getMessageCount() {
+		if (mService != null) {
+			try {
+				return mService.getMessageCount();
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return 0;
+	}
+
 	@Override
 	public void onAccessibilityEvent(AccessibilityEvent event) {
 		CharSequence sequence = event.getPackageName();

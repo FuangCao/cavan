@@ -3,23 +3,24 @@ package com.cavan.android;
 import android.os.Handler;
 import android.os.SystemClock;
 
-public abstract class DelayedSwitch implements Runnable {
+public abstract class DelayedRunnable implements Runnable {
 
 	protected long mTime;
 	protected boolean mEnabled;
 	protected Handler mHandler;
 
-	protected void onSwitchStateChanged(boolean enabled) {}
-	protected void handleMessage() {}
+	protected void onRunableStateChanged(boolean enabled) {}
+	protected void onRunableFire() {}
 
-	public DelayedSwitch(Handler handler) {
+	public DelayedRunnable(Handler handler) {
 		mHandler = handler;
 	}
 
 	@Override
-	synchronized public final void run() {
+	synchronized public void run() {
 		if (mEnabled && mTime <= SystemClock.uptimeMillis()) {
-			handleMessage();
+			cancel();
+			onRunableFire();
 		}
 	}
 
@@ -27,15 +28,25 @@ public abstract class DelayedSwitch implements Runnable {
 		return mEnabled;
 	}
 
+	synchronized public long getDelay() {
+		long time = SystemClock.uptimeMillis();
+		if (mTime < time) {
+			return 0;
+		}
+
+		return mTime - time;
+	}
+
 	synchronized public void post(long delay, boolean force) {
 		long time = SystemClock.uptimeMillis() + delay;
 		if (force || time > mTime) {
 			if (!mEnabled) {
 				mEnabled = true;
-				onSwitchStateChanged(true);
+				onRunableStateChanged(true);
 			}
 
 			mTime = time;
+			mHandler.removeCallbacks(this);
 			mHandler.postAtTime(this, time);
 		}
 	}
@@ -43,9 +54,7 @@ public abstract class DelayedSwitch implements Runnable {
 	synchronized public void cancel() {
 		if (mEnabled) {
 			mEnabled = false;
-			onSwitchStateChanged(false);
+			onRunableStateChanged(false);
 		}
-
-		mHandler.removeCallbacks(this);
 	}
 }

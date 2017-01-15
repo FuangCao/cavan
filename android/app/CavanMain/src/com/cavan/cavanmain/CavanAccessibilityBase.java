@@ -8,7 +8,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.cavan.android.CavanAccessibility;
 import com.cavan.android.CavanAndroid;
-import com.cavan.android.DelayedSwitch;
+import com.cavan.android.DelayedRunnable;
 import com.cavan.java.CavanString;
 import com.cavan.java.RedPacketFinder;
 
@@ -18,23 +18,18 @@ public abstract class CavanAccessibilityBase extends Handler {
 	protected String mClassName = CavanString.EMPTY_STRING;
 	protected String mPackageName = CavanString.EMPTY_STRING;
 
-	private DelayedSwitch mSwitchUnlock = new DelayedSwitch(this) {
+	private DelayedRunnable mRunnableUnlock = new DelayedRunnable(this) {
 
 		@Override
-		protected void onSwitchStateChanged(boolean enabled) {
+		protected void onRunableStateChanged(boolean enabled) {
 			onLockStateChanged(enabled);
-		}
-
-		@Override
-		protected void handleMessage() {
-			cancel();
 		}
 	};
 
-	private DelayedSwitch mSwitchBack = new DelayedSwitch(this) {
+	private DelayedRunnable mRunnableBack = new DelayedRunnable(this) {
 
 		@Override
-		protected void handleMessage() {
+		protected void onRunableFire() {
 			if (!isLocked()) {
 				performGlobalBack();
 			}
@@ -80,12 +75,12 @@ public abstract class CavanAccessibilityBase extends Handler {
 	}
 
 	public boolean isLocked() {
-		return mSwitchUnlock.isEnabled();
+		return mRunnableUnlock.isEnabled();
 	}
 
 	public void setLockEnable(long delay, boolean force) {
-		mSwitchBack.cancel();
-		mSwitchUnlock.post(delay, force);
+		mRunnableBack.cancel();
+		mRunnableUnlock.post(delay, force);
 	}
 
 	public boolean isRootActivity(AccessibilityNodeInfo root) {
@@ -125,10 +120,10 @@ public abstract class CavanAccessibilityBase extends Handler {
 	}
 
 	public void performGlobalBackDelayed(long delay) {
-		mSwitchBack.post(delay, false);
+		mRunnableBack.post(delay, false);
 	}
 
 	public void cancelGlobalBack() {
-		mSwitchBack.cancel();
+		mRunnableBack.cancel();
 	}
 }
