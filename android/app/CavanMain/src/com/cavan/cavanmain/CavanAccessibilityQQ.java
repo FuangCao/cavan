@@ -22,10 +22,10 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 	private static final String RED_PACKET_NAME = "QQ红包";
 
 	private static final int POLL_DELAY = 200;
-	private static final int POLL_DELAY_JUMP = 1000;
+	private static final int POLL_DELAY_JUMP = 500;
 	private static final int POLL_DELAY_UNPACK = 500;
-	private static final int SCROLL_DELAY = 100;
-	private static final int MAX_SCROLL_COUNT = 3;
+	private static final int SCROLL_DELAY = 200;
+	private static final int MAX_SCROLL_COUNT = 2;
 	private static final int MAX_RETRY_COUNT = 3;
 
 	private int mChatIndex;
@@ -42,21 +42,16 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 			removeCallbacks(this);
 
 			int count = mService.getMessageCount();
-			CavanAndroid.dLog("getMessageCount = " + count);
-
-			if (count == 0) {
+			if (count <= 0) {
+				CavanAndroid.dLog("getMessageCount = " + count);
 				mMesssages.clear();
-				return;
-			}
-
-			if (isLocked()) {
+			} else if (isLocked()) {
 				CavanAndroid.dLog("isLocked");
-				return;
-			}
-
-			long delay = doFindAndUnpack();
-			if (delay > 0) {
-				postDelayed(this, delay);
+			} else {
+				long delay = doFindAndUnpack();
+				if (delay > 0) {
+					postDelayed(this, delay);
+				}
 			}
 		}
 	};
@@ -142,6 +137,10 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 			return;
 		}
 
+		if (mPackets.contains(name)) {
+			return;
+		}
+
 		mPackets.add(name);
 		mChatIndex = 0;
 		mRetryCount = 0;
@@ -213,8 +212,6 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 			int hash = node.hashCode();
 
 			if (!mMesssages.contains(hash)) {
-				mMesssages.add(hash);
-
 				String type = CavanAccessibility.getNodeText(node);
 				CavanAndroid.dLog("type = " + type);
 
@@ -224,6 +221,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 						success = doUnpackGeneral(root, parent);
 						parent.recycle();
 						if (success) {
+							mMesssages.add(hash);
 							break;
 						}
 					}
@@ -259,23 +257,18 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 				return true;
 			}
 
-			CavanAndroid.dLog("performScrollUp" + i);
-
 			if (CavanAccessibility.performScrollUp(listNode)) {
+				CavanAndroid.dLog("performScrollUp" + i);
 				CavanJava.msleep(SCROLL_DELAY);
 			} else {
 				break;
 			}
 		}
 
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 10 && CavanAccessibility.performScrollDown(listNode); i++) {
 			CavanAndroid.dLog("performScrollDown" + i);
 
-			if (CavanAccessibility.performScrollDown(listNode)) {
-				CavanJava.msleep(SCROLL_DELAY);
-			} else {
-				break;
-			}
+			CavanJava.msleep(SCROLL_DELAY);
 
 			if (doAutoUnpack(root, listNode)) {
 				listNode.recycle();
@@ -316,8 +309,11 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 						return POLL_DELAY;
 					}
 
-					CavanAndroid.dLog("complete: " + packet);
-					mPackets.remove(packet);
+					while (mPackets.remove(packet)) {
+						CavanAndroid.dLog("complete: " + packet);
+					}
+
+					mMesssages.clear();
 					mRetryCount = 0;
 				}
 			}
@@ -336,6 +332,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 				return POLL_DELAY;
 			}
 
+			mMesssages.clear();
 			cancelGlobalBack();
 
 			Rect bounds = CavanAccessibility.getBoundsInScreen(listNode);
@@ -357,14 +354,17 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 					CavanAndroid.dLog("mChatIndex = " + mChatIndex);
 
 					AccessibilityNodeInfo parent = chats.get(mChatIndex++).getParent();
-					if (mRetryCount == 0 || CavanAccessibility.getNodeCountByViewId(parent, "com.tencent.mobileqq:id/unreadmsg") > 0) {
-						mMesssages.clear();
-						mRunnableClick.post(POLL_DELAY_JUMP, false);
-						CavanAccessibility.performClickAndRecycle(parent);
-						break;
-					}
+					if (parent != null) {
+						if (parent.hashCode() != listNode.hashCode()) {
+							if (mRetryCount == 0 || CavanAccessibility.getNodeCountByViewId(parent, "com.tencent.mobileqq:id/unreadmsg") > 0) {
+								mRunnableClick.post(POLL_DELAY_JUMP, false);
+								CavanAccessibility.performClickAndRecycle(parent);
+								break;
+							}
+						}
 
-					parent.recycle();
+						parent.recycle();
+					}
 				} else {
 					CavanAndroid.dLog("mRetryCount = " + mRetryCount);
 

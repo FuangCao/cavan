@@ -54,6 +54,14 @@ public abstract class CavanAccessibilityBase extends Handler {
 	protected void onViewTextChanged(AccessibilityEvent event) {}
 
 	protected boolean onKeyEvent(KeyEvent event) {
+		if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN && getRedPacketCount() > 0) {
+			if (event.getAction() == KeyEvent.ACTION_UP) {
+				clearRedPackets();
+			}
+
+			return true;
+		}
+
 		return false;
 	}
 

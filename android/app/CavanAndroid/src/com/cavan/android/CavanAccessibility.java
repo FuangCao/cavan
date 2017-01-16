@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction;
 import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -541,20 +542,31 @@ public class CavanAccessibility {
 		return performChildAction(parent, index, AccessibilityNodeInfo.ACTION_CLICK);
 	}
 
+	public static boolean hasAction(AccessibilityNodeInfo node, AccessibilityAction action) {
+		return node.getActionList().contains(action);
+	}
+
+	public static boolean hasAction(AccessibilityNodeInfo node, int value) {
+		for (AccessibilityAction action : node.getActionList()) {
+			if (action.getId() == value) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public static boolean performAction(AccessibilityNodeInfo node, int action, Bundle arguments, int count) {
 		boolean success = false;
 
-		while (count > 0) {
-			CavanAndroid.dLog("action" + count + " = " + action);
+		if (hasAction(node, action)) {
+			while (count > 0 && node.performAction(action, arguments)) {
+				CavanAndroid.dLog("action" + count + " = " + action);
 
-			if (node.performAction(action, arguments)) {
+				CavanJava.msleep(100);
 				success = true;
-				CavanJava.msleep(50);
-			} else {
-				break;
+				count--;
 			}
-
-			count--;
 		}
 
 		return success;
@@ -635,11 +647,11 @@ public class CavanAccessibility {
 				AccessibilityNodeInfo node = (AccessibilityNodeInfo) args[1];
 
 				builder.append(node.getClassName());
+				builder.append('[').append(Integer.toHexString(node.hashCode())).append(']');
 				builder.append("@");
 				builder.append(node.getViewIdResourceName());
 				builder.append(": ");
 				builder.append(node.getText());
-
 			}
 		});
 	}
