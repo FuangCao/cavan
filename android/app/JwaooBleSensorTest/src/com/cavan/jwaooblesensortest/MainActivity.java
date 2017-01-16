@@ -18,8 +18,8 @@ import com.jwaoo.android.JwaooBleToy;
 public class MainActivity extends JwaooToyActivity implements OnCheckedChangeListener {
 
 	private static final int SENSOR_DELAY = 20;
-	private static final int SENSOR_DELAY_MIN = SENSOR_DELAY - 1;
-	private static final int SENSOR_DELAY_MAX = SENSOR_DELAY + 1;
+	private static final int SENSOR_DELAY_MIN = SENSOR_DELAY - 2;
+	private static final int SENSOR_DELAY_MAX = SENSOR_DELAY + 2;
 
 	private static final int MSG_DISCONNECTED = 100;
 	private static final int MSG_UPDATE_SPEED = 101;
@@ -234,13 +234,15 @@ public class MainActivity extends JwaooToyActivity implements OnCheckedChangeLis
 					if (delay < SENSOR_DELAY_MIN || delay > SENSOR_DELAY_MAX) {
 						CavanAndroid.dLog("delay = " + delay);
 					}
-				} else if (mCheckBoxLogEnable.isChecked()) {
-					CavanAndroid.dLog(mSensor.getAccelText());
-				}
+				} else {
+					if (mCheckBoxLogEnable.isChecked()) {
+						CavanAndroid.dLog(mSensor.getAccelText());
+					}
 
-				mWaveViewX.addValue(mSensor.getAxisX());
-				mWaveViewY.addValue(mSensor.getAxisY());
-				mWaveViewZ.addValue(mSensor.getAxisZ());
+					mWaveViewX.addValue(mSensor.getAxisX());
+					mWaveViewY.addValue(mSensor.getAxisY());
+					mWaveViewZ.addValue(mSensor.getAxisZ());
+				}
 			}
 
 			@Override

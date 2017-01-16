@@ -18,9 +18,9 @@ import com.cavan.java.VoltageCapacityTable.Entry;
 public class JwaooBleToy extends CavanBleGatt {
 
 	private static final int SENSOR_QUEUE_SIZE = 10;
-	private static final int SENSOR_QUEUE_MIN = 2;
-	private static final int SENSOR_QUEUE_MAX = 3;
-	private static final int SENSOR_DELAY_STEP = 5000;
+	private static final int SENSOR_QUEUE_MIN = 1;
+	private static final int SENSOR_QUEUE_MAX = 1;
+	private static final int SENSOR_DELAY_STEP = 100000;
 
 	public static final String[] BT_NAMES = {
 		"JwaooToy", "SenseTube", "SenseBand"
@@ -2139,6 +2139,11 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public class SensorSpeedOptimizeThread extends Thread {
 
+		public SensorSpeedOptimizeThread() {
+			super();
+			setPriority(MAX_PRIORITY);
+		}
+
 		@Override
 		public void run() {
 			mSensorDataQueue.clear();
@@ -2165,7 +2170,7 @@ public class JwaooBleToy extends CavanBleGatt {
 						}
 					}
 
-					if (size > 5) {
+					if (size > 3) {
 						CavanAndroid.dLog("size = " + size + ", millis = " + mSensorDelayMillis + ", nanos = " + mSensorDelayNanos);
 					}
 				} else if (size < SENSOR_QUEUE_MIN) {
