@@ -17,11 +17,11 @@ public class CavanOverrideQueue<E> {
 		return (index + value) % mDataCache.length;
 	}
 
-	synchronized private void seekPrivate(int count) {
+	private void seekPrivate(int count) {
 		mTail = addIndex(mTail, count);
 	}
 
-	synchronized private void skipPrivate(int count) {
+	private void skipPrivate(int count) {
 		mHead = addIndex(mHead, count);
 	}
 
@@ -36,6 +36,16 @@ public class CavanOverrideQueue<E> {
 	}
 
 	synchronized public boolean add(E value) {
+		if (mSize < mDataCache.length) {
+			mDataCache[mTail] = value;
+			seekPrivate(1);
+			return true;
+		}
+
+		return false;
+	}
+
+	synchronized public boolean addOverride(E value) {
 		mDataCache[mTail] = value;
 		seekPrivate(1);
 
@@ -45,11 +55,11 @@ public class CavanOverrideQueue<E> {
 			}
 
 			return true;
-		} else {
-			skipPrivate(1);
-
-			return false;
 		}
+
+		skipPrivate(1);
+
+		return false;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -135,7 +145,7 @@ public class CavanOverrideQueue<E> {
 		};
 
 		for (int i = 0; i < 100; i++) {
-			queue.add(i);
+			queue.addOverride(i);
 			CavanJava.dLog("queue = " + queue.dump());
 
 			try {

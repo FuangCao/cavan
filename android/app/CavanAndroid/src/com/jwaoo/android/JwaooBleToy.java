@@ -181,7 +181,7 @@ public class JwaooBleToy extends CavanBleGatt {
 				mSensorDataSkip--;
 			} else if (mSensor != null) {
 				if (mSensorSpeedOptimize) {
-					mSensorDataQueue.add(data.clone());
+					mSensorDataQueue.addOverride(data.clone());
 				} else {
 					onSensorDataReceived(data);
 				}
@@ -505,7 +505,7 @@ public class JwaooBleToy extends CavanBleGatt {
 				mSensorOptimizeThread.start();
 			}
 		} else if (mSensorOptimizeThread != null) {
-			mSensorDataQueue.add(null);
+			mSensorDataQueue.addOverride(null);
 		}
 	}
 
