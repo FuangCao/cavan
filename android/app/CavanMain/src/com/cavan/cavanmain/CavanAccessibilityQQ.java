@@ -144,7 +144,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 		mPackets.add(name);
 		mChatIndex = 0;
 		mRetryCount = 0;
-		postDelayed(mRunnablePoll, POLL_DELAY);
+		setLockEnable(POLL_DELAY, false);
 	}
 
 	private boolean doUnpackGeneral(AccessibilityNodeInfo root, AccessibilityNodeInfo node) {
@@ -463,16 +463,14 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 		switch (mClassName) {
 		case "com.tencent.mobileqq.activity.SplashActivity":
 			if (getRedPacketCount() > 0) {
-				if (isLocked()) {
-					setLockEnable(POLL_DELAY, true);
-				} else {
-					postDelayed(mRunnablePoll, POLL_DELAY);
-				}
+				setLockEnable(POLL_DELAY, false);
 			}
 			break;
 
 		case "cooperation.qwallet.plugin.QWalletPluginProxyActivity":
-			setLockEnable(POLL_DELAY, true);
+			if (getRedPacketCount() > 0) {
+				setLockEnable(POLL_DELAY, true);
+			}
 			break;
 
 		case "com.tencent.mobileqq.activity.aio.photo.AIOGalleryActivity":
