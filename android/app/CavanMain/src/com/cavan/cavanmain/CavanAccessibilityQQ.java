@@ -7,7 +7,6 @@ import java.util.List;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Build;
-import android.os.Message;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -35,32 +34,12 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 
 	private List<Integer> mMesssages = new ArrayList<Integer>();
 	private LinkedList<String> mPackets = new LinkedList<String>();
-	private Runnable mRunnablePoll = new Runnable() {
-
-		@Override
-		public void run() {
-			removeCallbacks(this);
-
-			int count = mService.getMessageCount();
-			if (count <= 0) {
-				CavanAndroid.dLog("getMessageCount = " + count);
-				mMesssages.clear();
-			} else if (isLocked()) {
-				CavanAndroid.dLog("isLocked");
-			} else {
-				long delay = doFindAndUnpack();
-				if (delay > 0) {
-					postDelayed(this, delay);
-				}
-			}
-		}
-	};
 
 	private DelayedRunnable mRunnableClick = new DelayedRunnable(this) {
 
 		@Override
 		protected void onRunableFire() {
-			mHandler.post(mRunnablePoll);
+			startPoll();
 		}
 	};
 
@@ -129,22 +108,6 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 
 			setLockEnable(POLL_DELAY, false);
 		}
-	}
-
-	public void addRedPacket(String name) {
-		int delay = MainActivity.getAutoUnpackQQ(mService);
-		if (delay < 0) {
-			return;
-		}
-
-		if (mPackets.contains(name)) {
-			return;
-		}
-
-		mPackets.add(name);
-		mChatIndex = 0;
-		mRetryCount = 0;
-		setLockEnable(POLL_DELAY, false);
 	}
 
 	private boolean doUnpackGeneral(AccessibilityNodeInfo root, AccessibilityNodeInfo node) {
@@ -389,55 +352,6 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 		}
 	}
 
-	private long doFindAndUnpack() {
-		AccessibilityNodeInfo root = getRootInActiveWindow();
-		if (root == null) {
-			return POLL_DELAY;
-		}
-
-		CharSequence pkgName = root.getPackageName();
-		CavanAndroid.dLog("package = " + pkgName);
-
-		if (CavanPackageName.QQ.equals(pkgName) || CavanPackageName.QWALLET.equals(pkgName)) {
-			CavanAndroid.dLog("mClassName = " + mClassName);
-
-			switch (mClassName) {
-			case "com.tencent.mobileqq.activity.SplashActivity":
-				if (mPackets.isEmpty()) {
-					if (!mService.startNextPendingActivity()) {
-						mService.startIdleActivity();
-					}
-				} else {
-					return doFindAndUnpack(root);
-				}
-				break;
-
-			case "cooperation.qwallet.plugin.QWalletPluginProxyActivity":
-				setUnpackPending(root, false);
-				break;
-
-			default:
-				performGlobalBack(POLL_DELAY_JUMP);
-				return 0;
-			}
-		} else {
-			return 0;
-		}
-
-		return POLL_DELAY;
-	}
-
-	@Override
-	protected void onLockStateChanged(boolean locked) {
-		CavanAndroid.dLog("onLockStateChanged: locked = " + locked);
-
-		if (locked) {
-			removeCallbacks(mRunnablePoll);
-		} else {
-			post(mRunnablePoll);
-		}
-	}
-
 	@Override
 	public String getPackageName() {
 		return CavanPackageName.QQ;
@@ -454,8 +368,28 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 	}
 
 	@Override
-	public void handleMessage(Message msg) {
-		CavanAccessibility.dumpNode(getRootInActiveWindow());
+	protected boolean isValidPackageName(CharSequence pkgName) {
+		return CavanPackageName.QQ.equals(pkgName) || CavanPackageName.QWALLET.equals(pkgName);
+	}
+
+	@Override
+	protected long onPollEventFire(AccessibilityNodeInfo root) {
+		CavanAndroid.dLog("mClassName = " + mClassName);
+
+		switch (mClassName) {
+		case "com.tencent.mobileqq.activity.SplashActivity":
+			return doFindAndUnpack(root);
+
+		case "cooperation.qwallet.plugin.QWalletPluginProxyActivity":
+			setUnpackPending(root, false);
+			break;
+
+		default:
+			performGlobalBack(POLL_DELAY_JUMP);
+			return 0;
+		}
+
+		return POLL_DELAY;
 	}
 
 	@Override
@@ -533,5 +467,22 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 				postMessageNode(source);
 			}
 		}
+	}
+
+	@Override
+	public void addRedPacket(Object packet) {
+		int delay = MainActivity.getAutoUnpackQQ(mService);
+		if (delay < 0) {
+			return;
+		}
+
+		if (mPackets.contains(packet)) {
+			return;
+		}
+
+		mPackets.add((String) packet);
+		mChatIndex = 0;
+		mRetryCount = 0;
+		setLockEnable(POLL_DELAY, false);
 	}
 }

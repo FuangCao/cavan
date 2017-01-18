@@ -284,6 +284,7 @@ public class FloatMessageService extends FloatWidowService {
 			}
 
 			setLockScreenEnable(false);
+			CavanAndroid.setSuspendEnable(getApplicationContext(), false, 20000);
 
 			if (code != null) {
 				RedPacketCode node = RedPacketCode.getInstence(code);

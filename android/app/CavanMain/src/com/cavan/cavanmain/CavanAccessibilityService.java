@@ -131,10 +131,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 				break;
 
 			case MainActivity.ACTION_UNPACK_MM:
+				String chat = intent.getStringExtra("chat");
+				if (chat != null) {
+					mAccessibilityMM.addRedPacket(chat);
+				}
 				break;
 
 			case MainActivity.ACTION_UNPACK_QQ:
-				String chat = intent.getStringExtra("chat");
+				chat = intent.getStringExtra("chat");
 				if (chat != null) {
 					mAccessibilityQQ.addRedPacket(chat);
 				}

@@ -308,6 +308,28 @@ public class CavanAccessibility {
 		return count;
 	}
 
+	public static boolean containsText(AccessibilityNodeInfo root, String text) {
+		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(text);
+		if (nodes == null || nodes.isEmpty()) {
+			return false;
+		}
+
+		recycleNodes(nodes);
+
+		return true;
+	}
+
+	public static boolean containsViewId(AccessibilityNodeInfo root, String viewId) {
+		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(viewId);
+		if (nodes == null || nodes.isEmpty()) {
+			return false;
+		}
+
+		recycleNodes(nodes);
+
+		return true;
+	}
+
 	public static int traverseNodes(AccessibilityNodeInfo root, Closure closure) {
 		int count;
 

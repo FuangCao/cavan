@@ -45,6 +45,7 @@ public class RedPacketNotification extends CavanNotification {
 		CavanPackageName.ALIPAY,
 	};
 
+	public static HashMap<String, String> sNormalActionMap = new HashMap<String, String>();
 	public static HashMap<CharSequence, Long> sCodeTimeMap = new HashMap<CharSequence, Long>();
 	public static List<String> sExcludeCodes = new ArrayList<String>();
 
@@ -59,6 +60,11 @@ public class RedPacketNotification extends CavanNotification {
 	private String mDescription;
 	private RedPacketListenerService mService;
 	private StatusBarNotification mNotification;
+
+	static {
+		sNormalActionMap.put("QQ", MainActivity.ACTION_UNPACK_QQ);
+		sNormalActionMap.put("微信", MainActivity.ACTION_UNPACK_MM);
+	}
 
 	public RedPacketNotification(RedPacketListenerService service, StatusBarNotification sbn, boolean test) {
 		super(sbn);
@@ -377,8 +383,9 @@ public class RedPacketNotification extends CavanNotification {
 			return false;
 		}
 
-		if (code.equals("QQ")) {
-			Intent intent = new Intent(MainActivity.ACTION_UNPACK_QQ);
+		String action = sNormalActionMap.get(code);
+		if (action != null) {
+			Intent intent = new Intent(action);
 			intent.putExtra("chat", getUserDescription().toString());
 			mService.sendBroadcast(intent);
 		}

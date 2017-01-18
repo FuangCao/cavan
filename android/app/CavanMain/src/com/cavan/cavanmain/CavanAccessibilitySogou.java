@@ -24,6 +24,10 @@ public class CavanAccessibilitySogou extends CavanAccessibilityBase {
 	}
 
 	@Override
+	public void addRedPacket(Object packet) {
+	}
+
+	@Override
 	public int getRedPacketCount() {
 		return 0;
 	}

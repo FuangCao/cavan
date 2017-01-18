@@ -12,7 +12,7 @@ import com.cavan.android.DelayedRunnable;
 import com.cavan.java.CavanString;
 import com.cavan.java.RedPacketFinder;
 
-public abstract class CavanAccessibilityBase extends Handler {
+public abstract class CavanAccessibilityBase extends Handler implements Runnable {
 
 	protected CavanAccessibilityService mService;
 	protected String mClassName = CavanString.EMPTY_STRING;
@@ -42,16 +42,36 @@ public abstract class CavanAccessibilityBase extends Handler {
 
 	protected void onLockStateChanged(boolean locked) {
 		CavanAndroid.dLog("onLockStateChanged: locked = " + locked);
+
+		if (locked) {
+			removeCallbacks(this);
+		} else {
+			startPoll();
+		}
 	}
 
 	public abstract String getPackageName();
 	public abstract int getRedPacketCount();
+	public abstract void addRedPacket(Object packet);
 	public abstract void clearRedPackets();
 
-	protected void onWindowStateChanged(AccessibilityEvent event) {}
+	protected void onWindowStateChanged(AccessibilityEvent event) {
+		if (getRedPacketCount() > 0) {
+			startPoll();
+		}
+	}
+
 	protected void onWindowContentChanged(AccessibilityEvent event) {}
 	protected void onViewClicked(AccessibilityEvent event) {}
 	protected void onViewTextChanged(AccessibilityEvent event) {}
+
+	protected boolean isValidPackageName(CharSequence pkgName) {
+		return getPackageName().equals(pkgName);
+	}
+
+	protected long onPollEventFire(AccessibilityNodeInfo root) {
+		return 0;
+	}
 
 	protected boolean onKeyEvent(KeyEvent event) {
 		if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN && getRedPacketCount() > 0) {
@@ -134,5 +154,54 @@ public abstract class CavanAccessibilityBase extends Handler {
 
 	public void cancelGlobalBack() {
 		mRunnableBack.cancel();
+	}
+
+	public void startPoll() {
+		post(this);
+	}
+
+	public void startPoll(long delay) {
+		postDelayed(this, delay);
+	}
+
+	public boolean startNextActivity() {
+		if (mService.startNextPendingActivity()) {
+			return true;
+		}
+
+		mService.startIdleActivity();
+
+		return false;
+	}
+
+	@Override
+	public void run() {
+		removeCallbacks(this);
+
+		if (mService.getMessageCount() <= 0) {
+			clearRedPackets();
+		} else if (getRedPacketCount() <= 0) {
+			startNextActivity();
+		} else if (isLocked()) {
+			CavanAndroid.dLog("isLocked");
+		} else {
+			long delay;
+
+			AccessibilityNodeInfo root = getRootInActiveWindow();
+			if (root != null) {
+				CharSequence pkgName = root.getPackageName();
+
+				CavanAndroid.dLog("getPackageName = " + pkgName);
+
+				if (isValidPackageName(pkgName)) {
+					delay = onPollEventFire(root);
+					if (delay > 0) {
+						postDelayed(this, delay);
+					}
+				}
+			} else {
+				postDelayed(this, 500);
+			}
+		}
 	}
 }

@@ -665,6 +665,10 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 	}
 
 	@Override
+	public void addRedPacket(Object packet) {
+	}
+
+	@Override
 	public void clearRedPackets() {
 		mCodes.clear();
 	}
