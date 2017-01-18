@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.os.Build;
-import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -104,7 +103,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase {
 
 			AccessibilityNodeInfo parent = node.getParent();
 			if (parent != null) {
-				if (parent.getChildCount() == 3) {
+				if (parent.getChildCount() == 3 && "领取红包".equals(CavanAccessibility.getChildText(parent, 1))) {
 					mFinishNodes.add(hash);
 					setLockEnable(POLL_DELAY, false);
 					CavanAccessibility.performClickAndRecycle(parent);
@@ -153,17 +152,5 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase {
 		}
 
 		return POLL_DELAY;
-	}
-
-	@Override
-	protected boolean onKeyEvent(KeyEvent event) {
-		if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP) {
-			if (event.getAction() == KeyEvent.ACTION_DOWN) {
-				CavanAccessibility.dumpNodeSimple(getRootInActiveWindow());
-			}
-			return true;
-		}
-
-		return false;
 	}
 }

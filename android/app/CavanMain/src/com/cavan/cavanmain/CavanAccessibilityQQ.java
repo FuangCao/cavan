@@ -21,8 +21,8 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 	private static final String RED_PACKET_NAME = "QQ红包";
 
 	private static final int POLL_DELAY = 200;
-	private static final int POLL_DELAY_JUMP = 500;
-	private static final int POLL_DELAY_UNPACK = 500;
+	private static final int POLL_DELAY_JUMP = 1000;
+	private static final int POLL_DELAY_UNPACK = 800;
 	private static final int SCROLL_DELAY = 200;
 	private static final int MAX_SCROLL_COUNT = 2;
 	private static final int MAX_RETRY_COUNT = 3;
@@ -94,7 +94,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 	}
 
 	private void setUnpackPending(AccessibilityNodeInfo root, boolean pending) {
-		CavanAndroid.dLog("setUnpackBusy: " + mUnpackPending + " -> " + pending);
+		CavanAndroid.dLog("setUnpackPending: " + mUnpackPending + " -> " + pending);
 
 		if (pending) {
 			mUnpackPending = true;
