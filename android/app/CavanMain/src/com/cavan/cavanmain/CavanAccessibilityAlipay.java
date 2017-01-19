@@ -1,7 +1,6 @@
 package com.cavan.cavanmain;
 
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import android.content.Intent;
@@ -16,7 +15,7 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanString;
 
-public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
+public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCode> {
 
 	private static final String CLASS_NAME_EDIT_TEXT = EditText.class.getName();
 
@@ -35,7 +34,6 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 	private boolean mXiuXiu;
 	private boolean mXiuXiuPending;
 	private boolean mAutoOpenAlipay;
-	private LinkedList<RedPacketCode> mCodes = new LinkedList<RedPacketCode>();
 
 	private Runnable mRunnableAlipay = new Runnable() {
 
@@ -65,7 +63,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 			} else {
 				mClassName = CavanString.EMPTY_STRING;
 
-				if (mAutoOpenAlipay && mCodes.size() > 0) {
+				if (mAutoOpenAlipay && mPackets.size() > 0) {
 					RedPacketListenerService.startAlipayActivity(mService);
 				}
 			}
@@ -79,7 +77,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 	private int getRedPacketCodeCount() {
 		int count = mService.getRedPacketCodeCount();
 		if (count< 0) {
-			return mCodes.size();
+			return mPackets.size();
 		}
 
 		return count;
@@ -293,7 +291,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 
 	private void removeRedPacketCode(RedPacketCode code) {
 		code.setCompleted();
-		mCodes.remove(code);
+		mPackets.remove(code);
 	}
 
 	private boolean isCurrentRedPacketCode(RedPacketCode code) {
@@ -348,7 +346,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 	private RedPacketCode getNextCode() {
 		RedPacketCode code = null;
 
-		for (RedPacketCode node : mCodes) {
+		for (RedPacketCode node : mPackets) {
 			if (node.compareTo(code) > 0) {
 				code = node;
 			}
@@ -481,17 +479,17 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 	}
 
 	public void removeCodeAll() {
-		mCodes.clear();
+		mPackets.clear();
 	}
 
 	public void removeCode(RedPacketCode code) {
-		mCodes.remove(code);
+		mPackets.remove(code);
 	}
 
 	public void removeCodes() {
 		if (CavanInputMethod.isDefaultInputMethod(mService)) {
 			int count = 0;
-			Iterator<RedPacketCode> iterator = mCodes.iterator();
+			Iterator<RedPacketCode> iterator = mPackets.iterator();
 			while (iterator.hasNext()) {
 				RedPacketCode node = iterator.next();
 				if (node.isRepeatable()) {
@@ -502,7 +500,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 			}
 
 			if (count == 0) {
-				iterator = mCodes.iterator();
+				iterator = mPackets.iterator();
 				while (iterator.hasNext()) {
 					RedPacketCode node = iterator.next();
 					if (node.canRemove()) {
@@ -517,7 +515,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 	}
 
 	public boolean addCode(RedPacketCode code) {
-		if (mCodes.contains(code)) {
+		if (mPackets.contains(code)) {
 			return true;
 		}
 
@@ -530,7 +528,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 			code.updateRepeatTime(mService);
 		}
 
-		mCodes.add(code);
+		mPackets.add(code);
 
 		return true;
 	}
@@ -586,13 +584,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 	}
 
 	@Override
-	public int getRedPacketCount() {
-		return mCodes.size();
-	}
-
-	@Override
 	public void onWindowStateChanged(AccessibilityEvent event) {
-		if (mCodes.size() > 0 && isCurrentRedPacketCode(mCode)) {
+		if (mPackets.size() > 0 && isCurrentRedPacketCode(mCode)) {
 			switch (mClassName) {
 			case "com.alipay.mobile.framework.app.ui.DialogHelper$APGenericProgressDialog":
 				mCode.setPostComplete();
@@ -662,14 +655,5 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase {
 		}
 
 		return false;
-	}
-
-	@Override
-	public void addRedPacket(Object packet) {
-	}
-
-	@Override
-	public void clearRedPackets() {
-		mCodes.clear();
 	}
 }

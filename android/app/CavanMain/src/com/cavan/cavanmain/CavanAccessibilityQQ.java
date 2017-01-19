@@ -1,7 +1,6 @@
 package com.cavan.cavanmain;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import android.content.Intent;
@@ -16,13 +15,13 @@ import com.cavan.android.CavanPackageName;
 import com.cavan.android.DelayedRunnable;
 import com.cavan.java.CavanJava;
 
-public class CavanAccessibilityQQ extends CavanAccessibilityBase {
+public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 
 	private static final String RED_PACKET_NAME = "QQ红包";
 
 	private static final int POLL_DELAY = 200;
 	private static final int POLL_DELAY_JUMP = 1000;
-	private static final int POLL_DELAY_UNPACK = 800;
+	private static final int POLL_DELAY_UNPACK = 2000;
 	private static final int SCROLL_DELAY = 200;
 	private static final int MAX_SCROLL_COUNT = 2;
 	private static final int MAX_RETRY_COUNT = 3;
@@ -31,15 +30,13 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 	private int mRetryCount;
 	private boolean mUnpackPending;
 	private String mMessageBoxText;
-
-	private List<Integer> mMesssages = new ArrayList<Integer>();
-	private LinkedList<String> mPackets = new LinkedList<String>();
+	private List<Integer> mFinishNodes = new ArrayList<Integer>();
 
 	private DelayedRunnable mRunnableClick = new DelayedRunnable(this) {
 
 		@Override
 		protected void onRunableFire() {
-			startPoll();
+			setLockEnable(POLL_DELAY, true);
 		}
 	};
 
@@ -174,29 +171,27 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 			AccessibilityNodeInfo node = nodes.get(index);
 			int hash = node.hashCode();
 
-			if (!mMesssages.contains(hash)) {
-				String type = CavanAccessibility.getNodeText(node);
-				CavanAndroid.dLog("type = " + type);
+			if (mFinishNodes.contains(hash)) {
+				continue;
+			}
 
-				if (type.startsWith(RED_PACKET_NAME)) {
-					AccessibilityNodeInfo parent = node.getParent();
-					if (parent != null) {
-						success = doUnpackGeneral(root, parent);
-						parent.recycle();
-						if (success) {
-							mMesssages.add(hash);
-							break;
-						}
+			String type = CavanAccessibility.getNodeText(node);
+			CavanAndroid.dLog("type = " + type);
+
+			if (type.startsWith(RED_PACKET_NAME)) {
+				AccessibilityNodeInfo parent = node.getParent();
+				if (parent != null) {
+					success = doUnpackGeneral(root, parent);
+					parent.recycle();
+					if (success) {
+						mFinishNodes.add(hash);
+						break;
 					}
 				}
 			}
-
-			node.recycle();
 		}
 
-		while (index >= 0) {
-			nodes.get(index--).recycle();
-		}
+		CavanAccessibility.recycleNodes(nodes);
 
 		return success;
 	}
@@ -210,7 +205,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 			}
 		}
 
-		if (mMesssages.isEmpty() && CavanAccessibility.performScrollDown(listNode, 100)) {
+		if (mFinishNodes.isEmpty() && CavanAccessibility.performScrollDown(listNode, 100)) {
 			CavanJava.msleep(SCROLL_DELAY);
 		}
 
@@ -276,12 +271,18 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 						CavanAndroid.dLog("complete: " + packet);
 					}
 
-					mMesssages.clear();
+					mFinishNodes.clear();
 					mRetryCount = 0;
+
+					if (mPackets.isEmpty()) {
+						backNode.recycle();
+						return 0;
+					}
 				}
 			}
 
 			CavanAccessibility.performClickAndRecycle(backNode);
+
 			return POLL_DELAY;
 		} else {
 			if (mRunnableClick.isEnabled()) {
@@ -295,7 +296,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 				return POLL_DELAY;
 			}
 
-			mMesssages.clear();
+			mFinishNodes.clear();
 			cancelGlobalBack();
 
 			Rect bounds = CavanAccessibility.getBoundsInScreen(listNode);
@@ -358,16 +359,6 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 	}
 
 	@Override
-	public int getRedPacketCount() {
-		return mPackets.size();
-	}
-
-	@Override
-	public void clearRedPackets() {
-		mMesssages.clear();
-	}
-
-	@Override
 	protected boolean isValidPackageName(CharSequence pkgName) {
 		return CavanPackageName.QQ.equals(pkgName) || CavanPackageName.QWALLET.equals(pkgName);
 	}
@@ -385,7 +376,9 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 			break;
 
 		default:
-			performGlobalBack(POLL_DELAY_JUMP);
+			if (mClassName.length() > 0) {
+				performGlobalBack(POLL_DELAY_JUMP);
+			}
 			return 0;
 		}
 
@@ -396,13 +389,8 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 	public void onWindowStateChanged(AccessibilityEvent event) {
 		switch (mClassName) {
 		case "com.tencent.mobileqq.activity.SplashActivity":
-			if (getRedPacketCount() > 0) {
-				setLockEnable(POLL_DELAY, false);
-			}
-			break;
-
 		case "cooperation.qwallet.plugin.QWalletPluginProxyActivity":
-			if (getRedPacketCount() > 0) {
+			if (getPacketCount() > 0) {
 				setLockEnable(POLL_DELAY, true);
 			}
 			break;
@@ -470,7 +458,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase {
 	}
 
 	@Override
-	public void addRedPacket(Object packet) {
+	public void addPacket(String packet) {
 		int delay = MainActivity.getAutoUnpackQQ(mService);
 		if (delay < 0) {
 			return;

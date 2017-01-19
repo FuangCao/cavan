@@ -10,7 +10,7 @@ import com.cavan.android.CavanAccessibility;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanString;
 
-public class CavanAccessibilitySogou extends CavanAccessibilityBase {
+public class CavanAccessibilitySogou extends CavanAccessibilityBase<String> {
 
 	private String mLastClassName = CavanString.EMPTY_STRING;
 
@@ -21,19 +21,6 @@ public class CavanAccessibilitySogou extends CavanAccessibilityBase {
 	@Override
 	public String getPackageName() {
 		return CavanPackageName.SOGOU_IME;
-	}
-
-	@Override
-	public void addRedPacket(Object packet) {
-	}
-
-	@Override
-	public int getRedPacketCount() {
-		return 0;
-	}
-
-	@Override
-	public void clearRedPackets() {
 	}
 
 	@Override

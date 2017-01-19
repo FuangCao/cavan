@@ -60,7 +60,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private CavanAccessibilityMM mAccessibilityMM = new CavanAccessibilityMM(this);
 	private CavanAccessibilitySogou mAccessibilitySogou = new CavanAccessibilitySogou(this);
 	private CavanAccessibilityAlipay mAccessibilityAlipay = new CavanAccessibilityAlipay(this);
-	private HashMap<String, CavanAccessibilityBase> mAccessibilityMap = new HashMap<String, CavanAccessibilityBase>();
+	private HashMap<String, CavanAccessibilityBase<?>> mAccessibilityMap = new HashMap<String, CavanAccessibilityBase<?>>();
 
 	private Point mDisplaySize = new Point();
 
@@ -133,14 +133,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 			case MainActivity.ACTION_UNPACK_MM:
 				String chat = intent.getStringExtra("chat");
 				if (chat != null) {
-					mAccessibilityMM.addRedPacket(chat);
+					mAccessibilityMM.addPacket(chat);
 				}
 				break;
 
 			case MainActivity.ACTION_UNPACK_QQ:
 				chat = intent.getStringExtra("chat");
 				if (chat != null) {
-					mAccessibilityQQ.addRedPacket(chat);
+					mAccessibilityQQ.addPacket(chat);
 				}
 				break;
 			}
@@ -333,16 +333,16 @@ public class CavanAccessibilityService extends AccessibilityService {
 	public boolean startNextPendingActivity() {
 		if (getMessageCount() > 0) {
 			if (MainActivity.isAutoOpenAppEnabled(this)) {
-				for (CavanAccessibilityBase node : mAccessibilityMap.values()) {
-					if (node.getRedPacketCount() > 0) {
+				for (CavanAccessibilityBase<?> node : mAccessibilityMap.values()) {
+					if (node.getPacketCount() > 0) {
 						CavanAndroid.startActivity(this, node.getPackageName());
 						return true;
 					}
 				}
 			}
 		} else {
-			for (CavanAccessibilityBase node : mAccessibilityMap.values()) {
-				node.clearRedPackets();
+			for (CavanAccessibilityBase<?> node : mAccessibilityMap.values()) {
+				node.clearPackets();
 			}
 		}
 
@@ -434,7 +434,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			mPackageName = sequence.toString();
 		}
 
-		CavanAccessibilityBase accessibility = mAccessibilityMap.get(mPackageName);
+		CavanAccessibilityBase<?> accessibility = mAccessibilityMap.get(mPackageName);
 		if (accessibility == null) {
 			return;
 		}
@@ -451,7 +451,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			CavanAndroid.dLog("package = " + mPackageName);
 			CavanAndroid.dLog("class = " + mClassName);
 
-			accessibility.onWindowStateChanged(event, mPackageName, mClassName);
+			accessibility.performWindowStateChanged(event, mPackageName, mClassName);
 			break;
 
 		case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
@@ -484,7 +484,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 		CavanAndroid.dLog("package = " + sequence);
 
-		CavanAccessibilityBase accessibility = mAccessibilityMap.get(sequence.toString());
+		CavanAccessibilityBase<?> accessibility = mAccessibilityMap.get(sequence.toString());
 		if (accessibility == null) {
 			return false;
 		}

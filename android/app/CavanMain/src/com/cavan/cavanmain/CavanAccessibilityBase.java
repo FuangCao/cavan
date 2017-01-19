@@ -1,5 +1,7 @@
 package com.cavan.cavanmain;
 
+import java.util.LinkedList;
+
 import android.content.Intent;
 import android.os.Handler;
 import android.view.KeyEvent;
@@ -12,9 +14,12 @@ import com.cavan.android.DelayedRunnable;
 import com.cavan.java.CavanString;
 import com.cavan.java.RedPacketFinder;
 
-public abstract class CavanAccessibilityBase extends Handler implements Runnable {
+public abstract class CavanAccessibilityBase<E> extends Handler implements Runnable {
+
+	private static final long POLL_DELAY = 200;
 
 	protected CavanAccessibilityService mService;
+	protected LinkedList<E> mPackets = new LinkedList<E>();
 	protected String mClassName = CavanString.EMPTY_STRING;
 	protected String mPackageName = CavanString.EMPTY_STRING;
 
@@ -46,18 +51,27 @@ public abstract class CavanAccessibilityBase extends Handler implements Runnable
 		if (locked) {
 			removeCallbacks(this);
 		} else {
-			startPoll();
+			post(this);
 		}
 	}
 
 	public abstract String getPackageName();
-	public abstract int getRedPacketCount();
-	public abstract void addRedPacket(Object packet);
-	public abstract void clearRedPackets();
+
+	public int getPacketCount() {
+		return mPackets.size();
+	}
+
+	public void addPacket(E packet) {
+		mPackets.add(packet);
+	}
+
+	public void clearPackets() {
+		mPackets.clear();
+	}
 
 	protected void onWindowStateChanged(AccessibilityEvent event) {
-		if (getRedPacketCount() > 0) {
-			startPoll();
+		if (getPacketCount() > 0) {
+			setLockEnable(POLL_DELAY, true);
 		}
 	}
 
@@ -74,9 +88,9 @@ public abstract class CavanAccessibilityBase extends Handler implements Runnable
 	}
 
 	protected boolean onKeyEvent(KeyEvent event) {
-		if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN && getRedPacketCount() > 0) {
+		if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN && getPacketCount() > 0) {
 			if (event.getAction() == KeyEvent.ACTION_UP) {
-				clearRedPackets();
+				clearPackets();
 			}
 
 			return true;
@@ -85,7 +99,7 @@ public abstract class CavanAccessibilityBase extends Handler implements Runnable
 		return false;
 	}
 
-	public void onWindowStateChanged(AccessibilityEvent event, String packageName, String className) {
+	public void performWindowStateChanged(AccessibilityEvent event, String packageName, String className) {
 		mPackageName = packageName;
 		mClassName = className;
 		onWindowStateChanged(event);
@@ -156,14 +170,6 @@ public abstract class CavanAccessibilityBase extends Handler implements Runnable
 		mRunnableBack.cancel();
 	}
 
-	public void startPoll() {
-		post(this);
-	}
-
-	public void startPoll(long delay) {
-		postDelayed(this, delay);
-	}
-
 	public boolean startNextActivity() {
 		if (mService.startNextPendingActivity()) {
 			return true;
@@ -179,8 +185,8 @@ public abstract class CavanAccessibilityBase extends Handler implements Runnable
 		removeCallbacks(this);
 
 		if (mService.getMessageCount() <= 0) {
-			clearRedPackets();
-		} else if (getRedPacketCount() <= 0) {
+			clearPackets();
+		} else if (getPacketCount() <= 0) {
 			startNextActivity();
 		} else if (isLocked()) {
 			CavanAndroid.dLog("isLocked");
@@ -197,6 +203,8 @@ public abstract class CavanAccessibilityBase extends Handler implements Runnable
 					delay = onPollEventFire(root);
 					if (delay > 0) {
 						postDelayed(this, delay);
+					} else if (getPacketCount() <= 0) {
+						startNextActivity();
 					}
 				}
 			} else {

@@ -8,13 +8,14 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.cavan.android.CavanAccessibility;
+import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 
-public class CavanAccessibilityMM extends CavanAccessibilityBase {
+public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 	private static final int POLL_DELAY = 500;
+	private static final int POLL_DELAY_UNPACK = 2000;
 
-	private List<String> mRedPackets = new ArrayList<String>();
 	private List<Integer> mFinishNodes = new ArrayList<Integer>();
 
 	public CavanAccessibilityMM(CavanAccessibilityService service) {
@@ -36,29 +37,19 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase {
 	}
 
 	@Override
-	public void addRedPacket(Object packet) {
+	public void addPacket(String packet) {
 		int delay = MainActivity.getAutoUnpackMM(mService);
 		if (delay < 0) {
 			return;
 		}
 
-		if (mRedPackets.contains(packet)) {
+		if (mPackets.contains(packet)) {
 			return;
 		}
 
 		mFinishNodes.clear();
-		mRedPackets.add((String) packet);
+		mPackets.add(packet);
 		setLockEnable(POLL_DELAY, false);
-	}
-
-	@Override
-	public int getRedPacketCount() {
-		return mRedPackets.size();
-	}
-
-	@Override
-	public void clearRedPackets() {
-		mRedPackets.clear();
 	}
 
 	@Override
@@ -89,6 +80,24 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase {
 		return true;
 	}
 
+	private boolean isValidMessage(AccessibilityNodeInfo node) {
+		if (node.getChildCount() != 3) {
+			return false;
+		}
+
+		String message = CavanAccessibility.getChildText(node, 0);
+		CavanAndroid.dLog("message = " + message);
+
+		if (message == null || message.contains("测") || message.contains("挂")) {
+			return false;
+		}
+
+		String action = CavanAccessibility.getChildText(node, 1);
+		CavanAndroid.dLog("action = " + action);
+
+		return "领取红包".equals(action);
+	}
+
 	private boolean doFindAndUnpack(AccessibilityNodeInfo root) {
 		boolean success = false;
 
@@ -103,9 +112,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase {
 
 			AccessibilityNodeInfo parent = node.getParent();
 			if (parent != null) {
-				if (parent.getChildCount() == 3 && "领取红包".equals(CavanAccessibility.getChildText(parent, 1))) {
+				if (isValidMessage(parent)) {
 					mFinishNodes.add(hash);
-					setLockEnable(POLL_DELAY, false);
+					setLockEnable(POLL_DELAY_UNPACK, false);
 					CavanAccessibility.performClickAndRecycle(parent);
 					success = true;
 					break;
@@ -128,9 +137,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase {
 				break;
 			}
 
-			mRedPackets.clear();
-			startNextActivity();
-			return 0;
+			mPackets.clear();
+			break;
 
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI":
 			doUnpack(root);
@@ -152,5 +160,23 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase {
 		}
 
 		return POLL_DELAY;
+	}
+
+	@Override
+	public void onWindowStateChanged(AccessibilityEvent event) {
+		switch (mClassName) {
+		case "com.tencent.mm.ui.LauncherUI":
+		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI":
+		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI":
+			if (getPacketCount() > 0) {
+				setLockEnable(POLL_DELAY, true);
+			}
+			break;
+
+		default:
+			if (getPacketCount() > 0) {
+				setLockEnable(POLL_DELAY, false);
+			}
+		}
 	}
 }
