@@ -1,5 +1,6 @@
 package com.cavan.android;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +27,7 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.MulticastLock;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
@@ -654,5 +656,9 @@ public class CavanAndroid {
 
 	public static boolean startActivity(Context context, Class<?> cls) {
 		return startActivity(context, new Intent(context, cls));
+	}
+
+	public static File getExternalStorageFile(String name) {
+		return new File(Environment.getExternalStorageDirectory(), name);
 	}
 }
