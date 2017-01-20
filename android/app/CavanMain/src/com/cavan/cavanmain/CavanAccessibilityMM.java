@@ -6,6 +6,10 @@ import java.util.List;
 import android.os.Build;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 
 import com.cavan.android.CavanAccessibility;
 import com.cavan.android.CavanAndroid;
@@ -60,13 +64,75 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		}
 	}
 
+	private AccessibilityNodeInfo findReceiveUiBackNode(AccessibilityNodeInfo root) {
+		if (root.getChildCount() > 4) {
+			AccessibilityNodeInfo node = root.getChild(4);
+			if (node != null) {
+				if (ImageView.class.getName().equals(node.getClassName())) {
+					return node;
+				}
+
+				node.recycle();
+			}
+		}
+
+		return CavanAccessibility.findChildByClassName(root, ImageView.class.getName());
+	}
+
+	private AccessibilityNodeInfo findReceiveUiUnpckNode(AccessibilityNodeInfo root) {
+		if (root.getChildCount() > 3) {
+			AccessibilityNodeInfo node = root.getChild(3);
+			if (node != null) {
+				if (Button.class.getName().equals(node.getClassName())) {
+					return node;
+				}
+
+				node.recycle();
+			}
+		}
+
+		return CavanAccessibility.findChildByClassName(root, Button.class.getName());
+	}
+
+	private boolean isDetailUiBackNode(AccessibilityNodeInfo node) {
+		return node != null && LinearLayout.class.getName().equals(node.getClassName());
+	}
+
+	private AccessibilityNodeInfo findDetailUiBackNode(AccessibilityNodeInfo root) {
+		AccessibilityNodeInfo child = CavanAccessibility.findNodeByClassName(root, ImageView.class.getName());
+		if (child != null) {
+			AccessibilityNodeInfo node = child.getParent();
+			if (isDetailUiBackNode(node)) {
+				child.recycle();
+				return node;
+			}
+
+			child.recycle();
+		}
+
+		AccessibilityNodeInfo listNode = CavanAccessibility.findNodeByClassName(root, ListView.class.getName());
+		if (listNode != null) {
+			if (listNode.getChildCount() > 1) {
+				AccessibilityNodeInfo node = listNode.getChild(1);
+				if (isDetailUiBackNode(node)) {
+					listNode.recycle();
+					return node;
+				}
+			}
+
+			listNode.recycle();
+		}
+
+		return null;
+	}
+
 	private boolean doUnpack(AccessibilityNodeInfo root) {
-		AccessibilityNodeInfo backNode = CavanAccessibility.findNodeByViewId(root, "com.tencent.mm:id/bed");
+		AccessibilityNodeInfo backNode = findReceiveUiBackNode(root);
 		if (backNode == null) {
 			return false;
 		}
 
-		AccessibilityNodeInfo button = CavanAccessibility.findNodeByViewId(root, "com.tencent.mm:id/be_");
+		AccessibilityNodeInfo button = findReceiveUiUnpckNode(root);
 		if (button != null) {
 			setLockEnable(POLL_DELAY, false);
 			CavanAccessibility.performClickAndRecycle(button);
@@ -141,11 +207,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			break;
 
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI":
+			CavanAccessibility.dumpNodeSimple(root);
 			doUnpack(root);
 			break;
 
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI":
-			AccessibilityNodeInfo backNode = CavanAccessibility.findNodeByViewId(root, "com.tencent.mm:id/gr");
+			AccessibilityNodeInfo backNode = findDetailUiBackNode(root);
 			if (backNode != null) {
 				setLockEnable(POLL_DELAY, false);
 				CavanAccessibility.performClickAndRecycle(backNode);

@@ -1,6 +1,7 @@
 package com.cavan.android;
 
 import com.cavan.java.CavanJava;
+import com.cavan.java.CavanString;
 
 public class SystemProperties {
 
@@ -49,16 +50,12 @@ public class SystemProperties {
 	}
 
 	public static boolean getBoolean(String key, boolean def) {
-		try {
-			String value = get(key);
-			if (value != null) {
-				return Boolean.parseBoolean(value);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
+		String value = get(key);
+		if (value == null) {
+			return def;
 		}
 
-		return def;
+		return CavanString.parseBoolean(value);
 	}
 
 	public static float getFloat(String key, float def) {

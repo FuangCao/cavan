@@ -34,6 +34,7 @@ import android.widget.EditText;
 import com.cavan.android.CavanAccessibility;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
+import com.cavan.android.SystemProperties;
 import com.cavan.java.CavanString;
 
 public class CavanAccessibilityService extends AccessibilityService {
@@ -429,6 +430,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	@Override
 	public void onAccessibilityEvent(AccessibilityEvent event) {
+		boolean dump = CavanAccessibility.dumpEvent(event, "debug.cavan.dump.event");
+
 		CharSequence sequence = event.getPackageName();
 		if (sequence != null) {
 			mPackageName = sequence.toString();
@@ -459,6 +462,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 			break;
 
 		case AccessibilityEvent.TYPE_VIEW_CLICKED:
+			if (!dump) {
+				CavanAccessibility.dumpEvent(event, "debug.cavan.dump.click");
+			}
+
 			if (MainActivity.isListenClickEnabled(CavanAccessibilityService.this)) {
 				accessibility.onViewClicked(event);
 			}
@@ -475,6 +482,21 @@ public class CavanAccessibilityService extends AccessibilityService {
 		AccessibilityNodeInfo root = getRootInActiveWindow();
 		if (root == null) {
 			return false;
+		}
+
+		if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP) {
+			int dump = SystemProperties.getInt("debug.cavan.dump.node", 0);
+			if (dump > 0) {
+				if (event.getAction() == KeyEvent.ACTION_UP) {
+					if (dump > 1) {
+						CavanAccessibility.dumpNode(root);
+					} else {
+						CavanAccessibility.dumpNodeSimple(root);
+					}
+				}
+
+				return true;
+			}
 		}
 
 		CharSequence sequence = root.getPackageName();

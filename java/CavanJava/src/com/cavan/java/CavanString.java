@@ -9,6 +9,10 @@ public class CavanString {
 	public static final String EMPTY_STRING = new String();
 	public static final Pattern PATTERN_SPACE = Pattern.compile("\\s+");
 
+	private static final String[] TRUE_TEXTS = {
+		"1", "true", "on"
+	};
+
 	private String mContent;
 
 	public CavanString(String content) {
@@ -221,6 +225,16 @@ public class CavanString {
 		}
 
 		return index;
+	}
+
+	public static boolean parseBoolean(String value) {
+		for (String text : TRUE_TEXTS) {
+			if (text.equalsIgnoreCase(value)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@Override
