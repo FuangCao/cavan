@@ -666,7 +666,7 @@ public class CavanAccessibility {
 	}
 
 	public static void dumpNode(AccessibilityNodeInfo node, ClosureVoid closure) {
-		CavanAndroid.dLog(dumpNodeTo(node, closure));
+		CavanAndroid.dLogLarge(dumpNodeTo(node, closure));
 	}
 
 	public static void dumpNode(AccessibilityNodeInfo node) {

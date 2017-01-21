@@ -1,6 +1,10 @@
 package com.cavan.android;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
@@ -102,6 +106,37 @@ public class CavanAndroid {
 	public static void dLog(String message) {
 		if (DLOG_ENABLE) {
 			Log.d(TAG, message);
+		}
+	}
+
+	public static void dLogLarge(String message) {
+		ByteArrayInputStream stream = new ByteArrayInputStream(message.getBytes());
+		BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+
+		while (true) {
+			try {
+				String line = reader.readLine();
+				if (line == null) {
+					break;
+				}
+
+				dLog(line);
+			} catch (IOException e) {
+				e.printStackTrace();
+				break;
+			}
+		}
+
+		try {
+			reader.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		try {
+			stream.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
