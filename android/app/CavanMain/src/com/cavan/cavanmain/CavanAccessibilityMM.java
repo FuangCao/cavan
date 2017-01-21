@@ -180,6 +180,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	protected long onPollEventFire(AccessibilityNodeInfo root) {
 		switch (mClassName) {
 		case "com.tencent.mm.ui.LauncherUI":
+		case "com.tencent.mm.ui.chatting.ChattingUI":
 			if (doFindAndUnpack(root)) {
 				break;
 			}
@@ -227,6 +228,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			break;
 
 		case "com.tencent.mm.ui.LauncherUI":
+		case "com.tencent.mm.ui.chatting.ChattingUI":
 			setForceUnpackEnable(false);
 
 			if (getPacketCount() > 0) {
