@@ -18,6 +18,9 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 
 	private static final long POLL_DELAY = 200;
 
+	private boolean mForceUnpack;
+	private boolean mGotoIdleEnable;
+
 	protected CavanAccessibilityService mService;
 	protected LinkedList<E> mPackets = new LinkedList<E>();
 	protected String mClassName = CavanString.EMPTY_STRING;
@@ -58,15 +61,43 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 	public abstract String getPackageName();
 
 	public int getPacketCount() {
-		return mPackets.size();
+		int size = mPackets.size();
+
+		CavanAndroid.dLog(getPackageName() + ": getPacketCount = " + size);
+		return size;
 	}
 
-	public void addPacket(E packet) {
+	public boolean addPacket(E packet) {
+		if (mPackets.contains(packet)) {
+			return false;
+		}
+
+		mGotoIdleEnable = true;
 		mPackets.add(packet);
+		setLockEnable(POLL_DELAY, false);
+
+		return true;
 	}
 
 	public void clearPackets() {
+		mForceUnpack = false;
 		mPackets.clear();
+	}
+
+	public boolean setForceUnpackEnable(boolean enable) {
+		if (mPackets.size() > 0) {
+			mForceUnpack = false;
+		} else if (enable) {
+			mForceUnpack = true;
+			mGotoIdleEnable = false;
+			setLockEnable(POLL_DELAY, true);
+		} else {
+			mForceUnpack = false;
+		}
+
+		CavanAndroid.dLog(getPackageName() + ": mForceUnpack = " + mForceUnpack);
+
+		return mForceUnpack;
 	}
 
 	protected void onWindowStateChanged(AccessibilityEvent event) {
@@ -175,7 +206,11 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 			return true;
 		}
 
-		mService.startIdleActivity();
+		CavanAndroid.dLog("mGotoIdleEnable = " + mGotoIdleEnable);
+
+		if (mGotoIdleEnable) {
+			mService.startIdleActivity();
+		}
 
 		return false;
 	}
@@ -184,13 +219,28 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 	public void run() {
 		removeCallbacks(this);
 
-		if (mService.getMessageCount() <= 0) {
-			clearPackets();
-		} else if (getPacketCount() <= 0) {
-			startNextActivity();
-		} else if (isLocked()) {
+		CavanAndroid.dLog("mForceUnpack = " + mForceUnpack);
+
+		boolean pollEnable;
+
+		if (isLocked()) {
 			CavanAndroid.dLog("isLocked");
+			pollEnable = false;
+		} else if (mForceUnpack) {
+			pollEnable = true;
+		} else if (getPacketCount() < 1) {
+			startNextActivity();
+			pollEnable = false;
+		} else if (mService.getMessageCount() < 1) {
+			clearPackets();
+			pollEnable = false;
 		} else {
+			pollEnable = true;
+		}
+
+		CavanAndroid.dLog("pollEnable = " + pollEnable);
+
+		if (pollEnable) {
 			long delay;
 
 			AccessibilityNodeInfo root = getRootInActiveWindow();
@@ -203,12 +253,12 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 					delay = onPollEventFire(root);
 					if (delay > 0) {
 						postDelayed(this, delay);
-					} else if (getPacketCount() <= 0) {
-						startNextActivity();
+					} else {
+						postDelayed(this, POLL_DELAY);
 					}
 				}
 			} else {
-				postDelayed(this, 500);
+				postDelayed(this, POLL_DELAY);
 			}
 		}
 	}

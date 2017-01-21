@@ -386,15 +386,19 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public int getMessageCount() {
+		int count = 0;
+
 		if (mService != null) {
 			try {
-				return mService.getMessageCount();
+				count = mService.getMessageCount();
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
 		}
 
-		return 0;
+		CavanAndroid.dLog("getMessageCount = " + count);
+
+		return count;
 	}
 
 	public boolean setInputMethod(String name, int retry) {

@@ -458,19 +458,18 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 	}
 
 	@Override
-	public void addPacket(String packet) {
+	public boolean addPacket(String packet) {
 		int delay = MainActivity.getAutoUnpackQQ(mService);
 		if (delay < 0) {
-			return;
+			return false;
 		}
 
-		if (mPackets.contains(packet)) {
-			return;
+		if (super.addPacket(packet)) {
+			mRetryCount = 0;
+			mChatIndex = 0;
+			return true;
 		}
 
-		mPackets.add((String) packet);
-		mChatIndex = 0;
-		mRetryCount = 0;
-		setLockEnable(POLL_DELAY, false);
+		return false;
 	}
 }

@@ -9,7 +9,6 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 
 import com.cavan.android.CavanAccessibility;
 import com.cavan.android.CavanAndroid;
@@ -41,19 +40,18 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	}
 
 	@Override
-	public void addPacket(String packet) {
+	public boolean addPacket(String packet) {
 		int delay = MainActivity.getAutoUnpackMM(mService);
 		if (delay < 0) {
-			return;
+			return false;
 		}
 
-		if (mPackets.contains(packet)) {
-			return;
+		if (super.addPacket(packet)) {
+			mFinishNodes.clear();
+			return true;
 		}
 
-		mFinishNodes.clear();
-		mPackets.add(packet);
-		setLockEnable(POLL_DELAY, false);
+		return false;
 	}
 
 	@Override
@@ -94,36 +92,19 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		return CavanAccessibility.findChildByClassName(root, Button.class.getName());
 	}
 
-	private boolean isDetailUiBackNode(AccessibilityNodeInfo node) {
-		return node != null && LinearLayout.class.getName().equals(node.getClassName());
-	}
-
 	private AccessibilityNodeInfo findDetailUiBackNode(AccessibilityNodeInfo root) {
-		AccessibilityNodeInfo child = CavanAccessibility.findNodeByClassName(root, ImageView.class.getName());
-		if (child != null) {
-			AccessibilityNodeInfo node = child.getParent();
-			if (isDetailUiBackNode(node)) {
-				child.recycle();
-				return node;
-			}
-
-			child.recycle();
+		AccessibilityNodeInfo node = CavanAccessibility.findNodeByClassName(root, ImageView.class.getName());
+		if (node == null) {
+			return null;
 		}
 
-		AccessibilityNodeInfo listNode = CavanAccessibility.findNodeByClassName(root, ListView.class.getName());
-		if (listNode != null) {
-			if (listNode.getChildCount() > 1) {
-				AccessibilityNodeInfo node = listNode.getChild(1);
-				if (isDetailUiBackNode(node)) {
-					listNode.recycle();
-					return node;
-				}
-			}
-
-			listNode.recycle();
+		AccessibilityNodeInfo parent = node.getParent();
+		if (parent != null && LinearLayout.class.getName().equals(parent.getClassName())) {
+			node.recycle();
+			return parent;
 		}
 
-		return null;
+		return node;
 	}
 
 	private boolean doUnpack(AccessibilityNodeInfo root) {
@@ -132,12 +113,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			return false;
 		}
 
+		setLockEnable(POLL_DELAY, false);
+
 		AccessibilityNodeInfo button = findReceiveUiUnpckNode(root);
 		if (button != null) {
-			setLockEnable(POLL_DELAY, false);
 			CavanAccessibility.performClickAndRecycle(button);
 		} else {
-			setLockEnable(POLL_DELAY, false);
 			CavanAccessibility.performClick(backNode);
 		}
 
@@ -207,11 +188,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			break;
 
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI":
-			CavanAccessibility.dumpNodeSimple(root);
+		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiReceiveUI":
 			doUnpack(root);
 			break;
 
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI":
+		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI":
 			AccessibilityNodeInfo backNode = findDetailUiBackNode(root);
 			if (backNode != null) {
 				setLockEnable(POLL_DELAY, false);
@@ -232,9 +214,21 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	@Override
 	public void onWindowStateChanged(AccessibilityEvent event) {
 		switch (mClassName) {
-		case "com.tencent.mm.ui.LauncherUI":
+		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiReceiveUI":
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI":
+			if (setForceUnpackEnable(true)) {
+				break;
+			}
+		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI":
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI":
+			if (getPacketCount() > 0) {
+				setLockEnable(POLL_DELAY, true);
+			}
+			break;
+
+		case "com.tencent.mm.ui.LauncherUI":
+			setForceUnpackEnable(false);
+
 			if (getPacketCount() > 0) {
 				setLockEnable(POLL_DELAY, true);
 			}
