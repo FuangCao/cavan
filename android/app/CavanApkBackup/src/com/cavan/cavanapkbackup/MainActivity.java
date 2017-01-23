@@ -12,6 +12,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,6 +24,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -30,7 +33,7 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanCheckBox;
 import com.cavan.java.CavanFile;
 
-public class MainActivity extends Activity implements OnClickListener, OnCheckedChangeListener {
+public class MainActivity extends Activity implements OnClickListener, OnCheckedChangeListener, TextWatcher {
 
 	private static final CavanFile sOutDir = new CavanFile(Environment.getExternalStorageDirectory(), "cavan-apk-backup");
 
@@ -45,6 +48,7 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 	private Button mButtonStart;
 	private Button mButtonStop;
 	private ListView mListViewApps;
+	private EditText mEditTextSearch;
 	private CheckBox mCheckBoxBackupSysApp;
 	private CheckBox mCheckBoxClearBeforeBackup;
 	private CavanCheckBox mCheckBoxSelectAll;
@@ -114,12 +118,20 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 
 	public class LocalPackageInfo implements OnCheckedChangeListener {
 
+		private String mName;
 		private boolean mEnable;
 		private PackageInfo mPackageInfo;
 
 		public LocalPackageInfo(PackageInfo info) {
 			mPackageInfo = info;
 			mEnable = mCheckBoxSelectAll.isChecked();
+
+			CharSequence label = mPackageManager.getApplicationLabel(info.applicationInfo);
+			if (label == null) {
+				mName = info.packageName;
+			} else {
+				mName = label.toString();
+			}
 		}
 
 		public PackageInfo getPackageInfo() {
@@ -138,12 +150,12 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 			return mEnable;
 		}
 
-		public CharSequence getApplicationLabel() {
-			return mPackageManager.getApplicationLabel(getApplicationInfo());
+		public String getApplicationName() {
+			return mName;
 		}
 
 		public String getPackageName() {
-			return getApplication().getPackageName();
+			return mPackageInfo.packageName;
 		}
 
 		public int getVersionCode() {
@@ -165,13 +177,7 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 		public String getBackupName() {
 			StringBuilder builder = new StringBuilder();
 
-			CharSequence label = getApplicationLabel();
-			if (label == null) {
-				builder.append(getPackageName());
-			} else {
-				builder.append(CavanFile.replaceInvalidFilenameChar(label.toString(), '_'));
-			}
-
+			builder.append(CavanFile.replaceInvalidFilenameChar(mName, '_'));
 			builder.append('-');
 			builder.append(getVersionName());
 			builder.append(".apk");
@@ -179,10 +185,30 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 			return builder.toString();
 		}
 
-		public void setupView(CavanCheckBox view) {
-			view.setText(getApplicationLabel());
+		public int getFlags() {
+			return getApplicationInfo().flags;
+		}
+
+		public boolean isSystemApp() {
+			return (getFlags() & ApplicationInfo.FLAG_SYSTEM) != 0;
+		}
+
+		public void setupView(CavanCheckBox view, int position) {
+			view.setText(position + ". " + mName);
 			view.setCheckedSilent(mEnable);
 			view.setOnCheckedChangeListener(this);
+		}
+
+		public boolean isNeedBackup(String filter) {
+			if (!mCheckBoxBackupSysApp.isChecked() && isSystemApp()) {
+				return false;
+			}
+
+			if (filter.isEmpty()) {
+				return true;
+			}
+
+			return mName.contains(filter);
 		}
 
 		@Override
@@ -202,8 +228,12 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 		public void updateData() {
 			mPackageInfos.clear();
 
+			String filter = mEditTextSearch.getText().toString();
+
 			for (PackageInfo info : mPackageManager.getInstalledPackages(0)) {
-				if (isNeedBackup(info)) {
+				LocalPackageInfo pinfo = new LocalPackageInfo(info);
+
+				if (pinfo.isNeedBackup(filter)) {
 					mPackageInfos.add(new LocalPackageInfo(info));
 				}
 			}
@@ -219,19 +249,11 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 			notifyDataSetChangedSafe();
 		}
 
-		private boolean isNeedBackup(PackageInfo info) {
-			if (mCheckBoxBackupSysApp.isChecked()) {
-				return true;
-			}
-
-			return (info.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0;
-		}
-
 		public void notifyDataSetChangedSafe() {
 			if (CavanAndroid.isMainThread()) {
 				notifyDataSetChanged();
 			} else {
-				mListViewApps.post(new Runnable() {
+				runOnUiThread(new Runnable() {
 
 					@Override
 					public void run() {
@@ -267,7 +289,7 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 			}
 
 			LocalPackageInfo info = mPackageInfos.get(position);
-			info.setupView(view);
+			info.setupView(view, position);
 
 			return view;
 		}
@@ -317,9 +339,7 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 
 	private void setBackupEnable(boolean enable) {
 		mButtonStart.setEnabled(enable);
-		mCheckBoxSelectAll.setEnabled(enable);
 		mCheckBoxBackupSysApp.setEnabled(enable);
-		mCheckBoxClearBeforeBackup.setEnabled(enable);
 
 		enable = !enable;
 		mButtonStop.setEnabled(enable);
@@ -353,8 +373,11 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 
 		mListViewApps = (ListView) findViewById(R.id.listViewApps);
 		mListViewApps.setAdapter(mAdapter);
-		mAdapter.updateData();
 
+		mEditTextSearch = (EditText) findViewById(R.id.editTextSearch);
+		mEditTextSearch.addTextChangedListener(this);
+
+		mAdapter.updateData();
 		setBackupEnable(true);
 	}
 
@@ -404,5 +427,18 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 			mAdapter.updateData();
 			break;
 		}
+	}
+
+	@Override
+	public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+	}
+
+	@Override
+	public void onTextChanged(CharSequence s, int start, int before, int count) {
+	}
+
+	@Override
+	public void afterTextChanged(Editable s) {
+		mAdapter.updateData();
 	}
 }

@@ -30,19 +30,11 @@
         android:text="@string/stop" />
 
     <CheckBox
-        android:id="@+id/checkBoxBackupSysApp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/checkBoxClearBeforeBackup"
-        android:layout_alignBaseline="@+id/checkBoxSelectAll"
-        android:text="@string/backup_system_app" />
-
-    <CheckBox
         android:id="@+id/checkBoxClearBeforeBackup"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
-        android:layout_above="@+id/textViewState"
+        android:layout_alignBaseline="@+id/checkBoxBackupSysApp"
         android:text="@string/clear_before_backup" />
 
     <Button
@@ -57,7 +49,7 @@
         android:id="@+id/checkBoxSelectAll"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/checkBoxClearBeforeBackup"
+        android:layout_above="@+id/checkBoxBackupSysApp"
         android:layout_alignLeft="@+id/buttonStart"
         android:text="@string/select_all" />
 
@@ -70,5 +62,23 @@
         android:layout_above="@+id/progressBar" >
 
     </ListView>
+
+    <EditText
+        android:id="@+id/editTextSearch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/checkBoxSelectAll"
+        android:layout_alignParentRight="true"
+        android:layout_toRightOf="@+id/checkBoxBackupSysApp"
+        android:ems="10" >
+    </EditText>
+
+    <CheckBox
+        android:id="@+id/checkBoxBackupSysApp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_above="@+id/textViewState"
+        android:text="@string/backup_system_app" />
 
 </RelativeLayout>
