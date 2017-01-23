@@ -27,6 +27,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanCheckBox;
 import com.cavan.java.CavanFile;
 
 public class MainActivity extends Activity implements OnClickListener, OnCheckedChangeListener {
@@ -44,9 +45,9 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 	private Button mButtonStart;
 	private Button mButtonStop;
 	private ListView mListViewApps;
-	private CheckBox mCheckBoxSelectAll;
 	private CheckBox mCheckBoxBackupSysApp;
 	private CheckBox mCheckBoxClearBeforeBackup;
+	private CavanCheckBox mCheckBoxSelectAll;
 
 	private PackageManager mPackageManager;
 	private BackupThread mThread;
@@ -178,15 +179,21 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 			return builder.toString();
 		}
 
-		public void setupView(CheckBox view) {
+		public void setupView(CavanCheckBox view) {
 			view.setText(getApplicationLabel());
-			view.setChecked(mEnable);
+			view.setCheckedSilent(mEnable);
 			view.setOnCheckedChangeListener(this);
 		}
 
 		@Override
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 			mEnable = isChecked;
+
+			if (isChecked) {
+				isChecked = isAllEnabled();
+			}
+
+			mCheckBoxSelectAll.setCheckedSilent(isChecked);
 		}
 	}
 
@@ -251,12 +258,12 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
-			CheckBox view;
+			CavanCheckBox view;
 
 			if (convertView == null) {
-				view = new CheckBox(MainActivity.this);
+				view = new CavanCheckBox(MainActivity.this);
 			} else {
-				view = (CheckBox) convertView;
+				view = (CavanCheckBox) convertView;
 			}
 
 			LocalPackageInfo info = mPackageInfos.get(position);
@@ -298,6 +305,16 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 		}
 	};
 
+	private boolean isAllEnabled() {
+		for (LocalPackageInfo info : mPackageInfos) {
+			if (!info.isEnabled()) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	private void setBackupEnable(boolean enable) {
 		mButtonStart.setEnabled(enable);
 		mCheckBoxSelectAll.setEnabled(enable);
@@ -319,7 +336,7 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 		mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
 		mTextViewState = (TextView) findViewById(R.id.textViewState);
 
-		mCheckBoxSelectAll = (CheckBox) findViewById(R.id.checkBoxSelectAll);
+		mCheckBoxSelectAll = (CavanCheckBox) findViewById(R.id.checkBoxSelectAll);
 		mCheckBoxSelectAll.setOnCheckedChangeListener(this);
 
 		mCheckBoxBackupSysApp = (CheckBox) findViewById(R.id.checkBoxBackupSysApp);
