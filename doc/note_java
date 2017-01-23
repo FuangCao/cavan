@@ -1,1 +1,3 @@
 java.lang.Thread.dumpStack()
+ReentrantLock
+Condition condition = lock.newCondition();

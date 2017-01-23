@@ -1,6 +1,7 @@
 package com.cavan.cavanapkbackup;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
@@ -15,15 +16,20 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanFile;
 
-public class MainActivity extends Activity implements OnClickListener {
+public class MainActivity extends Activity implements OnClickListener, OnCheckedChangeListener {
 
 	private static final CavanFile sOutDir = new CavanFile(Environment.getExternalStorageDirectory(), "cavan-apk-backup");
 
@@ -32,6 +38,20 @@ public class MainActivity extends Activity implements OnClickListener {
 	private static final int MSG_COPY_START = 3;
 	private static final int MSG_COPY_END = 4;
 	private static final int MSG_CLEAR = 5;
+
+	private ProgressBar mProgressBar;
+	private TextView mTextViewState;
+	private Button mButtonStart;
+	private Button mButtonStop;
+	private ListView mListViewApps;
+	private CheckBox mCheckBoxSelectAll;
+	private CheckBox mCheckBoxBackupSysApp;
+	private CheckBox mCheckBoxClearBeforeBackup;
+
+	private PackageManager mPackageManager;
+	private BackupThread mThread;
+	private LocalAdapter mAdapter = new LocalAdapter();
+	private List<LocalPackageInfo> mPackageInfos = new ArrayList<LocalPackageInfo>();
 
 	class BackupThread extends Thread {
 
@@ -54,52 +74,33 @@ public class MainActivity extends Activity implements OnClickListener {
 		@Override
 		public void run() {
 			if (sOutDir.mkdirSafe()) {
-				PackageManager manager = getPackageManager();
-				List<PackageInfo> pinfos = manager.getInstalledPackages(0);
-
-				Message message = mHandler.obtainMessage(MSG_BACKUP_START, pinfos.size(), 0);
-				message.sendToTarget();
+				mHandler.sendEmptyMessage(MSG_BACKUP_START);
 
 				if (mCheckBoxClearBeforeBackup.isChecked()) {
-					message = mHandler.obtainMessage(MSG_CLEAR, sOutDir.getPath());
+					Message message = mHandler.obtainMessage(MSG_CLEAR, sOutDir.getPath());
 					message.sendToTarget();
 					sOutDir.clear();
 				}
 
 				int progress = 0;
 
-				for (PackageInfo pinfo : pinfos) {
+				for (LocalPackageInfo info : mPackageInfos) {
 					if (mNeedStop) {
 						break;
 					}
 
-					ApplicationInfo ainfo = pinfo.applicationInfo;
+					if (info.isEnabled()) {
+						CavanFile outFile = new CavanFile(sOutDir, info.getBackupName());
 
-					if (mCheckBoxBackupSysApp.isChecked() || (ainfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
-						StringBuilder builder = new StringBuilder();
-
-						CharSequence name = manager.getApplicationLabel(ainfo);
-						if (name == null) {
-							builder.append(ainfo.packageName);
-						} else {
-							builder.append(CavanFile.replaceInvalidFilenameChar(name.toString(), '_'));
-						}
-
-						builder.append('-');
-						builder.append(pinfo.versionName);
-						builder.append(".apk");
-
-						CavanFile outFile = new CavanFile(sOutDir, builder.toString());
-
-						message = mHandler.obtainMessage(MSG_COPY_START, outFile.getPath());
+						Message message = mHandler.obtainMessage(MSG_COPY_START, outFile.getPath());
 						message.sendToTarget();
 
-						if (!doBackupFile(new File(ainfo.sourceDir), outFile)) {
+						if (!doBackupFile(info.getSourceFile(), outFile)) {
 							break;
 						}
 					}
 
-					message = mHandler.obtainMessage(MSG_COPY_END, ++progress, 0);
+					Message message = mHandler.obtainMessage(MSG_COPY_END, ++progress, 0);
 					message.sendToTarget();
 				}
 
@@ -110,14 +111,160 @@ public class MainActivity extends Activity implements OnClickListener {
 		}
 	}
 
-	private ProgressBar mProgressBar;
-	private TextView mTextViewState;
-	private Button mButtonStart;
-	private Button mButtonStop;
-	private CheckBox mCheckBoxBackupSysApp;
-	private CheckBox mCheckBoxClearBeforeBackup;
+	public class LocalPackageInfo implements OnCheckedChangeListener {
 
-	private BackupThread mThread;
+		private boolean mEnable;
+		private PackageInfo mPackageInfo;
+
+		public LocalPackageInfo(PackageInfo info) {
+			mPackageInfo = info;
+			mEnable = mCheckBoxSelectAll.isChecked();
+		}
+
+		public PackageInfo getPackageInfo() {
+			return mPackageInfo;
+		}
+
+		public ApplicationInfo getApplicationInfo() {
+			return mPackageInfo.applicationInfo;
+		}
+
+		public void setEnable(boolean enable) {
+			mEnable = enable;
+		}
+
+		public boolean isEnabled() {
+			return mEnable;
+		}
+
+		public CharSequence getApplicationLabel() {
+			return mPackageManager.getApplicationLabel(getApplicationInfo());
+		}
+
+		public String getPackageName() {
+			return getApplication().getPackageName();
+		}
+
+		public int getVersionCode() {
+			return mPackageInfo.versionCode;
+		}
+
+		public String getVersionName() {
+			return mPackageInfo.versionName;
+		}
+
+		public String getSourcePath() {
+			return getApplicationInfo().sourceDir;
+		}
+
+		public File getSourceFile() {
+			return new File(getSourcePath());
+		}
+
+		public String getBackupName() {
+			StringBuilder builder = new StringBuilder();
+
+			CharSequence label = getApplicationLabel();
+			if (label == null) {
+				builder.append(getPackageName());
+			} else {
+				builder.append(CavanFile.replaceInvalidFilenameChar(label.toString(), '_'));
+			}
+
+			builder.append('-');
+			builder.append(getVersionName());
+			builder.append(".apk");
+
+			return builder.toString();
+		}
+
+		public void setupView(CheckBox view) {
+			view.setText(getApplicationLabel());
+			view.setChecked(mEnable);
+			view.setOnCheckedChangeListener(this);
+		}
+
+		@Override
+		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+			mEnable = isChecked;
+		}
+	}
+
+	public class LocalAdapter extends BaseAdapter {
+
+		public void updateData() {
+			mPackageInfos.clear();
+
+			for (PackageInfo info : mPackageManager.getInstalledPackages(0)) {
+				if (isNeedBackup(info)) {
+					mPackageInfos.add(new LocalPackageInfo(info));
+				}
+			}
+
+			notifyDataSetChangedSafe();
+		}
+
+		public void setEnableAll(boolean enable) {
+			for (LocalPackageInfo info : mPackageInfos) {
+				info.setEnable(enable);
+			}
+
+			notifyDataSetChangedSafe();
+		}
+
+		private boolean isNeedBackup(PackageInfo info) {
+			if (mCheckBoxBackupSysApp.isChecked()) {
+				return true;
+			}
+
+			return (info.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0;
+		}
+
+		public void notifyDataSetChangedSafe() {
+			if (CavanAndroid.isMainThread()) {
+				notifyDataSetChanged();
+			} else {
+				mListViewApps.post(new Runnable() {
+
+					@Override
+					public void run() {
+						notifyDataSetChanged();
+					}
+				});
+			}
+		}
+
+		@Override
+		public int getCount() {
+			return mPackageInfos.size();
+		}
+
+		@Override
+		public Object getItem(int position) {
+			return mPackageInfos.get(position);
+		}
+
+		@Override
+		public long getItemId(int position) {
+			return position;
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			CheckBox view;
+
+			if (convertView == null) {
+				view = new CheckBox(MainActivity.this);
+			} else {
+				view = (CheckBox) convertView;
+			}
+
+			LocalPackageInfo info = mPackageInfos.get(position);
+			info.setupView(view);
+
+			return view;
+		}
+	};
 
 	private Handler mHandler = new Handler() {
 
@@ -125,17 +272,13 @@ public class MainActivity extends Activity implements OnClickListener {
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case MSG_BACKUP_START:
-				mButtonStart.setEnabled(false);
-				mButtonStop.setEnabled(true);
-
-				mProgressBar.setMax(msg.arg1);
+				setBackupEnable(false);
+				mProgressBar.setMax(mPackageInfos.size());
 				mProgressBar.setProgress(0);
 				break;
 
 			case MSG_BACKUP_END:
-				mButtonStart.setEnabled(true);
-				mButtonStop.setEnabled(false);
-
+				setBackupEnable(true);
 				mTextViewState.setText(R.string.backup_complete);
 				CavanAndroid.showToast(getApplicationContext(), R.string.backup_complete);
 				break;
@@ -155,14 +298,33 @@ public class MainActivity extends Activity implements OnClickListener {
 		}
 	};
 
+	private void setBackupEnable(boolean enable) {
+		mButtonStart.setEnabled(enable);
+		mCheckBoxSelectAll.setEnabled(enable);
+		mCheckBoxBackupSysApp.setEnabled(enable);
+		mCheckBoxClearBeforeBackup.setEnabled(enable);
+
+		enable = !enable;
+		mButtonStop.setEnabled(enable);
+		mProgressBar.setEnabled(enable);
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		mPackageManager = getPackageManager();
+
 		mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
 		mTextViewState = (TextView) findViewById(R.id.textViewState);
+
+		mCheckBoxSelectAll = (CheckBox) findViewById(R.id.checkBoxSelectAll);
+		mCheckBoxSelectAll.setOnCheckedChangeListener(this);
+
 		mCheckBoxBackupSysApp = (CheckBox) findViewById(R.id.checkBoxBackupSysApp);
+		mCheckBoxBackupSysApp.setOnCheckedChangeListener(this);
+
 		mCheckBoxClearBeforeBackup = (CheckBox) findViewById(R.id.checkBoxClearBeforeBackup);
 
 		mButtonStart = (Button) findViewById(R.id.buttonStart);
@@ -171,6 +333,12 @@ public class MainActivity extends Activity implements OnClickListener {
 		mButtonStop = (Button) findViewById(R.id.buttonStop);
 		mButtonStop.setEnabled(false);
 		mButtonStop.setOnClickListener(this);
+
+		mListViewApps = (ListView) findViewById(R.id.listViewApps);
+		mListViewApps.setAdapter(mAdapter);
+		mAdapter.updateData();
+
+		setBackupEnable(true);
 	}
 
 	@Override
@@ -203,6 +371,21 @@ public class MainActivity extends Activity implements OnClickListener {
 			if (mThread != null) {
 				mThread.setNeedStop();
 			}
+
+			mButtonStop.setEnabled(false);
+		}
+	}
+
+	@Override
+	public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+		switch (buttonView.getId()) {
+		case R.id.checkBoxSelectAll:
+			mAdapter.setEnableAll(isChecked);
+			break;
+
+		case R.id.checkBoxBackupSysApp:
+			mAdapter.updateData();
+			break;
 		}
 	}
 }

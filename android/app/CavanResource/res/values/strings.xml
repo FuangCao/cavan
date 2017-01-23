@@ -28,5 +28,7 @@
     <string name="start">开始</string>
     <string name="stop">停止</string>
     <string name="clear">清除</string>
+    <string name="select_all">全选</string>
+    <string name="deselect_all">反选</string>
 
 </resources>

@@ -118,8 +118,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		AccessibilityNodeInfo button = findReceiveUiUnpckNode(root);
 		if (button != null) {
 			CavanAccessibility.performClickAndRecycle(button);
-		} else {
+		} else if (getPacketCount() > 0) {
 			CavanAccessibility.performClick(backNode);
+		} else {
+			setForceUnpackEnable(false);
 		}
 
 		backNode.recycle();

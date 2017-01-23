@@ -2,6 +2,7 @@
 
 alias shell="adb shell"
 alias logcat="adb logcat -v threadtime"
+alias cavan-adb-logcat-teamtalk="cavan-adb-logcat -s MoGuLogger"
 
 export FILE_APK_RENAME_JAR="${CAVAN_HOME}/java/bin/apkrename.jar"
 
