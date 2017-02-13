@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -195,6 +196,13 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 
 		public void setupView(CavanCheckBox view, int position) {
 			view.setText(position + ". " + mName);
+
+			if (isSystemApp()) {
+				view.setTextColor(Color.BLUE);
+			} else {
+				view.setTextColor(Color.BLACK);
+			}
+
 			view.setCheckedSilent(mEnable);
 			view.setOnCheckedChangeListener(this);
 		}
