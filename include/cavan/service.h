@@ -15,6 +15,8 @@ typedef enum cavan_service_state {
 	CAVAN_SERVICE_STATE_STOPPING,
 } cavan_service_state_t;
 
+struct cavan_epoll_service;
+
 struct cavan_service_description {
 	const char *name;
 	int used_count;
@@ -61,8 +63,35 @@ struct cavan_dynamic_service {
 	int (*run)(struct cavan_dynamic_service *service, void *conn_data);
 };
 
+struct cavan_epoll_client {
+	int fd;
+
+	int (*on_read)(struct cavan_epoll_service *service, struct cavan_epoll_client *client);
+	void (*on_close)(struct cavan_epoll_service *service, struct cavan_epoll_client *client);
+};
+
+struct cavan_epoll_service {
+	const char *name;
+	int epoll_fd;
+	u32 index;
+	u32 max;
+	bool as_daemon;
+	bool verbose;
+	size_t conn_size;
+	int super_permission;
+	void *private_data;
+	const char *logfile;
+	pthread_cond_t cond;
+	pthread_mutex_t lock;
+	const char *user, *group;
+};
+
+// ================================================================================
+
 extern int cavan_dynamic_service_count;
 extern struct cavan_dynamic_service *cavan_dynamic_services[10];
+
+// ================================================================================
 
 void cavan_service_set_busy(struct cavan_service_description *desc, int index, bool busy);
 int cavan_service_start(struct cavan_service_description *desc);
@@ -71,6 +100,8 @@ int cavan_service_run(struct cavan_service_description *desc);
 int cavan_service_stop(struct cavan_service_description *desc);
 int cavan_daemon_run(struct cavan_daemon_description *desc);
 int cavan_daemon_stop(struct cavan_daemon_description *desc);
+
+// ================================================================================
 
 int cavan_dynamic_service_init(struct cavan_dynamic_service *service);
 void cavan_dynamic_service_deinit(struct cavan_dynamic_service *service);
@@ -85,6 +116,16 @@ bool cavan_dynamic_service_unregister(struct cavan_dynamic_service *service);
 struct cavan_dynamic_service *cavan_dynamic_service_find(const char *name);
 boolean cavan_dynamic_service_stop_by_name(const char *name);
 void cavan_dynamic_service_scan(void *data, void (*handler)(struct cavan_dynamic_service *service, void *data));
+
+// ================================================================================
+
+int cavan_epoll_service_init(struct cavan_epoll_service *service);
+void cavan_epoll_service_deinit(struct cavan_epoll_service *service);
+int cavan_epoll_service_add(struct cavan_epoll_service *service, struct cavan_epoll_client *client);
+void cavan_epoll_service_remove(struct cavan_epoll_service *service, struct cavan_epoll_client *client);
+void cavan_epoll_service_run(struct cavan_epoll_service *service);
+
+// ================================================================================
 
 static inline void cavan_dynamic_service_lock(struct cavan_dynamic_service *service)
 {
@@ -102,6 +143,28 @@ static inline void *cavan_dynamic_service_get_data(struct cavan_dynamic_service 
 }
 
 static inline void cavan_dynamic_service_set_data(struct cavan_dynamic_service *service, void *data)
+{
+	service->private_data = data;
+}
+
+// ================================================================================
+
+static inline void cavan_epoll_service_lock(struct cavan_epoll_service *service)
+{
+	pthread_mutex_lock(&service->lock);
+}
+
+static inline void cavan_epoll_service_unlock(struct cavan_epoll_service *service)
+{
+	pthread_mutex_unlock(&service->lock);
+}
+
+static inline void *cavan_epoll_service_get_data(struct cavan_epoll_service *service)
+{
+	return service->private_data;
+}
+
+static inline void cavan_epoll_service_set_data(struct cavan_epoll_service *service, void *data)
 {
 	service->private_data = data;
 }

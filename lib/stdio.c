@@ -760,12 +760,14 @@ bool cavan_get_choose_yesno(const char *prompt, bool def_choose, int timeout_ms)
 			if (rdlen == 1 || buff[1] == '\n') {
 				return true;
 			}
+			break;
 
 		case 'n':
 		case 'N':
 			if (rdlen == 1 || buff[1] == '\n') {
 				return false;
 			}
+			break;
 		}
 
 		pr_red_info("Please input [Y/y/N/n/Enter]");

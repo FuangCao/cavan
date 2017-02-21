@@ -815,3 +815,72 @@ void cavan_dynamic_service_scan(void *data, void (*handler)(struct cavan_dynamic
 		}
 	}
 }
+
+// ================================================================================
+
+int cavan_epoll_service_init(struct cavan_epoll_service *service)
+{
+	int fd;
+
+	fd = epoll_create(service->max);
+	if (fd < 0) {
+		pr_err_info("epoll_create: %d", fd);
+		return fd;
+	}
+
+	service->epoll_fd = fd;
+
+	return 0;
+}
+
+void cavan_epoll_service_deinit(struct cavan_epoll_service *service)
+{
+	close(service->epoll_fd);
+}
+
+int cavan_epoll_service_add(struct cavan_epoll_service *service, struct cavan_epoll_client *client)
+{
+	struct epoll_event event = {
+		.events = EPOLLIN,
+		.data.ptr = client,
+	};
+
+	return epoll_ctl(service->epoll_fd, EPOLL_CTL_ADD, client->fd, &event);
+}
+
+void cavan_epoll_service_remove(struct cavan_epoll_service *service, struct cavan_epoll_client *client)
+{
+	epoll_ctl(service->epoll_fd, EPOLL_CTL_DEL, client->fd, NULL);
+}
+
+void cavan_epoll_service_run(struct cavan_epoll_service *service)
+{
+	int ret;
+	struct epoll_event events[10];
+
+	while (1) {
+		struct epoll_event *p;
+
+		ret = epoll_wait(service->epoll_fd, events, NELEM(events), -1);
+		if (ret <= 0) {
+			if (ret < 0) {
+				break;
+			}
+
+			continue;
+		}
+
+		for (p = events + ret - 1; p >= events; p--) {
+			struct cavan_epoll_client *client = p->data.ptr;
+
+			ret = client->on_read(service, client);
+			if (ret < 0) {
+				cavan_epoll_service_remove(service, client);
+
+				if (client->on_close != NULL) {
+					client->on_close(service, client);
+				}
+			}
+		}
+	}
+}

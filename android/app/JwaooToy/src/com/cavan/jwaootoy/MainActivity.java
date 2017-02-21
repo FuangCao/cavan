@@ -384,11 +384,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 	@Override
 	protected boolean onInitialize() {
-		if (!mBleToy.setSensorEnable(mCheckBoxSensor.isChecked(), SENSOR_DELAY)) {
-			CavanAndroid.dLog("Failed to setSensorEnable");
-			return false;
-		}
-
 		if (mBleToy.setClickEnable(mCheckBoxClick.isChecked()) == false && mBleToy.isCommandTimeout()) {
 			CavanAndroid.dLog("Failed to setClickEnable");
 			return false;
@@ -435,6 +430,11 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		CavanAndroid.dLog("JwaooToyBatteryInfo = " + mBleToy.getBatteryInfo());
 
 		mBleToy.setKeyReportEnable(0x0f);
+
+		if (!mBleToy.setSensorEnable(mCheckBoxSensor.isChecked(), SENSOR_DELAY)) {
+			CavanAndroid.dLog("Failed to setSensorEnable");
+			return false;
+		}
 
 		mHandler.sendEmptyMessage(EVENT_INIT_COMPLETE);
 

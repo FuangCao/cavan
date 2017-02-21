@@ -2,3 +2,33 @@ dump_stack
 lookup_symbol_name
 __print_symbol
 sprint_symbol
+
+详细了解printk后，发现还有更简便的方法。
+
+%p：打印裸指针(raw pointer)
+
+%pF可打印函数指针的函数名和偏移地址
+
+%pf只打印函数指针的函数名，不打印偏移地址。
+
+如
+printk("%pf",func[0]->action); 结果：
+my_Set
+
+%pM打印冒号分隔的MAC地址
+
+%pm打印MAC地址的16进制无分隔
+
+如
+printk("%pM %pm\n", mac, mac) willprint:
+
+2c:00:1d:00:1b:00 2c001d001b00
+
+%I4打印无前导0的IPv4地址，%i4打印冒号分隔的IPv4地址
+%I6打印无前导0的IPv6地址，%i6打印冒号分隔的IPv6地址
+如
+printk("%pI4 %pi4\n", ip, ip) will print:
+127.0.0.1 127:0:0:1
+
+其它的特殊格式字符参见
+http://lxr.linux.no/#linux+v2.6.34/lib/vsprintf.c#L930
