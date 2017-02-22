@@ -274,6 +274,13 @@ class CavanCommandHeartRate implements ICavanCommand {
 	}
 }
 
+class CavanCommandHttpService implements ICavanCommand {
+	@Override
+	public int main(String... args) {
+		return CavanNative.doHttpService(args);
+	}
+}
+
 class CavanCommandI2c implements ICavanCommand {
 	@Override
 	public int main(String... args) {
@@ -921,6 +928,7 @@ public class CavanNative {
 		sHashMap.put("ftp_server", new CavanCommandFtpServer());
 		sHashMap.put("git_daemon", new CavanCommandGitDaemon());
 		sHashMap.put("heart_rate", new CavanCommandHeartRate());
+		sHashMap.put("http_service", new CavanCommandHttpService());
 		sHashMap.put("i2c", new CavanCommandI2c());
 		sHashMap.put("image_dd", new CavanCommandImageDd());
 		sHashMap.put("inotify", new CavanCommandInotify());
@@ -1047,6 +1055,7 @@ public class CavanNative {
 	public static native int doFtpServer(String... args);
 	public static native int doGitDaemon(String... args);
 	public static native int doHeartRate(String... args);
+	public static native int doHttpService(String... args);
 	public static native int doI2c(String... args);
 	public static native int doImageDd(String... args);
 	public static native int doInotify(String... args);

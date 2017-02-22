@@ -4,7 +4,7 @@ alias shell="adb shell"
 alias logcat="adb logcat -v threadtime"
 alias cavan-adb-logcat-teamtalk="cavan-adb-logcat -s MoGuLogger"
 
-export FILE_APK_RENAME_JAR="${CAVAN_HOME}/java/bin/apkrename.jar"
+export FILE_APK_RENAME_JAR="${CAVAN_HOME}/android/app/bin/ApkRename.jar"
 
 function cavan-android-get-root()
 {
@@ -169,16 +169,31 @@ function cavan-apk-pack()
 	cavan-apk-sign "${APK_UNSIGNED}" "${APK_SIGNED}" || return 1
 }
 
+function cavan-find-apk-rename()
+{
+	for dir in java/bin android/app/bin
+	do
+		APK_RENAME_JAR="${CAVAN_HOME}/${dir}/ApkRename.jar"
+		[ -f "${APK_RENAME_JAR}" ] &&
+		{
+			echo "${APK_RENAME_JAR}"
+			break
+		}
+	done
+}
+
 function cavan-apk-rename()
 {
 	local ROOT_DIR MANIFEST SUFFIX MIME_TYPE IMAGE_PATH SMALI_DIR
-	local SOURCE_PKG SOURCE_RE SOURCE_DIR SOURCE_SMALI
+	local SOURCE_PKG SOURCE_RE SOURCE_DIR SOURCE_SMALI APK_RENAME_JAR
 	local DEST_PKG DEST_RE DEST_DIR_DIR DEST_SMALI
 	local APK_UNSIGNED APK_SIGNED APK_TARGET
 	local fn step
 
-	[ -f "${FILE_APK_RENAME_JAR}" ] &&
+	APK_RENAME_JAR=$(cavan-find-apk-rename)
+	[ "${APK_RENAME_JAR}" ] &&
 	{
+		echo "APK_RENAME_JAR = ${APK_RENAME_JAR}"
 		java -jar "${FILE_APK_RENAME_JAR}" $@ || return 1
 		return 0
 	}
@@ -322,11 +337,13 @@ function cavan-apk-rename()
 
 function cavan-apk-rename-auto()
 {
-	local ROOT_DIR APK_DEST APK_FAILED FAILED_DIR BASE_NAME
+	local ROOT_DIR APK_DEST APK_FAILED FAILED_DIR BASE_NAME APK_RENAME_JAR
 
-	[ -f "${FILE_APK_RENAME_JAR}" ] &&
+	APK_RENAME_JAR=$(cavan-find-apk-rename)
+	[ "${APK_RENAME_JAR}" ] &&
 	{
-		java -jar "${FILE_APK_RENAME_JAR}" $@ || return 1
+		echo "APK_RENAME_JAR = ${APK_RENAME_JAR}"
+		java -jar "${APK_RENAME_JAR}" $@ || return 1
 		return 0
 	}
 

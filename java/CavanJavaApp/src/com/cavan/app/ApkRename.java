@@ -154,7 +154,7 @@ public class ApkRename {
 	public static boolean doApkSign(String inPath, String outPath) {
 		CavanCommand command = new CavanCommand(
 				"jarsigner", "-digestalg", "SHA1", "-sigalg", "MD5withRSA",
-				"-tsa", "https://timestamp.geotrust.com/tsa",
+				// "-tsa", "https://timestamp.geotrust.com/tsa",
 				"-storepass", "CFA8888", "-keystore", KEYSTORE,
 				"-signedjar", outPath, inPath, KEYSTORE);
 
