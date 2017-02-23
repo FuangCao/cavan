@@ -51,18 +51,20 @@ public class VoltageCapacityTable {
 		VoltageCapacityTable table = new VoltageCapacityTable(entries);
 
 		for (int voltage = 3000; voltage < 4300; voltage += 10) {
-			CavanJava.dLog("voltage = " + voltage + ", capacity = " + table.getCapacity(voltage));
+			CavanJava.dLog("voltage = " + voltage + ", capacity = " + table.getCapacitySmooth(voltage));
 		}
 	}
 
 	private Entry[] mEntries;
+	private int mIndexMin = 0;
+	private int mIndexMax = 1;
 
 	public VoltageCapacityTable(Entry[] entries) {
-		if (entries != null && entries.length > 0) {
-			mEntries = entries;
-		} else {
+		if (entries == null || entries.length < 2) {
 			throw new InvalidParameterException("Invalid entries = " + entries);
 		}
+
+		mEntries = entries;
 	}
 
 	public VoltageCapacityTable(double minVoltage, double maxVoltage, int maxCapacity) {
@@ -135,6 +137,60 @@ public class VoltageCapacityTable {
 
 	public int getCapacityInt(double voltage) {
 		return (int) Math.round(getCapacity(voltage));
+	}
+
+	private double getVoltageMin() {
+		return mEntries[mIndexMin].getVoltage();
+	}
+
+	private int getCapacityMin() {
+		return mEntries[mIndexMin].getCapacity();
+	}
+
+	private double getVoltageMax() {
+		return mEntries[mIndexMax].getVoltage();
+	}
+
+	private int getCapacityMax() {
+		return mEntries[mIndexMax].getCapacity();
+	}
+
+	private double getVoltageRange() {
+		return getVoltageMax() - getVoltageMin();
+	}
+
+	private int getCapacityRange() {
+		return getCapacityMax() - getCapacityMin();
+	}
+
+	public double getCapacitySmooth(double voltage) {
+		if (voltage < getVoltageMin()) {
+			while (true) {
+				if (mIndexMin > 0) {
+					mIndexMax = mIndexMin--;
+
+					if (voltage >= getVoltageMin()) {
+						break;
+					}
+				} else {
+					return getCapacityMin();
+				}
+			}
+		} else if (voltage > getVoltageMax()) {
+			while (true) {
+				if (mIndexMax < mEntries.length - 1) {
+					mIndexMin = mIndexMax++;
+
+					if (voltage <= getVoltageMax()) {
+						break;
+					}
+				} else {
+					return getCapacityMax();
+				}
+			}
+		}
+
+		return (voltage - getVoltageMin()) * getCapacityRange() / getVoltageRange() + getCapacityMin();
 	}
 
 	@Override
