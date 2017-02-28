@@ -1,5 +1,7 @@
 package com.cavan.cavanmain;
 
+import java.util.ArrayList;
+
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
@@ -12,19 +14,24 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanIndexGenerator;
+import com.cavan.java.RedPacketFinder;
+import com.cavan.resource.EditableMultiSelectListPreference;
 
-public class RedPacketListenerService extends NotificationListenerService implements OnPrimaryClipChangedListener {
+public class RedPacketListenerService extends NotificationListenerService implements OnPrimaryClipChangedListener, OnSharedPreferenceChangeListener {
 
 	public static final int NOTIFY_TEST = -1;
 	public static final String EXTRA_CODE = "cavan.code";
@@ -37,6 +44,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	private CharSequence mClipText;
 	private ClipboardManager mClipboardManager;
 	private NotificationManager mNotificationManager;
+	private ArrayList<String> mKeywords = new ArrayList<String>();
 	private CavanIndexGenerator mGeneratorRequestCode = new CavanIndexGenerator();
 	private CavanIndexGenerator mGeneratorNotificationId = new CavanIndexGenerator();
 	private Handler mHandler = new Handler() {
@@ -270,6 +278,27 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		return true;
 	}
 
+	private void loadKeywords(SharedPreferences preferences) {
+		ArrayList<String> keywords = EditableMultiSelectListPreference.load(preferences, MainActivity.KEY_KEYWORD_NOTIFY);
+		if (keywords != null) {
+			mKeywords = keywords;
+		} else {
+			mKeywords.clear();
+		}
+
+		CavanAndroid.dLog("mKeywords = " + mKeywords);
+	}
+
+	public String getKeyword(RedPacketFinder finder) {
+		for (String keyword : mKeywords) {
+			if (finder.contains(keyword)) {
+				return keyword;
+			}
+		}
+
+		return null;
+	}
+
 	@Override
 	public void onCreate() {
 		mClipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
@@ -285,11 +314,22 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		filter.addAction(MainActivity.ACTION_CONTENT_RECEIVED);
 		registerReceiver(mReceiver, filter);
 
+		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+		if (preferences != null) {
+			loadKeywords(preferences);
+			preferences.registerOnSharedPreferenceChangeListener(this);
+		}
+
 		super.onCreate();
 	}
 
 	@Override
 	public void onDestroy() {
+		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+		if (preferences != null) {
+			preferences.unregisterOnSharedPreferenceChangeListener(this);
+		}
+
 		unregisterReceiver(mReceiver);
 		unbindService(mFloatMessageConnection);
 		super.onDestroy();
@@ -329,6 +369,13 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 			RedPacketNotification notification = new RedPacketNotification(this, "剪切板", text.toString(), false, false);
 			mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
+		}
+	}
+
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences preferences, String key) {
+		if (MainActivity.KEY_KEYWORD_NOTIFY.equals(key)) {
+			loadKeywords(preferences);
 		}
 	}
 }

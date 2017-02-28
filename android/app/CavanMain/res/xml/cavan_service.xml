@@ -8,6 +8,11 @@
 	    android:title="@string/text_local_ip_address"
 	    android:summary="@string/text_unknown" />
 
+	<com.cavan.resource.EditableMultiSelectListPreference
+	    android:key="keyword_notify"
+	    android:persistent="true"
+	    android:title="@string/keyword_notify"/>
+
 	<Preference android:key="message_show"
 	    android:title="@string/text_message_show" />
 

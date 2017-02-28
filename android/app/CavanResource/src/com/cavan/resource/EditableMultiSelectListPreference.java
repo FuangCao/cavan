@@ -151,7 +151,7 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 		super(context);
 	}
 
-	private static String[] load(SharedPreferences preferences, String key) {
+	private static String[] loadPrivate(SharedPreferences preferences, String key) {
 		try {
 			String lines = preferences.getString(key, null);
 			if (lines != null) {
@@ -164,8 +164,8 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 		return null;
 	}
 
-	public static ArrayList<String> load(Context context, String key) {
-		String[] lines = load(PreferenceManager.getDefaultSharedPreferences(context), key);
+	public static ArrayList<String> load(SharedPreferences preferences, String key) {
+		String[] lines = loadPrivate(preferences, key);
 		if (lines == null) {
 			return null;
 		}
@@ -181,13 +181,17 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 		return list;
 	}
 
+	public static ArrayList<String> load(Context context, String key) {
+		return load(PreferenceManager.getDefaultSharedPreferences(context), key);
+	}
+
 	private boolean load() {
 		String key = getKey();
 		if (key == null || key.isEmpty()) {
 			return false;
 		}
 
-		String[] lines = load(getSharedPreferences(), key);
+		String[] lines = loadPrivate(getSharedPreferences(), key);
 		if (lines == null) {
 			return false;
 		}

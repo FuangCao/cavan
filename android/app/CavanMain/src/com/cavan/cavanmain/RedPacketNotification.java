@@ -373,6 +373,15 @@ public class RedPacketNotification extends CavanNotification {
 		return false;
 	}
 
+	public boolean sendKeyword() {
+		String keyword = mService.getKeyword(mFinder);
+		if (keyword != null) {
+			return sendRedPacketNotifyNormal(keyword, "关键字@" + getUserDescription() + ": " + keyword, false);
+		}
+
+		return false;
+	}
+
 	public String getRedPacketCodeNormal() {
 		return mFinder.getNormalCode(getPackageName());
 	}
@@ -403,6 +412,10 @@ public class RedPacketNotification extends CavanNotification {
 		}
 
 		if (sendRedPacketNotifyAlipayPredict()) {
+			return true;
+		}
+
+		if (sendKeyword()) {
 			return true;
 		}
 

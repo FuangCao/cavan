@@ -186,5 +186,6 @@
     <string name="qq_auto_unpack">QQ自动抢</string>
     <string name="mm_auto_unpack">微信自动抢</string>
     <string name="auto_switch_ime">自动切换输入法</string>
+    <string name="keyword_notify">关键字提醒</string>
 
 </resources>

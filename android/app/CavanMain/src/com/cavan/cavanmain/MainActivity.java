@@ -91,6 +91,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_DISABLE_KEYGUARD = "disable_keyguard";
 	public static final String KEY_QQ_AUTO_UNPACK = "qq_auto_unpack";
 	public static final String KEY_MM_AUTO_UNPACK = "mm_auto_unpack";
+	public static final String KEY_KEYWORD_NOTIFY = "keyword_notify";
 
 	private static boolean sAutoOpenAppEnable = true;
 	private static boolean sRedPacketCodeReceiveEnabled = true;
