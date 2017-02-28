@@ -137,7 +137,7 @@
 	    android:defaultValue="true"
 	    android:title="@string/text_wan_share" />
 
-	<EditTextPreference android:key="wan_server"
+	<com.cavan.resource.EditableMultiSelectListPreference android:key="wan_server"
 	    android:persistent="true"
 	    android:defaultValue="192.168.88.88"
 	    android:title="@string/text_wan_server" />

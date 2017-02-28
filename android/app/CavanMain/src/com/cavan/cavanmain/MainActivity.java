@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
+import java.util.List;
 
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
@@ -37,6 +38,7 @@ import com.cavan.cavanjni.CavanJni;
 import com.cavan.cavanjni.CavanServicePreference;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
+import com.cavan.resource.EditableMultiSelectListPreference;
 
 public class MainActivity extends PreferenceActivity implements OnPreferenceChangeListener {
 
@@ -158,8 +160,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		return CavanAndroid.isPreferenceEnabled(context, KEY_WAN_RECEIVE);
 	}
 
-	public static String getWanShareServer(Context context) {
-		return CavanAndroid.getPreference(context, KEY_WAN_SERVER, null);
+	public static List<String> getWanShareServer(Context context) {
+		return EditableMultiSelectListPreference.load(context, KEY_WAN_SERVER);
 	}
 
 	public static boolean isTcpBridgeEnabled(Context context) {
@@ -273,7 +275,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private CavanServicePreference mPreferenceTcpRepeater;
 	private CheckBoxPreference mPreferenceWanShare;
 	private CheckBoxPreference mPreferenceWanReceive;
-	private EditTextPreference mPreferenceWanServer;
+	private EditableMultiSelectListPreference mPreferenceWanServer;
 	private Preference mPreferenceLanTest;
 	private Preference mPreferenceWanTest;
 	private CheckBoxPreference mPreferenceTcpBridge;
@@ -307,10 +309,12 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 				switch (intent.getIntExtra("state", 0)) {
 				case R.string.text_wan_connecting:
 					mPreferenceWanShare.setSummary(R.string.text_connecting);
+					mPreferenceWanServer.setSummary(intent.getStringExtra("summary"));
 					break;
 
 				case R.string.text_wan_connected:
 					mPreferenceWanShare.setSummary(R.string.text_connected);
+					mPreferenceWanServer.setSummary(intent.getStringExtra("summary"));
 					break;
 
 				case R.string.text_wan_disconnected:
@@ -377,8 +381,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 		mPreferenceWanReceive = (CheckBoxPreference) findPreference(KEY_WAN_RECEIVE);
 
-		mPreferenceWanServer = (EditTextPreference) findPreference(KEY_WAN_SERVER);
-		mPreferenceWanServer.setSummary(mPreferenceWanServer.getText());
+		mPreferenceWanServer = (EditableMultiSelectListPreference) findPreference(KEY_WAN_SERVER);
 		mPreferenceWanServer.setOnPreferenceChangeListener(this);
 
 		mPreferenceRedPacketNotifyTest = (EditTextPreference) findPreference(KEY_RED_PACKET_NOTIFY_TEST);

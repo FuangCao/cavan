@@ -2,17 +2,14 @@ package com.cavan.resource;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 
 import android.app.AlertDialog.Builder;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
+import android.content.res.TypedArray;
 import android.preference.DialogPreference;
 import android.preference.PreferenceManager;
 import android.text.Editable;
-import android.util.ArraySet;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -40,8 +37,13 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 		}
 
 		public Entry(String text) {
-			mKeyword = text.substring(0, text.length() - 2);
-			mEnabled = text.charAt(text.length() - 1) != '0';
+			if (text.length() > 0 && text.charAt(0) == '!') {
+				mKeyword = text.substring(1);
+				mEnabled = false;
+			} else {
+				mKeyword = text;
+				mEnabled = true;
+			}
 		}
 
 		public String getKeyword() {
@@ -60,9 +62,23 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 			mEnabled = enable;
 		}
 
+		public StringBuilder append(StringBuilder builder) {
+			if (!mEnabled) {
+				builder.append('!');
+			}
+
+			builder.append(mKeyword);
+
+			return builder;
+		}
+
 		@Override
 		public String toString() {
-			return mKeyword + ":" + (mEnabled ? '1' : '0');
+			if (mEnabled) {
+				return mKeyword;
+			}
+
+			return '!' + mKeyword;
 		}
 
 		@Override
@@ -135,81 +151,67 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 		super(context);
 	}
 
-	private boolean load() {
-		mEntries.clear();
-
-		String key = getKey();
-		if (key == null || key.isEmpty()) {
-			return false;
-		}
-
-		Set<String> values = getSharedPreferences().getStringSet(key, null);
-		if (values == null) {
-			return false;
-		}
-
-		boolean selectAll = true;
-
-		for (String value : values) {
-			if (value.length() < 3) {
-				continue;
+	private static String[] load(SharedPreferences preferences, String key) {
+		try {
+			String lines = preferences.getString(key, null);
+			if (lines != null) {
+				return lines.split("\\s*\\n\\s*");
 			}
-
-			Entry entry = new Entry(value);
-			mEntries.add(entry);
-
-			if (!entry.isEnabled()) {
-				selectAll = false;
-			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
-		mCheckBoxSelectAll.setCheckedSilent(selectAll);
-
-		return true;
+		return null;
 	}
 
-	public static List<String> load(Context context, String key) {
-		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-		if (preferences == null) {
+	public static ArrayList<String> load(Context context, String key) {
+		String[] lines = load(PreferenceManager.getDefaultSharedPreferences(context), key);
+		if (lines == null) {
 			return null;
 		}
 
-		Set<String> values = preferences.getStringSet(key, null);
-		if (values == null) {
-			return null;
-		}
+		ArrayList<String> list = new ArrayList<String>();
 
-		List<String> list = new ArrayList<String>();
-
-		for (String value : values) {
-			if (value.length() < 3) {
-				continue;
+		for (String line : lines) {
+			if (line.length() > 0 && line.charAt(0) != '!') {
+				list.add(line);
 			}
-
-			if (value.charAt(value.length() - 1) == '0') {
-				continue;
-			}
-
-			list.add(value.substring(0, value.length() - 2));
 		}
 
 		return list;
 	}
 
-	private boolean save() {
+	private boolean load() {
 		String key = getKey();
 		if (key == null || key.isEmpty()) {
 			return false;
 		}
 
-		Set<String> values = new ArraySet<String>();
-		for (Entry entry : mEntries) {
-			values.add(entry.toString());
+		String[] lines = load(getSharedPreferences(), key);
+		if (lines == null) {
+			return false;
 		}
 
-		Editor editor = getEditor();
-		editor.putStringSet(key, values);
-		return editor.commit();
+		for (String line : lines) {
+			Entry entry = new Entry(line);
+			mEntries.add(entry);
+		}
+
+		return true;
+	}
+
+	private boolean save() {
+		StringBuilder builder = new StringBuilder();
+
+		for (Entry entry : mEntries) {
+			if (builder.length() > 0) {
+				builder.append('\n');
+			}
+
+			entry.append(builder);
+		}
+
+		return persistString(builder.toString());
 	}
 
 	private boolean add() {
@@ -268,20 +270,36 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 		mListViewKeywords.setAdapter(mAdapter);
 
 		mCheckBoxSelectAll = (CavanCheckBox) view.findViewById(R.id.checkBoxSelectAll);
+		mCheckBoxSelectAll.setCheckedSilent(isAllEnabled());
 		mCheckBoxSelectAll.setOnCheckedChangeListener(this);
-
-		load();
 
 		builder.setView(view);
 	}
 
 	@Override
 	protected void onDialogClosed(boolean positiveResult) {
-		super.onDialogClosed(positiveResult);
-
 		if (positiveResult) {
 			add();
-			save();
+
+			if (callChangeListener(mEntries)) {
+				save();
+			}
+		}
+	}
+
+	@Override
+	protected Object onGetDefaultValue(TypedArray a, int index) {
+		return a.getString(index);
+	}
+
+	@Override
+	protected void onSetInitialValue(boolean restorePersistedValue, Object defaultValue) {
+		if (restorePersistedValue) {
+			load();
+		} else {
+			for (String text : ((String) defaultValue).split("\\s*,\\s*")) {
+				mEntries.add(new Entry(text));
+			}
 		}
 	}
 

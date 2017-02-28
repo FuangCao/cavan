@@ -108,9 +108,12 @@ public class FloatMessageService extends FloatWidowService {
 			case MSG_TCP_SERVICE_STATE_CHANGED:
 				Intent intent = new Intent(MainActivity.ACTION_WAN_UPDATED);
 				intent.putExtra("state", msg.arg1);
+				intent.putExtra("summary", (String) msg.obj);
 				sendStickyBroadcast(intent);
 
-				// CavanAndroid.showToast(getApplicationContext(), msg.arg1);
+				if (msg.arg1 == R.string.text_wan_connected) {
+					CavanAndroid.showToast(getApplicationContext(), msg.arg1);
+				}
 				break;
 
 			case MSG_TCP_SERVICE_UPDATED:
@@ -903,25 +906,19 @@ public class FloatMessageService extends FloatWidowService {
 		@Override
 		public void run() {
 			while (isRunEnable()) {
-				String text = MainActivity.getWanShareServer(getApplicationContext());
-				if (text == null || text.isEmpty()) {
+				List<String> lines = MainActivity.getWanShareServer(getApplicationContext());
+				if (lines == null || lines.isEmpty()) {
 					break;
 				}
 
-				String[] lines = text.split("\\s*\\n\\s*");
-				if (lines.length < 1) {
-					break;
-				}
+				try_all_server: for (String line : lines) {
+					if (!isRunEnable()) {
+						break;
+					}
 
-				try_all_server: for (int i = 0; isRunEnable() && i < lines.length; i++) {
 					try {
 						int port;
 						String host;
-						String line = lines[i].trim();
-
-						if (line.startsWith("#")) {
-							continue;
-						}
 
 						String[] segs = line.split("\\s*:\\s*");
 						if (segs.length > 1) {
@@ -937,7 +934,9 @@ public class FloatMessageService extends FloatWidowService {
 
 						CavanAndroid.dLog("host = " + host + ", port = " + port);
 
-						mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_connecting, 0).sendToTarget();
+						String summary = host + ':' + port;
+
+						mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_connecting, 0, summary).sendToTarget();
 
 						mSocket = new Socket();
 						mSocket.connect(new InetSocketAddress(host, port), 6000);
@@ -945,7 +944,7 @@ public class FloatMessageService extends FloatWidowService {
 						mInputStream = mSocket.getInputStream();
 						mOutputStream = mSocket.getOutputStream();
 
-						mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_connected, 0).sendToTarget();
+						mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_connected, 0, summary).sendToTarget();
 						mNetSender.restartKeepLive();
 						mConnDelay = 0;
 
@@ -983,7 +982,10 @@ public class FloatMessageService extends FloatWidowService {
 				if (mActive) {
 					synchronized (this) {
 						try {
-							mConnDelay = mConnDelay * 2 + 500;
+							if (mConnDelay < 60000) {
+								mConnDelay = mConnDelay * 2 + 500;
+							}
+
 							CavanAndroid.dLog("mConnDelay = " + mConnDelay);
 							wait(mConnDelay);
 						} catch (InterruptedException e1) {
