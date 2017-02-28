@@ -273,11 +273,6 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 
 					mFinishNodes.clear();
 					mRetryCount = 0;
-
-					if (mPackets.isEmpty()) {
-						backNode.recycle();
-						return 0;
-					}
 				}
 			}
 
