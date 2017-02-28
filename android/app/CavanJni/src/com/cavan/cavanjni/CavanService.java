@@ -1,7 +1,5 @@
 package com.cavan.cavanjni;
 
-import java.io.File;
-
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
@@ -86,12 +84,7 @@ public abstract class CavanService extends Service {
 
 	@Override
 	public void onCreate() {
-		File cache = getCacheDir();
-		if (cache != null) {
-			CavanJni.setEnv("CACHE_PATH", cache.getPath());
-			CavanJni.setEnv("HOME", cache.getParent());
-		}
-
+		CavanJni.setupEnv(this);
 		super.onCreate();
 	}
 

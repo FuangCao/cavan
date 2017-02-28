@@ -1,5 +1,9 @@
 package com.cavan.cavanjni;
 
+import java.io.File;
+
+import android.content.Context;
+
 
 public class CavanJni extends CavanNative {
 	public static final String TAG = "Cavan";
@@ -24,6 +28,22 @@ public class CavanJni extends CavanNative {
 		}
 
 		return setPathEnv(path);
+	}
+
+	public static boolean setupEnv(Context context) {
+		if (context == null) {
+			return false;
+		}
+
+		File cache = context.getCacheDir();
+		if (cache == null) {
+			return false;
+		}
+
+		CavanJni.setEnv("CACHE_PATH", cache.getPath());
+		CavanJni.setEnv("HOME", cache.getParent());
+
+		return true;
 	}
 
 	public static int doCommand(ICavanCommand command, String... args) {

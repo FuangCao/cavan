@@ -30,5 +30,7 @@
     <string name="clear">清除</string>
     <string name="select_all">全选</string>
     <string name="deselect_all">反选</string>
+    <string name="add">增加</string>
+    <string name="remove">删除</string>
 
 </resources>

@@ -23,7 +23,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_alignRight="@+id/editTextKeyword"
-            android:text="SelectAll" />
+            android:text="@string/select_all" />
 
         <Button
             android:id="@+id/buttonAdd"
@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_below="@+id/buttonRemove"
-            android:text="Add" />
+            android:text="@string/add" />
 
         <Button
             android:id="@+id/buttonRemove"
@@ -39,7 +39,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_alignParentTop="true"
-            android:text="Remove" />
+            android:text="@string/remove" />
 
         <EditText
             android:id="@+id/editTextKeyword"
