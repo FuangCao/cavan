@@ -71,15 +71,15 @@
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(12, 350);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(95, 12);
+            this.label2.Size = new System.Drawing.Size(83, 12);
             this.label2.TabIndex = 3;
-            this.label2.Text = "下一个MAC地址：";
+            this.label2.Text = "下一MAC地址：";
             // 
             // buttonConnect
             // 
-            this.buttonConnect.Location = new System.Drawing.Point(12, 452);
+            this.buttonConnect.Location = new System.Drawing.Point(12, 451);
             this.buttonConnect.Name = "buttonConnect";
-            this.buttonConnect.Size = new System.Drawing.Size(75, 67);
+            this.buttonConnect.Size = new System.Drawing.Size(100, 80);
             this.buttonConnect.TabIndex = 5;
             this.buttonConnect.Text = "连接测试";
             this.buttonConnect.UseVisualStyleBackColor = true;
@@ -87,9 +87,9 @@
             // 
             // buttonBurn
             // 
-            this.buttonBurn.Location = new System.Drawing.Point(322, 450);
+            this.buttonBurn.Location = new System.Drawing.Point(296, 451);
             this.buttonBurn.Name = "buttonBurn";
-            this.buttonBurn.Size = new System.Drawing.Size(75, 69);
+            this.buttonBurn.Size = new System.Drawing.Size(100, 80);
             this.buttonBurn.TabIndex = 6;
             this.buttonBurn.Text = "烧录";
             this.buttonBurn.UseVisualStyleBackColor = true;
@@ -97,10 +97,10 @@
             // 
             // textBoxBdAddressNext
             // 
-            this.textBoxBdAddressNext.Location = new System.Drawing.Point(113, 346);
+            this.textBoxBdAddressNext.Location = new System.Drawing.Point(101, 346);
             this.textBoxBdAddressNext.Name = "textBoxBdAddressNext";
             this.textBoxBdAddressNext.ReadOnly = true;
-            this.textBoxBdAddressNext.Size = new System.Drawing.Size(284, 21);
+            this.textBoxBdAddressNext.Size = new System.Drawing.Size(296, 21);
             this.textBoxBdAddressNext.TabIndex = 4;
             // 
             // openFileDialogFirmware
@@ -127,9 +127,9 @@
             // 
             // buttonClearLog
             // 
-            this.buttonClearLog.Location = new System.Drawing.Point(167, 451);
+            this.buttonClearLog.Location = new System.Drawing.Point(154, 451);
             this.buttonClearLog.Name = "buttonClearLog";
-            this.buttonClearLog.Size = new System.Drawing.Size(75, 67);
+            this.buttonClearLog.Size = new System.Drawing.Size(100, 80);
             this.buttonClearLog.TabIndex = 8;
             this.buttonClearLog.Text = "清空日志";
             this.buttonClearLog.UseVisualStyleBackColor = true;
@@ -146,10 +146,10 @@
             // 
             // textBoxBdAddressCurrent
             // 
-            this.textBoxBdAddressCurrent.Location = new System.Drawing.Point(113, 380);
+            this.textBoxBdAddressCurrent.Location = new System.Drawing.Point(101, 380);
             this.textBoxBdAddressCurrent.Name = "textBoxBdAddressCurrent";
             this.textBoxBdAddressCurrent.ReadOnly = true;
-            this.textBoxBdAddressCurrent.Size = new System.Drawing.Size(284, 21);
+            this.textBoxBdAddressCurrent.Size = new System.Drawing.Size(296, 21);
             this.textBoxBdAddressCurrent.TabIndex = 10;
             // 
             // labelState
@@ -166,7 +166,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(409, 528);
+            this.ClientSize = new System.Drawing.Size(409, 540);
             this.Controls.Add(this.labelState);
             this.Controls.Add(this.textBoxBdAddressCurrent);
             this.Controls.Add(this.label3);

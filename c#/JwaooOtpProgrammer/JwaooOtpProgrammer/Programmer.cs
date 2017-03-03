@@ -485,11 +485,14 @@ namespace JwaooOtpProgrammer {
             if (burnOtpFirmwareAll(pathname)) {
                 labelState.Text = "烧录成功";
                 labelState.ForeColor = System.Drawing.Color.LimeGreen;
+
+                appendLog("烧录成功");
             } else {
                 labelState.Text = "烧录失败";
                 labelState.ForeColor = System.Drawing.Color.Red;
 
-                MessageBox.Show("烧录失败！！！");
+                MessageBox.Show("烧录失败");
+                appendLog("烧录失败！！！");
             }
 
             buttonConnect.Enabled = true;
