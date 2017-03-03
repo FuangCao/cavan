@@ -734,6 +734,18 @@ public class CavanFile extends File {
 		return lastModified() <= file.lastModified();
 	}
 
+	public String getPathName(String suffix) {
+		return setSuffix(getPath(), suffix);
+	}
+
+	public String getFileName(String suffix) {
+		return setSuffix(getName(), suffix);
+	}
+
+	public String getBaseName() {
+		return getBaseName(getName());
+	}
+
 	public static String getMimeType(String pathname) {
 		CavanCommand command = new CavanCommand( "file", "-b", "--mime-type", pathname );
 		List<String> lines = command.doPipe();
@@ -790,6 +802,39 @@ public class CavanFile extends File {
 		}
 
 		return filename;
+	}
+
+	public static String getBaseName(String pathname) {
+		int end = pathname.length();
+		int start = end - 1;
+
+		while (start >= 0) {
+			char c = pathname.charAt(start);
+			if (c == separatorChar) {
+				break;
+			}
+
+			if (c == '.' && end == pathname.length()) {
+				end = start;
+			}
+		}
+
+		return pathname.substring(start + 1, end);
+	}
+
+	public static String setSuffix(String pathname, String suffix) {
+		for (int i = pathname.length() - 1; i >= 0; i--) {
+			char c = pathname.charAt(i);
+			if (c == separatorChar) {
+				break;
+			}
+
+			if (c == '.') {
+				pathname = pathname.substring(0, i);
+			}
+		}
+
+		return pathname + '.' + suffix;
 	}
 
 	@Override

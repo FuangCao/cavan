@@ -27,7 +27,7 @@ public class CavanHexFile extends CavanFile {
 		super(uri);
 	}
 
-	public byte[] parse(BufferedReader reader) {
+	public byte[] parse(BufferedReader reader, byte fill) {
 		try {
 			int sizeReal = 0;
 			byte[] binData = new byte[(int) length()];
@@ -56,6 +56,12 @@ public class CavanHexFile extends CavanFile {
 						byte[] datas = new byte[offset + length];
 						CavanJava.ArrayCopy(binData, datas, sizeReal);
 						binData = datas;
+					}
+
+					if (offset > sizeReal) {
+						for (int j = sizeReal; j < offset; j++) {
+							binData[j] = fill;
+						}
 					}
 
 					while (i < end) {
@@ -97,13 +103,17 @@ public class CavanHexFile extends CavanFile {
 		return null;
 	}
 
-	public byte[] parse() {
+	public byte[] parse(BufferedReader reader) {
+		return parse(reader, (byte) 0);
+	}
+
+	public byte[] parse(byte fill) {
 		BufferedReader reader = openBufferedReader();
 		if (reader == null) {
 			return null;
 		}
 
-		byte[] data = parse(reader);
+		byte[] data = parse(reader, fill);
 
 		try {
 			reader.close();
@@ -112,5 +122,9 @@ public class CavanHexFile extends CavanFile {
 		}
 
 		return data;
+	}
+
+	public byte[] parse() {
+		return parse((byte) 0);
 	}
 }
