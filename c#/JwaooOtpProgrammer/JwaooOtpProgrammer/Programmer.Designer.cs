@@ -36,12 +36,13 @@
             this.buttonClearLog = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.textBoxBdAddressCurrent = new System.Windows.Forms.TextBox();
+            this.labelState = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(16, 401);
+            this.label1.Location = new System.Drawing.Point(12, 419);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(65, 12);
             this.label1.TabIndex = 0;
@@ -49,15 +50,15 @@
             // 
             // textBoxFirmware
             // 
-            this.textBoxFirmware.Location = new System.Drawing.Point(87, 400);
+            this.textBoxFirmware.Location = new System.Drawing.Point(83, 415);
             this.textBoxFirmware.Name = "textBoxFirmware";
             this.textBoxFirmware.ReadOnly = true;
-            this.textBoxFirmware.Size = new System.Drawing.Size(269, 21);
+            this.textBoxFirmware.Size = new System.Drawing.Size(273, 21);
             this.textBoxFirmware.TabIndex = 1;
             // 
             // buttonFirmware
             // 
-            this.buttonFirmware.Location = new System.Drawing.Point(362, 398);
+            this.buttonFirmware.Location = new System.Drawing.Point(362, 414);
             this.buttonFirmware.Name = "buttonFirmware";
             this.buttonFirmware.Size = new System.Drawing.Size(35, 23);
             this.buttonFirmware.TabIndex = 2;
@@ -68,7 +69,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(4, 325);
+            this.label2.Location = new System.Drawing.Point(12, 350);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(95, 12);
             this.label2.TabIndex = 3;
@@ -76,20 +77,19 @@
             // 
             // buttonConnect
             // 
-            this.buttonConnect.Location = new System.Drawing.Point(16, 440);
+            this.buttonConnect.Location = new System.Drawing.Point(12, 452);
             this.buttonConnect.Name = "buttonConnect";
-            this.buttonConnect.Size = new System.Drawing.Size(75, 23);
+            this.buttonConnect.Size = new System.Drawing.Size(75, 67);
             this.buttonConnect.TabIndex = 5;
-            this.buttonConnect.Text = "连接";
+            this.buttonConnect.Text = "连接测试";
             this.buttonConnect.UseVisualStyleBackColor = true;
             this.buttonConnect.Click += new System.EventHandler(this.buttonConnect_Click);
             // 
             // buttonBurn
             // 
-            this.buttonBurn.Enabled = false;
-            this.buttonBurn.Location = new System.Drawing.Point(322, 438);
+            this.buttonBurn.Location = new System.Drawing.Point(322, 450);
             this.buttonBurn.Name = "buttonBurn";
-            this.buttonBurn.Size = new System.Drawing.Size(75, 23);
+            this.buttonBurn.Size = new System.Drawing.Size(75, 69);
             this.buttonBurn.TabIndex = 6;
             this.buttonBurn.Text = "烧录";
             this.buttonBurn.UseVisualStyleBackColor = true;
@@ -97,10 +97,10 @@
             // 
             // textBoxBdAddressNext
             // 
-            this.textBoxBdAddressNext.Location = new System.Drawing.Point(105, 322);
+            this.textBoxBdAddressNext.Location = new System.Drawing.Point(113, 346);
             this.textBoxBdAddressNext.Name = "textBoxBdAddressNext";
             this.textBoxBdAddressNext.ReadOnly = true;
-            this.textBoxBdAddressNext.Size = new System.Drawing.Size(292, 21);
+            this.textBoxBdAddressNext.Size = new System.Drawing.Size(284, 21);
             this.textBoxBdAddressNext.TabIndex = 4;
             // 
             // openFileDialogFirmware
@@ -116,29 +116,29 @@
             // 
             // textBoxLog
             // 
-            this.textBoxLog.Location = new System.Drawing.Point(14, 12);
+            this.textBoxLog.Location = new System.Drawing.Point(12, 12);
             this.textBoxLog.Multiline = true;
             this.textBoxLog.Name = "textBoxLog";
             this.textBoxLog.ReadOnly = true;
             this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxLog.Size = new System.Drawing.Size(383, 285);
+            this.textBoxLog.Size = new System.Drawing.Size(385, 279);
             this.textBoxLog.TabIndex = 7;
             this.textBoxLog.WordWrap = false;
             // 
             // buttonClearLog
             // 
-            this.buttonClearLog.Location = new System.Drawing.Point(152, 440);
+            this.buttonClearLog.Location = new System.Drawing.Point(167, 451);
             this.buttonClearLog.Name = "buttonClearLog";
-            this.buttonClearLog.Size = new System.Drawing.Size(75, 23);
+            this.buttonClearLog.Size = new System.Drawing.Size(75, 67);
             this.buttonClearLog.TabIndex = 8;
-            this.buttonClearLog.Text = "清空打印";
+            this.buttonClearLog.Text = "清空日志";
             this.buttonClearLog.UseVisualStyleBackColor = true;
             this.buttonClearLog.Click += new System.EventHandler(this.buttonClearLog_Click);
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(16, 363);
+            this.label3.Location = new System.Drawing.Point(12, 384);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(83, 12);
             this.label3.TabIndex = 9;
@@ -146,17 +146,28 @@
             // 
             // textBoxBdAddressCurrent
             // 
-            this.textBoxBdAddressCurrent.Location = new System.Drawing.Point(105, 360);
+            this.textBoxBdAddressCurrent.Location = new System.Drawing.Point(113, 380);
             this.textBoxBdAddressCurrent.Name = "textBoxBdAddressCurrent";
             this.textBoxBdAddressCurrent.ReadOnly = true;
-            this.textBoxBdAddressCurrent.Size = new System.Drawing.Size(292, 21);
+            this.textBoxBdAddressCurrent.Size = new System.Drawing.Size(284, 21);
             this.textBoxBdAddressCurrent.TabIndex = 10;
+            // 
+            // labelState
+            // 
+            this.labelState.AutoSize = true;
+            this.labelState.Font = new System.Drawing.Font("宋体", 21.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.labelState.Location = new System.Drawing.Point(7, 304);
+            this.labelState.Name = "labelState";
+            this.labelState.Size = new System.Drawing.Size(71, 29);
+            this.labelState.TabIndex = 11;
+            this.labelState.Text = "状态";
             // 
             // Programmer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(409, 475);
+            this.ClientSize = new System.Drawing.Size(409, 528);
+            this.Controls.Add(this.labelState);
             this.Controls.Add(this.textBoxBdAddressCurrent);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.buttonClearLog);
@@ -169,7 +180,7 @@
             this.Controls.Add(this.textBoxFirmware);
             this.Controls.Add(this.label1);
             this.Name = "Programmer";
-            this.Text = "井蛙蓝牙烧录器";
+            this.Text = "    ";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Programmer_FormClosed);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -190,6 +201,7 @@
         private System.Windows.Forms.Button buttonClearLog;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox textBoxBdAddressCurrent;
+        private System.Windows.Forms.Label labelState;
     }
 }
 

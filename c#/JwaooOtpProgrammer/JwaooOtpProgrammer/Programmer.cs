@@ -441,18 +441,26 @@ namespace JwaooOtpProgrammer {
             buttonConnect.Enabled = false;
             buttonBurn.Enabled = false;
 
+            labelState.Text = "正在测试连接";
+            labelState.ForeColor = System.Drawing.Color.Black;
+
             byte[] bytes = readOtpHeader();
             if (bytes != null) {
-                MessageBox.Show("连接成功");
+                labelState.Text = "连接成功";
+                labelState.ForeColor = System.Drawing.Color.LimeGreen;
+
                 appendLog("连接成功");
                 textBoxBdAddressCurrent.Text = MacAddressManager.getBdAddressString(bytes, 0xD4);
-                buttonConnect.Enabled = true;
                 buttonBurn.Enabled = true;
             } else {
+                labelState.Text = "连接失败";
+                labelState.ForeColor = System.Drawing.Color.Red;
+
                 MessageBox.Show("连接失败");
                 appendLog("连接失败！！！");
-                buttonConnect.Enabled = true;
             }
+
+            buttonConnect.Enabled = true;
         }
 
         private void buttonBurn_Click(object sender, EventArgs e) {
@@ -471,10 +479,17 @@ namespace JwaooOtpProgrammer {
             buttonBurn.Enabled = false;
             buttonFirmware.Enabled = false;
 
+            labelState.Text = "正在烧录";
+            labelState.ForeColor = System.Drawing.Color.Black;
+
             if (burnOtpFirmwareAll(pathname)) {
-                MessageBox.Show("恭喜，烧录成功");
+                labelState.Text = "烧录成功";
+                labelState.ForeColor = System.Drawing.Color.LimeGreen;
             } else {
-                appendLog("烧录失败！！！");
+                labelState.Text = "烧录失败";
+                labelState.ForeColor = System.Drawing.Color.Red;
+
+                MessageBox.Show("烧录失败！！！");
             }
 
             buttonConnect.Enabled = true;
