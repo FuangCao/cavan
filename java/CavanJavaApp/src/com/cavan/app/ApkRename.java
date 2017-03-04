@@ -612,6 +612,22 @@ public class ApkRename {
 		return null;
 	}
 
+	public String getVersionCode() {
+		if (mAndroidManifest == null) {
+			return null;
+		}
+
+		return mAndroidManifest.getVersionCode();
+	}
+
+	public String getVersionName() {
+		if (mAndroidManifest == null) {
+			return null;
+		}
+
+		return mAndroidManifest.getVersionName();
+	}
+
 	public boolean doRename(boolean fullRename) {
 
 		mFullRename = fullRename;

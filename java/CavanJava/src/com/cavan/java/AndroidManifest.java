@@ -79,6 +79,14 @@ public class AndroidManifest extends CavanXml {
 		mAppNameAttr = attr;
 	}
 
+	public String getVersionCode() {
+		return mManifest.getAttribute("platformBuildVersionCode");
+	}
+
+	public String getVersionName() {
+		return mManifest.getAttribute("platformBuildVersionName");
+	}
+
 	public String findAppName() {
 		NamedNodeMap map = mApplication.getAttributes();
 		for (int i = map.getLength() - 1; i >= 0; i--) {

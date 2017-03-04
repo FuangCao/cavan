@@ -54,19 +54,31 @@ public class ApkRenameMain {
 		}
 	}
 
-	public String buildApkName(String filename, String appName) {
-		for (char c : new char[] { '-', '_', ' ' }) {
-			int index = filename.indexOf(c);
-			if (index > 0) {
-				return appName + filename.substring(index);
+	public String buildApkName(ApkRename rename, String filename, String appName) {
+		String versionName = rename.getVersionName();
+		String versionCode = rename.getVersionCode();
+
+		CavanJava.dLog("versionName = " + versionName);
+		CavanJava.dLog("versionCode = " + versionCode);
+
+		if (versionName != null) {
+			appName += '-' + versionName;
+		} else if (versionCode != null) {
+			appName += '-' + versionCode;
+		} else {
+			for (char c : new char[] { '-', '_', ' ' }) {
+				int index = filename.indexOf(c);
+				if (index > 0) {
+					return appName + filename.substring(index);
+				}
 			}
 		}
 
 		return appName + ".apk";
 	}
 
-	public CavanFile buildApkFile(String filename, String appName) {
-		String apkName = buildApkName(filename, appName);
+	public CavanFile buildApkFile(ApkRename rename, String filename, String appName) {
+		String apkName = buildApkName(rename, filename, appName);
 		CavanFile apkFile = new CavanFile(mDirOut, apkName);
 		if (apkFile.exists()) {
 			if (filename.equals(apkName)) {
@@ -97,7 +109,7 @@ public class ApkRenameMain {
 		String appName = rename.getAppName();
 		if (success) {
 			if (appName != null) {
-				CavanFile namedFile = buildApkFile(filename, appName);
+				CavanFile namedFile = buildApkFile(rename, filename, appName);
 				if (namedFile != null) {
 					CavanJava.dLog("move: " + outFile.getPath() + " => " + namedFile.getPath());
 					if (!outFile.renameTo(namedFile)) {
