@@ -18,57 +18,34 @@
  */
 
 #include <cavan.h>
-#include <cavan/command.h>
-
-#define FILE_CREATE_DATE "2017-02-13 17:53:02"
-
-static void show_usage(const char *command)
-{
-	println("Usage: %s [option]", command);
-	println("-h, -H, --help\t\tshow this help");
-	println("-v, -V, --version\tshow version");
-}
+#include <cavan/http.h>
 
 int main(int argc, char *argv[])
 {
-	int c;
-	int option_index;
-	struct option long_option[] = {
-		{
-			.name = "help",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_HELP,
-		}, {
-			.name = "version",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_VERSION,
-		}, {
-			0, 0, 0, 0
-		},
-	};
+	int ret;
+	struct cavan_http_service *http;
+	struct cavan_dynamic_service *service;
 
-	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF) {
-		switch (c) {
-		case 'v':
-		case 'V':
-		case CAVAN_COMMAND_OPTION_VERSION:
-			show_author_info();
-			println(FILE_CREATE_DATE);
-			return 0;
-
-		case 'h':
-		case 'H':
-		case CAVAN_COMMAND_OPTION_HELP:
-			show_usage(argv[0]);
-			return 0;
-
-		default:
-			show_usage(argv[0]);
-			return -EINVAL;
-		}
+	service = cavan_dynamic_service_create(sizeof(struct cavan_http_service));
+	if (service == NULL) {
+		pr_red_info("cavan_dynamic_service_create");
+		return -ENOMEM;
 	}
 
-	return 0;
+	service->min = 20;
+	service->max = 1000;
+
+	http = cavan_dynamic_service_get_data(service);
+	network_url_init(&http->url, "tcp", "any", CAVAN_HTTP_PORT, network_get_socket_pathname());
+
+	ret = network_url_parse_cmdline(&http->url, service, argc, argv);
+	if (ret < 0) {
+		goto out_cavan_dynamic_service_destroy;
+	}
+
+	ret = cavan_http_service_run(service);
+
+out_cavan_dynamic_service_destroy:
+	cavan_dynamic_service_destroy(service);
+	return ret;
 }

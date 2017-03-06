@@ -19,86 +19,11 @@
 
 #include <cavan.h>
 #include <cavan/ftp.h>
-#include <cavan/network.h>
+#include <cavan/http.h>
 #include <cavan/tcp_proxy.h>
 #include <cavan/web_proxy.h>
 
 #define WEB_PROXY_DEBUG		0
-
-int web_proxy_get_request_type(const char *req, size_t length)
-{
-	switch (req[0]) {
-	case 'C':
-		if (length == 7 && text_lhcmp("ONNECT", req + 1) == 0) {
-			return HTTP_REQ_CONNECT;
-		}
-		break;
-
-	case 'D':
-		if (length == 6 && text_lhcmp("ELETE", req + 1) == 0) {
-			return HTTP_REQ_DELETE;
-		}
-		break;
-
-	case 'G':
-		if (length == 3 && text_lhcmp("ET", req + 1) == 0) {
-			return HTTP_REQ_GET;
-		}
-		break;
-
-	case 'H':
-		if (length == 4 && text_lhcmp("EAD", req + 1) == 0) {
-			return HTTP_REQ_HEAD;
-		}
-		break;
-
-	case 'O':
-		if (length == 7 && text_lhcmp("PTIONS", req + 1) == 0) {
-			return HTTP_REQ_OPTIONS;
-		}
-		break;
-
-	case 'P':
-		if (length == 3 && text_lhcmp("UT", req + 1) == 0) {
-			return HTTP_REQ_PUT;
-		} else if (length == 4 && text_lhcmp("OST", req + 1) == 0) {
-			return HTTP_REQ_POST;
-		}
-		break;
-
-	case 'T':
-		if (length == 5 && text_lhcmp("RACE", req + 1) == 0) {
-			return HTTP_REQ_TRACE;
-		}
-		break;
-	}
-
-	return -EINVAL;
-}
-
-const char *web_proxy_request_type_tostring(int type)
-{
-	switch (type) {
-	case HTTP_REQ_CONNECT:
-		return "CONNECT";
-	case HTTP_REQ_DELETE:
-		return "DELETE";
-	case HTTP_REQ_GET:
-		return "GET";
-	case HTTP_REQ_HEAD:
-		return "HEAD";
-	case HTTP_REQ_OPTIONS:
-		return "OPTIONS";
-	case HTTP_REQ_PUT:
-		return "PUT";
-	case HTTP_REQ_POST:
-		return "POST";
-	case HTTP_REQ_TRACE:
-		return "TRACE";
-	default:
-		return "UNKNOWN";
-	}
-}
 
 static int web_proxy_main_loop(struct network_client *client_src, struct network_client *client_dest, int timeout)
 {
@@ -138,37 +63,6 @@ static int web_proxy_main_loop(struct network_client *client_src, struct network
 	}
 
 	return 0;
-}
-
-static int web_proxy_ftp_send_http_reply(struct network_client *client, const char *filetype, size_t length, struct tm *time)
-{
-	char buff[2048], *p;
-
-	p = text_copy(buff, "HTTP/1.1 200 Gatewaying\r\n"
-		"Server: cavan-web_proxy\r\n"
-		"Mime-Version: 1.0\r\n"
-		"X-Cache: MISS from server\r\n"
-		"Via: 1.1 server (cavan-web_proxy)\r\n");
-
-	if (filetype == NULL) {
-		filetype = "text/html";
-	}
-
-	p += sprintf(p, "Content-Type: %s\r\n", filetype);
-
-#if __WORDSIZE == 64
-	p += sprintf(p, "Content-Length: %ld\r\n", length) - 1;
-#else
-	p += sprintf(p, "Content-Length: %d\r\n", length) - 1;
-#endif
-
-	if (time) {
-		p += sprintf(p, "Last-Modified: %s\r\n", asctime(time)) - 1;
-	}
-
-	p = text_copy(p, "Connection: keep-alive\r\n\r\n");
-
-	return client->send(client, buff, p - buff);
 }
 
 static int web_proxy_ftp_read_file(struct network_client *client, struct network_client *client_proxy, const char *filename)
@@ -216,7 +110,7 @@ static int web_proxy_ftp_read_file(struct network_client *client, struct network
 		goto out_close_sockfd;
 	}
 
-	ret = web_proxy_ftp_send_http_reply(client, "text/plain", size, &time);
+	ret = cavan_http_send_reply(client, CAVAN_WEB_PROXY_NAME, 0, 0, size, &time, "text/plain");
 	if (ret < 0) {
 		pr_red_info("web_proxy_ftp_send_http_reply");
 		goto out_close_sockfd;
@@ -249,70 +143,6 @@ out_close_sockfd:
 	return ret;
 }
 
-static int web_proxy_open_html_file(const char *title, char *pathname)
-{
-	int fd;
-	char buff[1024];
-
-	if (pathname == NULL) {
-		pathname = buff;
-	}
-
-	cavan_build_temp_path("cavan-XXXXXX", pathname, sizeof(buff));
-	fd = mkstemp(pathname);
-	if (fd < 0) {
-		pr_error_info("mkstemp `%s'", pathname);
-		return fd;
-	}
-
-	unlink(pathname);
-
-	println("pathname = %s, title = %s", pathname, title);
-
-	ffile_puts(fd, "<!-- This file is automatic generate by Fuang.Cao -->\r\n\r\n");
-	ffile_printf(fd, "<html>\r\n\t<head>\r\n\t\t<title>%s</title>\r\n\t</head>\r\n\t<body>\r\n", title);
-
-	return fd;
-}
-
-static int web_proxy_flush_html_file(int fd)
-{
-	int ret;
-
-	ret = ffile_puts(fd, "\t</body>\r\n</html>");
-	if (ret < 0) {
-		pr_red_info("ffile_puts");
-		return ret;
-	}
-
-	return fsync(fd);
-}
-
-static int web_proxy_send_file(struct network_client *client, int fd, const char *filetype)
-{
-	int ret;
-	struct stat st;
-
-	if (lseek(fd, 0, SEEK_SET) != 0) {
-		pr_error_info("lseek");
-		return -EFAULT;
-	}
-
-	ret = fstat(fd, &st);
-	if (ret < 0) {
-		pr_red_info("stat");
-		return ret;
-	}
-
-	ret = web_proxy_ftp_send_http_reply(client, filetype, st.st_size, NULL);
-	if (ret < 0) {
-		pr_red_info("web_proxy_ftp_send_http_reply");
-		return ret;
-	}
-
-	return network_client_send_file(client, fd, 0, st.st_size);
-}
-
 static int web_proxy_ftp_list_directory(struct network_client *client, struct network_client *client_proxy, const struct network_url *url)
 {
 	int fd;
@@ -336,14 +166,14 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 
 	network_url_tostring(url, buff, sizeof(buff), NULL);
 
-	fd = web_proxy_open_html_file(buff, NULL);
+	fd = cavan_http_open_html_file(buff, NULL);
 	if (fd < 0) {
 		ret = fd;
 		pr_red_info("web_proxy_open_html_file");
 		goto out_close_data_sockfd;
 	}
 
-	ffile_puts(fd, "\t\t<h1>FTP Proxy Server (Fuang.Cao <a href=\"http://mail.google.com\">cavan.cfa@gmail.com</a>)</h1>\r\n");
+	ffile_puts(fd, "\t\t<h1>FTP Proxy Server (Fuang.Cao <a href=\"http://mail.foxmail.com\">cavan.cao@foxmail.com</a>)</h1>\r\n");
 	ffile_printf(fd, "\t\t<h2>Directory: <a href=\"%s/\">%s</a></h2>\r\n", buff, buff);
 
 	p = text_dirname_base(buff, url->pathname);
@@ -387,28 +217,28 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 		ffile_puts(fd, "\t\t\t<tr class=\"entry\">");
 
 		switch (texts[0][0]) {
-			case 'l':
-				p = "LINK";
-				break;
+		case 'l':
+			p = "LINK";
+			break;
 
-			case 'f':
-				p = "FIFO";
-				break;
+		case 'f':
+			p = "FIFO";
+			break;
 
-			case 'c':
-				p = "CHR";
-				break;
+		case 'c':
+			p = "CHR";
+			break;
 
-			case 'b':
-				p = "BLK";
-				break;
+		case 'b':
+			p = "BLK";
+			break;
 
-			case 'd':
-				p = "DIR";
-				break;
+		case 'd':
+			p = "DIR";
+			break;
 
-			default:
-				p = "FILE";
+		default:
+			p = "FILE";
 		}
 
 		ffile_printf(fd, "<td class=\"type\">[%s]</td><td class=\"filename\">", p);
@@ -429,7 +259,7 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 	}
 
 	ffile_puts(fd, "\t\t</table>\r\n");
-	web_proxy_flush_html_file(fd);
+	cavan_http_flush_html_file(fd);
 
 	ret = ftp_client_read_response(client_proxy, NULL, 0);
 	if (ret != 226) {
@@ -438,7 +268,7 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 		goto out_cavan_fifo_deinit;
 	}
 
-	ret = web_proxy_send_file(client, fd, NULL);
+	ret = cavan_http_send_file(client, CAVAN_WEB_PROXY_NAME, fd, 0, 0, NULL);
 	if (ret < 0) {
 		pr_red_info("stat");
 	}
@@ -458,7 +288,7 @@ static int web_proxy_send_connect_failed(struct network_client *client, struct n
 	int ret;
 	char buff[1024];
 
-	fd = web_proxy_open_html_file("connection failure", NULL);
+	fd = cavan_http_open_html_file("connection failure", NULL);
 	if (fd < 0) {
 		pr_red_info("web_proxy_open_html_file");
 		return fd;
@@ -473,13 +303,13 @@ static int web_proxy_send_connect_failed(struct network_client *client, struct n
 	ffile_puts(fd, "\t\t\t<tr><td><strong>Source: </strong></td><td><a href=\"https://github.com/FuangCao/cavan.git\">https://github.com/FuangCao/cavan.git</a></td></tr>\r\n");
 	ffile_puts(fd, "\t\t</table>\r\n");
 
-	ret = web_proxy_flush_html_file(fd);
+	ret = cavan_http_flush_html_file(fd);
 	if (ret < 0) {
 		pr_red_info("web_proxy_flush_html_file");
 		goto out_close_fd;
 	}
 
-	ret = web_proxy_send_file(client, fd, NULL);
+	ret = cavan_http_send_file(client, CAVAN_WEB_PROXY_NAME, fd, 0, 0, NULL);
 
 out_close_fd:
 	close(fd);
@@ -510,92 +340,6 @@ static void web_proxy_stop_handler(struct cavan_dynamic_service *service)
 	struct web_proxy_service *proxy = cavan_dynamic_service_get_data(service);
 
 	network_service_close(&proxy->service);
-}
-
-char *web_proxy_find_http_prop(const char *req, const char *req_end, const char *name, size_t namelen)
-{
-	while ((size_t) (req_end - req) > namelen) {
-		if (text_ncmp(req, name, namelen) == 0) {
-			for (req += namelen; req < req_end && byte_is_space(*req); req++);
-
-			if (*req == ':') {
-				while (byte_is_space(*++req));
-
-				return (char *) req;
-			}
-		}
-
-		if (byte_is_lf(*req)) {
-			break;
-		}
-
-		while (req < req_end && *req++ != '\n');
-	}
-
-	return NULL;
-}
-
-char *web_proxy_set_http_prop(char *req, char *req_end, const char *name, int namelen, const char *value, int valuelen)
-{
-	char *prop;
-	int proplen;
-	char *prop_end;
-
-	prop = web_proxy_find_http_prop(req, req_end, name, namelen);
-	if (prop == NULL) {
-		return req_end;
-	}
-
-	for (prop_end = prop; prop_end < req_end && *prop_end != '\n'; prop_end++);
-
-	proplen = prop_end - prop;
-	if (proplen != valuelen) {
-		mem_move(prop + valuelen, prop_end, req_end - prop_end);
-	}
-
-	mem_copy(prop, value, valuelen);
-
-	return req_end + (valuelen - proplen);
-}
-
-ssize_t web_proxy_read_http_request(struct network_client *client, char *buff, size_t size)
-{
-	int count = 0;
-	char *buff_bak = buff;
-	char *buff_end = buff + size;
-
-	while (buff < buff_end) {
-		char *p;
-		ssize_t rdlen;
-
-		rdlen = client->recv(client, buff, buff_end - buff);
-		if (rdlen <= 0) {
-			return rdlen;
-		}
-
-		p = buff;
-		buff += rdlen;
-
-		while (p < buff) {
-			switch (*p) {
-			case '\n':
-				if (count > 0) {
-					goto out_return;
-				}
-				count++;
-			case '\r':
-				break;
-
-			default:
-				count = 0;
-			}
-
-			p++;
-		}
-	}
-
-out_return:
-	return buff - buff_bak;
 }
 
 static void web_proxy_close_proxy_client(struct network_client *client, bool ftp_login)
@@ -633,7 +377,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 	while (1) {
 		bool tcp_proxy;
 
-		ret = web_proxy_read_http_request(client, buff, sizeof(buff) - proxy->proxy_hostlen - 1);
+		ret = cavan_http_read_request(client, buff, sizeof(buff) - proxy->proxy_hostlen - 1);
 		if (ret <= 0) {
 			goto out_network_client_close_proxy;
 		}
@@ -648,13 +392,12 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 		for (url_text = buff; url_text < buff_end && *url_text != ' '; url_text++);
 
 		cmdlen = url_text++ - buff;
-		type = web_proxy_get_request_type(buff, cmdlen);
+		type = cavan_http_get_request_type(buff, cmdlen);
 		if (type < 0) {
 			pr_red_info("invalid request[%" PRINT_FORMAT_SIZE "] `%s'", cmdlen, buff);
 
 			if (client_proxy.sockfd < 0) {
-				ret = -EINVAL;
-				goto out_return;
+				return -EINVAL;
 			}
 
 			ret = network_client_send(&client_proxy, buff, buff_end - buff);
@@ -688,7 +431,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 			}
 
 			tcp_proxy = false;
-			pr_info("%s[%d](%d)", web_proxy_request_type_tostring(type), type, count);
+			pr_info("%s[%d](%d)", cavan_http_request_type_tostring(type), type, count);
 		} else {
 			tcp_proxy = true;
 			url = &proxy->url_proxy;
@@ -701,7 +444,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 			if (ret < 0) {
 				pr_red_info("network_client_open");
 				web_proxy_send_connect_failed(client, url);
-				goto out_return;
+				return ret;
 			}
 
 			count = 0;
@@ -727,7 +470,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 
 			default:
 				if (tcp_proxy) {
-					buff_end = web_proxy_set_http_prop(buff, buff_end, "Host", 4, proxy->url_proxy.hostname, proxy->proxy_hostlen);
+					buff_end = cavan_http_set_prop(buff, buff_end, "Host", 4, proxy->url_proxy.hostname, proxy->proxy_hostlen);
 #if WEB_PROXY_DEBUG
 					*buff_end = 0;
 #endif
@@ -834,7 +577,6 @@ label_change_dir:
 
 out_network_client_close_proxy:
 	web_proxy_close_proxy_client(&client_proxy, ftp_login);
-out_return:
 	return ret;
 }
 

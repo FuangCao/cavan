@@ -23,17 +23,7 @@
 #include <cavan/service.h>
 
 #define CAVAN_WEB_PROXY_PORT	9090
-
-typedef enum {
-	HTTP_REQ_CONNECT,
-	HTTP_REQ_DELETE,
-	HTTP_REQ_GET,
-	HTTP_REQ_HEAD,
-	HTTP_REQ_OPTIONS,
-	HTTP_REQ_PUT,
-	HTTP_REQ_POST,
-	HTTP_REQ_TRACE,
-} http_request_type_t;
+#define CAVAN_WEB_PROXY_NAME	"CavanWebProxy"
 
 struct web_proxy_service {
 	struct network_service service;
@@ -42,9 +32,4 @@ struct web_proxy_service {
 	size_t proxy_hostlen;
 };
 
-const char *web_proxy_request_type_tostring(int type);
-int web_proxy_get_request_type(const char *req, size_t length);
-char *web_proxy_find_http_prop(const char *req, const char *req_end, const char *name, size_t namelen);
-char *web_proxy_set_http_prop(char *req, char *req_end, const char *name, int namelen, const char *value, int valuelen);
-ssize_t web_proxy_read_http_request(struct network_client *client, char *buff, size_t size);
 int web_proxy_service_run(struct cavan_dynamic_service *service);

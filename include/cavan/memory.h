@@ -105,6 +105,7 @@ u8 mem_checksum8_simple(const u8 *mem, size_t count);
 
 char *mem_tostring(const byte *mem, size_t memlen, char *buff, size_t size);
 char *mem_size_tostring(double value, char *buff, size_t size);
+char *mem_size_tostring_simple(double value, char *buff, size_t size);
 char *mem_speed_tostring(double value, char *buff, size_t size);
 char *mem_time_tostring(double time, char *buff, size_t size);
 

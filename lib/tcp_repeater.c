@@ -117,7 +117,7 @@ static int cavan_tcp_repeater_run_handler(struct cavan_dynamic_service *service,
 int cavan_tcp_repeater_run(struct cavan_dynamic_service *service)
 {
 	service->name = "TCP_REPEATER";
-	service->conn_size = sizeof(struct cavan_tcp_repeater_conn);
+	service->conn_size = sizeof(struct network_client);
 	service->start = tcp_repeater_start_handler;
 	service->stop = tcp_repeater_stop_handler;
 	service->run = cavan_tcp_repeater_run_handler;

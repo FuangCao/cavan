@@ -556,6 +556,19 @@ char *mem_size_tostring(double value, char *buff, size_t size)
 	}
 }
 
+char *mem_size_tostring_simple(double value, char *buff, size_t size)
+{
+	if (value >= GB(1UL)) {
+		return buff + snprintf(buff, size, "%0.2lfG", value / GB(1UL));
+	} else if (value >= MB(1UL)) {
+		return buff + snprintf(buff, size, "%0.2lfM", value / MB(1UL));
+	} else if (value >= KB(1UL)) {
+		return buff + snprintf(buff, size, "%0.2lfK", value / KB(1UL));
+	} else {
+		return buff + snprintf(buff, size, "%ld", (ulong) value);
+	}
+}
+
 char *mem_speed_tostring(double value, char *buff, size_t size)
 {
 	char *p = mem_size_tostring(value, buff, size);
