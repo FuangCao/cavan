@@ -8,13 +8,56 @@
 	    android:title="@string/text_local_ip_address"
 	    android:summary="@string/text_unknown" />
 
+	<Preference android:key="message_show"
+	    android:title="@string/text_message_show" />
+
 	<com.cavan.resource.EditableMultiSelectListPreference
 	    android:key="keyword_notify"
 	    android:persistent="true"
 	    android:title="@string/keyword_notify"/>
 
-	<Preference android:key="message_show"
-	    android:title="@string/text_message_show" />
+	<EditTextPreference android:key="red_packet_notify_test"
+	    android:persistent="true"
+	    android:defaultValue="支付宝红包口令：12345678"
+	    android:title="@string/red_packet_notify_test" />
+
+	<CheckBoxPreference android:key="wan_share"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/text_wan_share" />
+
+	<com.cavan.resource.EditableMultiSelectListPreference android:key="wan_server"
+	    android:persistent="true"
+	    android:defaultValue="192.168.88.88"
+	    android:title="@string/text_wan_server" />
+
+	<CheckBoxPreference android:key="wan_receive"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/text_wan_receive" />
+
+	<Preference android:key="wan_test"
+	    android:title="@string/text_wan_test" />
+
+	<CheckBoxPreference android:key="lan_share"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/text_lan_share" />
+
+	<Preference android:key="lan_test"
+	    android:title="@string/text_lan_test" />
+
+	<EditTextPreference android:key="red_packet_code_send"
+	    android:persistent="true"
+	    android:title="@string/text_red_packet_code_send" />
+
+	<Preference android:key="red_packet_code_clear"
+	    android:title="@string/text_red_packet_code_clear" />
+
+	<CheckBoxPreference android:key="auto_unlock"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/text_auto_unlock" />
 
 	<Preference android:key="permission_settings"
 	    android:title="@string/text_permission_settings" />
@@ -38,15 +81,6 @@
 		android:defaultValue="3"
 	    android:title="@string/red_packet_notify_setting" />
 
-	<EditTextPreference android:key="red_packet_notify_test"
-	    android:persistent="true"
-	    android:defaultValue="支付宝红包口令：12345678"
-	    android:title="@string/red_packet_notify_test" />
-
-	<EditTextPreference android:key="red_packet_code_send"
-	    android:persistent="true"
-	    android:title="@string/text_red_packet_code_send" />
-
 	<EditTextPreference android:key="red_packet_code_recognize"
 	    android:persistent="true"
 	    android:title="@string/text_red_packet_code_recognize" />
@@ -54,9 +88,6 @@
 	<EditTextPreference android:key="red_packet_code_split"
 	    android:persistent="true"
 	    android:title="@string/text_red_packet_code_split" />
-
-	<Preference android:key="red_packet_code_clear"
-	    android:title="@string/text_red_packet_code_clear" />
 
 	<CheckBoxPreference android:key="auto_open_app"
 	    android:persistent="true"
@@ -67,6 +98,11 @@
 	    android:persistent="true"
 	    android:defaultValue="true"
 	    android:title="@string/auto_open_alipay" />
+
+	<CheckBoxPreference android:key="auto_back_desktop"
+	    android:persistent="true"
+	    android:defaultValue="false"
+	    android:title="@string/auto_back_desktop" />
 
 	<ListPreference android:key="qq_auto_unpack"
 	    android:persistent="true"
@@ -101,11 +137,6 @@
 	    android:defaultValue="false"
 	    android:title="@string/disable_keyguard" />
 
-	<CheckBoxPreference android:key="auto_unlock"
-	    android:persistent="true"
-	    android:defaultValue="true"
-	    android:title="@string/text_auto_unlock" />
-
 	<CheckBoxPreference android:key="auto_unpack"
 	    android:persistent="true"
 	    android:defaultValue="true"
@@ -120,32 +151,6 @@
 	    android:persistent="true"
 	    android:defaultValue="true"
 	    android:title="@string/text_listen_clip" />
-
-	<Preference android:key="lan_test"
-	    android:title="@string/text_lan_test" />
-
-	<CheckBoxPreference android:key="lan_share"
-	    android:persistent="true"
-	    android:defaultValue="true"
-	    android:title="@string/text_lan_share" />
-
-	<Preference android:key="wan_test"
-	    android:title="@string/text_wan_test" />
-
-	<CheckBoxPreference android:key="wan_receive"
-	    android:persistent="true"
-	    android:defaultValue="true"
-	    android:title="@string/text_wan_receive" />
-
-	<CheckBoxPreference android:key="wan_share"
-	    android:persistent="true"
-	    android:defaultValue="true"
-	    android:title="@string/text_wan_share" />
-
-	<com.cavan.resource.EditableMultiSelectListPreference android:key="wan_server"
-	    android:persistent="true"
-	    android:defaultValue="192.168.88.88"
-	    android:title="@string/text_wan_server" />
 
 	<CheckBoxPreference android:key="float_timer"
 	    android:persistent="true"

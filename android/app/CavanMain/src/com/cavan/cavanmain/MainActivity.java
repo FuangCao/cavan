@@ -92,6 +92,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_QQ_AUTO_UNPACK = "qq_auto_unpack";
 	public static final String KEY_MM_AUTO_UNPACK = "mm_auto_unpack";
 	public static final String KEY_KEYWORD_NOTIFY = "keyword_notify";
+	public static final String KEY_AUTO_BACK_DESKTOP = "auto_back_desktop";
 
 	private static boolean sAutoOpenAppEnable = true;
 	private static boolean sRedPacketCodeReceiveEnabled = true;
@@ -124,6 +125,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 	public static boolean isAutoUnpackEnabled(Context context) {
 		return CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_UNPACK);
+	}
+
+	public static boolean isAutoBackDesktopEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_BACK_DESKTOP);
 	}
 
 	public static boolean isListenClipEnabled(Context context) {

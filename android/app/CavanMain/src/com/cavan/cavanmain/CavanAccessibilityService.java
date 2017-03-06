@@ -351,11 +351,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public boolean startIdleActivity() {
-		if (CavanAndroid.startActivity(this, CavanPackageName.ALIPAY)) {
+		if (MainActivity.isAutoBackDesktopEnabled(this)) {
+			performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
 			return true;
+		} else if (CavanAndroid.startActivity(this, CavanPackageName.ALIPAY)) {
+			return true;
+		} else {
+			return CavanAndroid.startActivity(this, MainActivity.class);
 		}
-
-		return CavanAndroid.startActivity(this, MainActivity.class);
 	}
 
 	public int getRedPacketCodeCount() {
