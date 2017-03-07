@@ -110,7 +110,7 @@ char *cavan_http_find_prop(const char *req, const char *req_end, const char *nam
 			}
 		}
 
-		if (byte_is_lf(*req)) {
+		if (cavan_islf(*req)) {
 			break;
 		}
 
@@ -183,6 +183,93 @@ out_return:
 	return buff - buff_bak;
 }
 
+int cavan_http_parse_request(char *req, char *req_end, struct cavan_http_prop *props, int size)
+{
+	char *p;
+	struct cavan_http_prop *prop = props, *prop_end;
+
+	prop->key = req;
+	prop->value = NULL;
+
+	for (prop_end = prop + size; req < req_end && prop < prop_end; req++) {
+		switch (*req) {
+		case ' ':
+		case '\t':
+			if (prop->key == req) {
+				prop->key++;
+			} else if (prop->value == req) {
+				prop->value++;
+			}
+			break;
+
+		case '\r':
+		case '\n':
+			*req = 0;
+
+			if (prop->value) {
+				prop++;
+				prop->value = NULL;
+			}
+
+			prop->key = req + 1;
+			break;
+
+		case ':':
+			if (prop->value) {
+				break;
+			}
+
+			*req = 0;
+			prop->value = req + 1;
+
+			for (p = req - 1; p >= prop->key && cavan_isspace(*p); p--) {
+				*p = 0;
+			}
+			break;
+		}
+	}
+
+	return prop - props;
+}
+
+void cavan_http_dump_prop(const struct cavan_http_prop *prop)
+{
+	println("key = %s, value = %s", prop->key, prop->value);
+}
+
+void cavan_http_dump_props(const struct cavan_http_prop *props, int count)
+{
+	const struct cavan_http_prop *prop_end;
+
+	for (prop_end = props + count; props < prop_end; props++) {
+		cavan_http_dump_prop(props);
+	}
+}
+
+const struct cavan_http_prop *cavan_http_prop_find(const struct cavan_http_prop *props, int count, const char *key)
+{
+	const struct cavan_http_prop *prop_end;
+
+	for (prop_end = props + count; props < prop_end; props++) {
+		if (strcmp(props->key, key) == 0) {
+			return props;
+		}
+	}
+
+	return NULL;
+}
+
+const char *cavan_http_prop_find_value(const struct cavan_http_prop *props, int count, const char *key)
+{
+	const struct cavan_http_prop *prop = cavan_http_prop_find(props, count, key);
+
+	if (prop == NULL) {
+		return NULL;
+	}
+
+	return prop->value;
+}
+
 int cavan_http_open_html_file(const char *title, char *pathname)
 {
 	int fd;
@@ -222,7 +309,7 @@ int cavan_http_flush_html_file(int fd)
 	return fsync(fd);
 }
 
-int cavan_http_send_reply(struct network_client *client, const char *service, size_t start, size_t end, size_t size, struct tm *time, const char *filetype)
+int cavan_http_send_file_header(struct network_client *client, const char *service, const char *filetype, struct tm *time, size_t start, size_t length, size_t size)
 {
 	char buff[2048];
 	char *p = buff, *p_end = p + sizeof(buff);
@@ -234,15 +321,17 @@ int cavan_http_send_reply(struct network_client *client, const char *service, si
 		"Via: 1.1 server (%s)\r\n", service, service);
 
 	if (filetype == NULL) {
-		filetype = "text/html";
+		filetype = "application/octet-stream";
 	}
 
-	p += snprintf(p, p_end - p, "Content-Length: %" PRINT_FORMAT_SIZE "\r\n", end - start + 1);
+	p += snprintf(p, p_end - p, "Content-Length: %" PRINT_FORMAT_SIZE "\r\n", length);
 	p += snprintf(p, p_end - p, "Content-Type: %s\r\n", filetype);
-	p += snprintf(p, p_end - p, "Content-Range: bytes %" PRINT_FORMAT_SIZE "-%" PRINT_FORMAT_SIZE "/%" PRINT_FORMAT_SIZE "\r\n", start, end, size);
+	p += snprintf(p, p_end - p, "Content-Range: bytes %" PRINT_FORMAT_SIZE "-%" PRINT_FORMAT_SIZE "/%" PRINT_FORMAT_SIZE "\r\n", start, start + length - 1, size);
 
 	if (time) {
-		p += snprintf(p, p_end - p, "Last-Modified: %s\r\n", asctime(time));
+		p = text_copy(p, "Last-Modified: ");
+		p = text_tail(asctime_r(time, p)) - 1;
+		p = text_copy(p, "\r\n");
 	}
 
 	p = text_copy(p, "Connection: keep-alive\r\n\r\n");
@@ -252,12 +341,13 @@ int cavan_http_send_reply(struct network_client *client, const char *service, si
 	return client->send(client, buff, p - buff);
 }
 
-int cavan_http_send_file(struct network_client *client, const char *service, int fd, size_t start, size_t end, const char *filetype)
+int cavan_http_send_file(struct network_client *client, const char *service, int fd, const char *filetype, size_t start, size_t length)
 {
 	int ret;
 	struct stat st;
+	struct tm time;
 
-	if (lseek(fd, start, SEEK_SET) != 0) {
+	if (lseek(fd, start, SEEK_SET) != (off_t) start) {
 		pr_error_info("lseek");
 		return -EFAULT;
 	}
@@ -268,24 +358,20 @@ int cavan_http_send_file(struct network_client *client, const char *service, int
 		return ret;
 	}
 
-	if (end == 0 || end >= (size_t) st.st_size) {
-		end = st.st_size - 1;
+	if (length == 0 || start + length > (size_t) st.st_size) {
+		length = st.st_size - start;
 	}
 
-	if (start > end) {
-		start = end;
-	}
-
-	ret = cavan_http_send_reply(client, service, start, end, st.st_size, NULL, filetype);
+	ret = cavan_http_send_file_header(client, service, filetype, localtime_r((time_t *) &st.st_mtime, &time), start, length, st.st_size);
 	if (ret < 0) {
 		pr_red_info("web_proxy_ftp_send_http_reply");
 		return ret;
 	}
 
-	return network_client_send_file(client, fd, 0, end - start + 1);
+	return network_client_send_file(client, fd, 0, length);
 }
 
-int cavan_http_send_file2(struct network_client *client, const char *service, const char *pathname, size_t start, size_t end, const char *filetype)
+int cavan_http_send_file2(struct network_client *client, const char *service, const char *pathname, const char *filetype, size_t start, size_t length)
 {
 	int fd;
 	int ret;
@@ -296,10 +382,50 @@ int cavan_http_send_file2(struct network_client *client, const char *service, co
 		return fd;
 	}
 
-	ret = cavan_http_send_file(client, service, fd, start, end, filetype);
+	ret = cavan_http_send_file(client, service, fd, filetype, start, length);
 	close(fd);
 
 	return ret;
+}
+
+int cavan_http_send_file3(struct network_client *client, const char *service, const char *pathname, const struct cavan_http_prop *props, int count)
+{
+	const char *range;
+	size_t start, length;
+
+	range = cavan_http_prop_find_value(props, count, "Range");
+	if (range == NULL) {
+		start = length = 0;
+	} else {
+		if (text_lhcmp("bytes", range) == 0) {
+			range += 5;
+		}
+
+		while (cavan_isspace(*range) || *range == '=') {
+			range++;
+		}
+
+		if (*range == '-') {
+			start = 0;
+			length = text2value_unsigned(range + 1, NULL, 10);
+		} else {
+			int ret;
+			size_t end;
+
+			ret = sscanf(range, "%" PRINT_FORMAT_SIZE "-%" PRINT_FORMAT_SIZE, &start, &end);
+			if (ret < 2) {
+				if (ret < 1) {
+					start = 0;
+				}
+
+				length = 0;
+			} else {
+				length = end - start + 1;
+			}
+		}
+	}
+
+	return cavan_http_send_file2(client, service, pathname, NULL, start, length);
 }
 
 int cavan_http_list_directory(struct network_client *client, const char *dirname)
@@ -314,17 +440,8 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 
 	dp = opendir(dirname);
 	if (dp == NULL) {
-		if (file_stat(dirname, &st) < 0) {
-			pr_err_info("opendir: %s", dirname);
-			return -EFAULT;
-		}
-
-		if ((st.st_mode & S_IFMT) == S_IFREG) {
-			return cavan_http_send_file2(client, CAVAN_HTTP_NAME, dirname, 0, 0, "application/octet-stream");
-		}
-
-		pr_red_info("invalid file type");
-		return -EINVAL;
+		pr_err_info("opendir: %s", dirname);
+		return -EFAULT;
 	}
 
 	fd = cavan_http_open_html_file(dirname, NULL);
@@ -336,8 +453,7 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 
 	filename = text_path_cat(pathname, sizeof(pathname), dirname, NULL);
 
-	ffile_puts(fd, "\t\t<h1>HTTP Server (Fuang.Cao <a href=\"http://mail.foxmail.com\">cavan.cao@foxmail.com</a>)</h1>\r\n");
-	ffile_printf(fd, "\t\t<h2>Directory: <a href=\"%s\">%s</a></h2>\r\n", pathname, dirname);
+	ffile_printf(fd, "\t\t<h1>Directory: <a href=\"%s\">%s</a></h1>\r\n", pathname, dirname);
 	ffile_printf(fd, "\t\t<h2><a href=\"..\">Parent directory</a> (<a href=\"/\">Root directory</a>)</h2>\r\n");
 	ffile_puts(fd, "\t\t<table id=\"dirlisting\" summary=\"Directory Listing\">\r\n");
 	ffile_puts(fd, "\t\t\t<tr><td><b>type</b></td><td><b>filename</b></td><td><b>size</b></td><td><b>date</b></td></tr>\r\n");
@@ -413,7 +529,7 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 		goto out_closedir;
 	}
 
-	ret = cavan_http_send_file(client, CAVAN_HTTP_NAME, fd, 0, 0, NULL);
+	ret = cavan_http_send_html(client, CAVAN_HTTP_NAME, fd);
 	if (ret < 0) {
 		pr_red_info("stat");
 	}
@@ -422,6 +538,30 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 out_closedir:
 	closedir(dp);
 	return ret;
+}
+
+int cavan_http_process_get(struct network_client *client, struct cavan_http_prop *props, int count, const char *pathname, size_t start, size_t length)
+{
+	int ret;
+	struct stat st;
+
+	ret = file_stat(pathname, &st);
+	if (ret < 0) {
+		pr_err_info("file_stat %s: %d", pathname, ret);
+		return ret;
+	}
+
+	switch (st.st_mode & S_IFMT) {
+	case S_IFREG:
+		return cavan_http_send_file3(client, CAVAN_HTTP_NAME, pathname, props, count);
+
+	case S_IFDIR:
+		return cavan_http_list_directory(client, pathname);
+
+	default:
+		pr_red_info("invalid file type");
+		return -EINVAL;
+	}
 }
 
 // ================================================================================
@@ -454,26 +594,31 @@ static void cavan_http_close_connect(struct cavan_dynamic_service *service, void
 
 static int cavan_http_service_run_handler(struct cavan_dynamic_service *service, void *conn)
 {
+	int count;
 	int length;
 	char request[1024];
 	char *req, *req_end;
+	struct cavan_http_prop props[20];
 	struct network_client *client = conn;
 
 	while (1) {
+		int type;
 		int space = 0;
+		int req_length = 0;
 		const char *pathname;
 
 		length = cavan_http_read_request(client, request, sizeof(request));
 		if (length <= 0) {
 			if (length < 0) {
-				pr_red_info("cavan_http_read_request: %d", length);
+				pr_red_info("cavan_http_request_read: %d", length);
 			}
 
 			break;
 		}
 
-#if CAVAN_HTTP_DEBUG
 		request[length] = 0;
+
+#if CAVAN_HTTP_DEBUG
 		println("request[%d]:\n%s", length, request);
 #endif
 
@@ -488,13 +633,22 @@ static int cavan_http_service_run_handler(struct cavan_dynamic_service *service,
 				break;
 			}
 
+			req_length = req - request;
 			pathname = req + 1;
 			space++;
 		}
 
-		println("pathname = %s", pathname);
+		type = cavan_http_get_request_type(request, req_length);
+		req = text_skip_line(req + 1, req_end);
+		count = cavan_http_parse_request(req, req_end, props, NELEM(props));
 
-		if (cavan_http_list_directory(client, pathname) < 0) {
+#if CAVAN_HTTP_DEBUG
+		println("request[%d] = %s, pathname = %s", type, request, pathname);
+#endif
+
+		switch (type) {
+		case HTTP_REQ_GET:
+			cavan_http_process_get(client, props, count, pathname, 0, 0);
 			break;
 		}
 	}

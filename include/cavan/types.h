@@ -4,6 +4,14 @@
 #include <stdint.h>
 #include <sys/types.h>
 
+#ifndef null
+#define null			NULL
+#endif
+
+#ifndef nil
+#define nil				NULL
+#endif
+
 #ifndef PATH_MAX
 #define PATH_MAX		1024
 #endif

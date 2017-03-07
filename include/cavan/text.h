@@ -33,6 +33,7 @@ __BEGIN_DECLS;
 		__tmp = __tmp; \
 	})
 
+char *text_tail(const char *text);
 size_t text_len(const char *text);
 char *text_cat(char *dest, const char *src);
 char *text_cat2(char *dest, char *srcs[], size_t count);
@@ -177,6 +178,7 @@ char *text_skip_lf(const char *text, const char *text_end);
 char *text_skip_lf_invert(const char *text, const char *head);
 char *text_skip_space_and_lf(const char *text, const char *text_end);
 char *text_skip_space_and_lf_invert(const char *text, const char *head);
+char *text_skip_line(const char *text, const char *text_end);
 char *text_skip_name(const char *text, const char *text_end);
 char *text_skip_name_invert(const char *text, const char *head);
 

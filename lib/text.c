@@ -7,15 +7,18 @@
 
 #define USE_SYSTEM_PRINTF	1
 
-size_t text_len(const char *text)
+char *text_tail(const char *text)
 {
-	const char *last = text;
-
-	while (*last) {
-		last++;
+	while (*text) {
+		text++;
 	}
 
-	return last - text;
+	return (char *) text;
+}
+
+size_t text_len(const char *text)
+{
+	return text_tail(text) - text;
 }
 
 char *text_find(const char *text, char c)
@@ -2777,7 +2780,7 @@ char *text_strip(const char *text, size_t length, char *buff, size_t size)
 
 char *text_skip_space(const char *text, const char *text_end)
 {
-	while (text < text_end && byte_is_space(*text)) {
+	while (text < text_end && cavan_isspace(*text)) {
 		text++;
 	}
 
@@ -2786,7 +2789,7 @@ char *text_skip_space(const char *text, const char *text_end)
 
 char *text_skip_space_invert(const char *text, const char *head)
 {
-	while (text >= head && byte_is_space(*text)) {
+	while (text >= head && cavan_isspace(*text)) {
 		text--;
 	}
 
@@ -2795,7 +2798,7 @@ char *text_skip_space_invert(const char *text, const char *head)
 
 char *text_skip_lf(const char *text, const char *text_end)
 {
-	while (text < text_end && byte_is_lf(*text)) {
+	while (text < text_end && cavan_islf(*text)) {
 		text++;
 	}
 
@@ -2804,7 +2807,7 @@ char *text_skip_lf(const char *text, const char *text_end)
 
 char *text_skip_lf_invert(const char *text, const char *head)
 {
-	while (text >= head && byte_is_lf(*text)) {
+	while (text >= head && cavan_islf(*text)) {
 		text--;
 	}
 
@@ -2813,7 +2816,7 @@ char *text_skip_lf_invert(const char *text, const char *head)
 
 char *text_skip_space_and_lf(const char *text, const char *text_end)
 {
-	while (text < text_end && byte_is_space_or_lf(*text)) {
+	while (text < text_end && cavan_isspace(*text)) {
 		text++;
 	}
 
@@ -2822,16 +2825,29 @@ char *text_skip_space_and_lf(const char *text, const char *text_end)
 
 char *text_skip_space_and_lf_invert(const char *text, const char *head)
 {
-	while (text >= head && byte_is_space_or_lf(*text)) {
+	while (text >= head && cavan_isspace(*text)) {
 		text--;
 	}
 
 	return (char *) text;
 }
 
+char *text_skip_line(const char *text, const char *text_end)
+{
+	while (text < text_end) {
+		if (cavan_islf(*text)) {
+			break;
+		}
+
+		text++;
+	}
+
+	return text_skip_lf(text, text_end);
+}
+
 char *text_skip_name(const char *text, const char *text_end)
 {
-	while (text < text_end && byte_is_named(*text)) {
+	while (text < text_end && cavan_isnameable(*text)) {
 		text++;
 	}
 
@@ -2840,7 +2856,7 @@ char *text_skip_name(const char *text, const char *text_end)
 
 char *text_skip_name_invert(const char *text, const char *head)
 {
-	while (text >= head && byte_is_named(*text)) {
+	while (text >= head && cavan_isnameable(*text)) {
 		text--;
 	}
 
@@ -2850,7 +2866,7 @@ char *text_skip_name_invert(const char *text, const char *head)
 char *text_find_space(const char *text, const char *text_end)
 {
 	while (text < text_end) {
-		if (byte_is_space(*text)) {
+		if (cavan_isspace(*text)) {
 			return (char *) text;
 		}
 
@@ -2863,7 +2879,7 @@ char *text_find_space(const char *text, const char *text_end)
 char *text_find_space_invert(const char *text, const char *head)
 {
 	while (text >= head) {
-		if (byte_is_space(*text)) {
+		if (cavan_isspace(*text)) {
 			return (char *) text;
 		}
 
@@ -2876,7 +2892,7 @@ char *text_find_space_invert(const char *text, const char *head)
 char *text_find_lf(const char *text, const char *text_end)
 {
 	while (text < text_end) {
-		if (byte_is_lf(*text)) {
+		if (cavan_islf(*text)) {
 			return (char *) text;
 		}
 
@@ -2889,7 +2905,7 @@ char *text_find_lf(const char *text, const char *text_end)
 char *text_find_lf_invert(const char *text, const char *head)
 {
 	while (text >= head) {
-		if (byte_is_lf(*text)) {
+		if (cavan_islf(*text)) {
 			return (char *) text;
 		}
 
@@ -2902,7 +2918,7 @@ char *text_find_lf_invert(const char *text, const char *head)
 char *text_find_space_or_lf(const char *text, const char *text_end)
 {
 	while (text < text_end) {
-		if (byte_is_space_or_lf(*text)) {
+		if (cavan_isspace(*text)) {
 			return (char *) text;
 		}
 
@@ -2915,7 +2931,7 @@ char *text_find_space_or_lf(const char *text, const char *text_end)
 char *text_find_space_or_lf_invert(const char *text, const char *head)
 {
 	while (text >= head) {
-		if (byte_is_space_or_lf(*text)) {
+		if (cavan_isspace(*text)) {
 			return (char *) text;
 		}
 
@@ -2928,7 +2944,7 @@ char *text_find_space_or_lf_invert(const char *text, const char *head)
 char *text_find_name(const char *text, const char *text_end)
 {
 	while (text < text_end) {
-		if (byte_is_named(*text)) {
+		if (cavan_isnameable(*text)) {
 			return (char *) text;
 		}
 
@@ -2941,7 +2957,7 @@ char *text_find_name(const char *text, const char *text_end)
 char *text_find_name_invert(const char *text, const char *head)
 {
 	while (text >= head) {
-		if (byte_is_named(*text)) {
+		if (cavan_isnameable(*text)) {
 			return (char *) text;
 		}
 
