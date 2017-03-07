@@ -112,6 +112,14 @@ public class FloatMessageService extends FloatWidowService {
 				sendStickyBroadcast(intent);
 
 				if (msg.arg1 == R.string.text_wan_connected) {
+					if (mNetSender != null) {
+						mNetSender.restartKeepLive();
+					}
+
+					if (mTcpDaemon != null) {
+						mTcpDaemon.setConnDelay(0);
+					}
+
 					CavanAndroid.showToast(getApplicationContext(), msg.arg1);
 				}
 				break;
@@ -122,11 +130,7 @@ public class FloatMessageService extends FloatWidowService {
 						mTcpDaemon = new TcpDaemonThread();
 						mTcpDaemon.start();
 					} else {
-						synchronized (mTcpDaemon) {
-							mTcpDaemon.setActive(true);
-							mTcpDaemon.closeSocket();
-							mTcpDaemon.notify();
-						}
+						mTcpDaemon.reload();
 					}
 				} else if (mTcpDaemon != null) {
 					mTcpDaemon.setActive(false);
@@ -829,6 +833,7 @@ public class FloatMessageService extends FloatWidowService {
 
 		private boolean mActive;
 		private long mConnDelay;
+		private boolean mReload;
 
 		private Socket mSocket;
 		private InputStream mInputStream;
@@ -897,6 +902,17 @@ public class FloatMessageService extends FloatWidowService {
 			return mActive && MainActivity.isWanShareEnabled(getApplicationContext());
 		}
 
+		synchronized public void setConnDelay(long delay) {
+			mConnDelay = delay;
+		}
+
+		synchronized public void reload() {
+			mReload = true;
+			setActive(true);
+			closeSocket();
+			notify();
+		}
+
 		@Override
 		public synchronized void start() {
 			setActive(true);
@@ -906,12 +922,14 @@ public class FloatMessageService extends FloatWidowService {
 		@Override
 		public void run() {
 			while (isRunEnable()) {
+				mReload = false;
+
 				List<String> lines = MainActivity.getWanShareServer(getApplicationContext());
 				if (lines == null || lines.isEmpty()) {
 					break;
 				}
 
-				try_all_server: for (String line : lines) {
+				for (String line : lines) {
 					if (!isRunEnable()) {
 						break;
 					}
@@ -944,9 +962,8 @@ public class FloatMessageService extends FloatWidowService {
 						mInputStream = mSocket.getInputStream();
 						mOutputStream = mSocket.getOutputStream();
 
-						mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_connected, 0, summary).sendToTarget();
-						mNetSender.restartKeepLive();
-						mConnDelay = 0;
+						Message message = mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_connected, 0, summary);
+						mHandler.sendMessageDelayed(message, 1000);
 
 						BufferedReader reader = new BufferedReader(new InputStreamReader(mInputStream));
 
@@ -959,7 +976,7 @@ public class FloatMessageService extends FloatWidowService {
 							}
 
 							if (line == null) {
-								break try_all_server;
+								break;
 							}
 
 							try {
@@ -975,8 +992,15 @@ public class FloatMessageService extends FloatWidowService {
 					} finally {
 						closeSocket();
 					}
+
+					CavanAndroid.dLog("mReload = " + mReload);
+
+					if (mReload) {
+						break;
+					}
 				}
 
+				mHandler.removeMessages(MSG_TCP_SERVICE_STATE_CHANGED);
 				mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.text_wan_disconnected, 0).sendToTarget();
 
 				if (mActive) {
