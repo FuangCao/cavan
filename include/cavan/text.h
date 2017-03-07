@@ -84,6 +84,7 @@ char *text_dup(const char *text);
 char *text_tok(char *text, const char *delim);
 
 int char2value(char c);
+int text2byte(const char text[2]);
 int prefix2base(const char *prefix, const char *prefix_end, const char **last, int base);
 u64 text2value_unsigned(const char *text, const char **last, int base);
 s64 text2value(const char *text, const char **last, int base);

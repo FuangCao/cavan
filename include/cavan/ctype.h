@@ -30,7 +30,7 @@ enum {
 	CT_D = BIT(2), /* digit */
 	CT_C = BIT(3), /* cntrl */
 	CT_P = BIT(4), /* punct */
-	CT_S = BIT(5), /* white space (space/lf/tab) */
+	CT_S = BIT(5), /* white space (space/tab) */
 	CT_X = BIT(6), /* hex digit */
 	CT_SP = BIT(7), /* hard space (0x20) */
 	CT_O = BIT(8), /* octal digit */
@@ -106,6 +106,16 @@ static inline bool cavan_isspace(u8 c)
 	return (cavan_ctype_get(c) & (CT_S)) != 0;
 }
 
+static inline bool cavan_islf(u8 c)
+{
+	return (cavan_ctype_get(c) & (CT_LF)) != 0;
+}
+
+static inline bool cavan_isspace_lf(u8 c)
+{
+	return (cavan_ctype_get(c) & (CT_S | CT_LF)) != 0;
+}
+
 static inline bool cavan_isspace_zero(u8 c)
 {
 	return (cavan_ctype_get(c) & (CT_S | CT_ZERO)) != 0;
@@ -134,11 +144,6 @@ static inline int isodigit(char c)
 static inline bool cavan_isxdigit(u8 c)
 {
 	return (cavan_ctype_get(c) & (CT_D | CT_X)) != 0;
-}
-
-static inline bool cavan_islf(u8 c)
-{
-	return (cavan_ctype_get(c) & (CT_LF)) != 0;
 }
 
 static inline bool cavan_isnameable(u8 c)

@@ -39,10 +39,10 @@ const u32 cavan_ctype[] = {
 	CT_C,
 	CT_C, /* \b */
 	CT_C | CT_S, /* \t */ /* 9 */
-	CT_C | CT_S | CT_LF, /* \n */
+	CT_C | CT_LF, /* \n */
 	CT_C | CT_S,
 	CT_C | CT_S, /* \f */
-	CT_C | CT_S | CT_LF, /* \r */
+	CT_C | CT_LF, /* \r */
 	CT_C,
 	CT_C,
 	CT_C,

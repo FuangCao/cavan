@@ -663,6 +663,11 @@ int char2value(char c)
 	}
 }
 
+int text2byte(const char text[2])
+{
+	return char2value(text[0]) << 4 | char2value(text[1]);
+}
+
 int prefix2base(const char *prefix, const char *prefix_end, const char **last, int base)
 {
 	if (last) {
@@ -2816,7 +2821,7 @@ char *text_skip_lf_invert(const char *text, const char *head)
 
 char *text_skip_space_and_lf(const char *text, const char *text_end)
 {
-	while (text < text_end && cavan_isspace(*text)) {
+	while (text < text_end && cavan_isspace_lf(*text)) {
 		text++;
 	}
 
@@ -2825,7 +2830,7 @@ char *text_skip_space_and_lf(const char *text, const char *text_end)
 
 char *text_skip_space_and_lf_invert(const char *text, const char *head)
 {
-	while (text >= head && cavan_isspace(*text)) {
+	while (text >= head && cavan_isspace_lf(*text)) {
 		text--;
 	}
 
@@ -2918,7 +2923,7 @@ char *text_find_lf_invert(const char *text, const char *head)
 char *text_find_space_or_lf(const char *text, const char *text_end)
 {
 	while (text < text_end) {
-		if (cavan_isspace(*text)) {
+		if (cavan_isspace_lf(*text)) {
 			return (char *) text;
 		}
 
@@ -2931,7 +2936,7 @@ char *text_find_space_or_lf(const char *text, const char *text_end)
 char *text_find_space_or_lf_invert(const char *text, const char *head)
 {
 	while (text >= head) {
-		if (cavan_isspace(*text)) {
+		if (cavan_isspace_lf(*text)) {
 			return (char *) text;
 		}
 

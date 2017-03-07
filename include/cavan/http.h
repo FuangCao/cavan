@@ -62,6 +62,7 @@ void cavan_http_dump_prop(const struct cavan_http_prop *prop);
 void cavan_http_dump_props(const struct cavan_http_prop *props, int count);
 const struct cavan_http_prop *cavan_http_prop_find(const struct cavan_http_prop *props, int count, const char *key);
 const char *cavan_http_prop_find_value(const struct cavan_http_prop *props, int count, const char *key);
+char *cavan_http_pathname_decode(char *pathname);
 
 int cavan_http_open_html_file(const char *title, char *pathname);
 int cavan_http_flush_html_file(int fd);

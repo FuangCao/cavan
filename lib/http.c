@@ -270,6 +270,24 @@ const char *cavan_http_prop_find_value(const struct cavan_http_prop *props, int 
 	return prop->value;
 }
 
+char *cavan_http_pathname_decode(char *pathname)
+{
+	char *p;
+
+	for (p = pathname; *p; pathname++) {
+		if (*p == '%') {
+			*pathname = text2byte(p + 1);
+			p += 3;
+		} else {
+			*pathname = *p++;
+		}
+	}
+
+	*pathname = 0;
+
+	return pathname;
+}
+
 int cavan_http_open_html_file(const char *title, char *pathname)
 {
 	int fd;
@@ -453,8 +471,8 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 
 	filename = text_path_cat(pathname, sizeof(pathname), dirname, NULL);
 
-	ffile_printf(fd, "\t\t<h1>Directory: <a href=\"%s\">%s</a></h1>\r\n", pathname, dirname);
-	ffile_printf(fd, "\t\t<h2><a href=\"..\">Parent directory</a> (<a href=\"/\">Root directory</a>)</h2>\r\n");
+	ffile_printf(fd, "\t\t<h5>Path: <a href=\"%s\">%s</a></h5>\r\n", pathname, dirname);
+	ffile_printf(fd, "\t\t<h5><a href=\"..\">Parent directory</a> (<a href=\"/\">Root directory</a>)</h5>\r\n");
 	ffile_puts(fd, "\t\t<table id=\"dirlisting\" summary=\"Directory Listing\">\r\n");
 	ffile_puts(fd, "\t\t\t<tr><td><b>type</b></td><td><b>filename</b></td><td><b>size</b></td><td><b>date</b></td></tr>\r\n");
 
@@ -462,6 +480,10 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 		char buff[32];
 		struct tm time;
 		const char *type;
+
+		if (text_is_dot_name(entry->d_name)) {
+			continue;
+		}
 
 		strcpy(filename, entry->d_name);
 
@@ -603,9 +625,9 @@ static int cavan_http_service_run_handler(struct cavan_dynamic_service *service,
 
 	while (1) {
 		int type;
+		char *pathname;
 		int space = 0;
 		int req_length = 0;
-		const char *pathname;
 
 		length = cavan_http_read_request(client, request, sizeof(request));
 		if (length <= 0) {
@@ -637,6 +659,8 @@ static int cavan_http_service_run_handler(struct cavan_dynamic_service *service,
 			pathname = req + 1;
 			space++;
 		}
+
+		cavan_http_pathname_decode(pathname);
 
 		type = cavan_http_get_request_type(request, req_length);
 		req = text_skip_line(req + 1, req_end);
