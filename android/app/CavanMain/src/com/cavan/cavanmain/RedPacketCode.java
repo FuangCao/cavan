@@ -328,6 +328,10 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 		return mPostCount > 0;
 	}
 
+	synchronized public int getPostCount() {
+		return mPostCount;
+	}
+
 	synchronized public void setPostPending(boolean pending) {
 		mPostPending = pending;
 		mMaybeInvalid = false;

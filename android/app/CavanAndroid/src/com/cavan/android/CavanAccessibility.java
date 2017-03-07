@@ -23,6 +23,7 @@ import android.widget.TextView;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanJava.Closure;
 import com.cavan.java.CavanJava.ClosureVoid;
+import com.cavan.java.CavanString;
 
 public class CavanAccessibility {
 
@@ -508,6 +509,10 @@ public class CavanAccessibility {
 	}
 
 	public static boolean setNodeText(Context context, AccessibilityNodeInfo node, String text) {
+		if (text == null) {
+			text = CavanString.EMPTY_STRING;
+		}
+
 		performFocus(node);
 
 		String oldText = getNodeText(node);

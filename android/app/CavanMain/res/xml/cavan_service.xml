@@ -21,6 +21,10 @@
 	    android:defaultValue="支付宝红包口令：12345678"
 	    android:title="@string/red_packet_notify_test" />
 
+	<EditTextPreference android:key="red_packet_code_send"
+	    android:persistent="true"
+	    android:title="@string/text_red_packet_code_send" />
+
 	<CheckBoxPreference android:key="wan_share"
 	    android:persistent="true"
 	    android:defaultValue="true"
@@ -46,10 +50,6 @@
 
 	<Preference android:key="lan_test"
 	    android:title="@string/text_lan_test" />
-
-	<EditTextPreference android:key="red_packet_code_send"
-	    android:persistent="true"
-	    android:title="@string/text_red_packet_code_send" />
 
 	<Preference android:key="red_packet_code_clear"
 	    android:title="@string/text_red_packet_code_clear" />

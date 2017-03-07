@@ -23,7 +23,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 	private static final long POLL_DELAY_XIUXIU = 2000;
 	private static final long UNPACK_OVERTIME = 2000;
 	private static final long COMMIT_OVERTIME = 300000;
-	private static final long REPEAT_OVERTIME = 20000;
+	private static final long REPEAT_OVERTIME = 10000;
+	private static final int REPEAT_COUNT = 5;
 
 	private static final int MSG_COMMIT_TIMEOUT = 1;
 
@@ -177,6 +178,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 				if (getWindowTimeConsume() > 1000) {
 					setRedPacketCodeInvalid(code);
 					startAutoCommitRedPacketCode(0);
+					postRedPacketCode(root, null);
 				}
 
 				break;
@@ -233,7 +235,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 
 				if (mCodeCount > 0) {
 					if (mCode.getRepeatTime() > 0) {
-						if (mCode.getRepeatTimeout() > REPEAT_OVERTIME) {
+						if (mCode.getRepeatTimeout() > REPEAT_OVERTIME && mCode.getPostCount() > REPEAT_COUNT) {
 							setRedPacketCodeComplete();
 						} else {
 							mCode.updateTime();
@@ -387,6 +389,11 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 		AccessibilityNodeInfo node = findRedPacketInputNode(root);
 		if (node == null) {
 			return false;
+		}
+
+		if (code == null) {
+			CavanAccessibility.setNodeText(mService, node, null);
+			return true;
 		}
 
 		mInputtedCode = code.getCode();
