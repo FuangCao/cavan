@@ -85,6 +85,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_TCP_BRIDGE = "tcp_bridge";
 	public static final String KEY_TCP_BRIDGE_SETTING = "tcp_bridge_setting";
 	public static final String KEY_FTP = "ftp";
+	public static final String KEY_HTTP = "http";
 	public static final String KEY_TCP_DD = "tcp_dd";
 	public static final String KEY_WEB_PROXY = "web_proxy";
 	public static final String KEY_TCP_REPEATER = "tcp_repeater";
@@ -277,6 +278,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private RingtonePreference mPreferenceRedPacketNotifyRingtone;
 	private CavanServicePreference mPreferenceTcpDd;
 	private CavanServicePreference mPreferenceFtp;
+	private CavanServicePreference mPreferenceHttp;
 	private CavanServicePreference mPreferenceWebProxy;
 	private CavanServicePreference mPreferenceTcpRepeater;
 	private CheckBoxPreference mPreferenceWanShare;
@@ -423,6 +425,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceTcpBridgeSetting.setOnPreferenceChangeListener(this);
 
 		mPreferenceFtp = (CavanServicePreference) findPreference(KEY_FTP);
+		mPreferenceHttp = (CavanServicePreference) findPreference(KEY_HTTP);
 		mPreferenceTcpDd = (CavanServicePreference) findPreference(KEY_TCP_DD);
 		mPreferenceWebProxy = (CavanServicePreference) findPreference(KEY_WEB_PROXY);
 		mPreferenceTcpRepeater = (CavanServicePreference) findPreference(KEY_TCP_REPEATER);
@@ -467,6 +470,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		unbindService(mFloatMessageConnection);
 
 		mPreferenceFtp.unbindService(this);
+		mPreferenceHttp.unbindService(this);
 		mPreferenceTcpDd.unbindService(this);
 		mPreferenceWebProxy.unbindService(this);
 		mPreferenceTcpRepeater.unbindService(this);

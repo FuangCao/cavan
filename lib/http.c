@@ -20,7 +20,7 @@
 #include <cavan.h>
 #include <cavan/http.h>
 
-#define CAVAN_HTTP_DEBUG	1
+#define CAVAN_HTTP_DEBUG	0
 
 int cavan_http_get_request_type(const char *req, size_t length)
 {
@@ -306,7 +306,9 @@ int cavan_http_open_html_file(const char *title, char *pathname)
 
 	unlink(pathname);
 
+#if CAVAN_HTTP_DEBUG
 	println("pathname = %s, title = %s", pathname, title);
+#endif
 
 	ffile_puts(fd, "<!-- This file is automatic generate by Fuang.Cao -->\r\n\r\n");
 	ffile_printf(fd, "<html>\r\n\t<head>\r\n\t\t<title>%s</title>\r\n\t</head>\r\n\t<body>\r\n", title);
@@ -354,7 +356,9 @@ int cavan_http_send_file_header(struct network_client *client, const char *servi
 
 	p = text_copy(p, "Connection: keep-alive\r\n\r\n");
 
+#if CAVAN_HTTP_DEBUG
 	println("reply:\n%s", buff);
+#endif
 
 	return client->send(client, buff, p - buff);
 }
@@ -625,9 +629,9 @@ static int cavan_http_service_run_handler(struct cavan_dynamic_service *service,
 
 	while (1) {
 		int type;
-		char *pathname;
 		int space = 0;
 		int req_length = 0;
+		char *pathname = NULL;
 
 		length = cavan_http_read_request(client, request, sizeof(request));
 		if (length <= 0) {
@@ -658,6 +662,10 @@ static int cavan_http_service_run_handler(struct cavan_dynamic_service *service,
 			req_length = req - request;
 			pathname = req + 1;
 			space++;
+		}
+
+		if (pathname == NULL) {
+			break;
 		}
 
 		cavan_http_pathname_decode(pathname);

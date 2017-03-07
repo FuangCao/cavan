@@ -126,6 +126,7 @@
             android:launchMode="singleInstance"
             android:multiprocess="false" >
         </activity>
+        <service android:name="com.cavan.cavanjni.HttpService"></service>
     </application>
 
 </manifest>

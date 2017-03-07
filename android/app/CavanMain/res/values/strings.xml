@@ -6,6 +6,7 @@
     <string name="text_stop">停止</string>
     <string name="ftp_service">FTP 服务器</string>
     <string name="tcp_repeater">TCP 转发器</string>
+    <string name="http_service">HTTP 服务器</string>
     <string name="tcp_dd_service">TCP_DD 服务器</string>
     <string name="web_proxy_service">Web 代理服务器</string>
     <string name="text_running">正在运行</string>

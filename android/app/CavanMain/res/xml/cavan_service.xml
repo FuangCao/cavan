@@ -173,6 +173,10 @@
 	    android:persistent="true"
 	    android:title="@string/ftp_service" />
 
+	<com.cavan.cavanjni.HttpServicePreference android:key="http"
+	    android:persistent="true"
+	    android:title="@string/http_service" />
+
 	<com.cavan.cavanjni.TcpDdServicePreference android:key="tcp_dd"
 	    android:persistent="true"
 	    android:title="@string/tcp_dd_service" />
