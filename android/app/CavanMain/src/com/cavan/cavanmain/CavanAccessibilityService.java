@@ -17,6 +17,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Point;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -523,22 +524,24 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	@Override
 	protected void onServiceConnected() {
-		AccessibilityServiceInfo info = getServiceInfo();
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+			AccessibilityServiceInfo info = getServiceInfo();
 
-		info.packageNames = PACKAGE_NAMES;
+			info.packageNames = PACKAGE_NAMES;
 
-		info.flags |= AccessibilityServiceInfo.DEFAULT |
-				AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS |
-				AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS |
-				AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
+			info.flags |= AccessibilityServiceInfo.DEFAULT |
+					AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS |
+					AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS |
+					AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
 
-		info.eventTypes = AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED |
-				AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED | AccessibilityEvent.TYPE_VIEW_CLICKED |
-				AccessibilityEvent.TYPE_VIEW_CLICKED | AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED;
+			info.eventTypes = AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED |
+					AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED | AccessibilityEvent.TYPE_VIEW_CLICKED |
+					AccessibilityEvent.TYPE_VIEW_CLICKED | AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED;
 
-		setServiceInfo(info);
+			setServiceInfo(info);
 
-		CavanAndroid.dLog("info = " + getServiceInfo());
+			CavanAndroid.dLog("info = " + getServiceInfo());
+		}
 
 		super.onServiceConnected();
 	}
