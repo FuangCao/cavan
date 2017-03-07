@@ -93,6 +93,7 @@ public class CavanFile extends File {
 		try {
 			return new FileInputStream(this);
 		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -101,6 +102,7 @@ public class CavanFile extends File {
 		try {
 			return new FileOutputStream(this);
 		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -127,6 +129,7 @@ public class CavanFile extends File {
 		try {
 			return new FileReader(this);
 		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -135,6 +138,7 @@ public class CavanFile extends File {
 		try {
 			return new FileWriter(this, append);
 		} catch (IOException e) {
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -161,6 +165,7 @@ public class CavanFile extends File {
 		try {
 			return new RandomAccessFile(this, mode);
 		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -848,6 +853,7 @@ public class CavanFile extends File {
 					name = pathname.substring(index + 1);
 				}
 			} catch (IOException e) {
+				e.printStackTrace();
 				name = getName(getAbsolutePath());
 			}
 		}
