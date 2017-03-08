@@ -2792,6 +2792,15 @@ char *text_skip_space(const char *text, const char *text_end)
 	return (char *) text;
 }
 
+char *text_skip_space2(const char *text)
+{
+	while (cavan_isspace(*text)) {
+		text++;
+	}
+
+	return (char *) text;
+}
+
 char *text_skip_space_invert(const char *text, const char *head)
 {
 	while (text >= head && cavan_isspace(*text)) {
@@ -2881,6 +2890,23 @@ char *text_find_space(const char *text, const char *text_end)
 	return NULL;
 }
 
+char *text_find_space2(const char *text)
+{
+	while (1) {
+		switch (*text) {
+		case 0:
+			return NULL;
+
+		case ' ':
+		case '\t':
+		case '\f':
+			return (char *) text;
+		}
+
+		text++;
+	}
+}
+
 char *text_find_space_invert(const char *text, const char *head)
 {
 	while (text >= head) {
@@ -2933,6 +2959,25 @@ char *text_find_space_or_lf(const char *text, const char *text_end)
 	return NULL;
 }
 
+char *text_find_space_or_lf2(const char *text)
+{
+	while (1) {
+		switch (*text) {
+		case 0:
+			return NULL;
+
+		case ' ':
+		case '\t':
+		case '\f':
+		case '\r':
+		case '\n':
+			return (char *) text;
+		}
+
+		text++;
+	}
+}
+
 char *text_find_space_or_lf_invert(const char *text, const char *head)
 {
 	while (text >= head) {
@@ -2970,6 +3015,42 @@ char *text_find_name_invert(const char *text, const char *head)
 	}
 
 	return NULL;
+}
+
+char *text_clear_space(char *text)
+{
+	while (cavan_isspace(*text)) {
+		*text++ = 0;
+	}
+
+	return text;
+}
+
+char *text_clear_space_and_lf(char *text)
+{
+	while (cavan_isspace_lf(*text)) {
+		*text++ = 0;
+	}
+
+	return text;
+}
+
+char *text_clear_space_invert(const char *head, char *text)
+{
+	while (text >= head && cavan_isspace(*text)) {
+		*text-- = 0;
+	}
+
+	return text;
+}
+
+char *text_clear_space_and_lf_invert(const char *head, char *text)
+{
+	while (text >= head && cavan_isspace_lf(*text)) {
+		*text-- = 0;
+	}
+
+	return text;
 }
 
 char text_get_char(const char *text, int index)

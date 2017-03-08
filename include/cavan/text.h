@@ -174,6 +174,7 @@ bool text2bool(const char *text);
 
 char *text_strip(const char *text, size_t length, char *buff, size_t size);
 char *text_skip_space(const char *text, const char *text_end);
+char *text_skip_space2(const char *text);
 char *text_skip_space_invert(const char *text, const char *line);
 char *text_skip_lf(const char *text, const char *text_end);
 char *text_skip_lf_invert(const char *text, const char *head);
@@ -184,13 +185,20 @@ char *text_skip_name(const char *text, const char *text_end);
 char *text_skip_name_invert(const char *text, const char *head);
 
 char *text_find_space(const char *text, const char *text_end);
+char *text_find_space2(const char *text);
 char *text_find_space_invert(const char *text, const char *head);
 char *text_find_lf(const char *text, const char *text_end);
 char *text_find_lf_invert(const char *text, const char *head);
 char *text_find_space_or_lf(const char *text, const char *text_end);
+char *text_find_space_or_lf2(const char *text);
 char *text_find_space_or_lf_invert(const char *text, const char *head);
 char *text_find_name(const char *text, const char *text_end);
 char *text_find_name_invert(const char *text, const char *head);
+
+char *text_clear_space(char *text);
+char *text_clear_space_and_lf(char *text);
+char *text_clear_space_invert(const char *head, char *text);
+char *text_clear_space_and_lf_invert(const char *head, char *text);
 
 #if 0
 __printf_format_40__ char *cavan_vsnprintf(char *buff, size_t size, const char *fmt, char *args);
@@ -348,11 +356,6 @@ static inline char *text_substring(const char *text, char *sub, int start, int c
 static inline const char *cavan_bool_tostring(bool value)
 {
 	return value ? "true" : "false";
-}
-
-static inline char *text_skip_space2(const char *text)
-{
-	return text_skip_space(text, text + strlen(text));
 }
 
 __END_DECLS;
