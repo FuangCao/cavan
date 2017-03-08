@@ -110,7 +110,7 @@ static int web_proxy_ftp_read_file(struct network_client *client, struct network
 		goto out_close_sockfd;
 	}
 
-	ret = cavan_http_send_file_header(client, CAVAN_WEB_PROXY_NAME, NULL, &time, 0, 0, size);
+	ret = cavan_http_send_file_header(client, NULL, &time, 0, 0, size);
 	if (ret < 0) {
 		pr_red_info("web_proxy_ftp_send_http_reply");
 		goto out_close_sockfd;
@@ -268,7 +268,7 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 		goto out_cavan_fifo_deinit;
 	}
 
-	ret = cavan_http_send_html(client, CAVAN_WEB_PROXY_NAME, fd);
+	ret = cavan_http_send_html(client, fd);
 	if (ret < 0) {
 		pr_red_info("stat");
 	}
@@ -309,7 +309,7 @@ static int web_proxy_send_connect_failed(struct network_client *client, struct n
 		goto out_close_fd;
 	}
 
-	ret = cavan_http_send_html(client, CAVAN_WEB_PROXY_NAME, fd);
+	ret = cavan_http_send_html(client, fd);
 
 out_close_fd:
 	close(fd);

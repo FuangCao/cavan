@@ -23,7 +23,6 @@
 #include <cavan/service.h>
 
 #define CAVAN_WEB_PROXY_PORT	9090
-#define CAVAN_WEB_PROXY_NAME	"CavanWebProxy"
 
 struct web_proxy_service {
 	struct network_service service;
