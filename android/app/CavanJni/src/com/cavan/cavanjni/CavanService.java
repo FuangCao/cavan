@@ -11,15 +11,34 @@ public abstract class CavanService extends Service {
 
 	protected int mPort;
 	protected boolean mState;
+	protected boolean mEnabled;
 
 	class MyThread extends Thread {
 
 		@Override
+		public synchronized void start() {
+			mEnabled = true;
+			super.start();
+		}
+
+		@Override
 		public void run() {
 			CavanAndroid.dLog("Enter: service " + getServiceName());
-			setState(true);
-			mainServiceLoop(mPort);
-			setState(false);
+
+			while (mEnabled) {
+				setState(true);
+				mainServiceLoop(mPort);
+				setState(false);
+
+				try {
+					for (int i = 0; i < 10 && mEnabled; i++) {
+						Thread.sleep(200);
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+
 			CavanAndroid.dLog("Exit: service " + getServiceName());
 		}
 	}
@@ -53,7 +72,13 @@ public abstract class CavanService extends Service {
 
 		@Override
 		public boolean stop() throws RemoteException {
+			mEnabled = false;
 			return stopService();
+		}
+
+		@Override
+		public boolean isEnabled() throws RemoteException {
+			return mEnabled;
 		}
 	}
 

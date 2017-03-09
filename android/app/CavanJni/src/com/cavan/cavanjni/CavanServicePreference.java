@@ -86,7 +86,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 				}
 			}
 
-			updateSummary(getState());
+			updateSummary(getServiceState());
 			setEnabled(true);
 		}
 	};
@@ -144,10 +144,22 @@ public abstract class CavanServicePreference extends EditTextPreference {
 		mHandler.sendEmptyMessageDelayed(EVENT_START_SERVICE, 500);
 	}
 
-	public boolean getState() {
+	public boolean getServiceState() {
 		if (mService != null) {
 			try {
 				return mService.getState();
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return false;
+	}
+
+	public boolean isServiceEnabled() {
+		if (mService != null) {
+			try {
+				return mService.isEnabled();
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
@@ -237,7 +249,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 
 	@Override
 	protected void showDialog(Bundle state) {
-		mNeedStop = getState();
+		mNeedStop = isServiceEnabled();
 		setText(Integer.toString(getPort()));
 
 		super.showDialog(state);

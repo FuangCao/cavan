@@ -1006,7 +1006,7 @@ public class FloatMessageService extends FloatWidowService {
 				if (mActive) {
 					synchronized (this) {
 						try {
-							if (mConnDelay < 60000) {
+							if (mConnDelay < 30000) {
 								mConnDelay = mConnDelay * 2 + 500;
 							}
 
@@ -1065,7 +1065,7 @@ public class FloatMessageService extends FloatWidowService {
 				if (mActive) {
 					synchronized (this) {
 						try {
-							wait(20000);
+							wait(5000);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
