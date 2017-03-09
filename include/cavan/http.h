@@ -51,19 +51,41 @@ struct cavan_http_prop {
 	const char *value;
 };
 
-int cavan_http_get_request_type(const char *req, size_t length);
-const char *cavan_http_request_type_tostring(int type);
-char *cavan_http_find_prop(const char *req, const char *req_end, const char *name, size_t namelen);
-char *cavan_http_set_prop(char *req, char *req_end, const char *name, size_t namelen, const char *value, size_t valuelen);
-ssize_t cavan_http_read_request(struct network_client *client, char *buff, size_t size);
-size_t cavan_http_parse_request(char *req, char *req_end, struct cavan_http_prop *props, size_t propc);
-size_t cavan_http_parse_prop_value(char *value, struct cavan_http_prop *props, size_t propc);
+struct cavan_http_request {
+	char *type;
+	char *url;
+	char *version;
+
+	char *mem;
+	size_t mem_size;
+	size_t mem_used;
+
+	struct cavan_http_prop *props;
+	size_t prop_size;
+	size_t prop_used;
+
+	struct cavan_http_prop *params;
+	size_t param_size;
+	size_t param_used;
+};
+
 void cavan_http_dump_prop(const struct cavan_http_prop *prop);
 void cavan_http_dump_props(const struct cavan_http_prop *props, size_t propc);
+void cavan_http_request_dump(struct cavan_http_request *req);
+struct cavan_http_request *cavan_http_request_alloc(size_t mem_size, size_t prop_size, size_t param_size);
+void cavan_http_parse_prop(char *text, struct cavan_http_prop *prop);
+void cavan_http_request_free(struct cavan_http_request *req);
+int cavan_http_read_request(struct cavan_fifo *fifo, struct cavan_http_request *req, boolean full);
+
+int cavan_http_request_get_type(const char *req, size_t length);
+int cavan_http_request_get_type2(const char *type);
+const char *cavan_http_request_type_tostring(int type);
+size_t cavan_http_parse_request(char *req, char *req_end, struct cavan_http_prop *props, size_t propc);
+size_t cavan_http_parse_prop_value(char *value, struct cavan_http_prop *props, size_t propc);
 const struct cavan_http_prop *cavan_http_prop_find(const struct cavan_http_prop *props, size_t propc, const char *key);
 const char *cavan_http_prop_find_value(const struct cavan_http_prop *props, size_t propc, const char *key);
-size_t cavan_http_parse_url_props(char *url, struct cavan_http_prop *props, size_t propc);
-char *cavan_http_pathname_decode(char *pathname, struct cavan_http_prop *props, size_t *size);
+size_t cavan_http_parse_url_param(char *url, struct cavan_http_prop *props, size_t propc);
+size_t cavan_http_parse_url(char *url, struct cavan_http_prop *props, size_t size);
 char *cavan_http_get_boundary(struct cavan_http_prop *props, size_t propc);
 ssize_t cavan_http_read_multiform_header(struct network_client *client, const char *boundary, char *buff, size_t size);
 
@@ -76,8 +98,8 @@ int cavan_http_send_file2(struct network_client *client, const char *pathname, c
 int cavan_http_send_file3(struct network_client *client, const char *pathname, const struct cavan_http_prop *props, size_t propc);
 int cavan_http_list_directory(struct network_client *client, const char *pathname);
 ssize_t cavan_http_file_receive(struct network_client *client, const char *pathname, const char *boundary, size_t length);
-int cavan_http_process_get(struct network_client *client, const char *pathname, struct cavan_http_prop *props, size_t propc, struct cavan_http_prop *args, size_t argc);
-int cavan_http_process_post(struct network_client *client, const char *pathname, struct cavan_http_prop *props, size_t propc, struct cavan_http_prop *args, size_t argc);
+int cavan_http_process_get(struct network_client *client, struct cavan_http_request *req);
+int cavan_http_process_post(struct network_client *client, struct cavan_http_request *req);
 
 int cavan_http_service_run(struct cavan_dynamic_service *service);
 

@@ -25,6 +25,87 @@
 
 #define WEB_PROXY_DEBUG		0
 
+char *web_proxy_find_prop(const char *req, const char *req_end, const char *name, size_t namelen)
+{
+	while ((size_t) (req_end - req) > namelen) {
+		if (text_ncmp(req, name, namelen) == 0) {
+			for (req += namelen; req < req_end && byte_is_space(*req); req++);
+
+			if (*req == ':') {
+				while (byte_is_space(*++req));
+
+				return (char *) req;
+			}
+		}
+
+		if (cavan_islf(*req)) {
+			break;
+		}
+
+		while (req < req_end && *req++ != '\n');
+	}
+
+	return NULL;
+}
+
+char *web_proxy_set_prop(char *req, char *req_end, const char *name, size_t namelen, const char *value, size_t valuelen)
+{
+	char *prop;
+	size_t proplen;
+	char *prop_end;
+
+	prop = web_proxy_find_prop(req, req_end, name, namelen);
+	if (prop == NULL) {
+		return req_end;
+	}
+
+	for (prop_end = prop; prop_end < req_end && *prop_end != '\n'; prop_end++);
+
+	proplen = prop_end - prop;
+	if (proplen != valuelen) {
+		mem_move(prop + valuelen, prop_end, req_end - prop_end);
+	}
+
+	mem_copy(prop, value, valuelen);
+
+	return req_end + (valuelen - proplen);
+}
+
+ssize_t web_proxy_read_request(struct network_client *client, char *buff, size_t size)
+{
+	int count = 0;
+	char *p, *p_end;
+
+	for (p = buff, p_end = p + size; p < p_end; p++) {
+		int ret = network_client_recv(client, p, 1);
+		if (ret < 1) {
+			if (ret < 0) {
+				return ret;
+			}
+
+			break;
+		}
+
+		switch (*p) {
+		case '\n':
+			if (count > 0) {
+				goto out_complete;
+			}
+			count++;
+		case '\r':
+			break;
+
+		default:
+			count = 0;
+		}
+	}
+
+out_complete:
+	return p - buff;
+}
+
+// ================================================================================
+
 static int web_proxy_main_loop(struct network_client *client_src, struct network_client *client_dest, int timeout)
 {
 	int ret;
@@ -198,14 +279,13 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 		int count;
 		char *texts[16];
 
-		ret = cavan_fifo_read_line(&fifo, buff, sizeof(buff));
-		if (ret < 0) {
-			pr_red_info("file_read_line");
-			goto out_cavan_fifo_deinit;
-		}
+		ret = cavan_fifo_read_line_strip(&fifo, buff, sizeof(buff));
+		if (ret < 1) {
+			if (ret < 0) {
+				break;
+			}
 
-		if (ret == 0) {
-			break;
+			continue;
 		}
 
 		count = text_split_by_space(buff, texts, NELEM(texts));
@@ -377,7 +457,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 	while (1) {
 		bool tcp_proxy;
 
-		ret = cavan_http_read_request(client, buff, sizeof(buff) - proxy->proxy_hostlen - 1);
+		ret = web_proxy_read_request(client, buff, sizeof(buff) - proxy->proxy_hostlen - 1);
 		if (ret <= 0) {
 			goto out_network_client_close_proxy;
 		}
@@ -392,7 +472,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 		for (url_text = buff; url_text < buff_end && *url_text != ' '; url_text++);
 
 		cmdlen = url_text++ - buff;
-		type = cavan_http_get_request_type(buff, cmdlen);
+		type = cavan_http_request_get_type(buff, cmdlen);
 		if (type < 0) {
 			pr_red_info("invalid request[%" PRINT_FORMAT_SIZE "] `%s'", cmdlen, buff);
 
@@ -470,7 +550,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 
 			default:
 				if (tcp_proxy) {
-					buff_end = cavan_http_set_prop(buff, buff_end, "Host", 4, proxy->url_proxy.hostname, proxy->proxy_hostlen);
+					buff_end = web_proxy_set_prop(buff, buff_end, "Host", 4, proxy->url_proxy.hostname, proxy->proxy_hostlen);
 #if WEB_PROXY_DEBUG
 					*buff_end = 0;
 #endif
