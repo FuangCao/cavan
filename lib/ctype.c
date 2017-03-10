@@ -63,12 +63,12 @@ const u32 cavan_ctype[] = {
 	CT_C,
 	CT_S | CT_SP, /* space */
 	CT_P, /* ! */
-	CT_P, /* " */
+	CT_P | CT_Q, /* " */
 	CT_P, /* # */
 	CT_P, /* $ */
 	CT_P, /* % */
 	CT_P, /* & */
-	CT_P, /* ' */ /* 39 */
+	CT_P | CT_Q, /* ' */ /* 39 */
 	CT_P | CT_B | CT_BL, /* ( */
 	CT_P | CT_B | CT_BR, /* ) */
 	CT_P, /* * */

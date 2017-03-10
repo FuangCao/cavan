@@ -197,8 +197,15 @@ char *text_find_name_invert(const char *text, const char *head);
 
 char *text_clear_space(char *text);
 char *text_clear_space_and_lf(char *text);
+char *text_clear_quote(char *text);
+char *text_clear_space_and_quote(char *text);
+char *text_clear_space_and_lf_and_quote(char *text);
+
 char *text_clear_space_invert(const char *head, char *text);
 char *text_clear_space_and_lf_invert(const char *head, char *text);
+char *text_clear_quote_invert(const char *head, char *text);
+char *text_clear_space_and_quote_invert(const char *head, char *text);
+char *text_clear_space_and_lf_and_quote_invert(const char *head, char *text);
 
 #if 0
 __printf_format_40__ char *cavan_vsnprintf(char *buff, size_t size, const char *fmt, char *args);
@@ -241,7 +248,7 @@ char *text_replace_text_base(const char *text_old, char *text_new, const char *s
 int text_is_dot_name(const char *filename);
 int text_isnot_dot_name(const char *filename);
 
-size_t text_split_by_char(const char *text, char sep, char *buff, size_t size1, size_t size2);
+int text_split_by_char(char *text, char sep, char *texts[], int size);
 int text_split_by_space(char *text, char *texts[], int size);
 char *text_join_by_char(char *text[], size_t size1, char sep, char *buff, size_t size2);
 size_t text_split_by_text(const char *text, const char *sep, char *buff, size_t size1, size_t size2);

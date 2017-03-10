@@ -41,6 +41,7 @@ enum {
 	CT_BR = BIT(13), /* right bracket */
 	CT_ZERO = BIT(14), /* zero */
 	CT_DOT = BIT(15), /* zero */
+	CT_Q = BIT(16), /* '/" */
 };
 
 extern const u32 cavan_ctype[];
@@ -200,6 +201,11 @@ static inline char cavan_uppercase(char c)
 	}
 
 	return c;
+}
+
+static inline boolean cavan_isquote(char c)
+{
+	return (cavan_ctype_get(c) & CT_Q) != 0;
 }
 
 __END_DECLS;

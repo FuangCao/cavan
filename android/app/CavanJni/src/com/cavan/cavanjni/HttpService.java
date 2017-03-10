@@ -16,7 +16,7 @@ public class HttpService extends CavanService {
 
 	@Override
 	public int getDefaultPort() {
-		return 8088;
+		return 8021;
 	}
 
 	@Override

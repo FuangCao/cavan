@@ -71,6 +71,7 @@ int file_noperation_rw(const char *filename, size_t size, int (*handle)(int fd, 
 int mkdir_all(const char *pathname);
 int mkdir_hierarchy_length(const char *pathname, size_t length, mode_t mode);
 int mkdir_hierarchy2(char *pathname, mode_t mode);
+int mkdir_hierarchy3(const char *pathname, mode_t mode);
 int mkdir_parent_hierarchy(const char *pathname, mode_t mode);
 int mkdir_parent_hierarchy2(char *pathname, mode_t mode);
 int file_create_open(const char *pathname, int flags, mode_t mode);

@@ -520,7 +520,7 @@ ssize_t cavan_cache_write(struct cavan_cache *cache, const char *buff, size_t si
 			}
 
 #if CAVAN_CACHE_DEBUG
-			println("Write: head = %p, tail = %p, rcount = %d, length = %d, free_space = %d",
+			println("Write: head = %p, tail = %p, rcount = %" PRINT_FORMAT_SIZE ", length = %" PRINT_FORMAT_SIZE ", free_space = %" PRINT_FORMAT_SSIZE,
 				cache->head, cache->tail, rcount, length, cavan_cache_free_space(cache));
 #endif
 
@@ -580,7 +580,7 @@ ssize_t cavan_cache_read(struct cavan_cache *cache, char *buff, size_t size, siz
 		}
 
 #if CAVAN_CACHE_DEBUG
-		println("Read: head = %p, tail = %p, rcount = %d, length = %d, used_space = %d",
+		println("Read: head = %p, tail = %p, rcount = %" PRINT_FORMAT_SIZE ", length = %" PRINT_FORMAT_SIZE ", used_space = %" PRINT_FORMAT_SSIZE,
 			cache->head, cache->tail, rcount, length, cavan_cache_used_space(cache));
 #endif
 
@@ -731,6 +731,7 @@ int cavan_fifo_init(struct cavan_fifo *fifo, size_t size, void *data)
 	}
 
 	fifo->size = size;
+	fifo->available = 0;
 	fifo->private_data = data;
 
 	fifo->mem_end = fifo->mem + size;
@@ -778,6 +779,57 @@ ssize_t cavan_fifo_read_cache(struct cavan_fifo *fifo, void *buff, size_t size)
 	return rdlen;
 }
 
+void cavan_fifo_reset(struct cavan_fifo *fifo)
+{
+	cavan_fifo_lock(fifo);
+	fifo->data = fifo->data_end = fifo->mem;
+	cavan_fifo_unlock(fifo);
+}
+
+void cavan_fifo_set_available(struct cavan_fifo *fifo, size_t available)
+{
+	cavan_fifo_lock(fifo);
+	fifo->available = available;
+	fifo->readed = fifo->data_end - fifo->data;
+	cavan_fifo_unlock(fifo);
+}
+
+size_t cavan_fifo_get_remain(struct cavan_fifo *fifo)
+{
+	size_t remain;
+
+	cavan_fifo_lock(fifo);
+	remain = fifo->available - fifo->readed;
+	cavan_fifo_unlock(fifo);
+
+	return remain;
+}
+
+static ssize_t cavan_fifo_read_raw(struct cavan_fifo *fifo, void *buff, size_t size)
+{
+	ssize_t rdlen;
+
+	if (fifo->available > 0) {
+		if (unlikely(fifo->readed + size > fifo->available)) {
+			size = fifo->available - fifo->readed;
+			if (unlikely(size == 0)) {
+				return 0;
+			}
+		}
+
+		rdlen = fifo->read(fifo, buff, size); // rdlen < 0
+		fifo->readed += rdlen;
+
+#if CAVAN_CACHE_DEBUG
+		println("readed = %" PRINT_FORMAT_SIZE ", available = %" PRINT_FORMAT_SIZE, fifo->readed, fifo->available);
+#endif
+	} else {
+		rdlen = fifo->read(fifo, buff, size);
+	}
+
+	return rdlen;
+}
+
 static ssize_t cavan_fifo_read_locked(struct cavan_fifo *fifo, void *buff, size_t size)
 {
 	ssize_t rdlen;
@@ -785,7 +837,7 @@ static ssize_t cavan_fifo_read_locked(struct cavan_fifo *fifo, void *buff, size_
 	if (fifo->data < fifo->data_end) {
 		rdlen = fifo->data_end - fifo->data;
 	} else {
-		rdlen = fifo->read(fifo, fifo->mem, fifo->size);
+		rdlen = cavan_fifo_read_raw(fifo, fifo->mem, fifo->size);
 		if (rdlen <= 0) {
 			return rdlen;
 		}

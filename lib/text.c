@@ -2620,32 +2620,40 @@ int text_isnot_dot_name(const char *filename)
 	return filename[0] != '.' || filename[1] != 0;
 }
 
-size_t text_split_by_char(const char *text, char sep, char *buff, size_t size1, size_t size2)
+int text_split_by_char(char *text, char sep, char *texts[], int size)
 {
-	char *buff_end;
-	char *p;
+	int index;
 
-	for (p = buff, buff_end = buff + (size1 * size2), size1 = 1; *text && buff < buff_end; text++) {
+	if (size <= 0) {
+		return 0;
+	}
+
+	texts[0] = text;
+
+	for (index = 0; *text; text++) {
 		if (*text == sep) {
-			*p = 0;
-			buff += size2;
-			p = buff;
-			size1++;
-		} else {
-			*p++ = *text;
+			*text = 0;
+
+			if (++index < size) {
+				texts[index] = text + 1;
+			} else {
+				return size;
+			}
 		}
 	}
 
-	*p = 0;
+	if (texts[index] < text) {
+		return index + 1;
+	}
 
-	return size1;
+	return index;
 }
 
 int text_split_by_space(char *text, char *texts[], int size)
 {
 	int index;
 
-	if (size == 0) {
+	if (size <= 0) {
 		return 0;
 	}
 
@@ -2655,7 +2663,12 @@ int text_split_by_space(char *text, char *texts[], int size)
 	while (1) {
 		switch (*text) {
 		case 0:
-			return texts[index] < text ? index + 1 : index;
+			if (texts[index] < text) {
+				text_clear_space_and_lf_invert(texts[index], text - 1);
+				return index + 1;
+			} else {
+				return index;
+			}
 
 		case ' ':
 		case '\t':
@@ -2663,25 +2676,22 @@ int text_split_by_space(char *text, char *texts[], int size)
 		case '\r':
 		case '\n':
 			if (texts[index] < text) {
+				text_clear_space_and_lf_invert(texts[index], text - 1);
 				*text = 0;
-				index++;
 
-				if (index < size) {
+				if (++index < size) {
 					texts[index] = text + 1;
 				} else {
-					return index + 1;
+					return size;
 				}
 			} else {
 				texts[index] = text + 1;
 			}
-
 			break;
 		}
 
 		text++;
 	}
-
-	return 0;
 }
 
 char *text_join_by_char(char *text[], size_t size1, char sep, char *buff, size_t size2)
@@ -3035,6 +3045,27 @@ char *text_clear_space_and_lf(char *text)
 	return text;
 }
 
+char *text_clear_quote(char *text)
+{
+	while (cavan_isquote(*text)) {
+		*text++ = 0;
+	}
+
+	return text;
+}
+
+char *text_clear_space_and_quote(char *text)
+{
+	text = text_clear_space(text);
+	return text_clear_quote(text);
+}
+
+char *text_clear_space_and_lf_and_quote(char *text)
+{
+	text = text_clear_space_and_lf(text);
+	return text_clear_quote(text);
+}
+
 char *text_clear_space_invert(const char *head, char *text)
 {
 	while (text >= head && cavan_isspace(*text)) {
@@ -3051,6 +3082,27 @@ char *text_clear_space_and_lf_invert(const char *head, char *text)
 	}
 
 	return text;
+}
+
+char *text_clear_quote_invert(const char *head, char *text)
+{
+	while (text >= head && cavan_isquote(*text)) {
+		*text-- = 0;
+	}
+
+	return text;
+}
+
+char *text_clear_space_and_quote_invert(const char *head, char *text)
+{
+	text = text_clear_space_invert(head, text);
+	return text_clear_quote_invert(head, text);
+}
+
+char *text_clear_space_and_lf_and_quote_invert(const char *head, char *text)
+{
+	text = text_clear_space_and_lf_invert(head, text);
+	return text_clear_quote_invert(head, text);
 }
 
 char text_get_char(const char *text, int index)

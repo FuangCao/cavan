@@ -50,6 +50,8 @@ struct cavan_fifo {
 	char *data;
 	char *data_end;
 	size_t size;
+	size_t readed;
+	size_t available;
 	void *private_data;
 	pthread_mutex_t lock;
 
@@ -90,6 +92,9 @@ ssize_t cavan_cache_read_line(struct cavan_cache *cache, char *buff, size_t size
 
 int cavan_fifo_init(struct cavan_fifo *fifo, size_t size, void *data);
 void cavan_fifo_deinit(struct cavan_fifo *fifo);
+void cavan_fifo_reset(struct cavan_fifo *fifo);
+void cavan_fifo_set_available(struct cavan_fifo *fifo, size_t available);
+size_t cavan_fifo_get_remain(struct cavan_fifo *fifo);
 ssize_t cavan_fifo_read(struct cavan_fifo *fifo, void *buff, size_t size);
 ssize_t cavan_fifo_read_cache(struct cavan_fifo *fifo, void *buff, size_t size);
 ssize_t cavan_fifo_read_line(struct cavan_fifo *fifo, char *buff, size_t size);

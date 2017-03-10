@@ -521,6 +521,22 @@ int mkdir_hierarchy2(char *pathname, mode_t mode)
 	return 0;
 }
 
+int mkdir_hierarchy3(const char *pathname, mode_t mode)
+{
+	int ret;
+	char *text = strdup(pathname);
+
+	if (text == NULL) {
+		pr_err_info("strdup");
+		return -ENOMEM;
+	}
+
+	ret = mkdir_hierarchy2(text, mode);
+	free(text);
+
+	return ret;
+}
+
 int mkdir_parent_hierarchy2(char *pathname, mode_t mode)
 {
 	int ret;
