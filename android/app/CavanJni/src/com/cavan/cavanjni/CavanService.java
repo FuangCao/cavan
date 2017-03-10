@@ -27,7 +27,7 @@ public abstract class CavanService extends Service {
 
 			while (mEnabled) {
 				setState(true);
-				mainServiceLoop(mPort);
+				doMainLoop(mPort);
 				setState(false);
 
 				try {
@@ -47,12 +47,7 @@ public abstract class CavanService extends Service {
 
 		@Override
 		public void start(int port) throws RemoteException {
-			if (mState) {
-				sendStateBroadcast(true);
-			} else {
-				mPort = port;
-				new MyThread().start();
-			}
+			doStartService(port);
 		}
 
 		@Override
@@ -73,7 +68,7 @@ public abstract class CavanService extends Service {
 		@Override
 		public boolean stop() throws RemoteException {
 			mEnabled = false;
-			return stopService();
+			return doStopService();
 		}
 
 		@Override
@@ -83,9 +78,9 @@ public abstract class CavanService extends Service {
 	}
 
 	public abstract int getDefaultPort();
-	public abstract boolean stopService();
 	public abstract String getServiceName();
-	protected abstract void mainServiceLoop(int port);
+	public abstract boolean doStopService();
+	protected abstract void doMainLoop(int port);
 
 	public CavanService() {
 		super();
@@ -105,6 +100,15 @@ public abstract class CavanService extends Service {
 
 	public String getServiceAction() {
 		return "cavan.intent.action." + getServiceName();
+	}
+
+	protected void doStartService(int port) {
+		if (mState) {
+			sendStateBroadcast(true);
+		} else {
+			mPort = port;
+			new MyThread().start();
+		}
 	}
 
 	@Override

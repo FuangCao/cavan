@@ -583,7 +583,8 @@ int cavan_http_open_html_file(const char *title, char *pathname)
 #endif
 
 	ffile_puts(fd, "<!-- This file is automatic generate by Fuang.Cao -->\r\n\r\n");
-	ffile_printf(fd, "<html>\r\n\t<head>\r\n\t\t<title>%s</title>\r\n\t</head>\r\n\t<body>\r\n", title);
+	ffile_puts(fd, "<html>\r\n\t<head>\r\n\t\t<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\r\n");
+	ffile_printf(fd, "\t\t<title>%s</title>\r\n\t</head>\r\n\t<body>\r\n", title);
 
 	return fd;
 }
@@ -727,6 +728,7 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 	DIR *dp;
 	int ret;
 	struct stat st;
+	const char *env;
 	char *filename;
 	char pathname[1024];
 	struct dirent *entry;
@@ -746,9 +748,25 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 
 	filename = text_path_cat(pathname, sizeof(pathname), dirname, NULL);
 
-	ffile_printf(fd, "\t\t<h5>Path: <a href=\"%s\">%s</a></h5>\r\n", pathname, dirname);
-	ffile_printf(fd, "\t\t<h5><a href=\"..\">Parent directory</a> (<a href=\"/\">Root directory</a>)</h5>\r\n");
-	ffile_puts(fd, "\t\t<form enctype=\"multipart/form-data\" action=\".\" method=\"post\">\r\n");
+	ffile_printf(fd, "\t\t<h5>Current directory: <a href=\"%s\">%s</a></h5>\r\n", pathname, dirname);
+	ffile_puts(fd, "\t\t<h5>[<a href=\"..\">Parent</a>]  [<a href=\"/\">Root</a>]");
+
+	env = cavan_getenv("HOME", NULL);
+	if (env != NULL) {
+		ffile_printf(fd, "  [<a href=\"%s/\">Home</a>]", env);
+	}
+
+	env = cavan_getenv("CACHE_PATH", NULL);
+	if (env != NULL) {
+		ffile_printf(fd, "  [<a href=\"%s/\">Cache</a>]", env);
+	}
+
+	env = cavan_getenv("APP_PATH", NULL);
+	if (env != NULL) {
+		ffile_printf(fd, "  [<a href=\"%s/\">App</a>]", env);
+	}
+
+	ffile_puts(fd, "</h5>\r\n\t\t<form enctype=\"multipart/form-data\" action=\".\" method=\"post\">\r\n");
 	ffile_puts(fd, "\t\t\tFile to upload: <input name=\"cavan\" type=\"file\">\r\n");
 	ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"upload\">\r\n");
 	ffile_puts(fd, "\t\t</form>\r\n");

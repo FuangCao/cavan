@@ -49,3 +49,27 @@ JNIEXPORT jboolean Java_com_cavan_cavanjni_CavanJni_setEnv(JNIEnv *env, jclass c
 
 	return success;
 }
+
+JNIEXPORT jboolean Java_com_cavan_cavanjni_CavanJni_symlink(JNIEnv *env, jclass clazz, jstring strTarget, jstring strLinkPath)
+{
+	jboolean success;
+	const char *target, *linkpath;
+
+	if (strTarget == NULL || strLinkPath == NULL) {
+		return false;
+	}
+
+	target = (char *) (*env)->GetStringUTFChars(env, strTarget, NULL);
+	linkpath = (char *) (*env)->GetStringUTFChars(env, strLinkPath, NULL);
+	success = (target && linkpath && cavan_symlink(target, linkpath) == 0);
+
+	if (target) {
+		(*env)->ReleaseStringUTFChars(env, strTarget, target);
+	}
+
+	if (linkpath) {
+		(*env)->ReleaseStringUTFChars(env, strLinkPath, linkpath);
+	}
+
+	return success;
+}

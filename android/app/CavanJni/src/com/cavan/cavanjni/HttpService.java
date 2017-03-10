@@ -1,5 +1,7 @@
 package com.cavan.cavanjni;
 
+import com.cavan.java.CavanFile;
+
 public class HttpService extends CavanService {
 
 	public static final String NAME = "HTTP";
@@ -10,7 +12,7 @@ public class HttpService extends CavanService {
 	}
 
 	@Override
-	protected void mainServiceLoop(int port) {
+	protected void doMainLoop(int port) {
 		CavanJni.doHttpService("-p", Integer.toString(port));
 	}
 
@@ -20,7 +22,17 @@ public class HttpService extends CavanService {
 	}
 
 	@Override
-	public boolean stopService() {
+	protected void doStartService(int port) {
+		CavanFile apk = new CavanFile(getCacheDir(), "apk");
+		if (CavanJni.symlinkApks(getPackageManager(), apk)) {
+			CavanJni.setEnv("APP_PATH", apk.getPath());
+		}
+
+		super.doStartService(port);
+	}
+
+	@Override
+	public boolean doStopService() {
 		return CavanJni.kill("http_service");
 	}
 }

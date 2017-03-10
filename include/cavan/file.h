@@ -242,6 +242,8 @@ int file_write_s64(const char *pathname, s64 value);
 u64 file_read_u64(const char *pathname, u64 def_value);
 s64 file_read_s64(const char *pathname, s64 def_value);
 
+int cavan_symlink(const char *target, const char *linkpath);
+
 // ============================================================
 
 static inline int file_open_ro(const char *file_path)

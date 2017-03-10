@@ -10,7 +10,7 @@ public class TcpRepeater extends CavanService {
 	}
 
 	@Override
-	protected void mainServiceLoop(int port) {
+	protected void doMainLoop(int port) {
 		CavanJni.doTcpRepeater("-p", Integer.toString(port));
 	}
 
@@ -20,7 +20,7 @@ public class TcpRepeater extends CavanService {
 	}
 
 	@Override
-	public boolean stopService() {
+	public boolean doStopService() {
 		return CavanJni.kill("tcp_repeater");
 	}
 }

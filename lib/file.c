@@ -3282,3 +3282,32 @@ s64 file_read_s64(const char *pathname, s64 def_value)
 
 	return text2value(buff, NULL, 10);
 }
+
+int cavan_symlink(const char *target, const char *linkpath)
+{
+	if (symlink(target, linkpath) == 0) {
+		return 0;
+	}
+
+	if (errno != EEXIST) {
+		return -EFAULT;
+	}
+
+	if (file_is_directory2(linkpath)) {
+		char pathname[1024];
+		const char *filename;
+
+		filename = text_basename_simple(target);
+		if (filename == NULL) {
+			return -EFAULT;
+		}
+
+		text_path_cat(pathname, sizeof(pathname), linkpath, filename);
+
+		return symlink(target, pathname);
+	}
+
+	unlink(linkpath);
+
+	return symlink(target, linkpath);
+}

@@ -11,7 +11,7 @@ public class TcpDdService extends CavanService {
 	}
 
 	@Override
-	protected void mainServiceLoop(int port) {
+	protected void doMainLoop(int port) {
 		CavanJni.doTcpDdServer("-p", Integer.toString(port), "-s", "0");
 	}
 
@@ -21,7 +21,7 @@ public class TcpDdService extends CavanService {
 	}
 
 	@Override
-	public boolean stopService() {
+	public boolean doStopService() {
 		return CavanJni.kill("tcp_dd_server");
 	}
 }
