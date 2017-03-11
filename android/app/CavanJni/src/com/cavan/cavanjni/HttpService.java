@@ -22,17 +22,17 @@ public class HttpService extends CavanService {
 	}
 
 	@Override
-	protected void doStartService(int port) {
+	public boolean doStopService() {
+		return CavanJni.kill("http_service");
+	}
+
+	@Override
+	protected void onServiceStart() {
+		super.onServiceStart();
+
 		CavanFile apk = new CavanFile(getCacheDir(), "apk");
 		if (CavanJni.symlinkApks(getPackageManager(), apk)) {
 			CavanJni.setEnv("APP_PATH", apk.getPath());
 		}
-
-		super.doStartService(port);
-	}
-
-	@Override
-	public boolean doStopService() {
-		return CavanJni.kill("http_service");
 	}
 }

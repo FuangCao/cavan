@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 	case 'U':
 		if (img_path == NULL) {
 			return cavan_dd("u-boot-no-padding.bin", target_device, 0, UBOOT_OFFSET, 0);
-		} else if (strcmp(text_basename(img_path), "u-boot.bin") == 0) {
+		} else if (strcmp(cavan_path_basename_simple(img_path), "u-boot.bin") == 0) {
 			return cavan_dd(img_path, target_device, UBOOT_PADDING_SIZE, UBOOT_OFFSET, 0);
 		} else {
 			return cavan_dd(img_path, target_device, 0, UBOOT_OFFSET, 0);

@@ -165,6 +165,7 @@ __END_DECLS
 #include <cavan/types.h>
 #include <cavan/stdio.h>
 #include <cavan/text.h>
+#include <cavan/path.h>
 #include <cavan/memory.h>
 #include <cavan/file.h>
 #include <cavan/ctype.h>

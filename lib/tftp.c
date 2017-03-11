@@ -454,7 +454,7 @@ int tftp_client_receive_all(const char *ip, u16 port, const char *file_in, const
 	char temp_name[512];
 
 	if (file_test(file_out, "d") == 0) {
-		sprintf(temp_name, "%s/%s", file_out, text_basename(file_in));
+		sprintf(temp_name, "%s/%s", file_out, cavan_path_basename_simple(file_in));
 		file_out = temp_name;
 	}
 
@@ -625,8 +625,8 @@ int tftp_client_send_directory(const char *ip, u16 port, const char *dir_in, con
 		goto out_close_dir;
 	}
 
-	p_in = text_path_cat(temp_name_in, sizeof(temp_name_in), dir_in, NULL);
-	p_out = text_path_cat(temp_name_out, sizeof(temp_name_out), dir_out, NULL);
+	p_in = cavan_path_copy(temp_name_in, sizeof(temp_name_in), dir_in, true);
+	p_out = cavan_path_copy(temp_name_out, sizeof(temp_name_out), dir_out, true);
 
 	while (1) {
 		dt = readdir(src_dir);

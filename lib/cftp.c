@@ -274,11 +274,11 @@ static int cftp_client_send_directory(struct cftp_descriptor *desc, const char *
 		return -EFAULT;
 	}
 
-	p_in = text_path_cat(tmp_file_in, sizeof(tmp_file_in), dir_in, NULL);
-	p_out = text_path_cat(tmp_file_out, sizeof(tmp_file_out), dir_out, NULL);
+	p_in = cavan_path_copy(tmp_file_in, sizeof(tmp_file_in), dir_in, true);
+	p_out = cavan_path_copy(tmp_file_out, sizeof(tmp_file_out), dir_out, true);
 
 	while ((entry = readdir(dp))) {
-		if (text_is_dot_name(entry->d_name)) {
+		if (cavan_path_is_dot_name(entry->d_name)) {
 			continue;
 		}
 

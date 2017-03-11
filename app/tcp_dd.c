@@ -222,7 +222,7 @@ static int tcp_dd_rw_image_directory(const char *dirname, struct network_url *ur
 		return -EFAULT;
 	}
 
-	filename = text_path_cat(pathname, sizeof(pathname), dirname, NULL);
+	filename = cavan_path_copy(pathname, sizeof(pathname), dirname, true);
 
 	while ((dt = cavan_readdir_skip_dot(dp))) {
 		int ret;
@@ -554,11 +554,11 @@ label_parse_complete:
 				}
 
 				if (handler == tcp_dd_send_file) {
-					text_path_cat(file_req.src_file, sizeof(file_req.src_file), dirname, image_name);
+					cavan_path_cat(file_req.src_file, sizeof(file_req.src_file), dirname, image_name, false);
 					strcpy(file_req.dest_file, part_name);
 				} else {
 					strcpy(file_req.src_file, part_name);
-					text_path_cat(file_req.dest_file, sizeof(file_req.src_file), dirname, image_name);
+					cavan_path_cat(file_req.dest_file, sizeof(file_req.src_file), dirname, image_name, false);
 				}
 
 				file_req.size = 0;

@@ -233,7 +233,7 @@ enum image_type image_path_to_type(const char *img_path)
 {
 	char image_name[64];
 
-	text_basename_base(image_name, img_path);
+	cavan_path_basename(image_name, img_path);
 
 	return image_name_to_type(image_name);
 }
@@ -277,7 +277,7 @@ const char *image_path_to_part_name(const char *pathname)
 {
 	char image_name[64];
 
-	text_basename_base(image_name, pathname);
+	cavan_path_basename(image_name, pathname);
 
 	return image_name_to_part_name(image_name);
 }
@@ -443,7 +443,7 @@ int dump_ramdisk(const char *ramdisk_path, const char *ramdisk_dir)
 	int ret;
 	char abs_ramdisk_path[1024];
 
-	to_abs_path_base(ramdisk_path, abs_ramdisk_path, sizeof(abs_ramdisk_path));
+	cavan_path_to_abs_base(ramdisk_path, abs_ramdisk_path, sizeof(abs_ramdisk_path));
 
 	ret = system_command("rm %s -rfv && mkdir %s", ramdisk_dir, ramdisk_dir);
 	if (ret < 0) {
@@ -490,7 +490,7 @@ int create_ramdisk(const char *ramdisk_dir, const char *ramdisk_path)
 		return ret;
 	}
 
-	to_abs_path_base(ramdisk_path, abs_ramdisk_path, sizeof(abs_ramdisk_path));
+	cavan_path_to_abs_base(ramdisk_path, abs_ramdisk_path, sizeof(abs_ramdisk_path));
 
 	ret = chdir_backup(ramdisk_dir);
 	if (ret < 0) {
@@ -516,7 +516,7 @@ int create_uramdisk(const char *ramdisk_dir, const char *uramdisk_path)
 	int ret;
 	char abs_uramdisk_path[1024];
 
-	to_abs_path_base(uramdisk_path, abs_uramdisk_path, sizeof(abs_uramdisk_path));
+	cavan_path_to_abs_base(uramdisk_path, abs_uramdisk_path, sizeof(abs_uramdisk_path));
 
 	ret = create_ramdisk(ramdisk_dir, TEMP_RAMDISK_PATH);
 	if (ret < 0) {
@@ -535,7 +535,7 @@ int create_uramdisk(const char *ramdisk_dir, const char *uramdisk_path)
 
 int image_is(const char *img_path, const char *type)
 {
-	if (text_kmp_find(text_basename(img_path), type) == NULL) {
+	if (text_kmp_find(cavan_path_basename_simple(img_path), type) == NULL) {
 		return 0;
 	}
 

@@ -251,12 +251,12 @@ int main(int argc, char *argv[])
 	if (count == 1 || same) {
 		filename = NULL;
 	} else {
-		filename = text_path_cat(file_req.dest_file, sizeof(file_req.dest_file), argv[--argc], NULL);
+		filename = cavan_path_copy(file_req.dest_file, sizeof(file_req.dest_file), argv[--argc], true);
 	}
 
 	for (i = optind; i < argc; i++) {
 		if (filename) {
-			text_basename_base(filename, argv[i]);
+			cavan_path_basename(filename, argv[i]);
 			text_copy(file_req.src_file, argv[i]);
 		} else {
 			file_abs_path_simple(argv[i], file_req.src_file, sizeof(file_req.src_file), true);

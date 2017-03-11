@@ -210,7 +210,7 @@ static char *tcp_dd_find_platform_by_name_path(char *pathname, char *filename, s
 			continue;
 		}
 
-		if (text_is_dot_name(entry->d_name)) {
+		if (cavan_path_is_dot_name(entry->d_name)) {
 			continue;
 		}
 
@@ -1639,8 +1639,8 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 			goto out_client_close;
 		}
 
-		src_fname = text_path_cat(sub_req.src_file, sizeof(sub_req.src_file), file_req->src_file, NULL);
-		dest_fname = text_path_cat(sub_req.dest_file, sizeof(sub_req.dest_file), file_req->dest_file, NULL);
+		src_fname = cavan_path_copy(sub_req.src_file, sizeof(sub_req.src_file), file_req->src_file, true);
+		dest_fname = cavan_path_copy(sub_req.dest_file, sizeof(sub_req.dest_file), file_req->dest_file, true);
 		sub_req.src_offset = sub_req.dest_offset = 0;
 
 		while ((en = cavan_readdir_skip_dot(dp))) {
@@ -1752,8 +1752,8 @@ int tcp_dd_receive_file(struct network_url *url, struct network_file_request *fi
 			goto out_client_close;
 		}
 
-		dest_fname = text_path_cat(sub_req.dest_file, sizeof(sub_req.dest_file), file_req->dest_file, NULL);
-		src_fname = text_path_cat(sub_req.src_file, sizeof(sub_req.src_file), file_req->src_file, NULL);
+		dest_fname = cavan_path_copy(sub_req.dest_file, sizeof(sub_req.dest_file), file_req->dest_file, true);
+		src_fname = cavan_path_copy(sub_req.src_file, sizeof(sub_req.src_file), file_req->src_file, true);
 		sub_req.dest_offset = sub_req.src_offset = 0;
 
 		while (1) {

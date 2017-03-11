@@ -121,12 +121,11 @@ int text2date(const char *text, struct tm *date, ...);
 
 int text_match(const char *text1, const char *text2);
 
-const char *text_basename_simple(const char *pathname);
-char *text_basename_base(char *buff, const char *path);
-char *text_basename(const char *path);
+char *cavan_path_basename(char *buff, const char *path);
+const char *cavan_path_basename_simple(const char *pathname);
 
-char *text_dirname_base(char *buff, const char *path);
-char *text_dirname(const char *path);
+char *cavan_path_dirname_base(char *buff, const char *path);
+char *cavan_path_dirname(const char *path);
 
 char *get_ntext_base(const char *src, char *dest, int start, int count);
 char *get_ntext(const char *src, int start, int count);
@@ -138,17 +137,6 @@ void system_sync(void);
 
 char *mem2text_base(const void *mem, size_t mem_size, char *buff, int size);
 char *mem2text(const void *mem, int size);
-
-char *to_abs_path_base(const char *rel_path, char *abs_path, size_t size);
-char *to_abs_path(const char *rel_path);
-char *to_abs_path_directory_base(const char *rel_path, char *abs_path, size_t size);
-char *to_abs_directory(const char *rel_path);
-char *to_abs_path2_base(const char *rel_path, char *abs_path, size_t size);
-char *to_abs_path2(const char *rel_path);
-char *prettify_pathname_base(const char *src_path, char *dest_path, size_t size);
-char *prettify_pathname(const char *src_path);
-
-char *text_path_cat(char *pathname, size_t size, const char *dirname, const char *basename);
 
 char *text_delete_char_base(const char *text_in, char *text_out, char c);
 char *text_delete_sub_base(const char *text_in, char *text_out, const char *sub, const size_t sublen);
@@ -245,8 +233,6 @@ int text_is_letter(const char *text);
 char *text_replace_char(char *text, char c_src, char c_dest);
 char *text_replace_char2(const char *src, char *dest, char c_src, char c_dest);
 char *text_replace_text_base(const char *text_old, char *text_new, const char *src, size_t srclen, const char *dest);
-int text_is_dot_name(const char *filename);
-int text_isnot_dot_name(const char *filename);
 
 int text_split_by_char(char *text, char sep, char *texts[], int size);
 int text_split_by_space(char *text, char *texts[], int size);

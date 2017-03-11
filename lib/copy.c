@@ -111,8 +111,8 @@ int directory_copy_main(const char *src, const char *dest)
 		return -1;
 	}
 
-	src_p = text_path_cat(tmp_dirname_src, sizeof(tmp_dirname_src), src, NULL);
-	dest_p = text_path_cat(tmp_dirname_dest, sizeof(tmp_dirname_dest), dest, NULL);
+	src_p = cavan_path_copy(tmp_dirname_src, sizeof(tmp_dirname_src), src, true);
+	dest_p = cavan_path_copy(tmp_dirname_dest, sizeof(tmp_dirname_dest), dest, true);
 
 	while (1) {
 		dt = readdir(src_dir);
@@ -161,7 +161,7 @@ int copy_main(const char *src, const char *dest)
 	}
 
 	if (S_ISDIR(file_get_mode(dest))) {
-		text_path_cat(dest_path, sizeof(dest_path), dest, text_basename(src));
+		cavan_path_cat(dest_path, sizeof(dest_path), dest, cavan_path_basename_simple(src), false);
 	} else {
 		text_copy(dest_path, dest);
 	}
@@ -182,8 +182,8 @@ int move_auto(const char *srcpath, const char *destpath)
 
 	switch (st.st_mode & S_IFMT) {
 	case S_IFDIR:
-		p = text_path_cat(tmppath, sizeof(tmppath), destpath, NULL);
-		text_basename_base(p, srcpath);
+		p = cavan_path_copy(tmppath, sizeof(tmppath), destpath, true);
+		cavan_path_basename(p, srcpath);
 		destpath = tmppath;
 		break;
 

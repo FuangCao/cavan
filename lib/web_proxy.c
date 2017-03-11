@@ -257,7 +257,7 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 	ffile_puts(fd, "\t\t<h1>FTP Proxy Server (Fuang.Cao <a href=\"http://mail.foxmail.com\">cavan.cao@foxmail.com</a>)</h1>\r\n");
 	ffile_printf(fd, "\t\t<h2>Directory: <a href=\"%s/\">%s</a></h2>\r\n", buff, buff);
 
-	p = text_dirname_base(buff, url->pathname);
+	p = cavan_path_dirname_base(buff, url->pathname);
 	if (p == buff || p[-1] != '/') {
 		*p++ = '/';
 		*p = 0;

@@ -303,7 +303,7 @@ int cavan_i2c_client_open(struct cavan_i2c_client *client, int adapter, u16 slav
 			println("driver_path = %s", client->driver_path);
 
 			if (chip_config == NULL) {
-				config->chipname = text_basename(client->driver_path);
+				config->chipname = cavan_path_basename_simple(client->driver_path);
 				chip_config = cavan_i2c_find_config(config->chipname);
 			}
 		}
@@ -654,7 +654,7 @@ int cavan_i2c_sysfs_get_driver_name(struct cavan_i2c_client *client, char *buff,
 		return ret;
 	}
 
-	basename = text_basename_simple(pathname);
+	basename = cavan_path_basename_simple(pathname);
 	strncpy(buff, basename, size);
 
 	return 0;

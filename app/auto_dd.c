@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	if (to_abs_path_directory_base(argv[optind], dir_path, sizeof(dir_path)) == NULL) {
+	if (cavan_path_to_abs_directory_base(argv[optind], dir_path, sizeof(dir_path)) == NULL) {
 		pr_err_info("directory \"%s\" do't exist", argv[1]);
 		return -ENOENT;
 	}
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
 	for (p = descs, end_p = descs + ARRAY_SIZE(descs); p < end_p; p++) {
 		char path_tmp[1024];
 
-		text_path_cat(path_tmp, sizeof(path_tmp), dir_path, p->in);
+		cavan_path_cat(path_tmp, sizeof(path_tmp), dir_path, p->in, false);
 
 		if (file_test(path_tmp, "r") == 0) {
 			println("%s <=> %s", p->in, path_tmp);

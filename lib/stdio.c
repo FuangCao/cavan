@@ -822,7 +822,7 @@ const char *cavan_get_temp_path(void)
 const char *cavan_build_temp_path(const char *filename, char *buff, size_t size)
 {
 	const char *dirname = cavan_get_temp_path();
-	char *p = text_path_cat(buff, size, dirname, filename) - 1;
+	char *p = cavan_path_cat(buff, size, dirname, filename, false) - 1;
 
 	while (p >= buff) {
 		if (*p == '/') {

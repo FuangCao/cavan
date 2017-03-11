@@ -722,6 +722,11 @@ int cavan_http_send_file3(struct network_client *client, const char *pathname, c
 	return cavan_http_send_file2(client, pathname, NULL, start, length);
 }
 
+int cavan_http_write_path_href(int fd, const char *pathname)
+{
+	return ffile_printf(fd, "<a href=\"%s\">%s</a>", pathname, pathname);
+}
+
 int cavan_http_list_directory(struct network_client *client, const char *dirname)
 {
 	int fd;
@@ -746,29 +751,37 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 		goto out_closedir;
 	}
 
-	filename = text_path_cat(pathname, sizeof(pathname), dirname, NULL);
+	ffile_puts(fd, "\t\t<h5>Current directory: ");
 
-	ffile_printf(fd, "\t\t<h5>Current directory: <a href=\"%s\">%s</a></h5>\r\n", pathname, dirname);
-	ffile_puts(fd, "\t\t<h5>[<a href=\"..\">Parent</a>]  [<a href=\"/\">Root</a>]");
+	filename = cavan_path_copy(pathname, sizeof(pathname), dirname, true);
+
+	ret = cavan_http_write_path_href(fd, pathname);
+	if (ret < 0) {
+		pr_red_info("cavan_http_write_path_html: %d", ret);
+		goto out_closedir;
+	}
+
+	ffile_puts(fd, "</h5>\r\n");
+	ffile_puts(fd, "\t\t<h5>[<a href=\"..\">Parent</a>] [<a href=\"/\">Root</a>]");
 
 	env = cavan_getenv("HOME", NULL);
 	if (env != NULL) {
-		ffile_printf(fd, "  [<a href=\"%s/\">Home</a>]", env);
+		ffile_printf(fd, " [<a href=\"%s/\">Home</a>]", env);
 	}
 
-	env = cavan_getenv("CACHE_PATH", NULL);
+	env = cavan_get_temp_path();
 	if (env != NULL) {
-		ffile_printf(fd, "  [<a href=\"%s/\">Cache</a>]", env);
+		ffile_printf(fd, " [<a href=\"%s/\">Temp</a>]", env);
 	}
 
 	env = cavan_getenv("APP_PATH", NULL);
 	if (env != NULL) {
-		ffile_printf(fd, "  [<a href=\"%s/\">App</a>]", env);
+		ffile_printf(fd, " [<a href=\"%s/\">App</a>]", env);
 	}
 
 	ffile_puts(fd, "</h5>\r\n\t\t<form enctype=\"multipart/form-data\" action=\".\" method=\"post\">\r\n");
-	ffile_puts(fd, "\t\t\tFile to upload: <input name=\"cavan\" type=\"file\">\r\n");
-	ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"upload\">\r\n");
+	ffile_puts(fd, "\t\t\t<input name=\"cavan\" type=\"file\">\r\n");
+	ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"Upload\">\r\n");
 	ffile_puts(fd, "\t\t</form>\r\n");
 	ffile_puts(fd, "\t\t<table id=\"dirlisting\" summary=\"Directory Listing\">\r\n");
 	ffile_puts(fd, "\t\t\t<tr><td><b>type</b></td><td><b>filename</b></td><td><b>size</b></td><td><b>date</b></td></tr>\r\n");
@@ -778,7 +791,7 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 		struct tm time;
 		const char *type;
 
-		if (text_is_dot_name(entry->d_name)) {
+		if (cavan_path_is_dot_name(entry->d_name)) {
 			continue;
 		}
 
@@ -952,7 +965,7 @@ ssize_t cavan_http_file_receive(struct cavan_fifo *fifo, const char *dirname, co
 		return -EINVAL;
 	}
 
-	text_path_cat(pathname, sizeof(pathname), dirname, filename);
+	cavan_path_cat(pathname, sizeof(pathname), dirname, filename, false);
 	pd_info("pathname = %s", pathname);
 
 	fd = open(pathname, O_WRONLY | O_CREAT | O_TRUNC, 0777);

@@ -880,7 +880,7 @@ static int cavan_ext4_find_file(struct cavan_ext4_fs *fs, struct cavan_ext4_file
 			println("symlink = %s", symlink);
 
 			if (*pathname) {
-				text_path_cat(symlink + rdlen, PATH_MAX - rdlen, NULL, pathname);
+				cavan_path_cat(symlink + rdlen, PATH_MAX - rdlen, NULL, pathname, false);
 				println("%s -> %s", pathname, symlink);
 			}
 

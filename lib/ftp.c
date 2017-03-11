@@ -126,7 +126,7 @@ static int ftp_list_directory1(const char *dirpath, const char *newline)
 		goto out_closedir;
 	}
 
-	filename = text_path_cat(pathname, sizeof(pathname), dirpath, NULL);
+	filename = cavan_path_copy(pathname, sizeof(pathname), dirpath, true);
 
 	while ((ep = readdir(dp))) {
 		char *p;
@@ -169,7 +169,7 @@ static char *ftp_get_abs_path(const char *curr_path, const char *path, char *abs
 	if (*path == '/') {
 		text_ncopy(abs_path, path, size);
 	} else {
-		text_path_cat(abs_path, size, curr_path, path);
+		cavan_path_cat(abs_path, size, curr_path, path, false);
 	}
 
 #if FTP_DEBUG
@@ -377,7 +377,7 @@ static int ftp_service_cmdline(struct cavan_ftp_service *ftp_service, struct cav
 						break;
 					}
 
-					prettify_pathname_base(abs_path, curr_path, sizeof(curr_path));
+					cavan_path_prettify_base(abs_path, curr_path, sizeof(curr_path));
 				} else {
 					text_copy(curr_path, ftp_service->home);
 				}

@@ -78,12 +78,12 @@ int main(int argc, char *argv[])
 		port = cavan_get_server_port(TFTP_DD_DEFAULT_PORT);
 	}
 
-	p_name = text_path_cat(temp_name, sizeof(temp_name), argv[--argc], NULL);
+	p_name = cavan_path_copy(temp_name, sizeof(temp_name), argv[--argc], true);
 
 	for (i = optind; i < argc; i++) {
 		int ret;
 
-		text_basename_base(p_name, argv[i]);
+		cavan_path_basename(p_name, argv[i]);
 
 		ret = tftp_handle(hostname, port, argv[i], temp_name);
 		if (ret < 0) {

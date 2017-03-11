@@ -443,7 +443,7 @@ int cavan_exec_command(const char *command, int argc, char *argv[])
 	int ret;
 	const struct cavan_builtin_command *desc;
 	const char *shell = cavan_get_shell_path();
-	const char *name = text_basename_simple(shell);
+	const char *name = cavan_path_basename_simple(shell);
 
 	cavan_exec_set_oom_adj2(0, 0);
 
@@ -606,7 +606,7 @@ int cavan_exec_set_oom_adj(const char *dirname, int value)
 
 	length = value2text_simple(value, buff, sizeof(buff), 10) - buff;
 
-	filename = text_path_cat(pathname, sizeof(pathname), dirname, NULL);
+	filename = cavan_path_copy(pathname, sizeof(pathname), dirname, true);
 	strcpy(filename, "oom_score_adj");
 
 	wrlen = file_write(pathname, buff, length);

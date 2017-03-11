@@ -88,7 +88,7 @@ pid_t process_find_by_cmdline(const char *proc_path, const char *cmdline)
 	}
 
 	pid = -1;
-	p_name = text_path_cat(pathname, sizeof(pathname), proc_path, NULL);
+	p_name = cavan_path_copy(pathname, sizeof(pathname), proc_path, true);
 
 	while ((en = readdir(dir_proc))) {
 		char buff[1024];

@@ -87,8 +87,8 @@ int cavan_inotify_register_watch(struct cavan_inotify_descriptor *desc, const ch
 			int ret;
 			char fullpath[1024];
 
-			text_path_cat(fullpath, sizeof(fullpath), pathname, dt->d_name);
-			if (file_is_directory(fullpath)) {
+			cavan_path_cat(fullpath, sizeof(fullpath), pathname, dt->d_name, false);
+			if (dt->d_type == DT_DIR) {
 				ret = cavan_inotify_register_watch(desc, fullpath, mask);
 				if (ret < 0) {
 					pr_red_info("cavan_inotify_register_watch: %d", ret);

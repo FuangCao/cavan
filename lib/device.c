@@ -104,7 +104,7 @@ int umount_partition(const char *dev_path, int flags)
 		ERROR_RETURN(EINVAL);
 	}
 
-	if (to_abs_path2_base(dev_path, abs_path, sizeof(abs_path)) == NULL) {
+	if (cavan_path_to_abs_base2(dev_path, abs_path, sizeof(abs_path)) == NULL) {
 		ERROR_RETURN(ENOENT);
 	}
 
@@ -214,7 +214,7 @@ int device_is_mounted(const char *dev_path)
 {
 	char abs_path[1024];
 
-	if (to_abs_path2_base(dev_path, abs_path, sizeof(abs_path)) == NULL) {
+	if (cavan_path_to_abs_base2(dev_path, abs_path, sizeof(abs_path)) == NULL) {
 		pr_err_info("path \"%s\" do't exist", dev_path);
 		ERROR_RETURN(ENOENT);
 	}
@@ -240,7 +240,7 @@ int umount_device(const char *dev_path, int flags)
 		}
 	}
 
-	if (to_abs_path2_base(dev_path, abs_path, sizeof(abs_path)) == NULL) {
+	if (cavan_path_to_abs_base2(dev_path, abs_path, sizeof(abs_path)) == NULL) {
 		pr_err_info("path \"%s\" do't exist", dev_path);
 		ERROR_RETURN(ENOENT);
 	}
@@ -310,7 +310,7 @@ int umount_main(const char *pathname, int flags)
 		if (file_test(abs_path, "e") < 0) {
 			sprintf(abs_path, "/dev/%s", pathname);
 		}
-	} else if (to_abs_path2_base(pathname, abs_path, sizeof(abs_path)) == NULL) {
+	} else if (cavan_path_to_abs_base2(pathname, abs_path, sizeof(abs_path)) == NULL) {
 		pr_err_info("path \"%s\" do't exist", pathname);
 		ERROR_RETURN(ENOENT);
 	}
@@ -480,7 +480,7 @@ int partition_is_mounted(const char *source, const char *target)
 {
 	char mnt_point[1024];
 
-	if (to_abs_path2_base(target, mnt_point, sizeof(mnt_point)) == NULL) {
+	if (cavan_path_to_abs_base2(target, mnt_point, sizeof(mnt_point)) == NULL) {
 		return 0;
 	}
 
@@ -607,7 +607,7 @@ int mount_main(const char *mnt_dev, const char *mnt_point, const char *fstype, c
 
 		ret = partition_read_label_auto(mnt_dev, part_label, sizeof(part_label));
 		if (ret < 0 || part_label[0] == 0) {
-			text_basename_base(text_copy(target, "/mnt/"), mnt_dev);
+			cavan_path_basename(text_copy(target, "/mnt/"), mnt_dev);
 		} else {
 			sprintf(target, "/mnt/%s", part_label);
 		}
@@ -1537,7 +1537,7 @@ char *get_mount_source_base(const char *target, char *buff, size_t size)
 	ssize_t mtab_size;
 	char target_abs[1024];
 
-	if (to_abs_path_directory_base(target, target_abs, sizeof(target_abs)) == NULL) {
+	if (cavan_path_to_abs_directory_base(target, target_abs, sizeof(target_abs)) == NULL) {
 		return NULL;
 	}
 
@@ -1583,7 +1583,7 @@ char *get_mount_target_base(const char *source, char *buff, size_t size)
 	ssize_t mtab_size;
 	char source_abs[1024];
 
-	if (to_abs_path2_base(source, source_abs, sizeof(source_abs)) == NULL) {
+	if (cavan_path_to_abs_base2(source, source_abs, sizeof(source_abs)) == NULL) {
 		return NULL;
 	}
 
@@ -1631,7 +1631,7 @@ int loop_get_fd(const char *filename, char *loop_path, u64 offset)
 	char *p;
 	char file_abs_path[1024];
 
-	if (to_abs_path2_base(filename, file_abs_path, sizeof(file_abs_path)) == NULL) {
+	if (cavan_path_to_abs_base2(filename, file_abs_path, sizeof(file_abs_path)) == NULL) {
 		ERROR_RETURN(ENOENT);
 	}
 
@@ -1748,7 +1748,7 @@ int device_is_mmc(const char *dev_path)
 {
 	char dev_name[64];
 
-	text_basename_base(dev_name, dev_path);
+	cavan_path_basename(dev_name, dev_path);
 
 	return text_lhcmp("mmcblk", dev_name) == 0;
 }

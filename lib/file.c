@@ -136,7 +136,7 @@ int file_split(const char *file_name, const char *dest_dir, size_t size, int cou
 		}
 	}
 
-	dest_filename = text_path_cat(dest_pathname, sizeof(dest_pathname), dest_dir, text_basename(file_name));
+	dest_filename = cavan_path_cat(dest_pathname, sizeof(dest_pathname), dest_dir, cavan_path_basename_simple(file_name), false);
 
 	for (i = 1; remain_size; i++) {
 		ssize_t cpylen;
@@ -417,7 +417,7 @@ int mkdir_all(const char *pathname)
 		return 0;
 	}
 
-	text_dirname_base(dir_name, pathname);
+	cavan_path_dirname_base(dir_name, pathname);
 	ret = mkdir_all(dir_name);
 	if (ret < 0) {
 		pr_err_info("create directory \"%s\" failed", dir_name);
@@ -570,7 +570,7 @@ int file_create_open(const char *pathname, int flags, mode_t mode)
 		return ret;
 	}
 
-	ret = mkdir_hierarchy(text_dirname(pathname), mode);
+	ret = mkdir_hierarchy(cavan_path_dirname(pathname), mode);
 	if (ret < 0) {
 		return ret;
 	}
@@ -1968,7 +1968,7 @@ int file_set_loop(const char *filename, char *loop_path, u64 offset)
 	}
 
 	mem_set8((u8 *) &loopinfo, 0, sizeof(loopinfo));
-	if (to_abs_path2_base(filename, (char *) loopinfo.lo_file_name, sizeof(loopinfo.lo_file_name)) == NULL) {
+	if (cavan_path_to_abs_base2(filename, (char *) loopinfo.lo_file_name, sizeof(loopinfo.lo_file_name)) == NULL) {
 		ret = -ENOENT;
 		goto out_close_loop;
 	}
@@ -2130,7 +2130,7 @@ int file_hardlink(const char *from, const char *to)
 
 	remove(from);
 
-	ret = mkdir_hierarchy(text_dirname(from), 0777);
+	ret = mkdir_hierarchy(cavan_path_dirname(from), 0777);
 	if (ret < 0) {
 		return ret;
 	}
@@ -2323,10 +2323,10 @@ int remove_directory(const char *pathname)
 		return -ENOENT;
 	}
 
-	name_p = text_path_cat(tmppath, sizeof(tmppath), pathname, NULL);
+	name_p = cavan_path_copy(tmppath, sizeof(tmppath), pathname, true);
 
 	while ((en = readdir(dp))) {
-		if (text_is_dot_name(en->d_name)) {
+		if (cavan_path_is_dot_name(en->d_name)) {
 			continue;
 		}
 
@@ -2416,7 +2416,7 @@ size_t fscan_directory1(DIR *dp, void *buff, size_t size)
 	size = 0;
 
 	while (buff < buff_end && (en = readdir(dp))) {
-		if (text_is_dot_name(en->d_name)) {
+		if (cavan_path_is_dot_name(en->d_name)) {
 			continue;
 		}
 
@@ -2436,7 +2436,7 @@ size_t fscan_directory2(DIR *dp, void *buff, size_t size1, size_t size2)
 	size1 = 0;
 
 	while (buff < buff_end && (en = readdir(dp))) {
-		if (text_is_dot_name(en->d_name)) {
+		if (cavan_path_is_dot_name(en->d_name)) {
 			continue;
 		}
 
@@ -2749,7 +2749,7 @@ int cavan_mkdir_simple(const char *pathname, struct cavan_mkdir_command_option *
 		return 0;
 	}
 
-	filename = text_dirname_base(buff, pathname);
+	filename = cavan_path_dirname_base(buff, pathname);
 	*filename = '/';
 	text_copy(filename + 1, CAVAN_TEMP_FILENAME);
 
@@ -3297,12 +3297,12 @@ int cavan_symlink(const char *target, const char *linkpath)
 		char pathname[1024];
 		const char *filename;
 
-		filename = text_basename_simple(target);
+		filename = cavan_path_basename_simple(target);
 		if (filename == NULL) {
 			return -EFAULT;
 		}
 
-		text_path_cat(pathname, sizeof(pathname), linkpath, filename);
+		cavan_path_cat(pathname, sizeof(pathname), linkpath, filename, false);
 
 		return symlink(target, pathname);
 	}

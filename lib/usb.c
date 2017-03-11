@@ -487,7 +487,7 @@ int cavan_find_usb_device(const char *dev_path, struct cavan_usb_descriptor *des
 		return 0;
 	}
 
-	p1 = text_path_cat(tmp_path, sizeof(tmp_path), USB_DEVICE_DIR, NULL);
+	p1 = cavan_path_copy(tmp_path, sizeof(tmp_path), USB_DEVICE_DIR, true);
 
 	dir1 = opendir(tmp_path);
 	if (dir1 == NULL) {
@@ -496,7 +496,7 @@ int cavan_find_usb_device(const char *dev_path, struct cavan_usb_descriptor *des
 	}
 
 	while ((dt = readdir(dir1))) {
-		if (text_is_dot_name(dt->d_name)) {
+		if (cavan_path_is_dot_name(dt->d_name)) {
 			continue;
 		}
 
@@ -511,7 +511,7 @@ int cavan_find_usb_device(const char *dev_path, struct cavan_usb_descriptor *des
 		p2 = text_copy(p2, "/");
 
 		while ((dt = readdir(dir2))) {
-			if (text_is_dot_name(dt->d_name)) {
+			if (cavan_path_is_dot_name(dt->d_name)) {
 				continue;
 			}
 

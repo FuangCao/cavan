@@ -20,7 +20,7 @@ static int cavan_inotify_event_handle(struct cavan_inotify_descriptor *desc, str
 
 	if (event->len > 0) {
 		pathname = buff;
-		text_path_cat(buff, sizeof(buff), watch->pathname, event->name);
+		cavan_path_cat(buff, sizeof(buff), watch->pathname, event->name, false);
 	} else {
 		pathname = watch->pathname;
 	}

@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
 				const char *pathname;
 
 				if (file_type_test(argv[3], S_IFDIR)) {
-					text_basename_base(text_path_cat(path_buff, sizeof(path_buff), argv[3], NULL), argv[2]);
+					cavan_path_basename(cavan_path_copy(path_buff, sizeof(path_buff), argv[3], true), argv[2]);
 					pathname = path_buff;
 				} else {
 					pathname = argv[3];
