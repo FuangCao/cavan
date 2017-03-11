@@ -777,6 +777,7 @@ int cavan_http_write_path_hrefs(int fd, const char *pathname)
 
 int cavan_http_list_directory(struct network_client *client, const char *dirname)
 {
+	int i;
 	int fd;
 	DIR *dp;
 	int ret;
@@ -809,7 +810,7 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 		goto out_closedir;
 	}
 
-	ffile_puts(fd, "</h5>\r\n\t\t<h5>[<a href=\"..\">Parent</a>] [<a href=\"/\">Root</a>]");
+	ffile_puts(fd, "</h5>\r\n\t\t<h5>[<a href=\"..\">Parent</a>]");
 
 	env = cavan_getenv("HOME", NULL);
 	if (env != NULL) {
@@ -824,6 +825,19 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 	env = cavan_getenv("APP_PATH", NULL);
 	if (env != NULL) {
 		ffile_printf(fd, " [<a href=\"%s/\">App</a>]", env);
+	}
+
+	for (i = 0; i < 10; i++) {
+		char key[64];
+
+		snprintf(key, sizeof(key), "SDCARD%d_PATH", i);
+
+		env = cavan_getenv(key, NULL);
+		if (env == NULL) {
+			break;
+		}
+
+		ffile_printf(fd, " [<a href=\"%s/\">SDcard%d</a>]", env, i);
 	}
 
 	ffile_puts(fd, "</h5>\r\n\t\t<form enctype=\"multipart/form-data\" action=\".\" method=\"post\">\r\n");

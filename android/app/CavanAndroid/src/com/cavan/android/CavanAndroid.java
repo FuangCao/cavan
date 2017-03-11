@@ -35,6 +35,7 @@ import android.os.Environment;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.os.storage.StorageManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
@@ -695,5 +696,14 @@ public class CavanAndroid {
 
 	public static File getExternalStorageFile(String name) {
 		return new File(Environment.getExternalStorageDirectory(), name);
+	}
+
+	public static String[] getVolumePaths(StorageManager manager) {
+		Object object = CavanJava.invokeMethod(manager, "getVolumePaths");
+		if (object != null) {
+			return (String[]) object;
+		}
+
+		return new String[] { Environment.getExternalStorageDirectory().getPath() };
 	}
 }
