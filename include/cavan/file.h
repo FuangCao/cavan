@@ -331,6 +331,11 @@ static inline ssize_t ffile_puts(int fd, const char *text)
 	return ffile_write(fd, text, text_len(text));
 }
 
+static inline ssize_t ffile_putchar(int fd, char c)
+{
+	return ffile_write(fd, &c, 1);
+}
+
 static inline ssize_t file_puts(const char *filename, const char *text)
 {
 	return file_writeto(filename, text, text_len(text), 0, 0);

@@ -2872,7 +2872,7 @@ int cavan_temp_file_open(char *pathname, size_t size, const char *filename, bool
 {
 	int fd;
 
-	cavan_build_temp_path(filename, pathname, size);
+	cavan_path_build_tmp_path(filename, pathname, size);
 
 	fd = mkstemp(pathname);
 	if (fd < 0) {

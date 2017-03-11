@@ -21,7 +21,7 @@
 #include <cavan/http.h>
 #include <cavan/web_proxy.h>
 
-#define CAVAN_HTTP_DEBUG	1
+#define CAVAN_HTTP_DEBUG	0
 
 void cavan_http_dump_prop(const struct cavan_http_prop *prop)
 {
@@ -569,7 +569,7 @@ int cavan_http_open_html_file(const char *title, char *pathname)
 		pathname = buff;
 	}
 
-	cavan_build_temp_path("cavan-XXXXXX", pathname, sizeof(buff));
+	cavan_path_build_tmp_path("cavan-XXXXXX", pathname, sizeof(buff));
 	fd = mkstemp(pathname);
 	if (fd < 0) {
 		pr_error_info("mkstemp `%s'", pathname);
@@ -722,9 +722,57 @@ int cavan_http_send_file3(struct network_client *client, const char *pathname, c
 	return cavan_http_send_file2(client, pathname, NULL, start, length);
 }
 
-int cavan_http_write_path_href(int fd, const char *pathname)
+int cavan_http_write_path_href(int fd, const char *pathname, size_t psize, const char *name, size_t nsize)
 {
-	return ffile_printf(fd, "<a href=\"%s\">%s</a>", pathname, pathname);
+	int ret;
+
+	ret = ffile_puts(fd, "<a href=\"");
+	ret |= ffile_write(fd, pathname, psize);
+	ret |= ffile_puts(fd, "\">");
+	ret |= ffile_write(fd, name, nsize);
+	ret |= ffile_puts(fd, "</a>");
+
+	return ret;
+}
+
+int cavan_http_write_path_href2(int fd, const char *pathname, const char *name)
+{
+	return cavan_http_write_path_href(fd, pathname, strlen(pathname), name, strlen(name));
+}
+
+int cavan_http_write_path_hrefs(int fd, const char *pathname)
+{
+	int ret = 0;
+	const char *p = pathname;
+	const char *filename = pathname;
+
+	while (1) {
+		switch (*p) {
+		case 0:
+			if (p > filename) {
+				return cavan_http_write_path_href(fd, pathname, p - pathname, filename, p - filename);
+			}
+			return 0;
+
+		case '/':
+			if (p > filename) {
+				ret |= cavan_http_write_path_href(fd, pathname, p - pathname + 1, filename, p - filename);
+				ret |= ffile_putchar(fd, '/');
+			} else if (p == pathname) {
+				ret |= cavan_http_write_path_href2(fd, "/", "ROOT");
+				ret |= ffile_putchar(fd, '/');
+			}
+
+			if (ret < 0) {
+				return ret;
+			}
+
+			filename = p + 1;
+			break;
+		}
+
+		p++;
+	}
 }
 
 int cavan_http_list_directory(struct network_client *client, const char *dirname)
@@ -755,21 +803,20 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 
 	filename = cavan_path_copy(pathname, sizeof(pathname), dirname, true);
 
-	ret = cavan_http_write_path_href(fd, pathname);
+	ret = cavan_http_write_path_hrefs(fd, pathname);
 	if (ret < 0) {
 		pr_red_info("cavan_http_write_path_html: %d", ret);
 		goto out_closedir;
 	}
 
-	ffile_puts(fd, "</h5>\r\n");
-	ffile_puts(fd, "\t\t<h5>[<a href=\"..\">Parent</a>] [<a href=\"/\">Root</a>]");
+	ffile_puts(fd, "</h5>\r\n\t\t<h5>[<a href=\"..\">Parent</a>] [<a href=\"/\">Root</a>]");
 
 	env = cavan_getenv("HOME", NULL);
 	if (env != NULL) {
 		ffile_printf(fd, " [<a href=\"%s/\">Home</a>]", env);
 	}
 
-	env = cavan_get_temp_path();
+	env = cavan_path_get_tmp_directory();
 	if (env != NULL) {
 		ffile_printf(fd, " [<a href=\"%s/\">Temp</a>]", env);
 	}

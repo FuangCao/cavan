@@ -20,6 +20,68 @@
 #include <cavan.h>
 #include <cavan/path.h>
 
+const char *cavan_tmp_path;
+
+const char *cavan_path_get_tmp_directory_force(void)
+{
+	int i;
+	const char *path_envs[] = { "TMP_PATH", "CACHE_PATH", "HOME" };
+	const char *paths[] = { "/tmp", "/data/local/tmp", "/dev", "/data", "/cache" };
+
+	for (i = 0; i < NELEM(paths); i++) {
+		if (file_access_w(paths[i])) {
+			return paths[i];
+		}
+	}
+
+	for (i = 0; i < NELEM(path_envs); i++) {
+		const char *path = getenv(path_envs[i]);
+		if (path && file_access_w(path)) {
+			return path;
+		}
+	}
+
+	return paths[0];
+}
+
+const char *cavan_path_get_tmp_directory(void)
+{
+	if (cavan_tmp_path) {
+		return cavan_tmp_path;
+	}
+
+	cavan_tmp_path = cavan_path_get_tmp_directory_force();
+
+	return cavan_tmp_path;
+}
+
+const char *cavan_path_build_tmp_path(const char *filename, char *buff, size_t size)
+{
+	const char *dirname = cavan_path_get_tmp_directory();
+	char *p = cavan_path_cat(buff, size, dirname, filename, false) - 1;
+
+	while (p >= buff) {
+		if (*p == '/') {
+			int ret;
+
+			*p = 0;
+
+			ret = mkdir_hierarchy_length(buff, p - buff, 0777);
+			if (ret < 0) {
+				pd_err_info("mkdir_hierarchy_length: %d", ret);
+				return NULL;
+			}
+
+			*p = '/';
+			break;
+		}
+
+		p--;
+	}
+
+	return buff;
+}
+
 int cavan_path_is_dot_name(const char *filename)
 {
 	if (*filename != '.') {

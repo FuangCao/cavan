@@ -22,7 +22,7 @@ const char *network_get_socket_pathname(void)
 		return pathname;
 	}
 
-	return cavan_build_temp_path("cavan/network/socket", pathname, sizeof(pathname));
+	return cavan_path_build_tmp_path("cavan/network/socket", pathname, sizeof(pathname));
 #else
 	return "/dev/cavan/network/socket";
 #endif

@@ -21,6 +21,12 @@
 
 #include <cavan.h>
 
+extern const char *cavan_tmp_path;
+
+const char *cavan_path_get_tmp_directory_force(void);
+const char *cavan_path_get_tmp_directory(void);
+const char *cavan_path_build_tmp_path(const char *filename, char *buff, size_t size);
+
 int cavan_path_is_dot_name(const char *filename);
 int cavan_path_not_dot_name(const char *filename);
 

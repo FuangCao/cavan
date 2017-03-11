@@ -1276,7 +1276,7 @@ static void tcp_dd_apk_clean_handler(void *data)
 {
 	char pathname[1024];
 
-	cavan_build_temp_path(TCP_DD_APK_CACHE_NAME, pathname, sizeof(pathname));
+	cavan_path_build_tmp_path(TCP_DD_APK_CACHE_NAME, pathname, sizeof(pathname));
 	pd_info("remove directory: %s", pathname);
 	remove_directory(pathname);
 }

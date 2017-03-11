@@ -6,8 +6,6 @@
 
 #define MAX_BUFF_LEN	KB(4)
 
-const char *cavan_temp_path;
-
 static int console_fd = -1;
 static struct termios tty_attr;
 
@@ -784,66 +782,6 @@ bool cavan_get_choose_yesno_format(bool def_choose, int timeout_ms, const char *
 	va_end(ap);
 
 	return cavan_get_choose_yesno(buff, def_choose, timeout_ms);
-}
-
-const char *cavan_get_temp_path_force(void)
-{
-	int i;
-	const char *path_envs[] = { "TMP_PATH", "CACHE_PATH", "HOME" };
-	const char *paths[] = { "/tmp", "/data/local/tmp", "/dev", "/data", "/cache" };
-
-	for (i = 0; i < NELEM(paths); i++) {
-		if (file_access_w(paths[i])) {
-			return paths[i];
-		}
-	}
-
-	for (i = 0; i < NELEM(path_envs); i++) {
-		const char *path = getenv(path_envs[i]);
-		if (path && file_access_w(path)) {
-			return path;
-		}
-	}
-
-	return paths[0];
-}
-
-const char *cavan_get_temp_path(void)
-{
-	if (cavan_temp_path) {
-		return cavan_temp_path;
-	}
-
-	cavan_temp_path = cavan_get_temp_path_force();
-
-	return cavan_temp_path;
-}
-
-const char *cavan_build_temp_path(const char *filename, char *buff, size_t size)
-{
-	const char *dirname = cavan_get_temp_path();
-	char *p = cavan_path_cat(buff, size, dirname, filename, false) - 1;
-
-	while (p >= buff) {
-		if (*p == '/') {
-			int ret;
-
-			*p = 0;
-
-			ret = mkdir_hierarchy_length(buff, p - buff, 0777);
-			if (ret < 0) {
-				pd_err_info("mkdir_hierarchy_length: %d", ret);
-				return NULL;
-			}
-
-			*p = '/';
-			break;
-		}
-
-		p--;
-	}
-
-	return buff;
 }
 
 int cavan_stdio_redirect1(int ttyfds[3])

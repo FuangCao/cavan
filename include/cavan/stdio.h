@@ -545,8 +545,6 @@ using namespace std;
 
 __BEGIN_DECLS
 
-extern const char *cavan_temp_path;
-
 FILE *cavan_stdio_tty_open(void);
 void cavan_stdio_tty_close(void);
 int cavan_stdio_tty_getchar(void);
@@ -621,9 +619,6 @@ __printf_format_23__ void print_color_text(int color, const char *fmt, ...);
 __printf_format_12__ void print_error_base(const char *fmt, ...);
 
 extern char *size2text(u64 size);
-const char *cavan_get_temp_path_force(void);
-const char *cavan_get_temp_path(void);
-const char *cavan_build_temp_path(const char *filename, char *buff, size_t size);
 bool cavan_get_choose_yesno(const char *prompt, bool def_value, int timeout_ms);
 __printf_format_34__ bool cavan_get_choose_yesno_format(bool def_choose, int timeout_ms, const char *format, ...);
 
