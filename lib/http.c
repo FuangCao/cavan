@@ -69,7 +69,7 @@ struct cavan_http_request *cavan_http_request_alloc(size_t mem_size, size_t prop
 	req->mem_size = mem_size;
 	req->mem_used = 0;
 
-	req->props = (struct cavan_http_prop *) req->mem + mem_size;
+	req->props = (struct cavan_http_prop *) (req->mem + mem_size);
 	req->prop_size = prop_size;
 	req->prop_used = 0;
 
@@ -485,7 +485,8 @@ int cavan_http_read_props(struct cavan_fifo *fifo, struct cavan_http_request *re
 {
 	int rdlen;
 	struct cavan_http_prop *prop, *prop_end;
-	char *mem = req->mem + req->mem_used, *mem_end = mem + req->mem_size;
+	char *mem = req->mem + req->mem_used;
+	char *mem_end = req->mem + req->mem_size;
 
 	for (prop = req->props, prop_end = prop + req->prop_size; prop < prop_end; prop++) {
 		rdlen = cavan_fifo_read_line_strip(fifo, mem, mem_end - mem);
