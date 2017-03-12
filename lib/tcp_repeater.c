@@ -48,10 +48,19 @@ static void tcp_repeater_close_connect(struct cavan_dynamic_service *service, vo
 
 static int cavan_tcp_repeater_run_handler(struct cavan_dynamic_service *service, void *_conn)
 {
+	int ret;
+	struct cavan_fifo fifo;
 	struct cavan_tcp_repeater_conn *head;
 	struct cavan_tcp_repeater_conn *conn = _conn;
-	struct network_client *client = &conn->client;
 	struct cavan_tcp_repeater *repeater = cavan_dynamic_service_get_data(service);
+
+	ret = cavan_fifo_init(&fifo, 1024, &conn->client);
+	if (ret < 0) {
+		pr_red_info("cavan_fifo_init: %d", ret);
+		return ret;
+	}
+
+	fifo.read = network_client_fifo_read;
 
 	cavan_dynamic_service_lock(service);
 
@@ -71,29 +80,28 @@ static int cavan_tcp_repeater_run_handler(struct cavan_dynamic_service *service,
 	cavan_dynamic_service_unlock(service);
 
 	while (1) {
-		u16 length;
-		char *p, buff[1024];
+		int rdlen;
+		char buff[1024];
 
-		p = network_client_recv_line(client, buff, sizeof(buff));
-		if (p == NULL) {
+		rdlen = cavan_fifo_read_line(&fifo, buff, sizeof(buff));
+		if (rdlen <= 0) {
 			break;
 		}
 
-		length = p - buff + 1;
+		buff[rdlen] = 0;
 
 		cavan_dynamic_service_lock(service);
 
 		for (head = conn->next; head != conn; head = head->next) {
-			int wrlen = head->client.send(&head->client, buff, length);
-			if (wrlen < length) {
+			int wrlen = head->client.send(&head->client, buff, rdlen);
+			if (wrlen < rdlen) {
 				network_client_close(&head->client);
 			}
 		}
 
 		cavan_dynamic_service_unlock(service);
 
-		*p = 0;
-		pd_info("buff[%d] = %s", length, buff);
+		pd_info("buff[%d] = %s", rdlen, buff);
 	}
 
 	cavan_dynamic_service_lock(service);
@@ -110,6 +118,7 @@ static int cavan_tcp_repeater_run_handler(struct cavan_dynamic_service *service,
 	}
 
 	cavan_dynamic_service_unlock(service);
+	cavan_fifo_deinit(&fifo);
 
 	return 0;
 }
@@ -117,7 +126,7 @@ static int cavan_tcp_repeater_run_handler(struct cavan_dynamic_service *service,
 int cavan_tcp_repeater_run(struct cavan_dynamic_service *service)
 {
 	service->name = "TCP_REPEATER";
-	service->conn_size = sizeof(struct network_client);
+	service->conn_size = sizeof(struct cavan_tcp_repeater_conn);
 	service->start = tcp_repeater_start_handler;
 	service->stop = tcp_repeater_stop_handler;
 	service->run = cavan_tcp_repeater_run_handler;
