@@ -2806,7 +2806,7 @@ const char *text_fixup_null(const char *text, const char *text_null)
 	return text;
 }
 
-const char *text_fixup_null2(const char *text)
+const char *text_fixup_null_simple(const char *text)
 {
 	return text_fixup_null(text, "");
 }
@@ -2820,7 +2820,7 @@ const char *text_fixup_empty(const char *text, const char *text_empty)
 	return text;
 }
 
-const char *text_fixup_empty2(const char *text)
+const char *text_fixup_empty_simple(const char *text)
 {
 	return text_fixup_empty(text, NULL);
 }

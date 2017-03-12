@@ -342,7 +342,7 @@ const struct cavan_http_prop *cavan_http_find_prop(const struct cavan_http_prop 
 	return NULL;
 }
 
-const char *cavan_http_find_prop2(const struct cavan_http_prop *props, size_t size, const char *key)
+const char *cavan_http_find_prop_simple(const struct cavan_http_prop *props, size_t size, const char *key)
 {
 	const struct cavan_http_prop *prop_end;
 
@@ -687,7 +687,7 @@ int cavan_http_send_file3(struct network_client *client, const char *pathname, c
 	const char *range;
 	size_t start, length;
 
-	range = cavan_http_find_prop2(props, size, "Range");
+	range = cavan_http_find_prop_simple(props, size, "Range");
 	if (range == NULL) {
 		start = length = 0;
 	} else {
@@ -813,7 +813,6 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 	ffile_puts(fd, "\t\t\treturn false;\r\n");
 	ffile_puts(fd, "\t\t}\r\n");
 	ffile_puts(fd, "\t\t</script>\r\n");
-
 	ffile_puts(fd, "\t\t<h5>Current directory: ");
 
 	filename = cavan_path_copy(pathname, sizeof(pathname), dirname, true);
@@ -859,13 +858,13 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 	ffile_puts(fd, "\t\t\t<input id=\"upload\" name=\"pathname\" type=\"file\">\r\n");
 	ffile_puts(fd, "\t\t</form>\r\n");
 	ffile_puts(fd, "\t\t<form method=\"get\">\r\n");
-	ffile_printf(fd, "\t\t\t<input name=\"filter\" type=\"text\" value=\"%s\">\r\n", text_fixup_null2(filter));
+	ffile_printf(fd, "\t\t\t<input name=\"filter\" type=\"text\" value=\"%s\">\r\n", text_fixup_null_simple(filter));
 	ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"Search\">\r\n");
 	ffile_puts(fd, "\t\t</form>\r\n");
 	ffile_puts(fd, "\t\t<table id=\"dirlisting\" summary=\"Directory Listing\">\r\n");
 	ffile_puts(fd, "\t\t\t<tr><td><b>type</b></td><td><b>filename</b></td><td><b>size</b></td><td><b>date</b></td></tr>\r\n");
 
-	filter = text_fixup_empty2(filter);
+	filter = text_fixup_empty_simple(filter);
 
 	while ((entry = readdir(dp))) {
 		char buff[32];
@@ -973,7 +972,7 @@ int cavan_http_process_get(struct network_client *client, struct cavan_http_requ
 		return cavan_http_send_file3(client, req->url, req->props, req->prop_used);
 
 	case S_IFDIR:
-		return cavan_http_list_directory(client, req->url, cavan_http_request_find_param2(req, "filter"));
+		return cavan_http_list_directory(client, req->url, cavan_http_request_find_param_simple(req, "filter"));
 
 	default:
 		cavan_http_send_reply(client, 403, "Invalid file type");
@@ -1006,7 +1005,7 @@ int cavan_http_read_multiform_header(struct cavan_fifo *fifo, struct cavan_http_
 		return ret;
 	}
 
-	disposition = cavan_http_request_find_prop2(header, "Content-Disposition");
+	disposition = cavan_http_request_find_prop_simple(header, "Content-Disposition");
 
 #if CAVAN_HTTP_DEBUG
 	pd_info("Content-Description = %s", disposition);
@@ -1025,7 +1024,9 @@ ssize_t cavan_http_file_receive(struct cavan_fifo *fifo, const char *dirname, co
 	int ret;
 	size_t total;
 	char pathname[1024];
+	char *pathname_end;
 	const char *filename;
+	const char *mime_type;
 	struct cavan_http_request *header;
 
 	header = cavan_http_request_alloc(1024, 10, 5);
@@ -1044,13 +1045,18 @@ ssize_t cavan_http_file_receive(struct cavan_fifo *fifo, const char *dirname, co
 	cavan_http_dump_request(header);
 #endif
 
-	filename = cavan_http_request_find_param2(header, "filename");
+	mime_type = cavan_http_request_find_prop_simple(header, "Content-Type");
+	println("mime_type = %s", mime_type);
+
+	filename = cavan_http_request_find_param_simple(header, "filename");
 	if (filename == NULL || filename[0] == 0) {
 		pr_red_info("filename not found");
 		return -EINVAL;
 	}
 
-	cavan_path_cat(pathname, sizeof(pathname), dirname, filename, false);
+	pathname_end = cavan_path_cat(pathname, sizeof(pathname), dirname, filename, false);
+	strcpy(pathname_end, ".cavan.cache");
+
 	pd_info("pathname = %s", pathname);
 
 	fd = open(pathname, O_WRONLY | O_CREAT | O_TRUNC, 0777);
@@ -1099,25 +1105,29 @@ ssize_t cavan_http_file_receive(struct cavan_fifo *fifo, const char *dirname, co
 		}
 	}
 
-	ret = 0;
-
-out_close_fd:
 	close(fd);
 
+	ret = cavan_rename_part(pathname, NULL, pathname_end);
+	if (ret < 0) {
+		pr_err_info("cavan_rename_part: %d", ret);
+		goto out_unlink_pathname;
+	}
+
+	*pathname_end = 0;
+	pd_info("pathname = %s", pathname);
+
 #ifdef CONFIG_ANDROID
-	if (ret >= 0) {
-		const char *type = cavan_http_request_find_prop2(header, "Content-Type");
-
-#if CAVAN_HTTP_DEBUG
-		pd_info("type = %s", type);
-#endif
-
-		if (type != NULL && strcmp(type, "application/vnd.android.package-archive") == 0) {
-			cavan_system2("pm install -r \"%s\"", pathname);
-		}
+	if (mime_type != NULL && strcmp(mime_type, "application/vnd.android.package-archive") == 0) {
+		cavan_system2("pm install -r \"%s\"", pathname);
 	}
 #endif
 
+	return 0;
+
+out_close_fd:
+	close(fd);
+out_unlink_pathname:
+	unlink(pathname);
 	return ret;
 }
 
@@ -1125,7 +1135,7 @@ char *cavan_http_get_boundary(struct cavan_http_prop *props, size_t size)
 {
 	int count;
 	struct cavan_http_prop args[2];
-	char *value = (char *) cavan_http_find_prop2(props, size, "Content-Type");
+	char *value = (char *) cavan_http_find_prop_simple(props, size, "Content-Type");
 
 #if CAVAN_HTTP_DEBUG
 	pd_info("Content-Type = %s", value);
@@ -1170,7 +1180,7 @@ int cavan_http_process_post(struct cavan_fifo *fifo, struct cavan_http_request *
 		return -EINVAL;
 	}
 
-	text = cavan_http_request_find_prop2(req, "Content-Length");
+	text = cavan_http_request_find_prop_simple(req, "Content-Length");
 	if (text != NULL) {
 		cavan_fifo_set_available(fifo, text2value_unsigned(text, NULL, 10));
 	}

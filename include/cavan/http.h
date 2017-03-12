@@ -85,7 +85,7 @@ const char *cavan_http_request_type_tostring(int type);
 size_t cavan_http_parse_request(char *req, char *req_end, struct cavan_http_prop *props, size_t size);
 size_t cavan_http_parse_prop_value(char *value, struct cavan_http_prop *props, size_t size);
 const struct cavan_http_prop *cavan_http_find_prop(const struct cavan_http_prop *props, size_t size, const char *key);
-const char *cavan_http_find_prop2(const struct cavan_http_prop *props, size_t size, const char *key);
+const char *cavan_http_find_prop_simple(const struct cavan_http_prop *props, size_t size, const char *key);
 size_t cavan_http_parse_url_param(char *url, struct cavan_http_prop *props, size_t size);
 size_t cavan_http_parse_url(char *url, struct cavan_http_prop *props, size_t size);
 char *cavan_http_get_boundary(struct cavan_http_prop *props, size_t size);
@@ -118,9 +118,9 @@ static inline const struct cavan_http_prop *cavan_http_request_find_prop(struct 
 	return cavan_http_find_prop(req->props, req->prop_used, key);
 }
 
-static inline const char *cavan_http_request_find_prop2(struct cavan_http_request *req, const char *key)
+static inline const char *cavan_http_request_find_prop_simple(struct cavan_http_request *req, const char *key)
 {
-	return cavan_http_find_prop2(req->props, req->prop_used, key);
+	return cavan_http_find_prop_simple(req->props, req->prop_used, key);
 }
 
 static inline const struct cavan_http_prop *cavan_http_request_find_param(struct cavan_http_request *req, const char *key)
@@ -128,7 +128,7 @@ static inline const struct cavan_http_prop *cavan_http_request_find_param(struct
 	return cavan_http_find_prop(req->params, req->param_used, key);
 }
 
-static inline const char *cavan_http_request_find_param2(struct cavan_http_request *req, const char *key)
+static inline const char *cavan_http_request_find_param_simple(struct cavan_http_request *req, const char *key)
 {
-	return cavan_http_find_prop2(req->params, req->param_used, key);
+	return cavan_http_find_prop_simple(req->params, req->param_used, key);
 }

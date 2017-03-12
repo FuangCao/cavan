@@ -3311,3 +3311,34 @@ int cavan_symlink(const char *target, const char *linkpath)
 
 	return symlink(target, linkpath);
 }
+
+int cavan_rename_part(const char *pathname, const char *start, const char *end)
+{
+	char buff[1024];
+	char *p = buff;
+	char *p_end = p + sizeof(buff);
+	const char *q = pathname;
+
+	while (q < start && p < p_end) {
+		char c = *q;
+
+		*p++ = c;
+
+		if (c == '/') {
+			q = start;
+			break;
+		}
+
+		q++;
+	}
+
+	while (q < end && p < p_end) {
+		*p++ = *q++;
+	}
+
+	*p = 0;
+
+	pd_info("rename: %s => %s", pathname, buff);
+
+	return rename(pathname, buff);
+}

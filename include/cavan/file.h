@@ -243,6 +243,12 @@ u64 file_read_u64(const char *pathname, u64 def_value);
 s64 file_read_s64(const char *pathname, s64 def_value);
 
 int cavan_symlink(const char *target, const char *linkpath);
+int cavan_rename_part(const char *pathname, const char *start, const char *end);
+
+static inline int cavan_rename_part2(const char *pathname, const char *start, size_t length)
+{
+	return cavan_rename_part(pathname, start, start + length);
+}
 
 // ============================================================
 
