@@ -85,6 +85,13 @@ void cavan_http_request_free(struct cavan_http_request *req)
 	free(req);
 }
 
+void cavan_http_request_reset(struct cavan_http_request *req)
+{
+	req->mem_used = 0;
+	req->prop_used = 0;
+	req->param_used = 0;
+}
+
 int cavan_http_get_request_type(const char *req, size_t length)
 {
 	switch (req[0]) {
@@ -1020,7 +1027,7 @@ int cavan_http_read_multiform_header(struct cavan_fifo *fifo, struct cavan_http_
 	return 0;
 }
 
-ssize_t cavan_http_file_receive(struct cavan_fifo *fifo, const char *dirname, const char *boundary)
+ssize_t cavan_http_receive_file(struct cavan_fifo *fifo, struct cavan_http_request *header, const char *dirname, const char *boundary)
 {
 	int fd;
 	int ret;
@@ -1029,13 +1036,6 @@ ssize_t cavan_http_file_receive(struct cavan_fifo *fifo, const char *dirname, co
 	char *pathname_end;
 	const char *filename;
 	const char *mime_type;
-	struct cavan_http_request *header;
-
-	header = cavan_http_request_alloc(1024, 10, 5);
-	if (header == NULL) {
-		pr_red_info("cavan_http_request_alloc");
-		return -ENOMEM;
-	}
 
 	ret = cavan_http_read_multiform_header(fifo, header, boundary);
 	if (ret < 0) {
@@ -1175,6 +1175,7 @@ int cavan_http_process_post(struct cavan_fifo *fifo, struct cavan_http_request *
 {
 	int ret;
 	const char *text;
+	struct cavan_http_request *header;
 	const char *boundary = cavan_http_get_boundary(req->props, req->prop_used);
 
 	if (boundary == NULL) {
@@ -1187,15 +1188,31 @@ int cavan_http_process_post(struct cavan_fifo *fifo, struct cavan_http_request *
 		cavan_fifo_set_available(fifo, text2value_unsigned(text, NULL, 10));
 	}
 
-	do {
-		ret = cavan_http_file_receive(fifo, req->url, boundary);
+	header = cavan_http_request_alloc(1024, 10, 5);
+	if (header == NULL) {
+		pr_red_info("cavan_http_request_alloc");
+		return -ENOMEM;
+	}
+
+	while (1) {
+		ret = cavan_http_receive_file(fifo, header, req->url, boundary);
 		if (ret < 0) {
 			cavan_http_send_reply(fifo->private_data, 403, "Failed to upload: %d", ret);
-			return ret;
+			goto out_cavan_http_request_free;
 		}
-	} while (cavan_fifo_get_remain(fifo) > 0);
 
-	return cavan_http_send_reply(fifo->private_data, 200, "Upload successfull");
+		if (cavan_fifo_get_remain(fifo) > 0) {
+			cavan_http_request_reset(header);
+		} else {
+			break;
+		}
+	}
+
+	ret = cavan_http_send_reply(fifo->private_data, 200, "Upload successfull");
+
+out_cavan_http_request_free:
+	cavan_http_request_free(req);
+	return ret;
 }
 
 // ================================================================================
