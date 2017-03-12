@@ -1211,7 +1211,7 @@ int cavan_http_process_post(struct cavan_fifo *fifo, struct cavan_http_request *
 	ret = cavan_http_send_reply(fifo->private_data, 200, "Upload successfull");
 
 out_cavan_http_request_free:
-	cavan_http_request_free(req);
+	cavan_http_request_free(header);
 	return ret;
 }
 
