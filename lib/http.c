@@ -804,11 +804,15 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 		goto out_closedir;
 	}
 
-#if 0
 	ffile_puts(fd, "\t\t<script type=\"text/javascript\">\r\n");
-	ffile_puts(fd, "\t\t\tdocument.getElementById('filter').value = '12345';\r\n");
+	ffile_puts(fd, "\t\tfunction onUploadSubmit(form) {\r\n");
+	ffile_puts(fd, "\t\t\tif (form.pathname.value.length > 0) {\r\n");
+	ffile_puts(fd, "\t\t\t\treturn true;\r\n");
+	ffile_puts(fd, "\t\t\t}\r\n");
+	ffile_puts(fd, "\t\t\talert(\"Please select a file!\");\r\n");
+	ffile_puts(fd, "\t\t\treturn false;\r\n");
+	ffile_puts(fd, "\t\t}\r\n");
 	ffile_puts(fd, "\t\t</script>\r\n");
-#endif
 
 	ffile_puts(fd, "\t\t<h5>Current directory: ");
 
@@ -850,9 +854,9 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 		ffile_printf(fd, " [<a href=\"%s/\">SDcard%d</a>]", env, i);
 	}
 
-	ffile_puts(fd, "</h5>\r\n\t\t<form enctype=\"multipart/form-data\" action=\".\" method=\"post\">\r\n");
+	ffile_puts(fd, "</h5>\r\n\t\t<form enctype=\"multipart/form-data\" onsubmit=\"return onUploadSubmit(this)\" action=\".\" method=\"post\">\r\n");
 	ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"Upload\">\r\n");
-	ffile_puts(fd, "\t\t\t<input id=\"upload\" name=\"cavan\" type=\"file\">\r\n");
+	ffile_puts(fd, "\t\t\t<input id=\"upload\" name=\"pathname\" type=\"file\">\r\n");
 	ffile_puts(fd, "\t\t</form>\r\n");
 	ffile_puts(fd, "\t\t<form method=\"get\">\r\n");
 	ffile_printf(fd, "\t\t\t<input name=\"filter\" type=\"text\" value=\"%s\">\r\n", text_fixup_null2(filter));
