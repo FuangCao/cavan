@@ -2797,6 +2797,34 @@ char *text_clear_space_and_lf_and_quote_invert(const char *head, char *text)
 	return text_clear_quote_invert(head, text);
 }
 
+const char *text_fixup_null(const char *text, const char *text_null)
+{
+	if (text == NULL) {
+		return text_null;
+	}
+
+	return text;
+}
+
+const char *text_fixup_null2(const char *text)
+{
+	return text_fixup_null(text, "");
+}
+
+const char *text_fixup_empty(const char *text, const char *text_empty)
+{
+	if (text == NULL || text[0] == 0) {
+		return text_empty;
+	}
+
+	return text;
+}
+
+const char *text_fixup_empty2(const char *text)
+{
+	return text_fixup_empty(text, NULL);
+}
+
 char text_get_char(const char *text, int index)
 {
 	if (index < 0) {

@@ -472,7 +472,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 		for (url_text = buff; url_text < buff_end && *url_text != ' '; url_text++);
 
 		cmdlen = url_text++ - buff;
-		type = cavan_http_request_get_type(buff, cmdlen);
+		type = cavan_http_get_request_type(buff, cmdlen);
 		if (type < 0) {
 			pr_red_info("invalid request[%" PRINT_FORMAT_SIZE "] `%s'", cmdlen, buff);
 

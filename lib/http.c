@@ -37,7 +37,7 @@ void cavan_http_dump_props(const struct cavan_http_prop *props, size_t size)
 	}
 }
 
-void cavan_http_request_dump(struct cavan_http_request *req)
+void cavan_http_dump_request(struct cavan_http_request *req)
 {
 	print_sep(80);
 
@@ -84,7 +84,7 @@ void cavan_http_request_free(struct cavan_http_request *req)
 	free(req);
 }
 
-int cavan_http_request_get_type(const char *req, size_t length)
+int cavan_http_get_request_type(const char *req, size_t length)
 {
 	switch (req[0]) {
 	case 'C':
@@ -135,7 +135,7 @@ int cavan_http_request_get_type(const char *req, size_t length)
 	return -EINVAL;
 }
 
-int cavan_http_request_get_type2(const char *type)
+int cavan_http_get_request_type2(const char *type)
 {
 	switch (type[0]) {
 	case 'C':
@@ -583,7 +583,7 @@ int cavan_http_open_html_file(const char *title, char *pathname)
 #endif
 
 	ffile_puts(fd, "<!-- This file is automatic generate by Fuang.Cao -->\r\n\r\n");
-	ffile_puts(fd, "<html>\r\n\t<head>\r\n\t\t<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\r\n");
+	ffile_puts(fd, "<html>\r\n\t<head>\r\n\t\t<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\r\n");
 	ffile_printf(fd, "\t\t<title>%s</title>\r\n\t</head>\r\n\t<body>\r\n", title);
 
 	return fd;
@@ -775,7 +775,7 @@ int cavan_http_write_path_hrefs(int fd, const char *pathname)
 	}
 }
 
-int cavan_http_list_directory(struct network_client *client, const char *dirname)
+int cavan_http_list_directory(struct network_client *client, const char *dirname, const char *filter)
 {
 	int i;
 	int fd;
@@ -786,6 +786,10 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 	char *filename;
 	char pathname[1024];
 	struct dirent *entry;
+
+#if CAVAN_HTTP_DEBUG
+	println("filter = %s", filter);
+#endif
 
 	dp = opendir(dirname);
 	if (dp == NULL) {
@@ -799,6 +803,12 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 		pr_red_info("web_proxy_open_html_file");
 		goto out_closedir;
 	}
+
+#if 0
+	ffile_puts(fd, "\t\t<script type=\"text/javascript\">\r\n");
+	ffile_puts(fd, "\t\t\tdocument.getElementById('filter').value = '12345';\r\n");
+	ffile_puts(fd, "\t\t</script>\r\n");
+#endif
 
 	ffile_puts(fd, "\t\t<h5>Current directory: ");
 
@@ -841,11 +851,17 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 	}
 
 	ffile_puts(fd, "</h5>\r\n\t\t<form enctype=\"multipart/form-data\" action=\".\" method=\"post\">\r\n");
-	ffile_puts(fd, "\t\t\t<input name=\"cavan\" type=\"file\">\r\n");
 	ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"Upload\">\r\n");
+	ffile_puts(fd, "\t\t\t<input id=\"upload\" name=\"cavan\" type=\"file\">\r\n");
+	ffile_puts(fd, "\t\t</form>\r\n");
+	ffile_puts(fd, "\t\t<form method=\"get\">\r\n");
+	ffile_printf(fd, "\t\t\t<input name=\"filter\" type=\"text\" value=\"%s\">\r\n", text_fixup_null2(filter));
+	ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"Search\">\r\n");
 	ffile_puts(fd, "\t\t</form>\r\n");
 	ffile_puts(fd, "\t\t<table id=\"dirlisting\" summary=\"Directory Listing\">\r\n");
 	ffile_puts(fd, "\t\t\t<tr><td><b>type</b></td><td><b>filename</b></td><td><b>size</b></td><td><b>date</b></td></tr>\r\n");
+
+	filter = text_fixup_empty2(filter);
 
 	while ((entry = readdir(dp))) {
 		char buff[32];
@@ -853,6 +869,10 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 		const char *type;
 
 		if (cavan_path_is_dot_name(entry->d_name)) {
+			continue;
+		}
+
+		if (filter != NULL && strcasestr(entry->d_name, filter) == NULL) {
 			continue;
 		}
 
@@ -949,7 +969,7 @@ int cavan_http_process_get(struct network_client *client, struct cavan_http_requ
 		return cavan_http_send_file3(client, req->url, req->props, req->prop_used);
 
 	case S_IFDIR:
-		return cavan_http_list_directory(client, req->url);
+		return cavan_http_list_directory(client, req->url, cavan_http_request_find_param2(req, "filter"));
 
 	default:
 		cavan_http_send_reply(client, 403, "Invalid file type");
@@ -1017,7 +1037,7 @@ ssize_t cavan_http_file_receive(struct cavan_fifo *fifo, const char *dirname, co
 	}
 
 #if CAVAN_HTTP_DEBUG
-	cavan_http_request_dump(header);
+	cavan_http_dump_request(header);
 #endif
 
 	filename = cavan_http_request_find_param2(header, "filename");
@@ -1219,10 +1239,10 @@ static int cavan_http_service_run_handler(struct cavan_dynamic_service *service,
 	}
 
 #if CAVAN_HTTP_DEBUG
-	cavan_http_request_dump(req);
+	cavan_http_dump_request(req);
 #endif
 
-	type = cavan_http_request_get_type2(req->type);
+	type = cavan_http_get_request_type2(req->type);
 	switch (type) {
 	case HTTP_REQ_GET:
 		cavan_http_process_get(client, req);

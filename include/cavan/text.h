@@ -195,6 +195,11 @@ char *text_clear_quote_invert(const char *head, char *text);
 char *text_clear_space_and_quote_invert(const char *head, char *text);
 char *text_clear_space_and_lf_and_quote_invert(const char *head, char *text);
 
+const char *text_fixup_null(const char *text, const char *text_null);
+const char *text_fixup_null2(const char *text);
+const char *text_fixup_empty(const char *text, const char *text_empty);
+const char *text_fixup_empty2(const char *text);
+
 #if 0
 __printf_format_40__ char *cavan_vsnprintf(char *buff, size_t size, const char *fmt, char *args);
 __printf_format_12__ char *cavan_printf(const char *fmt, ...);

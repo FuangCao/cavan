@@ -71,15 +71,16 @@ struct cavan_http_request {
 
 void cavan_http_dump_prop(const struct cavan_http_prop *prop);
 void cavan_http_dump_props(const struct cavan_http_prop *props, size_t size);
-void cavan_http_request_dump(struct cavan_http_request *req);
+void cavan_http_dump_request(struct cavan_http_request *req);
+
 struct cavan_http_request *cavan_http_request_alloc(size_t mem_size, size_t prop_size, size_t param_size);
 void cavan_http_parse_prop(char *text, struct cavan_http_prop *prop);
 void cavan_http_request_free(struct cavan_http_request *req);
 int cavan_http_read_props(struct cavan_fifo *fifo, struct cavan_http_request *req);
 int cavan_http_read_request(struct cavan_fifo *fifo, struct cavan_http_request *req);
 
-int cavan_http_request_get_type(const char *req, size_t length);
-int cavan_http_request_get_type2(const char *type);
+int cavan_http_get_request_type(const char *req, size_t length);
+int cavan_http_get_request_type2(const char *type);
 const char *cavan_http_request_type_tostring(int type);
 size_t cavan_http_parse_request(char *req, char *req_end, struct cavan_http_prop *props, size_t size);
 size_t cavan_http_parse_prop_value(char *value, struct cavan_http_prop *props, size_t size);
@@ -99,7 +100,7 @@ int cavan_http_send_file3(struct network_client *client, const char *pathname, c
 int cavan_http_write_path_href(int fd, const char *pathname, size_t psize, const char *name, size_t nsize);
 int cavan_http_write_path_href2(int fd, const char *pathname, const char *name);
 int cavan_http_write_path_hrefs(int fd, const char *pathname);
-int cavan_http_list_directory(struct network_client *client, const char *pathname);
+int cavan_http_list_directory(struct network_client *client, const char *dirname, const char *filter);
 int cavan_http_read_multiform_header(struct cavan_fifo *fifo, struct cavan_http_request *header, const char *boundary);
 ssize_t cavan_http_file_receive(struct cavan_fifo *fifo, const char *dirname, const char *boundary);
 int cavan_http_process_get(struct network_client *client, struct cavan_http_request *req);
