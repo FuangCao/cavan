@@ -349,7 +349,18 @@ int cavan_pipe_cmdline_run4(const struct cavan_command_entry2 cmd_list[], size_t
 int cavan_async_command_service_init(struct cavan_async_command_service *service);
 void cavan_async_command_service_deinit(struct cavan_async_command_service *service);
 int cavan_async_command_execute(struct cavan_async_command_service *service, void (*handler)(void *data), void *data, long msec);
+
+static inline int cavan_async_command_execute_simple(void (*handler)(void *data), void *data, long msec)
+{
+	return cavan_async_command_execute(NULL, handler, data, msec);
+}
+
 int cavan_async_command_cancel(struct cavan_async_command_service *service, void (*handler)(void *data), int max);
+
+static inline int cavan_async_command_cancel_simple(void (*handler)(void *data), int max)
+{
+	return cavan_async_command_cancel(NULL, handler, max);
+}
 
 static inline int cavan_tty_redirect_loop4(int ttyin, int ttyout, int ttyerr)
 {

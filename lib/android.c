@@ -254,15 +254,56 @@ int android_get_hostname(char *buff, size_t size)
 	return android_get_device_name(buff, size);
 }
 
+boolean android_username_equals(const char *username)
+{
+	const char *user = cavan_getenv("USER", NULL);
+
+	return user != NULL && strcmp(user, username) == 0;
+}
+
+boolean android_username_contains(const char *users[], int count)
+{
+	const char *user = cavan_getenv("USER", NULL);
+
+	if (user) {
+		while (--count >= 0) {
+			if (strcmp(user, users[count]) == 0) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+boolean android_user_is_root(void)
+{
+	return android_username_equals("root");
+}
+
+boolean android_user_is_shell(void)
+{
+	return android_username_equals("shell");
+}
+
+boolean android_user_is_root_or_shell(void)
+{
+	const char *users[] = { "root", "shell" };
+
+	return android_username_contains(users, NELEM(users));
+}
+
 int android_install_application(const char *pathname)
 {
 	int ret;
 
-	pd_info("pm install: %s", pathname);
+	if (android_user_is_root_or_shell()) {
+		pd_info("pm install: %s", pathname);
 
-	ret = cavan_system2("pm install -r \"%s\"", pathname);
-	if (ret == 0) {
-		return 0;
+		ret = cavan_system2("pm install -r \"%s\"", pathname);
+		if (ret == 0) {
+			return 0;
+		}
 	}
 
 	pd_info("am install: %s", pathname);
@@ -273,4 +314,22 @@ int android_install_application(const char *pathname)
 	}
 
 	return -EFAULT;
+}
+
+static void android_install_application_handler(void *data)
+{
+	android_install_application(data);
+	free(data);
+}
+
+int android_install_application_async(const char *pathname, long msec)
+{
+	char *pathname_rw = strdup(pathname);
+	int ret = cavan_async_command_execute_simple(android_install_application_handler, pathname_rw, msec);
+
+	if (ret < 0) {
+		free(pathname_rw);
+	}
+
+	return ret;
 }

@@ -19,6 +19,7 @@
 
 #include <cavan.h>
 #include <cavan/http.h>
+#include <cavan/android.h>
 #include <cavan/web_proxy.h>
 
 #define CAVAN_HTTP_DEBUG	0
@@ -1118,7 +1119,7 @@ ssize_t cavan_http_file_receive(struct cavan_fifo *fifo, const char *dirname, co
 
 #ifdef CONFIG_ANDROID
 	if (mime_type != NULL && strcmp(mime_type, "application/vnd.android.package-archive") == 0) {
-		cavan_system2("pm install -r \"%s\"", pathname);
+		android_install_application_async(pathname, 0);
 	}
 #endif
 

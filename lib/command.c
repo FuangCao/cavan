@@ -1311,7 +1311,7 @@ int cavan_system(const char *command, int argc, char *argv[])
 int cavan_system2(const char *command, ...)
 {
 	va_list ap;
-	char buff[1024];
+	char buff[2048];
 
 	va_start(ap, command);
 	vsnprintf(buff, sizeof(buff), command, ap);
