@@ -894,7 +894,7 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 			continue;
 		}
 
-		ffile_puts(fd, "\t\t\t<tr class=\"entry\">");
+		ffile_puts(fd, "\t\t\t<tr>");
 
 		switch (st.st_mode & S_IFMT) {
 		case S_IFLNK:
@@ -925,7 +925,7 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 			type = "FILE";
 		}
 
-		ffile_printf(fd, "<td class=\"type\">[%s]</td><td class=\"filename\">", type);
+		ffile_printf(fd, "<td>[%s]</td><td>", type);
 
 		if ((st.st_mode & S_IFMT) == S_IFDIR) {
 			ffile_printf(fd, "<a href=\"%s/\">%s</a>", entry->d_name, entry->d_name);
@@ -933,14 +933,14 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 			ffile_printf(fd, "<a href=\"%s\">%s</a>", entry->d_name, entry->d_name);
 		}
 
-		ffile_puts(fd, "</td><td class=\"size\">");
+		ffile_puts(fd, "</td><td>");
 		ffile_write(fd, buff, mem_size_tostring_simple(st.st_size, buff, sizeof(buff)) - buff);
 
 		if (localtime_r((time_t *) &st.st_mtime, &time) == NULL) {
 			memset(&time, 0x00, sizeof(time));
 		}
 
-		ffile_printf(fd, "</td><td class=\"date\">%04d-%02d-%02d %02d:%02d:%02d</td>",
+		ffile_printf(fd, "</td><td>%04d-%02d-%02d %02d:%02d:%02d</td>",
 			time.tm_year + 1900, time.tm_mon + 1, time.tm_mday, time.tm_hour, time.tm_min, time.tm_sec);
 
 		ffile_printf(fd, "</tr>\r\n");
