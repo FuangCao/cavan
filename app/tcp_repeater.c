@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 	service->max = 1000;
 
 	repeater = cavan_dynamic_service_get_data(service);
-	network_url_init(&repeater->url, "tcp", "any", CAVAN_TCP_REPEATER_PORT, network_get_socket_pathname());
+	network_url_init(&repeater->url, "tcp", "any", TCP_REPEATER_PORT, network_get_socket_pathname());
 
 	ret = network_url_parse_cmdline(&repeater->url, service, argc, argv);
 	if (ret < 0) {

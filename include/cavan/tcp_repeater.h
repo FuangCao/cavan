@@ -20,13 +20,19 @@
  */
 
 #include <cavan.h>
+#include <cavan/timer.h>
 #include <cavan/network.h>
 #include <cavan/service.h>
 
-#define CAVAN_TCP_REPEATER_PORT		8864
+#define TCP_REPEATER_PORT					8864
+#define TCP_REPEATER_KEEP_ALIVE_COMMAND		"CavanKeepAlive"
+#define TCP_REPEATER_KEEP_ALIVE_DELAY		60000
+#define TCP_REPEATER_KEEP_ALIVE_OVERTIME	3600000
 
 struct cavan_tcp_repeater_conn {
 	struct network_client client;
+	u64 alive_time;
+
 	struct cavan_tcp_repeater_conn *prev;
 	struct cavan_tcp_repeater_conn *next;
 };

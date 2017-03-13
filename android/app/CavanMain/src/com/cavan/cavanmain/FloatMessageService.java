@@ -44,7 +44,7 @@ public class FloatMessageService extends FloatWidowService {
 
 	public static final String NET_CMD_RDPKG = "RedPacketCode: ";
 	public static final String NET_CMD_TEST = "CavanNetworkTest";
-	public static final String NET_CMD_KEEP_LIVE = "CavanKeepLive";
+	public static final String NET_CMD_KEEP_ALIVE = "CavanKeepAlive";
 	public static final String NET_CMD_TM_CODE = "SecretOrder: ";
 	public static final String NET_CMD_CLIPBOARD = "Clipboard: ";
 
@@ -112,10 +112,6 @@ public class FloatMessageService extends FloatWidowService {
 				sendStickyBroadcast(intent);
 
 				if (msg.arg1 == R.string.text_wan_connected) {
-					if (mNetSender != null) {
-						mNetSender.restartKeepLive();
-					}
-
 					if (mTcpDaemon != null) {
 						mTcpDaemon.setConnDelay(0);
 					}
@@ -627,7 +623,6 @@ public class FloatMessageService extends FloatWidowService {
 
 	public class NetworkSendThread extends HandlerThread implements Callback {
 
-		public static final int MSG_KEEP_LIVE = 1;
 		public static final int MSG_SEND_UDP_COMMAND = 2;
 		public static final int MSG_SEND_TCP_COMMAND = 3;
 
@@ -675,14 +670,6 @@ public class FloatMessageService extends FloatWidowService {
 			return sendTcpCommand(command, delay) || sendUdpCommand(command, delay, 5);
 		}
 
-		public void restartKeepLive() {
-			String command = NET_CMD_KEEP_LIVE;
-			Message message = mNetSendHandler.obtainMessage(MSG_KEEP_LIVE, command);
-
-			mNetSendHandler.removeMessages(MSG_KEEP_LIVE, command);
-			mNetSendHandler.sendMessageDelayed(message, 120000);
-		}
-
 		@Override
 		public boolean quit() {
 			boolean result = super.quit();
@@ -703,7 +690,6 @@ public class FloatMessageService extends FloatWidowService {
 		@Override
 		public boolean handleMessage(Message msg) {
 			switch (msg.what) {
-			case MSG_KEEP_LIVE:
 			case MSG_SEND_TCP_COMMAND:
 				if (mTcpDaemon != null) {
 					String command = (String) msg.obj;
@@ -712,8 +698,6 @@ public class FloatMessageService extends FloatWidowService {
 						CavanAndroid.dLog("tcp success send: " + command);
 					}
 				}
-
-				restartKeepLive();
 				break;
 
 			case MSG_SEND_UDP_COMMAND:
@@ -980,7 +964,10 @@ public class FloatMessageService extends FloatWidowService {
 							}
 
 							try {
-								if (MainActivity.isWanReceiveEnabled(getApplicationContext())) {
+								if (NET_CMD_KEEP_ALIVE.equals(line)) {
+									CavanAndroid.dLog("send reply: " + line);
+									sendCommand(line);
+								} else if (MainActivity.isWanReceiveEnabled(getApplicationContext())) {
 									onNetworkCommandReceived("外网分享", line);
 								}
 							} catch (Exception e) {

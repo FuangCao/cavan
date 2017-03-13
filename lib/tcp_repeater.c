@@ -46,7 +46,45 @@ static void tcp_repeater_close_connect(struct cavan_dynamic_service *service, vo
 	network_client_close(conn);
 }
 
-static int cavan_tcp_repeater_run_handler(struct cavan_dynamic_service *service, void *_conn)
+static int tcp_repeater_keepalive_handler(struct cavan_dynamic_service *service)
+{
+	int delay = TCP_REPEATER_KEEP_ALIVE_DELAY;
+	struct cavan_tcp_repeater *repeater = cavan_dynamic_service_get_data(service);
+
+	if (repeater->head) {
+		u64 time = clock_gettime_ms_mono();
+		struct cavan_tcp_repeater_conn *conn, *head;
+
+		conn = head = repeater->head;
+
+		while (1) {
+			u64 idle = time - conn->alive_time;
+
+			if (idle < TCP_REPEATER_KEEP_ALIVE_DELAY) {
+				int remain = TCP_REPEATER_KEEP_ALIVE_DELAY - idle;
+				if (remain < delay) {
+					delay = remain;
+				}
+			} else if (idle < TCP_REPEATER_KEEP_ALIVE_OVERTIME) {
+				int ret = network_client_send(&conn->client, TCP_REPEATER_KEEP_ALIVE_COMMAND "\n", sizeof(TCP_REPEATER_KEEP_ALIVE_COMMAND));
+				if (ret < 0) {
+					network_client_close(&conn->client);
+				}
+			} else {
+				network_client_close(&conn->client);
+			}
+
+			conn = conn->next;
+			if (conn == head) {
+				break;
+			}
+		};
+	}
+
+	return delay;
+}
+
+static int tcp_repeater_run_handler(struct cavan_dynamic_service *service, void *_conn)
 {
 	int ret;
 	struct cavan_fifo fifo;
@@ -61,6 +99,8 @@ static int cavan_tcp_repeater_run_handler(struct cavan_dynamic_service *service,
 	}
 
 	fifo.read = network_client_fifo_read;
+
+	conn->alive_time = clock_gettime_ms_mono();
 
 	cavan_dynamic_service_lock(service);
 
@@ -80,28 +120,33 @@ static int cavan_tcp_repeater_run_handler(struct cavan_dynamic_service *service,
 	cavan_dynamic_service_unlock(service);
 
 	while (1) {
-		int rdlen;
 		char buff[1024];
+		int rdlen, wrlen;
 
 		rdlen = cavan_fifo_read_line(&fifo, buff, sizeof(buff));
 		if (rdlen <= 0) {
 			break;
 		}
 
+		conn->alive_time = clock_gettime_ms_mono();
+
 		buff[rdlen] = 0;
+		pd_info("tcp_repeater[%d] = %s", rdlen, buff);
+
+		if (text_lhcmp(TCP_REPEATER_KEEP_ALIVE_COMMAND, buff) == 0) {
+			continue;
+		}
 
 		cavan_dynamic_service_lock(service);
 
 		for (head = conn->next; head != conn; head = head->next) {
-			int wrlen = head->client.send(&head->client, buff, rdlen);
+			wrlen = network_client_send(&head->client, buff, rdlen);
 			if (wrlen < rdlen) {
 				network_client_close(&head->client);
 			}
 		}
 
 		cavan_dynamic_service_unlock(service);
-
-		pd_info("buff[%d] = %s", rdlen, buff);
 	}
 
 	cavan_dynamic_service_lock(service);
@@ -129,7 +174,8 @@ int cavan_tcp_repeater_run(struct cavan_dynamic_service *service)
 	service->conn_size = sizeof(struct cavan_tcp_repeater_conn);
 	service->start = tcp_repeater_start_handler;
 	service->stop = tcp_repeater_stop_handler;
-	service->run = cavan_tcp_repeater_run_handler;
+	service->run = tcp_repeater_run_handler;
+	service->keepalive = tcp_repeater_keepalive_handler;
 	service->open_connect = tcp_repeater_open_connect;
 	service->close_connect = tcp_repeater_close_connect;
 

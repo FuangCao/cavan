@@ -304,6 +304,7 @@ int cavan_dynamic_service_init(struct cavan_dynamic_service *service)
 
 	service->min = 10;
 	service->max = 1000;
+	service->keepalive = NULL;
 
 	return 0;
 
@@ -350,6 +351,30 @@ void cavan_dynamic_service_destroy(struct cavan_dynamic_service *service)
 {
 	cavan_dynamic_service_deinit(service);
 	free(service);
+}
+
+static int cavan_dynamic_service_keepalive_handler(struct cavan_thread *thread, void *data)
+{
+	struct cavan_dynamic_service *service = data;
+
+	pd_bold_info("service %s keepalive ready", service->name);
+
+
+	while (service->state == CAVAN_SERVICE_STATE_RUNNING) {
+		int delay = service->keepalive(service);
+
+		if (likely(delay > 0)) {
+			cavan_dynamic_service_unlock(service);
+			cavan_thread_msleep(thread, delay);
+			cavan_dynamic_service_lock(service);
+		} else if (delay < 0) {
+			break;
+		}
+	}
+
+	pd_bold_info("service %s keepalive exit", service->name);
+
+	return 0;
 }
 
 static void *cavan_dynamic_service_handler(void *data)
@@ -427,6 +452,10 @@ static void *cavan_dynamic_service_handler(void *data)
 	pd_green_info("service %s daemon %d exit (%d/%d)", service->name, index, service->used, service->count);
 
 	if (service->count == 0) {
+		if (service->keepalive) {
+			cavan_thread_stop(&service->keepalive_thread);
+		}
+
 		pd_red_info("service %s stopped", service->name);
 
 		service->state = CAVAN_SERVICE_STATE_STOPPED;
@@ -633,6 +662,20 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 
 	pd_bold_info("conn_size = %" PRINT_FORMAT_SIZE, service->conn_size);
 
+	if (service->keepalive) {
+		struct cavan_thread *thread = &service->keepalive_thread;
+
+		thread->name = "KEEP_ALIVE";
+		thread->wake_handker = NULL;
+		thread->handler = cavan_dynamic_service_keepalive_handler;
+
+		ret = cavan_thread_run(thread, service, 0);
+		if (ret < 0) {
+			pr_error_info("cavan_thread_run");
+			goto out_service_stop;
+		}
+	}
+
 	if (sync) {
 		cavan_dynamic_service_register(service);
 		cavan_dynamic_service_handler(service);
@@ -644,7 +687,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 		ret = cavan_pthread_run(cavan_dynamic_service_handler, service);
 		if (ret < 0) {
 			pr_error_info("cavan_pthread_create");
-			goto out_service_stop;
+			goto out_cavan_thread_stop_keepalive;
 		}
 
 		pthread_mutex_lock(&service->lock);
@@ -668,8 +711,14 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 
 	return 0;
 
+out_cavan_thread_stop_keepalive:
+	if (service->keepalive) {
+		cavan_thread_stop(&service->keepalive_thread);
+	}
 out_service_stop:
+	service->state = CAVAN_SERVICE_STATE_STOPPING;
 	service->stop(service);
+	service->state = CAVAN_SERVICE_STATE_STOPPED;
 	return ret;
 }
 

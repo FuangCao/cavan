@@ -8,6 +8,7 @@
 
 #include <cavan.h>
 #include <cavan/list.h>
+#include <cavan/thread.h>
 
 typedef enum cavan_service_state {
 	CAVAN_SERVICE_STATE_RUNNING,
@@ -54,12 +55,14 @@ struct cavan_dynamic_service {
 	pthread_mutex_t lock;
 	const char *user, *group;
 	cavan_service_state_t state;
+	struct cavan_thread keepalive_thread;
 	bool stopping;
 
 	int (*open_connect)(struct cavan_dynamic_service *service, void *conn_data);
 	void (*close_connect)(struct cavan_dynamic_service *service, void *conn_data);
 	int (*start)(struct cavan_dynamic_service *service);
 	void (*stop)(struct cavan_dynamic_service *service);
+	int (*keepalive)(struct cavan_dynamic_service *service);
 	int (*run)(struct cavan_dynamic_service *service, void *conn_data);
 };
 
