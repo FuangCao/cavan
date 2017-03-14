@@ -547,7 +547,13 @@ int cavan_http_read_request(struct cavan_fifo *fifo, struct cavan_http_request *
 
 	req->param_used = cavan_http_parse_url(req->url, req->params, req->param_size);
 
-	return cavan_http_read_props(fifo, req);
+	ret = cavan_http_read_props(fifo, req);
+	if (ret < 0) {
+		pr_red_info("cavan_http_read_props: %d", ret);
+		return ret;
+	}
+
+	return 0;
 }
 
 int cavan_http_send_reply(struct network_client *client, int code, const char *format, ...)
@@ -1290,25 +1296,43 @@ static int cavan_http_service_run_handler(struct cavan_dynamic_service *service,
 
 	fifo.read = network_client_fifo_read;
 
-	ret = cavan_http_read_request(&fifo, req);
-	if (ret < 0) {
-		pr_red_info("cavan_http_read_request");
-		goto out_cavan_fifo_deinit;
-	}
+	while (1) {
+		const char *keepalive;
+
+		ret = cavan_http_read_request(&fifo, req);
+		if (ret < 0) {
+			goto out_cavan_fifo_deinit;
+		}
 
 #if CAVAN_HTTP_DEBUG
-	cavan_http_dump_request(req);
+		cavan_http_dump_request(req);
 #endif
 
-	type = cavan_http_get_request_type2(req->type);
-	switch (type) {
-	case HTTP_REQ_GET:
-		cavan_http_process_get(client, req);
-		break;
+		type = cavan_http_get_request_type2(req->type);
+		switch (type) {
+		case HTTP_REQ_GET:
+			cavan_http_process_get(client, req);
+			break;
 
-	case HTTP_REQ_POST:
-		cavan_http_process_post(&fifo, req);
-		break;
+		case HTTP_REQ_POST:
+			cavan_http_process_post(&fifo, req);
+			break;
+
+		default:
+			goto out_cavan_fifo_deinit;
+		}
+
+		keepalive = cavan_http_request_find_prop_simple(req, "Connection");
+		if (keepalive && strcasecmp(keepalive, "close") == 0) {
+			break;
+		}
+
+		if (cavan_fifo_get_remain(&fifo)) {
+			break;
+		}
+
+		cavan_fifo_reset(&fifo);
+		cavan_http_request_reset(req);
 	}
 
 out_cavan_fifo_deinit:
