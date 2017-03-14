@@ -279,13 +279,8 @@ static int web_proxy_ftp_list_directory(struct network_client *client, struct ne
 		int count;
 		char *texts[16];
 
-		ret = cavan_fifo_read_line_strip(&fifo, buff, sizeof(buff));
-		if (ret < 1) {
-			if (ret < 0) {
-				break;
-			}
-
-			continue;
+		if (cavan_fifo_read_line_strip(&fifo, buff, sizeof(buff)) == NULL) {
+			break;
 		}
 
 		count = text_split_by_space(buff, texts, NELEM(texts));

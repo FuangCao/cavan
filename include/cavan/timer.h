@@ -126,17 +126,17 @@ static inline int clock_gettime_mono(struct timespec *time)
 	return clock_gettime_safe(CLOCK_MONOTONIC, time);
 }
 
-static inline u64 clock_gettime_ns_mono(void)
+static inline u64 clock_gettime_mono_ns(void)
 {
 	return clock_gettime_ns(CLOCK_MONOTONIC);
 }
 
-static inline u64 clock_gettime_us_mono(void)
+static inline u64 clock_gettime_mono_us(void)
 {
 	return clock_gettime_us(CLOCK_MONOTONIC);
 }
 
-static inline u64 clock_gettime_ms_mono(void)
+static inline u64 clock_gettime_mono_ms(void)
 {
 	return clock_gettime_ms(CLOCK_MONOTONIC);
 }
@@ -146,17 +146,17 @@ static inline int clock_gettime_real(struct timespec *time)
 	return clock_gettime_safe(CLOCK_REALTIME, time);
 }
 
-static inline u64 clock_gettime_ns_real(void)
+static inline u64 clock_gettime_real_ns(void)
 {
 	return clock_gettime_ns(CLOCK_REALTIME);
 }
 
-static inline u64 clock_gettime_us_real(void)
+static inline u64 clock_gettime_real_us(void)
 {
 	return clock_gettime_us(CLOCK_REALTIME);
 }
 
-static inline u64 clock_gettime_ms_real(void)
+static inline u64 clock_gettime_real_ms(void)
 {
 	return clock_gettime_ms(CLOCK_REALTIME);
 }

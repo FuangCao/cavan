@@ -72,7 +72,7 @@ static void reliable_udp_send_package(struct reliable_udp_client *client, struct
 		client->index_send++;
 	}
 
-	reliable_udp_add_package_locked(client, package, clock_gettime_ms_real());
+	reliable_udp_add_package_locked(client, package, clock_gettime_real_ms());
 
 	client->unlock_send(client);
 }
@@ -100,7 +100,7 @@ void reliable_udp_client_init(struct reliable_udp_client *client, void *data)
 {
 	client->rtt = 5000;
 	client->client_data = data;
-	client->index = client->index_send = clock_gettime_ms_mono();
+	client->index = client->index_send = clock_gettime_mono_ms();
 }
 
 void reliable_udp_send_main_loop(struct reliable_udp_client *client)
@@ -113,7 +113,7 @@ void reliable_udp_send_main_loop(struct reliable_udp_client *client)
 		if (p == NULL) {
 			client->wait(client);
 		} else {
-			u64 time = clock_gettime_ms_real();
+			u64 time = clock_gettime_real_ms();
 
 			if (p->time < time) {
 				client->msleep(client, time - p->time);

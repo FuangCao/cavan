@@ -44,8 +44,7 @@ int main(int argc, char *argv[])
 	fifo.read = file_fifo_read;
 
 	while (1) {
-		int ret = cavan_fifo_read_line_strip(&fifo, buff, sizeof(buff));
-		if (ret < 0) {
+		if (cavan_fifo_read_line_strip(&fifo, buff, sizeof(buff)) == NULL) {
 			break;
 		}
 

@@ -587,6 +587,33 @@ char *mem_time_tostring(double time, char *buff, size_t size)
 	}
 }
 
+char *mem_time_tostring_ms(double time, char *buff, size_t size)
+{
+	if (time > 1000) {
+		return mem_time_tostring(time / 1000, buff, size);
+	} else {
+		return buff + snprintf(buff, size, "%0.2lfms", time);
+	}
+}
+
+char *mem_time_tostring_us(double time, char *buff, size_t size)
+{
+	if (time > 1000) {
+		return mem_time_tostring_ms(time / 1000, buff, size);
+	} else {
+		return buff + snprintf(buff, size, "%0.2lfus", time);
+	}
+}
+
+char *mem_time_tostring_ns(double time, char *buff, size_t size)
+{
+	if (time > 1000) {
+		return mem_time_tostring_us(time / 1000, buff, size);
+	} else {
+		return buff + snprintf(buff, size, "%0.2lfns", time);
+	}
+}
+
 byte mem_lsb_msb_transfer(byte value)
 {
 	int i;

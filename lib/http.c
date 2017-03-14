@@ -19,6 +19,7 @@
 
 #include <cavan.h>
 #include <cavan/http.h>
+#include <cavan/timer.h>
 #include <cavan/android.h>
 #include <cavan/web_proxy.h>
 
@@ -490,24 +491,24 @@ void cavan_http_parse_prop(char *text, struct cavan_http_prop *prop)
 
 int cavan_http_read_props(struct cavan_fifo *fifo, struct cavan_http_request *req)
 {
-	int rdlen;
 	struct cavan_http_prop *prop, *prop_end;
 	char *mem = req->mem + req->mem_used;
 	char *mem_end = req->mem + req->mem_size;
 
 	for (prop = req->props, prop_end = prop + req->prop_size; prop < prop_end; prop++) {
-		rdlen = cavan_fifo_read_line_strip(fifo, mem, mem_end - mem);
-		if (rdlen < 1) {
-			if (rdlen < 0) {
-				pr_red_info("cavan_fifo_read_line_strip");
-				return rdlen;
-			}
+		char *p = cavan_fifo_read_line_strip(fifo, mem, mem_end - mem);
+		if (p == NULL) {
+			pr_red_info("cavan_fifo_read_line_strip");
+			return -EFAULT;
+		}
 
+		if (p > mem) {
+			cavan_http_parse_prop(mem, prop);
+		} else {
 			break;
 		}
 
-		cavan_http_parse_prop(mem, prop);
-		mem += rdlen + 1;
+		mem = p + 1;
 	}
 
 	req->prop_used = prop - req->props;
@@ -517,27 +518,28 @@ int cavan_http_read_props(struct cavan_fifo *fifo, struct cavan_http_request *re
 
 int cavan_http_read_request(struct cavan_fifo *fifo, struct cavan_http_request *req)
 {
-	int rdlen;
+	int ret;
+	char *p;
 	char *texts[3];
 
-	rdlen = cavan_fifo_read_line_strip(fifo, req->mem, req->mem_size);
-	if (rdlen < 0) {
+	p = cavan_fifo_read_line_strip(fifo, req->mem, req->mem_size);
+	if (p == NULL) {
 		pr_red_info("cavan_fifo_read_line_strip");
-		return rdlen;
+		return -EFAULT;
 	}
 
-	req->mem_used = rdlen + 1;
+	req->mem_used = (p - req->mem) + 1;
 
-	rdlen = text_split_by_space(req->mem, texts, NELEM(texts));
-	if (rdlen < 2) {
-		pr_red_info("text_split_by_space: %d", rdlen);
+	ret = text_split_by_space(req->mem, texts, NELEM(texts));
+	if (ret < 2) {
+		pr_red_info("text_split_by_space: %d", ret);
 		return -EINVAL;
 	}
 
 	req->type = texts[0];
 	req->url = texts[1];
 
-	if (rdlen > 2) {
+	if (ret > 2) {
 		req->version = texts[2];
 	} else {
 		req->version = NULL;
@@ -992,13 +994,13 @@ int cavan_http_process_get(struct network_client *client, struct cavan_http_requ
 int cavan_http_read_multiform_header(struct cavan_fifo *fifo, struct cavan_http_request *header, const char *boundary)
 {
 	int ret;
-	int rdlen;
+	char *p;
 	const char *disposition;
 
-	rdlen = cavan_fifo_read_line_strip(fifo, header->mem, header->mem_size);
-	if (rdlen < 0) {
+	p = cavan_fifo_read_line_strip(fifo, header->mem, header->mem_size);
+	if (p == NULL) {
 		pr_red_info("cavan_fifo_read_line_strip");
-		return rdlen;
+		return -EFAULT;
 	}
 
 	if (text_lhcmp("--", header->mem) || strcmp(header->mem + 2, boundary)) {
@@ -1006,7 +1008,7 @@ int cavan_http_read_multiform_header(struct cavan_fifo *fifo, struct cavan_http_
 		return -EINVAL;
 	}
 
-	header->mem_used = rdlen + 1;
+	header->mem_used = (p - header->mem) + 1;
 
 	ret = cavan_http_read_props(fifo, header);
 	if (ret < 0) {
@@ -1071,20 +1073,23 @@ ssize_t cavan_http_receive_file(struct cavan_fifo *fifo, struct cavan_http_reque
 
 	while (1) {
 		int rdlen;
+		char *p;
 		char buff[1024];
 
-		rdlen = cavan_fifo_read_line(fifo, buff, sizeof(buff));
-		if (rdlen < 0) {
-			ret = rdlen;
-			pr_err_info("cavan_fifo_read_line: %d", rdlen);
+		p = cavan_fifo_read_line(fifo, buff, sizeof(buff));
+		if (p == NULL) {
+			ret = -EFAULT;
+			pr_err_info("cavan_fifo_read_line");
 			goto out_close_fd;
 		}
 
 		if (text_lhcmp("--", buff) == 0 &&
 			text_lhcmp(boundary, buff + 2) == 0 &&
-			text_lhcmp("--", buff + rdlen - 4) == 0) {
+			text_lhcmp("--", p - 4) == 0) {
 			break;
 		}
+
+		rdlen = p - buff;
 
 		ret = write(fd, buff, rdlen);
 		if (ret < rdlen) {
@@ -1175,6 +1180,7 @@ int cavan_http_process_post(struct cavan_fifo *fifo, struct cavan_http_request *
 {
 	int ret;
 	const char *text;
+	u64 time_start, time_consume;
 	struct cavan_http_request *header;
 	const char *boundary = cavan_http_get_boundary(req->props, req->prop_used);
 
@@ -1194,6 +1200,8 @@ int cavan_http_process_post(struct cavan_fifo *fifo, struct cavan_http_request *
 		return -ENOMEM;
 	}
 
+	time_start = clock_gettime_mono_ms();
+
 	while (1) {
 		ret = cavan_http_receive_file(fifo, header, req->url, boundary);
 		if (ret < 0) {
@@ -1208,7 +1216,24 @@ int cavan_http_process_post(struct cavan_fifo *fifo, struct cavan_http_request *
 		}
 	}
 
-	ret = cavan_http_send_reply(fifo->private_data, 200, "Upload successfull");
+	time_consume = clock_gettime_mono_ms() - time_start;
+
+	if (fifo->available) {
+		char speed_buff[128];
+		char *p = speed_buff, *p_end = p + sizeof(speed_buff);
+		double speed = (((double) fifo->available * 1000) / time_consume);
+
+		p = mem_speed_tostring(speed, speed_buff, p_end - p);
+		p = text_ncopy(p, " (", p_end - p);
+		p = mem_size_tostring(fifo->available, p, p_end - p);
+		p = text_ncopy(p, " in ", p_end - p);
+		p = mem_time_tostring_ms(time_consume, p, p_end - p);
+		p = text_ncopy(p, ")", p_end - p);
+
+		ret = cavan_http_send_reply(fifo->private_data, 200, "Upload successfull: %s", speed_buff);
+	} else {
+		ret = cavan_http_send_reply(fifo->private_data, 200, "Upload successfull");
+	}
 
 out_cavan_http_request_free:
 	cavan_http_request_free(header);
@@ -1257,7 +1282,7 @@ static int cavan_http_service_run_handler(struct cavan_dynamic_service *service,
 		return -EFAULT;
 	}
 
-	ret = cavan_fifo_init(&fifo, 1024, client);
+	ret = cavan_fifo_init(&fifo, 4096, client);
 	if (ret < 0) {
 		pr_red_info("cavan_fifo_init");
 		goto out_cavan_http_request_free;

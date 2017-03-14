@@ -439,13 +439,8 @@ ssize_t parse_filesystems(int fd, char (*fstypes)[FSTYPE_NAME_LEN], size_t fstyp
 	while (fstypes < end_fstypes) {
 		char temp[FSTYPE_NAME_LEN];
 
-		ret = cavan_fifo_read_line_strip(&fifo, buff, sizeof(buff));
-		if (ret < 1) {
-			if (ret < 0) {
-				break;
-			}
-
-			continue;
+		if (cavan_fifo_read_line_strip(&fifo, buff, sizeof(buff)) == NULL) {
+			break;
 		}
 
 		ret = sscanf(buff, "%s %s", *fstypes, temp);
@@ -1409,13 +1404,8 @@ ssize_t parse_mount_table(int fd, struct mount_table *mtab, size_t mtab_size)
 	fifo.read = file_fifo_read;
 
 	while (mtab < end_mtab) {
-		ret = cavan_fifo_read_line_strip(&fifo, buff, sizeof(buff));
-		if (ret < 1) {
-			if (ret < 0) {
-				break;
-			}
-
-			continue;
+		if (cavan_fifo_read_line_strip(&fifo, buff, sizeof(buff)) == NULL) {
+			break;
 		}
 
 		ret = parse_mount_table_simple(buff, mtab);

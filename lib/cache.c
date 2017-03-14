@@ -843,7 +843,7 @@ static ssize_t cavan_fifo_read_locked(struct cavan_fifo *fifo, void *buff, size_
 		}
 
 		fifo->data = fifo->mem;
-		fifo->data_end = fifo->data + rdlen;
+		fifo->data_end = fifo->mem + rdlen;
 	}
 
 	if (rdlen > (ssize_t) size) {
@@ -867,85 +867,68 @@ ssize_t cavan_fifo_read(struct cavan_fifo *fifo, void *buff, size_t size)
 	return rdlen;
 }
 
-static ssize_t cavan_fifo_read_line_locked(struct cavan_fifo *fifo, char *buff, size_t size)
+static char *cavan_fifo_read_line_locked(struct cavan_fifo *fifo, char *buff, size_t size)
 {
-	char *p, *p_end;
+	char *p = buff;
+	char *p_end = p + size;
 
-	for (p = buff, p_end = p + size; p < p_end; p++) {
-		ssize_t rdlen;
-
-		rdlen = cavan_fifo_read_locked(fifo, p, 1);
-		if (rdlen < 1) {
-			if (rdlen < 0) {
-				return rdlen;
-			}
-
-			break;
-		}
-
-		if (*p == '\n') {
-			p++;
-			break;
-		}
-	}
-
-	return p - buff;
-}
-
-ssize_t cavan_fifo_read_line(struct cavan_fifo *fifo, char *buff, size_t size)
-{
-	ssize_t rdlen;
-
-	cavan_fifo_lock(fifo);
-	rdlen = cavan_fifo_read_line_locked(fifo, buff, size);
-	cavan_fifo_unlock(fifo);
-
-	return rdlen;
-}
-
-static ssize_t cavan_fifo_read_line_strip_locked(struct cavan_fifo *fifo, char *buff, size_t size)
-{
-	char *p, *p_end;
-
-	for (p = buff, p_end = p + size - 1; p < p_end; p++) {
-		ssize_t rdlen;
-
-		rdlen = cavan_fifo_read_locked(fifo, p, 1);
-		if (rdlen < 1) {
-			if (rdlen < 0) {
-				return rdlen;
-			}
-
-			if (p > buff) {
+	while (likely(p < p_end)) {
+		if (likely(fifo->data < fifo->data_end)) {
+			*p = *fifo->data++;
+			if (*p++ == '\n') {
 				break;
 			}
+		} else {
+			ssize_t rdlen = cavan_fifo_read_raw(fifo, fifo->mem, fifo->size);
 
-			return EOF;
-		}
+			if (rdlen <= 0) {
+				if (p > buff) {
+					break;
+				}
 
-		if (*p == '\n') {
-			break;
+				return NULL;
+			}
+
+			fifo->data = fifo->mem;
+			fifo->data_end = fifo->mem + rdlen;
 		}
 	}
 
-	if (p > buff && p[-1] == '\r') {
-		p--;
+	return p;
+}
+
+char *cavan_fifo_read_line(struct cavan_fifo *fifo, char *buff, size_t size)
+{
+	char *p;
+
+	cavan_fifo_lock(fifo);
+	p = cavan_fifo_read_line_locked(fifo, buff, size);
+	cavan_fifo_unlock(fifo);
+
+	return p;
+}
+
+char *cavan_fifo_read_line_strip(struct cavan_fifo *fifo, char *buff, size_t size)
+{
+	char *p = cavan_fifo_read_line(fifo, buff, size - 1);
+
+	if (p == NULL) {
+		return NULL;
+	}
+
+	while (p > buff) {
+		char *q = p - 1;
+
+		if (cavan_islf(*q)) {
+			p = q;
+		} else {
+			break;
+		}
 	}
 
 	*p = 0;
 
-	return p - buff;
-}
-
-ssize_t cavan_fifo_read_line_strip(struct cavan_fifo *fifo, char *buff, size_t size)
-{
-	ssize_t rdlen;
-
-	cavan_fifo_lock(fifo);
-	rdlen = cavan_fifo_read_line_strip_locked(fifo, buff, size);
-	cavan_fifo_unlock(fifo);
-
-	return rdlen;
+	return p;
 }
 
 static ssize_t cavan_fifo_fill_locked(struct cavan_fifo *fifo, char *buff, size_t size)

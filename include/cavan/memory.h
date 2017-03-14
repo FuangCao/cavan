@@ -108,6 +108,9 @@ char *mem_size_tostring(double value, char *buff, size_t size);
 char *mem_size_tostring_simple(double value, char *buff, size_t size);
 char *mem_speed_tostring(double value, char *buff, size_t size);
 char *mem_time_tostring(double time, char *buff, size_t size);
+char *mem_time_tostring_ms(double time, char *buff, size_t size);
+char *mem_time_tostring_us(double time, char *buff, size_t size);
+char *mem_time_tostring_ns(double time, char *buff, size_t size);
 
 byte mem_lsb_msb_transfer(byte value);
 byte *memcpy_lsb_msb_transfer(byte *dest, const byte *src, size_t size);
