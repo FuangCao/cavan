@@ -75,7 +75,7 @@ public class CavanBleGatt {
 			}
 
 			if (status != 0 && newState == BluetoothProfile.STATE_CONNECTED) {
-				disconnectInternal(true, false);
+				disconnect(false);
 			} else {
 				mGattState = newState;
 
@@ -100,7 +100,7 @@ public class CavanBleGatt {
 					mConnThread.setConnState(STATE_SERVICE_DISCOVERED, 0);
 				}
 			} else {
-				disconnectInternal(true, false);
+				disconnect(false);
 			}
 
 			super.onServicesDiscovered(gatt, status);
@@ -283,10 +283,13 @@ public class CavanBleGatt {
 		return connectInternal();
 	}
 
-	synchronized public void disconnectInternal(boolean reConnect, boolean cleanup) {
+	synchronized public void disconnect(boolean cleanup) {
 		CavanAndroid.dLog("disconnectInternal");
 
-		mConnEnable = reConnect;
+		if (cleanup) {
+			mConnEnable = false;
+		}
+
 		mGattState = BluetoothProfile.STATE_DISCONNECTED;
 		mConnThread.setConnState(STATE_GATT_DISCONNECTED, DISCONNECT_WAIT_TIME);
 
@@ -300,16 +303,8 @@ public class CavanBleGatt {
 		}
 	}
 
-	synchronized public void disconnect(boolean reConnect) {
-		if (reConnect) {
-			disconnectInternal(true, false);
-		} else {
-			disconnectInternal(false, true);
-		}
-	}
-
 	synchronized public void disconnect() {
-		disconnectInternal(false, true);
+		disconnect(true);
 	}
 
 	synchronized public boolean isGattConnected() {
@@ -463,8 +458,7 @@ public class CavanBleGatt {
 		}
 
 		private void setConnectFailed() {
-			mConnEnable = false;
-			disconnectInternal(false, true);
+			disconnect(true);
 			onConnectFailed();
 		}
 
@@ -488,6 +482,7 @@ public class CavanBleGatt {
 
 						mGattConnectCount++;
 					} else {
+						disconnect(true);
 						setConnectFailed();
 					}
 				}
@@ -496,16 +491,16 @@ public class CavanBleGatt {
 			case STATE_GATT_CONNECTED:
 				CavanAndroid.dLog("STATE_GATT_CONNECTED");
 
-				if (mGatt != null && mGatt.discoverServices()) {
+				if (mConnEnable && mGatt != null && mGatt.discoverServices()) {
 					setConnState(STATE_SERVICE_DISCOVERING, DISCOVER_OVERTIME);
 				} else {
-					disconnectInternal(true, false);
+					disconnect(false);
 				}
 				break;
 
 			case STATE_SERVICE_DISCOVERING:
 				CavanAndroid.dLog("STATE_SERVICE_DISCOVERING");
-				disconnectInternal(true, false);
+				disconnect(false);
 				break;
 
 			case STATE_SERVICE_DISCOVERED:
@@ -513,20 +508,24 @@ public class CavanBleGatt {
 
 				dumpServices();
 
-				if (mConnEnable && mGatt != null) {
-					mService = mGatt.getService(mUuid);
-					CavanAndroid.dLog("mService = " + mService);
-					CavanAndroid.dLog("mServiceConnectCount = " + mServiceConnectCount);
+				if (mConnEnable) {
+					if (mGatt != null) {
+						mService = mGatt.getService(mUuid);
+						CavanAndroid.dLog("mService = " + mService);
+						CavanAndroid.dLog("mServiceConnectCount = " + mServiceConnectCount);
 
-					if (mService != null && doInitialize() && onInitialize()) {
-						setConnState(STATE_SERVICE_CONNECTED, 0);
-						mServiceConnectCount = 0;
-					} else if (mServiceConnectCount < MAX_CONN_COUNT) {
-						disconnectInternal(true, false);
-						mServiceConnectCount++;
-					} else {
-						setConnectFailed();
+						if (mService != null && doInitialize() && onInitialize()) {
+							setConnState(STATE_SERVICE_CONNECTED, 0);
+							mServiceConnectCount = 0;
+						} else if (mServiceConnectCount < MAX_CONN_COUNT) {
+							disconnect(false);
+							mServiceConnectCount++;
+						} else {
+							setConnectFailed();
+						}
 					}
+				} else {
+					disconnect(false);
 				}
 				break;
 

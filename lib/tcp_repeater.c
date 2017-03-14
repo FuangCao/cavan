@@ -60,11 +60,9 @@ static int tcp_repeater_keepalive_handler(struct cavan_dynamic_service *service)
 			u64 idle = time - conn->alive_time;
 
 			if (idle < TCP_REPEATER_KEEP_ALIVE_OVERTIME) {
-				if (idle > TCP_REPEATER_KEEP_ALIVE_DELAY) {
-					int ret = network_client_send(&conn->client, TCP_REPEATER_KEEP_ALIVE_COMMAND "\n", sizeof(TCP_REPEATER_KEEP_ALIVE_COMMAND));
-					if (ret < 0) {
-						network_client_close(&conn->client);
-					}
+				int ret = network_client_send(&conn->client, TCP_REPEATER_KEEP_ALIVE_COMMAND "\n", sizeof(TCP_REPEATER_KEEP_ALIVE_COMMAND));
+				if (ret < 0) {
+					network_client_close(&conn->client);
 				}
 			} else {
 				network_client_close(&conn->client);

@@ -26,8 +26,8 @@
 
 #define TCP_REPEATER_PORT					8864
 #define TCP_REPEATER_KEEP_ALIVE_COMMAND		"CavanKeepAlive"
-#define TCP_REPEATER_KEEP_ALIVE_DELAY		60000
-#define TCP_REPEATER_KEEP_ALIVE_OVERTIME	3600000
+#define TCP_REPEATER_KEEP_ALIVE_DELAY		120000
+#define TCP_REPEATER_KEEP_ALIVE_OVERTIME	1800000
 
 struct cavan_tcp_repeater_conn {
 	struct network_client client;
