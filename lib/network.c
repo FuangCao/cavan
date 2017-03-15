@@ -3359,6 +3359,8 @@ static SSL *network_ssl_open(int fd, boolean server)
 		return NULL;
 	}
 
+	SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
+
 	ret = SSL_set_fd(ssl, fd);
 	if (ret != 1) {
 		pr_red_info("SSL_set_fd: %s", network_ssl_err_str(ssl, ret, NULL));
@@ -3398,11 +3400,19 @@ static void network_client_ssl_close(struct network_client *client)
 
 static ssize_t network_client_ssl_send(struct network_client *client, const void *buff, size_t size)
 {
+	if (unlikely(client->context == NULL)) {
+		return -EINVAL;
+	}
+
 	return SSL_write(client->context, buff, size);
 }
 
 static ssize_t network_client_ssl_recv(struct network_client *client, void *buff, size_t size)
 {
+	if (unlikely(client->context == NULL)) {
+		return -EINVAL;
+	}
+
 	return SSL_read(client->context, buff, size);
 }
 
@@ -3903,6 +3913,8 @@ int network_service_open(struct network_service *service, const struct network_u
 {
 	int ret;
 	const struct network_protocol_desc *desc;
+
+	signal(SIGPIPE, SIG_IGN); // prevent exit when disconnect
 
 	pd_bold_info("URL = %s", network_url_tostring(url, NULL, 0, NULL));
 

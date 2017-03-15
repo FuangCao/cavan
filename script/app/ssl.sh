@@ -5,6 +5,7 @@ function cavan-openssl-create()
 	openssl genrsa -out key.pem 1024/2038 || return 1
 	openssl req -new -key key.pem -out cert.csr || return 1
 	openssl req -new -x509 -key key.pem -out cert.pem -days 1095 || return 1
+	keytool -import -trustcacerts -file cert.pem -keystore cert.jks || return 1
 }
 
 function cavan-openssl-verify()
