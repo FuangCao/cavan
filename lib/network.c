@@ -9,6 +9,11 @@
 #include <cavan/progress.h>
 #include <cavan/permission.h>
 
+#if CONFIG_CAVAN_SSL
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#endif
+
 #define CAVAN_NETWORK_DEBUG				0
 #define CAVAN_IFCONFIG_DEBUG			0
 #define CAVAN_NETWORK_TRANSMIT_THREAD	0
@@ -3236,6 +3241,214 @@ static int network_service_unix_udp_open(struct network_service *service, const 
 	return 0;
 }
 
+#if CONFIG_CAVAN_SSL
+static SSL_CTX *network_ssl_context_new(const SSL_METHOD *method, const char *cert_file, const char *key_file, const char *password)
+{
+	SSL_CTX *ctx;
+
+	println("cert_file = %s", cert_file);
+	println("key_file = %s", key_file);
+	println("password = %s", password);
+
+	ctx = SSL_CTX_new(method);
+	if (ctx == NULL) {
+		return NULL;
+	}
+
+	if (cert_file) {
+		if (1 != SSL_CTX_use_certificate_file(ctx, cert_file, SSL_FILETYPE_PEM)) {
+			pr_red_info("SSL_CTX_use_certificate_file");
+			goto out_SSL_CTX_free;
+		}
+	}
+
+	if (password) {
+		SSL_CTX_set_default_passwd_cb_userdata(ctx, (void *) password);
+	}
+
+	if (key_file) {
+		if (1 != SSL_CTX_use_PrivateKey_file(ctx, key_file, SSL_FILETYPE_PEM)) {
+			pr_red_info("SSL_CTX_use_PrivateKey_file");
+			goto out_SSL_CTX_free;
+		}
+
+		if (1 != SSL_CTX_check_private_key(ctx)) {
+			pr_red_info("SSL_CTX_check_private_key");
+			goto out_SSL_CTX_free;
+		}
+	}
+
+	return ctx;
+
+out_SSL_CTX_free:
+	SSL_CTX_free(ctx);
+	return NULL;
+}
+
+static SSL_CTX *network_ssl_context_get(boolean server)
+{
+	static boolean initialized;
+	static SSL_CTX *context_client;
+	static SSL_CTX *context_server;
+
+	if (!initialized) {
+		SSL_load_error_strings();
+		SSL_library_init();
+		initialized = true;
+	}
+
+	if (server) {
+		if (context_server == NULL) {
+			const char *cert = getenv("CAVAN_SSL_CERT");
+			const char *key = getenv("CAVAN_SSL_KEY");
+			const char *password = getenv("CAVAN_SSL_PASSWORD");
+
+			context_server = network_ssl_context_new(SSLv23_server_method(), cert, key, password);
+		}
+
+		return context_server;
+	}
+
+	if (context_client == NULL) {
+		context_client = network_ssl_context_new(SSLv23_client_method(), NULL, NULL, NULL);
+	}
+
+	return context_client;
+}
+
+static char *network_ssl_err_str(const SSL *ssl, int code, char *buff)
+{
+	return ERR_error_string(SSL_get_error(ssl, code), buff);
+}
+
+static void network_client_ssl_close(struct network_client *client)
+{
+	SSL_free(client->context); // or SSL_shutdown(ssl);
+	network_client_tcp_close(client);
+}
+
+static ssize_t network_client_ssl_send(struct network_client *client, const void *buff, size_t size)
+{
+	return SSL_write(client->context, buff, size);
+}
+
+static ssize_t network_client_ssl_recv(struct network_client *client, void *buff, size_t size)
+{
+	return SSL_read(client->context, buff, size);
+}
+
+static int network_client_ssl_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
+{
+	int ret;
+	SSL *ssl;
+	SSL_CTX *ctx;
+
+	ctx = network_ssl_context_get(false);
+	if (ctx == NULL) {
+		pr_red_info("network_ssl_context_get");
+		return -EFAULT;
+	}
+
+	ret = network_client_tcp_open(client, url, port, flags);
+	if (ret < 0) {
+		pr_red_info("network_client_tcp_open: %d", ret);
+		return ret;
+	}
+
+	ssl = SSL_new(ctx);
+	if (ssl == NULL) {
+		pr_red_info("SSL_new");
+		goto out_client_close;
+	}
+
+	ret = SSL_set_fd(ssl, client->sockfd);
+	if (ret != 1) {
+		pr_red_info("SSL_set_fd: %s", network_ssl_err_str(ssl, ret, NULL));
+		goto out_client_close;
+	}
+
+	ret = SSL_connect(ssl);
+	if (ret != 1) {
+		pr_red_info("SSL_connect: %s", network_ssl_err_str(ssl, ret, NULL));
+		goto out_client_close;
+	}
+
+	client->context = ssl;
+	client->close = network_client_ssl_close;
+
+	return 0;
+
+out_client_close:
+	client->close(client);
+	return -EFAULT;
+}
+
+static int network_service_ssl_accept(struct network_service *service, struct network_client *conn)
+{
+	int ret;
+	SSL *ssl;
+	SSL_CTX *ctx;
+
+	ctx = network_ssl_context_get(true);
+	if (ctx == NULL) {
+		pr_red_info("network_ssl_context_get");
+		return -EFAULT;
+	}
+
+	ret = network_service_accept_dummy(service, conn);
+	if (ret < 0) {
+		pr_red_info("network_service_accept_dummy");
+		return ret;
+	}
+
+	ssl = SSL_new(ctx);
+	if (ssl == NULL) {
+		pr_red_info("SSL_new");
+		goto out_conn_close;
+	}
+
+	ret = SSL_set_fd(ssl, conn->sockfd);
+	if (ret != 1) {
+		pr_red_info("SSL_set_fd: %s", network_ssl_err_str(ssl, ret, NULL));
+		goto out_SSL_free;
+	}
+
+	ret = SSL_accept(ssl);
+	if (ret != 1) {
+		pr_red_info("SSL_accept: %s", network_ssl_err_str(ssl, ret, NULL));
+		goto out_SSL_free;
+	}
+
+	conn->context = ssl;
+	conn->close = network_client_ssl_close;
+	conn->send = network_client_ssl_send;
+	conn->recv = network_client_ssl_recv;
+
+	return 0;
+
+out_SSL_free:
+	SSL_free(ssl);
+out_conn_close:
+	conn->close(conn);
+	return -EFAULT;
+}
+
+static int network_service_ssl_open(struct network_service *service, const struct network_url *url, u16 port, int flags)
+{
+	int ret;
+
+	ret = network_service_tcp_open(service, url, port, flags);
+	if (ret < 0) {
+		pr_red_info("network_service_tcp_open: %d", ret);
+		return ret;
+	}
+
+	service->accept = network_service_ssl_accept;
+
+	return 0;
+}
+#endif
+
 // ============================================================
 
 static const struct network_protocol_desc protocol_descs[] = {
@@ -3257,9 +3470,22 @@ static const struct network_protocol_desc protocol_descs[] = {
 		.name = "https",
 		.port = NETWORK_PORT_HTTPS,
 		.type = NETWORK_PROTOCOL_HTTPS,
+#if CONFIG_CAVAN_SSL
+		.open_service = network_service_ssl_open,
+		.open_client = network_client_ssl_open,
+#else
 		.open_service = network_service_tcp_open,
 		.open_client = network_client_tcp_open,
+#endif
 	},
+#if CONFIG_CAVAN_SSL
+	[NETWORK_PROTOCOL_SSL] = {
+		.name = "ssl",
+		.type = NETWORK_PROTOCOL_SSL,
+		.open_service = network_service_ssl_open,
+		.open_client = network_client_ssl_open,
+	},
+#endif
 	[NETWORK_PROTOCOL_TCP] = {
 		.name = "tcp",
 		.type = NETWORK_PROTOCOL_TCP,
@@ -3443,6 +3669,12 @@ network_protocol_t network_protocol_parse(const char *name)
 			} else if (name[4] == 's' && name[5] == 0) {
 				return NETWORK_PROTOCOL_HTTPS;
 			}
+		}
+		break;
+
+	case 's':
+		if (text_cmp(name + 1, "sl") == 0) {
+			return NETWORK_PROTOCOL_SSL;
 		}
 		break;
 	}

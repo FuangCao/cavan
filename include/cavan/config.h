@@ -46,3 +46,7 @@
 #endif
 
 #define CONFIG_I2C_ROCKCHIP_COMPAT	1
+
+#ifndef CONFIG_CAVAN_SSL
+#define CONFIG_CAVAN_SSL			0
+#endif

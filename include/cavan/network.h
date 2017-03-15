@@ -213,6 +213,7 @@ typedef enum {
 	NETWORK_PROTOCOL_FTP,
 	NETWORK_PROTOCOL_HTTP,
 	NETWORK_PROTOCOL_HTTPS,
+	NETWORK_PROTOCOL_SSL,
 	NETWORK_PROTOCOL_TCP,
 	NETWORK_PROTOCOL_UDP,
 	NETWORK_PROTOCOL_ADB,
@@ -259,6 +260,7 @@ struct network_service;
 struct network_client {
 	int sockfd;
 	socklen_t addrlen;
+	void *context;
 	void *private_data;
 	network_protocol_t type;
 	struct network_service *service;
