@@ -3304,9 +3304,29 @@ static SSL_CTX *network_ssl_context_get(boolean server)
 
 	if (server) {
 		if (context_server == NULL) {
-			const char *cert = getenv("CAVAN_SSL_CERT");
-			const char *key = getenv("CAVAN_SSL_KEY");
-			const char *password = getenv("CAVAN_SSL_PASSWORD");
+			const char *cert, *key, *password;
+
+			cert = getenv("CAVAN_SSL_CERT");
+			key = getenv("CAVAN_SSL_KEY");
+			password = getenv("CAVAN_SSL_PASSWORD");
+
+#ifdef CONFIG_CAVAN_SSL_CERT
+			if (cert == NULL) {
+				cert = CONFIG_CAVAN_SSL_CERT;
+			}
+#endif
+
+#ifdef CONFIG_CAVAN_SSL_KEY
+			if (key == NULL) {
+				key = CONFIG_CAVAN_SSL_KEY;
+			}
+#endif
+
+#ifdef CONFIG_CAVAN_SSL_PASSWORD
+			if (password == NULL) {
+				password = CONFIG_CAVAN_SSL_PASSWORD;
+			}
+#endif
 
 			context_server = network_ssl_context_new(SSLv23_server_method(), cert, key, password);
 		}
@@ -3464,6 +3484,18 @@ static int network_service_ssl_open(struct network_service *service, const struc
 
 	return 0;
 }
+#else
+static int network_client_ssl_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
+{
+	pr_red_info("Need enable use CONFIG_CAVAN_SSL");
+	return -EINVAL;
+}
+
+static int network_service_ssl_open(struct network_service *service, const struct network_url *url, u16 port, int flags)
+{
+	pr_red_info("Need enable use CONFIG_CAVAN_SSL");
+	return -EINVAL;
+}
 #endif
 
 // ============================================================
@@ -3487,22 +3519,15 @@ static const struct network_protocol_desc protocol_descs[] = {
 		.name = "https",
 		.port = NETWORK_PORT_HTTPS,
 		.type = NETWORK_PROTOCOL_HTTPS,
-#if CONFIG_CAVAN_SSL
 		.open_service = network_service_ssl_open,
 		.open_client = network_client_ssl_open,
-#else
-		.open_service = network_service_tcp_open,
-		.open_client = network_client_tcp_open,
-#endif
 	},
-#if CONFIG_CAVAN_SSL
 	[NETWORK_PROTOCOL_SSL] = {
 		.name = "ssl",
 		.type = NETWORK_PROTOCOL_SSL,
 		.open_service = network_service_ssl_open,
 		.open_client = network_client_ssl_open,
 	},
-#endif
 	[NETWORK_PROTOCOL_TCP] = {
 		.name = "tcp",
 		.type = NETWORK_PROTOCOL_TCP,

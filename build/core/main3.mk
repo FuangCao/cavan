@@ -67,7 +67,12 @@ SUB_DIRS += test
 endif
 
 ifeq ($(BUILD_OTHERS),true)
-CFLAGS += -lasound -ldl
+LDFLAGS += -lasound -ldl
+endif
+
+ifeq ($(CONFIG_CAVAN_SSL),true)
+CFLAGS += -DCONFIG_CAVAN_SSL
+LDFLAGS += -lssl
 endif
 
 ifneq ($(BUILD_ENTRY),cavan)
