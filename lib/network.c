@@ -3242,6 +3242,11 @@ static int network_service_unix_udp_open(struct network_service *service, const 
 }
 
 #if CONFIG_CAVAN_SSL
+static char *network_ssl_err_str(const SSL *ssl, int code, char *buff)
+{
+	return ERR_error_string(SSL_get_error(ssl, code), buff);
+}
+
 static SSL_CTX *network_ssl_context_new(const SSL_METHOD *method, const char *cert_file, const char *key_file, const char *password)
 {
 	SSL_CTX *ctx;
@@ -3316,14 +3321,58 @@ static SSL_CTX *network_ssl_context_get(boolean server)
 	return context_client;
 }
 
-static char *network_ssl_err_str(const SSL *ssl, int code, char *buff)
+static SSL *network_ssl_open(int fd, boolean server)
 {
-	return ERR_error_string(SSL_get_error(ssl, code), buff);
+	int ret;
+	SSL *ssl;
+	SSL_CTX *ctx;
+
+	ctx = network_ssl_context_get(server);
+	if (ctx == NULL) {
+		pr_red_info("network_ssl_context_get");
+		return NULL;
+	}
+
+	ssl = SSL_new(ctx);
+	if (ssl == NULL) {
+		pr_red_info("SSL_new");
+		return NULL;
+	}
+
+	ret = SSL_set_fd(ssl, fd);
+	if (ret != 1) {
+		pr_red_info("SSL_set_fd: %s", network_ssl_err_str(ssl, ret, NULL));
+		goto out_SSL_free;
+	}
+
+	if (server) {
+		ret = SSL_accept(ssl);
+		if (ret != 1) {
+			pr_red_info("SSL_accept: %s", network_ssl_err_str(ssl, ret, NULL));
+			goto out_SSL_free;
+		}
+	} else {
+		ret = SSL_connect(ssl);
+		if (ret != 1) {
+			pr_red_info("SSL_connect: %s", network_ssl_err_str(ssl, ret, NULL));
+			goto out_SSL_free;
+		}
+	}
+
+	return ssl;
+
+out_SSL_free:
+	SSL_free(ssl);
+	return NULL;
 }
 
 static void network_client_ssl_close(struct network_client *client)
 {
-	SSL_free(client->context); // or SSL_shutdown(ssl);
+	if (client->context) {
+		SSL_free(client->context); // or SSL_shutdown(ssl);
+		client->context = NULL;
+	}
+
 	network_client_tcp_close(client);
 }
 
@@ -3337,17 +3386,27 @@ static ssize_t network_client_ssl_recv(struct network_client *client, void *buff
 	return SSL_read(client->context, buff, size);
 }
 
+int network_client_ssl_attach(struct network_client *client, boolean server)
+{
+	SSL *ssl;
+
+	ssl = network_ssl_open(client->sockfd, server);
+	if (ssl == NULL) {
+		pr_red_info("network_ssl_open");
+		return -EFAULT;
+	}
+
+	client->context = ssl;
+	client->close = network_client_ssl_close;
+	client->send = network_client_ssl_send;
+	client->recv = network_client_ssl_recv;
+
+	return 0;
+}
+
 static int network_client_ssl_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
 {
 	int ret;
-	SSL *ssl;
-	SSL_CTX *ctx;
-
-	ctx = network_ssl_context_get(false);
-	if (ctx == NULL) {
-		pr_red_info("network_ssl_context_get");
-		return -EFAULT;
-	}
 
 	ret = network_client_tcp_open(client, url, port, flags);
 	if (ret < 0) {
@@ -3355,26 +3414,11 @@ static int network_client_ssl_open(struct network_client *client, const struct n
 		return ret;
 	}
 
-	ssl = SSL_new(ctx);
-	if (ssl == NULL) {
-		pr_red_info("SSL_new");
+	ret = network_client_ssl_attach(client, false);
+	if (ret < 0) {
+		pr_red_info("network_client_ssl_attach: %d", ret);
 		goto out_client_close;
 	}
-
-	ret = SSL_set_fd(ssl, client->sockfd);
-	if (ret != 1) {
-		pr_red_info("SSL_set_fd: %s", network_ssl_err_str(ssl, ret, NULL));
-		goto out_client_close;
-	}
-
-	ret = SSL_connect(ssl);
-	if (ret != 1) {
-		pr_red_info("SSL_connect: %s", network_ssl_err_str(ssl, ret, NULL));
-		goto out_client_close;
-	}
-
-	client->context = ssl;
-	client->close = network_client_ssl_close;
 
 	return 0;
 
@@ -3386,14 +3430,6 @@ out_client_close:
 static int network_service_ssl_accept(struct network_service *service, struct network_client *conn)
 {
 	int ret;
-	SSL *ssl;
-	SSL_CTX *ctx;
-
-	ctx = network_ssl_context_get(true);
-	if (ctx == NULL) {
-		pr_red_info("network_ssl_context_get");
-		return -EFAULT;
-	}
 
 	ret = network_service_accept_dummy(service, conn);
 	if (ret < 0) {
@@ -3401,33 +3437,14 @@ static int network_service_ssl_accept(struct network_service *service, struct ne
 		return ret;
 	}
 
-	ssl = SSL_new(ctx);
-	if (ssl == NULL) {
-		pr_red_info("SSL_new");
+	ret = network_client_ssl_attach(conn, true);
+	if (ret < 0) {
+		pr_red_info("network_client_ssl_attach: %d", ret);
 		goto out_conn_close;
 	}
 
-	ret = SSL_set_fd(ssl, conn->sockfd);
-	if (ret != 1) {
-		pr_red_info("SSL_set_fd: %s", network_ssl_err_str(ssl, ret, NULL));
-		goto out_SSL_free;
-	}
-
-	ret = SSL_accept(ssl);
-	if (ret != 1) {
-		pr_red_info("SSL_accept: %s", network_ssl_err_str(ssl, ret, NULL));
-		goto out_SSL_free;
-	}
-
-	conn->context = ssl;
-	conn->close = network_client_ssl_close;
-	conn->send = network_client_ssl_send;
-	conn->recv = network_client_ssl_recv;
-
 	return 0;
 
-out_SSL_free:
-	SSL_free(ssl);
 out_conn_close:
 	conn->close(conn);
 	return -EFAULT;

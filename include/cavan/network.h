@@ -470,6 +470,7 @@ const char *network_protocol_tostring(network_protocol_t type);
 
 int network_client_open(struct network_client *client, const struct network_url *url, int flags);
 int network_client_open2(struct network_client *client, const char *url, int flags);
+int network_client_ssl_attach(struct network_client *client, boolean server);
 void network_client_close(struct network_client *client);
 int network_client_vprintf(struct network_client *client, const char *format, va_list ap);
 int network_client_printf(struct network_client *client, const char *format, ...);
