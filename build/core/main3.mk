@@ -72,6 +72,8 @@ endif
 
 ifeq ($(CONFIG_CAVAN_SSL),true)
 CFLAGS += -DCONFIG_CAVAN_SSL
+CFLAGS += -DCONFIG_CAVAN_SSL_CERT=\"$(ROOT_PATH)/config/ssl/cert.pem\"
+CFLAGS += -DCONFIG_CAVAN_SSL_KEY=\"$(ROOT_PATH)/config/ssl/key.pem\"
 LDFLAGS += -lssl
 endif
 
