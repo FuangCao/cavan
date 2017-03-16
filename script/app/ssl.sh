@@ -2,10 +2,25 @@
 
 function cavan-openssl-create()
 {
-	openssl genrsa -out key.pem 1024/2038 || return 1
-	openssl req -new -key key.pem -out cert.csr || return 1
-	openssl req -new -x509 -key key.pem -out cert.pem -days 1095 || return 1
-	keytool -import -trustcacerts -file cert.pem -keystore cert.jks || return 1
+	[ "$1" = "all" ] &&
+	{
+		echo "generate key.pem"
+		openssl genrsa -out key.pem 1024/2038 || return 1
+
+		echo "generate cert.csr"
+		openssl req -new -key key.pem -out cert.csr || return 1
+
+		echo "generate cert.pem"
+		openssl req -new -x509 -key key.pem -out cert.pem -days 1095 || return 1
+	}
+
+	echo "generate cert.jks"
+	rm cert.jks
+	keytool -import -trustcacerts -file cert.pem -storetype JKS -keystore cert.jks || return 1
+
+	rm cert.bks
+	echo "generate cert.bks"
+	keytool -provider org.bouncycastle.jce.provider.BouncyCastleProvider -import -trustcacerts -file cert.pem -storetype BKS -keystore cert.bks || return 1
 }
 
 function cavan-openssl-verify()
