@@ -1,0 +1,592 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		8625914B1E7A7E3400816455 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8625914A1E7A7E3400816455 /* AppDelegate.m */; };
+		8625914E1E7A7E3400816455 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 8625914D1E7A7E3400816455 /* main.m */; };
+		862591511E7A7E3400816455 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 862591501E7A7E3400816455 /* ViewController.m */; };
+		862591531E7A7E3400816455 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 862591521E7A7E3400816455 /* Assets.xcassets */; };
+		862591561E7A7E3400816455 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 862591541E7A7E3400816455 /* Main.storyboard */; };
+		862591611E7A7E3400816455 /* TestSSLTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 862591601E7A7E3400816455 /* TestSSLTests.m */; };
+		8625916C1E7A7E3400816455 /* TestSSLUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 8625916B1E7A7E3400816455 /* TestSSLUITests.m */; };
+		ADCB8D591C4381A9E60674EE /* libPods-TestSSL.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0BEA411D205FE248B3137008 /* libPods-TestSSL.a */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		8625915D1E7A7E3400816455 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8625913E1E7A7E3400816455 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 862591451E7A7E3400816455;
+			remoteInfo = TestSSL;
+		};
+		862591681E7A7E3400816455 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8625913E1E7A7E3400816455 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 862591451E7A7E3400816455;
+			remoteInfo = TestSSL;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0BEA411D205FE248B3137008 /* libPods-TestSSL.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-TestSSL.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3D81D673105A1F93D81B8E95 /* Pods-TestSSL.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TestSSL.release.xcconfig"; path = "Pods/Target Support Files/Pods-TestSSL/Pods-TestSSL.release.xcconfig"; sourceTree = "<group>"; };
+		862591461E7A7E3400816455 /* TestSSL.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TestSSL.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		862591491E7A7E3400816455 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		8625914A1E7A7E3400816455 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		8625914D1E7A7E3400816455 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		8625914F1E7A7E3400816455 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		862591501E7A7E3400816455 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		862591521E7A7E3400816455 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		862591551E7A7E3400816455 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		862591571E7A7E3400816455 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8625915C1E7A7E3400816455 /* TestSSLTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TestSSLTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		862591601E7A7E3400816455 /* TestSSLTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestSSLTests.m; sourceTree = "<group>"; };
+		862591621E7A7E3400816455 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		862591671E7A7E3400816455 /* TestSSLUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TestSSLUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8625916B1E7A7E3400816455 /* TestSSLUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestSSLUITests.m; sourceTree = "<group>"; };
+		8625916D1E7A7E3400816455 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E7A187EBEE8C72A2B33840A3 /* Pods-TestSSL.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TestSSL.debug.xcconfig"; path = "Pods/Target Support Files/Pods-TestSSL/Pods-TestSSL.debug.xcconfig"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		862591431E7A7E3400816455 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ADCB8D591C4381A9E60674EE /* libPods-TestSSL.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		862591591E7A7E3400816455 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		862591641E7A7E3400816455 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2B0791C1E0171897B9D0DE94 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0BEA411D205FE248B3137008 /* libPods-TestSSL.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		8625913D1E7A7E3400816455 = {
+			isa = PBXGroup;
+			children = (
+				862591481E7A7E3400816455 /* TestSSL */,
+				8625915F1E7A7E3400816455 /* TestSSLTests */,
+				8625916A1E7A7E3400816455 /* TestSSLUITests */,
+				862591471E7A7E3400816455 /* Products */,
+				B8468EF4B4280FC5C47F323E /* Pods */,
+				2B0791C1E0171897B9D0DE94 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		862591471E7A7E3400816455 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				862591461E7A7E3400816455 /* TestSSL.app */,
+				8625915C1E7A7E3400816455 /* TestSSLTests.xctest */,
+				862591671E7A7E3400816455 /* TestSSLUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		862591481E7A7E3400816455 /* TestSSL */ = {
+			isa = PBXGroup;
+			children = (
+				862591491E7A7E3400816455 /* AppDelegate.h */,
+				8625914A1E7A7E3400816455 /* AppDelegate.m */,
+				8625914F1E7A7E3400816455 /* ViewController.h */,
+				862591501E7A7E3400816455 /* ViewController.m */,
+				862591521E7A7E3400816455 /* Assets.xcassets */,
+				862591541E7A7E3400816455 /* Main.storyboard */,
+				862591571E7A7E3400816455 /* Info.plist */,
+				8625914C1E7A7E3400816455 /* Supporting Files */,
+			);
+			path = TestSSL;
+			sourceTree = "<group>";
+		};
+		8625914C1E7A7E3400816455 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				8625914D1E7A7E3400816455 /* main.m */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		8625915F1E7A7E3400816455 /* TestSSLTests */ = {
+			isa = PBXGroup;
+			children = (
+				862591601E7A7E3400816455 /* TestSSLTests.m */,
+				862591621E7A7E3400816455 /* Info.plist */,
+			);
+			path = TestSSLTests;
+			sourceTree = "<group>";
+		};
+		8625916A1E7A7E3400816455 /* TestSSLUITests */ = {
+			isa = PBXGroup;
+			children = (
+				8625916B1E7A7E3400816455 /* TestSSLUITests.m */,
+				8625916D1E7A7E3400816455 /* Info.plist */,
+			);
+			path = TestSSLUITests;
+			sourceTree = "<group>";
+		};
+		B8468EF4B4280FC5C47F323E /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				E7A187EBEE8C72A2B33840A3 /* Pods-TestSSL.debug.xcconfig */,
+				3D81D673105A1F93D81B8E95 /* Pods-TestSSL.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		862591451E7A7E3400816455 /* TestSSL */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 862591701E7A7E3400816455 /* Build configuration list for PBXNativeTarget "TestSSL" */;
+			buildPhases = (
+				5836A04714C0A9E578269B90 /* [CP] Check Pods Manifest.lock */,
+				862591421E7A7E3400816455 /* Sources */,
+				862591431E7A7E3400816455 /* Frameworks */,
+				862591441E7A7E3400816455 /* Resources */,
+				BC325DF77AE4C570E214CD67 /* [CP] Embed Pods Frameworks */,
+				557996309C58004FA9D198E7 /* [CP] Copy Pods Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TestSSL;
+			productName = TestSSL;
+			productReference = 862591461E7A7E3400816455 /* TestSSL.app */;
+			productType = "com.apple.product-type.application";
+		};
+		8625915B1E7A7E3400816455 /* TestSSLTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 862591731E7A7E3400816455 /* Build configuration list for PBXNativeTarget "TestSSLTests" */;
+			buildPhases = (
+				862591581E7A7E3400816455 /* Sources */,
+				862591591E7A7E3400816455 /* Frameworks */,
+				8625915A1E7A7E3400816455 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8625915E1E7A7E3400816455 /* PBXTargetDependency */,
+			);
+			name = TestSSLTests;
+			productName = TestSSLTests;
+			productReference = 8625915C1E7A7E3400816455 /* TestSSLTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		862591661E7A7E3400816455 /* TestSSLUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 862591761E7A7E3400816455 /* Build configuration list for PBXNativeTarget "TestSSLUITests" */;
+			buildPhases = (
+				862591631E7A7E3400816455 /* Sources */,
+				862591641E7A7E3400816455 /* Frameworks */,
+				862591651E7A7E3400816455 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				862591691E7A7E3400816455 /* PBXTargetDependency */,
+			);
+			name = TestSSLUITests;
+			productName = TestSSLUITests;
+			productReference = 862591671E7A7E3400816455 /* TestSSLUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		8625913E1E7A7E3400816455 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0730;
+				ORGANIZATIONNAME = "曹福昂";
+				TargetAttributes = {
+					862591451E7A7E3400816455 = {
+						CreatedOnToolsVersion = 7.3;
+					};
+					8625915B1E7A7E3400816455 = {
+						CreatedOnToolsVersion = 7.3;
+						TestTargetID = 862591451E7A7E3400816455;
+					};
+					862591661E7A7E3400816455 = {
+						CreatedOnToolsVersion = 7.3;
+						TestTargetID = 862591451E7A7E3400816455;
+					};
+				};
+			};
+			buildConfigurationList = 862591411E7A7E3400816455 /* Build configuration list for PBXProject "TestSSL" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 8625913D1E7A7E3400816455;
+			productRefGroup = 862591471E7A7E3400816455 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				862591451E7A7E3400816455 /* TestSSL */,
+				8625915B1E7A7E3400816455 /* TestSSLTests */,
+				862591661E7A7E3400816455 /* TestSSLUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		862591441E7A7E3400816455 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				862591531E7A7E3400816455 /* Assets.xcassets in Resources */,
+				862591561E7A7E3400816455 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8625915A1E7A7E3400816455 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		862591651E7A7E3400816455 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		557996309C58004FA9D198E7 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-TestSSL/Pods-TestSSL-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		5836A04714C0A9E578269B90 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		BC325DF77AE4C570E214CD67 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-TestSSL/Pods-TestSSL-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		862591421E7A7E3400816455 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				862591511E7A7E3400816455 /* ViewController.m in Sources */,
+				8625914E1E7A7E3400816455 /* main.m in Sources */,
+				8625914B1E7A7E3400816455 /* AppDelegate.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		862591581E7A7E3400816455 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				862591611E7A7E3400816455 /* TestSSLTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		862591631E7A7E3400816455 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8625916C1E7A7E3400816455 /* TestSSLUITests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8625915E1E7A7E3400816455 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 862591451E7A7E3400816455 /* TestSSL */;
+			targetProxy = 8625915D1E7A7E3400816455 /* PBXContainerItemProxy */;
+		};
+		862591691E7A7E3400816455 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 862591451E7A7E3400816455 /* TestSSL */;
+			targetProxy = 862591681E7A7E3400816455 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		862591541E7A7E3400816455 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				862591551E7A7E3400816455 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		8625916E1E7A7E3400816455 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		8625916F1E7A7E3400816455 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		862591711E7A7E3400816455 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E7A187EBEE8C72A2B33840A3 /* Pods-TestSSL.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = TestSSL/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cavan.TestSSL;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		862591721E7A7E3400816455 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3D81D673105A1F93D81B8E95 /* Pods-TestSSL.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = TestSSL/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cavan.TestSSL;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		862591741E7A7E3400816455 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = TestSSLTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cavan.TestSSLTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TestSSL.app/Contents/MacOS/TestSSL";
+			};
+			name = Debug;
+		};
+		862591751E7A7E3400816455 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = TestSSLTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cavan.TestSSLTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TestSSL.app/Contents/MacOS/TestSSL";
+			};
+			name = Release;
+		};
+		862591771E7A7E3400816455 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = TestSSLUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cavan.TestSSLUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = TestSSL;
+			};
+			name = Debug;
+		};
+		862591781E7A7E3400816455 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = TestSSLUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cavan.TestSSLUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = TestSSL;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		862591411E7A7E3400816455 /* Build configuration list for PBXProject "TestSSL" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8625916E1E7A7E3400816455 /* Debug */,
+				8625916F1E7A7E3400816455 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		862591701E7A7E3400816455 /* Build configuration list for PBXNativeTarget "TestSSL" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				862591711E7A7E3400816455 /* Debug */,
+				862591721E7A7E3400816455 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		862591731E7A7E3400816455 /* Build configuration list for PBXNativeTarget "TestSSLTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				862591741E7A7E3400816455 /* Debug */,
+				862591751E7A7E3400816455 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		862591761E7A7E3400816455 /* Build configuration list for PBXNativeTarget "TestSSLUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				862591771E7A7E3400816455 /* Debug */,
+				862591781E7A7E3400816455 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 8625913E1E7A7E3400816455 /* Project object */;
+}

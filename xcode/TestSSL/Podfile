@@ -1,0 +1,5 @@
+platform :osx, '10.8'
+
+target 'TestSSL' do
+	pod 'CocoaAsyncSocket'
+end
