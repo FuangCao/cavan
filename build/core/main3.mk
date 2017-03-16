@@ -7,7 +7,7 @@ APP_CORE_PATH = $(ROOT_PATH)/app/core
 INCLUDE_PATH = $(ROOT_PATH)/include
 SUB_DIRS = lib cpp app
 
-APP_PREFIX = ${CAVAN_NAME}-
+APP_PREFIX = $(CAVAN_NAME)-
 MAKEFILE_CAVAN = $(CAVAN_NAME).mk
 BUILD_LIBA = $(BUILD_CORE_PATH)/build_liba.mk
 BUILD_LIBSO = $(BUILD_CORE_PATH)/build_libso.mk
@@ -70,10 +70,16 @@ ifeq ($(BUILD_OTHERS),true)
 LDFLAGS += -lasound -ldl
 endif
 
+CONFIG_CAVAN_SSL_CERT ?= $(ROOT_PATH)/config/ssl/cert.pem
+CONFIG_CAVAN_SSL_KEY ?= $(ROOT_PATH)/config/ssl/key.pem
+
 ifeq ($(CONFIG_CAVAN_SSL),true)
 CFLAGS += -DCONFIG_CAVAN_SSL
-CFLAGS += -DCONFIG_CAVAN_SSL_CERT=\"$(ROOT_PATH)/config/ssl/cert.pem\"
-CFLAGS += -DCONFIG_CAVAN_SSL_KEY=\"$(ROOT_PATH)/config/ssl/key.pem\"
+CFLAGS += -DCONFIG_CAVAN_SSL_CERT=\"$(CONFIG_CAVAN_SSL_CERT)\"
+CFLAGS += -DCONFIG_CAVAN_SSL_KEY=\"$(CONFIG_CAVAN_SSL_KEY)\"
+ifneq ($(CONFIG_CAVAN_SSL_PASSWORD),)
+CFLAGS += -DCONFIG_CAVAN_SSL_PASSWORD=\"$(CONFIG_CAVAN_SSL_PASSWORD)\"
+endif
 LDFLAGS += -lssl
 endif
 
@@ -111,7 +117,6 @@ include $(BUILD_CORE_PATH)/defines3.mk
 $(foreach path,$(OUT_LIB) $(OUT_BIN),$(shell [ -d $(path) ] || $(MKDIR) $(path)))
 
 all: all-modules
-
 jni:
 	@+make -C "${ROOT_PATH}/android/app/CavanJni/jni"
 
@@ -121,6 +126,9 @@ clean distclean:
 $(foreach sub,$(SUB_DIRS),$(eval $(call build_sub_module,$(sub))))
 
 all-modules: $(MODULES)
+
+$(ROOT_PATH)/include/cavan/config.h : Makefile
+	@touch $@
 
 .PRECIOUS: $(APP_OBJ_FILES) $(LIB_OBJ_FILES) $(CAVAN_OBJ_FILES)
 .PHONY: uninstall uninstall-header uninstall-lib uninstall-bin
