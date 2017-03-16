@@ -203,31 +203,28 @@ public class CavanAndroid {
 		return service;
 	}
 
-	public static void cancelToastLocked() {
-		if (sToast != null) {
-			sToast.cancel();
-			sToast = null;
-		}
-	}
-
 	public static void cancelToast() {
 		synchronized (sToastLock) {
-			cancelToastLocked();
+			if (sToast != null) {
+				sToast.cancel();
+				sToast = null;
+			}
 		}
 	}
 
 	public static void showToast(Context context, String text, int duration) {
 		dLog(text);
 
-		Toast toast = Toast.makeText(context, text, duration);
-
-		toast.setGravity(Gravity.CENTER, 0, 0);
-
 		synchronized (sToastLock) {
-			cancelToastLocked();
+			if (sToast == null) {
+				sToast = Toast.makeText(context, text, duration);
+				sToast.setGravity(Gravity.CENTER, 0, 0);
+			} else {
+				sToast.setDuration(duration);
+				sToast.setText(text);
+			}
 
-			sToast = toast;
-			toast.show();
+			sToast.show();
 		}
 	}
 
