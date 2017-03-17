@@ -626,6 +626,130 @@ public class CavanFile extends File {
 		return true;
 	}
 
+	public static boolean copy(InputStream inStream, OutputStream outStream) {
+		byte[] bytes = new byte[1024];
+
+		try {
+			while (true) {
+				int length = inStream.read(bytes);
+				if (length <= 0) {
+					if (length < 0) {
+						break;
+					}
+
+					continue;
+				}
+
+				outStream.write(bytes, 0, length);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+
+		return true;
+	}
+
+	public static boolean copy(FileInputStream inStream, FileOutputStream outStream) {
+		try {
+			MappedByteBuffer buffer = inStream.getChannel().map(MapMode.READ_ONLY, 0, inStream.available());
+			if (buffer == null) {
+				return copy((InputStream) inStream, (OutputStream) outStream);
+			} else {
+				outStream.getChannel().write(buffer);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+
+		return true;
+	}
+
+	public static boolean copy(File inFile, OutputStream outStream) {
+		InputStream inStream = null;
+
+		try {
+			inStream = new FileInputStream(inFile);
+			return copy(inStream, outStream);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} finally {
+			if (inStream != null) {
+				try {
+					inStream.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return false;
+	}
+
+	public static boolean copy(File inFile, FileOutputStream outStream) {
+		InputStream inStream = null;
+
+		try {
+			inStream = new FileInputStream(inFile);
+			return copy(inStream, outStream);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} finally {
+			if (inStream != null) {
+				try {
+					inStream.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return false;
+	}
+
+	public static boolean copy(InputStream inStream, File outFile) {
+		OutputStream outStream = null;
+
+		try {
+			outStream = new FileOutputStream(outFile);
+			return copy(inStream, outStream);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} finally {
+			if (outStream != null) {
+				try {
+					outStream.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return false;
+	}
+
+	public static boolean copy(FileInputStream inStream, File outFile) {
+		OutputStream outStream = null;
+
+		try {
+			outStream = new FileOutputStream(outFile);
+			return copy(inStream, outStream);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} finally {
+			if (outStream != null) {
+				try {
+					outStream.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return false;
+	}
+
 	public static boolean copy(File inFile, File outFile) {
 		if (inFile.isDirectory()) {
 			if (!outFile.isDirectory()) {
@@ -646,33 +770,10 @@ public class CavanFile extends File {
 		}
 
 		FileInputStream inStream = null;
-		FileOutputStream outStream = null;
 
 		try {
 			inStream = new FileInputStream(inFile);
-			outStream = new FileOutputStream(outFile);
-
-			MappedByteBuffer buffer = inStream.getChannel().map(MapMode.READ_ONLY, 0, inStream.available());
-			if (buffer == null) {
-				byte[] bytes = new byte[1024];
-
-				while (true) {
-					int length = inStream.read(bytes);
-					if (length <= 0) {
-						if (length < 0) {
-							break;
-						}
-
-						continue;
-					}
-
-					outStream.write(bytes, 0, length);
-				}
-			} else {
-				outStream.getChannel().write(buffer);
-			}
-
-			return true;
+			return copy(inStream, outFile);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -684,19 +785,43 @@ public class CavanFile extends File {
 					e.printStackTrace();
 				}
 			}
-
-			if (outStream != null) {
-				try {
-					outStream.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
 		}
 	}
 
+	public static boolean copy(String inPath, File outFile) {
+		return copy(new File(inPath), outFile);
+	}
+
+	public static boolean copy(File inFile, String outPath) {
+		return copy(inFile, new File(outPath));
+	}
+
 	public static boolean copy(String inPath, String outPath) {
-		return copy(new File(inPath), new File(outPath));
+		return copy(inPath, new File(outPath));
+	}
+
+	public static boolean copy(String inPath, OutputStream outStream) {
+		return copy(new File(inPath), outStream);
+	}
+
+	public static boolean copy(String inPath, FileOutputStream outStream) {
+		return copy(new File(inPath), outStream);
+	}
+
+	public static boolean copy(InputStream inStream, String outPath) {
+		return copy(inStream, new File(outPath));
+	}
+
+	public static boolean copy(FileInputStream inStream, String outPath) {
+		return copy(inStream, new File(outPath));
+	}
+
+	public boolean copyFrom(InputStream stream) {
+		return copy(stream, this);
+	}
+
+	public boolean copyFrom(FileInputStream stream) {
+		return copy(stream, this);
 	}
 
 	public boolean copyFrom(File file) {
@@ -705,6 +830,14 @@ public class CavanFile extends File {
 
 	public boolean copyFrom(String pathname) {
 		return copyFrom(new File(pathname));
+	}
+
+	public boolean sopyTo(OutputStream stream) {
+		return copy(this, stream);
+	}
+
+	public boolean copyTo(FileOutputStream stream) {
+		return copy(this, stream);
 	}
 
 	public boolean copyTo(File file) {

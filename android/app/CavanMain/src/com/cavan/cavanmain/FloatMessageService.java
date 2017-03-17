@@ -35,6 +35,8 @@ import android.view.ViewGroup;
 import android.view.WindowManager.LayoutParams;
 import android.widget.TextView;
 
+import com.cavan.activity.KeyguardActivity;
+import com.cavan.activity.MainActivity;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.FloatWidowService;
 import com.cavan.cavanjni.CavanJni;
@@ -205,7 +207,7 @@ public class FloatMessageService extends FloatWidowService {
 			switch (action) {
 			case Intent.ACTION_SCREEN_OFF:
 				if (MainActivity.isDisableKeyguardEnabled(getApplicationContext())) {
-					CavanAndroid.startActivity(getApplicationContext(), CavanKeyguardActivity.class);
+					CavanAndroid.startActivity(getApplicationContext(), KeyguardActivity.class);
 				}
 
 				setLockScreenEnable(true);

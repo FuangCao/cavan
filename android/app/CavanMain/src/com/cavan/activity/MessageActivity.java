@@ -1,4 +1,4 @@
-package com.cavan.cavanmain;
+package com.cavan.activity;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -30,8 +30,14 @@ import android.widget.EditText;
 import android.widget.ListView;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.cavanmain.CavanFilter;
+import com.cavan.cavanmain.CavanMessageAdapter;
+import com.cavan.cavanmain.CavanMessageView;
+import com.cavan.cavanmain.CavanNotification;
+import com.cavan.cavanmain.R;
+import com.cavan.cavanmain.RedPacketListenerService;
 
-public class CavanMessageActivity extends Activity {
+public class MessageActivity extends Activity {
 
 	private CavanMessageAdapter mAdapter;
 	private CavanMessageFilter mMessageFinder = new CavanMessageFilter();
@@ -49,7 +55,7 @@ public class CavanMessageActivity extends Activity {
 	private Pattern[] mFilterPatterns;
 
 	public static Intent getIntent(Context context) {
-		return new Intent(context, CavanMessageActivity.class);
+		return new Intent(context, MessageActivity.class);
 	}
 
 	public Pattern[] getFilterPatterns() {
@@ -203,7 +209,7 @@ public class CavanMessageActivity extends Activity {
 				CavanFilterView view = (CavanFilterView) convertView;
 				CavanFilter filter = mFilters[position];
 				if (view == null) {
-					view = new CavanFilterView(CavanMessageActivity.this, filter);
+					view = new CavanFilterView(MessageActivity.this, filter);
 				} else {
 					view.setFilter(filter);
 				}
@@ -268,7 +274,7 @@ public class CavanMessageActivity extends Activity {
 			mListViewFilter.setAdapter(mFilterAdapter);
 			mFilterAdapter.notifyDataSetChanged();
 
-			AlertDialog.Builder builder = new AlertDialog.Builder(CavanMessageActivity.this);
+			AlertDialog.Builder builder = new AlertDialog.Builder(MessageActivity.this);
 
 			builder.setView(view);
 			builder.setCancelable(false);

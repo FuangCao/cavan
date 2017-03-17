@@ -10,6 +10,7 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.EditText;
 
+import com.cavan.activity.MainActivity;
 import com.cavan.android.CavanAccessibility;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
@@ -266,7 +267,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 			}
 			break;
 
-		case "com.alipay.mobile.xiuxiu.ui.MainActivity":
+		case "com.alipay.mobile.xiuxiu.ui.RedPacketSettingsActivity":
 			if (mXiuXiuPending && startXiuXiu(root)) {
 				mXiuXiuPending = false;
 			}
@@ -606,7 +607,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 			}
 		} else {
 			switch (mClassName) {
-			case "com.alipay.mobile.xiuxiu.ui.MainActivity":
+			case "com.alipay.mobile.xiuxiu.ui.RedPacketSettingsActivity":
 				mXiuXiu = true;
 				mXiuXiuPending = true;
 			case "com.alipay.mobile.nebulacore.ui.H5Activity":

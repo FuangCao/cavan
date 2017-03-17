@@ -190,4 +190,13 @@
     <string name="keyword_notify">关键字提醒</string>
     <string name="auto_back_desktop">自动返回桌面</string>
 
+    <string name="app_name_service_settings">服务器设置</string>
+    <string name="app_name_apk_backup">应用备份</string>
+    <string name="action_settings">设置</string>
+    <string name="backup_file">备份文件：<xliff:g>%1$s</xliff:g></string>
+    <string name="clear_directory">清空文件夹：<xliff:g>%1$s</xliff:g></string>
+    <string name="backup_complete">备份完成</string>
+    <string name="backup_system_app">备份系统应用</string>
+    <string name="clear_before_backup">备份前先清除</string>
+
 </resources>

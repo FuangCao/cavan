@@ -1,11 +1,6 @@
-package com.cavan.cavanmain;
+package com.cavan.activity;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.InetAddress;
+
 import java.util.List;
 
 import android.app.Notification.Builder;
@@ -19,7 +14,6 @@ import android.content.ServiceConnection;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -34,9 +28,13 @@ import android.preference.RingtonePreference;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
-import com.cavan.cavanjni.CavanJni;
-import com.cavan.cavanjni.CavanServicePreference;
-import com.cavan.java.CavanJava;
+import com.cavan.cavanmain.CavanAccessibilityService;
+import com.cavan.cavanmain.CavanInputMethod;
+import com.cavan.cavanmain.FloatMessageService;
+import com.cavan.cavanmain.IFloatMessageService;
+import com.cavan.cavanmain.R;
+import com.cavan.cavanmain.RedPacketCode;
+import com.cavan.cavanmain.RedPacketListenerService;
 import com.cavan.java.CavanString;
 import com.cavan.resource.EditableMultiSelectListPreference;
 
@@ -55,7 +53,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String ACTION_UNPACK_QQ = "cavan.intent.action.ACTION_UNPACK_QQ";
 	public static final String ACTION_UNPACK_MM = "cavan.intent.action.ACTION_UNPACK_MM";
 
-	public static final String KEY_IP_ADDRESS = "ip_address";
 	public static final String KEY_AUTO_UNLOCK = "auto_unlock";
 	public static final String KEY_AUTO_COMMIT = "auto_commit";
 	public static final String KEY_AUTO_UNPACK = "auto_unpack";
@@ -84,11 +81,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_RED_PACKET_NOTIFY_RINGTONE = "red_packet_notify_ringtone";
 	public static final String KEY_TCP_BRIDGE = "tcp_bridge";
 	public static final String KEY_TCP_BRIDGE_SETTING = "tcp_bridge_setting";
-	public static final String KEY_FTP = "ftp";
-	public static final String KEY_HTTP = "http";
-	public static final String KEY_TCP_DD = "tcp_dd";
-	public static final String KEY_WEB_PROXY = "web_proxy";
-	public static final String KEY_TCP_REPEATER = "tcp_repeater";
 	public static final String KEY_DISABLE_KEYGUARD = "disable_keyguard";
 	public static final String KEY_QQ_AUTO_UNPACK = "qq_auto_unpack";
 	public static final String KEY_MM_AUTO_UNPACK = "mm_auto_unpack";
@@ -261,8 +253,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		}
 	}
 
-	private File mFileBin;
-	private Preference mPreferenceIpAddress;
 	private Preference mPreferenceRedPacketClear;
 	private Preference mPreferenceInputMethodSelect;
 	private CheckBoxPreference mPreferenceFloatTime;
@@ -276,11 +266,6 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private EditTextPreference mPreferenceRedPacketCodeSplit;
 	private EditTextPreference mPreferenceRedPacketNotifyTest;
 	private RingtonePreference mPreferenceRedPacketNotifyRingtone;
-	private CavanServicePreference mPreferenceTcpDd;
-	private CavanServicePreference mPreferenceFtp;
-	private CavanServicePreference mPreferenceHttp;
-	private CavanServicePreference mPreferenceWebProxy;
-	private CavanServicePreference mPreferenceTcpRepeater;
 	private CheckBoxPreference mPreferenceWanShare;
 	private CheckBoxPreference mPreferenceWanReceive;
 	private EditableMultiSelectListPreference mPreferenceWanServer;
@@ -362,9 +347,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		addPreferencesFromResource(R.xml.cavan_service);
+		addPreferencesFromResource(R.xml.red_packet_settings);
 
-		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
 		mPreferenceInputMethodSelect = findPreference(KEY_INPUT_METHOD_SELECT);
 		mPreferenceLanTest = findPreference(KEY_LAN_TEST);
 		mPreferenceWanTest = findPreference(KEY_WAN_TEST);
@@ -376,7 +360,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceAutoUnlock.setOnPreferenceChangeListener(this);
 
 		mPreferenceMessageShow = findPreference(KEY_MESSAGE_SHOW);
-		mPreferenceMessageShow.setIntent(CavanMessageActivity.getIntent(this));
+		mPreferenceMessageShow.setIntent(MessageActivity.getIntent(this));
 
 		mPreferencePermissionSettings = findPreference(KEY_PERMISSION_SETTINGS);
 		mPreferencePermissionSettings.setIntent(PermissionSettingsActivity.getIntent(this));
@@ -424,34 +408,11 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceTcpBridgeSetting.setSummary(mPreferenceTcpBridgeSetting.getText());
 		mPreferenceTcpBridgeSetting.setOnPreferenceChangeListener(this);
 
-		mPreferenceFtp = (CavanServicePreference) findPreference(KEY_FTP);
-		mPreferenceHttp = (CavanServicePreference) findPreference(KEY_HTTP);
-		mPreferenceTcpDd = (CavanServicePreference) findPreference(KEY_TCP_DD);
-		mPreferenceWebProxy = (CavanServicePreference) findPreference(KEY_WEB_PROXY);
-		mPreferenceTcpRepeater = (CavanServicePreference) findPreference(KEY_TCP_REPEATER);
-
 		findListPreference(KEY_AUTO_COMMIT);
 		findListPreference(KEY_COMMIT_AHEAD);
 		findListPreference(KEY_RED_PACKET_NOTIFY_SETTING);
 		findListPreference(KEY_QQ_AUTO_UNPACK);
 		findListPreference(KEY_MM_AUTO_UNPACK);
-
-		updateIpAddressStatus();
-
-		mFileBin = getDir("bin", 0777);
-		if (mFileBin == null) {
-			CavanAndroid.dLog("Failed to getDir bin");
-		} else {
-			CavanJni.appendPathEnv(mFileBin.getPath());
-
-			new Thread() {
-
-				@Override
-				public void run() {
-					CavanAndroid.dLog("releaseCavanMain " + (releaseCavanMain() ? "OK" : "Failed"));
-				}
-			}.start();
-		}
 
 		Intent service = FloatMessageService.buildIntent(this);
 
@@ -469,94 +430,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		unregisterReceiver(mReceiver);
 		unbindService(mFloatMessageConnection);
 
-		mPreferenceFtp.unbindService(this);
-		mPreferenceHttp.unbindService(this);
-		mPreferenceTcpDd.unbindService(this);
-		mPreferenceWebProxy.unbindService(this);
-		mPreferenceTcpRepeater.unbindService(this);
-
 		super.onDestroy();
-	}
-
-	@SuppressWarnings("deprecation")
-	private boolean releaseCavanMain() {
-		File fileCavanMain = new File(mFileBin, "cavan-main");
-		if (fileCavanMain.canExecute()) {
-			return true;
-		}
-
-		for (String abi : new String[] { Build.CPU_ABI, Build.CPU_ABI2 }) {
-			String filename = "cavan-main" + "." + abi;
-
-			if (releaseAsset(filename, fileCavanMain)) {
-				fileCavanMain.setExecutable(true, false);
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	private boolean releaseAsset(InputStream inStream, OutputStream outStream) {
-		byte[] buff = new byte[1024];
-
-		try {
-			while (true) {
-				int length = inStream.read(buff);
-				if (length < 1) {
-					break;
-				}
-
-				outStream.write(buff, 0, length);
-			}
-
-			return true;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
-
-	private boolean releaseAsset(String filename, File outFile) {
-		CavanAndroid.dLog("releaseAsset: " + filename + " => " + outFile.getPath());
-
-		InputStream inStream = null;
-		OutputStream outStream = null;
-
-		try {
-			inStream = getAssets().open(filename);
-			outStream = new FileOutputStream(outFile);
-			return releaseAsset(inStream, outStream);
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			if (inStream != null) {
-				try {
-					inStream.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-
-			if (outStream != null) {
-				try {
-					outStream.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-
-		return false;
-	}
-
-	private void updateIpAddressStatus() {
-		InetAddress address = CavanJava.getIpAddress();
-		if (address != null) {
-			mPreferenceIpAddress.setSummary(address.getHostAddress());
-		} else {
-			mPreferenceIpAddress.setSummary(R.string.text_unknown);
-		}
 	}
 
 	private boolean setDesktopFloatTimerEnable(boolean enable) {
@@ -594,9 +468,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	@SuppressWarnings("deprecation")
 	@Override
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
-		if (preference == mPreferenceIpAddress) {
-			updateIpAddressStatus();
-		} else if (preference == mPreferenceInputMethodSelect) {
+		if (preference == mPreferenceInputMethodSelect) {
 			CavanAndroid.showInputMethodPicker(this);
 		} else if (preference == mPreferenceLanTest) {
 			if (mFloatMessageService != null) {

@@ -13,6 +13,8 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 
+import com.cavan.activity.MainActivity;
+
 @SuppressLint("SimpleDateFormat")
 public class RedPacketCode implements Comparable<RedPacketCode> {
 

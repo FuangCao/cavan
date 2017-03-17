@@ -1,0 +1,84 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.cavan.cavanapkbackup.MainActivity" >
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_above="@+id/checkBoxSelectAll" />
+
+    <TextView
+        android:id="@+id/textViewState"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/progressBar"
+        android:layout_alignRight="@+id/progressBar"
+        android:layout_above="@+id/buttonStart" />
+
+    <Button
+        android:id="@+id/buttonStop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:text="@string/stop" />
+
+    <CheckBox
+        android:id="@+id/checkBoxClearBeforeBackup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignBaseline="@+id/checkBoxBackupSysApp"
+        android:text="@string/clear_before_backup" />
+
+    <Button
+        android:id="@+id/buttonStart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:text="@string/start" />
+
+    <com.cavan.android.CavanCheckBox
+        android:id="@+id/checkBoxSelectAll"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/checkBoxBackupSysApp"
+        android:layout_alignLeft="@+id/buttonStart"
+        android:text="@string/select_all" />
+
+    <ListView
+        android:id="@+id/listViewApps"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_above="@+id/progressBar" >
+
+    </ListView>
+
+    <EditText
+        android:id="@+id/editTextSearch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/checkBoxSelectAll"
+        android:layout_alignParentRight="true"
+        android:layout_toRightOf="@+id/checkBoxBackupSysApp"
+        android:ems="10" >
+    </EditText>
+
+    <CheckBox
+        android:id="@+id/checkBoxBackupSysApp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_above="@+id/textViewState"
+        android:text="@string/backup_system_app" />
+
+</RelativeLayout>

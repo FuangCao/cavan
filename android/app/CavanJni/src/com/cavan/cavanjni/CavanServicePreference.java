@@ -64,7 +64,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 
 			mService = null;
 
-			updateSummary(false);
+			updateSummary(CavanService.STATE_STOPPED);
 			setEnabled(false);
 
 			mHandler.sendEmptyMessageDelayed(EVENT_START_SERVICE, 500);
@@ -104,7 +104,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 	public CavanServicePreference(Context context, AttributeSet attrs) {
 		super(context, attrs);
 
-		updateSummary(false);
+		updateSummary(CavanService.STATE_STOPPED);
 		startService(context);
 	}
 
@@ -144,7 +144,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 		mHandler.sendEmptyMessageDelayed(EVENT_START_SERVICE, 500);
 	}
 
-	public boolean getServiceState() {
+	public int getServiceState() {
 		if (mService != null) {
 			try {
 				return mService.getState();
@@ -153,7 +153,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 			}
 		}
 
-		return false;
+		return CavanService.STATE_STOPPED;
 	}
 
 	public boolean isServiceEnabled() {
@@ -202,7 +202,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 		return 0;
 	}
 
-	public void updateSummary(boolean state) {
+	public void updateSummary(int state) {
 
 		if (mService == null) {
 			setSummary(R.string.text_service_disconnected);
@@ -213,12 +213,26 @@ public abstract class CavanServicePreference extends EditTextPreference {
 			} else {
 				StringBuilder builder = new StringBuilder();
 
-				if (state) {
-					builder.append(resources.getString(R.string.text_running));
-				} else {
-					builder.append(resources.getString(R.string.text_stopped));
+				int resId;
+
+				switch (state) {
+				case CavanService.STATE_PREPARE:
+					resId = R.string.text_prepare;
+					break;
+
+				case CavanService.STATE_RUNNING:
+					resId = R.string.text_running;
+					break;
+
+				case CavanService.STATE_WAITING:
+					resId = R.string.text_waiting;
+					break;
+
+				default:
+					resId = R.string.text_stopped;
 				}
 
+				builder.append(resources.getString(resId));
 				builder.append(", ");
 				builder.append(resources.getString(R.string.text_port));
 				builder.append(": ");
@@ -230,7 +244,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 	}
 
 	public void updateSummary(Context context, Intent intent) {
-		boolean state = intent.getBooleanExtra("state", false);
+		int state = intent.getIntExtra("state", CavanService.STATE_STOPPED);
 		updateSummary(state);
 	}
 

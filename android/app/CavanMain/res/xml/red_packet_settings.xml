@@ -4,10 +4,6 @@
     xmlns:settings="http://schemas.android.com/apk/res/com.android.settings"
     android:key="parent">
 
-	<Preference android:key="ip_address"
-	    android:title="@string/text_local_ip_address"
-	    android:summary="@string/text_unknown" />
-
 	<Preference android:key="message_show"
 	    android:title="@string/text_message_show" />
 
@@ -164,25 +160,5 @@
 	<EditTextPreference android:key="tcp_bridge_setting"
 	    android:persistent="true"
 	    android:title="@string/text_tcp_bridge_setting" />
-
-	<com.cavan.cavanjni.TcpRepeaterPreference android:key="tcp_repeater"
-	    android:persistent="true"
-	    android:title="@string/tcp_repeater" />
-
-	<com.cavan.cavanjni.FtpServicePreference android:key="ftp"
-	    android:persistent="true"
-	    android:title="@string/ftp_service" />
-
-	<com.cavan.cavanjni.HttpServicePreference android:key="http"
-	    android:persistent="true"
-	    android:title="@string/http_service" />
-
-	<com.cavan.cavanjni.TcpDdServicePreference android:key="tcp_dd"
-	    android:persistent="true"
-	    android:title="@string/tcp_dd_service" />
-
-	<com.cavan.cavanjni.WebProxyServicePreference android:key="web_proxy"
-	    android:persistent="true"
-	    android:title="@string/web_proxy_service" />
 
 </PreferenceScreen>

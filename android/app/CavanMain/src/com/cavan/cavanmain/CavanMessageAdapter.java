@@ -3,6 +3,8 @@ package com.cavan.cavanmain;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.cavan.activity.MessageActivity;
+
 import android.database.Cursor;
 import android.net.Uri;
 import android.view.View;
@@ -14,7 +16,7 @@ public class CavanMessageAdapter extends BaseAdapter {
 
 	private ListView mView;
 	private boolean mSelectionBottom;
-	private CavanMessageActivity mActivity;
+	private MessageActivity mActivity;
 
 	private int mCount;
 	private Cursor mCursor;
@@ -56,7 +58,7 @@ public class CavanMessageAdapter extends BaseAdapter {
 		}
 	};
 
-	public CavanMessageAdapter(CavanMessageActivity activity) {
+	public CavanMessageAdapter(MessageActivity activity) {
 		super();
 
 		mActivity = activity;

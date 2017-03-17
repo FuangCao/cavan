@@ -1,6 +1,4 @@
-package com.cavan.cavanmain;
-
-import com.cavan.android.CavanAndroid;
+package com.cavan.activity;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -9,7 +7,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 
-public class CavanKeyguardActivity extends Activity {
+import com.cavan.android.CavanAndroid;
+import com.cavan.cavanmain.R;
+
+public class KeyguardActivity extends Activity {
 
 	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
 

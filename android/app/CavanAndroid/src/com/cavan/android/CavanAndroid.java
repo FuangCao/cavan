@@ -703,4 +703,16 @@ public class CavanAndroid {
 
 		return new String[] { Environment.getExternalStorageDirectory().getPath() };
 	}
+
+	public static String[] getSupportedAbis() {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+			if (Build.CPU_ABI2.isEmpty()) {
+				return new String[] { Build.CPU_ABI };
+			} else {
+				return new String[] { Build.CPU_ABI, Build.CPU_ABI2 };
+			}
+		}
+
+		return Build.SUPPORTED_ABIS;
+	}
 }

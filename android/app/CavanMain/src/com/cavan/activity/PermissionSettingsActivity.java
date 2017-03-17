@@ -1,4 +1,4 @@
-package com.cavan.cavanmain;
+package com.cavan.activity;
 
 import android.content.Context;
 import android.content.Intent;
@@ -7,6 +7,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.cavanmain.R;
 
 public class PermissionSettingsActivity extends PreferenceActivity {
 

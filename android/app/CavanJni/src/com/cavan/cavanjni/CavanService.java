@@ -9,26 +9,26 @@ import com.cavan.android.CavanAndroid;
 
 public abstract class CavanService extends Service {
 
+	public static final int STATE_STOPPED = 0;
+	public static final int STATE_PREPARE = 1;
+	public static final int STATE_RUNNING = 2;
+	public static final int STATE_WAITING = 3;
+
 	protected int mPort;
-	protected boolean mState;
 	protected boolean mEnabled;
+	protected int mState = STATE_STOPPED;
 
 	class MyThread extends Thread {
 
 		@Override
-		public synchronized void start() {
-			mEnabled = true;
-			super.start();
-		}
-
-		@Override
 		public void run() {
-			onServiceStart();
+			setServiceState(STATE_PREPARE);
 
 			while (mEnabled) {
-				setState(true);
+				setServiceState(STATE_RUNNING);
 				doMainLoop(mPort);
-				setState(false);
+
+				setServiceState(STATE_WAITING);
 
 				try {
 					for (int i = 0; i < 10 && mEnabled; i++) {
@@ -39,7 +39,7 @@ public abstract class CavanService extends Service {
 				}
 			}
 
-			onServiceStop();
+			setServiceState(STATE_STOPPED);
 		}
 	}
 
@@ -47,8 +47,10 @@ public abstract class CavanService extends Service {
 
 		@Override
 		public void start(int port) throws RemoteException {
-			if (mState) {
-				sendStateBroadcast(true);
+			mEnabled = true;
+
+			if (mState != STATE_STOPPED) {
+				sendStateBroadcast(mState);
 			} else {
 				mPort = port;
 				new MyThread().start();
@@ -56,7 +58,7 @@ public abstract class CavanService extends Service {
 		}
 
 		@Override
-		public boolean getState() throws RemoteException {
+		public int getState() throws RemoteException {
 			return mState;
 		}
 
@@ -87,15 +89,7 @@ public abstract class CavanService extends Service {
 	public abstract boolean doStopService();
 	protected abstract void doMainLoop(int port);
 
-	protected void onServiceStart() {
-		CavanAndroid.dLog("onServiceStart: " + getServiceName());
-	}
-
-	protected void onServiceStop() {
-		CavanAndroid.dLog("onServiceStop: " + getServiceName());
-	}
-
-	protected void onServiceStateChanged(boolean state) {
+	protected void onServiceStateChanged(int state) {
 		CavanAndroid.dLog("onServiceStateChanged: " + getServiceName() + " = " + state);
 	}
 
@@ -104,16 +98,18 @@ public abstract class CavanService extends Service {
 		mPort = getDefaultPort();
 	}
 
-	private void sendStateBroadcast(boolean state) {
+	private void sendStateBroadcast(int state) {
 		Intent intent = new Intent(getServiceAction());
 		intent.putExtra("state", state);
 		sendBroadcast(intent);
 	}
 
-	private void setState(boolean state) {
-		mState = state;
-		sendStateBroadcast(state);
-		onServiceStateChanged(state);
+	private void setServiceState(int state) {
+		if (mState != state) {
+			mState = state;
+			sendStateBroadcast(state);
+			onServiceStateChanged(state);
+		}
 	}
 
 	public String getServiceAction() {
