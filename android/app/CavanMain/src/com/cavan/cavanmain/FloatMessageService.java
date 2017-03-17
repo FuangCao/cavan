@@ -35,8 +35,6 @@ import android.view.ViewGroup;
 import android.view.WindowManager.LayoutParams;
 import android.widget.TextView;
 
-import com.cavan.activity.KeyguardActivity;
-import com.cavan.activity.MainActivity;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.FloatWidowService;
 import com.cavan.cavanjni.CavanJni;

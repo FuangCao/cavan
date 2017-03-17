@@ -1,4 +1,4 @@
-package com.cavan.activity;
+package com.cavan.apkbackup;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -33,7 +33,7 @@ import com.cavan.android.CavanCheckBox;
 import com.cavan.cavanmain.R;
 import com.cavan.java.CavanFile;
 
-public class ApkBackupActivity extends Activity implements OnClickListener, OnCheckedChangeListener, TextWatcher {
+public class MainActivity extends Activity implements OnClickListener, OnCheckedChangeListener, TextWatcher {
 
 	private static final CavanFile sOutDir = new CavanFile(Environment.getExternalStorageDirectory(), "cavan-apk-backup");
 
@@ -290,7 +290,7 @@ public class ApkBackupActivity extends Activity implements OnClickListener, OnCh
 			CavanCheckBox view;
 
 			if (convertView == null) {
-				view = new CavanCheckBox(ApkBackupActivity.this);
+				view = new CavanCheckBox(MainActivity.this);
 			} else {
 				view = (CavanCheckBox) convertView;
 			}

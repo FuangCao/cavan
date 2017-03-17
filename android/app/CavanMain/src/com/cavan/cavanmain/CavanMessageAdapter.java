@@ -3,8 +3,6 @@ package com.cavan.cavanmain;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.cavan.activity.MessageActivity;
-
 import android.database.Cursor;
 import android.net.Uri;
 import android.view.View;

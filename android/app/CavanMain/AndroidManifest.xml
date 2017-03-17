@@ -35,7 +35,7 @@
         android:persistent="true"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="com.cavan.activity.MainActivity"
+            android:name="com.cavan.cavanmain.MainActivity"
             android:label="@string/app_name"
             android:launchMode="singleInstance"
             android:multiprocess="false" >
@@ -81,7 +81,7 @@
         </provider>
 
         <activity
-            android:name="com.cavan.activity.MessageActivity"
+            android:name="com.cavan.cavanmain.MessageActivity"
             android:launchMode="singleInstance"
             android:multiprocess="false" >
             <intent-filter>
@@ -92,7 +92,7 @@
                 <data android:scheme="cavan" />
             </intent-filter>
         </activity>
-        <activity android:name="com.cavan.activity.PermissionSettingsActivity" >
+        <activity android:name="com.cavan.cavanmain.PermissionSettingsActivity" >
         </activity>
 
         <service
@@ -120,14 +120,21 @@
             </intent-filter>
         </service>
         <service android:name="com.cavan.cavanjni.HttpService"></service>
-        <activity android:name="com.cavan.activity.ApkBackupActivity" android:launchMode="singleTask" android:label="@string/app_name_apk_backup">
+        <activity android:name="com.cavan.apkbackup.MainActivity" android:launchMode="singleTask" android:label="@string/app_name_apk_backup">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.cavan.activity.ServiceSettingsActivity" android:label="@string/app_name_service_settings">
+        <activity android:name="com.cavan.servicemanager.MainActivity" android:label="@string/app_name_service_settings">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="com.cavan.radixconverter.MainActivity" android:label="@string/app_name_radix_converter">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

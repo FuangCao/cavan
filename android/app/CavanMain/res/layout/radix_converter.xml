@@ -1,0 +1,105 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingLeft="1dp"
+    android:paddingRight="1dp"
+    tools:context="com.cavan.radixconverter.MainActivity" >
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <Spinner
+	        android:id="@+id/spinnerRadix"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content" />
+
+	    <EditText
+	        android:id="@+id/editTextNumber"
+	        android:layout_weight="1"
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:textIsSelectable="true"
+	        android:digits="0123456789abcdefABCDEF"
+	        android:inputType="numberDecimal" />
+
+	</LinearLayout>
+
+	<!--
+    <TextView
+        android:id="@+id/textViewBin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@+string/radix_bin" />
+	-->
+
+    <GridView
+        android:id="@+id/gridViewBin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:horizontalSpacing="1dp"
+        android:numColumns="8"
+        android:verticalSpacing="1dp" >
+    </GridView>
+
+	<TextView
+        android:id="@+id/textViewHex"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@+string/radix_hex" />
+
+    <GridView
+        android:id="@+id/gridViewHex"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:horizontalSpacing="1dp"
+        android:numColumns="8" >
+    </GridView>
+
+	<TextView
+        android:id="@+id/textViewOct"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@+string/radix_oct" />
+
+    <GridView
+        android:id="@+id/gridViewOct"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:horizontalSpacing="1dp"
+        android:numColumns="11" >
+    </GridView>
+
+	<TextView
+        android:id="@+id/textViewDec"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@+string/radix_dec" />
+
+    <GridView
+        android:id="@+id/gridViewDec"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:horizontalSpacing="1dp"
+        android:numColumns="10" >
+    </GridView>
+
+	<!--
+	<TextView
+        android:id="@+id/textViewKeypad"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@+string/keypad_text" />
+	-->
+
+    <GridView
+        android:id="@+id/gridViewKeypad"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:numColumns="8" >
+    </GridView>
+
+</LinearLayout>

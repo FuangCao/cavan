@@ -20,7 +20,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
-import com.cavan.activity.MainActivity;
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.RedPacketFinder;
 

@@ -1,4 +1,4 @@
-package com.cavan.activity;
+package com.cavan.cavanmain;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -30,12 +30,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 
 import com.cavan.android.CavanAndroid;
-import com.cavan.cavanmain.CavanFilter;
-import com.cavan.cavanmain.CavanMessageAdapter;
-import com.cavan.cavanmain.CavanMessageView;
-import com.cavan.cavanmain.CavanNotification;
 import com.cavan.cavanmain.R;
-import com.cavan.cavanmain.RedPacketListenerService;
 
 public class MessageActivity extends Activity {
 

@@ -1,4 +1,4 @@
-package com.cavan.activity;
+package com.cavan.servicemanager;
 
 import java.net.InetAddress;
 
@@ -11,7 +11,7 @@ import com.cavan.cavanjni.CavanServicePreference;
 import com.cavan.cavanmain.R;
 import com.cavan.java.CavanJava;
 
-public class ServiceSettingsActivity extends PreferenceActivity {
+public class MainActivity extends PreferenceActivity {
 
 	public static final String KEY_IP_ADDRESS = "ip_address";
 	public static final String KEY_FTP = "ftp";
@@ -31,7 +31,7 @@ public class ServiceSettingsActivity extends PreferenceActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		addPreferencesFromResource(R.xml.service_settings);
+		addPreferencesFromResource(R.xml.service_manager);
 
 		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
 		mPreferenceFtp = (CavanServicePreference) findPreference(KEY_FTP);

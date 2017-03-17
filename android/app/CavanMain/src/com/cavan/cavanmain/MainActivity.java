@@ -1,4 +1,4 @@
-package com.cavan.activity;
+package com.cavan.cavanmain;
 
 
 import java.util.List;
@@ -28,13 +28,8 @@ import android.preference.RingtonePreference;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
-import com.cavan.cavanmain.CavanAccessibilityService;
-import com.cavan.cavanmain.CavanInputMethod;
-import com.cavan.cavanmain.FloatMessageService;
 import com.cavan.cavanmain.IFloatMessageService;
 import com.cavan.cavanmain.R;
-import com.cavan.cavanmain.RedPacketCode;
-import com.cavan.cavanmain.RedPacketListenerService;
 import com.cavan.java.CavanString;
 import com.cavan.resource.EditableMultiSelectListPreference;
 

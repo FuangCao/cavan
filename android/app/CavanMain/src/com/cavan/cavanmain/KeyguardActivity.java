@@ -1,4 +1,4 @@
-package com.cavan.activity;
+package com.cavan.cavanmain;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;

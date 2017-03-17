@@ -19,7 +19,6 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.service.notification.StatusBarNotification;
 
-import com.cavan.activity.MainActivity;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanJava;
