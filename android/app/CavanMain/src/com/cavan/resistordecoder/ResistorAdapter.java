@@ -94,7 +94,7 @@ public class ResistorAdapter extends BaseAdapter {
 	void setResistence(double resistence, int mistake, int tempCofficient) {
 		int pow = 0;
 
-		while (resistence > (long) resistence && pow > -2) {
+		while (resistence >= (long) resistence && pow > -2) {
 			resistence *= 10;
 			pow--;
 		}
