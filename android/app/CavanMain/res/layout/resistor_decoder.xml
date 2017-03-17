@@ -1,0 +1,96 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingLeft="1dp"
+    android:paddingRight="1dp"
+    tools:context="com.cavan.resistordecoder.MainActivity" >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/resistor_value" />
+
+   <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <EditText
+	        android:id="@+id/editTextResistence1"
+	        android:layout_weight="1"
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:inputType="numberDecimal"
+	        android:digits="0123456789." />
+
+        <Spinner
+	        android:id="@+id/spinnerResistenceUnit"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+	<LinearLayout
+	     android:orientation="horizontal"
+	     android:layout_width="match_parent"
+	     android:layout_height="wrap_content" >
+
+		<EditText
+			android:id="@+id/editTextResistence2"
+			android:layout_weight="1"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:inputType="numberDecimal"
+			android:digits="0123456789KR" />
+
+		<Spinner
+			android:id="@+id/spinnerResistenceMistake"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content" />
+
+		<Spinner
+			android:id="@+id/spinnerTempCofficient"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+	<TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/name_resistor4" />
+
+    <GridView
+        android:id="@+id/gridViewResistor4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:horizontalSpacing="1dp"
+        android:numColumns="4" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/name_resistor5" />
+
+    <GridView
+        android:id="@+id/gridViewResistor5"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:horizontalSpacing="1dp"
+        android:numColumns="5" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/name_resistor6" />
+
+    <GridView
+        android:id="@+id/gridViewResistor6"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:horizontalSpacing="1dp"
+        android:numColumns="6" />
+
+</LinearLayout>

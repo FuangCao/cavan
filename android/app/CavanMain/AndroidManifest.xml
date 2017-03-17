@@ -41,7 +41,6 @@
             android:multiprocess="false" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -86,9 +85,7 @@
             android:multiprocess="false" >
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
-
                 <data android:scheme="cavan" />
             </intent-filter>
         </activity>
@@ -130,14 +127,18 @@
         <activity android:name="com.cavan.servicemanager.MainActivity" android:label="@string/app_name_service_settings">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity android:name="com.cavan.radixconverter.MainActivity" android:label="@string/app_name_radix_converter">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="com.cavan.resistordecoder.MainActivity" android:label="@string/app_name_resistor_decoder">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
