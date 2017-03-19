@@ -71,6 +71,7 @@ public class CavanAndroid {
 	private static final Object sToastLock = new Object();
 
 	private static WakeLock sWakeLock;
+	private static WakeLock sWakeLockWakeup;
 	private static KeyguardLock sKeyguardLock;
 	private static MulticastLock sMulticastLock;
 
@@ -287,44 +288,83 @@ public class CavanAndroid {
 		return setLockScreenEnable(manager, enable);
 	}
 
-	public static boolean setSuspendEnable(PowerManager manager, boolean enable, long timeout) {
-		if (enable) {
-			if (sWakeLock != null && sWakeLock.isHeld()) {
-				sWakeLock.release();
+	public static void releaseWakeLock() {
+		CavanAndroid.dLog("releaseWakeLock");
+
+		if (sWakeLock != null && sWakeLock.isHeld()) {
+			sWakeLock.release();
+		}
+
+		if (sWakeLockWakeup != null && sWakeLockWakeup.isHeld()) {
+			sWakeLockWakeup.release();
+		}
+	}
+
+	public static boolean acquireWakeLock(PowerManager manager, boolean wakeup, long overtime) {
+		CavanAndroid.dLog("acquireWakeLock: wakeup = " + wakeup + ", overtime = " + overtime);
+
+		WakeLock lock;
+
+		if (wakeup) {
+			if(sWakeLockWakeup == null) {
+				sWakeLockWakeup = manager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.FULL_WAKE_LOCK, CavanAndroid.class.getName());
+				if (sWakeLockWakeup == null) {
+					return false;
+				}
 			}
+
+			lock = sWakeLockWakeup;
 		} else {
 			if (sWakeLock == null) {
-				sWakeLock = manager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.FULL_WAKE_LOCK, CavanAndroid.class.getName());
+				sWakeLock = manager.newWakeLock(PowerManager.FULL_WAKE_LOCK, CavanAndroid.class.getName());
 				if (sWakeLock == null) {
 					return false;
 				}
 			}
 
-			if (timeout > 0) {
-				sWakeLock.acquire(timeout);
-			} else {
-				sWakeLock.acquire();
-			}
+			lock = sWakeLock;
+		}
+
+		if (overtime > 0) {
+			lock.acquire(overtime);
+		} else {
+			lock.acquire();
 		}
 
 		return true;
 	}
 
-	public static boolean setSuspendEnable(PowerManager manager, boolean enable) {
-		return setSuspendEnable(manager, enable, 0);
+	public static boolean acquireWakeLock(PowerManager manager, boolean wakeup) {
+		return acquireWakeLock(manager, wakeup, 0);
 	}
 
-	public static boolean setSuspendEnable(Context context, boolean enable, long timeout) {
+	public static boolean acquireWakeLock(PowerManager manager, long overtime) {
+		return acquireWakeLock(manager, true, overtime);
+	}
+
+	public static boolean acquireWakeLock(PowerManager manager) {
+		return acquireWakeLock(manager, true);
+	}
+
+	public static boolean acquireWakeLock(Context context, boolean wakeup, long overtime) {
 		PowerManager manager = (PowerManager) getCachedSystemService(context, Context.POWER_SERVICE);
 		if (manager == null) {
 			return false;
 		}
 
-		return setSuspendEnable(manager, enable, timeout);
+		return acquireWakeLock(manager, wakeup, overtime);
 	}
 
-	public static boolean setSuspendEnable(Context context, boolean enable) {
-		return setSuspendEnable(context, enable, 0);
+	public static boolean acquireWakeLock(Context context, boolean wakeup) {
+		return acquireWakeLock(context, wakeup, 0);
+	}
+
+	public static boolean acquireWakeLock(Context context, long overtime) {
+		return acquireWakeLock(context, true, overtime);
+	}
+
+	public static boolean acquireWakeLock(Context context) {
+		return acquireWakeLock(context, true);
 	}
 
 	public static void postClipboardText(ClipboardManager manager, CharSequence label, CharSequence text) {

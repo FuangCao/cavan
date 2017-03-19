@@ -205,6 +205,7 @@ public class FloatMessageService extends FloatWidowService {
 			switch (action) {
 			case Intent.ACTION_SCREEN_OFF:
 				if (MainActivity.isDisableKeyguardEnabled(getApplicationContext())) {
+					CavanAndroid.acquireWakeLock(getApplicationContext(), false, 5000);
 					CavanAndroid.startActivity(getApplicationContext(), KeyguardActivity.class);
 				}
 
@@ -287,7 +288,7 @@ public class FloatMessageService extends FloatWidowService {
 			}
 
 			setLockScreenEnable(false);
-			CavanAndroid.setSuspendEnable(getApplicationContext(), false, 20000);
+			CavanAndroid.acquireWakeLock(getApplicationContext(), 20000);
 
 			if (code != null) {
 				RedPacketCode node = RedPacketCode.getInstence(code);
