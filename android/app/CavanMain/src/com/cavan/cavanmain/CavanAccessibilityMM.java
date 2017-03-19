@@ -208,6 +208,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			break;
 
 		default:
+			if (mClassName.startsWith("com.tencent.mm.plugin.luckymoney.ui.En_")) {
+				doUnpack(root);
+				break;
+			}
 			return 0;
 		}
 
@@ -239,6 +243,18 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			break;
 
 		default:
+			if (mClassName.startsWith("com.tencent.mm.plugin.luckymoney.ui.En_")) {
+				if (setForceUnpackEnable(true)) {
+					break;
+				}
+
+				if (getPacketCount() > 0) {
+					setLockEnable(POLL_DELAY, true);
+				}
+
+				break;
+			}
+
 			if (getPacketCount() > 0) {
 				setLockEnable(POLL_DELAY, false);
 			}
