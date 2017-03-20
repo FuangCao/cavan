@@ -237,6 +237,54 @@ public class CavanString {
 		return false;
 	}
 
+	public static boolean isNumber(char c) {
+		return c >= '0' && c <= '9';
+	}
+
+	public static boolean isNumberFloat(char c) {
+		return isNumber(c) || c == '.';
+	}
+
+	public static boolean isNumber(char c, int radix) {
+		if (radix <= 10) {
+			return c >= '0' && c < ('0' + radix);
+		}
+
+		if (isNumber(c)) {
+			return true;
+		}
+
+		if (c >= 'a' && c < ('a' + radix - 10)) {
+			return true;
+		}
+
+		if (c >= 'A' && c < ('A' + radix - 10)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public static boolean isNumber(String text) {
+		for (int i = text.length() - 1; i >= 0; i--) {
+			if (!isNumber(text.charAt(i))) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public static boolean isNumber(String text, int radix) {
+		for (int i = text.length() - 1; i >= 0; i--) {
+			if (!isNumber(text.charAt(i), radix)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	@Override
 	public String toString() {
 		return mContent;

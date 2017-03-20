@@ -139,7 +139,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		CavanAndroid.setSuspendEnable(this, false);
+		CavanAndroid.acquireWakeLock(this);
 
 		mDrawableNoTest = getResources().getDrawable(R.drawable.no_test);
 		mDrawableNoTest.setBounds(0, 0, mDrawableNoTest.getMinimumWidth(), mDrawableNoTest.getMinimumHeight());
@@ -169,7 +169,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 	@Override
 	protected void onDestroy() {
-		CavanAndroid.setSuspendEnable(this, true);
+		CavanAndroid.releaseWakeLock();
 
 		if (mBleToy != null && mBleToy.isConnected()) {
 			mBleToy.setFactoryModeEnable(false);
