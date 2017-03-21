@@ -779,6 +779,8 @@ namespace JwaooOtpProgrammer {
 
             try {
                 stream = File.OpenWrite(mFilePath);
+                stream.SetLength(0);
+
                 stream.Write(bytes, 0, bytes.Length);
 
                 bytes = Encoding.ASCII.GetBytes(" " + count);
