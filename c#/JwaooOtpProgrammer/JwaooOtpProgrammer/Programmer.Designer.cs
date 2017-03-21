@@ -45,7 +45,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 455);
+            this.label1.Location = new System.Drawing.Point(12, 497);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(65, 12);
             this.label1.TabIndex = 0;
@@ -53,17 +53,17 @@
             // 
             // textBoxFirmware
             // 
-            this.textBoxFirmware.Location = new System.Drawing.Point(83, 451);
+            this.textBoxFirmware.Location = new System.Drawing.Point(83, 493);
             this.textBoxFirmware.Name = "textBoxFirmware";
             this.textBoxFirmware.ReadOnly = true;
-            this.textBoxFirmware.Size = new System.Drawing.Size(273, 21);
+            this.textBoxFirmware.Size = new System.Drawing.Size(415, 21);
             this.textBoxFirmware.TabIndex = 1;
             // 
             // buttonFirmware
             // 
-            this.buttonFirmware.Location = new System.Drawing.Point(362, 450);
+            this.buttonFirmware.Location = new System.Drawing.Point(504, 492);
             this.buttonFirmware.Name = "buttonFirmware";
-            this.buttonFirmware.Size = new System.Drawing.Size(35, 23);
+            this.buttonFirmware.Size = new System.Drawing.Size(34, 23);
             this.buttonFirmware.TabIndex = 2;
             this.buttonFirmware.Text = "...";
             this.buttonFirmware.UseVisualStyleBackColor = true;
@@ -72,7 +72,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 361);
+            this.label2.Location = new System.Drawing.Point(12, 403);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(83, 12);
             this.label2.TabIndex = 3;
@@ -80,9 +80,9 @@
             // 
             // buttonConnect
             // 
-            this.buttonConnect.Location = new System.Drawing.Point(12, 488);
+            this.buttonConnect.Location = new System.Drawing.Point(12, 530);
             this.buttonConnect.Name = "buttonConnect";
-            this.buttonConnect.Size = new System.Drawing.Size(100, 80);
+            this.buttonConnect.Size = new System.Drawing.Size(152, 80);
             this.buttonConnect.TabIndex = 5;
             this.buttonConnect.Text = "连接测试";
             this.buttonConnect.UseVisualStyleBackColor = true;
@@ -90,9 +90,9 @@
             // 
             // buttonBurn
             // 
-            this.buttonBurn.Location = new System.Drawing.Point(296, 488);
+            this.buttonBurn.Location = new System.Drawing.Point(386, 530);
             this.buttonBurn.Name = "buttonBurn";
-            this.buttonBurn.Size = new System.Drawing.Size(100, 80);
+            this.buttonBurn.Size = new System.Drawing.Size(152, 80);
             this.buttonBurn.TabIndex = 6;
             this.buttonBurn.Text = "烧录";
             this.buttonBurn.UseVisualStyleBackColor = true;
@@ -100,10 +100,10 @@
             // 
             // textBoxBdAddressNext
             // 
-            this.textBoxBdAddressNext.Location = new System.Drawing.Point(101, 357);
+            this.textBoxBdAddressNext.Location = new System.Drawing.Point(101, 399);
             this.textBoxBdAddressNext.Name = "textBoxBdAddressNext";
             this.textBoxBdAddressNext.ReadOnly = true;
-            this.textBoxBdAddressNext.Size = new System.Drawing.Size(296, 21);
+            this.textBoxBdAddressNext.Size = new System.Drawing.Size(437, 21);
             this.textBoxBdAddressNext.TabIndex = 4;
             // 
             // openFileDialogFirmware
@@ -124,15 +124,15 @@
             this.textBoxLog.Name = "textBoxLog";
             this.textBoxLog.ReadOnly = true;
             this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxLog.Size = new System.Drawing.Size(385, 279);
+            this.textBoxLog.Size = new System.Drawing.Size(526, 321);
             this.textBoxLog.TabIndex = 7;
             this.textBoxLog.WordWrap = false;
             // 
             // buttonClearLog
             // 
-            this.buttonClearLog.Location = new System.Drawing.Point(154, 488);
+            this.buttonClearLog.Location = new System.Drawing.Point(199, 528);
             this.buttonClearLog.Name = "buttonClearLog";
-            this.buttonClearLog.Size = new System.Drawing.Size(100, 80);
+            this.buttonClearLog.Size = new System.Drawing.Size(152, 80);
             this.buttonClearLog.TabIndex = 8;
             this.buttonClearLog.Text = "清空日志";
             this.buttonClearLog.UseVisualStyleBackColor = true;
@@ -141,7 +141,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 421);
+            this.label3.Location = new System.Drawing.Point(12, 463);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(83, 12);
             this.label3.TabIndex = 9;
@@ -149,17 +149,17 @@
             // 
             // textBoxBdAddressCurrent
             // 
-            this.textBoxBdAddressCurrent.Location = new System.Drawing.Point(101, 419);
+            this.textBoxBdAddressCurrent.Location = new System.Drawing.Point(101, 461);
             this.textBoxBdAddressCurrent.Name = "textBoxBdAddressCurrent";
             this.textBoxBdAddressCurrent.ReadOnly = true;
-            this.textBoxBdAddressCurrent.Size = new System.Drawing.Size(296, 21);
+            this.textBoxBdAddressCurrent.Size = new System.Drawing.Size(437, 21);
             this.textBoxBdAddressCurrent.TabIndex = 10;
             // 
             // labelState
             // 
             this.labelState.AutoSize = true;
             this.labelState.Font = new System.Drawing.Font("宋体", 21.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.labelState.Location = new System.Drawing.Point(12, 318);
+            this.labelState.Location = new System.Drawing.Point(12, 360);
             this.labelState.Name = "labelState";
             this.labelState.Size = new System.Drawing.Size(73, 29);
             this.labelState.TabIndex = 11;
@@ -168,7 +168,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(12, 392);
+            this.label4.Location = new System.Drawing.Point(12, 434);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(83, 12);
             this.label4.TabIndex = 12;
@@ -176,16 +176,16 @@
             // 
             // textBoxAddressCount
             // 
-            this.textBoxAddressCount.Location = new System.Drawing.Point(101, 388);
+            this.textBoxAddressCount.Location = new System.Drawing.Point(101, 430);
             this.textBoxAddressCount.Name = "textBoxAddressCount";
             this.textBoxAddressCount.ReadOnly = true;
-            this.textBoxAddressCount.Size = new System.Drawing.Size(295, 21);
+            this.textBoxAddressCount.Size = new System.Drawing.Size(437, 21);
             this.textBoxAddressCount.TabIndex = 13;
             // 
             // checkBoxSaveLog
             // 
             this.checkBoxSaveLog.AutoSize = true;
-            this.checkBoxSaveLog.Location = new System.Drawing.Point(288, 297);
+            this.checkBoxSaveLog.Location = new System.Drawing.Point(430, 339);
             this.checkBoxSaveLog.Name = "checkBoxSaveLog";
             this.checkBoxSaveLog.Size = new System.Drawing.Size(108, 16);
             this.checkBoxSaveLog.TabIndex = 14;
@@ -197,7 +197,7 @@
             this.AcceptButton = this.buttonBurn;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(409, 579);
+            this.ClientSize = new System.Drawing.Size(550, 620);
             this.Controls.Add(this.checkBoxSaveLog);
             this.Controls.Add(this.textBoxAddressCount);
             this.Controls.Add(this.label4);
