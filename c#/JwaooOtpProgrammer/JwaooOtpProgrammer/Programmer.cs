@@ -43,8 +43,6 @@ namespace JwaooOtpProgrammer {
             InitializeComponent();
 
             loadConfigFile();
-
-            mFileStreamLog = File.Open(Path.Combine(Application.StartupPath, "log.txt"), FileMode.Append, FileAccess.Write, FileShare.Read);
             openFileDialogFirmware.InitialDirectory = Application.StartupPath;
             openFileDialogSmartSnippets.InitialDirectory = Application.StartupPath;
         }
@@ -131,8 +129,15 @@ namespace JwaooOtpProgrammer {
         }
 
         public bool writeLogFile(String text) {
+            if (!checkBoxSaveLog.Checked) {
+                return true;
+            }
+
             if (mFileStreamLog == null) {
-                return false;
+                mFileStreamLog = File.Open(Path.Combine(Application.StartupPath, "log.txt"), FileMode.Append, FileAccess.Write, FileShare.Read);
+                if (mFileStreamLog == null) {
+                    return false;
+                }
             }
 
             try {
