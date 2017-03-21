@@ -37,12 +37,14 @@
             this.label3 = new System.Windows.Forms.Label();
             this.textBoxBdAddressCurrent = new System.Windows.Forms.TextBox();
             this.labelState = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.textBoxAddressCount = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 419);
+            this.label1.Location = new System.Drawing.Point(12, 444);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(65, 12);
             this.label1.TabIndex = 0;
@@ -50,7 +52,7 @@
             // 
             // textBoxFirmware
             // 
-            this.textBoxFirmware.Location = new System.Drawing.Point(83, 415);
+            this.textBoxFirmware.Location = new System.Drawing.Point(83, 440);
             this.textBoxFirmware.Name = "textBoxFirmware";
             this.textBoxFirmware.ReadOnly = true;
             this.textBoxFirmware.Size = new System.Drawing.Size(273, 21);
@@ -58,7 +60,7 @@
             // 
             // buttonFirmware
             // 
-            this.buttonFirmware.Location = new System.Drawing.Point(362, 414);
+            this.buttonFirmware.Location = new System.Drawing.Point(362, 439);
             this.buttonFirmware.Name = "buttonFirmware";
             this.buttonFirmware.Size = new System.Drawing.Size(35, 23);
             this.buttonFirmware.TabIndex = 2;
@@ -77,7 +79,7 @@
             // 
             // buttonConnect
             // 
-            this.buttonConnect.Location = new System.Drawing.Point(12, 451);
+            this.buttonConnect.Location = new System.Drawing.Point(12, 477);
             this.buttonConnect.Name = "buttonConnect";
             this.buttonConnect.Size = new System.Drawing.Size(100, 80);
             this.buttonConnect.TabIndex = 5;
@@ -87,7 +89,7 @@
             // 
             // buttonBurn
             // 
-            this.buttonBurn.Location = new System.Drawing.Point(296, 451);
+            this.buttonBurn.Location = new System.Drawing.Point(296, 477);
             this.buttonBurn.Name = "buttonBurn";
             this.buttonBurn.Size = new System.Drawing.Size(100, 80);
             this.buttonBurn.TabIndex = 6;
@@ -127,7 +129,7 @@
             // 
             // buttonClearLog
             // 
-            this.buttonClearLog.Location = new System.Drawing.Point(154, 451);
+            this.buttonClearLog.Location = new System.Drawing.Point(154, 477);
             this.buttonClearLog.Name = "buttonClearLog";
             this.buttonClearLog.Size = new System.Drawing.Size(100, 80);
             this.buttonClearLog.TabIndex = 8;
@@ -138,7 +140,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 384);
+            this.label3.Location = new System.Drawing.Point(12, 410);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(83, 12);
             this.label3.TabIndex = 9;
@@ -146,7 +148,7 @@
             // 
             // textBoxBdAddressCurrent
             // 
-            this.textBoxBdAddressCurrent.Location = new System.Drawing.Point(101, 380);
+            this.textBoxBdAddressCurrent.Location = new System.Drawing.Point(101, 408);
             this.textBoxBdAddressCurrent.Name = "textBoxBdAddressCurrent";
             this.textBoxBdAddressCurrent.ReadOnly = true;
             this.textBoxBdAddressCurrent.Size = new System.Drawing.Size(296, 21);
@@ -162,11 +164,30 @@
             this.labelState.TabIndex = 11;
             this.labelState.Text = "状态";
             // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(12, 381);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(83, 12);
+            this.label4.TabIndex = 12;
+            this.label4.Text = "剩余MAC地址：";
+            // 
+            // textBoxAddressCount
+            // 
+            this.textBoxAddressCount.Location = new System.Drawing.Point(101, 377);
+            this.textBoxAddressCount.Name = "textBoxAddressCount";
+            this.textBoxAddressCount.ReadOnly = true;
+            this.textBoxAddressCount.Size = new System.Drawing.Size(295, 21);
+            this.textBoxAddressCount.TabIndex = 13;
+            // 
             // Programmer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(409, 540);
+            this.ClientSize = new System.Drawing.Size(409, 565);
+            this.Controls.Add(this.textBoxAddressCount);
+            this.Controls.Add(this.label4);
             this.Controls.Add(this.labelState);
             this.Controls.Add(this.textBoxBdAddressCurrent);
             this.Controls.Add(this.label3);
@@ -202,6 +223,8 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox textBoxBdAddressCurrent;
         private System.Windows.Forms.Label labelState;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.TextBox textBoxAddressCount;
     }
 }
 
