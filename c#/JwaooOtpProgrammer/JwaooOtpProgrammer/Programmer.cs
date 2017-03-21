@@ -398,7 +398,7 @@ namespace JwaooOtpProgrammer {
 
             byte[] bytes = readOtpFirmware();
             if (bytes == null) {
-                MessageBox.Show("读取固件失败");
+                MessageBox.Show("读取固件失败！");
                 return false;
             }
 
@@ -420,7 +420,7 @@ namespace JwaooOtpProgrammer {
 
             if (isMemoryEmpty(bytes, 0x7FD4, 6)) {
                 if (!writeBdAddress()) {
-                    MessageBox.Show("写MAC地址失败");
+                    MessageBox.Show("写MAC地址失败！");
                     return false;
                 }
 
@@ -432,7 +432,7 @@ namespace JwaooOtpProgrammer {
 
             if (isMemoryEmpty(bytes, 0x7F00, 8)) {
                 if (!setOtpBootEnable()) {
-                    MessageBox.Show("设置从OTP启动失败");
+                    MessageBox.Show("设置从OTP启动失败！");
                     return false;
                 }
 
@@ -507,7 +507,7 @@ namespace JwaooOtpProgrammer {
                 else
                 {
                     appendLog("烧录失败！！！");
-                    labelState.Text = "烧录失败";
+                    labelState.Text = "烧录失败！";
                     labelState.ForeColor = System.Drawing.Color.Red;
                 }
 
