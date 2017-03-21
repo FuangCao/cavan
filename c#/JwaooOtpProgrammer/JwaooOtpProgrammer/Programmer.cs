@@ -462,18 +462,16 @@ namespace JwaooOtpProgrammer {
 
             byte[] bytes = readOtpHeader();
             if (bytes != null) {
+                appendLog("连接成功");
                 labelState.Text = "连接成功";
                 labelState.ForeColor = System.Drawing.Color.LimeGreen;
 
-                appendLog("连接成功");
                 textBoxBdAddressCurrent.Text = MacAddressManager.getBdAddressString(bytes, 0xD4);
                 buttonBurn.Enabled = true;
             } else {
-                labelState.Text = "连接失败";
-                labelState.ForeColor = System.Drawing.Color.Red;
-
-                MessageBox.Show("连接失败");
                 appendLog("连接失败！！！");
+                labelState.Text = "连接失败！";
+                labelState.ForeColor = System.Drawing.Color.Red;
             }
 
             buttonConnect.Enabled = true;
@@ -502,18 +500,15 @@ namespace JwaooOtpProgrammer {
 
                 if (burnOtpFirmwareAll(pathname))
                 {
+                    appendLog("烧录成功");
                     labelState.Text = "烧录成功";
                     labelState.ForeColor = System.Drawing.Color.LimeGreen;
-
-                    appendLog("烧录成功");
                 }
                 else
                 {
+                    appendLog("烧录失败！！！");
                     labelState.Text = "烧录失败";
                     labelState.ForeColor = System.Drawing.Color.Red;
-
-                    MessageBox.Show("烧录失败");
-                    appendLog("烧录失败！！！");
                 }
 
                 buttonConnect.Enabled = true;

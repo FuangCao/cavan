@@ -158,10 +158,10 @@
             // labelState
             // 
             this.labelState.AutoSize = true;
-            this.labelState.Font = new System.Drawing.Font("宋体", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.labelState.Location = new System.Drawing.Point(12, 324);
+            this.labelState.Font = new System.Drawing.Font("宋体", 21.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.labelState.Location = new System.Drawing.Point(12, 318);
             this.labelState.Name = "labelState";
-            this.labelState.Size = new System.Drawing.Size(54, 21);
+            this.labelState.Size = new System.Drawing.Size(73, 29);
             this.labelState.TabIndex = 11;
             this.labelState.Text = "状态";
             // 
@@ -196,7 +196,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(409, 575);
+            this.ClientSize = new System.Drawing.Size(409, 579);
             this.Controls.Add(this.checkBoxSaveLog);
             this.Controls.Add(this.textBoxAddressCount);
             this.Controls.Add(this.label4);
