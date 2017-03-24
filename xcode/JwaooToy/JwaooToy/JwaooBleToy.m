@@ -131,7 +131,7 @@
 				}
 
 				if ([mDelegate respondsToSelector:@selector(didBatteryStateChanged:level:voltage:)]) {
-					double voltage = ((double) (bytes[3] | ((uint16_t) bytes[4]) << 8) / 1000;
+					double voltage = ((double) (bytes[3] | ((uint16_t) bytes[4]) << 8)) / 1000;
                     [mDelegate didBatteryStateChanged:bytes[1] level:bytes[2] voltage:voltage];
                 } else {
                     NSLog(@"didMotoStateChanged: mode = %d, speed = %d", bytes[1], bytes[2]);
