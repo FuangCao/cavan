@@ -33,6 +33,30 @@
 
 @end
 
+@implementation JwaooToyBattInfo
+
+@synthesize state = mState;
+@synthesize level = mLevel;
+@synthesize voltage = mVoltage;
+
+- (JwaooToyMotoMode *)initWithState:(uint8_t)state
+                         withLevel:(uint8_t)level
+                         withVoltage:(double)voltage {
+    if (self = [super init]) {
+		mState = state;
+		mLevel = level;
+		mVoltage = voltage;
+    }
+
+    return self;
+}
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"state: %d, level: %d, voltage = %3.2lf", mState, mLevel, mVoltage];
+}
+
+@end
+
 @implementation JwaooBleToy
 
 @synthesize sensor = mSensor;
@@ -100,6 +124,19 @@
                     NSLog(@"didMotoStateChanged: mode = %d, speed = %d", bytes[1], bytes[2]);
                 }
                 break;
+
+            case JWAOO_TOY_EVT_BATT_INFO:
+				if (length < 5) {
+					break;
+				}
+
+				if ([mDelegate respondsToSelector:@selector(didBatteryStateChanged:level:voltage:)]) {
+					double voltage = ((double) (bytes[3] | ((uint16_t) bytes[4]) << 8) / 1000;
+                    [mDelegate didBatteryStateChanged:bytes[1] level:bytes[2] voltage:voltage];
+                } else {
+                    NSLog(@"didMotoStateChanged: mode = %d, speed = %d", bytes[1], bytes[2]);
+                }
+				break;
 
             default:
                 NSLog(@"unknown event%d, length = %lu", bytes[0], (unsigned long)length);
@@ -515,6 +552,22 @@
     uint8_t command[] = { JWAOO_TOY_CMD_MOTO_SET_MODE, mode, speed };
 
     return [mCommand readBoolWithBytes:command length:sizeof(command)];
+}
+
+- (JwaooToyBattInfo)readBattInfo {
+	NSData *response = [mCommand readDataWithType:JWAOO_TOY_CMD_BATT_INFO];
+    if (response == nil || response.length != 4) {
+        return nil;
+    }
+
+    const uint8_t *bytes = response.bytes;
+    double voltage = ((double) (bytes[2] | ((uint16_t) bytes[3]) << 8)) / 1000;
+
+    return [[JwaooToyBattInfo alloc] initWithState:bytes[0] withLevel:bytes[1] withVoltage:voltage];
+}
+
+- (BOOL)setBattEventEnable:(BOOL)enable {
+    return [mCommand readBoolWithType:JWAOO_TOY_CMD_BATT_EVENT_ENABLE withBool:enable];
 }
 
 @end

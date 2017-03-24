@@ -59,6 +59,9 @@ typedef NS_ENUM(NSUInteger, JwaooToyDeviceId) {
 - (void)didKeyLongClicked:(uint8_t)code;
 - (void)didMotoStateChanged:(uint8_t)mode
                       speed:(uint8_t)speed;
+- (void)didBatteryStateChanged:(uint8_t)state;
+							level:(uint8_t)level;
+							voltage:(double)voltage;
 - (void)didSensorDataReceived:(nonnull NSData *)data;
 - (void)didDebugDataReceived:(nonnull NSData *)data;
 - (void)didConnectStateChanged:(BOOL)connected;
@@ -75,6 +78,22 @@ typedef NS_ENUM(NSUInteger, JwaooToyDeviceId) {
 
 - (nonnull JwaooToyMotoMode *)initWithMode:(uint8_t)mode
                                  withSpeed:(uint8_t)speed;
+
+@end
+
+@interface JwaooToyBattInfo : NSObject {
+    uint8_t mState;
+    uint8_t mLevel;
+    double mVoltage;
+}
+
+@property uint8_t state;
+@property uint8_t level;
+@property double voltage;
+
+- (nonnull JwaooToyBattInfo *)initWithState:(uint8_t)state
+                                 withLevel:(uint8_t)level
+                                 withVoltage:(double)voltage;
 
 @end
 
@@ -143,5 +162,6 @@ typedef NS_ENUM(NSUInteger, JwaooToyDeviceId) {
 - (nonnull JwaooToyMotoMode *)getMotoMode;
 - (BOOL)setMotoMode:(uint8_t)mode
           withSpeed:(uint8_t)speed;
-
+- (BOOL)setBattEventEnable:(BOOL)enable;
+- (nonnull JwaooToyBattInfo *)readBattInfo;
 @end
