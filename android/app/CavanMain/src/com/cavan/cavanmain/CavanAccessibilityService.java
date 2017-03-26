@@ -456,7 +456,11 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 			sequence = event.getClassName();
 			if (sequence != null) {
-				mClassName = sequence.toString();
+				String className = sequence.toString();
+
+				if (!className.startsWith("android.widget.")) {
+					mClassName = className;
+				}
 			}
 
 			CavanAndroid.dLog("package = " + mPackageName);

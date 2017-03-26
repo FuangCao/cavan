@@ -358,20 +358,22 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 	}
 
 	private boolean gotoRedPacketActivity(AccessibilityNodeInfo root) {
-		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId("com.alipay.android.phone.openplatform:id/home_app_view");
-		if (nodes == null || nodes.size() <= 0) {
+		AccessibilityNodeInfo node = CavanAccessibility.findNodeByText(root, "红包");
+		if (node == null) {
 			return false;
 		}
 
-		root = nodes.get(0);
-
-		AccessibilityNodeInfo info = CavanAccessibility.findNodeByText(root, "红包");
-		if (info == null) {
+		AccessibilityNodeInfo parent = node.getParent();
+		if (parent == null) {
+			node.recycle();
 			return false;
 		}
 
-		info.performAction(AccessibilityNodeInfo.ACTION_SELECT);
-		root.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+		node.performAction(AccessibilityNodeInfo.ACTION_SELECT);
+		parent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+
+		parent.recycle();
+		node.recycle();
 
 		return true;
 	}
