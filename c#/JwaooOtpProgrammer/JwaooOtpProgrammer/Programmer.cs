@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Configuration;
@@ -29,6 +30,7 @@ namespace JwaooOtpProgrammer {
         private FileStream mFileStreamLog;
         private MacAddressManager mMacAddressManager;
         private UInt64 mBdAddress;
+        private UInt32 mCount;
 
         private MacAddressManager[] mMacAddressManagers = {
             new MacAddressManager("JwaooMacModel06.txt", "JwaooFwModel06", 0x88EA00000000),
@@ -41,8 +43,6 @@ namespace JwaooOtpProgrammer {
             InitializeComponent();
 
             loadConfigFile();
-
-            mFileStreamLog = File.Open(Path.Combine(Application.StartupPath, "log.txt"), FileMode.Append, FileAccess.Write, FileShare.Read);
             openFileDialogFirmware.InitialDirectory = Application.StartupPath;
             openFileDialogSmartSnippets.InitialDirectory = Application.StartupPath;
         }
@@ -76,7 +76,12 @@ namespace JwaooOtpProgrammer {
             }
 
             mMacAddressManager = manager;
-            setBdAddress(manager.readFromFile());
+
+            UInt64 address = 0;
+            UInt32 count = 0;
+            manager.readFromFile(ref address, ref count);
+
+            setBdAddress(address, count);
 
             textBoxFirmware.Text = pathname;
 
@@ -124,8 +129,15 @@ namespace JwaooOtpProgrammer {
         }
 
         public bool writeLogFile(String text) {
+            if (!checkBoxSaveLog.Checked) {
+                return true;
+            }
+
             if (mFileStreamLog == null) {
-                return false;
+                mFileStreamLog = File.Open(Path.Combine(Application.StartupPath, "log.txt"), FileMode.Append, FileAccess.Write, FileShare.Read);
+                if (mFileStreamLog == null) {
+                    return false;
+                }
             }
 
             try {
@@ -147,9 +159,12 @@ namespace JwaooOtpProgrammer {
             textBoxLog.AppendText("\r\n");
         }
 
-        private void setBdAddress(UInt64 addr) {
+        private void setBdAddress(UInt64 addr, UInt32 count) {
             mBdAddress = addr;
+            mCount = count;
             textBoxBdAddressNext.Text = MacAddressManager.getBdAddressString(addr);
+
+            textBoxAddressCount.Text = count + " (个)";
         }
 
         private String findSmartSnippetsPath() {
@@ -260,9 +275,10 @@ namespace JwaooOtpProgrammer {
 
         public bool addBdAddress() {
             UInt64 addr = mBdAddress + 1;
+            UInt32 count = mCount - 1;
 
-            if (mMacAddressManager != null && mMacAddressManager.writeToFile(addr)) {
-                setBdAddress(addr);
+            if (mMacAddressManager != null && mMacAddressManager.writeToFile(addr, count)) {
+                setBdAddress(addr, count);
                 return true;
             }
 
@@ -270,7 +286,7 @@ namespace JwaooOtpProgrammer {
         }
 
         private bool writeBdAddress() {
-            if (mBdAddress == 0) {
+            if (mBdAddress == 0 || mCount == 0) {
                 return false;
             }
 
@@ -382,7 +398,7 @@ namespace JwaooOtpProgrammer {
 
             byte[] bytes = readOtpFirmware();
             if (bytes == null) {
-                MessageBox.Show("读取固件失败");
+                MessageBox.Show("读取固件失败！");
                 return false;
             }
 
@@ -404,7 +420,7 @@ namespace JwaooOtpProgrammer {
 
             if (isMemoryEmpty(bytes, 0x7FD4, 6)) {
                 if (!writeBdAddress()) {
-                    MessageBox.Show("写MAC地址失败");
+                    MessageBox.Show("写MAC地址失败！");
                     return false;
                 }
 
@@ -416,7 +432,7 @@ namespace JwaooOtpProgrammer {
 
             if (isMemoryEmpty(bytes, 0x7F00, 8)) {
                 if (!setOtpBootEnable()) {
-                    MessageBox.Show("设置从OTP启动失败");
+                    MessageBox.Show("设置从OTP启动失败！");
                     return false;
                 }
 
@@ -446,18 +462,16 @@ namespace JwaooOtpProgrammer {
 
             byte[] bytes = readOtpHeader();
             if (bytes != null) {
+                appendLog("连接成功");
                 labelState.Text = "连接成功";
                 labelState.ForeColor = System.Drawing.Color.LimeGreen;
 
-                appendLog("连接成功");
                 textBoxBdAddressCurrent.Text = MacAddressManager.getBdAddressString(bytes, 0xD4);
                 buttonBurn.Enabled = true;
             } else {
-                labelState.Text = "连接失败";
-                labelState.ForeColor = System.Drawing.Color.Red;
-
-                MessageBox.Show("连接失败");
                 appendLog("连接失败！！！");
+                labelState.Text = "连接失败！";
+                labelState.ForeColor = System.Drawing.Color.Red;
             }
 
             buttonConnect.Enabled = true;
@@ -475,29 +489,36 @@ namespace JwaooOtpProgrammer {
                 return;
             }
 
-            buttonConnect.Enabled = false;
-            buttonBurn.Enabled = false;
-            buttonFirmware.Enabled = false;
+            if (mCount > 0)
+            {
+                buttonConnect.Enabled = false;
+                buttonBurn.Enabled = false;
+                buttonFirmware.Enabled = false;
 
-            labelState.Text = "正在烧录";
-            labelState.ForeColor = System.Drawing.Color.Black;
+                labelState.Text = "正在烧录";
+                labelState.ForeColor = System.Drawing.Color.Black;
 
-            if (burnOtpFirmwareAll(pathname)) {
-                labelState.Text = "烧录成功";
-                labelState.ForeColor = System.Drawing.Color.LimeGreen;
+                if (burnOtpFirmwareAll(pathname))
+                {
+                    appendLog("烧录成功");
+                    labelState.Text = "烧录成功";
+                    labelState.ForeColor = System.Drawing.Color.LimeGreen;
+                }
+                else
+                {
+                    appendLog("烧录失败！！！");
+                    labelState.Text = "烧录失败！";
+                    labelState.ForeColor = System.Drawing.Color.Red;
+                }
 
-                appendLog("烧录成功");
+                buttonConnect.Enabled = true;
+                buttonBurn.Enabled = true;
+                buttonFirmware.Enabled = true;
             } else {
-                labelState.Text = "烧录失败";
+                labelState.Text = "MAC地址用完了，请重新分配!";
                 labelState.ForeColor = System.Drawing.Color.Red;
-
-                MessageBox.Show("烧录失败");
-                appendLog("烧录失败！！！");
+                buttonBurn.Enabled = false;
             }
-
-            buttonConnect.Enabled = true;
-            buttonBurn.Enabled = true;
-            buttonFirmware.Enabled = true;
         }
 
         private void buttonClearLog_Click(object sender, EventArgs e) {
@@ -712,7 +733,7 @@ namespace JwaooOtpProgrammer {
             return (address & 0xFFFF00000000) != mStartValue;
         }
 
-        public UInt64 readFromFile() {
+        public bool readFromFile(ref UInt64 address, ref UInt32 count) {
             FileStream stream = null;
 
             try {
@@ -721,9 +742,9 @@ namespace JwaooOtpProgrammer {
                 byte[] buff = new byte[32];
                 int length = stream.Read(buff, 0, buff.Length);
                 String text = Encoding.ASCII.GetString(buff, 0, length);
-                UInt64 addr = getBdAddressValue(text);
-                if (addr != 0) {
-                    return addr;
+
+                if (getBdAddressValue(text, ref address, ref count)) {
+                    return true;
                 }
 
                 if (text.Length > 0) {
@@ -732,9 +753,9 @@ namespace JwaooOtpProgrammer {
                     MessageBox.Show("MAC地址文件为空：" + mFilePath);
                 }
             } catch (FileNotFoundException) {
-                UInt64 addr = mStartValue;
-                writeToFile(addr);
-                return addr;
+                address = mStartValue;
+                count = 0;
+                writeToFile(address, 0);
             } catch (Exception e) {
                 MessageBox.Show("读取MAC地址文件失败：\r\n" + e);
             } finally {
@@ -743,10 +764,10 @@ namespace JwaooOtpProgrammer {
                 }
             }
 
-            return 0;
+            return false;
         }
 
-        public bool writeToFile(UInt64 addr) {
+        public bool writeToFile(UInt64 addr, UInt32 count) {
             String text = getBdAddressString(addr);
             if (text == null) {
                 return false;
@@ -758,6 +779,11 @@ namespace JwaooOtpProgrammer {
 
             try {
                 stream = File.OpenWrite(mFilePath);
+                stream.SetLength(0);
+
+                stream.Write(bytes, 0, bytes.Length);
+
+                bytes = Encoding.ASCII.GetBytes(" " + count);
                 stream.Write(bytes, 0, bytes.Length);
                 return true;
             } catch (Exception) {
@@ -800,31 +826,37 @@ namespace JwaooOtpProgrammer {
             return builder.ToString();
         }
 
-        public static UInt64 getBdAddressValue(String text) {
+        public static bool getBdAddressValue(String text, ref UInt64 address, ref UInt32 count) {
             if (text == null) {
-                return 0;
+                return false;
             }
 
-            String[] texts = text.Split(':', '-');
+            String[] texts = Regex.Split(text, "\\s+");
+            if (texts.Length > 1) {
+                text = texts[0];
+                count = Convert.ToUInt32(texts[1]);
+            }
+
+            texts = text.Split(':', '-');
             if (texts.Length != 6) {
-                return 0;
+                return false;
             }
 
-            UInt64 value = 0;
+            address = 0;
 
             try {
                 foreach (String node in texts) {
                     if (node.Length != 2) {
-                        return 0;
+                        return false;
                     }
 
-                    value = (value << 8) | Convert.ToByte(node, 16);
+                    address = (address << 8) | Convert.ToByte(node, 16);
                 }
             } catch {
-                return 0;
+                return false;
             }
 
-            return value;
+            return true;
         }
 
         public static byte[] getBdAddressBytes(UInt64 addr) {

@@ -144,7 +144,7 @@ public class MainActivity extends JwaooToyActivity implements OnCheckedChangeLis
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		CavanAndroid.setSuspendEnable(this, false);
+		CavanAndroid.acquireWakeLock(this);
 
 		mWaveViewX = (CavanWaveView) findViewById(R.id.waveViewX);
 		mWaveViewX.setValueRange(-19.6, 19.6);
@@ -173,7 +173,7 @@ public class MainActivity extends JwaooToyActivity implements OnCheckedChangeLis
 
 	@Override
 	protected void onDestroy() {
-		CavanAndroid.setSuspendEnable(this, true);
+		CavanAndroid.releaseWakeLock();
 		super.onDestroy();
 	}
 

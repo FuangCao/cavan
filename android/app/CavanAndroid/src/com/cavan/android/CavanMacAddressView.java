@@ -1,17 +1,60 @@
 package com.cavan.android;
 
-import com.cavan.java.CavanString;
-
 import android.content.Context;
 import android.text.InputFilter;
+import android.text.Spanned;
 import android.util.AttributeSet;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.cavan.java.CavanString;
+
 public class CavanMacAddressView extends LinearLayout {
 
-	private EditText[] mEditTextValues = new EditText[6];
+	private static int TEXT_MAX_LENGTH = 2;
+
+	private CavanMacAddressEditText[] mEditTextValues = new CavanMacAddressEditText[6];
+
+	public class CavanMacAddressEditText extends EditText implements InputFilter {
+
+		private int mIndex;
+
+		public CavanMacAddressEditText(Context context, int index) {
+			super(context);
+
+			mIndex = index;
+			setSelectAllOnFocus(true);
+			setFilters(new InputFilter[] { this });
+		}
+
+		@Override
+		public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+			for (int i = start; i < end; i++) {
+				if (!CavanString.isNumber(source.charAt(i), 16)) {
+					return CavanString.EMPTY_STRING;
+				}
+			}
+
+			int sLen = end - start;
+			int dLen = dend - dstart;
+
+			if (sLen > dLen) {
+				int length = dest.length() - dLen;
+				if (length + sLen >= TEXT_MAX_LENGTH) {
+					end = start + (TEXT_MAX_LENGTH - length);
+
+					if (mIndex < mEditTextValues.length - 1) {
+						mEditTextValues[mIndex + 1].requestFocus();
+					}
+				}
+			} else if (sLen <= 0 && dest.length() <= dLen && mIndex > 0) {
+				mEditTextValues[mIndex - 1].requestFocus();
+			}
+
+			return source.subSequence(start, end).toString().toUpperCase();
+		}
+	};
 
 	public CavanMacAddressView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
 		super(context, attrs, defStyleAttr, defStyleRes);
@@ -81,10 +124,9 @@ public class CavanMacAddressView extends LinearLayout {
 				addView(textView);
 			}
 
-			EditText editText = new EditText(getContext());
-			editText.setFilters(new InputFilter[] { new InputFilter.LengthFilter(2)} );
-			editText.setText(Integer.toString(i));
+			CavanMacAddressEditText editText = new CavanMacAddressEditText(getContext(), i);
 			mEditTextValues[i] = editText;
+
 			addView(editText);
 		}
 

@@ -20,13 +20,13 @@ public class MainActivity extends JwaooToyActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		CavanAndroid.setSuspendEnable(this, false);
+		CavanAndroid.acquireWakeLock(this);
 		showScanActivity();
 	}
 
 	@Override
 	protected void onDestroy() {
-		CavanAndroid.setSuspendEnable(this, true);
+		CavanAndroid.releaseWakeLock();
 		super.onDestroy();
 	}
 
