@@ -130,8 +130,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	}
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+	protected void onCreateBle(Bundle savedInstanceState) {
 		setContentView(R.layout.activity_main);
 
 		mEditTextIp = (EditText) findViewById(R.id.editTextServerIp);

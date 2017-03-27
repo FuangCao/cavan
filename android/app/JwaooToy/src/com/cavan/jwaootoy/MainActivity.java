@@ -149,8 +149,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	};
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+	protected void onCreateBle(Bundle savedInstanceState) {
 		setContentView(R.layout.activity_main);
 
 		mButtonSend = (Button) findViewById(R.id.buttonSend);

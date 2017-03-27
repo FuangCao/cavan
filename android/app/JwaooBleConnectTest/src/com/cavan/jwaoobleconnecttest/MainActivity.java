@@ -16,8 +16,7 @@ public class MainActivity extends JwaooToyActivity {
 	private int mSuccess;
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+	protected void onCreateBle(Bundle savedInstanceState) {
 		setContentView(R.layout.activity_main);
 
 		CavanAndroid.acquireWakeLock(this);

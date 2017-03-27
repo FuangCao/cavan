@@ -135,8 +135,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 	@SuppressWarnings("deprecation")
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+	protected void onCreateBle(Bundle savedInstanceState) {
 		setContentView(R.layout.activity_main);
 
 		CavanAndroid.acquireWakeLock(this);

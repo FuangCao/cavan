@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
@@ -19,7 +20,7 @@ import com.cavan.android.CavanBleDevice;
 import com.cavan.android.CavanBleDeviceAdapter;
 import com.cavan.android.CavanBleScanner;
 
-public class CavanBleScanActivity extends Activity implements OnClickListener {
+public class CavanBleScanActivity extends CavanBleActivity implements OnClickListener {
 
 	private UUID[] mUuids;
 	private String[] mNames;
@@ -45,7 +46,7 @@ public class CavanBleScanActivity extends Activity implements OnClickListener {
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		if (event.getAction() == MotionEvent.ACTION_DOWN) {
+		if (event.getAction() == MotionEvent.ACTION_DOWN && mScanner != null) {
 			mScanner.setAutoSelect(0);
 		}
 
@@ -53,8 +54,7 @@ public class CavanBleScanActivity extends Activity implements OnClickListener {
 	}
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+	protected void onCreateBle(Bundle savedInstanceState) {
 		setContentView(R.layout.ble_scanner);
 
 		Intent intent = getIntent();
@@ -111,7 +111,10 @@ public class CavanBleScanActivity extends Activity implements OnClickListener {
 
 	@Override
 	protected void onDestroy() {
-		mScanner.stopScan();
+		if (mScanner != null) {
+			mScanner.stopScan();
+		}
+
 		super.onDestroy();
 	}
 
@@ -124,7 +127,7 @@ public class CavanBleScanActivity extends Activity implements OnClickListener {
 	}
 
 	public static void show(Activity activity, int requestCode, UUID[] uuids, String[] names) {
-		if (activity.isDestroyed()) {
+		if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN && activity.isDestroyed()) {
 			return;
 		}
 

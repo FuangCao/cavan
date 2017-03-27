@@ -34,6 +34,7 @@ typedef enum {
 	HTTP_REQ_PUT,
 	HTTP_REQ_POST,
 	HTTP_REQ_TRACE,
+	HTTP_REQ_PROPFIND,
 } http_request_type_t;
 
 struct cavan_http_client {
@@ -104,8 +105,10 @@ int cavan_http_write_path_hrefs(int fd, const char *pathname);
 int cavan_http_list_directory(struct network_client *client, const char *dirname, const char *filter);
 int cavan_http_read_multiform_header(struct cavan_fifo *fifo, struct cavan_http_request *header, const char *boundary);
 ssize_t cavan_http_receive_file(struct cavan_fifo *fifo, struct cavan_http_request *header, const char *dirname, const char *boundary);
+
 int cavan_http_process_get(struct network_client *client, struct cavan_http_request *req);
 int cavan_http_process_post(struct cavan_fifo *fifo, struct cavan_http_request *req);
+int cavan_http_process_propfind(struct cavan_fifo *fifo, struct cavan_http_request *req);
 
 int cavan_http_service_run(struct cavan_dynamic_service *service);
 

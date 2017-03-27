@@ -933,21 +933,22 @@ char *cavan_fifo_read_line_strip(struct cavan_fifo *fifo, char *buff, size_t siz
 
 static ssize_t cavan_fifo_fill_locked(struct cavan_fifo *fifo, char *buff, size_t size)
 {
-	char *buff_end = buff + size;
+	char *p = buff;
+	char *p_end = p + size;
 
-	while (buff < buff_end) {
+	while (p < p_end) {
 		ssize_t rdlen;
 
-		rdlen = cavan_fifo_read_locked(fifo, buff, buff_end - buff);
+		rdlen = cavan_fifo_read_locked(fifo, p, p_end - p);
 		if (rdlen <= 0) {
 			if (rdlen < 0) {
 				return rdlen;
 			}
 
-			return buff_end - buff;
+			return p - buff;
 		}
 
-		buff += rdlen;
+		p += rdlen;
 	}
 
 	return size;

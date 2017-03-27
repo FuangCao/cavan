@@ -131,6 +131,8 @@ int cavan_http_get_request_type(const char *req, size_t length)
 			return HTTP_REQ_PUT;
 		} else if (length == 4 && text_lhcmp("OST", req + 1) == 0) {
 			return HTTP_REQ_POST;
+		} else if (length == 8 && text_lhcmp("ROPFIND", req + 1) == 0) {
+			return HTTP_REQ_PROPFIND;
 		}
 		break;
 
@@ -182,6 +184,8 @@ int cavan_http_get_request_type2(const char *type)
 			return HTTP_REQ_PUT;
 		} else if (strcmp("OST", type + 1) == 0) {
 			return HTTP_REQ_POST;
+		} else if (strcmp("ROPFIND", type + 1) == 0) {
+			return HTTP_REQ_PROPFIND;
 		}
 		break;
 
@@ -1246,6 +1250,29 @@ out_cavan_http_request_free:
 	return ret;
 }
 
+int cavan_http_process_propfind(struct cavan_fifo *fifo, struct cavan_http_request *req)
+{
+	int ret;
+	char buff[1024];
+	const char *text;
+
+	text = cavan_http_request_find_prop_simple(req, "Content-Length");
+	if (text != NULL) {
+		cavan_fifo_set_available(fifo, text2value_unsigned(text, NULL, 10));
+	}
+
+	ret = cavan_fifo_fill(fifo, buff, sizeof(buff));
+	if (ret < 0) {
+		pr_red_info("cavan_fifo_fill: %d", ret);
+		return ret;
+	}
+
+	buff[ret] = 0;
+	println("buff[%d] = %s", ret, buff);
+
+	return 0;
+}
+
 // ================================================================================
 
 static int cavan_http_start_handler(struct cavan_dynamic_service *service)
@@ -1316,6 +1343,10 @@ static int cavan_http_service_run_handler(struct cavan_dynamic_service *service,
 
 		case HTTP_REQ_POST:
 			cavan_http_process_post(&fifo, req);
+			break;
+
+		case HTTP_REQ_PROPFIND:
+			cavan_http_process_propfind(&fifo, req);
 			break;
 
 		default:

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
@@ -19,7 +18,7 @@ import com.cavan.android.CavanAndroid;
 import com.jwaoo.android.JwaooBleToy;
 
 @SuppressLint("HandlerLeak")
-public class JwaooToyActivity extends Activity implements OnCancelListener, Callback {
+public class JwaooToyActivity extends CavanBleActivity implements OnCancelListener, Callback {
 
 	private final int MSG_UPDATE_UI = 1;
 	private final int MSG_SHOW_PROGRESS_DIALOG = 2;

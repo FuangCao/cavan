@@ -32,5 +32,6 @@
     <string name="deselect_all">反选</string>
     <string name="add">增加</string>
     <string name="remove">删除</string>
+    <string name="ble_not_support_propmpt">本机硬件不支持蓝牙4.0，无法正常使用！</string>
 
 </resources>
