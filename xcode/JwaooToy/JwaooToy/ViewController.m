@@ -75,7 +75,7 @@
 }
 
 - (void)didBatteryStateChanged:(uint8_t)state level:(uint8_t)level voltage:(double)voltage {
-    NSLog(@"state = %d, level = %d, voltage = %3.2lf", state, level, voltage);
+    NSLog(@"didBatteryStateChanged: state = %d, level = %d, voltage = %3.2lf", state, level, voltage);
 }
 
 - (void)dataSpeedTimer {

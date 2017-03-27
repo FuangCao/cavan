@@ -164,7 +164,7 @@
     if ([mDelegate respondsToSelector:@selector(didConnectStateChanged:)]) {
         [mDelegate didConnectStateChanged:connected];
     } else {
-        [self onConnectStateChanged:connected];
+        NSLog(@"onConnectStateChanged: connected = %d", connected);
     }
 }
 
