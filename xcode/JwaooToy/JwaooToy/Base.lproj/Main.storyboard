@@ -865,9 +865,20 @@
                                     <action selector="buttonKeyLockClick:" target="XfG-lQ-9wD" id="Jh0-YK-nMm"/>
                                 </connections>
                             </button>
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="wq5-te-rPs">
+                                <rect key="frame" x="193" y="133" width="109" height="18"/>
+                                <buttonCell key="cell" type="check" title="允许电池事件" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="GJq-qp-WXN">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="buttonBattInfoClick:" target="XfG-lQ-9wD" id="aHo-Fa-ets"/>
+                                </connections>
+                            </button>
                         </subviews>
                     </view>
                     <connections>
+                        <outlet property="mButtonBattInfo" destination="wq5-te-rPs" id="1pA-x1-P5c"/>
                         <outlet property="mButtonClick" destination="REp-1e-pVy" id="LJH-7r-cc6"/>
                         <outlet property="mButtonDisconnect" destination="TDE-jM-8Vb" id="u3T-w6-Ape"/>
                         <outlet property="mButtonLongClick" destination="hp0-Tm-8ts" id="xTa-wG-RYi"/>

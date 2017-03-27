@@ -59,9 +59,9 @@ typedef NS_ENUM(NSUInteger, JwaooToyDeviceId) {
 - (void)didKeyLongClicked:(uint8_t)code;
 - (void)didMotoStateChanged:(uint8_t)mode
                       speed:(uint8_t)speed;
-- (void)didBatteryStateChanged:(uint8_t)state;
-							level:(uint8_t)level;
-							voltage:(double)voltage;
+- (void)didBatteryStateChanged:(uint8_t)state
+                         level:(uint8_t)level
+                       voltage:(double)voltage;
 - (void)didSensorDataReceived:(nonnull NSData *)data;
 - (void)didDebugDataReceived:(nonnull NSData *)data;
 - (void)didConnectStateChanged:(BOOL)connected;

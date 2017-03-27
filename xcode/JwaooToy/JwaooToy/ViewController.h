@@ -27,6 +27,7 @@
 @property (weak) IBOutlet NSButton *mButtonLongClick;
 @property (weak) IBOutlet NSButton *mButtonMultiClick;
 @property (weak) IBOutlet NSButton *mButtonClick;
+@property (weak) IBOutlet NSButton *mButtonBattInfo;
 @property (weak) IBOutlet NSButton *mButtonReadBdAddr;
 @property (weak) IBOutlet NSButton *mButtonWriteBdAddr;
 @property (weak) IBOutlet NSTextField *mLabelSensorData;

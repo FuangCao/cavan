@@ -115,6 +115,7 @@
 
         NSLog(@"cancelPeripheralConnection");
         [self cancelPeripheralConnection:mPeripheral];
+        [self setConnectState:false];
 
         NSLog(@"connectPeripheral");
         [self connectPeripheral:mPeripheral options:nil];

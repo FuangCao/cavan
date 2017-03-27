@@ -49,6 +49,19 @@
         return false;
     }
 
+    if (![bleToy setBattEventEnable:_mButtonBattInfo.state]) {
+        NSLog(@"Failed to setBattEventEnable");
+        return false;
+    }
+
+    JwaooToyBattInfo *info = [bleToy readBattInfo];
+    if (info == nil) {
+        NSLog(@"Failed to readBattInfo");
+        return false;
+    }
+
+    NSLog(@"battery info: %@", info);
+
     return true;
 }
 
@@ -59,6 +72,10 @@
 - (void)didSensorDataReceived:(nonnull NSData *)data {
     mCount++;
     [self performSelectorOnMainThread:@selector(updateSensorData) withObject:nil waitUntilDone:NO];
+}
+
+- (void)didBatteryStateChanged:(uint8_t)state level:(uint8_t)level voltage:(double)voltage {
+    NSLog(@"state = %d, level = %d, voltage = %3.2lf", state, level, voltage);
 }
 
 - (void)dataSpeedTimer {
@@ -217,6 +234,10 @@
 
 - (IBAction)buttonKeyLockClick:(NSButton *)sender {
     [mBleToy setKeyLock:sender.state];
+}
+
+- (IBAction)buttonBattInfoClick:(NSButton *)sender {
+    [mBleToy setBattEventEnable:sender.state];
 }
 
 @end

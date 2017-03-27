@@ -39,9 +39,9 @@
 @synthesize level = mLevel;
 @synthesize voltage = mVoltage;
 
-- (JwaooToyMotoMode *)initWithState:(uint8_t)state
-                         withLevel:(uint8_t)level
-                         withVoltage:(double)voltage {
+- (JwaooToyBattInfo *)initWithState:(uint8_t)state
+                          withLevel:(uint8_t)level
+                        withVoltage:(double)voltage {
     if (self = [super init]) {
 		mState = state;
 		mLevel = level;
@@ -554,7 +554,7 @@
     return [mCommand readBoolWithBytes:command length:sizeof(command)];
 }
 
-- (JwaooToyBattInfo)readBattInfo {
+- (JwaooToyBattInfo *)readBattInfo {
 	NSData *response = [mCommand readDataWithType:JWAOO_TOY_CMD_BATT_INFO];
     if (response == nil || response.length != 4) {
         return nil;
