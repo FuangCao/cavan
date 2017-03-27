@@ -534,7 +534,7 @@ public class CavanAccessibility {
 		}
 
 		performSelection(node, 0, oldText.length());
-		CavanAndroid.postClipboardText(context, CavanAndroid.CLIP_LABEL_SKIP, text);
+		CavanAndroid.postClipboardText(context, CavanAndroid.CLIP_LABEL_TEMP, text);
 
 		return node.performAction(AccessibilityNodeInfo.ACTION_PASTE);
 	}

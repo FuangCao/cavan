@@ -184,7 +184,7 @@ public class CavanString {
 		return c == ':' || c == '：';
 	}
 
-	public static int getLineCount(String text) {
+	public static int getLineCount(CharSequence text) {
 		int length = text.length();
 
 		if (length > 0) {
@@ -202,13 +202,16 @@ public class CavanString {
 		}
 	}
 
-	public static int findLineEnd(String text) {
-		int index = text.indexOf('\n');
-		if (index < 0) {
-			return text.length();
+	public static int findLineEnd(CharSequence text) {
+		int length = text.length();
+
+		for (int i = 0; i < length; i++) {
+			if (text.charAt(i) == '\n') {
+				return i;
+			}
 		}
 
-		return index;
+		return length;
 	}
 
 	public static int lastIndexOf(String content, int end, int c) {

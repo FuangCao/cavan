@@ -174,7 +174,7 @@ public class FloatMessageService extends FloatWidowService {
 				String code = (String) msg.obj;
 				String text = getResources().getString(R.string.clipboard_updated, code);
 				CavanAndroid.showToast(getApplicationContext(), text);
-				CavanAndroid.postClipboardText(getApplicationContext(), code);
+				CavanAndroid.postClipboardTextTemp(getApplicationContext(), code);
 				break;
 
 			case MSG_CHECK_KEYGUARD:

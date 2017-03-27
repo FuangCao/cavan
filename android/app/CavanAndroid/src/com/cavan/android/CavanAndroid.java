@@ -17,6 +17,7 @@ import android.app.KeyguardManager.KeyguardLock;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.ClipData;
+import android.content.ClipDescription;
 import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -59,7 +60,7 @@ public class CavanAndroid {
 	public static boolean PLOG_ENABLE = true;
 
 	public static final String CLIP_LABEL_DEFAULT = "Cavan";
-	public static final String CLIP_LABEL_SKIP = "CavanSkip";
+	public static final String CLIP_LABEL_TEMP = CLIP_LABEL_DEFAULT + "Temp";
 
 	public static final String ENABLED_NOTIFICATION_LISTENERS = "enabled_notification_listeners";
 
@@ -375,6 +376,10 @@ public class CavanAndroid {
 		postClipboardText(manager, CLIP_LABEL_DEFAULT, text);
 	}
 
+	public static void postClipboardTextTemp(ClipboardManager manager, CharSequence text) {
+		postClipboardText(manager, CLIP_LABEL_TEMP, text);
+	}
+
 	public static boolean postClipboardText(Context context, CharSequence label, CharSequence text) {
 		ClipboardManager manager = (ClipboardManager) getCachedSystemService(context, Context.CLIPBOARD_SERVICE);
 		if (manager != null) {
@@ -387,6 +392,24 @@ public class CavanAndroid {
 
 	public static boolean postClipboardText(Context context, CharSequence text) {
 		return postClipboardText(context, CLIP_LABEL_DEFAULT, text);
+	}
+
+	public static boolean postClipboardTextTemp(Context context, CharSequence text) {
+		return postClipboardText(context, CLIP_LABEL_TEMP, text);
+	}
+
+	public static String getClipboardLabel(ClipData clip) {
+		ClipDescription desc = clip.getDescription();
+		if (desc == null) {
+			return null;
+		}
+
+		CharSequence label = desc.getLabel();
+		if (label == null) {
+			return null;
+		}
+
+		return label.toString();
 	}
 
 	public static boolean sendNotification(Context context, int id, Notification notification) {

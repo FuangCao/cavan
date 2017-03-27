@@ -6,7 +6,6 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
-import android.content.ClipDescription;
 import android.content.ClipboardManager;
 import android.content.ClipboardManager.OnPrimaryClipChangedListener;
 import android.content.ComponentName;
@@ -28,6 +27,7 @@ import android.service.notification.StatusBarNotification;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanIndexGenerator;
+import com.cavan.java.CavanString;
 import com.cavan.java.RedPacketFinder;
 import com.cavan.resource.EditableMultiSelectListPreference;
 
@@ -240,11 +240,11 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	}
 
 	public static boolean postRedPacketCode(Context context, String code) {
-		return CavanAndroid.postClipboardText(context, CavanAndroid.CLIP_LABEL_SKIP, code);
+		return CavanAndroid.postClipboardText(context, CavanAndroid.CLIP_LABEL_TEMP, code);
 	}
 
 	public void postRedPacketCode(CharSequence code) {
-		CavanAndroid.postClipboardText(mClipboardManager, CavanAndroid.CLIP_LABEL_SKIP, code);
+		CavanAndroid.postClipboardText(mClipboardManager, CavanAndroid.CLIP_LABEL_TEMP, code);
 	}
 
 	public static boolean startAlipayActivity(Context context) {
@@ -360,9 +360,19 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 			mClipText = text;
 
-			ClipDescription desc = clip.getDescription();
-			if (desc != null && CavanAndroid.CLIP_LABEL_SKIP.equals(desc.getLabel())) {
-				return;
+			String label = CavanAndroid.getClipboardLabel(clip);
+			if (label != null && label.startsWith(CavanAndroid.CLIP_LABEL_DEFAULT)) {
+				if (label.equals(CavanAndroid.CLIP_LABEL_TEMP)) {
+					return;
+				}
+			} else if (CavanString.getLineCount(text) == 1) {
+				try {
+					if (mFloatMessageService != null) {
+						mFloatMessageService.sendTcpCommand(FloatMessageService.NET_CMD_CLIPBOARD + text);
+					}
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
 			}
 
 			CavanAndroid.dLog("clip = " + text);
