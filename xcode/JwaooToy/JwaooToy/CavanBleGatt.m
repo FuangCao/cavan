@@ -52,6 +52,8 @@
 }
 
 - (void)connectByPeripheral:(CBPeripheral *)peripheral {
+    mConnEnable = true;
+
     if (mConnected) {
         if (mPeripheral == peripheral) {
             return;
