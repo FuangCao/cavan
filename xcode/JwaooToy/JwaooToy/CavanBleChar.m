@@ -7,6 +7,7 @@
 //
 
 #import "CavanBleChar.h"
+#import "CavanBleGatt.h"
 
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
 
@@ -21,11 +22,12 @@
 }
 
 - (CavanBleChar *)initWithCharacteristic:(CBCharacteristic *)characteristic
-                                  peripheral:(CBPeripheral *)peripheral {
+                                  gatt:(CavanBleGatt *)gatt {
     if (self = [super init]) {
         mReadCond = [NSCondition new];
         mWriteCond = [NSCondition new];
-        mPeripheral = peripheral;
+        mGatt = gatt;
+        mPeripheral = gatt.peripheral;
         mChar = characteristic;
 
         NSLog(@"uuid = %@, properties = 0x%08lx", mChar.UUID, (long)mChar.properties);
@@ -68,6 +70,10 @@
 }
 
 - (NSData *)readData {
+    if (!mGatt.isReady) {
+        return nil;
+    }
+
     NSData *value;
 
     @synchronized (self) {
@@ -92,7 +98,7 @@
     @synchronized (self) {
         [mWriteCond lock];
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 3 && mGatt.isReady; i++) {
             [mPeripheral writeValue:data forCharacteristic:mChar type:CBCharacteristicWriteWithResponse];
             if ([mWriteCond waitUntilDate:[NSDate dateWithTimeIntervalSinceNow:5.0]]) {
                 success = (mWriteError == nil);

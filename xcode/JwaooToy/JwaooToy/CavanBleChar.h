@@ -12,10 +12,11 @@
 
 #define CAVAN_BLE_FRAME_SIZE    20
 
-@class CavanBleChar;
+@class CavanBleGatt;
 
 @interface CavanBleChar : NSObject {
     CBCharacteristic *mChar;
+    CavanBleGatt *mGatt;
     CBPeripheral *mPeripheral;
 
     NSError *mWriteError;
@@ -31,7 +32,7 @@
 @property (nonnull, readonly) const void *bytes;
 
 - (nullable CavanBleChar *)initWithCharacteristic:(nonnull CBCharacteristic *)characteristic
-                                       peripheral:(nonnull CBPeripheral *)peripheral;
+                                       gatt:(nonnull CavanBleGatt *)gatt;
 - (void)enableNotifyWithSelector:(nonnull SEL)selector
                withTarget:(nullable NSObject *)target;
 - (void)setWriteStatus:(nullable NSError *)error;

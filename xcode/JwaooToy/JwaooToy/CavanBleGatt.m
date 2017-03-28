@@ -30,6 +30,26 @@
     return self;
 }
 
+- (BOOL)isReady {
+    return mReady;
+}
+
+- (BOOL)isConnected {
+    return mConnected;
+}
+
+- (BOOL)isPoweredOn {
+    return mPoweredOn;
+}
+
+- (BOOL)isConnEnabled {
+    return mConnEnable;
+}
+
+- (void)setConnEnable:(BOOL)enable {
+    mConnEnable = enable;
+}
+
 - (void)startScan {
     if (mConnEnable && mPoweredOn) {
         mPeripheral = nil;
@@ -74,7 +94,7 @@
 }
 
 - (CavanBleChar *)createBleChar:(CBCharacteristic *)characteristic {
-    CavanBleChar *bleChar = [[CavanBleChar alloc] initWithCharacteristic:characteristic peripheral:mPeripheral];
+    CavanBleChar *bleChar = [[CavanBleChar alloc] initWithCharacteristic:characteristic gatt:self];
 
     [self addBleChar:bleChar withUUID:characteristic.UUID];
 
@@ -107,6 +127,8 @@
 }
 
 - (void)setConnectState:(BOOL)connected {
+    mReady = connected;
+
     if (mConnected != connected) {
         mConnected = connected;
         [self onConnectStateChanged:connected];
@@ -126,6 +148,7 @@
         mInitPending = false;
 
         mService = service;
+        mReady = true;
 
         if ([self doInitialize]) {
             [self setConnectState:true];

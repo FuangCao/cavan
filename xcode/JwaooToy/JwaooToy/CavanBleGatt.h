@@ -24,6 +24,7 @@
     NSNumber *mRssi;
     NSMutableDictionary *mDictChars;
 
+    BOOL mReady;
     BOOL mConnected;
     BOOL mPoweredOn;
     BOOL mConnEnable;
@@ -43,6 +44,11 @@
 - (nullable CavanBleGatt *)initWithNames:(nullable NSArray *)names
                           uuid:(nullable CBUUID *)uuids;
 
+- (BOOL)isReady;
+- (BOOL)isConnected;
+- (BOOL)isPoweredOn;
+- (BOOL)isConnEnabled;
+- (void)setConnEnable:(BOOL)enable;
 - (void)startScan;
 - (void)connectByIdentify:(nullable NSUUID *)identifier;
 - (void)connectByPeripheral:(nonnull CBPeripheral *)peripheral;
