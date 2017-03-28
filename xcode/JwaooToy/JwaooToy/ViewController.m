@@ -197,6 +197,15 @@
     [mBleToy disconnect];
 }
 
+- (IBAction)connectButton:(NSButton *)sender {
+#if 0
+    NSUUID *uuid = [[NSUUID alloc] initWithUUIDString:@"6BB9E94D-75AF-40DF-9597-07D067636AF2"];
+    [mBleToy connectByIdentify:uuid];
+#else
+    [mBleToy connect];
+#endif
+}
+
 - (IBAction)buttonReadBdAddr:(NSButton *)sender {
     NSString *addr = [mBleToy readBdAddressString];
     if (addr != nil) {

@@ -875,6 +875,16 @@
                                     <action selector="buttonBattInfoClick:" target="XfG-lQ-9wD" id="aHo-Fa-ets"/>
                                 </connections>
                             </button>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vOh-Hx-srl">
+                                <rect key="frame" x="189" y="155" width="81" height="32"/>
+                                <buttonCell key="cell" type="push" title="连接" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="tri-J8-nMz">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="connectButton:" target="XfG-lQ-9wD" id="vBl-0i-G3m"/>
+                                </connections>
+                            </button>
                         </subviews>
                     </view>
                     <connections>

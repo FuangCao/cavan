@@ -13,6 +13,7 @@
 @synthesize rssi = mRssi;
 @synthesize service = mService;
 @synthesize peripheral = mPeripheral;
+@synthesize identifier = mIdentifier;
 
 // ================================================================================
 
@@ -30,8 +31,30 @@
 }
 
 - (void)startScan {
-    mPeripheral = nil;
-    [self scanForPeripheralsWithServices:nil options:nil];
+    if (mConnEnable && mPoweredOn) {
+        mPeripheral = nil;
+        [self scanForPeripheralsWithServices:nil options:nil];
+    }
+}
+
+- (void)connectByIdentify:(NSUUID *)identifier {
+    mConnEnable = true;
+    mIdentifier = identifier;
+
+    if (!mConnected) {
+        [self stopScan];
+        [self startScan];
+    }
+}
+
+- (void)connect {
+    [self connectByIdentify:nil];
+}
+
+- (void)connectByPeripheral:(CBPeripheral *)peripheral {
+    mPeripheral = peripheral;
+    [self stopScan];
+    [self startConnThread:false];
 }
 
 - (void)addBleChar:(CavanBleChar *)bleChar
@@ -47,11 +70,20 @@
     return bleChar;
 }
 
-- (void)disconnect {
+- (void)disconnectInternal {
     if (mPeripheral != nil) {
         [self cancelPeripheralConnection:mPeripheral];
         mPeripheral = nil;
     }
+}
+
+- (void)disconnect {
+    mConnEnable = false;
+    mInitPending = false;
+    mConnPending = false;
+
+    [self stopScan];
+    [self disconnectInternal];
 }
 
 - (void)onConnectStateChanged:(BOOL)connected {
@@ -79,7 +111,7 @@
 
     mInitRunning = true;
 
-    while (mInitPending) {
+    while (mInitPending && mConnEnable) {
         mInitPending = false;
 
         mService = service;
@@ -87,7 +119,7 @@
         if ([self doInitialize]) {
             [self setConnectState:true];
         } else {
-            [self disconnect];
+            [self disconnectInternal];
         }
     };
 
@@ -109,7 +141,7 @@
         [NSThread sleepForTimeInterval:CAVAN_BLE_SCAN_TIME];
     }
 
-    while (mConnPending && mPeripheral) {
+    while (mConnPending && mPeripheral && mConnEnable) {
         NSLog(@"stopScan");
         [self stopScan];
 
@@ -134,7 +166,6 @@
     if (!mConnRunning) {
         [NSThread detachNewThreadSelector:@selector(connThread:) toTarget:self withObject:[NSNumber numberWithBool:needSleep]];
     }
-
 }
 
 - (BOOL)isValidPeripheral:(CBPeripheral *)peripheral {
@@ -179,10 +210,12 @@
 
         case CBCentralManagerStatePoweredOff:
             strState = @"CBCentralManagerStatePoweredOff";
+            mPoweredOn = false;
             break;
 
         case CBCentralManagerStatePoweredOn:
             strState = @"CBCentralManagerStatePoweredOn";
+            mPoweredOn = true;
             [self startScan];
             break;
 
@@ -208,13 +241,19 @@
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *, id> *)advertisementData RSSI:(NSNumber *)RSSI {
     NSLog(@"didDiscoverPeripheral: %@, rssi = %@", peripheral, RSSI);
     if ([self isValidPeripheral:peripheral]) {
-        if (mPeripheral == nil || RSSI.intValue > mRssi.intValue) {
-            NSLog(@"Modify peripheral: %@ => %@", mPeripheral, peripheral);
-            mPeripheral = peripheral;
-            mRssi = RSSI;
-        }
+        if (mIdentifier != nil) {
+            if ([mIdentifier isEqual:peripheral.identifier]) {
+                [self connectByPeripheral:peripheral];
+            }
+        } else {
+            if (mPeripheral == nil || RSSI.intValue > mRssi.intValue) {
+                NSLog(@"Modify peripheral: %@ => %@", mPeripheral, peripheral);
+                mPeripheral = peripheral;
+                mRssi = RSSI;
+            }
 
-        [self startConnThread:true];
+            [self startConnThread:true];
+        }
     }
 }
 
@@ -231,10 +270,12 @@
 
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error {
     NSLog(@"didDisconnectPeripheral: %@", peripheral);
+
+    [self setConnectState:false];
+
     if (mPeripheral != nil) {
         [self startConnThread:false];
     } else {
-        [self setConnectState:false];
         [self startScan];
     }
 }

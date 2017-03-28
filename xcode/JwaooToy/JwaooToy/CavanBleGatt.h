@@ -18,12 +18,16 @@
     NSArray *mNames;
     CBService *mService;
     CBPeripheral *mPeripheral;
+    NSUUID *mIdentifier;
     dispatch_queue_t mQueue;
 
     NSNumber *mRssi;
     NSMutableDictionary *mDictChars;
 
     BOOL mConnected;
+    BOOL mPoweredOn;
+    BOOL mConnEnable;
+
     BOOL mConnPending;
     BOOL mConnRunning;
 
@@ -34,11 +38,15 @@
 @property (nullable) NSNumber *rssi;
 @property (nullable) CBService *service;
 @property (nullable) CBPeripheral *peripheral;
+@property (nullable) NSUUID *identifier;
 
 - (nullable CavanBleGatt *)initWithNames:(nullable NSArray *)names
                           uuid:(nullable CBUUID *)uuids;
 
 - (void)startScan;
+- (void)connectByIdentify:(nullable NSUUID *)identifier;
+- (void)connectByPeripheral:(nonnull CBPeripheral *)peripheral;
+- (void)connect;
 - (void)addBleChar:(nonnull CavanBleChar *)bleChar
           withUUID:(nonnull CBUUID *)uuid;
 - (nonnull CavanBleChar *)createBleChar:(nonnull CBCharacteristic *)characteristic;
