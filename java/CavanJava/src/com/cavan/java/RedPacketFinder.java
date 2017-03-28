@@ -526,10 +526,12 @@ public class RedPacketFinder {
 		return null;
 	}
 
-	public String getNormalCode(String pkgName) {
-		Matcher matcher = PATTERN_FU_DAI.matcher(mJoinedLines);
-		if (matcher.find()) {
-			return "福袋";
+	public String getNormalCode(String pkgName, boolean fudai) {
+		if (fudai) {
+			Matcher matcher = PATTERN_FU_DAI.matcher(mJoinedLines);
+			if (matcher.find()) {
+				return "福袋";
+			}
 		}
 
 		String code = sPackageCodeMap.get(pkgName);
@@ -546,7 +548,7 @@ public class RedPacketFinder {
 		}
 
 		for (Pattern pattern : sNormalPatterns) {
-			matcher = pattern.matcher(mJoinedLines);
+			Matcher matcher = pattern.matcher(mJoinedLines);
 			if (matcher.find()) {
 				return matcher.group(1);
 			}

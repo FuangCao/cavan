@@ -383,7 +383,7 @@ public class RedPacketNotification extends CavanNotification {
 	}
 
 	public String getRedPacketCodeNormal() {
-		return mFinder.getNormalCode(getPackageName());
+		return mFinder.getNormalCode(getPackageName(), MainActivity.isFuDaiNotifyEnabled(mService));
 	}
 
 	public boolean sendRedPacketNotifyNormal() {

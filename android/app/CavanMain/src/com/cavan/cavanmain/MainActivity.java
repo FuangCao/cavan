@@ -81,6 +81,8 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_MM_AUTO_UNPACK = "mm_auto_unpack";
 	public static final String KEY_KEYWORD_NOTIFY = "keyword_notify";
 	public static final String KEY_AUTO_BACK_DESKTOP = "auto_back_desktop";
+	public static final String KEY_FU_DAI_NOTIFY = "fu_dai_notify";
+	public static final String KEY_CLIPBOARD_SHARE = "clipboard_share";
 
 	private static boolean sAutoOpenAppEnable = true;
 	private static boolean sRedPacketCodeReceiveEnabled = true;
@@ -156,6 +158,14 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 	public static List<String> getWanShareServer(Context context) {
 		return EditableMultiSelectListPreference.load(context, KEY_WAN_SERVER);
+	}
+
+	public static boolean isFuDaiNotifyEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_FU_DAI_NOTIFY);
+	}
+
+	public static boolean isClipboardShareEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_CLIPBOARD_SHARE);
 	}
 
 	public static boolean isTcpBridgeEnabled(Context context) {

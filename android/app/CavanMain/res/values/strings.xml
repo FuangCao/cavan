@@ -259,5 +259,8 @@
 		<item>5 PPM/℃</item>
 		<item>1 PPM/℃</item>
 	</string-array>
+	<string name="clipboard_share">剪切板分享</string>
+	<string name="fu_dai_notify">福袋提醒</string>
+	<string name="text_share">分享</string>
 
 </resources>

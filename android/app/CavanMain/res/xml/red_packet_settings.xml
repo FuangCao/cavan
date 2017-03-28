@@ -55,6 +55,16 @@
 	    android:defaultValue="true"
 	    android:title="@string/text_auto_unlock" />
 
+	<CheckBoxPreference android:key="fu_dai_notify"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/fu_dai_notify" />
+
+	<CheckBoxPreference android:key="clipboard_share"
+	    android:persistent="true"
+	    android:defaultValue="false"
+	    android:title="@string/clipboard_share" />
+
 	<Preference android:key="permission_settings"
 	    android:title="@string/text_permission_settings" />
 

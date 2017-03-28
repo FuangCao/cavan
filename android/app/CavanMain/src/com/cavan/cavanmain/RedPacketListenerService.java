@@ -365,14 +365,9 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				if (label.equals(CavanAndroid.CLIP_LABEL_TEMP)) {
 					return;
 				}
-			} else if (CavanString.getLineCount(text) == 1) {
-				try {
-					if (mFloatMessageService != null) {
-						mFloatMessageService.sendTcpCommand(FloatMessageService.NET_CMD_CLIPBOARD + text);
-					}
-				} catch (RemoteException e) {
-					e.printStackTrace();
-				}
+			} else if (MainActivity.isClipboardShareEnabled(this) && CavanString.getLineCount(text) == 1) {
+				FloatEditorDialog dialog = FloatEditorDialog.getInstance(this, text, false, false);
+				dialog.show(6000);
 			}
 
 			CavanAndroid.dLog("clip = " + text);

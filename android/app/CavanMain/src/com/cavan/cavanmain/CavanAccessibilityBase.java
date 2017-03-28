@@ -173,7 +173,7 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 		String text = CavanString.fromCharSequence(node.getText());
 
 		if (text.length() > 0 && RedPacketFinder.containsUrl(text) == false) {
-			FloatEditorDialog dialog = FloatEditorDialog.getInstance(mService, text, true);
+			FloatEditorDialog dialog = FloatEditorDialog.getInstance(mService, text, true, true);
 			dialog.show(6000);
 		}
 

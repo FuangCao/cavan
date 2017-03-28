@@ -31,6 +31,7 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 	private boolean mShowing;
 	private boolean mAutoDismiss;
 
+	private boolean mCopy;
 	private View mRootView;
 	private Button mButtonCopy;
 	private Button mButtonSend;
@@ -43,12 +44,12 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 	private WindowManager mWindowManager;
 	private Handler mHandler = new Handler();
 
-	public static FloatEditorDialog getInstance(Context context, CharSequence text, boolean checked) {
+	public static FloatEditorDialog getInstance(Context context, CharSequence text, boolean checked, boolean copy) {
 		if (mInstance == null) {
 			mInstance = new FloatEditorDialog(context);
 		}
 
-		mInstance.updateContent(text, checked);
+		mInstance.updateContent(text, checked, copy);
 
 		return mInstance;
 	}
@@ -77,9 +78,11 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 		mWindowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 	}
 
-	public void updateContent(CharSequence text, boolean checked) {
+	public void updateContent(CharSequence text, boolean checked, boolean copy) {
+		mCopy = copy;
 		mCheckBox.setChecked(checked);
 		mEditText.setText(text);
+		mButtonCopy.setText(copy ? R.string.text_copy : R.string.text_share);
 	}
 
 	private View findViewById(int id) {
@@ -190,7 +193,10 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 			}
 		} else if (v == mButtonCopy) {
 			String text = mEditText.getText().toString();
-			CavanAndroid.postClipboardText(mContext, text);
+
+			if (mCopy) {
+				CavanAndroid.postClipboardText(mContext, text);
+			}
 
 			Intent intent = new Intent(MainActivity.ACTION_SEND_WAN_COMMAN);
 			intent.putExtra("command", FloatMessageService.NET_CMD_CLIPBOARD + text);
