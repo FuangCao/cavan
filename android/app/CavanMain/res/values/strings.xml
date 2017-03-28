@@ -262,5 +262,6 @@
 	<string name="clipboard_share">剪切板分享</string>
 	<string name="fu_dai_notify">福袋提醒</string>
 	<string name="text_share">分享</string>
+	<string name="disable_suspend">禁止休眠</string>
 
 </resources>

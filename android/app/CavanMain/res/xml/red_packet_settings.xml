@@ -55,6 +55,16 @@
 	    android:defaultValue="true"
 	    android:title="@string/text_auto_unlock" />
 
+	<CheckBoxPreference android:key="disable_suspend"
+	    android:persistent="true"
+	    android:defaultValue="false"
+	    android:title="@string/disable_suspend" />
+
+	<CheckBoxPreference android:key="disable_keyguard"
+	    android:persistent="true"
+	    android:defaultValue="false"
+	    android:title="@string/disable_keyguard" />
+
 	<CheckBoxPreference android:key="fu_dai_notify"
 	    android:persistent="true"
 	    android:defaultValue="true"
@@ -137,11 +147,6 @@
 		android:entryValues="@array/text_auto_values"
 		android:defaultValue="1"
 	    android:title="@string/text_auto_commit" />
-
-	<CheckBoxPreference android:key="disable_keyguard"
-	    android:persistent="true"
-	    android:defaultValue="false"
-	    android:title="@string/disable_keyguard" />
 
 	<CheckBoxPreference android:key="auto_unpack"
 	    android:persistent="true"

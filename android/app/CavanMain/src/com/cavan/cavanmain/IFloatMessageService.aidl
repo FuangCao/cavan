@@ -20,4 +20,7 @@ interface IFloatMessageService {
 
 	void updateTcpService();
 	void updateTcpBridge();
+
+	boolean isSuspendDisabled();
+	void setSuspendDisable(boolean disable);
 }

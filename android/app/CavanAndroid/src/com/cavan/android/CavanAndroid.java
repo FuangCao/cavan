@@ -268,7 +268,7 @@ public class CavanAndroid {
 			}
 		} else {
 			if (sKeyguardLock == null) {
-				sKeyguardLock = manager.newKeyguardLock(CavanAndroid.class.getName());
+				sKeyguardLock = manager.newKeyguardLock(CavanAndroid.class.getCanonicalName());
 				if (sKeyguardLock == null) {
 					return false;
 				}
@@ -308,7 +308,7 @@ public class CavanAndroid {
 
 		if (wakeup) {
 			if(sWakeLockWakeup == null) {
-				sWakeLockWakeup = manager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.FULL_WAKE_LOCK, CavanAndroid.class.getName());
+				sWakeLockWakeup = manager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.FULL_WAKE_LOCK, CavanAndroid.class.getCanonicalName());
 				if (sWakeLockWakeup == null) {
 					return false;
 				}
@@ -317,7 +317,7 @@ public class CavanAndroid {
 			lock = sWakeLockWakeup;
 		} else {
 			if (sWakeLock == null) {
-				sWakeLock = manager.newWakeLock(PowerManager.FULL_WAKE_LOCK, CavanAndroid.class.getName());
+				sWakeLock = manager.newWakeLock(PowerManager.FULL_WAKE_LOCK, CavanAndroid.class.getCanonicalName());
 				if (sWakeLock == null) {
 					return false;
 				}

@@ -83,6 +83,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_AUTO_BACK_DESKTOP = "auto_back_desktop";
 	public static final String KEY_FU_DAI_NOTIFY = "fu_dai_notify";
 	public static final String KEY_CLIPBOARD_SHARE = "clipboard_share";
+	public static final String KEY_DISABLE_SUSPEND = "disable_suspend";
 
 	private static boolean sAutoOpenAppEnable = true;
 	private static boolean sRedPacketCodeReceiveEnabled = true;
@@ -166,6 +167,10 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 	public static boolean isClipboardShareEnabled(Context context) {
 		return CavanAndroid.isPreferenceEnabled(context, KEY_CLIPBOARD_SHARE);
+	}
+
+	public static boolean isDisableSuspendEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_DISABLE_SUSPEND);
 	}
 
 	public static boolean isTcpBridgeEnabled(Context context) {
@@ -273,6 +278,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private RingtonePreference mPreferenceRedPacketNotifyRingtone;
 	private CheckBoxPreference mPreferenceWanShare;
 	private CheckBoxPreference mPreferenceWanReceive;
+	private CheckBoxPreference mPreferenceDisableSuspend;
 	private EditableMultiSelectListPreference mPreferenceWanServer;
 	private Preference mPreferenceLanTest;
 	private Preference mPreferenceWanTest;
@@ -372,6 +378,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 		mPreferenceFloatTime = (CheckBoxPreference) findPreference(KEY_FLOAT_TIMER);
 		mPreferenceFloatTime.setOnPreferenceChangeListener(this);
+
+		mPreferenceDisableSuspend = (CheckBoxPreference) findPreference(KEY_DISABLE_SUSPEND);
+		mPreferenceDisableSuspend.setOnPreferenceChangeListener(this);
 
 		mPreferenceWanShare = (CheckBoxPreference) findPreference(KEY_WAN_SHARE);
 		mPreferenceWanShare.setOnPreferenceChangeListener(this);
@@ -622,6 +631,14 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		} else if (preference == mPreferenceAutoUnlock) {
 			if ((boolean) object) {
 				CavanAndroid.setLockScreenEnable(this, true);
+			}
+		} else if (preference == mPreferenceDisableSuspend) {
+			if (mFloatMessageService != null) {
+				try {
+					mFloatMessageService.setSuspendDisable((boolean) object);
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 

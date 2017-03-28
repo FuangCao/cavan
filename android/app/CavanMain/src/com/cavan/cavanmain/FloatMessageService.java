@@ -24,10 +24,12 @@ import android.net.ConnectivityManager;
 import android.os.Environment;
 import android.os.FileObserver;
 import android.os.Handler;
+import android.os.PowerManager;
 import android.os.Handler.Callback;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.PowerManager.WakeLock;
 import android.os.RemoteException;
 import android.view.Gravity;
 import android.view.View;
@@ -72,6 +74,7 @@ public class FloatMessageService extends FloatWidowService {
 	private int mLastSecond;
 	private boolean mScreenClosed;
 	private TextView mTextViewTime;
+	private WakeLock mWakeLock;
 	private HashMap<CharSequence, RedPacketCode> mMessageCodeMap = new HashMap<CharSequence, RedPacketCode>();
 
 	private UdpDaemonThread mUdpDaemon;
@@ -413,6 +416,16 @@ public class FloatMessageService extends FloatWidowService {
 
 			return mNetSender.sendTcpCommand(command, 0);
 		}
+
+		@Override
+		public boolean isSuspendDisabled() throws RemoteException {
+			return FloatMessageService.this.isSuspendDisabled();
+		}
+
+		@Override
+		public void setSuspendDisable(boolean disable) throws RemoteException {
+			FloatMessageService.this.setSuspendDisable(disable);
+		}
 	};
 
 	public static Intent buildIntent(Context context) {
@@ -423,6 +436,25 @@ public class FloatMessageService extends FloatWidowService {
 		Intent intent = buildIntent(context);
 		context.startService(intent);
 		return intent;
+	}
+
+	public boolean isSuspendDisabled() {
+		return mWakeLock != null && mWakeLock.isHeld();
+	}
+
+	@SuppressWarnings("deprecation")
+	public void setSuspendDisable(boolean disable) {
+		if (disable) {
+			if (mWakeLock == null) {
+				PowerManager manager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+				mWakeLock = manager.newWakeLock(PowerManager.FULL_WAKE_LOCK, FloatMessageService.class.getCanonicalName());
+			}
+
+			mWakeLock.acquire();
+		} else if (isSuspendDisabled()) {
+			mWakeLock.release();
+			mWakeLock = null;
+		}
 	}
 
 	public boolean setLockScreenEnable(boolean enable) {
@@ -549,6 +581,7 @@ public class FloatMessageService extends FloatWidowService {
 		mUdpDaemon.start();
 
 		updateNetworkConnState();
+		setSuspendDisable(MainActivity.isDisableSuspendEnabled(this));
 
 		super.onCreate();
 	}
