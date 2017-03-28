@@ -52,7 +52,16 @@
 }
 
 - (void)connectByPeripheral:(CBPeripheral *)peripheral {
+    if (mConnected) {
+        if (mPeripheral == peripheral) {
+            return;
+        }
+
+        [self disconnectInternal];
+    }
+
     mPeripheral = peripheral;
+
     [self stopScan];
     [self startConnThread:false];
 }
