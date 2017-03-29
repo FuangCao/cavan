@@ -57,9 +57,10 @@
     <string name="into_suspend">进入待机</string>
     <string name="device_not_connect">设备未连接</string>
     <string name="device_disconnected">设备已断开连接</string>
-    <string name="device_connected">已连接到设备：<xliff:g>%1$s</xliff:g></string>
+    <string name="device_connected">已连接到：<xliff:g>%1$s</xliff:g></string>
     <string name="app_name_mac_convert">井蛙MAC计算器</string>
     <string name="start_mac_address">起始地址：</string>
     <string name="end_mac_address">结束地址：</string>
+    <string name="device_suspend_propmpt">设备已进入待机，请查看待机电流是否正常</string>
 
 </resources>

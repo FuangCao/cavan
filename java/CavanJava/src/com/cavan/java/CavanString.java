@@ -8,6 +8,8 @@ public class CavanString {
 
 	public static final String EMPTY_STRING = new String();
 	public static final Pattern PATTERN_SPACE = Pattern.compile("\\s+");
+	public static final char[] HEX_LOWERCASE_CHARS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+	public static final char[] HEX_UPPERCASE_CHARS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
 	private static final String[] TRUE_TEXTS = {
 		"1", "true", "on"
@@ -107,6 +109,22 @@ public class CavanString {
 		builder.append(" ]");
 
 		return builder.toString();
+	}
+
+	public static char convertToCharLowercase(int value) {
+		return HEX_LOWERCASE_CHARS[value];
+	}
+
+	public static char convertToCharUppercase(int value) {
+		return HEX_UPPERCASE_CHARS[value];
+	}
+
+	public static String fromByte(byte value) {
+		return new String(new char[] { convertToCharUppercase((value >> 4) & 0x0F), convertToCharUppercase(value & 0x0F) } );
+	}
+
+	public static void fromByte(StringBuilder builder, byte value) {
+		builder.append(convertToCharUppercase((value >> 4) & 0x0F)).append(convertToCharUppercase(value & 0x0F));
 	}
 
 	public static String deleteSpace(String text) {

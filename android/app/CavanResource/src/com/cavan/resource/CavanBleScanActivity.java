@@ -23,6 +23,7 @@ import com.cavan.android.CavanBleScanner;
 public class CavanBleScanActivity extends CavanBleActivity implements OnClickListener {
 
 	private UUID[] mUuids;
+	private String[] mAddresses;
 	private String[] mNames;
 	private CavanBleScanner mScanner;
 	private CavanBleDeviceAdapter mAdapter;
@@ -39,7 +40,7 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 
 	public void startScan() {
 		if (mScanner != null) {
-			mScanner.startScan(mUuids, mNames);
+			mScanner.startScan(mUuids, mNames, mAddresses);
 			CavanAndroid.showToast(this, R.string.text_scanning);
 		}
 	}
@@ -59,6 +60,7 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 
 		Intent intent = getIntent();
 		mNames = intent.getStringArrayExtra("names");
+		mAddresses = intent.getStringArrayExtra("addresses");
 
 		Object[] objects = (Object[]) intent.getSerializableExtra("uuids");
 		if (objects != null && objects.length > 0) {
@@ -126,7 +128,7 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 		context.startActivity(getIntent(context));
 	}
 
-	public static void show(Activity activity, int requestCode, UUID[] uuids, String[] names) {
+	public static void show(Activity activity, int requestCode, UUID[] uuids, String[] names, String[] addresses) {
 		if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN && activity.isDestroyed()) {
 			return;
 		}
@@ -141,27 +143,39 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 			intent.putExtra("names", names);
 		}
 
+		if (addresses != null) {
+			intent.putExtra("addresses", addresses);
+		}
+
 		activity.startActivityForResult(intent, requestCode);
 	}
 
-	public static void show(Activity activity, String[] names, UUID[] uuids) {
-		show(activity, 0, uuids, names);
+	public static void show(Activity activity, UUID[] uuids, String[] names, String[] addresses) {
+		show(activity, 0, uuids, names, addresses);
+	}
+
+	public static void show(Activity activity, UUID[] uuids, String[] names) {
+		show(activity, uuids, names, null);
+	}
+
+	public static void show(Activity activity, String[] names, String[] addresses) {
+		show(activity, null, names, addresses);
 	}
 
 	public static void show(Activity activity, String[] names) {
-		show(activity, 0, null, names);
+		show(activity, null, names, null);
 	}
 
 	public static void show(Activity activity, UUID[] uuids) {
-		show(activity, 0, uuids, null);
+		show(activity, uuids, null);
 	}
 
 	public static void show(Activity activity) {
-		show(activity, 0, null, null);
+		show(activity, null, null, null);
 	}
 
 	public static void show(Activity activity, int requestCode) {
-		show(activity, requestCode, null, null);
+		show(activity, requestCode, null, null, null);
 	}
 
 	@Override

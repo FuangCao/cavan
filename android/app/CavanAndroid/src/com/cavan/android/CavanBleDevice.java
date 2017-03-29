@@ -47,6 +47,10 @@ public class CavanBleDevice implements Comparable<CavanBleDevice> {
 		mScanRecord = scanRecord;
 	}
 
+	public String getAddress() {
+		return mDevice.getAddress();
+	}
+
 	@Override
 	public String toString() {
 		String name = mDevice.getName();

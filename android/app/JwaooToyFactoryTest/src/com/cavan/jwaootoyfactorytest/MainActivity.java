@@ -27,6 +27,8 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.java.CavanMacAddress;
+import com.cavan.resource.CavanBleScanActivity;
 import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
 import com.jwaoo.android.JwaooToySensor;
@@ -47,22 +49,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	private static final int TEST_ITEM_CHARGE = 5;
 	private static final int TEST_ITEM_SUSPEND = 7;
 
-	private Button mButtonPass;
-	private Button mButtonFail;
-	private Button mButtonStart;
-	private TextView mTextViewInfo;
-
-	private Drawable mDrawablePass;
-	private Drawable mDrawableFail;
-	private Drawable mDrawableNoTest;
-
-	private int mTestItem;
-	private boolean mAutoTestEnable;
-
-	private TestResult mTestResult;
-	private TestResultFragment mTestResultFragment = new TestResultFragment();
-
-	private TestItemFragment[] mTestItemFragmanets;
+	private TestItemFragment[] mTestItemFragmanetsEmpty = new TestItemFragment[0];
 
 	private TestItemFragment[] mTestItemFragmanetsModel06 = {
 		new ButtonTestFragment(),
@@ -82,6 +69,26 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		new SuspendTestFragment(),
 	};
 
+	private Button mButtonPass;
+	private Button mButtonFail;
+	private Button mButtonStart;
+	private TextView mTextViewInfo;
+
+	private Drawable mDrawablePass;
+	private Drawable mDrawableFail;
+	private Drawable mDrawableNoTest;
+
+	private int mCurrentItem;
+	private boolean mAutoTestEnable;
+	private boolean mSuspendSuccess;
+	private String[] mAddresses;
+
+	private TestResult mTestResult;
+	private TestResultFragment mTestResultFragment = new TestResultFragment();
+
+	private TestItemFragment mCurrentFragmanet;
+	private TestItemFragment[] mTestItemFragmanets = mTestItemFragmanetsEmpty;
+
 	public void setTestItem(int item) {
 		BaseTestFragment fragment;
 
@@ -89,6 +96,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		if (item < 0 || item >= mTestItemFragmanets.length) {
 			item = -1;
+			mCurrentFragmanet = null;
 			fragment = mTestResultFragment;
 
 			mButtonFail.setVisibility(View.INVISIBLE);
@@ -98,7 +106,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				return;
 			}
 
-			fragment = mTestItemFragmanets[item];
+			mCurrentFragmanet = mTestItemFragmanets[item];
+			fragment = mCurrentFragmanet;
 
 			mButtonFail.setVisibility(View.VISIBLE);
 			mButtonStart.setVisibility(View.INVISIBLE);
@@ -110,19 +119,29 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		setTitle(fragment.getTestName());
 
-		mTestItem = item;
+		mCurrentItem = item;
 	}
 
 	public void gotoNextTest(boolean pass) {
-		if (mTestItem >= 0) {
-			mTestItemFragmanets[mTestItem].setTestResult(pass);
+		if (mCurrentFragmanet != null) {
+			mCurrentFragmanet.setTestResult(pass);
 		}
 
-		setTestItem(mAutoTestEnable ? (mTestItem + 1) : -1);
+		if (mSuspendSuccess) {
+			showScanActivity();
+		} else {
+			setTestItem(mAutoTestEnable ? (mCurrentItem + 1) : -1);
+		}
 	}
 
 	public void setPassEnable() {
 		mButtonPass.setVisibility(View.VISIBLE);
+		mButtonPass.setEnabled(true);
+	}
+
+	public void setFailEnable() {
+		mButtonFail.setVisibility(View.VISIBLE);
+		mButtonFail.setEnabled(true);
 	}
 
 	public void setTestComplete(boolean pass) {
@@ -190,7 +209,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		case MSG_CONNECT_STATE_CHANGED:
 			if ((boolean) msg.obj) {
-				mTextViewInfo.setText(getResources().getString(R.string.device_connected, mBleToy.getDeviceName()));
+				mTextViewInfo.setText(getResources().getString(R.string.device_connected, mBleToy.getAddress() + " - " + mBleToy.getDeviceName()));
 
 				if (mBleToy.getDeviveId() == JwaooBleToy.DEVICE_ID_MODEL10) {
 					mTestItemFragmanets = mTestItemFragmanetsModel10;
@@ -198,25 +217,42 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 					mTestItemFragmanets = mTestItemFragmanetsModel06;
 				}
 			} else {
+				if (mSuspendSuccess && mCurrentFragmanet instanceof SuspendTestFragment) {
+					((SuspendTestFragment) mCurrentFragmanet).setSuspendComplete();
+				}
+
 				mTextViewInfo.setText(R.string.device_disconnected);
-				mTestItemFragmanets = null;
+				mTestItemFragmanets = mTestItemFragmanetsEmpty;
 			}
 
 			mTestResultFragment.notifyDataSetChanged();
 			break;
 
 		default:
-			if (mTestItem < 0) {
+			if (mCurrentItem < 0) {
 				break;
 			}
 
-			TestItemFragment fragment = mTestItemFragmanets[mTestItem];
+			TestItemFragment fragment = mTestItemFragmanets[mCurrentItem];
 			if (fragment.isInitialized()) {
 				fragment.handleMessage(msg);
 			}
 		}
 
 		return true;
+	}
+
+	@Override
+	public void showScanActivity() {
+		updateUI(false);
+		showProgressDialog(false);
+
+		if (mSuspendSuccess && mBleToy != null) {
+			String address = mBleToy.getAddress();
+			mAddresses = new String[] { new CavanMacAddress(address).increase().toString(), address };
+		}
+
+		CavanBleScanActivity.show(this, JwaooBleToy.BT_NAMES, mAddresses);
 	}
 
 	@Override
@@ -229,8 +265,19 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 			@Override
 			protected void onConnectionStateChange(boolean connected) {
 				CavanAndroid.dLog("onConnectionStateChange: connected = " + connected);
+
 				updateUI(connected);
-				showProgressDialog(!connected);
+
+				if (connected) {
+					showProgressDialog(false);
+					mSuspendSuccess = false;
+					mAddresses = null;
+				} else if (mSuspendSuccess) {
+					disconnect();
+				} else {
+					showProgressDialog(true);
+				}
+
 				mHandler.obtainMessage(MSG_CONNECT_STATE_CHANGED, connected).sendToTarget();
 			}
 
@@ -418,11 +465,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 			@Override
 			public int getCount() {
-				if (mTestItemFragmanets != null) {
-					return mTestItemFragmanets.length;
-				}
-
-				return 0;
+				return mTestItemFragmanets.length;
 			}
 		};
 
@@ -948,6 +991,13 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 			super(TEST_ITEM_SUSPEND);
 		}
 
+		public void setSuspendComplete() {
+			mButtonIntoSuspend.setText(R.string.device_suspend_propmpt);
+			mButtonIntoSuspend.setEnabled(false);
+			setPassEnable();
+			setFailEnable();
+		}
+
 		@Override
 		protected int getNameResource() {
 			return R.string.test_item_suspend;
@@ -961,15 +1011,20 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		@Override
 		protected boolean doInitialize() {
 			mButtonIntoSuspend = (Button) findViewById(R.id.buttonIntoSuspend);
+			mButtonIntoSuspend.setText(R.string.into_suspend);
 			mButtonIntoSuspend.setOnClickListener(this);
-			setPassEnable();
+
+			if (mAutoTestEnable) {
+				mButtonIntoSuspend.performClick();
+			}
+
 			return true;
 		}
 
 		@Override
 		public void onClick(View v) {
 			if (mBleToy.setFactoryModeEnable(false) && mBleToy.doShutdown()) {
-				gotoNextTest(true);
+				mSuspendSuccess = true;
 			}
 		}
 	}
