@@ -24,12 +24,10 @@ import android.net.ConnectivityManager;
 import android.os.Environment;
 import android.os.FileObserver;
 import android.os.Handler;
-import android.os.PowerManager;
 import android.os.Handler.Callback;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Message;
-import android.os.PowerManager.WakeLock;
 import android.os.RemoteException;
 import android.view.Gravity;
 import android.view.View;
@@ -38,10 +36,12 @@ import android.view.WindowManager.LayoutParams;
 import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanWakeLock;
 import com.cavan.android.FloatWidowService;
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.java.CavanString;
 
+@SuppressWarnings("deprecation")
 public class FloatMessageService extends FloatWidowService {
 
 	public static final String NET_CMD_RDPKG = "RedPacketCode: ";
@@ -74,7 +74,7 @@ public class FloatMessageService extends FloatWidowService {
 	private int mLastSecond;
 	private boolean mScreenClosed;
 	private TextView mTextViewTime;
-	private WakeLock mWakeLock;
+	private CavanWakeLock mWakeLock = new CavanWakeLock(FloatMessageService.class.getCanonicalName());
 	private HashMap<CharSequence, RedPacketCode> mMessageCodeMap = new HashMap<CharSequence, RedPacketCode>();
 
 	private UdpDaemonThread mUdpDaemon;
@@ -86,7 +86,6 @@ public class FloatMessageService extends FloatWidowService {
 
 	private Handler mHandler = new Handler() {
 
-		@SuppressWarnings("deprecation")
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
@@ -439,21 +438,14 @@ public class FloatMessageService extends FloatWidowService {
 	}
 
 	public boolean isSuspendDisabled() {
-		return mWakeLock != null && mWakeLock.isHeld();
+		return mWakeLock.isHeld();
 	}
 
-	@SuppressWarnings("deprecation")
 	public void setSuspendDisable(boolean disable) {
 		if (disable) {
-			if (mWakeLock == null) {
-				PowerManager manager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-				mWakeLock = manager.newWakeLock(PowerManager.FULL_WAKE_LOCK, FloatMessageService.class.getCanonicalName());
-			}
-
-			mWakeLock.acquire();
-		} else if (isSuspendDisabled()) {
+			mWakeLock.acquire(this);
+		} else {
 			mWakeLock.release();
-			mWakeLock = null;
 		}
 	}
 

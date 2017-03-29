@@ -13,7 +13,6 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.KeyguardManager;
-import android.app.KeyguardManager.KeyguardLock;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.ClipData;
@@ -29,13 +28,10 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.wifi.WifiManager;
-import android.net.wifi.WifiManager.MulticastLock;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Looper;
 import android.os.PowerManager;
-import android.os.PowerManager.WakeLock;
 import android.os.storage.StorageManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -71,10 +67,11 @@ public class CavanAndroid {
 	private static Toast sToast;
 	private static final Object sToastLock = new Object();
 
-	private static WakeLock sWakeLock;
-	private static WakeLock sWakeLockWakeup;
-	private static KeyguardLock sKeyguardLock;
-	private static MulticastLock sMulticastLock;
+	private static Context sContext;
+	private static CavanWakeLock sWakeLock = new CavanWakeLock(false);
+	private static CavanWakeLock sWakeLockWakeup = new CavanWakeLock(true);
+	private static CavanKeyguardLock sKeyguardLock = new CavanKeyguardLock();
+	private static CavanMulticastLock sMulticastLock = new CavanMulticastLock();
 
 	public static void eLog(String message) {
 		if (ELOG_ENABLE) {
@@ -195,6 +192,14 @@ public class CavanAndroid {
 			return service;
 		}
 
+		if (context != null) {
+			sContext = context;
+		} else if (sContext != null) {
+			context = sContext;
+		} else {
+			return null;
+		}
+
 		service = context.getSystemService(name);
 		if (service == null) {
 			return null;
@@ -263,76 +268,39 @@ public class CavanAndroid {
 
 	public static boolean setLockScreenEnable(KeyguardManager manager, boolean enable) {
 		if (enable) {
-			if (sKeyguardLock != null) {
-				sKeyguardLock.reenableKeyguard();
-			}
+			sKeyguardLock.release();
 		} else {
-			if (sKeyguardLock == null) {
-				sKeyguardLock = manager.newKeyguardLock(CavanAndroid.class.getCanonicalName());
-				if (sKeyguardLock == null) {
-					return false;
-				}
-			}
-
-			sKeyguardLock.disableKeyguard();
+			return sKeyguardLock.acquire(manager);
 		}
 
 		return true;
 	}
 
 	public static boolean setLockScreenEnable(Context context, boolean enable) {
-		KeyguardManager manager = (KeyguardManager) getCachedSystemService(context, Context.KEYGUARD_SERVICE);
-		if (manager == null) {
-			return false;
+		if (enable) {
+			sKeyguardLock.release();
+		} else {
+			return sKeyguardLock.acquire(context);
 		}
 
-		return setLockScreenEnable(manager, enable);
+		return true;
 	}
 
 	public static void releaseWakeLock() {
 		CavanAndroid.dLog("releaseWakeLock");
 
-		if (sWakeLock != null && sWakeLock.isHeld()) {
-			sWakeLock.release();
-		}
-
-		if (sWakeLockWakeup != null && sWakeLockWakeup.isHeld()) {
-			sWakeLockWakeup.release();
-		}
+		sWakeLock.release();
+		sWakeLockWakeup.release();
 	}
 
 	public static boolean acquireWakeLock(PowerManager manager, boolean wakeup, long overtime) {
 		CavanAndroid.dLog("acquireWakeLock: wakeup = " + wakeup + ", overtime = " + overtime);
 
-		WakeLock lock;
-
 		if (wakeup) {
-			if(sWakeLockWakeup == null) {
-				sWakeLockWakeup = manager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.FULL_WAKE_LOCK, CavanAndroid.class.getCanonicalName());
-				if (sWakeLockWakeup == null) {
-					return false;
-				}
-			}
-
-			lock = sWakeLockWakeup;
+			return sWakeLockWakeup.acquire(manager, overtime);
 		} else {
-			if (sWakeLock == null) {
-				sWakeLock = manager.newWakeLock(PowerManager.FULL_WAKE_LOCK, CavanAndroid.class.getCanonicalName());
-				if (sWakeLock == null) {
-					return false;
-				}
-			}
-
-			lock = sWakeLock;
+			return sWakeLock.acquire(manager, overtime);
 		}
-
-		if (overtime > 0) {
-			lock.acquire(overtime);
-		} else {
-			lock.acquire();
-		}
-
-		return true;
 	}
 
 	public static boolean acquireWakeLock(PowerManager manager, boolean wakeup) {
@@ -623,32 +591,12 @@ public class CavanAndroid {
 		return pkgName.equals(getTopActivieyPackageName(context));
 	}
 
-	public static MulticastLock getMulticastLock(Context context) {
-		if (sMulticastLock != null) {
-			return sMulticastLock;
-		}
-
-		WifiManager manager = (WifiManager) getCachedSystemService(context, Context.WIFI_SERVICE);
-		if (manager == null) {
-			return null;
-		}
-
-		sMulticastLock = manager.createMulticastLock(TAG);
-
-		return sMulticastLock;
-	}
-
 	public static boolean setMulticastEnabled(Context context, boolean enable) {
-		MulticastLock lock = getMulticastLock(context);
-		if (lock == null) {
-			return false;
+		if (enable) {
+			return sMulticastLock.acquire(context);
 		}
 
-		if (enable) {
-			lock.acquire();
-		} else {
-			lock.release();
-		}
+		sMulticastLock.release();
 
 		return true;
 	}

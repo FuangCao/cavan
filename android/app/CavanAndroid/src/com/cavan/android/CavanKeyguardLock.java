@@ -1,0 +1,48 @@
+package com.cavan.android;
+
+import android.app.KeyguardManager;
+import android.app.KeyguardManager.KeyguardLock;
+import android.content.Context;
+
+@SuppressWarnings("deprecation")
+public class CavanKeyguardLock {
+
+	private String mTag;
+	private KeyguardLock mLock;
+
+	public CavanKeyguardLock(String tag) {
+		mTag = tag;
+	}
+
+	public CavanKeyguardLock() {
+		this(CavanKeyguardLock.class.getCanonicalName());
+	}
+
+	public void release() {
+		if (mLock != null) {
+			mLock.reenableKeyguard();
+		}
+	}
+
+	public boolean acquire(KeyguardManager manager) {
+		if (mLock == null) {
+			mLock = manager.newKeyguardLock(mTag);
+			if (mLock == null) {
+				return false;
+			}
+		}
+
+		mLock.disableKeyguard();
+
+		return true;
+	}
+
+	public boolean acquire(Context context) {
+		KeyguardManager manager = (KeyguardManager) CavanAndroid.getCachedSystemService(context, Context.KEYGUARD_SERVICE);
+		if (manager == null) {
+			return false;
+		}
+
+		return acquire(manager);
+	}
+}
