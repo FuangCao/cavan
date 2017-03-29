@@ -84,6 +84,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_FU_DAI_NOTIFY = "fu_dai_notify";
 	public static final String KEY_CLIPBOARD_SHARE = "clipboard_share";
 	public static final String KEY_DISABLE_SUSPEND = "disable_suspend";
+	public static final String KEY_RED_PACKET_EDIT = "red_packet_edit";
 
 	private static boolean sAutoOpenAppEnable = true;
 	private static boolean sRedPacketCodeReceiveEnabled = true;
@@ -269,6 +270,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	private CheckBoxPreference mPreferenceAutoUnlock;
 	private Preference mPreferencePermissionSettings;
 	private Preference mPreferenceMessageShow;
+	private Preference mPreferenceRedPacketEdit;
 	private CheckBoxPreference mPreferenceAutoOpenApp;
 	private CheckBoxPreference mPreferenceAutoOpenAlipay;
 	private EditTextPreference mPreferenceRedPacketCodeSend;
@@ -372,6 +374,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 		mPreferenceMessageShow = findPreference(KEY_MESSAGE_SHOW);
 		mPreferenceMessageShow.setIntent(MessageActivity.getIntent(this));
+
+		mPreferenceRedPacketEdit = findPreference(KEY_RED_PACKET_EDIT);
+		mPreferenceRedPacketEdit.setIntent(RedPacketEditActivity.getIntent(this));
 
 		mPreferencePermissionSettings = findPreference(KEY_PERMISSION_SETTINGS);
 		mPreferencePermissionSettings.setIntent(PermissionSettingsActivity.getIntent(this));

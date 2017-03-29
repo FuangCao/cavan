@@ -143,6 +143,7 @@
             </intent-filter>
         </activity>
         <activity android:name="KeyguardActivity"></activity>
+        <activity android:name="RedPacketEditActivity"></activity>
     </application>
 
 </manifest>
