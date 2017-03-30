@@ -10,8 +10,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import android.annotation.SuppressLint;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+
+import com.cavan.android.CavanAndroid;
 
 @SuppressLint("SimpleDateFormat")
 public class RedPacketCode implements Comparable<RedPacketCode> {
@@ -33,12 +37,14 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 	private boolean mPostPending;
 
 	private long mTime;
+	private long mExactTime;
 	private long mRepeatTime;
 
 	private String mCode;
 	private int mPriority;
 	private boolean mValid;
 	private boolean mInvalid;
+	private boolean mIgnored;
 	private boolean mSendDisable;
 	private boolean mRecvDisable;
 	private boolean mSendPending;
@@ -131,6 +137,31 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 		}
 
 		return count;
+	}
+
+	public static RedPacketCode update(Context context, String code, long time, boolean ignore) {
+		RedPacketCode node = getInstence(code, 0, true, false, false);
+		if (node == null) {
+			return null;
+		}
+
+		node.setExactTime(time);
+		node.setIgnored(ignore);
+		node.setRepeatable();
+
+		AlarmManager manager = (AlarmManager) CavanAndroid.getCachedSystemService(context, Context.ALARM_SERVICE);
+		if (manager != null) {
+			Intent intent = new Intent(context, RedPacketAlarmReceiver.class).putExtra("code", code);
+			PendingIntent operation = PendingIntent.getBroadcast(context, code.hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+			if (ignore) {
+				manager.cancel(operation);
+			} else {
+				manager.set(AlarmManager.RTC_WAKEUP, time - 20000, operation);
+			}
+		}
+
+		return node;
 	}
 
 	private RedPacketCode(String code, int priority) {
@@ -359,6 +390,22 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 		mPostCount++;
 
 		return true;
+	}
+
+	synchronized void setIgnored(boolean ignored) {
+		mIgnored = ignored;
+	}
+
+	synchronized boolean isIgnored() {
+		return mIgnored;
+	}
+
+	synchronized void setExactTime(long time) {
+		mExactTime = time;
+	}
+
+	synchronized long getExactTime() {
+		return mExactTime;
 	}
 
 	@Override

@@ -45,6 +45,8 @@ import com.cavan.java.CavanString;
 public class FloatMessageService extends FloatWidowService {
 
 	public static final String NET_CMD_RDPKG = "RedPacketCode: ";
+	public static final String NET_CMD_UPDATE = "RedPacketUpdate: ";
+	public static final String NET_CMD_DELETE = "RedPacketDelete: ";
 	public static final String NET_CMD_TEST = "CavanNetworkTest";
 	public static final String NET_CMD_KEEP_ALIVE = "CavanKeepAlive";
 	public static final String NET_CMD_TM_CODE = "SecretOrder: ";
@@ -70,6 +72,7 @@ public class FloatMessageService extends FloatWidowService {
 	private static final int MSG_START_OCR = 7;
 	private static final int MSG_CLIPBOARD_RECEIVED = 8;
 	private static final int MSG_CHECK_KEYGUARD = 9;
+	private static final int MSG_RED_PACKET_UPDATED = 10;
 
 	private int mLastSecond;
 	private boolean mScreenClosed;
@@ -192,6 +195,12 @@ public class FloatMessageService extends FloatWidowService {
 					mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_bg);
 				}
 				break;
+
+			case MSG_RED_PACKET_UPDATED:
+				RedPacketCode node = (RedPacketCode) msg.obj;
+				text = getResources().getString(R.string.red_packet_code_updated, node.getCode());
+				CavanAndroid.showToast(getApplicationContext(), text);
+				break;
 			}
 		}
 	};
@@ -283,18 +292,31 @@ public class FloatMessageService extends FloatWidowService {
 
 		@Override
 		public int addMessage(CharSequence message, String code) throws RemoteException {
-			FloatMessageService.this.removeText(message);
-			TextView view = (TextView) FloatMessageService.this.addText(message, -1);
-			if (view == null) {
-				return -1;
-			}
-
 			setLockScreenEnable(false);
 			CavanAndroid.acquireWakeLock(getApplicationContext(), 20000);
 
 			if (code != null) {
 				RedPacketCode node = RedPacketCode.getInstence(code);
 				if (node != null) {
+					if (node.isIgnored()) {
+						CavanAndroid.dLog("isIgnored: " + node.getCode());
+						return -1;
+					}
+
+					if (node.isInvalid()) {
+						CavanAndroid.dLog("isInvalid: " + node.getCode());
+						return -1;
+					}
+
+					long time = node.getExactTime();
+					if (time != 0) {
+						long timeNow = System.currentTimeMillis();
+						if (timeNow < time - 60000 || timeNow > time + 60000) {
+							CavanAndroid.dLog("time not match: " + node.getCode());
+							return -1;
+						}
+					}
+
 					if (node.isTestOnly()) {
 						sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_TEST, code);
 					} else {
@@ -308,6 +330,12 @@ public class FloatMessageService extends FloatWidowService {
 						}
 					}
 				}
+			}
+
+			FloatMessageService.this.removeText(message);
+			TextView view = (TextView) FloatMessageService.this.addText(message, -1);
+			if (view == null) {
+				return -1;
 			}
 
 			return view.getId();
@@ -521,6 +549,24 @@ public class FloatMessageService extends FloatWidowService {
 					intent.putExtra("code", code);
 					intent.putExtra("shared", true);
 					sendBroadcast(intent);
+				}
+			}
+		} else if (command.startsWith(NET_CMD_UPDATE)) {
+			String text = command.substring(NET_CMD_UPDATE.length());
+			String[] texts = text.split("\\s*\\|\\s*");
+
+			if (texts.length == 3) {
+				try {
+					String code = texts[0].trim();
+					long time = Long.parseLong(texts[1]);
+					boolean ignore = Boolean.parseBoolean(texts[2]);
+
+					RedPacketCode node = RedPacketCode.update(this, code, time, ignore);
+					if (node != null) {
+						mHandler.obtainMessage(MSG_RED_PACKET_UPDATED, node).sendToTarget();
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 		} else if (command.startsWith(NET_CMD_TM_CODE)) {

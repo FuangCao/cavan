@@ -143,7 +143,8 @@
             </intent-filter>
         </activity>
         <activity android:name="KeyguardActivity"></activity>
-        <activity android:name="RedPacketEditActivity"></activity>
+        <activity android:name="RedPacketEditActivity" android:windowSoftInputMode="stateHidden"></activity>
+        <receiver android:name="RedPacketAlarmReceiver"></receiver>
     </application>
 
 </manifest>

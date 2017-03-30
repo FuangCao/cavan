@@ -92,6 +92,7 @@
     <string name="text_secret_order_received">收到密令：<xliff:g>%1$s</xliff:g></string>
     <string name="extract">提取</string>
     <string name="clipboard_updated">剪切板已更新：<xliff:g>%1$s</xliff:g></string>
+    <string name="red_packet_code_updated">口令已更新：<xliff:g>%1$s</xliff:g></string>
     <string name="auto_open_alipay">自动打开支付宝</string>
     <string name="red_packet_notify_setting">红包提醒设置</string>
 
@@ -264,5 +265,8 @@
 	<string name="text_share">分享</string>
 	<string name="disable_suspend">禁止休眠</string>
 	<string name="red_packet_edit">红包口令编辑</string>
+	<string name="text_update">更新</string>
+	<string name="text_ignore">忽略</string>
+	<string name="text_refresh">刷新</string>
 
 </resources>
