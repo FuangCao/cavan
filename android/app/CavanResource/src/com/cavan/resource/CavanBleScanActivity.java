@@ -93,7 +93,9 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 			}
 		};
 
-		if (mUuids != null || mNames != null) {
+		if (mAddresses != null) {
+			mScanner.setAutoSelect(1000);
+		} else if (mUuids != null || mNames != null) {
 			mScanner.setAutoSelect(3000);
 		}
 
@@ -135,15 +137,15 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 
 		Intent intent = getIntent(activity);
 
-		if (uuids != null) {
+		if (uuids != null && uuids.length > 0) {
 			intent.putExtra("uuids", uuids);
 		}
 
-		if (names != null) {
+		if (names != null && names.length > 0) {
 			intent.putExtra("names", names);
 		}
 
-		if (addresses != null) {
+		if (addresses != null && addresses.length > 0) {
 			intent.putExtra("addresses", addresses);
 		}
 

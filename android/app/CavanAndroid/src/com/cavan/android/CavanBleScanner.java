@@ -28,8 +28,17 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 	private ArrayList<String> mNames = new ArrayList<String>();
 	private HashMap<String, CavanBleDevice> mDeviceMap = new HashMap<String, CavanBleDevice>();
 
-	protected void onScanResult(CavanBleDevice[] devices, CavanBleDevice device) {}
-	protected void onAutoSelected(CavanBleDevice device) {}
+	protected void onScanResult(CavanBleDevice[] devices, CavanBleDevice device) {
+		CavanAndroid.dLog("onScanResult: " + device);
+	}
+
+	protected void onAutoSelected(CavanBleDevice device) {
+		CavanAndroid.dLog("onAutoSelected: " + device);
+	}
+
+	protected void onBestDeviceChanged(CavanBleDevice device) {
+		CavanAndroid.dLog("onBestDeviceChanged: " + device);
+	}
 
 	private Handler mHandler = new Handler() {
 
@@ -40,8 +49,15 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 			case MSG_AUTO_SELECT:
 				CavanAndroid.dLog("MSG_AUTO_SELECT: enable = " + mScanEnable);
 				mHandler.removeMessages(MSG_AUTO_SELECT);
-				if (mScanEnable && mAutoSelectDelay > 0 && mAddresses == null) {
-					onAutoSelected(mDeviceBest);
+
+				if (mScanEnable && mAutoSelectDelay > 0) {
+					CavanBleDevice device = mDeviceBest;
+
+					if (device == null) {
+						sendEmptyMessageDelayed(MSG_AUTO_SELECT, mAutoSelectDelay);
+					} else {
+						onAutoSelected(device);
+					}
 				}
 				break;
 
@@ -57,24 +73,25 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 				break;
 
 			case MSG_SCAN_RESULT:
+				CavanBleDevice[] devices;
 				CavanBleDevice device = (CavanBleDevice) msg.obj;
 
 				synchronized (mDeviceMap) {
 					Collection<CavanBleDevice> values = mDeviceMap.values();
-					CavanBleDevice[] devices = new CavanBleDevice[values.size()];
+
+					devices = new CavanBleDevice[values.size()];
 					values.toArray(devices);
 					Arrays.sort(devices);
 
-					mDeviceBest = devices[0];
 					onScanResult(devices, device);
 				}
 
 				if (mAddresses != null) {
-					if (mScanEnable && isAddressMatchedInternal(device.getAddress())) {
-						onAutoSelected(device);
+					if (isAddressMatchedInternal(device.getAddress())) {
+						setBestDevice(device);
 					}
-				} else if (mAutoSelectDelay > 0 && mHandler.hasMessages(MSG_AUTO_SELECT) == false) {
-					mHandler.sendEmptyMessageDelayed(MSG_AUTO_SELECT, mAutoSelectDelay);
+				} else {
+					setBestDevice(devices[0]);
 				}
 				break;
 			}
@@ -110,8 +127,23 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 	}
 
 	public void setAutoSelect(long delay) {
+		setBestDevice(null);
 		mAutoSelectDelay = delay;
 		CavanAndroid.dLog("mAutoSelectDelay = " + mAutoSelectDelay);
+	}
+
+	public void setBestDevice(CavanBleDevice device) {
+		if (mDeviceBest != device) {
+			mDeviceBest = device;
+
+			if (device != null) {
+				onBestDeviceChanged(device);
+
+				if (mAutoSelectDelay > 0 && !mHandler.hasMessages(MSG_AUTO_SELECT)) {
+					mHandler.sendEmptyMessageDelayed(MSG_AUTO_SELECT, mAutoSelectDelay);
+				}
+			}
+		}
 	}
 
 	public void startScan(UUID[] uuids, String[] names, String[] addresses) {
@@ -126,6 +158,7 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 			}
 		} else {
 			mAddresses = null;
+			CavanAndroid.dLog("mAddresses is empty");
 		}
 
 		if (names != null) {

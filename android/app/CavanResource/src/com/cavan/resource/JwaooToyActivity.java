@@ -26,6 +26,7 @@ public class JwaooToyActivity extends CavanBleActivity implements OnCancelListen
 	public static final int SENSOR_DELAY = 30;
 
 	private boolean mUserCancel;
+	private String[] mAddresses;
 
 	protected JwaooBleToy mBleToy;
 	protected ProgressDialog mProgressDialog;
@@ -65,6 +66,8 @@ public class JwaooToyActivity extends CavanBleActivity implements OnCancelListen
 	protected void onBatteryStateChanged(int state, int level, double voltage) {}
 
 	protected JwaooBleToy createJwaooBleToy(BluetoothDevice device) {
+		setAddresses2(device.getAddress());
+
 		return new JwaooBleToy(device) {
 
 			@Override
@@ -80,7 +83,14 @@ public class JwaooToyActivity extends CavanBleActivity implements OnCancelListen
 			@Override
 			protected void onConnectionStateChange(boolean connected) {
 				CavanAndroid.dLog("JwaooBleToy.onConnectionStateChange: connected = " + connected);
-				showProgressDialog(!connected);
+
+				if (connected) {
+					showProgressDialog(false);
+					mAddresses = null;
+				} else {
+					showProgressDialog(true);
+				}
+
 				JwaooToyActivity.this.onConnectionStateChange(connected);
 			}
 
@@ -136,10 +146,18 @@ public class JwaooToyActivity extends CavanBleActivity implements OnCancelListen
 		}
 	}
 
+	public void setAddresses(String[] addresses) {
+		mAddresses = addresses;
+	}
+
+	public void setAddresses2(String... addresses) {
+		mAddresses = addresses;
+	}
+
 	public void showScanActivity() {
 		updateUI(false);
 		showProgressDialog(false);
-		CavanBleScanActivity.show(this, JwaooBleToy.BT_NAMES); // , JwaooBleToy.BT_UUIDS);
+		CavanBleScanActivity.show(this, JwaooBleToy.BT_NAMES, mAddresses); // , JwaooBleToy.BT_UUIDS);
 	}
 
 	public void disconnect() {

@@ -28,7 +28,6 @@ import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanMacAddress;
-import com.cavan.resource.CavanBleScanActivity;
 import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
 import com.jwaoo.android.JwaooToySensor;
@@ -81,7 +80,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	private int mCurrentItem;
 	private boolean mAutoTestEnable;
 	private boolean mSuspendSuccess;
-	private String[] mAddresses;
 
 	private TestResult mTestResult;
 	private TestResultFragment mTestResultFragment = new TestResultFragment();
@@ -244,21 +242,20 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 	@Override
 	public void showScanActivity() {
-		updateUI(false);
-		showProgressDialog(false);
-
 		if (mSuspendSuccess && mBleToy != null) {
 			String address = mBleToy.getAddress();
-			mAddresses = new String[] { new CavanMacAddress(address).increase().toString(), address };
+			setAddresses2(new CavanMacAddress(address).increase().toString(), address);
 		}
 
-		CavanBleScanActivity.show(this, JwaooBleToy.BT_NAMES, mAddresses);
+		super.showScanActivity();
 	}
 
 	@Override
 	protected JwaooBleToy createJwaooBleToy(BluetoothDevice device) {
 		mTextViewInfo.setText(R.string.device_not_connect);
 		mTestResult = new TestResult(this, device.getAddress());
+
+		setAddresses2(device.getAddress());
 
 		return new JwaooBleToy(device) {
 
@@ -271,7 +268,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				if (connected) {
 					showProgressDialog(false);
 					mSuspendSuccess = false;
-					mAddresses = null;
+					setAddresses(null);
 				} else if (mSuspendSuccess) {
 					disconnect();
 				} else {
@@ -826,7 +823,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				} else if (voltage > 2.5 && voltage < 4.5) {
 					mTextViewBatteryVoltage.setTextColor(Color.BLACK);
 
-					if ((state & 2) != 0) {
+					if (state == JwaooBleToy.BATTERY_STATE_CHARGING) {
 						setPassEnable();
 					}
 				} else {
