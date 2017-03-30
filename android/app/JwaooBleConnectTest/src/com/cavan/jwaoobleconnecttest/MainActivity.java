@@ -1,12 +1,10 @@
 package com.cavan.jwaoobleconnecttest;
 
-import android.bluetooth.BluetoothDevice;
 import android.os.Bundle;
 import android.os.Message;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.resource.JwaooToyActivity;
-import com.jwaoo.android.JwaooBleToy;
 
 public class MainActivity extends JwaooToyActivity {
 
@@ -30,13 +28,19 @@ public class MainActivity extends JwaooToyActivity {
 	}
 
 	@Override
-	protected void onConnectionStateChange(boolean connected) {
-		super.onConnectionStateChange(connected);
+	public void onConnectionStateChanged(boolean connected) {
+		super.onConnectionStateChanged(connected);
 
 		if (connected) {
 			mSuccess++;
-			mHandler.sendEmptyMessageDelayed(MSG_CONN_COMPLETE, 3000);
+			mHandler.sendEmptyMessageDelayed(MSG_CONN_COMPLETE, 1000);
 		}
+	}
+
+	@Override
+	public void onConnectFailed() {
+		mFailed++;
+		mHandler.sendEmptyMessageDelayed(MSG_CONN_COMPLETE, 5000);
 	}
 
 	@Override
@@ -56,28 +60,5 @@ public class MainActivity extends JwaooToyActivity {
 	@Override
 	protected String buildProgressDialogMessage() {
 		return "success = " + mSuccess + ", failed = " + mFailed;
-	}
-
-	@Override
-	protected JwaooBleToy createJwaooBleToy(BluetoothDevice device) {
-		return new JwaooBleToy(device) {
-
-			@Override
-			protected void onConnectionStateChange(boolean connected) {
-				CavanAndroid.dLog("JwaooBleToy.onConnectionStateChange: connected = " + connected);
-				showProgressDialog(!connected);
-
-				if (connected) {
-					mSuccess++;
-					mHandler.sendEmptyMessageDelayed(MSG_CONN_COMPLETE, 1000);
-				}
-			}
-
-			@Override
-			protected void onConnectFailed() {
-				mFailed++;
-				mHandler.sendEmptyMessageDelayed(MSG_CONN_COMPLETE, 5000);
-			}
-		};
 	}
 }

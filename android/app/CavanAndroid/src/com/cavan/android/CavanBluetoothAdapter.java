@@ -10,15 +10,7 @@ public class CavanBluetoothAdapter {
 
 	protected Context mContext;
 	protected BluetoothAdapter mAdapter;
-
-	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
-
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
-			onBluetoothAdapterStateChanged(state);
-		}
-	};
+	private BroadcastReceiver mReceiver;
 
 	protected void onBluetoothAdapterStateChanged(boolean enabled) {
 		CavanAndroid.dLog("onBluetoothAdapterStateChanged: enabled = " + enabled);
@@ -39,15 +31,38 @@ public class CavanBluetoothAdapter {
 	}
 
 	public CavanBluetoothAdapter(Context context) {
-		mContext = context;
 		mAdapter = BluetoothAdapter.getDefaultAdapter();
-
-		IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
-		context.registerReceiver(mReceiver, filter);
+		setContext(context);
 	}
 
 	public Context getContext() {
 		return mContext;
+	}
+
+	public void setContext(Context context) {
+		if (context == null || context == mContext) {
+			return;
+		}
+
+		if (mContext != null && mReceiver != null) {
+			mContext.unregisterReceiver(mReceiver);
+		}
+
+		mContext = context;
+
+		if (mReceiver == null) {
+			mReceiver = new BroadcastReceiver() {
+
+				@Override
+				public void onReceive(Context context, Intent intent) {
+					int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+					onBluetoothAdapterStateChanged(state);
+				}
+			};
+		}
+
+		IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+		context.registerReceiver(mReceiver, filter);
 	}
 
 	public BluetoothAdapter getAdapter() {
@@ -66,8 +81,12 @@ public class CavanBluetoothAdapter {
 		return mAdapter.isEnabled();
 	}
 
+	public boolean isPoweredOn() {
+		return isAdapterEnabled();
+	}
+
 	public void cleaup() {
-		if (mReceiver != null) {
+		if (mContext != null && mReceiver != null) {
 			mContext.unregisterReceiver(mReceiver);
 			mReceiver = null;
 		}

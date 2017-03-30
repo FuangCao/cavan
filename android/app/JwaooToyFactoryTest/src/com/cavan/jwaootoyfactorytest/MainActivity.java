@@ -251,67 +251,59 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	}
 
 	@Override
-	protected JwaooBleToy createJwaooBleToy(BluetoothDevice device) {
+	protected void onScanComplete(BluetoothDevice device) {
 		mTextViewInfo.setText(R.string.device_not_connect);
 		mTestResult = new TestResult(this, device.getAddress());
+	}
 
-		setAddresses2(device.getAddress());
+	@Override
+	public void onConnectionStateChanged(boolean connected) {
+		CavanAndroid.dLog("onConnectionStateChanged: connected = " + connected);
 
-		return new JwaooBleToy(device) {
+		updateUI(connected);
 
-			@Override
-			protected void onConnectionStateChange(boolean connected) {
-				CavanAndroid.dLog("onConnectionStateChange: connected = " + connected);
+		if (connected) {
+			showProgressDialog(false);
+			mSuspendSuccess = false;
+			setAddresses(null);
+		} else if (mSuspendSuccess) {
+			mBleToy.disconnect();
+		} else {
+			showProgressDialog(true);
+		}
 
-				updateUI(connected);
+		mHandler.obtainMessage(MSG_CONNECT_STATE_CHANGED, connected).sendToTarget();
+	}
 
-				if (connected) {
-					showProgressDialog(false);
-					mSuspendSuccess = false;
-					setAddresses(null);
-				} else if (mSuspendSuccess) {
-					disconnect();
-				} else {
-					showProgressDialog(true);
-				}
+	@Override
+	public boolean onInitialize() {
+		if (!super.onInitialize()) {
+			return false;
+		}
 
-				mHandler.obtainMessage(MSG_CONNECT_STATE_CHANGED, connected).sendToTarget();
-			}
+		if (!mBleToy.setFactoryModeEnable(true)) {
+			CavanAndroid.dLog("Failed to setFactoryModeEnable");
+			return false;
+		}
 
-			@Override
-			protected void onConnectFailed() {
-				CavanAndroid.eLog("onAutoConnectFailed");
-				showScanActivity();
-			}
+		mHandler.obtainMessage(MSG_SET_TEST_ITEM, -1, 0).sendToTarget();
 
-			@Override
-			protected boolean onInitialize() {
-				if (!mBleToy.setFactoryModeEnable(true)) {
-					CavanAndroid.dLog("Failed to setFactoryModeEnable");
-					return false;
-				}
+		return true;
+	}
 
-				mHandler.obtainMessage(MSG_SET_TEST_ITEM, -1, 0).sendToTarget();
+	@Override
+	public void onSensorDataReceived(JwaooToySensor sensor, byte[] data) {
+		mHandler.obtainMessage(MSG_SENSOR_DATA, sensor).sendToTarget();
+	}
 
-				return super.onInitialize();
-			}
+	@Override
+	public void onKeyStateChanged(int code, int state) {
+		mHandler.obtainMessage(MSG_KEY_STATE, code, state).sendToTarget();;
+	}
 
-			@Override
-			protected void onSensorDataReceived(byte[] arg0) {
-				mSensor.putBytes(arg0);
-				mHandler.obtainMessage(MSG_SENSOR_DATA, mSensor).sendToTarget();
-			}
-
-			@Override
-			protected void onKeyStateChanged(int code, int state) {
-				mHandler.obtainMessage(MSG_KEY_STATE, code, state).sendToTarget();;
-			}
-
-			@Override
-			protected void onBatteryStateChanged(int state, int level, double voltage) {
-				mHandler.obtainMessage(MSG_BATTERY_STATE, state, level, voltage).sendToTarget();
-			}
-		};
+	@Override
+	public void onBatteryStateChanged(int state, int level, double voltage) {
+		mHandler.obtainMessage(MSG_BATTERY_STATE, state, level, voltage).sendToTarget();
 	}
 
 	public class MyGridViewAdapter extends BaseAdapter {

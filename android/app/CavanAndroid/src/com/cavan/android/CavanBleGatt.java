@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -22,7 +23,7 @@ import com.cavan.java.CavanJava;
 import com.cavan.java.CavanProgressListener;
 import com.cavan.java.CavanString;
 
-public class CavanBleGatt {
+public class CavanBleGatt extends CavanBluetoothAdapter {
 
 	public static final int FRAME_SIZE = 20;
 	public static final int MAX_CONN_COUNT = 20;
@@ -45,8 +46,44 @@ public class CavanBleGatt {
 	public static final int PROPERTY_READ_ALL = BluetoothGattCharacteristic.PROPERTY_READ;
 	public static final int PROPERTY_WRITE_ALL = BluetoothGattCharacteristic.PROPERTY_WRITE |
 			BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE | BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE;
+
 	public static final UUID CFG_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 	public static final UUID DESC_UUID = UUID.fromString("00002901-0000-1000-8000-00805f9b34fb");
+
+	public static final CavanBleGattEventListener sEventListenerDummy = new CavanBleGattEventListener() {
+
+		@Override
+		public boolean onInitialize() {
+			CavanAndroid.dLog("onInitialize");
+			return true;
+		}
+
+		@Override
+		public void onConnectionStateChanged(boolean connected) {
+			CavanAndroid.dLog("onConnectionStateChanged: connected = " + connected);
+		}
+
+		@Override
+		public void onConnectFailed() {
+			CavanAndroid.dLog("onConnectFailed");
+		}
+
+		@Override
+		public void onBluetoothAdapterStateChanged(boolean enabled) {
+			CavanAndroid.dLog("onBluetoothAdapterStateChanged: enabled = " + enabled);
+		}
+	};
+
+	public interface CavanBleGattEventListener {
+		boolean onInitialize();
+		void onConnectFailed();
+		void onConnectionStateChanged(boolean connected);
+		void onBluetoothAdapterStateChanged(boolean enabled);
+	}
+
+	public interface CavanBleDataListener {
+		void onDataReceived(byte[] data);
+	}
 
 	private int mGattState;
 	private boolean mReady;
@@ -56,9 +93,9 @@ public class CavanBleGatt {
 	private boolean mConnEnable;
 	private int mGattConnectCount;
 	private int mServiceConnectCount;
+	private CavanBleGattEventListener mEventListener = sEventListenerDummy;
 
 	private UUID mUuid;
-	private Context mContext;
 	private BluetoothGatt mGatt;
 	private BluetoothDevice mDevice;
 	private BluetoothGattService mService;
@@ -175,6 +212,14 @@ public class CavanBleGatt {
 		}
 	};
 
+	synchronized public void setEventListener(CavanBleGattEventListener listener) {
+		if (listener != null) {
+			mEventListener = listener;
+		} else {
+			mEventListener = sEventListenerDummy;
+		}
+	}
+
 	protected boolean doInitialize() {
 		CavanAndroid.dLog("doInitialize");
 
@@ -184,27 +229,36 @@ public class CavanBleGatt {
 	}
 
 	protected boolean onInitialize() {
-		CavanAndroid.dLog("onInitialize");
-		return true;
+		return mEventListener.onInitialize();
 	}
 
 	protected void onConnectionStateChange(boolean connected) {
-		CavanAndroid.dLog("onConnectStatusChanged: connected = " + connected);
+		mEventListener.onConnectionStateChanged(connected);
 	}
 
 	protected void onConnectFailed() {
-		CavanAndroid.eLog("onAutoConnectFailed");
+		mEventListener.onConnectFailed();
 	}
 
-	public interface CavanBleDataListener {
-		void onDataReceived(byte[] data);
+	@Override
+	protected void onBluetoothAdapterStateChanged(boolean enabled) {
+		mEventListener.onBluetoothAdapterStateChanged(enabled);
 	}
 
-	public CavanBleGatt(BluetoothDevice device, UUID uuid) {
-		super();
+	public CavanBleGatt(Context context, BluetoothDevice device, UUID uuid) {
+		super(context);
 
 		mUuid = uuid;
 		mDevice = device;
+		mAdapter = BluetoothAdapter.getDefaultAdapter();
+	}
+
+	public CavanBleGatt(Context context, UUID uuid) {
+		this(context, null, uuid);
+	}
+
+	public CavanBleGatt(UUID uuid) {
+		this(null, uuid);
 	}
 
 	@Override
@@ -223,6 +277,10 @@ public class CavanBleGatt {
 	}
 
 	public String getAddress() {
+		if (mDevice == null) {
+			return null;
+		}
+
 		return mDevice.getAddress();
 	}
 
@@ -259,6 +317,11 @@ public class CavanBleGatt {
 		mConnThread.updateConnState(CONNECT_OVERTIME);
 
 		if (mGatt == null) {
+			if (mDevice == null) {
+				CavanAndroid.dLog("mDevice is null");
+				return false;
+			}
+
 			mGatt = mDevice.connectGatt(mContext, false, mCallback);
 			if (mGatt == null) {
 				CavanAndroid.eLog("Failed to connectGatt");
@@ -281,6 +344,11 @@ public class CavanBleGatt {
 		mServiceConnectCount = 0;
 
 		return connectInternal();
+	}
+
+	synchronized public boolean connect(BluetoothDevice device) {
+		mDevice = device;
+		return connect();
 	}
 
 	synchronized public void disconnect(boolean cleanup) {
@@ -475,7 +543,7 @@ public class CavanBleGatt {
 				if (mConnEnable) {
 					CavanAndroid.dLog("mGattConnectCount = " + mGattConnectCount);
 
-					if (mGattConnectCount < MAX_CONN_COUNT) {
+					if (mGattConnectCount < MAX_CONN_COUNT && isPoweredOn()) {
 						if (!connectInternal()) {
 							CavanAndroid.eLog("Failed to connectInternal");
 						}

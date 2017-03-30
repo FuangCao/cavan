@@ -13,7 +13,7 @@ import android.widget.TextView;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanWaveView;
 import com.cavan.resource.JwaooToyActivity;
-import com.jwaoo.android.JwaooBleToy;
+import com.jwaoo.android.JwaooToySensor;
 
 public class MainActivity extends JwaooToyActivity implements OnCheckedChangeListener {
 
@@ -45,6 +45,7 @@ public class MainActivity extends JwaooToyActivity implements OnCheckedChangeLis
 
 	private long mConnStartTime;
 	private long mConnLastTime;
+	private long mSensorDataTime;
 
 	private int mPackageCount;
 	private long mPackageTotal;
@@ -177,80 +178,73 @@ public class MainActivity extends JwaooToyActivity implements OnCheckedChangeLis
 	}
 
 	@Override
-	protected JwaooBleToy createJwaooBleToy(BluetoothDevice device) {
+	protected void onScanComplete(BluetoothDevice device) {
 		mConnStartTime = 0;
 
 		if (mDialogDisconnected != null) {
 			mDialogDisconnected.dismiss();
 		}
+	}
 
-		return new JwaooBleToy(device) {
+	@Override
+	public void onConnectionStateChanged(boolean connected) {
+		updateUI(connected);
+		mHandler.removeMessages(MSG_UPDATE_SPEED);
 
-			private long mSensorDataTime;
+		if (connected) {
+			showProgressDialog(false);
+			mConnStartTime = System.currentTimeMillis();
+			mHandler.sendEmptyMessage(MSG_UPDATE_SPEED);
+		} else if (mConnStartTime == 0 || mCheckBoxReConn.isChecked()) {
+			showProgressDialog(true);
+		} else if (!isUserCanceled()) {
+			disconnect();
+			mHandler.sendEmptyMessage(MSG_DISCONNECTED);
+		}
+	}
 
-			@Override
-			protected void onConnectionStateChange(boolean connected) {
-				updateUI(connected);
-				mHandler.removeMessages(MSG_UPDATE_SPEED);
+	@Override
+	public boolean onInitialize() {
+		if (!super.onInitialize()) {
+			return false;
+		}
 
-				if (connected) {
-					showProgressDialog(false);
-					mConnStartTime = System.currentTimeMillis();
-					mHandler.sendEmptyMessage(MSG_UPDATE_SPEED);
-				} else if (mConnStartTime == 0 || mCheckBoxReConn.isChecked()) {
-					showProgressDialog(true);
-				} else if (!isUserCanceled()) {
-					disconnect();
-					mHandler.sendEmptyMessage(MSG_DISCONNECTED);
-				}
+		mBleToy.setBatteryEventEnable(true);
+		mBleToy.setSensorEnable(true, SENSOR_DELAY);
+		mBleToy.setSensorSpeedOptimizeEnable(mCheckBoxOptimizeSensorSpeed.isChecked());
+
+		return true;
+	}
+
+	@Override
+	public void onSensorDataReceived(JwaooToySensor sensor, byte[] arg0) {
+		mPackageCount++;
+
+		if (mCheckBoxShowDelay.isChecked()) {
+			long time = System.currentTimeMillis();
+			long delay = time - mSensorDataTime;
+
+			mSensorDataTime = time;
+
+			if (delay < SENSOR_DELAY_MIN || delay > SENSOR_DELAY_MAX) {
+				CavanAndroid.dLog("delay = " + delay);
+			}
+		} else {
+			if (mCheckBoxLogEnable.isChecked()) {
+				CavanAndroid.dLog(sensor.getAccelText());
 			}
 
-			@Override
-			protected void onConnectFailed() {
-				showScanActivity();
-			}
+			mWaveViewX.addValue(sensor.getAxisX());
+			mWaveViewY.addValue(sensor.getAxisY());
+			mWaveViewZ.addValue(sensor.getAxisZ());
+		}
+	}
 
-			@Override
-			protected boolean onInitialize() {
-				setBatteryEventEnable(true);
-				setSensorEnable(true, SENSOR_DELAY);
-				setSensorSpeedOptimizeEnable(mCheckBoxOptimizeSensorSpeed.isChecked());
-				return super.onInitialize();
-			}
-
-			@Override
-			protected void onSensorDataReceived(byte[] arg0) {
-				mPackageCount++;
-
-				mSensor.putBytes(arg0);
-
-				if (mCheckBoxShowDelay.isChecked()) {
-					long time = System.currentTimeMillis();
-					long delay = time - mSensorDataTime;
-
-					mSensorDataTime = time;
-
-					if (delay < SENSOR_DELAY_MIN || delay > SENSOR_DELAY_MAX) {
-						CavanAndroid.dLog("delay = " + delay);
-					}
-				} else {
-					if (mCheckBoxLogEnable.isChecked()) {
-						CavanAndroid.dLog(mSensor.getAccelText());
-					}
-
-					mWaveViewX.addValue(mSensor.getAxisX());
-					mWaveViewY.addValue(mSensor.getAxisY());
-					mWaveViewZ.addValue(mSensor.getAxisZ());
-				}
-			}
-
-			@Override
-			protected void onBatteryStateChanged(int state, int level, double voltage) {
-				mBatteryLevel = level;
-				mBatteryVoltage = voltage;
-				mHandler.sendEmptyMessage(MSG_BATTERY_INFO);
-			}
-		};
+	@Override
+	public void onBatteryStateChanged(int state, int level, double voltage) {
+		mBatteryLevel = level;
+		mBatteryVoltage = voltage;
+		mHandler.sendEmptyMessage(MSG_BATTERY_INFO);
 	}
 
 	@Override

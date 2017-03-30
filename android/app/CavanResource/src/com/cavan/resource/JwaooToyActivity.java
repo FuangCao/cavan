@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Handler.Callback;
 import android.os.Message;
@@ -16,9 +17,11 @@ import android.view.View;
 
 import com.cavan.android.CavanAndroid;
 import com.jwaoo.android.JwaooBleToy;
+import com.jwaoo.android.JwaooBleToy.JwaooBleToyEventListener;
+import com.jwaoo.android.JwaooToySensor;
 
 @SuppressLint("HandlerLeak")
-public class JwaooToyActivity extends CavanBleActivity implements OnCancelListener, Callback {
+public class JwaooToyActivity extends CavanBleActivity implements OnCancelListener, Callback, JwaooBleToyEventListener {
 
 	private final int MSG_UPDATE_UI = 1;
 	private final int MSG_SHOW_PROGRESS_DIALOG = 2;
@@ -27,11 +30,16 @@ public class JwaooToyActivity extends CavanBleActivity implements OnCancelListen
 
 	private boolean mUserCancel;
 	private String[] mAddresses;
-
-	protected JwaooBleToy mBleToy;
 	protected ProgressDialog mProgressDialog;
 	protected Handler mHandler = new Handler(this);
+	protected JwaooBleToy mBleToy = new JwaooBleToy();
+
 	protected List<View> mListViews = new ArrayList<View>();
+
+	public JwaooToyActivity() {
+		super();
+		mBleToy.setEventListener(this);
+	}
 
 	public boolean isUserCanceled() {
 		return mUserCancel;
@@ -51,65 +59,6 @@ public class JwaooToyActivity extends CavanBleActivity implements OnCancelListen
 		default:
 			return false;
 		}
-	}
-
-	protected boolean onInitialize() {
-		return true;
-	}
-
-	protected void onConnectionStateChange(boolean connected) {
-		CavanAndroid.dLog("onConnectionStateChange: connected = " + connected);
-		updateUI(connected);
-	}
-
-	protected void onSensorDataReceived(byte[] data) {}
-	protected void onBatteryStateChanged(int state, int level, double voltage) {}
-
-	protected JwaooBleToy createJwaooBleToy(BluetoothDevice device) {
-		setAddresses2(device.getAddress());
-
-		return new JwaooBleToy(device) {
-
-			@Override
-			protected boolean onInitialize() {
-				if (!JwaooToyActivity.this.onInitialize()) {
-					CavanAndroid.dLog("Failed to JwaooToyActivity.this.onInitialize");
-					return false;
-				}
-
-				return super.onInitialize();
-			}
-
-			@Override
-			protected void onConnectionStateChange(boolean connected) {
-				CavanAndroid.dLog("JwaooBleToy.onConnectionStateChange: connected = " + connected);
-
-				if (connected) {
-					showProgressDialog(false);
-					mAddresses = null;
-				} else {
-					showProgressDialog(true);
-				}
-
-				JwaooToyActivity.this.onConnectionStateChange(connected);
-			}
-
-			@Override
-			protected void onConnectFailed() {
-				showScanActivity();
-			}
-
-			@Override
-			protected void onSensorDataReceived(byte[] data) {
-				super.onSensorDataReceived(data);
-				JwaooToyActivity.this.onSensorDataReceived(data);
-			}
-
-			@Override
-			protected void onBatteryStateChanged(int state, int level, double voltage) {
-				JwaooToyActivity.this.onBatteryStateChanged(state, level, voltage);
-			}
-		};
 	}
 
 	public void updateUI(boolean enable) {
@@ -171,6 +120,12 @@ public class JwaooToyActivity extends CavanBleActivity implements OnCancelListen
 	}
 
 	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		mBleToy.setContext(this);
+	}
+
+	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		CavanAndroid.dLog("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
 		if (resultCode == RESULT_OK && data != null) {
@@ -179,17 +134,22 @@ public class JwaooToyActivity extends CavanBleActivity implements OnCancelListen
 				finish();
 			} else {
 				mUserCancel = false;
-				mBleToy = createJwaooBleToy(device);
-
 				showProgressDialog(true);
+				setAddresses2(device.getAddress());
 
-				if (mBleToy == null || mBleToy.connect() == false) {
+				onScanComplete(device);
+
+				if (mBleToy.connect(device) == false) {
 					showScanActivity();
 				}
 			}
 		} else {
 			finish();
 		}
+	}
+
+	protected void onScanComplete(BluetoothDevice device) {
+		CavanAndroid.dLog("onScanComplete: " + device);
 	}
 
 	@Override
@@ -204,10 +164,7 @@ public class JwaooToyActivity extends CavanBleActivity implements OnCancelListen
 
 	@Override
 	protected void onDestroy() {
-		if (mBleToy != null) {
-			mBleToy.disconnect();
-		}
-
+		mBleToy.disconnect();
 		System.exit(0);
 
 		super.onDestroy();
@@ -221,5 +178,76 @@ public class JwaooToyActivity extends CavanBleActivity implements OnCancelListen
 	@Override
 	public void onBackPressed() {
 		disconnect();
+	}
+
+	@Override
+	public boolean onInitialize() {
+		CavanAndroid.dLog("onInitialize");
+		return true;
+	}
+
+	@Override
+	public void onConnectFailed() {
+		CavanAndroid.dLog("onInitialize");
+		showScanActivity();
+	}
+
+	@Override
+	public void onConnectionStateChanged(boolean connected) {
+		CavanAndroid.dLog("onConnectionStateChanged: connected = " + connected);
+
+		if (connected) {
+			showProgressDialog(false);
+			mAddresses = null;
+		} else {
+			showProgressDialog(true);
+		}
+
+		updateUI(connected);
+	}
+
+	@Override
+	public void onUpgradeComplete(boolean success) {
+		CavanAndroid.dLog("onUpgradeComplete: success = " + success);
+	}
+
+	@Override
+	public void onSensorDataReceived(JwaooToySensor sensor, byte[] data) {
+		// CavanAndroid.dLog("onSensorDataReceived: length = " + data.length);
+	}
+
+	@Override
+	public void onMotoStateChanged(int mode, int level) {
+		CavanAndroid.dLog("onMotoStateChanged: mode = " +  mode + ", level = " + level);
+	}
+
+	@Override
+	public void onKeyStateChanged(int code, int state) {
+		CavanAndroid.dLog("onKeyStateChanged: code = " + code + ", state = " + state);
+	}
+
+	@Override
+	public void onKeyLongClicked(int code) {
+		CavanAndroid.dLog("onKeyLongClicked: code = " + code);
+	}
+
+	@Override
+	public void onKeyClicked(int code, int count) {
+		CavanAndroid.dLog("onKeyClicked: code = " + code + ", count = " + count);
+	}
+
+	@Override
+	public void onDebugDataReceived(byte[] data) {
+		CavanAndroid.dLog("onDebugDataReceived: length = " + data.length);
+	}
+
+	@Override
+	public void onBatteryStateChanged(int state, int level, double voltage) {
+		CavanAndroid.dLog("onBatteryStateChanged: state = " + state + ", level = " + level + ", voltage = " + voltage);
+	}
+
+	@Override
+	public void onBluetoothAdapterStateChanged(boolean enabled) {
+		CavanAndroid.dLog("onBluetoothAdapterStateChanged: enabled = " + enabled);
 	}
 }

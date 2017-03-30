@@ -28,6 +28,7 @@ import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
 import com.jwaoo.android.JwaooBleToy.JwaooToyAppSettings;
 import com.jwaoo.android.JwaooBleToy.JwaooToyKeySettings;
+import com.jwaoo.android.JwaooToySensor;
 
 @SuppressLint("HandlerLeak")
 public class MainActivity extends JwaooToyActivity implements OnClickListener, OnCheckedChangeListener {
@@ -382,7 +383,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	}
 
 	@Override
-	protected boolean onInitialize() {
+	public boolean onInitialize() {
 		if (mBleToy.setClickEnable(mCheckBoxClick.isChecked()) == false && mBleToy.isCommandTimeout()) {
 			CavanAndroid.dLog("Failed to setClickEnable");
 			return false;
@@ -441,9 +442,9 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	}
 
 	@Override
-	protected void onSensorDataReceived(byte[] data) {
+	public void onSensorDataReceived(JwaooToySensor sensor, byte[] data) {
 		mDataCount++;
-		CavanAndroid.dLog("onSensorDataReceived: " + mBleToy.getSensor().getAccelText());
+		CavanAndroid.dLog("onSensorDataReceived: " + sensor.getAccelText());
 	}
 
 	@Override
@@ -492,7 +493,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	}
 
 	@Override
-	protected void onBatteryStateChanged(int state, int level, double voltage) {
+	public void onBatteryStateChanged(int state, int level, double voltage) {
 		CavanAndroid.dLog("capacity = " + mBleToy.getBatteryCapacityByVoltage(voltage));
 
 		StringBuilder builder = new StringBuilder();
