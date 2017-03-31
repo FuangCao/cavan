@@ -216,7 +216,7 @@ public class FloatMessageService extends FloatWidowService {
 			switch (action) {
 			case Intent.ACTION_SCREEN_OFF:
 				if (MainActivity.isDisableKeyguardEnabled(getApplicationContext())) {
-					CavanAndroid.acquireWakeLock(getApplicationContext(), false, 5000);
+					CavanAndroid.acquireWakeLock(getApplicationContext(), 5000);
 					CavanAndroid.startActivity(getApplicationContext(), KeyguardActivity.class);
 				}
 
@@ -293,30 +293,11 @@ public class FloatMessageService extends FloatWidowService {
 		@Override
 		public int addMessage(CharSequence message, String code) throws RemoteException {
 			setLockScreenEnable(false);
-			CavanAndroid.acquireWakeLock(getApplicationContext(), 20000);
+			CavanAndroid.acquireWakeupLock(getApplicationContext(), 20000);
 
 			if (code != null) {
 				RedPacketCode node = RedPacketCode.getInstence(code);
 				if (node != null) {
-					if (node.isIgnored()) {
-						CavanAndroid.dLog("isIgnored: " + node.getCode());
-						return -1;
-					}
-
-					if (node.isInvalid()) {
-						CavanAndroid.dLog("isInvalid: " + node.getCode());
-						return -1;
-					}
-
-					long time = node.getExactTime();
-					if (time != 0) {
-						long timeNow = System.currentTimeMillis();
-						if (timeNow < time - 60000 || timeNow > time + 60000) {
-							CavanAndroid.dLog("time not match: " + node.getCode());
-							return -1;
-						}
-					}
-
 					if (node.isTestOnly()) {
 						sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_TEST, code);
 					} else {

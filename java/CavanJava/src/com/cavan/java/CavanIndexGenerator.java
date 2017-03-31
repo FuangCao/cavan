@@ -4,7 +4,7 @@ public class CavanIndexGenerator {
 
 	private int mIndex;
 
-	public int genIndex() {
+	synchronized public int genIndex() {
 		if (++mIndex < 0) {
 			mIndex = 0;
 		}
@@ -12,7 +12,7 @@ public class CavanIndexGenerator {
 		return mIndex;
 	}
 
-	public void setIndex(int index) {
+	synchronized public void setIndex(int index) {
 		mIndex = index;
 	}
 }

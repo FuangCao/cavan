@@ -18,7 +18,8 @@
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/timePicker"
         android:layout_alignParentTop="true"
-        android:ems="10" >
+        android:ems="10"
+        android:inputType="text" >
 
         <requestFocus />
     </EditText>
@@ -54,5 +55,14 @@
         android:layout_alignBottom="@+id/buttonReload"
         android:layout_alignParentRight="true"
         android:text="@string/text_update" />
+
+    <CheckBox
+        android:id="@+id/checkBoxSync"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignBaseline="@+id/checkBoxIgnore"
+        android:checked="true"
+        android:text="@string/text_sync" />
 
 </RelativeLayout>

@@ -1,11 +1,15 @@
 package com.cavan.android;
 
+import com.cavan.java.CavanIndexGenerator;
+
 import android.content.Context;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 
 @SuppressWarnings("deprecation")
 public class CavanWakeLock {
+
+	private static final CavanIndexGenerator sGenerator = new CavanIndexGenerator();
 
 	private int mFlags;
 	private String mTag;
@@ -30,22 +34,22 @@ public class CavanWakeLock {
 	}
 
 	public CavanWakeLock(boolean wakeup) {
-		this(CavanWakeLock.class.getCanonicalName());
+		this(CavanWakeLock.class.getCanonicalName(), wakeup);
 	}
 
 	public CavanWakeLock() {
 		this(false);
 	}
 
-	public void release() {
+	synchronized public void release() {
 		if (mLock != null && mLock.isHeld()) {
 			mLock.release();
 		}
 	}
 
-	public boolean acquire(PowerManager manager, long overtime) {
+	synchronized public boolean acquire(PowerManager manager, long overtime) {
 		if (mLock == null) {
-			mLock = manager.newWakeLock(mFlags, mTag);
+			mLock = manager.newWakeLock(mFlags, mTag + sGenerator.genIndex());
 			if (mLock == null) {
 				return false;
 			}
@@ -60,11 +64,11 @@ public class CavanWakeLock {
 		return true;
 	}
 
-	public boolean acquire(PowerManager manager) {
+	synchronized public boolean acquire(PowerManager manager) {
 		return acquire(manager, 0);
 	}
 
-	public boolean acquire(Context context, long overtime) {
+	synchronized public boolean acquire(Context context, long overtime) {
 		PowerManager manager = (PowerManager) CavanAndroid.getCachedSystemService(context, Context.POWER_SERVICE);
 		if (manager == null) {
 			return false;
@@ -73,11 +77,11 @@ public class CavanWakeLock {
 		return acquire(manager, overtime);
 	}
 
-	public boolean acquire(Context context) {
+	synchronized public boolean acquire(Context context) {
 		return acquire(context, 0);
 	}
 
-	public boolean isHeld() {
+	synchronized public boolean isHeld() {
 		return mLock != null && mLock.isHeld();
 	}
 }

@@ -268,5 +268,6 @@
 	<string name="text_update">更新</string>
 	<string name="text_ignore">忽略</string>
 	<string name="text_refresh">刷新</string>
+	<string name="text_sync">同步</string>
 
 </resources>

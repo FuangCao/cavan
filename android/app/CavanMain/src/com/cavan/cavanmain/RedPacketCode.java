@@ -157,7 +157,12 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 			if (ignore) {
 				manager.cancel(operation);
 			} else {
-				manager.set(AlarmManager.RTC_WAKEUP, time - 20000, operation);
+				long timeNow = System.currentTimeMillis();
+				if (time < timeNow) {
+					manager.cancel(operation);
+				} else {
+					manager.set(AlarmManager.RTC_WAKEUP, time - 20000, operation);
+				}
 			}
 		}
 
@@ -484,5 +489,40 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 		}
 
 		return (int) (another.getTime() - mTime);
+	}
+
+	public boolean needSkip() {
+		if (mInvalid) {
+			CavanAndroid.dLog("skip invalid code: " + mCode);
+			return true;
+		}
+
+		if (mIgnored) {
+			CavanAndroid.dLog("skip ignored code: " + mCode);
+			return true;
+		}
+
+		if (mCompleted) {
+			CavanAndroid.dLog("skip completed code: " + mCode);
+			return true;
+		}
+
+		CavanAndroid.dLog("mExactTime = " + mExactTime);
+
+		if (mExactTime != 0) {
+			long timeNow = System.currentTimeMillis();
+
+			if (timeNow > (mExactTime + 60000)) {
+				CavanAndroid.dLog("skip overtime code: " + mCode);
+				return true;
+			}
+
+			if (timeNow < (mExactTime - 60000)) {
+				CavanAndroid.dLog("skip early code: " + mCode);
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

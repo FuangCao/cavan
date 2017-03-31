@@ -34,6 +34,7 @@ public class RedPacketEditActivity extends Activity implements OnClickListener, 
 	private TimePicker mTimePicker;
 	private EditText mEditTextCode;
 	private ListView mListViewCodes;
+	private CheckBox mCheckBoxSync;
 	private CheckBox mCheckBoxIgnore;
 
 	private IFloatMessageService mFloatMessageService;
@@ -119,6 +120,7 @@ public class RedPacketEditActivity extends Activity implements OnClickListener, 
 		setContentView(R.layout.red_packet_editor);
 
 		mEditTextCode = (EditText) findViewById(R.id.editTextCode);
+		mCheckBoxSync = (CheckBox) findViewById(R.id.checkBoxSync);
 		mCheckBoxIgnore = (CheckBox) findViewById(R.id.checkBoxIgnore);
 
 		mTimePicker = (TimePicker) findViewById(R.id.timePicker);
@@ -161,8 +163,8 @@ public class RedPacketEditActivity extends Activity implements OnClickListener, 
 			}
 
 			Date date = new Date();
-			date.setHours(mTimePicker.getHour());
-			date.setMinutes(mTimePicker.getMinute());
+			date.setHours(mTimePicker.getCurrentHour());
+			date.setMinutes(mTimePicker.getCurrentMinute());
 
 			long time = date.getTime() / 60000 * 60000;
 
@@ -171,7 +173,7 @@ public class RedPacketEditActivity extends Activity implements OnClickListener, 
 				break;
 			}
 
-			if (mFloatMessageService != null) {
+			if (mCheckBoxSync.isChecked() && mFloatMessageService != null) {
 				StringBuilder builder = new StringBuilder();
 				builder.append(FloatMessageService.NET_CMD_UPDATE);
 				builder.append(node.getCode());
@@ -198,7 +200,7 @@ public class RedPacketEditActivity extends Activity implements OnClickListener, 
 		mCheckBoxIgnore.setChecked(node.isIgnored());
 
 		Date date = new Date(node.getExactTime());
-		mTimePicker.setHour(date.getHours());
-		mTimePicker.setMinute(date.getMinutes());
+		mTimePicker.setCurrentHour(date.getHours());
+		mTimePicker.setCurrentMinute(date.getMinutes());
 	}
 }

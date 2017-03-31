@@ -69,7 +69,7 @@ public class CavanAndroid {
 
 	private static Context sContext;
 	private static CavanWakeLock sWakeLock = new CavanWakeLock(false);
-	private static CavanWakeLock sWakeLockWakeup = new CavanWakeLock(true);
+	private static CavanWakeLock sWakeupLock = new CavanWakeLock(true);
 	private static CavanKeyguardLock sKeyguardLock = new CavanKeyguardLock();
 	private static CavanMulticastLock sMulticastLock = new CavanMulticastLock();
 
@@ -290,50 +290,51 @@ public class CavanAndroid {
 		CavanAndroid.dLog("releaseWakeLock");
 
 		sWakeLock.release();
-		sWakeLockWakeup.release();
-	}
-
-	public static boolean acquireWakeLock(PowerManager manager, boolean wakeup, long overtime) {
-		CavanAndroid.dLog("acquireWakeLock: wakeup = " + wakeup + ", overtime = " + overtime);
-
-		if (wakeup) {
-			return sWakeLockWakeup.acquire(manager, overtime);
-		} else {
-			return sWakeLock.acquire(manager, overtime);
-		}
-	}
-
-	public static boolean acquireWakeLock(PowerManager manager, boolean wakeup) {
-		return acquireWakeLock(manager, wakeup, 0);
+		sWakeupLock.release();
 	}
 
 	public static boolean acquireWakeLock(PowerManager manager, long overtime) {
-		return acquireWakeLock(manager, true, overtime);
+		CavanAndroid.dLog("acquireWakeLock: overtime = " + overtime);
+		return sWakeLock.acquire(manager, overtime);
 	}
 
 	public static boolean acquireWakeLock(PowerManager manager) {
-		return acquireWakeLock(manager, true);
+		return acquireWakeLock(manager, 0);
 	}
 
-	public static boolean acquireWakeLock(Context context, boolean wakeup, long overtime) {
+	public static boolean acquireWakeLock(Context context, long overtime) {
 		PowerManager manager = (PowerManager) getCachedSystemService(context, Context.POWER_SERVICE);
 		if (manager == null) {
 			return false;
 		}
 
-		return acquireWakeLock(manager, wakeup, overtime);
-	}
-
-	public static boolean acquireWakeLock(Context context, boolean wakeup) {
-		return acquireWakeLock(context, wakeup, 0);
-	}
-
-	public static boolean acquireWakeLock(Context context, long overtime) {
-		return acquireWakeLock(context, true, overtime);
+		return acquireWakeLock(manager, overtime);
 	}
 
 	public static boolean acquireWakeLock(Context context) {
-		return acquireWakeLock(context, true);
+		return acquireWakeLock(context, 0);
+	}
+
+	public static boolean acquireWakeupLock(PowerManager manager, long overtime) {
+		CavanAndroid.dLog("acquireWakeupLock: overtime = " + overtime);
+		return sWakeupLock.acquire(manager, overtime);
+	}
+
+	public static boolean acquireWakeupLock(PowerManager manager) {
+		return acquireWakeupLock(manager, 0);
+	}
+
+	public static boolean acquireWakeupLock(Context context, long overtime) {
+		PowerManager manager = (PowerManager) getCachedSystemService(context, Context.POWER_SERVICE);
+		if (manager == null) {
+			return false;
+		}
+
+		return acquireWakeupLock(manager, overtime);
+	}
+
+	public static boolean acquireWakeupLock(Context context) {
+		return acquireWakeupLock(context, 0);
 	}
 
 	public static void postClipboardText(ClipboardManager manager, CharSequence label, CharSequence text) {

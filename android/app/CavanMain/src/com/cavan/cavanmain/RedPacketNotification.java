@@ -217,7 +217,7 @@ public class RedPacketNotification extends CavanNotification {
 	}
 
 	public Notification buildNotification(CharSequence content, PendingIntent intent) {
-		CavanAndroid.acquireWakeLock(mService, 5000);
+		CavanAndroid.acquireWakeupLock(mService, 20000);
 
 		Notification.Builder builder = new Notification.Builder(mService)
 			.setSmallIcon(R.drawable.ic_launcher)
@@ -315,13 +315,23 @@ public class RedPacketNotification extends CavanNotification {
 			return 0;
 		}
 
-		mService.startAlipayActivity();
-		// mService.postRedPacketCode(code);
+		boolean needStartAlipay = true;
 
 		for (String code : codes) {
+			RedPacketCode node = RedPacketCode.getInstence(code, mPriority, true, mTestOnly, false);
+			CavanAndroid.dLog("node = " + node);
+			CavanAndroid.dLog("needSkip = " + node.needSkip());
+			if (node == null || node.needSkip()) {
+				continue;
+			}
+
+			if (needStartAlipay) {
+				needStartAlipay = false;
+				mService.startAlipayActivity();
+			}
+
 			Notification notification = buildRedPacketNotifyAlipay(code);
 			if (notification != null) {
-				RedPacketCode node = RedPacketCode.getInstence(code, mPriority, true, mTestOnly, false);
 				node.setTime(time);
 
 				if (mNetShared) {
