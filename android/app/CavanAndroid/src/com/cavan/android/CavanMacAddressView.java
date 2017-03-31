@@ -4,19 +4,23 @@ import android.content.Context;
 import android.text.InputFilter;
 import android.text.Spanned;
 import android.util.AttributeSet;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.cavan.java.CavanMacAddress;
 import com.cavan.java.CavanString;
 
 public class CavanMacAddressView extends LinearLayout {
 
 	private static int TEXT_MAX_LENGTH = 2;
 
+	private CavanKeyboardView mKeyboardView;
+	private CavanMacAddress mAddress = new CavanMacAddress();
 	private CavanMacAddressEditText[] mEditTextValues = new CavanMacAddressEditText[6];
 
-	public class CavanMacAddressEditText extends EditText implements InputFilter {
+	public class CavanMacAddressEditText extends EditText implements InputFilter, OnFocusChangeListener {
 
 		private int mIndex;
 
@@ -25,6 +29,7 @@ public class CavanMacAddressView extends LinearLayout {
 
 			mIndex = index;
 			setSelectAllOnFocus(true);
+			setOnFocusChangeListener(this);
 			setFilters(new InputFilter[] { this });
 		}
 
@@ -48,11 +53,16 @@ public class CavanMacAddressView extends LinearLayout {
 						mEditTextValues[mIndex + 1].requestFocus();
 					}
 				}
-			} else if (sLen <= 0 && dest.length() <= dLen && mIndex > 0) {
-				mEditTextValues[mIndex - 1].requestFocus();
 			}
 
 			return source.subSequence(start, end).toString().toUpperCase();
+		}
+
+		@Override
+		public void onFocusChange(View v, boolean hasFocus) {
+			if (hasFocus && mKeyboardView != null) {
+				mKeyboardView.setEditText(this);
+			}
 		}
 	};
 
@@ -70,6 +80,10 @@ public class CavanMacAddressView extends LinearLayout {
 
 	public CavanMacAddressView(Context context) {
 		super(context);
+	}
+
+	public void setKeyboardView(CavanKeyboardView view) {
+		mKeyboardView = view;
 	}
 
 	public String[] getAddressTexts() {
@@ -107,6 +121,14 @@ public class CavanMacAddressView extends LinearLayout {
 		}
 
 		return bytes;
+	}
+
+	public CavanMacAddressEditText getMacAddressView(int index) {
+		return mEditTextValues[index];
+	}
+
+	public CavanMacAddress getAddress() {
+		return mAddress.parse(getAddressTexts());
 	}
 
 	@Override
