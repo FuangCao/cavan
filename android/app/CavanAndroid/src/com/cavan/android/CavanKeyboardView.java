@@ -4,7 +4,9 @@ import android.content.Context;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.text.Editable;
+import android.text.InputType;
 import android.util.AttributeSet;
+import android.view.View;
 import android.widget.EditText;
 
 public abstract class CavanKeyboardView extends KeyboardView {
@@ -38,56 +40,25 @@ public abstract class CavanKeyboardView extends KeyboardView {
 
 		@Override
 		public void onText(CharSequence text) {
-			CavanAndroid.dLog("onText: text = " + text);
-
-			if (mEditText != null) {
-				try {
-					int start = mEditText.getSelectionStart();
-					int end = mEditText.getSelectionEnd();
-					Editable editable = mEditText.getEditableText();
-					int length = editable.length() + start - end;
-
-					length = editable.replace(start, end, text).length() - length;
-					mEditText.setSelection(start + length);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			try {
+				processText(text);
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 
 		@Override
-		public void onRelease(int primaryCode) {
-			CavanAndroid.dLog("onRelease: primaryCode = " + primaryCode);
-		}
+		public void onRelease(int primaryCode) {}
 
 		@Override
-		public void onPress(int primaryCode) {
-			CavanAndroid.dLog("onPress: primaryCode = " + primaryCode);
-		}
+		public void onPress(int primaryCode) {}
 
 		@Override
 		public void onKey(int primaryCode, int[] keyCodes) {
-			CavanAndroid.dLog("onKey: primaryCode = " + primaryCode);
-
-			switch (primaryCode) {
-			case KEYCODE_DELETE:
-				if (mEditText != null) {
-					int start = mEditText.getSelectionStart();
-					int end = mEditText.getSelectionEnd();
-
-					if (start < end) {
-						mEditText.getEditableText().delete(start, end);
-					} else if (start > 0) {
-						mEditText.getEditableText().delete(start - 1, start);
-					}
-				}
-				break;
-
-			case KEYCODE_CLEAR:
-				if (mEditText != null) {
-					mEditText.getEditableText().clear();
-				}
-				break;
+			try {
+				processKey(primaryCode, keyCodes);
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 	};
@@ -106,12 +77,65 @@ public abstract class CavanKeyboardView extends KeyboardView {
 
 	protected abstract int getKeyboardResource();
 
+	public void processText(CharSequence text) {
+		if (mEditText == null) {
+			return;
+		}
+
+		int start = mEditText.getSelectionStart();
+		int end = mEditText.getSelectionEnd();
+		Editable editable = mEditText.getEditableText();
+		int length = editable.length() + start - end;
+
+		length = editable.replace(start, end, text).length() - length;
+		mEditText.setSelection(start + length);
+	}
+
+	public void processKey(int primaryCode, int[] keyCodes) {
+		switch (primaryCode) {
+		case KEYCODE_DELETE:
+			if (mEditText != null) {
+				int start = mEditText.getSelectionStart();
+				int end = mEditText.getSelectionEnd();
+
+				if (start < end) {
+					mEditText.getEditableText().delete(start, end);
+				} else if (start > 0) {
+					mEditText.getEditableText().delete(start - 1, start);
+				}
+			}
+			break;
+
+		case KEYCODE_CLEAR:
+			if (mEditText != null) {
+				mEditText.getEditableText().clear();
+			}
+			break;
+		}
+	}
+
 	public void setEditText(EditText view) {
 		mEditText = view;
 	}
 
 	public EditText getEditText() {
 		return mEditText;
+	}
+
+	public void setupEditText(EditText view, OnFocusChangeListener listener) {
+		view.setInputType(InputType.TYPE_NULL);
+		view.setSelectAllOnFocus(true);
+		view.setOnFocusChangeListener(listener);
+	}
+
+	public void setupEditText(EditText view) {
+		setupEditText(view, new OnFocusChangeListener() {
+
+			@Override
+			public void onFocusChange(View view, boolean hasFocus) {
+				setEditText((EditText) view);
+			}
+		});
 	}
 
 	@Override

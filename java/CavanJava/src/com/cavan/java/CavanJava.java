@@ -292,6 +292,30 @@ public class CavanJava {
 		return false;
 	}
 
+	public static byte[] ArrayClone(byte[] source) {
+		byte[] bytes = new byte[source.length];
+		System.arraycopy(source, 0, bytes, 0, source.length);
+		return bytes;
+	}
+
+	public static short[] ArrayClone(short[] source) {
+		short[] shorts = new short[source.length];
+		System.arraycopy(source, 0, shorts, 0, source.length);
+		return shorts;
+	}
+
+	public static int[] ArrayClone(int[] source) {
+		int[] ints = new int[source.length];
+		System.arraycopy(source, 0, ints, 0, source.length);
+		return ints;
+	}
+
+	public static long[] ArrayClone(long[] source) {
+		long[] longs = new long[source.length];
+		System.arraycopy(source, 0, longs, 0, source.length);
+		return longs;
+	}
+
 	public static short buildValue16(byte[] bytes, int offset) {
 		return (short) ((bytes[offset] & 0xFF) | (bytes[offset + 1] & 0xFF) << 8);
 	}

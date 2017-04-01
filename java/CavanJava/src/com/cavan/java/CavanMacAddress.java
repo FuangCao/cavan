@@ -1,8 +1,6 @@
 package com.cavan.java;
 
-
-
-public class CavanMacAddress {
+public class CavanMacAddress implements Cloneable {
 
 	public static final char SEPRATOR = ':';
 
@@ -33,6 +31,11 @@ public class CavanMacAddress {
 
 	public CavanMacAddress(String text) {
 		this(text, SEPRATOR);
+	}
+
+	public CavanMacAddress(CavanMacAddress address) {
+		mBytes = CavanJava.ArrayClone(address.getBytes());
+		mSeparator = address.getSeparator();
 	}
 
 	public CavanMacAddress() {
@@ -149,6 +152,10 @@ public class CavanMacAddress {
 		return mBytes;
 	}
 
+	public char getSeparator() {
+		return mSeparator;
+	}
+
 	public byte[] getBytes(int length) {
 		if (mBytes == null || mBytes.length < length) {
 			mBytes = new byte[length];
@@ -260,7 +267,7 @@ public class CavanMacAddress {
 		return add(address.getBytes());
 	}
 
-	public CavanMacAddress sub(byte[] bytes) {
+	public boolean sub(byte[] bytes) {
 		int carry = 0;
 
 		for (int i = mBytes.length - 1, j = bytes.length - 1; i >= 0 && j >= 0; i--, j--) {
@@ -274,10 +281,10 @@ public class CavanMacAddress {
 			}
 		}
 
-		return this;
+		return carry == 0;
 	}
 
-	public CavanMacAddress sub(CavanMacAddress address) {
+	public boolean sub(CavanMacAddress address) {
 		return sub(address.getBytes());
 	}
 
@@ -303,6 +310,29 @@ public class CavanMacAddress {
 
 	public void clearByLength(byte[] bytes, int start, int length) {
 		clear(bytes, start, start + length);
+	}
+
+	public boolean isZero() {
+		if (mBytes == null) {
+			return true;
+		}
+
+		for (byte value : mBytes) {
+			if (value != 0) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public CavanMacAddress fork() {
+		return new CavanMacAddress(this);
+	}
+
+	@Override
+	protected Object clone() throws CloneNotSupportedException {
+		return new CavanMacAddress(this);
 	}
 
 	@Override

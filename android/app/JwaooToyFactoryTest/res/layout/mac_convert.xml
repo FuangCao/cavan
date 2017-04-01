@@ -5,29 +5,39 @@
     tools:context="${relativePackage}.${activityClass}" >
 
     <TextView
-        android:id="@+id/textView1"
+        android:id="@+id/textViewAddrStart"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:text="@string/start_mac_address" />
 
-    <com.cavan.android.CavanMacAddressView
-        android:id="@+id/macAddressViewStart"
+    <TextView
+        android:id="@+id/textViewAddrCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/textView1"
-        android:text="@string/end_mac_address" >
-    </com.cavan.android.CavanMacAddressView>
+        android:layout_below="@+id/macAddressViewNext"
+        android:layout_marginTop="5dp"
+        android:text="@string/address_count" />
+
+    <EditText
+        android:id="@+id/editTextAddrCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignRight="@+id/macAddressViewNext"
+        android:layout_below="@+id/textViewAddrCount"
+        android:ems="10"
+        android:inputType="none" />
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/textViewAddrEnd"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/macAddressViewStart"
-        android:layout_marginTop="42dp"
+        android:layout_marginTop="5dp"
         android:text="@string/end_mac_address" />
 
     <com.cavan.android.CavanMacAddressView
@@ -35,8 +45,43 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/textView2"
+        android:layout_below="@+id/textViewAddrEnd"
         android:text="@string/end_mac_address" >
     </com.cavan.android.CavanMacAddressView>
+
+    <TextView
+        android:id="@+id/textViewAddrNext"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/macAddressViewEnd"
+        android:layout_marginTop="5dp"
+        android:text="@string/text_start_mac_address" />
+
+    <com.cavan.android.CavanMacAddressView
+        android:id="@+id/macAddressViewNext"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/textViewAddrNext"
+        android:text="@string/end_mac_address" >
+    </com.cavan.android.CavanMacAddressView>
+
+    <com.cavan.android.CavanMacAddressView
+        android:id="@+id/macAddressViewStart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/textViewAddrStart"
+        android:text="@string/end_mac_address" >
+    </com.cavan.android.CavanMacAddressView>
+
+    <com.cavan.resource.CavanKeyboardViewHex
+        android:id="@+id/keyboardView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true" />
 
 </RelativeLayout>

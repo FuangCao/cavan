@@ -7,6 +7,7 @@ import android.text.InputType;
 import android.text.Spanned;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -40,16 +41,27 @@ public class CavanMacAddressView extends LinearLayout {
 			super(context);
 
 			mIndex = index;
-			setInputType(InputType.TYPE_NULL);
 
+			setGravity(Gravity.CENTER);
 			setMinEms(1);
 			setText("00");
-			setSelectAllOnFocus(true);
-			setOnFocusChangeListener(this);
+
+			if (mKeyboardView != null) {
+				mKeyboardView.setupEditText(this, this);
+			}
+
 			setFilters(new InputFilter[] { this });
 
 			if (mWatcher != null) {
 				addTextChangedListener(mWatcher);
+			}
+		}
+
+		private void setInputType() {
+			if (mKeyboardView != null) {
+				mKeyboardView.setupEditText(this, this);
+			} else {
+				setInputType(InputType.TYPE_CLASS_NUMBER);
 			}
 		}
 
@@ -166,8 +178,14 @@ public class CavanMacAddressView extends LinearLayout {
 		super(context);
 	}
 
-	public void setKeyboardView(CavanKeyboardView view) {
-		mKeyboardView = view;
+	public void setKeyboardView(CavanKeyboardView keyboard) {
+		mKeyboardView = keyboard;
+
+		for (CavanMacAddressSubView view : mSubViews) {
+			if (view != null) {
+				view.setInputType();
+			}
+		}
 	}
 
 	public CavanMacAddressSubView getSubView(int index) {
@@ -193,8 +211,21 @@ public class CavanMacAddressView extends LinearLayout {
 		return texts;
 	}
 
+	public void setTexts(String[] texts) {
+		for (int i = mSubViews.length - 1, j = texts.length - 1; i >= 0 && j >= 0; i--, j--) {
+			CavanMacAddressSubView view = mSubViews[i];
+			if (view != null) {
+				view.setText(texts[j]);
+			}
+		}
+	}
+
 	public CavanMacAddress getAddress() {
 		return mAddress.parseStrings(getTexts());
+	}
+
+	public void setAddress(CavanMacAddress address) {
+		setTexts(address.getStrings());
 	}
 
 	public void clear() {
@@ -231,6 +262,7 @@ public class CavanMacAddressView extends LinearLayout {
 			if (i > 0) {
 				TextView textView = new TextView(getContext());
 				textView.getPaint().setFakeBoldText(true);
+				textView.setGravity(Gravity.CENTER);
 				textView.setText(":");
 				addView(textView);
 			}
