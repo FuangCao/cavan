@@ -3,6 +3,7 @@ package com.cavan.android;
 import android.content.Context;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
+import android.text.Editable;
 import android.util.AttributeSet;
 import android.widget.EditText;
 
@@ -40,13 +41,14 @@ public abstract class CavanKeyboardView extends KeyboardView {
 			CavanAndroid.dLog("onText: text = " + text);
 
 			if (mEditText != null) {
-				int start = mEditText.getSelectionStart();
-				int end = mEditText.getSelectionEnd();
-
-				mEditText.getEditableText().replace(start, end, text);
-
 				try {
-					mEditText.setSelection(start + text.length());
+					int start = mEditText.getSelectionStart();
+					int end = mEditText.getSelectionEnd();
+					Editable editable = mEditText.getEditableText();
+					int length = editable.length() + start - end;
+
+					length = editable.replace(start, end, text).length() - length;
+					mEditText.setSelection(start + length);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -106,10 +108,6 @@ public abstract class CavanKeyboardView extends KeyboardView {
 
 	public void setEditText(EditText view) {
 		mEditText = view;
-
-		if (view != null) {
-			// view.setInputType(InputType.TYPE_NULL);
-		}
 	}
 
 	public EditText getEditText() {
