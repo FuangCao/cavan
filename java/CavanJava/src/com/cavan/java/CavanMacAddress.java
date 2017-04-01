@@ -152,6 +152,14 @@ public class CavanMacAddress implements Cloneable {
 		return mBytes;
 	}
 
+	public byte getByte(int index) {
+		return mBytes[index];
+	}
+
+	public void setByte(int index, byte value) {
+		mBytes[index] = value;
+	}
+
 	public char getSeparator() {
 		return mSeparator;
 	}

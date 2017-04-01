@@ -64,5 +64,10 @@
     <string name="device_suspend_propmpt">设备已进入待机，请查看待机电流是否正常</string>
     <string name="address_count">地址个数：</string>
     <string name="text_start_mac_address">下一次起始地址：</string>
+    <string-array name="projects">
+        <item >请选择项目</item>
+        <item >MODEL-06</item>
+        <item >MODEL-10</item>
+    </string-array>
 
 </resources>

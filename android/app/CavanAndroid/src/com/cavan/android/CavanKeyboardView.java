@@ -126,6 +126,14 @@ public abstract class CavanKeyboardView extends KeyboardView {
 		view.setInputType(InputType.TYPE_NULL);
 		view.setSelectAllOnFocus(true);
 		view.setOnFocusChangeListener(listener);
+		view.setOnLongClickListener(new OnLongClickListener() {
+
+			@Override
+			public boolean onLongClick(View view) {
+				((EditText) view).getEditableText().clear();
+				return true;
+			}
+		});
 	}
 
 	public void setupEditText(EditText view) {

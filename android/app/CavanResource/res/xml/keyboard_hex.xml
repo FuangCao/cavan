@@ -7,9 +7,6 @@
 
     <Row>
         <Key
-            android:keyOutputText="0"
-            android:keyLabel="0" />
-        <Key
             android:keyOutputText="1"
             android:keyLabel="1" />
         <Key
@@ -22,15 +19,15 @@
             android:keyOutputText="4"
             android:keyLabel="4" />
         <Key
+            android:keyOutputText="5"
+            android:keyLabel="5" />
+        <Key
             android:codes="1"
             android:keyIcon="@drawable/key_del"
             android:isRepeatable="true" />
     </Row>
 
     <Row>
-        <Key
-            android:keyOutputText="5"
-            android:keyLabel="5" />
         <Key
             android:keyOutputText="6"
             android:keyLabel="6" />
@@ -43,6 +40,9 @@
         <Key
             android:keyOutputText="9"
             android:keyLabel="9" />
+        <Key
+            android:keyOutputText="0"
+            android:keyLabel="0" />
         <Key
             android:codes="2"
             android:keyLabel="清空" />

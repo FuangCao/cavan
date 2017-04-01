@@ -26,9 +26,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_alignRight="@+id/macAddressViewNext"
-        android:layout_below="@+id/textViewAddrCount"
-        android:ems="10"
+        android:layout_alignBaseline="@+id/spinnerProject"
+        android:layout_toLeftOf="@+id/spinnerProject"
         android:inputType="none" />
 
     <TextView
@@ -83,5 +82,13 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true" />
+
+    <Spinner
+        android:id="@+id/spinnerProject"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/textViewAddrCount"
+        android:entries="@array/projects" />
 
 </RelativeLayout>

@@ -7,7 +7,11 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.EditText;
+import android.widget.Spinner;
 
 import com.cavan.android.CavanKeyboardView;
 import com.cavan.android.CavanMacAddressView;
@@ -21,12 +25,14 @@ public class MacConvertActivity extends Activity {
 	private static final int MSG_END_ADDR_CHANGED = 3;
 	private static final int MSG_NEXT_ADDR_CHANGED = 4;
 	private static final int MSG_ADDR_COUNT_CHANGED = 5;
+	private static final int MSG_PROJECT_CHANGED = 6;
 
 	private CavanMacAddressView mAddressViewStart;
 	private CavanMacAddressView mAddressViewEnd;
 	private CavanMacAddressView mAddressViewNext;
 	private EditText mEditTextAddressCount;
 	private CavanKeyboardView mKeyboard;
+	private Spinner mSpinnerProject;
 
 	private Handler mHandler = new Handler() {
 
@@ -69,6 +75,26 @@ public class MacConvertActivity extends Activity {
 			switch (msg.what) {
 			case MSG_UNLOCK:
 				mMessageBusy = 0;
+				break;
+
+			case MSG_PROJECT_CHANGED:
+				if (setMessageBusy(msg.what)) {
+					int position = mSpinnerProject.getSelectedItemPosition();
+					if (position > 0) {
+						CavanMacAddress address = getAddressStart();
+
+						address.setByte(0, (byte) 0x88);
+
+						if (position == 1) {
+							address.setByte(1, (byte) 0xEA);
+						} else {
+							address.setByte(1, (byte) 0xEB);
+						}
+
+						mMessageBusy = MSG_START_ADDR_CHANGED;
+						mAddressViewStart.setAddress(address);
+					}
+				}
 				break;
 
 			case MSG_START_ADDR_CHANGED:
@@ -154,6 +180,18 @@ public class MacConvertActivity extends Activity {
 
 		mEditTextAddressCount = (EditText) findViewById(R.id.editTextAddrCount);
 		mKeyboard.setupEditText(mEditTextAddressCount);
+
+		mSpinnerProject = (Spinner) findViewById(R.id.spinnerProject);
+		mSpinnerProject.setOnItemSelectedListener(new OnItemSelectedListener() {
+
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+				mHandler.sendEmptyMessage(MSG_PROJECT_CHANGED);
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> parent) {}
+		});
 
 		mAddressViewStart.addTextChangedListener(new TextWatcher() {
 
