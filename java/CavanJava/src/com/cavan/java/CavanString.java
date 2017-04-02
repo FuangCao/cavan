@@ -111,25 +111,41 @@ public class CavanString {
 		return builder.toString();
 	}
 
-	public static char convertToCharLowercase(int value) {
+	public static char convertValueToCharLowercase(int value) {
 		return HEX_LOWERCASE_CHARS[value];
 	}
 
-	public static char convertToCharUppercase(int value) {
+	public static char convertValueToCharUppercase(int value) {
 		return HEX_UPPERCASE_CHARS[value];
 	}
 
+	public static int convertCharToValue(char c) {
+		if (c >= '0' && c <= '9') {
+			return c - '0';
+		}
+
+		if (c >= 'a' && c <= 'z') {
+			return c - 'a' + 10;
+		}
+
+		if (c >= 'A' && c <= 'Z') {
+			return c - 'A' + 10;
+		}
+
+		return 0;
+	}
+
 	public static String fromByte(byte value) {
-		return new String(new char[] { convertToCharUppercase((value >> 4) & 0x0F), convertToCharUppercase(value & 0x0F) } );
+		return new String(new char[] { convertValueToCharUppercase((value >> 4) & 0x0F), convertValueToCharUppercase(value & 0x0F) } );
 	}
 
 	public static void fromByte(StringBuilder builder, byte value) {
-		builder.append(convertToCharUppercase((value >> 4) & 0x0F)).append(convertToCharUppercase(value & 0x0F));
+		builder.append(convertValueToCharUppercase((value >> 4) & 0x0F)).append(convertValueToCharUppercase(value & 0x0F));
 	}
 
 	public static void fromByte(char[] chars, int index, byte value) {
-		chars[index] = convertToCharUppercase((value >> 4) & 0x0F);
-		chars[index + 1] = convertToCharUppercase(value & 0x0F);
+		chars[index] = convertValueToCharUppercase((value >> 4) & 0x0F);
+		chars[index + 1] = convertValueToCharUppercase(value & 0x0F);
 	}
 
 	public static String deleteSpace(String text) {

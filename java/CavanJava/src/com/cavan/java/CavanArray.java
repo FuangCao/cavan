@@ -17,7 +17,13 @@ public class CavanArray {
 
 	public static byte[] clone(byte[] bytes, int start, int length) {
 		byte[] newBytes = new byte[length];
+
+		if (start + length > bytes.length) {
+			length = bytes.length - start;
+		}
+
 		copy(bytes, start, newBytes, 0, length);
+
 		return newBytes;
 	}
 
