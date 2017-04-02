@@ -74,7 +74,7 @@ public class CavanHexFile extends CavanFile {
 					break;
 
 				case 0x01:
-					return CavanArray.copy(binData, 0, sizeReal);
+					return CavanArray.cloneByLength(binData, sizeReal);
 
 				case 0x02:
 					break;

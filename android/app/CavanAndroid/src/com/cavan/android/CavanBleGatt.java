@@ -716,7 +716,7 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 				}
 
 				if (offset < data.length) {
-					data = CavanArray.copy(data, offset, data.length - offset);
+					data = CavanArray.clone(data, offset, data.length - offset);
 				} else {
 					return true;
 				}

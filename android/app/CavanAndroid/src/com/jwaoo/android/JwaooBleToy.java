@@ -1445,7 +1445,7 @@ public class JwaooBleToy extends CavanBleGatt {
 				return null;
 			}
 
-			return CavanArray.copySkip(mBytes, 2);
+			return CavanArray.clone(mBytes, 2);
 		}
 
 		public JwaooToyTestResult getTestResult() {

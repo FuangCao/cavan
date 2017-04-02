@@ -127,6 +127,11 @@ public class CavanString {
 		builder.append(convertToCharUppercase((value >> 4) & 0x0F)).append(convertToCharUppercase(value & 0x0F));
 	}
 
+	public static void fromByte(char[] chars, int index, byte value) {
+		chars[index] = convertToCharUppercase((value >> 4) & 0x0F);
+		chars[index + 1] = convertToCharUppercase(value & 0x0F);
+	}
+
 	public static String deleteSpace(String text) {
 		Matcher matcher = PATTERN_SPACE.matcher(text);
 
