@@ -296,7 +296,7 @@ public class CavanFile extends File {
 
 		if (length != count) {
 			byte[] newBytes = new byte[length];
-			CavanJava.ArrayCopy(bytes, newBytes, length);
+			CavanArray.copy(bytes, newBytes, length);
 			return newBytes;
 		}
 

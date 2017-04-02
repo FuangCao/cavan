@@ -19,7 +19,7 @@ import android.os.Handler.Callback;
 import android.os.HandlerThread;
 import android.os.Message;
 
-import com.cavan.java.CavanJava;
+import com.cavan.java.CavanArray;
 import com.cavan.java.CavanProgressListener;
 import com.cavan.java.CavanString;
 
@@ -703,7 +703,7 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 				byte[] block = new byte[FRAME_SIZE];
 
 				while (offset <= last) {
-					CavanJava.ArrayCopy(data, offset, block, 0, FRAME_SIZE);
+					CavanArray.copy(data, offset, block, 0, FRAME_SIZE);
 					if (!writeFrame(block, sync)) {
 						return false;
 					}
@@ -716,7 +716,7 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 				}
 
 				if (offset < data.length) {
-					data = CavanJava.ArrayCopy(data, offset, data.length - offset);
+					data = CavanArray.copy(data, offset, data.length - offset);
 				} else {
 					return true;
 				}

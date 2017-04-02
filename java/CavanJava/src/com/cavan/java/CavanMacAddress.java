@@ -34,7 +34,7 @@ public class CavanMacAddress implements Cloneable {
 	}
 
 	public CavanMacAddress(CavanMacAddress address) {
-		mBytes = CavanJava.ArrayClone(address.getBytes());
+		mBytes = CavanArray.clone(address.getBytes());
 		mSeparator = address.getSeparator();
 	}
 

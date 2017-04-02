@@ -17,7 +17,11 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 	}
 
 	public CavanLargeValue(byte[] bytes) {
-		this(bytes, bytes.length);
+		mBytes = bytes.clone();
+	}
+
+	public CavanLargeValue(CavanLargeValue value) {
+		this(value.getBytes());
 	}
 
 	public byte[] getBytes() {
@@ -40,6 +44,16 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 		}
 
 		return true;
+	}
+
+	public boolean notZero() {
+		for (byte value : mBytes) {
+			if (value != 0) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public static void clear(byte[] bytes, int index, int end) {
@@ -168,6 +182,30 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 		return sub(value.getBytes());
 	}
 
+	public CavanLargeValue mul(long value) {
+		long product = 0;
+
+		for (int i = 0; i < mBytes.length; i++) {
+			product += (mBytes[i] & 0xFF) * value;
+			mBytes[i] = (byte) product;
+			product >>= 8;
+		}
+
+		return this;
+	}
+
+	public long div(long value) {
+		long remain = 0;
+
+		for (int i = mBytes.length - 1; i >= 0; i--) {
+			remain = (remain << 8) + (mBytes[i] & 0xFF);
+			mBytes[i] = (byte) (remain / value);
+			remain %= value;
+		}
+
+		return remain;
+	}
+
 	public long toLong() {
 		long value = 0;
 
@@ -281,12 +319,28 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 		return builder.toString();
 	}
 
+	public String toString(int radix) {
+		int count;
+		char[] chars = new char[length() * 8];
+		CavanLargeValue value = new CavanLargeValue(this);
+
+		for (count = 0; value.notZero(); count++) {
+			int remain = (int) value.div(radix);
+			chars[count] = CavanString.convertToCharUppercase(remain);
+		}
+
+		CavanArray.reverse(chars, 0, count);
+
+		return new String(chars, 0, count);
+	}
+
 	public static void main(String[] args) {
-		CavanLargeValue value1 = new CavanLargeValue(8).fromLong(1000);
+		CavanLargeValue value1 = new CavanLargeValue(8).fromLong(0x12345);
 		CavanLargeValue value2 = new CavanLargeValue(2).fromLong(1000);
 
 		CavanJava.dLog("compareTo = " + value1.compareTo(value2));
-		CavanJava.dLog("value1 = " + value1 + " = " + value1.toStringHex());
+		// CavanJava.dLog("remain = " + value1.div(55));
+		CavanJava.dLog("value1 = " + value1.toString(12));
 	}
 
 	@Override

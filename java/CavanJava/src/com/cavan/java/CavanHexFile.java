@@ -54,7 +54,7 @@ public class CavanHexFile extends CavanFile {
 				case 0x00:
 					if (offset + length > binData.length) {
 						byte[] datas = new byte[offset + length];
-						CavanJava.ArrayCopy(binData, datas, sizeReal);
+						CavanArray.copy(binData, datas, sizeReal);
 						binData = datas;
 					}
 
@@ -74,7 +74,7 @@ public class CavanHexFile extends CavanFile {
 					break;
 
 				case 0x01:
-					return CavanJava.ArrayCopy(binData, 0, sizeReal);
+					return CavanArray.copy(binData, 0, sizeReal);
 
 				case 0x02:
 					break;

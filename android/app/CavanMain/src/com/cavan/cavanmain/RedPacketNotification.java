@@ -21,7 +21,7 @@ import android.service.notification.StatusBarNotification;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
-import com.cavan.java.CavanJava;
+import com.cavan.java.CavanArray;
 import com.cavan.java.RedPacketFinder;
 
 public class RedPacketNotification extends CavanNotification {
@@ -72,13 +72,13 @@ public class RedPacketNotification extends CavanNotification {
 		mTestOnly = test;
 		mService = service;
 		mNotification = sbn;
-		mIsTimedCode = CavanJava.ArrayContains(sTimerPackages, mPackageName);
+		mIsTimedCode = CavanArray.contains(sTimerPackages, mPackageName);
 
 		if (mTitle != null && mIsTimedCode) {
 			mFinder.addLine(mTitle);
 		}
 
-		mNeedSave = CavanJava.ArrayContains(sSavePackages, mPackageName);
+		mNeedSave = CavanArray.contains(sSavePackages, mPackageName);
 		if (mNeedSave || mIsTimedCode || mService.getPackageName().equals(getPackageName())) {
 			mFinder.split(mContent);
 		}

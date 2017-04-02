@@ -7,6 +7,7 @@ import android.content.Context;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleGatt;
+import com.cavan.java.CavanArray;
 import com.cavan.java.CavanByteCache;
 import com.cavan.java.CavanHexFile;
 import com.cavan.java.CavanJava;
@@ -873,7 +874,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		byte[] command = new byte[bytes.length + 1];
 
 		command[0] = JWAOO_TOY_CMD_APP_DATA;
-		CavanJava.ArrayCopy(bytes, 0, command, 1, bytes.length);
+		CavanArray.copy(bytes, 0, command, 1, bytes.length);
 
 		return mCommand.readBool(command);
 	}
@@ -1444,7 +1445,7 @@ public class JwaooBleToy extends CavanBleGatt {
 				return null;
 			}
 
-			return CavanJava.ArrayCopySkip(mBytes, 2);
+			return CavanArray.copySkip(mBytes, 2);
 		}
 
 		public JwaooToyTestResult getTestResult() {
@@ -1580,7 +1581,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			byte[] command = new byte[data.length + 1];
 
 			command[0] = type;
-			CavanJava.ArrayCopy(data, 0, command, 1, data.length);
+			CavanArray.copy(data, 0, command, 1, data.length);
 
 			return command;
 		}
@@ -1740,7 +1741,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			command[0] = JWAOO_TOY_CMD_I2C_RW;
 			command[1] = mSlave;
 			command[2] = (byte) rdlen;
-			CavanJava.ArrayCopy(data, 0, command, 3, data.length);
+			CavanArray.copy(data, 0, command, 3, data.length);
 
 			return mCommand.readData(command);
 		}
