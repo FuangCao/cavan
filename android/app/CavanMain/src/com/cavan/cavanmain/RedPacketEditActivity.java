@@ -156,8 +156,6 @@ public class RedPacketEditActivity extends Activity implements OnClickListener, 
 			Editable text = mEditTextCode.getText();
 			String code = text.toString().trim();
 
-			text.clear();
-
 			if (code.isEmpty()) {
 				break;
 			}
