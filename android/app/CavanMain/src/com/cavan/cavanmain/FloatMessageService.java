@@ -333,6 +333,7 @@ public class FloatMessageService extends FloatWidowService {
 
 			RedPacketCode code = mMessageCodeMap.get(message);
 			if (code != null) {
+				code.setNetworkEnable();
 				mMessageCodeMap.remove(message);
 				sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_REMOVE, code.getCode());
 			}

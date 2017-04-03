@@ -335,7 +335,7 @@ public class RedPacketNotification extends CavanNotification {
 				node.setTime(time);
 
 				if (mNetShared) {
-					node.setSendDisable();
+					node.setSendEnable(false);
 				}
 
 				if (mIsTimedCode) {

@@ -45,13 +45,14 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 	private boolean mValid;
 	private boolean mInvalid;
 	private boolean mIgnored;
-	private boolean mSendDisable;
-	private boolean mRecvDisable;
-	private boolean mSendPending;
 	private boolean mTestOnly;
 	private boolean mCompleted;
 	private boolean mRepeatable;
 	private boolean mMaybeInvalid;
+
+	private boolean mSendPending;
+	private boolean mSendEnabled = true;
+	private boolean mRecvEnabled = true;
 
 	public static String filtration(String text) {
 		StringBuilder builder = new StringBuilder();
@@ -148,20 +149,22 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 		node.setExactTime(time);
 		node.setIgnored(ignore);
 		node.setRepeatable();
+		node.setNetworkEnable();
 
 		AlarmManager manager = (AlarmManager) CavanAndroid.getCachedSystemService(context, Context.ALARM_SERVICE);
 		if (manager != null) {
 			Intent intent = new Intent(context, RedPacketAlarmReceiver.class).putExtra("code", code);
 			PendingIntent operation = PendingIntent.getBroadcast(context, code.hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-			if (ignore) {
-				manager.cancel(operation);
-			} else {
+			manager.cancel(operation);
+
+			if (!ignore) {
 				long timeNow = System.currentTimeMillis();
-				if (time < timeNow) {
-					manager.cancel(operation);
-				} else {
-					manager.set(AlarmManager.RTC_WAKEUP, time - 20000, operation);
+				long timeAlarm = time - 20000;
+
+				if (timeAlarm > timeNow) {
+					CavanAndroid.dLog("timeAlarm = " + sDateFormat.format(new Date(timeAlarm)));
+					manager.set(AlarmManager.RTC_WAKEUP, timeAlarm, operation);
 				}
 			}
 		}
@@ -271,36 +274,29 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 		return mInvalid;
 	}
 
-	synchronized public void setSendDisable() {
-		mSendDisable = true;
-	}
-
-	synchronized public boolean isSendDisabled() {
-		return mSendDisable;
+	synchronized public void setSendEnable(boolean enable) {
+		mSendEnabled = enable;
 	}
 
 	synchronized public boolean isSendEnabled() {
-		if (mRepeatable) {
-			return true;
-		}
-
-		return !mSendDisable;
+		return mSendEnabled;
 	}
 
-	synchronized public void setRecvDisable() {
-		mRecvDisable = true;
-	}
-
-	synchronized public boolean isRecvDisabled() {
-		return mRecvDisable;
+	synchronized public void setRecvEnable(boolean enable) {
+		mRecvEnabled = enable;
 	}
 
 	synchronized public boolean isRecvEnabled() {
-		if (mRepeatable) {
-			return true;
-		}
+		return mRecvEnabled;
+	}
 
-		return !mRecvDisable;
+	synchronized public void setNetworkEnable(boolean sendEnable, boolean recvEnable) {
+		mSendEnabled = sendEnable;
+		mRecvEnabled = recvEnable;
+	}
+
+	public void setNetworkEnable() {
+		setNetworkEnable(true, true);
 	}
 
 	synchronized public boolean isRepeatable() {
@@ -311,10 +307,18 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 		mRepeatable = true;
 	}
 
+	public static long TimeAlign(long time) {
+		time += REPEAT_TIME_ALIGN + TIME_MISTAKE;
+		return time - time % REPEAT_TIME_ALIGN;
+	}
+
+	public static long TimeAlign() {
+		return TimeAlign(System.currentTimeMillis());
+	}
+
 	synchronized public void updateRepeatTime(Context context) {
 		mRepeatable = true;
-		mRepeatTime = System.currentTimeMillis() + REPEAT_TIME_ALIGN + TIME_MISTAKE;
-		mRepeatTime -= mRepeatTime % REPEAT_TIME_ALIGN;
+		mRepeatTime = TimeAlign();
 		mTime = mRepeatTime - MainActivity.getCommitAhead(context);
 	}
 
@@ -410,6 +414,12 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 	}
 
 	synchronized long getExactTime() {
+		long timeNow = System.currentTimeMillis();
+
+		if (mExactTime < timeNow) {
+			return TimeAlign(timeNow);
+		}
+
 		return mExactTime;
 	}
 
@@ -448,12 +458,12 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 			builder.append(sDateFormat.format(new Date(mTime)));
 		}
 
-		if (mSendDisable) {
-			builder.append(", SendDisabled");
+		if (mSendEnabled) {
+			builder.append(", SendEnabled");
 		}
 
-		if (mRecvDisable) {
-			builder.append(", RecvDisabled");
+		if (mRecvEnabled) {
+			builder.append(", RecvEnabled");
 		}
 
 		if (mSendPending) {
@@ -502,25 +512,25 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 			return true;
 		}
 
-		if (mCompleted) {
-			CavanAndroid.dLog("skip completed code: " + mCode);
-			return true;
-		}
-
 		CavanAndroid.dLog("mExactTime = " + mExactTime);
 
-		if (mExactTime != 0) {
-			long timeNow = System.currentTimeMillis();
+		if (mRepeatable) {
+			if (mExactTime != 0) {
+				long timeNow = System.currentTimeMillis();
 
-			if (timeNow > (mExactTime + 60000)) {
-				CavanAndroid.dLog("skip overtime code: " + mCode);
-				return true;
-			}
+				if (timeNow > (mExactTime + 60000)) {
+					CavanAndroid.dLog("skip overtime code: " + mCode);
+					return true;
+				}
 
-			if (timeNow < (mExactTime - 60000)) {
-				CavanAndroid.dLog("skip early code: " + mCode);
-				return true;
+				if (timeNow < (mExactTime - 60000)) {
+					CavanAndroid.dLog("skip early code: " + mCode);
+					return true;
+				}
 			}
+		} else if (mCompleted) {
+			CavanAndroid.dLog("skip completed code: " + mCode);
+			return true;
 		}
 
 		return false;

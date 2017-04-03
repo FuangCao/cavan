@@ -378,7 +378,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		try {
 			if (mService != null) {
 				code.setSendPending(false);
-				code.setRecvDisable();
+				code.setRecvEnable(false);
 				mService.sendRedPacketCode(code.getCode());
 				return true;
 			}
