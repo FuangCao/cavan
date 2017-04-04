@@ -520,23 +520,18 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 
 		CavanAndroid.dLog("mExactTime = " + mExactTime);
 
-		if (mRepeatable) {
-			if (mExactTime != 0) {
-				long timeNow = System.currentTimeMillis();
+		if (mRepeatable && mExactTime != 0) {
+			long timeNow = System.currentTimeMillis();
 
-				if (timeNow > (mExactTime + 60000)) {
-					CavanAndroid.dLog("skip overtime code: " + mCode);
-					return true;
-				}
-
-				if (timeNow < (mExactTime - 60000)) {
-					CavanAndroid.dLog("skip early code: " + mCode);
-					return true;
-				}
+			if (timeNow > (mExactTime + 60000)) {
+				CavanAndroid.dLog("skip overtime code: " + mCode);
+				return true;
 			}
-		} else if (mCompleted) {
-			CavanAndroid.dLog("skip completed code: " + mCode);
-			return true;
+
+			if (timeNow < (mExactTime - 60000)) {
+				CavanAndroid.dLog("skip early code: " + mCode);
+				return true;
+			}
 		}
 
 		return false;
