@@ -16,7 +16,7 @@
             android:codes="2"
             android:keyLabel="清空" />
         <Key
-            android:codes="1"
+            android:codes="-1"
             android:keyIcon="@drawable/key_del"
             android:isRepeatable="true" />
     </Row>

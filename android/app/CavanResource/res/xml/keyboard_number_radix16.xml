@@ -22,7 +22,7 @@
             android:keyOutputText="5"
             android:keyLabel="5" />
         <Key
-            android:codes="1"
+            android:codes="-1"
             android:keyIcon="@drawable/key_del"
             android:isRepeatable="true" />
     </Row>
@@ -44,7 +44,7 @@
             android:keyOutputText="0"
             android:keyLabel="0" />
         <Key
-            android:codes="2"
+            android:codes="-2"
             android:keyLabel="清空" />
     </Row>
 

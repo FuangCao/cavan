@@ -13,8 +13,8 @@ import android.widget.EditText;
 
 public abstract class CavanKeyboardView extends KeyboardView {
 
-	public static final int KEYCODE_DELETE = 1;
-	public static final int KEYCODE_CLEAR = 2;
+	public static final int KEYCODE_DELETE = -1;
+	public static final int KEYCODE_CLEAR = -2;
 
 	private EditText mEditText;
 	private Keyboard[] mKeyboards;
@@ -199,8 +199,6 @@ public abstract class CavanKeyboardView extends KeyboardView {
 
 	@Override
 	protected void onAttachedToWindow() {
-		setKeyboard(0);
-
 		setEnabled(true);
 		setPreviewEnabled(false);
 		setOnKeyboardActionListener(mListener);

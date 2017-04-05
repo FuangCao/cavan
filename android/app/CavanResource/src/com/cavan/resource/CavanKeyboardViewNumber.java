@@ -11,12 +11,14 @@ public class CavanKeyboardViewNumber extends CavanKeyboardView {
 	public static final int KEYBOARD_RADIX16 = 1;
 	public static final int KEYBOARD_RADIX8 = 2;
 	public static final int KEYBOARD_RADIX2 = 3;
+	public static final int KEYBOARD_FLOAT = 4;
 
 	public static final int[] RESOURCES = {
 		R.xml.keyboard_number_radix10,
 		R.xml.keyboard_number_radix16,
 		R.xml.keyboard_number_radix8,
 		R.xml.keyboard_number_radix2,
+		R.xml.keyboard_number_float,
 	};
 
 	public CavanKeyboardViewNumber(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
