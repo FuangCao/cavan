@@ -13,9 +13,9 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.EditText;
 import android.widget.Spinner;
 
-import com.cavan.android.CavanKeyboardView;
 import com.cavan.android.CavanMacAddressView;
 import com.cavan.java.CavanMacAddress;
+import com.cavan.resource.CavanKeyboardViewNumber;
 
 @SuppressLint("HandlerLeak")
 public class MacConvertActivity extends Activity {
@@ -31,7 +31,7 @@ public class MacConvertActivity extends Activity {
 	private CavanMacAddressView mAddressViewEnd;
 	private CavanMacAddressView mAddressViewNext;
 	private EditText mEditTextAddressCount;
-	private CavanKeyboardView mKeyboard;
+	private CavanKeyboardViewNumber mKeyboard;
 	private Spinner mSpinnerProject;
 
 	private Handler mHandler = new Handler() {
@@ -173,19 +173,20 @@ public class MacConvertActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.mac_convert);
 
-		mKeyboard = (CavanKeyboardView) findViewById(R.id.keyboardView);
+		mKeyboard = (CavanKeyboardViewNumber) findViewById(R.id.keyboardView);
 
 		mAddressViewStart = (CavanMacAddressView) findViewById(R.id.macAddressViewStart);
-		mAddressViewStart.setKeyboardView(mKeyboard);
+		mAddressViewStart.setKeyboardView(mKeyboard, CavanKeyboardViewNumber.KEYBOARD_RADIX16);
 
 		mAddressViewEnd = (CavanMacAddressView) findViewById(R.id.macAddressViewEnd);
-		mAddressViewEnd.setKeyboardView(mKeyboard);
+		mAddressViewEnd.setKeyboardView(mKeyboard, CavanKeyboardViewNumber.KEYBOARD_RADIX16);
 
 		mAddressViewNext = (CavanMacAddressView) findViewById(R.id.macAddressViewNext);
-		mAddressViewNext.setKeyboardView(mKeyboard);
+		mAddressViewNext.setKeyboardView(mKeyboard, CavanKeyboardViewNumber.KEYBOARD_RADIX16);
 
 		mEditTextAddressCount = (EditText) findViewById(R.id.editTextAddrCount);
 		mKeyboard.setupEditText(mEditTextAddressCount);
+		mKeyboard.setKeyboard(mEditTextAddressCount, CavanKeyboardViewNumber.KEYBOARD_RADIX10);
 
 		mSpinnerProject = (Spinner) findViewById(R.id.spinnerProject);
 		mSpinnerProject.setOnItemSelectedListener(new OnItemSelectedListener() {

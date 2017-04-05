@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+	android:keyHeight="8%p"
+	android:keyWidth="100%p"
+	android:horizontalGap="0px"
+	android:verticalGap="0px" >
+
+    <Row>
+        <Key
+            android:keyOutputText="0"
+            android:keyLabel="0" />
+        <Key
+            android:keyOutputText="1"
+            android:keyLabel="1" />
+        <Key
+            android:codes="2"
+            android:keyLabel="清空" />
+        <Key
+            android:codes="1"
+            android:keyIcon="@drawable/key_del"
+            android:isRepeatable="true" />
+    </Row>
+</Keyboard>

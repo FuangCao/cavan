@@ -1,5 +1,7 @@
 package com.cavan.android;
 
+import java.util.HashMap;
+
 import android.content.Context;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
@@ -15,6 +17,9 @@ public abstract class CavanKeyboardView extends KeyboardView {
 	public static final int KEYCODE_CLEAR = 2;
 
 	private EditText mEditText;
+	private Keyboard[] mKeyboards;
+	private int[] mKeyboardResources;
+	private HashMap<View, Integer> mKeyboardMap = new HashMap<View, Integer>();
 
 	private OnKeyboardActionListener mListener = new OnKeyboardActionListener() {
 
@@ -75,7 +80,7 @@ public abstract class CavanKeyboardView extends KeyboardView {
 		super(context, attrs);
 	}
 
-	protected abstract int getKeyboardResource();
+	protected abstract int[] getKeyboardResources();
 
 	public void processText(CharSequence text) {
 		if (mEditText == null) {
@@ -116,6 +121,7 @@ public abstract class CavanKeyboardView extends KeyboardView {
 
 	public void setEditText(EditText view) {
 		mEditText = view;
+		setKeyboard(getKeyboard(view));
 	}
 
 	public EditText getEditText() {
@@ -146,9 +152,54 @@ public abstract class CavanKeyboardView extends KeyboardView {
 		});
 	}
 
+	public Keyboard getKeyboard(int index) {
+		if (mKeyboards == null) {
+			mKeyboardResources = getKeyboardResources();
+			mKeyboards = new Keyboard[mKeyboardResources.length];
+		}
+
+		Keyboard keyboard = mKeyboards[index];
+		if (keyboard != null) {
+			return keyboard;
+		}
+
+		keyboard = new Keyboard(getContext(), mKeyboardResources[index]);
+		mKeyboards[index] = keyboard;
+		return keyboard;
+	}
+
+	public void setKeyboard(int index) {
+		try {
+			setKeyboard(getKeyboard(index));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public Keyboard getKeyboard(View view) {
+		Integer index = mKeyboardMap.get(view);
+		if (index == null) {
+			index = 0;
+		}
+
+		return getKeyboard(index);
+	}
+
+	public void setKeyboard(View view, int keyboard) {
+		mKeyboardMap.put(view, keyboard);
+	}
+
+	public void setKeyboard(EditText view) {
+		try {
+			setKeyboard(getKeyboard(view));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	@Override
 	protected void onAttachedToWindow() {
-		setKeyboard(new Keyboard(getContext(), getKeyboardResource()));
+		setKeyboard(0);
 
 		setEnabled(true);
 		setPreviewEnabled(false);

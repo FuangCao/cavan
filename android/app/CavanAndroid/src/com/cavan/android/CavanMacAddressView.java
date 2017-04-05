@@ -21,6 +21,7 @@ public class CavanMacAddressView extends LinearLayout {
 	private static int TEXT_MAX_LENGTH = 2;
 
 	private TextWatcher mWatcher;
+	private int mKeyboard;
 	private CavanKeyboardView mKeyboardView;
 	private CavanMacAddress mAddress = new CavanMacAddress();
 	private CavanMacAddressSubView[] mSubViews = new CavanMacAddressSubView[6];
@@ -60,6 +61,7 @@ public class CavanMacAddressView extends LinearLayout {
 		private void setInputType() {
 			if (mKeyboardView != null) {
 				mKeyboardView.setupEditText(this, this);
+				mKeyboardView.setKeyboard(this, mKeyboard);
 			} else {
 				setInputType(InputType.TYPE_CLASS_NUMBER);
 			}
@@ -178,12 +180,13 @@ public class CavanMacAddressView extends LinearLayout {
 		super(context);
 	}
 
-	public void setKeyboardView(CavanKeyboardView keyboard) {
-		mKeyboardView = keyboard;
+	public void setKeyboardView(CavanKeyboardView view, int keyboard) {
+		mKeyboardView = view;
+		mKeyboard = keyboard;
 
-		for (CavanMacAddressSubView view : mSubViews) {
-			if (view != null) {
-				view.setInputType();
+		for (CavanMacAddressSubView sub : mSubViews) {
+			if (sub != null) {
+				sub.setInputType();
 			}
 		}
 	}

@@ -75,7 +75,7 @@
         android:text="@string/end_mac_address" >
     </com.cavan.android.CavanMacAddressView>
 
-    <com.cavan.resource.CavanKeyboardViewHex
+    <com.cavan.resource.CavanKeyboardViewNumber
         android:id="@+id/keyboardView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
