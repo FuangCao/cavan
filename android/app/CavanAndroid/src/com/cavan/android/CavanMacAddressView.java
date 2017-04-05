@@ -221,11 +221,11 @@ public class CavanMacAddressView extends LinearLayout {
 	}
 
 	public CavanMacAddress getAddress() {
-		return mAddress.parseStrings(getTexts());
+		return mAddress.fromStrings(getTexts());
 	}
 
 	public void setAddress(CavanMacAddress address) {
-		setTexts(address.getStrings());
+		setTexts(address.toStrings());
 	}
 
 	public void clear() {

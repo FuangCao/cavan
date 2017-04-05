@@ -59,8 +59,8 @@ public class MacConvertActivity extends Activity {
 
 			long count;
 
-			if (address.sub(start)) {
-				count = address.getLongValue();
+			if (address.sub(start) == 0) {
+				count = address.toLong();
 			} else {
 				count = 0;
 			}
@@ -83,12 +83,12 @@ public class MacConvertActivity extends Activity {
 					if (position > 0) {
 						CavanMacAddress address = getAddressStart();
 
-						address.setByte(0, (byte) 0x88);
+						address.setByte(5, (byte) 0x88);
 
 						if (position == 1) {
-							address.setByte(1, (byte) 0xEA);
+							address.setByte(4, (byte) 0xEA);
 						} else {
-							address.setByte(1, (byte) 0xEB);
+							address.setByte(4, (byte) 0xEB);
 						}
 
 						mMessageBusy = MSG_START_ADDR_CHANGED;
@@ -104,8 +104,11 @@ public class MacConvertActivity extends Activity {
 
 					long count = getAddressCount();
 					if (count > 0) {
-						mAddressViewNext.setAddress(address.add(getAddressCount()));
-						mAddressViewEnd.setAddress(address.decrease());
+						address.add(getAddressCount());
+						mAddressViewNext.setAddress(address);
+
+						address.decrease();
+						mAddressViewEnd.setAddress(address);
 					} else {
 						mAddressViewNext.setAddress(address);
 						mAddressViewEnd.setAddress(address);
@@ -116,7 +119,10 @@ public class MacConvertActivity extends Activity {
 			case MSG_END_ADDR_CHANGED:
 				if (setMessageBusy(msg.what)) {
 					CavanMacAddress end = getAddressEnd();
-					mAddressViewNext.setAddress(end.increase());
+
+					end.increase();
+					mAddressViewNext.setAddress(end);
+
 					updateAddressCount(end);
 				}
 				break;
@@ -127,7 +133,7 @@ public class MacConvertActivity extends Activity {
 					if (next.isZero()) {
 						mAddressViewEnd.setAddress(next);
 					} else {
-						mAddressViewEnd.setAddress(new CavanMacAddress(next).decrease());
+						mAddressViewEnd.setAddress(CavanMacAddress.sub(next, 1));
 					}
 
 					updateAddressCount(next);

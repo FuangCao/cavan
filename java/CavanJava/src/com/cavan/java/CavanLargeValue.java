@@ -83,7 +83,7 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 
 		for (int i = msb1; i >= 0; i--) {
 			if (bytes1[i] != bytes2[i]) {
-				return (bytes1[i] & 0xFF) - (bytes2[i] & 0xFF);
+				return Integer.compare(bytes1[i] & 0xFF, bytes2[i] & 0xFF);
 			}
 		}
 
@@ -134,10 +134,10 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 		return add(bytes, -value);
 	}
 
-	public static long mul(byte[] bytes, long value) {
+	public static long mul(byte[] bytes, int lsb, long value) {
 		long carry = 0;
 
-		for (int i = findLsbIndex(bytes); i < bytes.length; i++) {
+		for (int i = lsb; i < bytes.length; i++) {
 			carry += (bytes[i] & 0xFF) * value;
 			bytes[i] = (byte) carry;
 			carry >>= 8;
@@ -146,16 +146,24 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 		return carry;
 	}
 
-	public static long div(byte[] bytes, long value) {
+	public static long mul(byte[] bytes, long value) {
+		return mul(bytes, findLsbIndex(bytes), value);
+	}
+
+	public static long div(byte[] bytes, int msb, long value) {
 		long remain = 0;
 
-		for (int i = findMsbIndex(bytes); i >= 0; i--) {
+		for (int i = msb; i >= 0; i--) {
 			remain = (remain << 8) | (bytes[i] & 0xFF);
 			bytes[i] = (byte) (remain / value);
 			remain %= value;
 		}
 
 		return remain;
+	}
+
+	public static long div(byte[] bytes, long value) {
+		return div(bytes, findMsbIndex(bytes), value);
 	}
 
 	public static int add(byte[] bytes1, byte[] bytes2) {
@@ -220,7 +228,7 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 
 	// ============================================================
 
-	private byte[] mBytes;
+	protected byte[] mBytes;
 
 	public CavanLargeValue(byte[] bytes) {
 		mBytes = bytes;
@@ -344,96 +352,96 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 		return add(mBytes, value);
 	}
 
-	public static CavanLargeValue add(CavanLargeValue a, long value) {
-		a = a.clone();
-		a.add(value);
-		return a;
+	public static CavanLargeValue add(CavanLargeValue left, long value) {
+		left = left.cloneLargeValue();
+		left.add(value);
+		return left;
 	}
 
 	public int add(byte[] bytes) {
 		return add(mBytes, bytes);
 	}
 
-	public static CavanLargeValue add(CavanLargeValue a, byte[] bytes) {
-		a = a.clone();
-		a.add(bytes);
-		return a;
+	public static CavanLargeValue add(CavanLargeValue left, byte[] bytes) {
+		left = left.cloneLargeValue();
+		left.add(bytes);
+		return left;
 	}
 
 	public int add(CavanLargeValue value) {
 		return add(value.getBytes());
 	}
 
-	public static CavanLargeValue add(CavanLargeValue a, CavanLargeValue b) {
-		a = a.clone();
-		a.add(b);
-		return a;
+	public static CavanLargeValue add(CavanLargeValue left, CavanLargeValue right) {
+		left = left.cloneLargeValue();
+		left.add(right);
+		return left;
 	}
 
 	public long sub(long value) {
 		return add(-value);
 	}
 
-	public static CavanLargeValue sub(CavanLargeValue a, long value) {
-		a = a.clone();
-		a.sub(value);
-		return a;
+	public static CavanLargeValue sub(CavanLargeValue left, long value) {
+		left = left.cloneLargeValue();
+		left.sub(value);
+		return left;
 	}
 
 	public int sub(byte[] bytes) {
 		return sub(mBytes, bytes);
 	}
 
-	public static CavanLargeValue sub(CavanLargeValue a, byte[] bytes) {
-		a = a.clone();
-		a.sub(bytes);
-		return a;
+	public static CavanLargeValue sub(CavanLargeValue left, byte[] bytes) {
+		left = left.cloneLargeValue();
+		left.sub(bytes);
+		return left;
 	}
 
 	public int sub(CavanLargeValue value) {
 		return sub(value.getBytes());
 	}
 
-	public static CavanLargeValue sub(CavanLargeValue a, CavanLargeValue b) {
-		a = a.clone();
-		a.sub(b);
-		return a;
+	public static CavanLargeValue sub(CavanLargeValue left, CavanLargeValue right) {
+		left = left.cloneLargeValue();
+		left.sub(right);
+		return left;
 	}
 
 	public long mul(long value) {
 		return mul(mBytes, value);
 	}
 
-	public static CavanLargeValue mul(CavanLargeValue a, long value) {
-		a = a.clone();
-		a.mul(value);
-		return a;
+	public static CavanLargeValue mul(CavanLargeValue left, long value) {
+		left = left.cloneLargeValue();
+		left.mul(value);
+		return left;
 	}
 
 	public byte[] mul(byte[] bytes) {
 		return mul(mBytes, bytes);
 	}
 
-	public static CavanLargeValue mul(CavanLargeValue a, byte[] bytes) {
-		return new CavanLargeValue(a.mul(bytes));
+	public static CavanLargeValue mul(CavanLargeValue left, byte[] bytes) {
+		return new CavanLargeValue(left.mul(bytes));
 	}
 
 	public CavanLargeValue mul(CavanLargeValue value) {
 		return new CavanLargeValue(mul(value.getBytes()));
 	}
 
-	public static CavanLargeValue mul(CavanLargeValue a, CavanLargeValue b) {
-		return a.mul(b);
+	public static CavanLargeValue mul(CavanLargeValue left, CavanLargeValue right) {
+		return left.mul(right);
 	}
 
 	public long div(long value) {
 		return div(mBytes, value);
 	}
 
-	public static CavanLargeValue div(CavanLargeValue a, long value) {
-		a = a.clone();
-		a.div(value);
-		return a;
+	public static CavanLargeValue div(CavanLargeValue left, long value) {
+		left = left.cloneLargeValue();
+		left.div(value);
+		return left;
 	}
 
 	// ============================================================
@@ -470,11 +478,18 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 		int length = end - index;
 		byte[] bytes = getBytes(length);
 
-		for (int i = length - 1; i >= 0; i--, index++) {
-			try {
-				bytes[i] = (byte) Integer.parseInt(texts[index], radix);
-			} catch (NumberFormatException e) {
-				e.printStackTrace();
+		for (int i = length - 1; index < end; i--, index++) {
+			String text = texts[index];
+
+			if (text == null || text.isEmpty()) {
+				bytes[i] = 0;
+			} else {
+				try {
+					bytes[i] = (byte) Integer.parseInt(text, radix);
+				} catch (NumberFormatException e) {
+					e.printStackTrace();
+					bytes[i] = 0;
+				}
 			}
 		}
 
@@ -586,8 +601,8 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 	}
 
 	public String toString(int radix) {
+		CavanLargeValue value = cloneLargeValue();
 		char[] chars = new char[length() * 8];
-		CavanLargeValue value = clone();
 		int length;
 
 		for (length = 0; value.notZero(); length++) {
@@ -603,6 +618,26 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 		return "0";
 	}
 
+	public String[] toStrings(int length) {
+		String[] strings = new String[length];
+		int msb = findMsbIndex();
+		int index = 0;
+
+		for (int end = length - msb - 1; index < end; index++) {
+			strings[index] = "00";
+		}
+
+		for (int i = msb; index < length; i--, index++) {
+			strings[index] = CavanString.fromByte(mBytes[i]);
+		}
+
+		return strings;
+	}
+
+	public String[] toStrings() {
+		return toStrings(mBytes.length);
+	}
+
 	@Override
 	public String toString() {
 		return toString(10);
@@ -610,7 +645,7 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 
 	// ============================================================
 
-	public CavanLargeValue clone() {
+	public CavanLargeValue cloneLargeValue() {
 		return new CavanLargeValue(this);
 	}
 
@@ -632,7 +667,7 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 
 	public static void main(String[] args) {
 		CavanLargeValue a = new CavanLargeValue(8).fromString("12345678");
-		CavanLargeValue b = new CavanLargeValue(8).fromString("0");
+		CavanLargeValue b = new CavanLargeValue(8).fromString("10000");
 
 		CavanJava.dLog("a = " + a);
 		CavanJava.dLog("b = " + b);
@@ -647,5 +682,12 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 		CavanJava.dLog("mul = " + CavanLargeValue.mul(a, b));
 
 		CavanJava.dLog("div = " + CavanLargeValue.div(a, 10000));
+
+		a.fromStrings("11", "22", "33", "44", "55", "66");
+		CavanJava.dLog("a = " + a.toStringHex());
+
+		for (String text : a.toStrings(6)) {
+			CavanJava.dLog("text = " + text);
+		}
 	}
 }

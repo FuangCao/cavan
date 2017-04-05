@@ -244,7 +244,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	public void showScanActivity() {
 		if (mSuspendSuccess && mBleToy != null) {
 			String address = mBleToy.getAddress();
-			setAddresses2(new CavanMacAddress(address).increase().toString(), address);
+			CavanMacAddress mac = new CavanMacAddress().fromString(address);
+
+			mac.increase();
+			setAddresses2(mac.toString(), address);
 		}
 
 		super.showScanActivity();

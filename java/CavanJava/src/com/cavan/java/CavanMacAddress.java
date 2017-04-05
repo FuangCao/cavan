@@ -1,375 +1,113 @@
 package com.cavan.java;
 
-public class CavanMacAddress implements Cloneable {
+public class CavanMacAddress extends CavanLargeValue {
 
 	public static final char SEPRATOR = ':';
 
-	private byte[] mBytes;
 	private char mSeparator;
 
-	public CavanMacAddress(byte[] bytes, char seprator) {
-		mBytes = bytes;
-		mSeparator = seprator;
+	public CavanMacAddress(byte[] bytes, char separator) {
+		super(bytes);
+		mSeparator = separator;
 	}
 
 	public CavanMacAddress(byte[] bytes) {
 		this(bytes, SEPRATOR);
 	}
 
-	public CavanMacAddress(String[] texts, char seprator) {
-		mSeparator = seprator;
-		parseStrings(texts);
+	public CavanMacAddress(int length, char separator) {
+		super(length);
+		mSeparator = separator;
 	}
 
-	public CavanMacAddress(String[] texts) {
-		this(texts, SEPRATOR);
-	}
-
-	public CavanMacAddress(String text, char seprator) {
-		parseString(text, seprator);
-	}
-
-	public CavanMacAddress(String text) {
-		this(text, SEPRATOR);
-	}
-
-	public CavanMacAddress(CavanMacAddress address) {
-		mBytes = CavanArray.clone(address.getBytes());
-		mSeparator = address.getSeparator();
+	public CavanMacAddress(int length) {
+		this(length, SEPRATOR);
 	}
 
 	public CavanMacAddress() {
-		mSeparator = SEPRATOR;
-		clear(getBytes(6));
+		this(6);
 	}
 
-	public CavanMacAddress parseString(String text, char seprator) {
-		mSeparator = seprator;
-		return parseStrings(text.split("\\s*" + seprator + "\\s*"));
+	public CavanMacAddress(CavanMacAddress address) {
+		super(address);
+		mSeparator = address.getSeparator();
 	}
 
-	public CavanMacAddress parseString(String text) {
-		return parseString(text, SEPRATOR);
-	}
-
-	public CavanMacAddress parseStrings(String[] texts) {
-		byte[] bytes = getBytes(texts.length);
-
-		for (int i = texts.length - 1, j = bytes.length - 1; i >= 0; i--, j--) {
-			try {
-				String text = texts[i];
-
-				if (text == null || text.isEmpty()) {
-					bytes[j] = 0;
-				} else {
-					bytes[j] = (byte) Integer.parseInt(texts[i], 16);
-				}
-			} catch (Exception e) {
-				bytes[j] = 0;
-			}
-		}
-
-		return this;
-	}
-
-	public CavanMacAddress parseInt(int value) {
-		byte[] bytes = getBytes(6);
-
-		for (int i = bytes.length - 1; i >= 0; i--) {
-			if (value < 1) {
-				while (i >= 0) {
-					bytes[i--] = 0;
-				}
-
-				break;
-			}
-
-			bytes[i] = (byte) value;
-			value >>= 8;
-		}
-
-		return this;
-	}
-
-	public CavanMacAddress parseLong(long value) {
-		byte[] bytes = getBytes(6);
-
-		for (int i = bytes.length - 1; i >= 0; i--) {
-			if (value < 1) {
-				while (i >= 0) {
-					bytes[i--] = 0;
-				}
-
-				break;
-			}
-
-			bytes[i] = (byte) value;
-			value >>= 8;
-		}
-
-		return this;
-	}
-
-	public CavanMacAddress parseFloat(float value) {
-		byte[] bytes = getBytes(6);
-
-		for (int i = bytes.length - 1; i >= 0; i--) {
-			if (value < 1) {
-				while (i >= 0) {
-					bytes[i--] = 0;
-				}
-
-				break;
-			}
-
-			bytes[i] = (byte) value;
-			value /= 0x100;
-		}
-
-		return this;
-	}
-
-	public CavanMacAddress parseDouble(double value) {
-		byte[] bytes = getBytes(6);
-
-		for (int i = bytes.length - 1; i >= 0; i--) {
-			if (value < 1) {
-				while (i >= 0) {
-					bytes[i--] = 0;
-				}
-
-				break;
-			}
-
-			bytes[i] = (byte) value;
-			value /= 0x100;
-		}
-
-		return this;
-	}
-
-	public byte[] getBytes() {
-		return mBytes;
-	}
-
-	public byte getByte(int index) {
-		return mBytes[index];
-	}
-
-	public void setByte(int index, byte value) {
-		mBytes[index] = value;
+	public void getSeparator(char separator) {
+		mSeparator = separator;
 	}
 
 	public char getSeparator() {
 		return mSeparator;
 	}
 
-	public byte[] getBytes(int length) {
-		if (mBytes == null || mBytes.length < length) {
-			mBytes = new byte[length];
-		} else {
-			clear(mBytes, 0, mBytes.length - length);
-		}
-
-		return mBytes;
-	}
-
-	public String[] getStrings() {
-		String[] strings = new String[mBytes.length];
-
-		for (int i = mBytes.length - 1; i >= 0; i--) {
-			strings[i] = CavanString.fromByte(mBytes[i]);
-		}
-
-		return strings;
-	}
-
-	public int getIntValue() {
-		int value = 0;
-
-		for (int i = 0; i < mBytes.length; i++) {
-			value = (value << 8) | (mBytes[i] & 0xFF);
-		}
-
-		return value;
-	}
-
-	public long getLongValue() {
-		long value = 0;
-
-		for (int i = 0; i < mBytes.length; i++) {
-			value = (value << 8) | (mBytes[i] & 0xFF);
-		}
-
-		return value;
-	}
-
-	public float getFloatValue() {
-		float value = 0;
-
-		for (int i = 0; i < mBytes.length; i++) {
-			value = value * 0x100 + (mBytes[i] & 0xFF);
-		}
-
-		return value;
-	}
-
-	public double getDoubleValue() {
-		double value = 0;
-
-		for (int i = 0; i < mBytes.length; i++) {
-			value = value * 0x100 + (mBytes[i] & 0xFF);
-		}
-
-		return value;
-	}
-
-	public CavanMacAddress add(long value) {
-		for (int i = mBytes.length - 1; i >= 0 && value != 0; i--, value >>= 8) {
-			value += mBytes[i] & 0xFF;
-			mBytes[i] = (byte) value;
-		}
-
+	public CavanMacAddress fromValues(int... args) {
+		super.fromValues(args);
 		return this;
 	}
 
-	public CavanMacAddress increase() {
-		for (int i = mBytes.length - 1; i >= 0; i--) {
-			if (mBytes[i] != (byte) 0xFF) {
-				mBytes[i]++;
-				break;
-			}
-
-			mBytes[i] = 0;
-		}
-
+	public CavanMacAddress fromStrings(String... args) {
+		super.fromStrings(args);
 		return this;
 	}
 
-	public CavanMacAddress decrease() {
-		for (int i = mBytes.length - 1; i >= 0; i--) {
-			if (mBytes[i] != (byte) 0) {
-				mBytes[i]--;
-				break;
-			}
-
-			mBytes[i] = (byte) 0xFF;
-		}
-
-		return this;
+	public CavanMacAddress fromString(String text) {
+		return fromStrings(text.split("\\s*" + mSeparator + "\\s*"));
 	}
 
-	public CavanMacAddress add(byte[] bytes) {
-		int carry = 0;
-
-		for (int i = mBytes.length - 1, j = bytes.length - 1; i >= 0 && j >= 0; i--, j--) {
-			carry += (mBytes[i] & 0xFF) + (bytes[j] & 0xFF);
-			mBytes[i] = (byte) carry;
-			carry >>= 8;
-		}
-
-		return this;
+	public static CavanMacAddress add(CavanMacAddress left, long value) {
+		left = left.cloneMacAddress();
+		left.add(value);
+		return left;
 	}
 
-	public CavanMacAddress add(CavanMacAddress address) {
-		return add(address.getBytes());
+	public static CavanMacAddress sub(CavanMacAddress address, long value) {
+		address = address.cloneMacAddress();
+		address.sub(value);
+		return address;
 	}
 
-	public boolean sub(byte[] bytes) {
-		int carry = 0;
-
-		for (int i = mBytes.length - 1, j = bytes.length - 1; i >= 0 && j >= 0; i--, j--) {
-			carry = (mBytes[i] & 0xFF) - (bytes[j] & 0xFF) - carry;
-			if (carry < 0) {
-				mBytes[i] = (byte) (carry + 0x100);
-				carry = 1;
-			} else {
-				mBytes[i] = (byte) carry;
-				carry = 0;
-			}
-		}
-
-		return carry == 0;
+	public static CavanMacAddress sub(CavanMacAddress left, CavanMacAddress right) {
+		CavanMacAddress address = left.cloneMacAddress();
+		address.sub(right);
+		return address;
 	}
 
-	public boolean sub(CavanMacAddress address) {
-		return sub(address.getBytes());
-	}
-
-	public void clear(byte[] bytes, int start, int end) {
-		while (start < end) {
-			bytes[start++] = 0;
-		}
-	}
-
-	public void clear(byte[] bytes, int start) {
-		clear(bytes, start, bytes.length);
-	}
-
-	public void clear(byte[] bytes) {
-		clear(bytes, 0);
-	}
-
-	public void clear() {
-		if (mBytes != null) {
-			clear(mBytes);
-		}
-	}
-
-	public void clearByLength(byte[] bytes, int start, int length) {
-		clear(bytes, start, start + length);
-	}
-
-	public boolean isZero() {
-		if (mBytes == null) {
-			return true;
-		}
-
-		for (byte value : mBytes) {
-			if (value != 0) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	public CavanMacAddress fork() {
-		return new CavanMacAddress(this);
-	}
-
-	@Override
-	protected Object clone() throws CloneNotSupportedException {
+	public CavanMacAddress cloneMacAddress() {
 		return new CavanMacAddress(this);
 	}
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
+		char[] chars = new char[mBytes.length * 3 - 1];
 
-		for (byte value : mBytes) {
-			if (builder.length() > 0) {
-				builder.append(mSeparator);
+		for (int i = mBytes.length - 1, j = 0; i >= 0; i--, j += 2) {
+			if (j > 0) {
+				chars[j++] = mSeparator;
 			}
 
-			CavanString.fromByte(builder, value);
+			CavanString.fromByte(chars, j, mBytes[i]);
 		}
 
-		return builder.toString();
+		return new String(chars);
 	}
 
 	public static void main(String[] args) {
-		CavanMacAddress mac1 = new CavanMacAddress("2a:2b:3c:4d:5e:fe");
-		CavanMacAddress mac2 = new CavanMacAddress("1a:2b:3c:4d:5e:02");
+		CavanMacAddress mac1 = new CavanMacAddress().fromString("2a:2b:3c:4d:5e:fe");
+		CavanMacAddress mac2 = new CavanMacAddress().fromString("1a:2b:3c:4d:5e:02");
 
 		for (int i = 0; i < 10; i++) {
-			CavanJava.dLog("mac1 = " + mac1.increase());
+			CavanJava.dLog("mac1 = " + mac1);
+			mac1.increase();
 		}
 
 		for (int i = 0; i < 10; i++) {
-			CavanJava.dLog("mac2 = " + mac2.decrease());
+			CavanJava.dLog("mac2 = " + mac2);
+			mac2.decrease();
 		}
 
-		CavanJava.dLog("mac1 = " + mac1.parseDouble(12345.5));
+		CavanJava.dLog("mac1 = " + mac1);
+		CavanJava.dLog("mac2 = " + mac2);
+		CavanJava.dLog("sub = " + CavanMacAddress.sub(mac1, mac2));
 	}
 }
