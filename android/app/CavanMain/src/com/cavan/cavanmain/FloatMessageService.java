@@ -44,6 +44,8 @@ import com.cavan.java.CavanString;
 @SuppressWarnings("deprecation")
 public class FloatMessageService extends FloatWidowService {
 
+	public static final long KEEP_ALIVE_DELAY = 120000;
+
 	public static final String NET_CMD_RDPKG = "RedPacketCode: ";
 	public static final String NET_CMD_UPDATE = "RedPacketUpdate: ";
 	public static final String NET_CMD_DELETE = "RedPacketDelete: ";
@@ -73,6 +75,7 @@ public class FloatMessageService extends FloatWidowService {
 	private static final int MSG_CLIPBOARD_RECEIVED = 8;
 	private static final int MSG_CHECK_KEYGUARD = 9;
 	private static final int MSG_RED_PACKET_UPDATED = 10;
+	private static final int MSG_KEEP_ALIVE = 11;
 
 	private int mLastSecond;
 	private boolean mScreenClosed;
@@ -200,6 +203,17 @@ public class FloatMessageService extends FloatWidowService {
 				RedPacketCode node = (RedPacketCode) msg.obj;
 				text = getResources().getString(R.string.red_packet_code_updated, node.getCode());
 				CavanAndroid.showToast(getApplicationContext(), text);
+				break;
+
+			case MSG_KEEP_ALIVE:
+				removeMessages(MSG_KEEP_ALIVE);
+
+				if (mTcpDaemon != null && mTcpDaemon.isRunning()) {
+					CavanAndroid.dLog("Send: " + NET_CMD_KEEP_ALIVE);
+
+					mTcpDaemon.sendCommand(NET_CMD_KEEP_ALIVE);
+					sendEmptyMessageDelayed(MSG_KEEP_ALIVE, KEEP_ALIVE_DELAY);
+				}
 				break;
 			}
 		}
@@ -872,6 +886,7 @@ public class FloatMessageService extends FloatWidowService {
 		private boolean mActive;
 		private long mConnDelay;
 		private boolean mReload;
+		private boolean mRunning;
 
 		private Socket mSocket;
 		private InputStream mInputStream;
@@ -936,7 +951,7 @@ public class FloatMessageService extends FloatWidowService {
 			}
 		}
 
-		synchronized private boolean isRunEnable() {
+		synchronized private boolean isRunEnabled() {
 			return mActive && MainActivity.isWanShareEnabled(getApplicationContext());
 		}
 
@@ -951,6 +966,10 @@ public class FloatMessageService extends FloatWidowService {
 			notify();
 		}
 
+		synchronized boolean isRunning() {
+			return mRunning;
+		}
+
 		@Override
 		public synchronized void start() {
 			setActive(true);
@@ -959,7 +978,7 @@ public class FloatMessageService extends FloatWidowService {
 
 		@Override
 		public void run() {
-			while (isRunEnable()) {
+			while (isRunEnabled()) {
 				mReload = false;
 
 				List<String> lines = MainActivity.getWanShareServer(getApplicationContext());
@@ -968,7 +987,7 @@ public class FloatMessageService extends FloatWidowService {
 				}
 
 				for (String line : lines) {
-					if (!isRunEnable()) {
+					if (!isRunEnabled()) {
 						break;
 					}
 
@@ -1005,6 +1024,9 @@ public class FloatMessageService extends FloatWidowService {
 
 						BufferedReader reader = new BufferedReader(new InputStreamReader(mInputStream));
 
+						mRunning = true;
+						mHandler.sendEmptyMessage(MSG_KEEP_ALIVE);
+
 						while (true) {
 							try {
 								line = reader.readLine();
@@ -1019,8 +1041,7 @@ public class FloatMessageService extends FloatWidowService {
 
 							try {
 								if (NET_CMD_KEEP_ALIVE.equals(line)) {
-									CavanAndroid.dLog("send reply: " + line);
-									sendCommand(line);
+									CavanAndroid.dLog("Received: " + line);
 								} else if (MainActivity.isWanReceiveEnabled(getApplicationContext())) {
 									onNetworkCommandReceived("外网分享", line);
 								}
@@ -1028,6 +1049,8 @@ public class FloatMessageService extends FloatWidowService {
 								e.printStackTrace();
 							}
 						}
+
+						mRunning = false;
 					} catch (Exception e) {
 						e.printStackTrace();
 					} finally {
