@@ -31,6 +31,7 @@ namespace JwaooOtpProgrammer {
         private MacAddressManager mMacAddressManager;
         private UInt64 mBdAddress;
         private UInt32 mCount;
+        private bool mBurnSuccess;
 
         private MacAddressManager[] mMacAddressManagers = {
             new MacAddressManager("JwaooMacModel06.txt", "JwaooFwModel06", 0x88EA00000000),
@@ -84,6 +85,7 @@ namespace JwaooOtpProgrammer {
             setBdAddress(address, count);
 
             textBoxFirmware.Text = pathname;
+            buttonBurn.Enabled = true;
 
             return true;
         }
@@ -236,7 +238,7 @@ namespace JwaooOtpProgrammer {
         }
 
         private bool writeOtpData(String offset, String data) {
-            appendLog("写裸数据: " + data + " => " + offset);
+            // appendLog("写裸数据: " + data + " => " + offset);
 
             String line = runOtpCommand(false, "-cmd", "write_field", "-offset", offset, "-data", data);
             if (line == null) {
@@ -291,6 +293,10 @@ namespace JwaooOtpProgrammer {
             }
 
             byte[] bytes = MacAddressManager.getBdAddressBytes(mBdAddress);
+            String text = MacAddressManager.getBdAddressString(bytes, 0);
+
+            appendLog("写MAC地址：" + text);
+
             if (!writeOtpData("0x7FD4", bytes)) {
                 return false;
             }
@@ -301,6 +307,8 @@ namespace JwaooOtpProgrammer {
         }
 
         private bool setOtpBootEnable() {
+            appendLog("设置从OTP启动");
+
             return writeOtpData("0x7F00", "1234A5A5A5A51234");
         }
 
@@ -414,7 +422,7 @@ namespace JwaooOtpProgrammer {
 
                 appendLog("成功");
             } else {
-                MessageBox.Show("OTP中的固件不为空，可能已经写过了");
+                // MessageBox.Show("OTP中的固件不为空，可能已经写过了");
                 appendLog("已经写过固件了，直接跳过");
             }
 
@@ -426,7 +434,7 @@ namespace JwaooOtpProgrammer {
 
                 appendLog("成功");
             } else {
-                MessageBox.Show("OTP中的MAC地址不为空，可能已经写过了");
+                // MessageBox.Show("OTP中的MAC地址不为空，可能已经写过了");
                 appendLog("已经写过MAC地址了，直接跳过");
             }
 
@@ -457,7 +465,7 @@ namespace JwaooOtpProgrammer {
             buttonConnect.Enabled = false;
             buttonBurn.Enabled = false;
 
-            labelState.Text = "正在测试连接";
+            labelState.Text = "正在测试连接...";
             labelState.ForeColor = System.Drawing.Color.Black;
 
             byte[] bytes = readOtpHeader();
@@ -478,28 +486,28 @@ namespace JwaooOtpProgrammer {
         }
 
         private void buttonBurn_Click(object sender, EventArgs e) {
+            buttonBurn.Enabled = false;
+
+            if (mBurnSuccess) {
+                mBurnSuccess = false;
+                textBoxLog.Clear();
+            }
+
             String pathname = textBoxFirmware.Text;
             if (pathname == null || pathname.Length == 0) {
                 MessageBox.Show("请选择固件文件");
-                return;
-            }
-
-            if (!File.Exists(pathname)) {
+            } else if (!File.Exists(pathname)) {
                 MessageBox.Show("固件文件不存在：" + pathname);
-                return;
-            }
-
-            if (mCount > 0)
-            {
+            } else if (mCount > 0) {
                 buttonConnect.Enabled = false;
-                buttonBurn.Enabled = false;
                 buttonFirmware.Enabled = false;
 
-                labelState.Text = "正在烧录";
+                labelState.Text = "正在烧录...";
                 labelState.ForeColor = System.Drawing.Color.Black;
 
                 if (burnOtpFirmwareAll(pathname))
                 {
+                    mBurnSuccess = true;
                     appendLog("烧录成功");
                     labelState.Text = "烧录成功";
                     labelState.ForeColor = System.Drawing.Color.LimeGreen;
@@ -511,17 +519,20 @@ namespace JwaooOtpProgrammer {
                     labelState.ForeColor = System.Drawing.Color.Red;
                 }
 
-                buttonConnect.Enabled = true;
                 buttonBurn.Enabled = true;
+                buttonConnect.Enabled = true;
                 buttonFirmware.Enabled = true;
             } else {
                 labelState.Text = "MAC地址用完了，请重新分配!";
                 labelState.ForeColor = System.Drawing.Color.Red;
-                buttonBurn.Enabled = false;
             }
         }
 
         private void buttonClearLog_Click(object sender, EventArgs e) {
+            if (mFileStreamLog != null) {
+                mFileStreamLog.SetLength(0);
+            }
+
             textBoxLog.Clear();
         }
     }
