@@ -33,7 +33,7 @@ public class CavanMacAddress extends CavanLargeValue {
 		mSeparator = address.getSeparator();
 	}
 
-	public void getSeparator(char separator) {
+	public void setSeparator(char separator) {
 		mSeparator = separator;
 	}
 
@@ -42,17 +42,15 @@ public class CavanMacAddress extends CavanLargeValue {
 	}
 
 	public CavanMacAddress fromValues(int... args) {
-		super.fromValues(args);
-		return this;
+		return (CavanMacAddress) super.fromValues(args);
 	}
 
 	public CavanMacAddress fromStrings(String... args) {
-		super.fromStrings(args);
-		return this;
+		return (CavanMacAddress) super.fromStrings(args);
 	}
 
 	public CavanMacAddress fromString(String text) {
-		return fromStrings(text.split("\\s*" + mSeparator + "\\s*"));
+		return (CavanMacAddress) super.fromString(text, mSeparator);
 	}
 
 	public static CavanMacAddress add(CavanMacAddress left, long value) {
@@ -79,17 +77,7 @@ public class CavanMacAddress extends CavanLargeValue {
 
 	@Override
 	public String toString() {
-		char[] chars = new char[mBytes.length * 3 - 1];
-
-		for (int i = mBytes.length - 1, j = 0; i >= 0; i--, j += 2) {
-			if (j > 0) {
-				chars[j++] = mSeparator;
-			}
-
-			CavanString.fromByte(chars, j, mBytes[i]);
-		}
-
-		return new String(chars);
+		return toString(mSeparator);
 	}
 
 	public static void main(String[] args) {

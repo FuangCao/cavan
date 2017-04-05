@@ -560,6 +560,14 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 		return fromString(text, 0);
 	}
 
+	public CavanLargeValue fromString(String text, char separator, int radix) {
+		return fromStrings(radix, text.split("\\s*" + separator + "\\s*"));
+	}
+
+	public CavanLargeValue fromString(String text, char separator) {
+		return fromString(text, separator, 16);
+	}
+
 	// ============================================================
 
 	public long toLong() {
@@ -618,16 +626,16 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 		return "0";
 	}
 
-	public String[] toStrings(int length) {
-		String[] strings = new String[length];
+	public String[] toStrings(int count) {
+		String[] strings = new String[count];
 		int msb = findMsbIndex();
 		int index = 0;
 
-		for (int end = length - msb - 1; index < end; index++) {
+		for (int end = count - msb - 1; index < end; index++) {
 			strings[index] = "00";
 		}
 
-		for (int i = msb; index < length; i--, index++) {
+		for (int i = msb; index < count; i--, index++) {
 			strings[index] = CavanString.fromByte(mBytes[i]);
 		}
 
@@ -636,6 +644,66 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 
 	public String[] toStrings() {
 		return toStrings(mBytes.length);
+	}
+
+	public String[] toStringsWithRadix(int count, int radix) {
+		String[] strings = new String[count];
+		int msb = findMsbIndex();
+		int index = 0;
+
+		for (int end = count - msb - 1; index < end; index++) {
+			strings[index] = "0";
+		}
+
+		for (int i = msb; index < count; i--, index++) {
+			strings[index] = Integer.toString(mBytes[i] & 0xFF, radix);
+		}
+
+		return strings;
+	}
+
+	public String[] toStringsWithRadix(int radix) {
+		return toStringsWithRadix(mBytes.length, radix);
+	}
+
+	public String[] toStringsWithRadix() {
+		return toStringsWithRadix(10);
+	}
+
+	public String toStringWithRadix(char separator, int count, int radix) {
+		StringBuilder builder = new StringBuilder();
+
+		for (String text : toStringsWithRadix(count, radix)) {
+			if (builder.length() > 0) {
+				builder.append(separator);
+			}
+
+			builder.append(text);
+		}
+
+		return builder.toString();
+	}
+
+	public String toStringWithRadix(char separator, int count) {
+		return toStringWithRadix(separator, count, 10);
+	}
+
+	public String toStringWithRadix(char separator) {
+		return toStringWithRadix(separator, mBytes.length);
+	}
+
+	public String toString(char separator) {
+		char[] chars = new char[mBytes.length * 3 - 1];
+
+		for (int i = mBytes.length - 1, j = 0; i >= 0; i--, j += 2) {
+			if (j > 0) {
+				chars[j++] = separator;
+			}
+
+			CavanString.fromByte(chars, j, mBytes[i]);
+		}
+
+		return new String(chars);
 	}
 
 	@Override
@@ -689,5 +757,8 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 		for (String text : a.toStrings(6)) {
 			CavanJava.dLog("text = " + text);
 		}
+
+		a.fromStrings(10, "192", "168", "1", "1");
+		CavanJava.dLog("a = " + a.toStringWithRadix('.', 4));
 	}
 }
