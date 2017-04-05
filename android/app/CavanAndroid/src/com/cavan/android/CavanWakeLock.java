@@ -20,21 +20,32 @@ public class CavanWakeLock {
 		mFlags = flags;
 	}
 
-	public CavanWakeLock(String tag, boolean wakeup) {
+	public CavanWakeLock(String tag, boolean light, boolean wakeup) {
 		mTag = tag;
-		mFlags = PowerManager.FULL_WAKE_LOCK;
 
 		if (wakeup) {
-			mFlags |= PowerManager.ACQUIRE_CAUSES_WAKEUP;
+			mFlags = PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP;
+		} else if (light) {
+			mFlags = PowerManager.FULL_WAKE_LOCK;
+		} else {
+			mFlags = PowerManager.PARTIAL_WAKE_LOCK;
 		}
+	}
+
+	public CavanWakeLock(String tag, boolean wakeup) {
+		this(tag, false, wakeup);
 	}
 
 	public CavanWakeLock(String tag) {
 		this(tag, false);
 	}
 
+	public CavanWakeLock(boolean light, boolean wakeup) {
+		this(CavanWakeLock.class.getCanonicalName(), light, wakeup);
+	}
+
 	public CavanWakeLock(boolean wakeup) {
-		this(CavanWakeLock.class.getCanonicalName(), wakeup);
+		this(false, wakeup);
 	}
 
 	public CavanWakeLock() {
