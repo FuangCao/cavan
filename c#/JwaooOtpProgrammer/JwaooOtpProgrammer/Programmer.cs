@@ -535,6 +535,10 @@ namespace JwaooOtpProgrammer {
 
             textBoxLog.Clear();
         }
+
+        private void buttonMacAlloc_Click(object sender, EventArgs e) {
+
+        }
     }
 
     public class ShellCommandRunner {
