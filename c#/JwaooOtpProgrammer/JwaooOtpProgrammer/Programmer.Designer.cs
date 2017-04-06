@@ -228,6 +228,7 @@
             this.Controls.Add(this.buttonFirmware);
             this.Controls.Add(this.textBoxFirmware);
             this.Controls.Add(this.label1);
+            this.MaximizeBox = false;
             this.Name = "Programmer";
             this.Text = "井蛙烧录器";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Programmer_FormClosed);

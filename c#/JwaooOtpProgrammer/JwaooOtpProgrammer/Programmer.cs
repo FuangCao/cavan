@@ -537,7 +537,8 @@ namespace JwaooOtpProgrammer {
         }
 
         private void buttonMacAlloc_Click(object sender, EventArgs e) {
-
+            MacManager manager = new MacManager();
+            manager.ShowDialog(this);
         }
     }
 
