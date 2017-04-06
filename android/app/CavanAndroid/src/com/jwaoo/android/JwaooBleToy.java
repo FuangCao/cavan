@@ -280,8 +280,8 @@ public class JwaooBleToy extends CavanBleGatt {
 	}
 
 	@Override
-	protected void onConnectionStateChange(boolean connected) {
-		super.onConnectionStateChange(connected);
+	protected void onConnectionStateChanged(boolean connected) {
+		super.onConnectionStateChanged(connected);
 		mEventListener.onConnectionStateChanged(connected);
 	}
 

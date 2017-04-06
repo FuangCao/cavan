@@ -230,7 +230,7 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 		return mEventListener.onInitialize();
 	}
 
-	protected void onConnectionStateChange(boolean connected) {
+	protected void onConnectionStateChanged(boolean connected) {
 		mEventListener.onConnectionStateChanged(connected);
 	}
 
@@ -301,7 +301,7 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 
 		if (mConnected != connected) {
 			mConnected = connected;
-			onConnectionStateChange(connected);
+			onConnectionStateChanged(connected);
 		}
 	}
 
@@ -323,10 +323,9 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 	}
 
 	synchronized private boolean connectInternal() {
-		CavanAndroid.dLog("connectInternal");
+		CavanAndroid.dLog("connectInternal: enable = " + mConnEnable);
 
-		if (!isPoweredOn()) {
-			setConnectFailed();
+		if (!mConnEnable) {
 			return false;
 		}
 
@@ -355,15 +354,24 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 	}
 
 	synchronized public boolean connect() {
-		mConnEnable = true;
 		mGattConnectCount = 0;
 		mServiceConnectCount = 0;
+
+		if (mConnEnable) {
+			return true;
+		}
+
+		mConnEnable = isPoweredOn();
 
 		return connectInternal();
 	}
 
 	synchronized public boolean connect(BluetoothDevice device) {
-		mDevice = device;
+		if (mDevice != device) {
+			mDevice = device;
+			disconnect();
+		}
+
 		return connect();
 	}
 

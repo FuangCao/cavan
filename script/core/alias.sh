@@ -133,6 +133,7 @@ function cavan-git-config()
 	${CMD_GIT_CONFIG} user.email cavan.cfa@gmail.com || return 1
 	${CMD_GIT_CONFIG} core.editor vim || return 1
 	${CMD_GIT_CONFIG} core.filemode false || return 1
+	${CMD_GIT_CONFIG} core.autocrlf false || return 1
 	${CMD_GIT_CONFIG} push.default matching || return 1
 	${CMD_GIT_CONFIG} http.sslverify false || return 1
 	# ${CMD_GIT_CONFIG} credential.helper cache
