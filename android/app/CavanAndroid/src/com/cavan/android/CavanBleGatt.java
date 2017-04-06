@@ -69,9 +69,7 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 		}
 
 		@Override
-		public void onBluetoothAdapterStateChanged(boolean enabled) {
-			CavanAndroid.dLog("onBluetoothAdapterStateChanged: enabled = " + enabled);
-		}
+		public void onBluetoothAdapterStateChanged(boolean enabled) {}
 	};
 
 	public interface CavanBleGattEventListener {
@@ -242,6 +240,12 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 
 	@Override
 	protected void onBluetoothAdapterStateChanged(boolean enabled) {
+		super.onBluetoothAdapterStateChanged(enabled);
+
+		if (!enabled) {
+			setConnectFailed();
+		}
+
 		mEventListener.onBluetoothAdapterStateChanged(enabled);
 	}
 
@@ -301,6 +305,13 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 		}
 	}
 
+	synchronized private void setConnectFailed() {
+		if (mConnEnable) {
+			disconnect(true);
+			onConnectFailed();
+		}
+	}
+
 	synchronized public CavanBleChar openChar(UUID uuid) {
 		try {
 			return new CavanBleChar(uuid);
@@ -313,6 +324,11 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 
 	synchronized private boolean connectInternal() {
 		CavanAndroid.dLog("connectInternal");
+
+		if (!isPoweredOn()) {
+			setConnectFailed();
+			return false;
+		}
 
 		mConnThread.updateConnState(CONNECT_OVERTIME);
 
@@ -525,11 +541,6 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 			return mConnState;
 		}
 
-		private void setConnectFailed() {
-			disconnect(true);
-			onConnectFailed();
-		}
-
 		@Override
 		public boolean handleMessage(Message msg) {
 			CavanAndroid.dLog("handleMessage: mConnState = " + mConnState);
@@ -550,7 +561,6 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 
 						mGattConnectCount++;
 					} else {
-						disconnect(true);
 						setConnectFailed();
 					}
 				}

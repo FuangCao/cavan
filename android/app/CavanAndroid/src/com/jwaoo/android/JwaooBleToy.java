@@ -192,24 +192,18 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		@Override
-		public void onConnectionStateChanged(boolean connected) {
-			CavanAndroid.dLog("onConnectionStateChanged: connected = " + connected);
-		}
-
-		@Override
-		public void onConnectFailed() {
-			CavanAndroid.dLog("onConnectFailed");
-		}
-
-		@Override
 		public void onBatteryStateChanged(int state, int level, double voltage) {
 			CavanAndroid.dLog("onBatteryStateChanged: state = " + state + ", level = " + level + ", voltage = " + voltage);
 		}
 
 		@Override
-		public void onBluetoothAdapterStateChanged(boolean enabled) {
-			CavanAndroid.dLog("onBluetoothAdapterStateChanged: enabled = " + enabled);
-		}
+		public void onConnectionStateChanged(boolean connected) {}
+
+		@Override
+		public void onConnectFailed() {}
+
+		@Override
+		public void onBluetoothAdapterStateChanged(boolean enabled) {}
 	};
 
 	public interface JwaooBleToyEventListener {
@@ -287,16 +281,19 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	@Override
 	protected void onConnectionStateChange(boolean connected) {
+		super.onConnectionStateChange(connected);
 		mEventListener.onConnectionStateChanged(connected);
 	}
 
 	@Override
 	protected void onConnectFailed() {
+		super.onConnectFailed();
 		mEventListener.onConnectFailed();
 	}
 
 	@Override
 	protected void onBluetoothAdapterStateChanged(boolean enabled) {
+		super.onBluetoothAdapterStateChanged(enabled);
 		mEventListener.onBluetoothAdapterStateChanged(enabled);
 	}
 

@@ -206,7 +206,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 			break;
 
 		case MSG_CONNECT_STATE_CHANGED:
-			if ((boolean) msg.obj) {
+			if ((Boolean) msg.obj) {
 				mTextViewInfo.setText(getResources().getString(R.string.device_connected, mBleToy.getAddress() + " - " + mBleToy.getDeviceName()));
 
 				if (mBleToy.getDeviveId() == JwaooBleToy.DEVICE_ID_MODEL10) {
@@ -797,7 +797,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		protected void handleMessage(Message msg) {
 			if (msg.what == MSG_BATTERY_STATE) {
 				int state = msg.arg1;
-				double voltage = (double) msg.obj;
+				double voltage = (Double) msg.obj;
 
 				if (state >= 0 && state < mBatteryStates.length) {
 					mTextViewBatteryState.setText(mBatteryStates[state]);
