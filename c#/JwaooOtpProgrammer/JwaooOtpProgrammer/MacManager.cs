@@ -10,8 +10,8 @@ using System.Windows.Forms;
 namespace JwaooOtpProgrammer {
     public partial class MacManager : Form {
 
+        private int mMacButtonCount;
         private MacAddressButton mCurrMacButton;
-        private MacAddressButton mFocusMacButton;
         private LinkedList<MacAddressButton> mMacButtonList = new LinkedList<MacAddressButton>();
 
         public MacManager() {
@@ -32,23 +32,37 @@ namespace JwaooOtpProgrammer {
         }
 
         public void setFocusMacAddressButton(MacAddressButton button) {
-            if (mFocusMacButton != null) {
-                mFocusMacButton.FlatAppearance.BorderColor = Color.Black;
+            if (mCurrMacButton != null) {
+                mCurrMacButton.BackColor = Color.White;
+                mCurrMacButton.ForeColor = Color.Black;
+                mCurrMacButton.FlatAppearance.BorderColor = Color.Black;
             }
 
             mCurrMacButton = button;
-            mFocusMacButton = button;
-            mFocusMacButton.FlatAppearance.BorderColor = Color.Red;
+            mCurrMacButton.BackColor = Color.Blue;
+            mCurrMacButton.ForeColor = Color.White;
+            mCurrMacButton.FlatAppearance.BorderColor = Color.Red;
+
+            listViewAddresses.Items[button.Index].Selected = true;
         }
 
         public void addMacAddressButton(MacAddressButton button) {
             button.GotFocus += buttonMacAddress_GotFocus;
             button.MouseEnter += buttonMacAddress_MouseEnter;
             panelAddresses.Controls.Add(button);
+
+            button.Index = mMacButtonCount++;
+
+            ListViewItem item = new ListViewItem("11:22:33:44:55:66");
+            item.SubItems.Add("11:22:33:44:55:66");
+            item.SubItems.Add("100");
+            item.SubItems.Add("已分配");
+            listViewAddresses.Items.Add(item);
         }
 
         private void buttonMacAddress_MouseEnter(object sender, EventArgs e) {
-            mCurrMacButton = (MacAddressButton)sender;
+            MacAddressButton button = (MacAddressButton)sender;
+            button.Focus();
         }
 
         private void buttonMacAddress_GotFocus(object sender, EventArgs e) {
@@ -115,6 +129,7 @@ namespace JwaooOtpProgrammer {
 
     public class MacAddressButton : Button {
 
+        private int mIndex;
         private int mCount;
         private bool mUsed;
         private MacManager mForm;
@@ -126,6 +141,16 @@ namespace JwaooOtpProgrammer {
 
             Count = count;
             Used = false;
+        }
+
+        public int Index {
+            get {
+                return mIndex;
+            }
+
+            set {
+                mIndex = value;
+            }
         }
 
         public int Count {

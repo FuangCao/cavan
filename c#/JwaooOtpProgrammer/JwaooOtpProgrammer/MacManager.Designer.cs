@@ -24,7 +24,6 @@
         /// </summary>
         private void InitializeComponent() {
             this.components = new System.ComponentModel.Container();
-            this.listBoxAddresses = new System.Windows.Forms.ListBox();
             this.labelAddressStart = new System.Windows.Forms.Label();
             this.labelAddressEnd = new System.Windows.Forms.Label();
             this.labelAddressCount = new System.Windows.Forms.Label();
@@ -36,18 +35,14 @@
             this.contextMenuStripFree = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItemFree = new System.Windows.Forms.ToolStripMenuItem();
             this.panelAddresses = new System.Windows.Forms.Panel();
+            this.listViewAddresses = new System.Windows.Forms.ListView();
+            this.columnHeaderAddressStart = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeaderAddressEnd = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeaderAddressCount = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeaderState = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.contextMenuStripAlloc.SuspendLayout();
             this.contextMenuStripFree.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // listBoxAddresses
-            // 
-            this.listBoxAddresses.FormattingEnabled = true;
-            this.listBoxAddresses.ItemHeight = 12;
-            this.listBoxAddresses.Location = new System.Drawing.Point(5, 220);
-            this.listBoxAddresses.Name = "listBoxAddresses";
-            this.listBoxAddresses.Size = new System.Drawing.Size(831, 292);
-            this.listBoxAddresses.TabIndex = 0;
             // 
             // labelAddressStart
             // 
@@ -61,7 +56,7 @@
             // labelAddressEnd
             // 
             this.labelAddressEnd.AutoSize = true;
-            this.labelAddressEnd.Location = new System.Drawing.Point(5, 62);
+            this.labelAddressEnd.Location = new System.Drawing.Point(5, 68);
             this.labelAddressEnd.Name = "labelAddressEnd";
             this.labelAddressEnd.Size = new System.Drawing.Size(65, 12);
             this.labelAddressEnd.TabIndex = 2;
@@ -70,7 +65,7 @@
             // labelAddressCount
             // 
             this.labelAddressCount.AutoSize = true;
-            this.labelAddressCount.Location = new System.Drawing.Point(5, 36);
+            this.labelAddressCount.Location = new System.Drawing.Point(5, 39);
             this.labelAddressCount.Name = "labelAddressCount";
             this.labelAddressCount.Size = new System.Drawing.Size(65, 12);
             this.labelAddressCount.TabIndex = 3;
@@ -86,7 +81,7 @@
             // 
             // textBoxAddressCount
             // 
-            this.textBoxAddressCount.Location = new System.Drawing.Point(76, 32);
+            this.textBoxAddressCount.Location = new System.Drawing.Point(76, 35);
             this.textBoxAddressCount.Name = "textBoxAddressCount";
             this.textBoxAddressCount.Size = new System.Drawing.Size(760, 21);
             this.textBoxAddressCount.TabIndex = 5;
@@ -94,7 +89,7 @@
             // 
             // textBoxAddressEnd
             // 
-            this.textBoxAddressEnd.Location = new System.Drawing.Point(76, 58);
+            this.textBoxAddressEnd.Location = new System.Drawing.Point(76, 64);
             this.textBoxAddressEnd.Name = "textBoxAddressEnd";
             this.textBoxAddressEnd.Size = new System.Drawing.Size(760, 21);
             this.textBoxAddressEnd.TabIndex = 6;
@@ -130,10 +125,48 @@
             // 
             // panelAddresses
             // 
-            this.panelAddresses.Location = new System.Drawing.Point(5, 95);
+            this.panelAddresses.Location = new System.Drawing.Point(5, 93);
             this.panelAddresses.Name = "panelAddresses";
             this.panelAddresses.Size = new System.Drawing.Size(831, 119);
             this.panelAddresses.TabIndex = 9;
+            // 
+            // listViewAddresses
+            // 
+            this.listViewAddresses.Alignment = System.Windows.Forms.ListViewAlignment.Left;
+            this.listViewAddresses.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderAddressStart,
+            this.columnHeaderAddressEnd,
+            this.columnHeaderAddressCount,
+            this.columnHeaderState});
+            this.listViewAddresses.FullRowSelect = true;
+            this.listViewAddresses.GridLines = true;
+            this.listViewAddresses.Location = new System.Drawing.Point(5, 220);
+            this.listViewAddresses.MultiSelect = false;
+            this.listViewAddresses.Name = "listViewAddresses";
+            this.listViewAddresses.Size = new System.Drawing.Size(831, 292);
+            this.listViewAddresses.TabIndex = 10;
+            this.listViewAddresses.UseCompatibleStateImageBehavior = false;
+            this.listViewAddresses.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeaderAddressStart
+            // 
+            this.columnHeaderAddressStart.Text = "起始地址";
+            this.columnHeaderAddressStart.Width = 200;
+            // 
+            // columnHeaderAddressEnd
+            // 
+            this.columnHeaderAddressEnd.Text = "结束地址";
+            this.columnHeaderAddressEnd.Width = 200;
+            // 
+            // columnHeaderAddressCount
+            // 
+            this.columnHeaderAddressCount.Text = "地址个数";
+            this.columnHeaderAddressCount.Width = 200;
+            // 
+            // columnHeaderState
+            // 
+            this.columnHeaderState.Text = "状态";
+            this.columnHeaderState.Width = 100;
             // 
             // MacManager
             // 
@@ -143,6 +176,7 @@
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ClientSize = new System.Drawing.Size(841, 516);
+            this.Controls.Add(this.listViewAddresses);
             this.Controls.Add(this.panelAddresses);
             this.Controls.Add(this.textBoxAddressEnd);
             this.Controls.Add(this.textBoxAddressCount);
@@ -150,7 +184,6 @@
             this.Controls.Add(this.labelAddressCount);
             this.Controls.Add(this.labelAddressEnd);
             this.Controls.Add(this.labelAddressStart);
-            this.Controls.Add(this.listBoxAddresses);
             this.MaximizeBox = false;
             this.Name = "MacManager";
             this.Text = "井蛙地址管理器";
@@ -162,8 +195,6 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.ListBox listBoxAddresses;
         private System.Windows.Forms.Label labelAddressStart;
         private System.Windows.Forms.Label labelAddressEnd;
         private System.Windows.Forms.Label labelAddressCount;
@@ -175,5 +206,10 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStripFree;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemFree;
         private System.Windows.Forms.Panel panelAddresses;
+        private System.Windows.Forms.ListView listViewAddresses;
+        private System.Windows.Forms.ColumnHeader columnHeaderAddressStart;
+        private System.Windows.Forms.ColumnHeader columnHeaderAddressEnd;
+        private System.Windows.Forms.ColumnHeader columnHeaderAddressCount;
+        private System.Windows.Forms.ColumnHeader columnHeaderState;
     }
 }
