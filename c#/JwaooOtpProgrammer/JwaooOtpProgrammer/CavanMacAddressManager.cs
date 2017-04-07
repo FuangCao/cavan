@@ -12,7 +12,6 @@ namespace JwaooOtpProgrammer {
 
         private MacAddressAllocDialog mAddressAllocDialog;
         private CavanMacAddressButton mAddressCurrent;
-        private CavanMacAddressButton mAddressFocus;
         private CavanMacAddressRange mAddressRange;
         private object mSenderLocked;
 
@@ -98,13 +97,12 @@ namespace JwaooOtpProgrammer {
         }
 
         public void setCurrentMacAddressButton(CavanMacAddressButton button) {
-            if (mAddressFocus != null) {
-                mAddressFocus.setHighLight(false);
+            if (mAddressCurrent != null) {
+                mAddressCurrent.setHighLight(false);
             }
 
-            mAddressFocus = button;
             mAddressCurrent = button;
-            mAddressFocus.setHighLight(true);
+            mAddressCurrent.setHighLight(true);
 
             updateContextMenuStrip();
         }
@@ -122,14 +120,15 @@ namespace JwaooOtpProgrammer {
         public void addMacAddressItem(int index, CavanMacAddressItem item) {
             CavanMacAddressButton button = item.AddressButton;
             button.GotFocus += buttonMacAddress_GotFocus;
-            button.MouseEnter += buttonMacAddress_MouseEnter;
+            button.MouseCaptureChanged += buttonMacAddress_MouseCaptureChanged;
             panelAddresses.Controls.Add(button);
 
             listViewAddresses.Items.Insert(index, item);
         }
 
-        private void buttonMacAddress_MouseEnter(object sender, EventArgs e) {
-            mAddressCurrent = (CavanMacAddressButton)sender;
+        private void buttonMacAddress_MouseCaptureChanged(object sender, EventArgs e) {
+            CavanMacAddressButton button = (CavanMacAddressButton)sender;
+            button.Focus();
         }
 
         private void buttonMacAddress_GotFocus(object sender, EventArgs e) {
