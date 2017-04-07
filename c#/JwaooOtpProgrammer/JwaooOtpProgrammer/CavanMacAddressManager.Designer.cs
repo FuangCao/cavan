@@ -159,6 +159,7 @@
             this.listViewAddresses.UseCompatibleStateImageBehavior = false;
             this.listViewAddresses.View = System.Windows.Forms.View.Details;
             this.listViewAddresses.SelectedIndexChanged += new System.EventHandler(this.listViewAddresses_SelectedIndexChanged);
+            this.listViewAddresses.Enter += new System.EventHandler(this.listViewAddresses_SelectedIndexChanged);
             // 
             // columnHeaderAddressStart
             // 

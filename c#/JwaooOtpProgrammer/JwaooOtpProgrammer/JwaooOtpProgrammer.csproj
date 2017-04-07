@@ -53,6 +53,12 @@
     <Compile Include="CavanMacAddressManager.Designer.cs">
       <DependentUpon>CavanMacAddressManager.cs</DependentUpon>
     </Compile>
+    <Compile Include="MacAddressAllocDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MacAddressAllocDialog.Designer.cs">
+      <DependentUpon>MacAddressAllocDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Programmer.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -63,6 +69,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="CavanMacAddressManager.resx">
       <DependentUpon>CavanMacAddressManager.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MacAddressAllocDialog.resx">
+      <DependentUpon>MacAddressAllocDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Programmer.resx">
       <DependentUpon>Programmer.cs</DependentUpon>

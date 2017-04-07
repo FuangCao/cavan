@@ -10,20 +10,22 @@ using System.Windows.Forms;
 namespace JwaooOtpProgrammer {
     public partial class CavanMacAddressManager : Form {
 
+        private MacAddressAllocDialog mAddressAllocDialog;
         private CavanMacAddressButton mAddressCurrent;
+        private CavanMacAddressButton mAddressFocus;
         private CavanMacAddressRange mAddressRange;
         private object mSenderLocked;
 
         public CavanMacAddressManager(CavanMacAddress address, UInt32 count) {
             InitializeComponent();
 
-            mAddressRange = new CavanMacAddressRange(address, count);
+            mAddressRange = new CavanMacAddressRange(new CavanMacAddress(address), count);
 
             Rectangle bounds = panelAddresses.Bounds;
             bounds.X = 0;
             bounds.Y = 0;
 
-            CavanMacAddressItem item = new CavanMacAddressItem(this, bounds, address, count);
+            CavanMacAddressItem item = new CavanMacAddressItem(this, bounds, new CavanMacAddress(address), count);
             addMacAddressItem(0, item);
 
             AddressStart = address;
@@ -47,36 +49,6 @@ namespace JwaooOtpProgrammer {
 
         public ContextMenuStrip getContextMenuStripFree() {
             return contextMenuStripFree;
-        }
-
-        public void setCurrentMacAddressButton(CavanMacAddressButton button) {
-            if (mAddressCurrent != null) {
-                mAddressCurrent.setHighLight(false);
-            }
-
-            mAddressCurrent = button;
-            mAddressCurrent.setHighLight(true);
-
-            updateContextMenuStrip();
-        }
-
-        public void updateContextMenuStrip() {
-            if (mAddressCurrent == null) {
-                listViewAddresses.ContextMenuStrip = null;
-            } else if (mAddressCurrent.AddressUsed) {
-                listViewAddresses.ContextMenuStrip = contextMenuStripFree;
-            } else {
-                listViewAddresses.ContextMenuStrip = contextMenuStripAlloc;
-            }
-        }
-
-        public void addMacAddressItem(int index, CavanMacAddressItem item) {
-            CavanMacAddressButton button = item.AddressButton;
-            button.GotFocus += buttonMacAddress_GotFocus;
-            button.MouseEnter += buttonMacAddress_MouseEnter;
-            panelAddresses.Controls.Add(button);
-
-            listViewAddresses.Items.Insert(index, item);
         }
 
         public void removeMacAddressItem(CavanMacAddressItem item) {
@@ -125,9 +97,39 @@ namespace JwaooOtpProgrammer {
             }
         }
 
+        public void setCurrentMacAddressButton(CavanMacAddressButton button) {
+            if (mAddressFocus != null) {
+                mAddressFocus.setHighLight(false);
+            }
+
+            mAddressFocus = button;
+            mAddressCurrent = button;
+            mAddressFocus.setHighLight(true);
+
+            updateContextMenuStrip();
+        }
+
+        public void updateContextMenuStrip() {
+            if (mAddressCurrent == null || mAddressCurrent.AddressCount == 0) {
+                listViewAddresses.ContextMenuStrip = null;
+            } else if (mAddressCurrent.AddressUsed) {
+                listViewAddresses.ContextMenuStrip = contextMenuStripFree;
+            } else {
+                listViewAddresses.ContextMenuStrip = contextMenuStripAlloc;
+            }
+        }
+
+        public void addMacAddressItem(int index, CavanMacAddressItem item) {
+            CavanMacAddressButton button = item.AddressButton;
+            button.GotFocus += buttonMacAddress_GotFocus;
+            button.MouseEnter += buttonMacAddress_MouseEnter;
+            panelAddresses.Controls.Add(button);
+
+            listViewAddresses.Items.Insert(index, item);
+        }
+
         private void buttonMacAddress_MouseEnter(object sender, EventArgs e) {
-            CavanMacAddressButton button = (CavanMacAddressButton)sender;
-            button.Focus();
+            mAddressCurrent = (CavanMacAddressButton)sender;
         }
 
         private void buttonMacAddress_GotFocus(object sender, EventArgs e) {
@@ -150,7 +152,19 @@ namespace JwaooOtpProgrammer {
 
         private void allocMacAddress() {
             if (mAddressCurrent != null) {
-                mAddressCurrent.alloc(100);
+                UInt32 count = mAddressCurrent.AddressCount;
+                if (count > 0) {
+                    if (mAddressAllocDialog == null) {
+                        mAddressAllocDialog = new MacAddressAllocDialog();
+                    }
+
+                    mAddressAllocDialog.AddressCountMax = count;
+                    mAddressAllocDialog.ShowDialog(this);
+
+                    if (mAddressAllocDialog.AddressCountValid) {
+                        mAddressCurrent.alloc(mAddressAllocDialog.AddressCount);
+                    }
+                }
             }
         }
 
@@ -256,7 +270,6 @@ namespace JwaooOtpProgrammer {
 
             set {
                 textBoxAddressCount.Text = Convert.ToString(value);
-                setAddressCount(value);
             }
         }
 
@@ -336,19 +349,25 @@ namespace JwaooOtpProgrammer {
         }
 
         private void textBoxAddressStart_Leave(object sender, EventArgs e) {
-            AddressStart = AddressStart;
+            CavanMacAddress address = AddressStart;
+            AddressStart = address;
+            setAddressStart(address);
         }
 
         private void textBoxAddressEnd_Leave(object sender, EventArgs e) {
             AddressEnd = AddressEnd;
+            setAddressCount(AddressCount);
         }
 
         private void textBoxAddressCount_Leave(object sender, EventArgs e) {
-            AddressCount = AddressCount;
+            UInt32 count = AddressCount;
+            AddressCount = count;
+            setAddressCount(count);
         }
 
         private void textBoxAddressNext_Leave(object sender, EventArgs e) {
             AddressNext = AddressNext;
+            setAddressCount(AddressCount);
         }
 
         private void toolStripMenuItemFree_Click(object sender, EventArgs e) {
@@ -437,12 +456,17 @@ namespace JwaooOtpProgrammer {
         }
 
         public void updateUI() {
-            if (AddressUsed) {
+            UInt32 count = AddressCount;
+
+            if (count == 0) {
+                ContextMenuStrip = null;
+                Text = "无可用地址";
+            } else if (AddressUsed) {
                 ContextMenuStrip = AddressManager.getContextMenuStripFree();
-                Text = "已分配(" + AddressCount + ")";
+                Text = "已分配\n(" + count + ")";
             } else {
                 ContextMenuStrip = AddressManager.getContextMenuStripAlloc();
-                Text = "空闲(" + AddressCount + ")";
+                Text = "空闲\n(" + count + ")";
             }
         }
 
