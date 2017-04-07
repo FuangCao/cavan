@@ -505,15 +505,12 @@ namespace JwaooOtpProgrammer {
                 labelState.Text = "正在烧录...";
                 labelState.ForeColor = System.Drawing.Color.Black;
 
-                if (burnOtpFirmwareAll(pathname))
-                {
+                if (burnOtpFirmwareAll(pathname)) {
                     mBurnSuccess = true;
                     appendLog("烧录成功");
                     labelState.Text = "烧录成功";
                     labelState.ForeColor = System.Drawing.Color.LimeGreen;
-                }
-                else
-                {
+                } else {
                     appendLog("烧录失败！！！");
                     labelState.Text = "烧录失败！";
                     labelState.ForeColor = System.Drawing.Color.Red;
@@ -537,7 +534,8 @@ namespace JwaooOtpProgrammer {
         }
 
         private void buttonMacAlloc_Click(object sender, EventArgs e) {
-            MacManager manager = new MacManager();
+            CavanMacAddress address = (CavanMacAddress)new CavanMacAddress().fromLong((long)mBdAddress);
+            CavanMacAddressManager manager = new CavanMacAddressManager(address, mCount);
             manager.ShowDialog(this);
         }
     }

@@ -42,11 +42,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MacManager.cs">
+    <Compile Include="CavanLargeValue.cs" />
+    <Compile Include="CavanMacAddress.cs" />
+    <Compile Include="CavanMacAddressRange.cs" />
+    <Compile Include="CavanString.cs" />
+    <Compile Include="JwaooMacAddress.cs" />
+    <Compile Include="CavanMacAddressManager.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="MacManager.Designer.cs">
-      <DependentUpon>MacManager.cs</DependentUpon>
+    <Compile Include="CavanMacAddressManager.Designer.cs">
+      <DependentUpon>CavanMacAddressManager.cs</DependentUpon>
     </Compile>
     <Compile Include="Programmer.cs">
       <SubType>Form</SubType>
@@ -56,8 +61,8 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="MacManager.resx">
-      <DependentUpon>MacManager.cs</DependentUpon>
+    <EmbeddedResource Include="CavanMacAddressManager.resx">
+      <DependentUpon>CavanMacAddressManager.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Programmer.resx">
       <DependentUpon>Programmer.cs</DependentUpon>
