@@ -79,6 +79,11 @@ namespace JwaooOtpProgrammer {
             listViewAddresses.Items.Insert(index, item);
         }
 
+        public void removeMacAddressItem(CavanMacAddressItem item) {
+            panelAddresses.Controls.Remove(item.AddressButton);
+            listViewAddresses.Items.Remove(item);
+        }
+
         public void joinMacAddressItems(ListView.ListViewItemCollection items, int index, int count) {
             int width = 0;
             UInt32 addresses = 0;
@@ -90,9 +95,7 @@ namespace JwaooOtpProgrammer {
                 if (count-- > 1) {
                     width += button.Width + 1;
                     addresses += item.AddressCount;
-
-                    panelAddresses.Controls.Remove(button);
-                    listViewAddresses.Items.Remove(item);
+                    removeMacAddressItem(item);
                 } else {
                     button.Width += width;
                     item.AddressCount += addresses;
@@ -170,6 +173,66 @@ namespace JwaooOtpProgrammer {
             }
 
             mAddressRange.AddressCount = count;
+
+            if (count > 0) {
+                UInt32 total = 0;
+                CavanMacAddressItem lastItem = null;
+
+                foreach (CavanMacAddressItem item in listViewAddresses.Items) {
+                    if (total < count) {
+                        CavanMacAddressButton button = item.AddressButton;
+
+                        if (total + item.AddressCount > count) {
+                            item.AddressCount = count - total;
+                            total = count;
+                        } else {
+                            total += item.AddressCount;
+                        }
+
+                        int width = (int)(panelAddresses.Width * item.AddressCount / count - 1);
+
+                        if (lastItem == null) {
+                            button.Width = width;
+                        } else {
+                            Rectangle bounds = lastItem.AddressButton.Bounds;
+                            bounds.X += bounds.Width + 1;
+                            bounds.Width = width;
+                            button.Bounds = bounds;
+                        }
+
+                        lastItem = item;
+                    } else {
+                        removeMacAddressItem(item);
+                    }
+                }
+
+                if (total < count) {
+                    if (lastItem == null) {
+                        Rectangle bounds = panelAddresses.Bounds;
+                        bounds.X = 0;
+                        bounds.Y = 0;
+
+                        CavanMacAddressItem item = new CavanMacAddressItem(this, bounds, AddressStart, count);
+                        addMacAddressItem(0, item);
+                    } else if (lastItem.AddressUsed) {
+                        Rectangle bounds = lastItem.ButtonBounds;
+                        bounds.X += bounds.Width + 1;
+                        bounds.Width = panelAddresses.Width - bounds.X;
+
+                        CavanMacAddressItem item = new CavanMacAddressItem(this, bounds, lastItem.AddressNext, count - total);
+                        addMacAddressItem(lastItem.Index + 1, item);
+                        lastItem = null;
+                    } else {
+                        lastItem.AddressCount += count - total;
+                    }
+                }
+
+                if (lastItem != null) {
+                    Rectangle bounds = lastItem.ButtonBounds;
+                    bounds.Width = panelAddresses.Width - bounds.X;
+                    lastItem.ButtonBounds = bounds;
+                }
+            }
         }
 
         public CavanMacAddress AddressStart {
@@ -282,7 +345,6 @@ namespace JwaooOtpProgrammer {
 
         private void textBoxAddressCount_Leave(object sender, EventArgs e) {
             AddressCount = AddressCount;
-
         }
 
         private void textBoxAddressNext_Leave(object sender, EventArgs e) {
@@ -482,6 +544,26 @@ namespace JwaooOtpProgrammer {
         public CavanMacAddressButton AddressButton {
             get {
                 return mAddressButton;
+            }
+        }
+
+        public Rectangle ButtonBounds {
+            get {
+                return mAddressButton.Bounds;
+            }
+
+            set {
+                mAddressButton.Bounds = value;
+            }
+        }
+
+        public int ButtonWidth {
+            get {
+                return mAddressButton.Width;
+            }
+
+            set {
+                mAddressButton.Width = value;
             }
         }
 
