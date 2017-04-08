@@ -26,7 +26,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_alignBaseline="@+id/spinnerProject"
+        android:layout_below="@+id/textViewAddrCount"
         android:layout_toLeftOf="@+id/spinnerProject"
         android:inputType="none" />
 
@@ -87,8 +87,17 @@
         android:id="@+id/spinnerProject"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/textViewAddrCount"
+        android:layout_alignBaseline="@+id/editTextAddrCount"
+        android:layout_toLeftOf="@+id/buttonCopy"
         android:entries="@array/projects" />
+
+    <Button
+        android:id="@+id/buttonCopy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/spinnerProject"
+        android:layout_alignBaseline="@+id/editTextAddrCount"
+        android:layout_alignParentRight="true"
+        android:text="@string/text_copy" />
 
 </RelativeLayout>

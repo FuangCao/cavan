@@ -69,5 +69,7 @@
         <item >MODEL-06</item>
         <item >MODEL-10</item>
     </string-array>
+        <string name="text_copy">复制</string>
+        <string name="prompt_copied_to_clipboard">文字已复制到剪切板</string>
 
 </resources>

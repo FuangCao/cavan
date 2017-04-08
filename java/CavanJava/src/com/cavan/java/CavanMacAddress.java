@@ -53,6 +53,18 @@ public class CavanMacAddress extends CavanLargeValue {
 		return (CavanMacAddress) super.fromString(text, mSeparator);
 	}
 
+	public CavanMacAddress increaseMacAddress() {
+		CavanMacAddress address = cloneMacAddress();
+		address.increase();
+		return address;
+	}
+
+	public CavanMacAddress decreaseMacAddress() {
+		CavanMacAddress address = cloneMacAddress();
+		address.decrease();
+		return address;
+	}
+
 	public static CavanMacAddress add(CavanMacAddress left, long value) {
 		left = left.cloneMacAddress();
 		left.add(value);
@@ -69,6 +81,30 @@ public class CavanMacAddress extends CavanLargeValue {
 		CavanMacAddress address = left.cloneMacAddress();
 		address.sub(right);
 		return address;
+	}
+
+	public CavanMacAddress getAddressEnd(long count) {
+		CavanMacAddress address = cloneMacAddress();
+
+		if (count > 0) {
+			address.add(count - 1);
+		} else {
+			address.decrease();
+		}
+
+		return address;
+	}
+
+	public CavanMacAddress getAddressEnd() {
+		return decreaseMacAddress();
+	}
+
+	public CavanMacAddress getAddressNext(long count) {
+		return add(this, count);
+	}
+
+	public CavanMacAddress getAddressNext() {
+		return increaseMacAddress();
 	}
 
 	public CavanMacAddress cloneMacAddress() {
@@ -97,5 +133,11 @@ public class CavanMacAddress extends CavanLargeValue {
 		CavanJava.dLog("mac1 = " + mac1);
 		CavanJava.dLog("mac2 = " + mac2);
 		CavanJava.dLog("sub = " + CavanMacAddress.sub(mac1, mac2));
+
+		CavanJava.dLog("mac1 = " + mac1.fromString("00:00:11:22:33:44:55:66"));
+		CavanJava.dLog("mac1 = " + mac1.fromValues(0x00, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66));
+
+		mac2.fromString("11:22:00:00:00:00");
+		CavanJava.dLog("startsWith = " + mac1.startsWith(mac2));
 	}
 }

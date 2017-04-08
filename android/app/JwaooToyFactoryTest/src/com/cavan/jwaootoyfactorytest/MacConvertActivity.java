@@ -2,17 +2,21 @@ package com.cavan.jwaootoyfactorytest;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 
+import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanMacAddressView;
 import com.cavan.java.CavanMacAddress;
 import com.cavan.resource.CavanKeyboardViewNumber;
@@ -33,6 +37,7 @@ public class MacConvertActivity extends Activity {
 	private EditText mEditTextAddressCount;
 	private CavanKeyboardViewNumber mKeyboard;
 	private Spinner mSpinnerProject;
+	private Button mButtonCopy;
 
 	private Handler mHandler = new Handler() {
 
@@ -102,17 +107,11 @@ public class MacConvertActivity extends Activity {
 				if (setMessageBusy(msg.what)) {
 					CavanMacAddress address = getAddressStart();
 
-					long count = getAddressCount();
-					if (count > 0) {
-						address.add(getAddressCount());
-						mAddressViewNext.setAddress(address);
+					address.add(getAddressCount());
+					mAddressViewNext.setAddress(address);
 
-						address.decrease();
-						mAddressViewEnd.setAddress(address);
-					} else {
-						mAddressViewNext.setAddress(address);
-						mAddressViewEnd.setAddress(address);
-					}
+					address.decrease();
+					mAddressViewEnd.setAddress(address);
 				}
 				break;
 
@@ -130,12 +129,8 @@ public class MacConvertActivity extends Activity {
 			case MSG_NEXT_ADDR_CHANGED:
 				if (setMessageBusy(msg.what)) {
 					CavanMacAddress next = getAddressNext();
-					if (next.isZero()) {
-						mAddressViewEnd.setAddress(next);
-					} else {
-						mAddressViewEnd.setAddress(CavanMacAddress.sub(next, 1));
-					}
 
+					mAddressViewEnd.setAddress(next.decreaseMacAddress());
 					updateAddressCount(next);
 				}
 				break;
@@ -198,6 +193,26 @@ public class MacConvertActivity extends Activity {
 
 			@Override
 			public void onNothingSelected(AdapterView<?> parent) {}
+		});
+
+		mButtonCopy = (Button) findViewById(R.id.buttonCopy);
+		mButtonCopy.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				StringBuilder builder = new StringBuilder();
+				Resources resources = getResources();
+
+				builder.append(resources.getString(R.string.start_mac_address));
+				builder.append(getAddressStart()).append('\n');
+				builder.append(resources.getString(R.string.end_mac_address));
+				builder.append(getAddressEnd()).append('\n');
+				builder.append(resources.getString(R.string.address_count));
+				builder.append(getAddressCount());
+
+				CavanAndroid.postClipboardText(getApplicationContext(), builder);
+				CavanAndroid.showToast(getApplicationContext(), R.string.prompt_copied_to_clipboard);
+			}
 		});
 
 		mAddressViewStart.addTextChangedListener(new TextWatcher() {
