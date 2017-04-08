@@ -88,17 +88,15 @@ namespace JwaooOtpProgrammer {
 
             if (count > 0) {
                 address.add(count - 1);
-            } else if (address.decrease() != 0) {
-                address.increase();
+            } else {
+                address.decrease();
             }
 
             return address;
         }
 
         public CavanMacAddress getAddressNext(long count) {
-            CavanMacAddress address = cloneMacAddress();
-            address.add(count);
-            return address;
+            return add(this, count);
         }
 
         public override String ToString() {
