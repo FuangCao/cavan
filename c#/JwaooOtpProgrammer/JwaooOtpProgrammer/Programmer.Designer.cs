@@ -57,14 +57,15 @@
             this.textBoxFirmware.Location = new System.Drawing.Point(75, 273);
             this.textBoxFirmware.Name = "textBoxFirmware";
             this.textBoxFirmware.ReadOnly = true;
-            this.textBoxFirmware.Size = new System.Drawing.Size(432, 21);
+            this.textBoxFirmware.Size = new System.Drawing.Size(429, 21);
             this.textBoxFirmware.TabIndex = 1;
             // 
             // buttonFirmware
             // 
-            this.buttonFirmware.Location = new System.Drawing.Point(513, 272);
+            this.buttonFirmware.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.buttonFirmware.Location = new System.Drawing.Point(510, 272);
             this.buttonFirmware.Name = "buttonFirmware";
-            this.buttonFirmware.Size = new System.Drawing.Size(32, 23);
+            this.buttonFirmware.Size = new System.Drawing.Size(35, 23);
             this.buttonFirmware.TabIndex = 2;
             this.buttonFirmware.Text = "...";
             this.buttonFirmware.UseVisualStyleBackColor = true;
@@ -73,7 +74,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(5, 306);
+            this.label2.Location = new System.Drawing.Point(5, 305);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(83, 12);
             this.label2.TabIndex = 3;
@@ -81,7 +82,7 @@
             // 
             // buttonConnect
             // 
-            this.buttonConnect.Location = new System.Drawing.Point(277, 388);
+            this.buttonConnect.Location = new System.Drawing.Point(277, 386);
             this.buttonConnect.Name = "buttonConnect";
             this.buttonConnect.Size = new System.Drawing.Size(134, 77);
             this.buttonConnect.TabIndex = 5;
@@ -92,7 +93,7 @@
             // buttonBurn
             // 
             this.buttonBurn.Enabled = false;
-            this.buttonBurn.Location = new System.Drawing.Point(413, 388);
+            this.buttonBurn.Location = new System.Drawing.Point(413, 386);
             this.buttonBurn.Name = "buttonBurn";
             this.buttonBurn.Size = new System.Drawing.Size(132, 77);
             this.buttonBurn.TabIndex = 6;
@@ -102,7 +103,7 @@
             // 
             // textBoxBdAddressNext
             // 
-            this.textBoxBdAddressNext.Location = new System.Drawing.Point(94, 302);
+            this.textBoxBdAddressNext.Location = new System.Drawing.Point(94, 301);
             this.textBoxBdAddressNext.Name = "textBoxBdAddressNext";
             this.textBoxBdAddressNext.ReadOnly = true;
             this.textBoxBdAddressNext.Size = new System.Drawing.Size(451, 21);
@@ -124,6 +125,7 @@
             this.textBoxLog.Location = new System.Drawing.Point(5, 4);
             this.textBoxLog.Multiline = true;
             this.textBoxLog.Name = "textBoxLog";
+            this.textBoxLog.ReadOnly = true;
             this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.textBoxLog.Size = new System.Drawing.Size(540, 231);
             this.textBoxLog.TabIndex = 7;
@@ -131,7 +133,7 @@
             // 
             // buttonClearLog
             // 
-            this.buttonClearLog.Location = new System.Drawing.Point(141, 388);
+            this.buttonClearLog.Location = new System.Drawing.Point(141, 386);
             this.buttonClearLog.Name = "buttonClearLog";
             this.buttonClearLog.Size = new System.Drawing.Size(134, 77);
             this.buttonClearLog.TabIndex = 8;
@@ -142,7 +144,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(5, 364);
+            this.label3.Location = new System.Drawing.Point(5, 361);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(83, 12);
             this.label3.TabIndex = 9;
@@ -150,7 +152,7 @@
             // 
             // textBoxBdAddressCurrent
             // 
-            this.textBoxBdAddressCurrent.Location = new System.Drawing.Point(94, 360);
+            this.textBoxBdAddressCurrent.Location = new System.Drawing.Point(94, 357);
             this.textBoxBdAddressCurrent.Name = "textBoxBdAddressCurrent";
             this.textBoxBdAddressCurrent.ReadOnly = true;
             this.textBoxBdAddressCurrent.Size = new System.Drawing.Size(451, 21);
@@ -160,7 +162,7 @@
             // 
             this.labelState.AutoSize = true;
             this.labelState.Font = new System.Drawing.Font("宋体", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.labelState.Location = new System.Drawing.Point(5, 241);
+            this.labelState.Location = new System.Drawing.Point(5, 242);
             this.labelState.Name = "labelState";
             this.labelState.Size = new System.Drawing.Size(60, 24);
             this.labelState.TabIndex = 11;
@@ -169,7 +171,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(5, 335);
+            this.label4.Location = new System.Drawing.Point(5, 333);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(83, 12);
             this.label4.TabIndex = 12;
@@ -177,7 +179,7 @@
             // 
             // textBoxAddressCount
             // 
-            this.textBoxAddressCount.Location = new System.Drawing.Point(94, 331);
+            this.textBoxAddressCount.Location = new System.Drawing.Point(94, 329);
             this.textBoxAddressCount.Name = "textBoxAddressCount";
             this.textBoxAddressCount.ReadOnly = true;
             this.textBoxAddressCount.Size = new System.Drawing.Size(451, 21);
@@ -186,7 +188,7 @@
             // checkBoxSaveLog
             // 
             this.checkBoxSaveLog.AutoSize = true;
-            this.checkBoxSaveLog.Location = new System.Drawing.Point(437, 241);
+            this.checkBoxSaveLog.Location = new System.Drawing.Point(437, 242);
             this.checkBoxSaveLog.Name = "checkBoxSaveLog";
             this.checkBoxSaveLog.Size = new System.Drawing.Size(108, 16);
             this.checkBoxSaveLog.TabIndex = 14;
@@ -195,7 +197,7 @@
             // 
             // buttonMacAlloc
             // 
-            this.buttonMacAlloc.Location = new System.Drawing.Point(5, 388);
+            this.buttonMacAlloc.Location = new System.Drawing.Point(5, 386);
             this.buttonMacAlloc.Name = "buttonMacAlloc";
             this.buttonMacAlloc.Size = new System.Drawing.Size(134, 77);
             this.buttonMacAlloc.TabIndex = 15;
@@ -210,7 +212,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
             this.AutoSize = true;
-            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ClientSize = new System.Drawing.Size(550, 468);
             this.Controls.Add(this.buttonMacAlloc);
             this.Controls.Add(this.checkBoxSaveLog);
@@ -228,8 +229,10 @@
             this.Controls.Add(this.buttonFirmware);
             this.Controls.Add(this.textBoxFirmware);
             this.Controls.Add(this.label1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.Name = "Programmer";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "井蛙烧录器";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Programmer_FormClosed);
             this.ResumeLayout(false);

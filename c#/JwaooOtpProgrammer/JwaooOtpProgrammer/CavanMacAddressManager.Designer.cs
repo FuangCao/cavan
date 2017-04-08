@@ -43,6 +43,8 @@
             this.timerEventLock = new System.Windows.Forms.Timer(this.components);
             this.labelAddressNext = new System.Windows.Forms.Label();
             this.textBoxAddressNext = new System.Windows.Forms.TextBox();
+            this.buttonAllocAvg = new System.Windows.Forms.Button();
+            this.buttonAllocFixSize = new System.Windows.Forms.Button();
             this.contextMenuStripAlloc.SuspendLayout();
             this.contextMenuStripFree.SuspendLayout();
             this.SuspendLayout();
@@ -50,7 +52,7 @@
             // labelAddressStart
             // 
             this.labelAddressStart.AutoSize = true;
-            this.labelAddressStart.Location = new System.Drawing.Point(5, 10);
+            this.labelAddressStart.Location = new System.Drawing.Point(5, 12);
             this.labelAddressStart.Name = "labelAddressStart";
             this.labelAddressStart.Size = new System.Drawing.Size(65, 12);
             this.labelAddressStart.TabIndex = 1;
@@ -59,7 +61,7 @@
             // labelAddressEnd
             // 
             this.labelAddressEnd.AutoSize = true;
-            this.labelAddressEnd.Location = new System.Drawing.Point(451, 10);
+            this.labelAddressEnd.Location = new System.Drawing.Point(484, 12);
             this.labelAddressEnd.Name = "labelAddressEnd";
             this.labelAddressEnd.Size = new System.Drawing.Size(65, 12);
             this.labelAddressEnd.TabIndex = 2;
@@ -68,7 +70,7 @@
             // labelAddressCount
             // 
             this.labelAddressCount.AutoSize = true;
-            this.labelAddressCount.Location = new System.Drawing.Point(5, 40);
+            this.labelAddressCount.Location = new System.Drawing.Point(5, 41);
             this.labelAddressCount.Name = "labelAddressCount";
             this.labelAddressCount.Size = new System.Drawing.Size(65, 12);
             this.labelAddressCount.TabIndex = 3;
@@ -77,9 +79,9 @@
             // textBoxAddressStart
             // 
             this.textBoxAddressStart.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
-            this.textBoxAddressStart.Location = new System.Drawing.Point(76, 6);
+            this.textBoxAddressStart.Location = new System.Drawing.Point(76, 8);
             this.textBoxAddressStart.Name = "textBoxAddressStart";
-            this.textBoxAddressStart.Size = new System.Drawing.Size(314, 21);
+            this.textBoxAddressStart.Size = new System.Drawing.Size(350, 21);
             this.textBoxAddressStart.TabIndex = 4;
             this.textBoxAddressStart.Text = "00:00:00:00:00:00";
             this.textBoxAddressStart.TextChanged += new System.EventHandler(this.textBoxAddressStart_TextChanged);
@@ -87,9 +89,9 @@
             // 
             // textBoxAddressCount
             // 
-            this.textBoxAddressCount.Location = new System.Drawing.Point(76, 36);
+            this.textBoxAddressCount.Location = new System.Drawing.Point(76, 37);
             this.textBoxAddressCount.Name = "textBoxAddressCount";
-            this.textBoxAddressCount.Size = new System.Drawing.Size(314, 21);
+            this.textBoxAddressCount.Size = new System.Drawing.Size(350, 21);
             this.textBoxAddressCount.TabIndex = 5;
             this.textBoxAddressCount.Text = "1000";
             this.textBoxAddressCount.TextChanged += new System.EventHandler(this.textBoxAddressCount_TextChanged);
@@ -98,9 +100,9 @@
             // textBoxAddressEnd
             // 
             this.textBoxAddressEnd.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
-            this.textBoxAddressEnd.Location = new System.Drawing.Point(522, 6);
+            this.textBoxAddressEnd.Location = new System.Drawing.Point(555, 8);
             this.textBoxAddressEnd.Name = "textBoxAddressEnd";
-            this.textBoxAddressEnd.Size = new System.Drawing.Size(314, 21);
+            this.textBoxAddressEnd.Size = new System.Drawing.Size(350, 21);
             this.textBoxAddressEnd.TabIndex = 6;
             this.textBoxAddressEnd.Text = "00:00:00:00:00:00";
             this.textBoxAddressEnd.TextChanged += new System.EventHandler(this.textBoxAddressEnd_TextChanged);
@@ -117,7 +119,7 @@
             // 
             this.toolStripMenuItemAlloc.Name = "toolStripMenuItemAlloc";
             this.toolStripMenuItemAlloc.Size = new System.Drawing.Size(136, 22);
-            this.toolStripMenuItemAlloc.Text = "增加地址段";
+            this.toolStripMenuItemAlloc.Text = "新增地址段";
             this.toolStripMenuItemAlloc.Click += new System.EventHandler(this.toolStripMenuItemAlloc_Click);
             // 
             // contextMenuStripFree
@@ -136,9 +138,9 @@
             // 
             // panelAddresses
             // 
-            this.panelAddresses.Location = new System.Drawing.Point(5, 71);
+            this.panelAddresses.Location = new System.Drawing.Point(5, 69);
             this.panelAddresses.Name = "panelAddresses";
-            this.panelAddresses.Size = new System.Drawing.Size(831, 119);
+            this.panelAddresses.Size = new System.Drawing.Size(900, 89);
             this.panelAddresses.TabIndex = 9;
             // 
             // listViewAddresses
@@ -151,10 +153,11 @@
             this.columnHeaderState});
             this.listViewAddresses.FullRowSelect = true;
             this.listViewAddresses.GridLines = true;
-            this.listViewAddresses.Location = new System.Drawing.Point(5, 204);
+            this.listViewAddresses.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+            this.listViewAddresses.Location = new System.Drawing.Point(5, 163);
             this.listViewAddresses.MultiSelect = false;
             this.listViewAddresses.Name = "listViewAddresses";
-            this.listViewAddresses.Size = new System.Drawing.Size(831, 255);
+            this.listViewAddresses.Size = new System.Drawing.Size(900, 200);
             this.listViewAddresses.TabIndex = 10;
             this.listViewAddresses.UseCompatibleStateImageBehavior = false;
             this.listViewAddresses.View = System.Windows.Forms.View.Details;
@@ -164,12 +167,12 @@
             // columnHeaderAddressStart
             // 
             this.columnHeaderAddressStart.Text = "起始地址";
-            this.columnHeaderAddressStart.Width = 200;
+            this.columnHeaderAddressStart.Width = 300;
             // 
             // columnHeaderAddressEnd
             // 
             this.columnHeaderAddressEnd.Text = "结束地址";
-            this.columnHeaderAddressEnd.Width = 200;
+            this.columnHeaderAddressEnd.Width = 300;
             // 
             // columnHeaderAddressCount
             // 
@@ -179,7 +182,7 @@
             // columnHeaderState
             // 
             this.columnHeaderState.Text = "状态";
-            this.columnHeaderState.Width = 100;
+            this.columnHeaderState.Width = 96;
             // 
             // timerEventLock
             // 
@@ -189,7 +192,7 @@
             // labelAddressNext
             // 
             this.labelAddressNext.AutoSize = true;
-            this.labelAddressNext.Location = new System.Drawing.Point(415, 40);
+            this.labelAddressNext.Location = new System.Drawing.Point(448, 41);
             this.labelAddressNext.Name = "labelAddressNext";
             this.labelAddressNext.Size = new System.Drawing.Size(101, 12);
             this.labelAddressNext.TabIndex = 11;
@@ -198,13 +201,33 @@
             // textBoxAddressNext
             // 
             this.textBoxAddressNext.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
-            this.textBoxAddressNext.Location = new System.Drawing.Point(522, 36);
+            this.textBoxAddressNext.Location = new System.Drawing.Point(555, 37);
             this.textBoxAddressNext.Name = "textBoxAddressNext";
-            this.textBoxAddressNext.Size = new System.Drawing.Size(314, 21);
+            this.textBoxAddressNext.Size = new System.Drawing.Size(350, 21);
             this.textBoxAddressNext.TabIndex = 12;
             this.textBoxAddressNext.Text = "00:00:00:00:00:00";
             this.textBoxAddressNext.TextChanged += new System.EventHandler(this.textBoxAddressNext_TextChanged);
             this.textBoxAddressNext.Leave += new System.EventHandler(this.textBoxAddressNext_Leave);
+            // 
+            // buttonAllocAvg
+            // 
+            this.buttonAllocAvg.Location = new System.Drawing.Point(5, 369);
+            this.buttonAllocAvg.Name = "buttonAllocAvg";
+            this.buttonAllocAvg.Size = new System.Drawing.Size(95, 49);
+            this.buttonAllocAvg.TabIndex = 13;
+            this.buttonAllocAvg.Text = "平均分配";
+            this.buttonAllocAvg.UseVisualStyleBackColor = true;
+            this.buttonAllocAvg.Click += new System.EventHandler(this.buttonAllocAvg_Click);
+            // 
+            // buttonAllocFixSize
+            // 
+            this.buttonAllocFixSize.Location = new System.Drawing.Point(810, 369);
+            this.buttonAllocFixSize.Name = "buttonAllocFixSize";
+            this.buttonAllocFixSize.Size = new System.Drawing.Size(95, 49);
+            this.buttonAllocFixSize.TabIndex = 14;
+            this.buttonAllocFixSize.Text = "固定大小分配";
+            this.buttonAllocFixSize.UseVisualStyleBackColor = true;
+            this.buttonAllocFixSize.Click += new System.EventHandler(this.buttonAllocFixSize_Click);
             // 
             // CavanMacAddressManager
             // 
@@ -212,8 +235,9 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
             this.AutoSize = true;
-            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(841, 464);
+            this.ClientSize = new System.Drawing.Size(911, 423);
+            this.Controls.Add(this.buttonAllocFixSize);
+            this.Controls.Add(this.buttonAllocAvg);
             this.Controls.Add(this.textBoxAddressNext);
             this.Controls.Add(this.labelAddressNext);
             this.Controls.Add(this.listViewAddresses);
@@ -224,8 +248,10 @@
             this.Controls.Add(this.labelAddressCount);
             this.Controls.Add(this.labelAddressEnd);
             this.Controls.Add(this.labelAddressStart);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.Name = "CavanMacAddressManager";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "井蛙地址管理器";
             this.contextMenuStripAlloc.ResumeLayout(false);
             this.contextMenuStripFree.ResumeLayout(false);
@@ -254,5 +280,7 @@
         private System.Windows.Forms.Timer timerEventLock;
         private System.Windows.Forms.Label labelAddressNext;
         private System.Windows.Forms.TextBox textBoxAddressNext;
+        private System.Windows.Forms.Button buttonAllocAvg;
+        private System.Windows.Forms.Button buttonAllocFixSize;
     }
 }

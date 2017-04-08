@@ -10,7 +10,7 @@ using System.Windows.Forms;
 namespace JwaooOtpProgrammer {
     public partial class CavanMacAddressManager : Form {
 
-        private MacAddressAllocDialog mAddressAllocDialog;
+        private CavanMacAddressAddDialog mAddressAllocDialog;
         private CavanMacAddressButton mAddressCurrent;
         private CavanMacAddressRange mAddressRange;
         private object mSenderLocked;
@@ -154,7 +154,7 @@ namespace JwaooOtpProgrammer {
                 UInt32 count = mAddressCurrent.AddressCount;
                 if (count > 0) {
                     if (mAddressAllocDialog == null) {
-                        mAddressAllocDialog = new MacAddressAllocDialog();
+                        mAddressAllocDialog = new CavanMacAddressAddDialog();
                     }
 
                     mAddressAllocDialog.AddressCountMax = count;
@@ -395,6 +395,14 @@ namespace JwaooOtpProgrammer {
         private void timerUpdateLock_Tick(object sender, EventArgs e) {
             timerEventLock.Stop();
             mSenderLocked = null;
+        }
+
+        private void buttonAllocAvg_Click(object sender, EventArgs e) {
+
+        }
+
+        private void buttonAllocFixSize_Click(object sender, EventArgs e) {
+
         }
     }
 

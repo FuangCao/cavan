@@ -8,13 +8,13 @@ using System.Text;
 using System.Windows.Forms;
 
 namespace JwaooOtpProgrammer {
-    public partial class MacAddressAllocDialog : Form {
+    public partial class CavanMacAddressAddDialog : Form {
 
         private UInt32 mAddressCount;
         private UInt32 mAddressCountMax;
         private bool mAddressCountValid;
 
-        public MacAddressAllocDialog() {
+        public CavanMacAddressAddDialog() {
             InitializeComponent();
         }
 

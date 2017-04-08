@@ -536,7 +536,7 @@ namespace JwaooOtpProgrammer {
         private void buttonMacAlloc_Click(object sender, EventArgs e) {
             CavanMacAddress address = (CavanMacAddress)new CavanMacAddress().fromLong((long)mBdAddress);
             CavanMacAddressManager manager = new CavanMacAddressManager(address, mCount);
-            manager.ShowDialog(this);
+            manager.Show(this);
         }
     }
 

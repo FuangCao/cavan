@@ -1,5 +1,5 @@
 ﻿namespace JwaooOtpProgrammer {
-    partial class MacAddressAllocDialog {
+    partial class CavanMacAddressAddDialog {
         /// <summary>
         /// Required designer variable.
         /// </summary>
@@ -32,17 +32,17 @@
             // labelAddressCount
             // 
             this.labelAddressCount.AutoSize = true;
-            this.labelAddressCount.Location = new System.Drawing.Point(12, 15);
+            this.labelAddressCount.Location = new System.Drawing.Point(10, 15);
             this.labelAddressCount.Name = "labelAddressCount";
-            this.labelAddressCount.Size = new System.Drawing.Size(65, 12);
+            this.labelAddressCount.Size = new System.Drawing.Size(77, 12);
             this.labelAddressCount.TabIndex = 0;
-            this.labelAddressCount.Text = "地址个数：";
+            this.labelAddressCount.Text = "分配地址数：";
             // 
             // textBoxAddressCount
             // 
-            this.textBoxAddressCount.Location = new System.Drawing.Point(83, 12);
+            this.textBoxAddressCount.Location = new System.Drawing.Point(93, 12);
             this.textBoxAddressCount.Name = "textBoxAddressCount";
-            this.textBoxAddressCount.Size = new System.Drawing.Size(189, 21);
+            this.textBoxAddressCount.Size = new System.Drawing.Size(102, 21);
             this.textBoxAddressCount.TabIndex = 1;
             // 
             // buttonOK
@@ -57,26 +57,33 @@
             // 
             // buttonCancel
             // 
-            this.buttonCancel.Location = new System.Drawing.Point(197, 57);
+            this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.buttonCancel.Location = new System.Drawing.Point(120, 57);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(75, 23);
             this.buttonCancel.TabIndex = 3;
             this.buttonCancel.Text = "取消";
             this.buttonCancel.UseVisualStyleBackColor = true;
             // 
-            // MacAddressAllocDialog
+            // CavanMacAddressAddDialog
             // 
             this.AcceptButton = this.buttonOK;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScroll = true;
+            this.AutoSize = true;
             this.CancelButton = this.buttonCancel;
-            this.ClientSize = new System.Drawing.Size(284, 92);
+            this.ClientSize = new System.Drawing.Size(207, 92);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.textBoxAddressCount);
             this.Controls.Add(this.labelAddressCount);
-            this.Name = "MacAddressAllocDialog";
-            this.Text = "MAC地址分配";
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
+            this.Name = "CavanMacAddressAddDialog";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            this.Text = "新增地址段";
             this.ResumeLayout(false);
             this.PerformLayout();
 
