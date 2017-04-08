@@ -38,6 +38,10 @@ namespace JwaooOtpProgrammer {
             chars[index + 1] = ValueToCharUppercase(value & 0x0F);
         }
 
+        public static StringBuilder fromByte(StringBuilder build, byte value) {
+            return build.Append(ValueToCharUppercase((value >> 4) & 0x0F)).Append(ValueToCharUppercase(value & 0x0F));
+        }
+
         public static String fromByte(byte value) {
             char[] chars = new char[2];
             fromByte(chars, 0, value);

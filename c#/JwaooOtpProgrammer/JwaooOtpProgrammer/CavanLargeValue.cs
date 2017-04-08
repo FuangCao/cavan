@@ -623,7 +623,21 @@ namespace JwaooOtpProgrammer {
                 byte value = mBytes[i];
 
                 chars[j] = CavanString.ValueToCharUppercase((value >> 4) & 0x0F);
-                chars[j + 1] = CavanString.ValueToCharUppercase(value & 0xFF);
+                chars[j + 1] = CavanString.ValueToCharUppercase(value & 0x0F);
+            }
+
+            return new String(chars);
+        }
+
+        public String toStringHexReverse() {
+            char[] chars = new char[mBytes.Length * 2];
+
+            for (int i = 0; i < mBytes.Length; i++) {
+                byte value = mBytes[i];
+                int index = i << 1;
+
+                chars[index] = CavanString.ValueToCharUppercase((value >> 4) & 0x0F);
+                chars[index + 1] = CavanString.ValueToCharUppercase(value & 0x0F);
             }
 
             return new String(chars);

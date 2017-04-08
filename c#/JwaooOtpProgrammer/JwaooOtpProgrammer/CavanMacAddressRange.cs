@@ -14,6 +14,10 @@ namespace JwaooOtpProgrammer {
             mAddressCount = count;
         }
 
+        public CavanMacAddressRange(CavanMacAddress address) : this(address, 0) { }
+
+        public CavanMacAddressRange() : this(new CavanMacAddress()) { }
+
         public CavanMacAddress AddressStart {
             get {
                 return mAddressStart;
@@ -36,17 +40,13 @@ namespace JwaooOtpProgrammer {
 
         public CavanMacAddress AddressEnd {
             get {
-                if (mAddressCount > 0) {
-                    return CavanMacAddress.add(mAddressStart, mAddressCount - 1);
-                }
-
-                return new CavanMacAddress(mAddressStart);
+                return mAddressStart.getAddressEnd(mAddressCount);
             }
         }
 
         public CavanMacAddress AddressNext {
             get {
-                return CavanMacAddress.add(mAddressStart, mAddressCount);
+                return AddressStart.getAddressNext(mAddressCount);
             }
         }
     }

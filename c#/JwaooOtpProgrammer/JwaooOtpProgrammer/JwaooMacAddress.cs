@@ -9,26 +9,62 @@ using System.Windows.Forms;
 namespace JwaooOtpProgrammer {
     class JwaooMacAddress : CavanMacAddress {
 
-        private UInt32 mCount;
-        private String mPathname;
+        private String mFilePath;
+        private String mFwPrefix;
+        private UInt32 mAddressCount;
         private CavanMacAddress mAddressStart;
 
-        public JwaooMacAddress(CavanMacAddress address, String pathname) {
-            mAddressStart = address;
-            mPathname = pathname;
+        public JwaooMacAddress() { }
+
+        public JwaooMacAddress(String fileName, String fwPrefix, CavanMacAddress startAddress) {
+            mFilePath = Path.Combine(Application.StartupPath, fileName);
+            mFwPrefix = fwPrefix;
+            mAddressStart = startAddress;
         }
 
-        public UInt32 Count {
+        public String FilePath {
             get {
-                return mCount;
+                return mFilePath;
+            }
+
+            set {
+                mFilePath = value;
             }
         }
 
-        public bool setCount(String text) {
+        public String FwPrefix {
+            get {
+                return mFwPrefix;
+            }
+
+            set {
+                mFwPrefix = value;
+            }
+        }
+
+        public UInt32 AddressCount {
+            get {
+                return mAddressCount;
+            }
+        }
+
+        public CavanMacAddress AddressEnd {
+            get {
+                return getAddressEnd(mAddressCount);
+            }
+        }
+
+        public CavanMacAddress AddressNext {
+            get {
+                return getAddressNext(mAddressCount);
+            }
+        }
+
+        public bool setAddressCount(String text) {
             try {
-                mCount = Convert.ToUInt32(text);
+                mAddressCount = Convert.ToUInt32(text);
             } catch {
-                mCount = 0;
+                mAddressCount = 0;
             }
 
             return false;
@@ -37,10 +73,10 @@ namespace JwaooOtpProgrammer {
         public new JwaooMacAddress fromString(String text) {
             String[] texts = Regex.Split(text, "\\s+");
             if (texts.Length > 1) {
-                setCount(texts[1]);
+                setAddressCount(texts[1]);
                 text = texts[0];
             } else {
-                mCount = 0;
+                mAddressCount = 0;
             }
 
             CavanMacAddress address = base.fromString(text);
@@ -51,11 +87,11 @@ namespace JwaooOtpProgrammer {
             return null;
         }
 
-        public JwaooMacAddress readFromFile() {
+        public bool readFromFile() {
             FileStream stream = null;
 
             try {
-                stream = File.OpenRead(mPathname);
+                stream = File.OpenRead(mFilePath);
 
                 byte[] buff = new byte[32];
                 int length = stream.Read(buff, 0, buff.Length);
@@ -63,14 +99,14 @@ namespace JwaooOtpProgrammer {
 
                 JwaooMacAddress address = fromString(text);
                 if (address != null) {
-                    return address;
+                    return true;
                 }
 
-                MessageBox.Show("MAC地址格式错误：" + mPathname);
+                MessageBox.Show("MAC地址配置文件格式错误，应该类似：" + mAddressStart + " 100");
             } catch (FileNotFoundException) {
                 copyFrom(mAddressStart);
                 if (writeToFile()) {
-                    return this;
+                    return true;
                 }
             } catch (Exception e) {
                 MessageBox.Show("读MAC地址出错：\n" + e);
@@ -80,17 +116,17 @@ namespace JwaooOtpProgrammer {
                 }
             }
 
-            return null;
+            return false;
         }
 
         public bool writeToFile() {
-            String text = ToString() + " " + mCount;
+            String text = ToString() + " " + mAddressCount;
             byte[] bytes = Encoding.ASCII.GetBytes(text);
 
             FileStream stream = null;
 
             try {
-                stream = File.OpenWrite(mPathname);
+                stream = File.OpenWrite(mFilePath);
                 stream.SetLength(0);
                 stream.Write(bytes, 0, bytes.Length);
             } catch (Exception e) {
@@ -106,8 +142,8 @@ namespace JwaooOtpProgrammer {
         }
 
         public new bool increase() {
-            if (mCount > 0) {
-                mCount--;
+            if (mAddressCount > 0) {
+                mAddressCount--;
             } else {
                 return false;
             }
@@ -117,7 +153,7 @@ namespace JwaooOtpProgrammer {
             }
 
             base.decrease();
-            mCount--;
+            mAddressCount--;
 
             return false;
         }
@@ -128,7 +164,7 @@ namespace JwaooOtpProgrammer {
                 return false;
             }
 
-            mCount++;
+            mAddressCount++;
 
             return true;
         }
@@ -143,6 +179,22 @@ namespace JwaooOtpProgrammer {
             }
 
             return false;
+        }
+
+        public JwaooMacAddress fromOtpMemory(byte[] bytes, int index) {
+            return (JwaooMacAddress)fromBytes(bytes, index, index + 6);
+        }
+
+        public JwaooMacAddress fromOtpHeader(byte[] bytes) {
+            return fromOtpMemory(bytes, 0xD4);
+        }
+
+        public JwaooMacAddress fromOtpFirmware(byte[] bytes) {
+            return fromOtpMemory(bytes, 0x7FD4);
+        }
+
+        public String toStringOtp() {
+            return toStringHexReverse();
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿namespace JwaooOtpProgrammer {
-    partial class Programmer {
+    partial class JwaooOtpProgrammer {
         /// <summary>
         /// 必需的设计器变量。
         /// </summary>
@@ -26,21 +26,23 @@
             this.label1 = new System.Windows.Forms.Label();
             this.textBoxFirmware = new System.Windows.Forms.TextBox();
             this.buttonFirmware = new System.Windows.Forms.Button();
-            this.label2 = new System.Windows.Forms.Label();
+            this.labelMacAddressStart = new System.Windows.Forms.Label();
             this.buttonConnect = new System.Windows.Forms.Button();
             this.buttonBurn = new System.Windows.Forms.Button();
-            this.textBoxBdAddressNext = new System.Windows.Forms.TextBox();
+            this.textBoxMacAddressStart = new System.Windows.Forms.TextBox();
             this.openFileDialogFirmware = new System.Windows.Forms.OpenFileDialog();
             this.openFileDialogSmartSnippets = new System.Windows.Forms.OpenFileDialog();
             this.textBoxLog = new System.Windows.Forms.TextBox();
             this.buttonClearLog = new System.Windows.Forms.Button();
-            this.label3 = new System.Windows.Forms.Label();
-            this.textBoxBdAddressCurrent = new System.Windows.Forms.TextBox();
+            this.labelMacAddressNow = new System.Windows.Forms.Label();
+            this.textBoxMacAddressNow = new System.Windows.Forms.TextBox();
             this.labelState = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
-            this.textBoxAddressCount = new System.Windows.Forms.TextBox();
+            this.labelMacAddressCount = new System.Windows.Forms.Label();
+            this.textBoxMacAddressCount = new System.Windows.Forms.TextBox();
             this.checkBoxSaveLog = new System.Windows.Forms.CheckBox();
             this.buttonMacAlloc = new System.Windows.Forms.Button();
+            this.labelMacAddressEnd = new System.Windows.Forms.Label();
+            this.textBoxMacAddressEnd = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // label1
@@ -54,7 +56,7 @@
             // 
             // textBoxFirmware
             // 
-            this.textBoxFirmware.Location = new System.Drawing.Point(75, 273);
+            this.textBoxFirmware.Location = new System.Drawing.Point(75, 275);
             this.textBoxFirmware.Name = "textBoxFirmware";
             this.textBoxFirmware.ReadOnly = true;
             this.textBoxFirmware.Size = new System.Drawing.Size(429, 21);
@@ -71,18 +73,18 @@
             this.buttonFirmware.UseVisualStyleBackColor = true;
             this.buttonFirmware.Click += new System.EventHandler(this.buttonFirmware_Click);
             // 
-            // label2
+            // labelMacAddressStart
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(5, 305);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(83, 12);
-            this.label2.TabIndex = 3;
-            this.label2.Text = "下一MAC地址：";
+            this.labelMacAddressStart.AutoSize = true;
+            this.labelMacAddressStart.Location = new System.Drawing.Point(5, 308);
+            this.labelMacAddressStart.Name = "labelMacAddressStart";
+            this.labelMacAddressStart.Size = new System.Drawing.Size(83, 12);
+            this.labelMacAddressStart.TabIndex = 3;
+            this.labelMacAddressStart.Text = "起始MAC地址：";
             // 
             // buttonConnect
             // 
-            this.buttonConnect.Location = new System.Drawing.Point(277, 386);
+            this.buttonConnect.Location = new System.Drawing.Point(277, 366);
             this.buttonConnect.Name = "buttonConnect";
             this.buttonConnect.Size = new System.Drawing.Size(134, 77);
             this.buttonConnect.TabIndex = 5;
@@ -93,7 +95,7 @@
             // buttonBurn
             // 
             this.buttonBurn.Enabled = false;
-            this.buttonBurn.Location = new System.Drawing.Point(413, 386);
+            this.buttonBurn.Location = new System.Drawing.Point(413, 366);
             this.buttonBurn.Name = "buttonBurn";
             this.buttonBurn.Size = new System.Drawing.Size(132, 77);
             this.buttonBurn.TabIndex = 6;
@@ -101,13 +103,13 @@
             this.buttonBurn.UseVisualStyleBackColor = true;
             this.buttonBurn.Click += new System.EventHandler(this.buttonBurn_Click);
             // 
-            // textBoxBdAddressNext
+            // textBoxMacAddressStart
             // 
-            this.textBoxBdAddressNext.Location = new System.Drawing.Point(94, 301);
-            this.textBoxBdAddressNext.Name = "textBoxBdAddressNext";
-            this.textBoxBdAddressNext.ReadOnly = true;
-            this.textBoxBdAddressNext.Size = new System.Drawing.Size(451, 21);
-            this.textBoxBdAddressNext.TabIndex = 4;
+            this.textBoxMacAddressStart.Location = new System.Drawing.Point(94, 304);
+            this.textBoxMacAddressStart.Name = "textBoxMacAddressStart";
+            this.textBoxMacAddressStart.ReadOnly = true;
+            this.textBoxMacAddressStart.Size = new System.Drawing.Size(151, 21);
+            this.textBoxMacAddressStart.TabIndex = 4;
             // 
             // openFileDialogFirmware
             // 
@@ -133,7 +135,7 @@
             // 
             // buttonClearLog
             // 
-            this.buttonClearLog.Location = new System.Drawing.Point(141, 386);
+            this.buttonClearLog.Location = new System.Drawing.Point(141, 366);
             this.buttonClearLog.Name = "buttonClearLog";
             this.buttonClearLog.Size = new System.Drawing.Size(134, 77);
             this.buttonClearLog.TabIndex = 8;
@@ -141,49 +143,49 @@
             this.buttonClearLog.UseVisualStyleBackColor = true;
             this.buttonClearLog.Click += new System.EventHandler(this.buttonClearLog_Click);
             // 
-            // label3
+            // labelMacAddressNow
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(5, 361);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(83, 12);
-            this.label3.TabIndex = 9;
-            this.label3.Text = "当前MAC地址：";
+            this.labelMacAddressNow.AutoSize = true;
+            this.labelMacAddressNow.Location = new System.Drawing.Point(305, 336);
+            this.labelMacAddressNow.Name = "labelMacAddressNow";
+            this.labelMacAddressNow.Size = new System.Drawing.Size(83, 12);
+            this.labelMacAddressNow.TabIndex = 9;
+            this.labelMacAddressNow.Text = "当前MAC地址：";
             // 
-            // textBoxBdAddressCurrent
+            // textBoxMacAddressNow
             // 
-            this.textBoxBdAddressCurrent.Location = new System.Drawing.Point(94, 357);
-            this.textBoxBdAddressCurrent.Name = "textBoxBdAddressCurrent";
-            this.textBoxBdAddressCurrent.ReadOnly = true;
-            this.textBoxBdAddressCurrent.Size = new System.Drawing.Size(451, 21);
-            this.textBoxBdAddressCurrent.TabIndex = 10;
+            this.textBoxMacAddressNow.Location = new System.Drawing.Point(394, 333);
+            this.textBoxMacAddressNow.Name = "textBoxMacAddressNow";
+            this.textBoxMacAddressNow.ReadOnly = true;
+            this.textBoxMacAddressNow.Size = new System.Drawing.Size(151, 21);
+            this.textBoxMacAddressNow.TabIndex = 10;
             // 
             // labelState
             // 
             this.labelState.AutoSize = true;
             this.labelState.Font = new System.Drawing.Font("宋体", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.labelState.Location = new System.Drawing.Point(5, 242);
+            this.labelState.Location = new System.Drawing.Point(5, 243);
             this.labelState.Name = "labelState";
             this.labelState.Size = new System.Drawing.Size(60, 24);
             this.labelState.TabIndex = 11;
             this.labelState.Text = "状态";
             // 
-            // label4
+            // labelMacAddressCount
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(5, 333);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(83, 12);
-            this.label4.TabIndex = 12;
-            this.label4.Text = "剩余MAC地址：";
+            this.labelMacAddressCount.AutoSize = true;
+            this.labelMacAddressCount.Location = new System.Drawing.Point(5, 337);
+            this.labelMacAddressCount.Name = "labelMacAddressCount";
+            this.labelMacAddressCount.Size = new System.Drawing.Size(83, 12);
+            this.labelMacAddressCount.TabIndex = 12;
+            this.labelMacAddressCount.Text = "剩余MAC地址：";
             // 
-            // textBoxAddressCount
+            // textBoxMacAddressCount
             // 
-            this.textBoxAddressCount.Location = new System.Drawing.Point(94, 329);
-            this.textBoxAddressCount.Name = "textBoxAddressCount";
-            this.textBoxAddressCount.ReadOnly = true;
-            this.textBoxAddressCount.Size = new System.Drawing.Size(451, 21);
-            this.textBoxAddressCount.TabIndex = 13;
+            this.textBoxMacAddressCount.Location = new System.Drawing.Point(94, 333);
+            this.textBoxMacAddressCount.Name = "textBoxMacAddressCount";
+            this.textBoxMacAddressCount.ReadOnly = true;
+            this.textBoxMacAddressCount.Size = new System.Drawing.Size(151, 21);
+            this.textBoxMacAddressCount.TabIndex = 13;
             // 
             // checkBoxSaveLog
             // 
@@ -197,7 +199,7 @@
             // 
             // buttonMacAlloc
             // 
-            this.buttonMacAlloc.Location = new System.Drawing.Point(5, 386);
+            this.buttonMacAlloc.Location = new System.Drawing.Point(5, 366);
             this.buttonMacAlloc.Name = "buttonMacAlloc";
             this.buttonMacAlloc.Size = new System.Drawing.Size(134, 77);
             this.buttonMacAlloc.TabIndex = 15;
@@ -205,35 +207,54 @@
             this.buttonMacAlloc.UseVisualStyleBackColor = true;
             this.buttonMacAlloc.Click += new System.EventHandler(this.buttonMacAlloc_Click);
             // 
-            // Programmer
+            // labelMacAddressEnd
+            // 
+            this.labelMacAddressEnd.AutoSize = true;
+            this.labelMacAddressEnd.Location = new System.Drawing.Point(305, 307);
+            this.labelMacAddressEnd.Name = "labelMacAddressEnd";
+            this.labelMacAddressEnd.Size = new System.Drawing.Size(83, 12);
+            this.labelMacAddressEnd.TabIndex = 16;
+            this.labelMacAddressEnd.Text = "结束MAC地址：";
+            // 
+            // textBoxMacAddressEnd
+            // 
+            this.textBoxMacAddressEnd.Location = new System.Drawing.Point(394, 304);
+            this.textBoxMacAddressEnd.Name = "textBoxMacAddressEnd";
+            this.textBoxMacAddressEnd.ReadOnly = true;
+            this.textBoxMacAddressEnd.Size = new System.Drawing.Size(151, 21);
+            this.textBoxMacAddressEnd.TabIndex = 17;
+            // 
+            // JwaooOtpProgrammer
             // 
             this.AcceptButton = this.buttonBurn;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(550, 468);
+            this.ClientSize = new System.Drawing.Size(550, 447);
+            this.Controls.Add(this.textBoxMacAddressEnd);
+            this.Controls.Add(this.labelMacAddressEnd);
             this.Controls.Add(this.buttonMacAlloc);
             this.Controls.Add(this.checkBoxSaveLog);
-            this.Controls.Add(this.textBoxAddressCount);
-            this.Controls.Add(this.label4);
+            this.Controls.Add(this.textBoxMacAddressCount);
+            this.Controls.Add(this.labelMacAddressCount);
             this.Controls.Add(this.labelState);
-            this.Controls.Add(this.textBoxBdAddressCurrent);
-            this.Controls.Add(this.label3);
+            this.Controls.Add(this.textBoxMacAddressNow);
+            this.Controls.Add(this.labelMacAddressNow);
             this.Controls.Add(this.buttonClearLog);
             this.Controls.Add(this.textBoxLog);
             this.Controls.Add(this.buttonBurn);
             this.Controls.Add(this.buttonConnect);
-            this.Controls.Add(this.textBoxBdAddressNext);
-            this.Controls.Add(this.label2);
+            this.Controls.Add(this.textBoxMacAddressStart);
+            this.Controls.Add(this.labelMacAddressStart);
             this.Controls.Add(this.buttonFirmware);
             this.Controls.Add(this.textBoxFirmware);
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
-            this.Name = "Programmer";
+            this.Name = "JwaooOtpProgrammer";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "井蛙烧录器";
+            this.Text = "井蛙OTP烧录器";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Programmer_FormClosed);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -244,21 +265,23 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox textBoxFirmware;
         private System.Windows.Forms.Button buttonFirmware;
-        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label labelMacAddressStart;
         private System.Windows.Forms.Button buttonConnect;
         private System.Windows.Forms.Button buttonBurn;
-        private System.Windows.Forms.TextBox textBoxBdAddressNext;
+        private System.Windows.Forms.TextBox textBoxMacAddressStart;
         private System.Windows.Forms.OpenFileDialog openFileDialogFirmware;
         private System.Windows.Forms.OpenFileDialog openFileDialogSmartSnippets;
         private System.Windows.Forms.TextBox textBoxLog;
         private System.Windows.Forms.Button buttonClearLog;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox textBoxBdAddressCurrent;
+        private System.Windows.Forms.Label labelMacAddressNow;
+        private System.Windows.Forms.TextBox textBoxMacAddressNow;
         private System.Windows.Forms.Label labelState;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.TextBox textBoxAddressCount;
+        private System.Windows.Forms.Label labelMacAddressCount;
+        private System.Windows.Forms.TextBox textBoxMacAddressCount;
         private System.Windows.Forms.CheckBox checkBoxSaveLog;
         private System.Windows.Forms.Button buttonMacAlloc;
+        private System.Windows.Forms.Label labelMacAddressEnd;
+        private System.Windows.Forms.TextBox textBoxMacAddressEnd;
     }
 }
 

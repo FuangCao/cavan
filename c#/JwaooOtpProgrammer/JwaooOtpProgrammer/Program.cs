@@ -16,7 +16,7 @@ namespace JwaooOtpProgrammer {
             if (createdNew) {
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new Programmer());
+                Application.Run(new JwaooOtpProgrammer());
 
                 mutex.ReleaseMutex();
             } else {

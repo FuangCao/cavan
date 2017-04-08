@@ -23,17 +23,8 @@ namespace JwaooOtpProgrammer {
 
             AddressStart = address;
             AddressCount = count;
-
-            if (count > 0) {
-                address.add(count);
-                AddressNext = address;
-
-                address.decrease();
-                AddressEnd = address;
-            } else {
-                AddressEnd = address;
-                AddressNext = address;
-            }
+            AddressEnd = address.getAddressEnd(count);
+            AddressNext = address.getAddressNext(count);
         }
 
         public ContextMenuStrip getContextMenuStripAlloc() {
@@ -343,17 +334,8 @@ namespace JwaooOtpProgrammer {
                 CavanMacAddress address = AddressStart;
 
                 setAddressStart(new CavanMacAddress(address));
-
-                if (count > 0) {
-                    address.add(count);
-                    AddressNext = address;
-
-                    address.decrease();
-                    AddressEnd = address;
-                } else {
-                    AddressNext = address;
-                    AddressEnd = address;
-                }
+                AddressEnd = address.getAddressEnd(count);
+                AddressNext = address.getAddressNext(count);
             }
         }
 

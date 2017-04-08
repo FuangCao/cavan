@@ -9,7 +9,7 @@ using System.Configuration;
 
 namespace JwaooOtpProgrammer {
 
-    public partial class Programmer : Form {
+    public partial class JwaooOtpProgrammer : Form {
 
         private const String KEY_SMATR_SNIPPETS_PATH = "SmartSnippet";
         private const String KEY_FIRMWARE_PATH = "Firmware";
@@ -28,19 +28,17 @@ namespace JwaooOtpProgrammer {
 
         private String mFileSmartSnippetsExe;
         private FileStream mFileStreamLog;
-        private MacAddressManager mMacAddressManager;
-        private UInt64 mBdAddress;
-        private UInt32 mCount;
+        private JwaooMacAddress mMacAddress;
         private bool mBurnSuccess;
 
-        private MacAddressManager[] mMacAddressManagers = {
-            new MacAddressManager("JwaooMacModel06.txt", "JwaooFwModel06", 0x88EA00000000),
-            new MacAddressManager("JwaooMacModel10.txt", "JwaooFwModel10", 0x88EB00000000),
+        private JwaooMacAddress[] mMacAddreses = {
+            new JwaooMacAddress("JwaooMacModel06.txt", "JwaooFwModel06", new CavanMacAddress().fromString("88:EA:00:00:00:00")),
+            new JwaooMacAddress("JwaooMacModel10.txt", "JwaooFwModel10", new CavanMacAddress().fromString("88:EB:00:00:00:00")),
         };
 
         delegate void Process_OutputDataReceivedDelegate(object sender, DataReceivedEventArgs e);
 
-        public Programmer() {
+        public JwaooOtpProgrammer() {
             InitializeComponent();
 
             loadConfigFile();
@@ -57,12 +55,12 @@ namespace JwaooOtpProgrammer {
             saveConfigFile();
         }
 
-        private MacAddressManager getMacAddressManager(String pathname) {
+        private JwaooMacAddress getMacAddress(String pathname) {
             String name = Path.GetFileName(pathname);
 
-            foreach (MacAddressManager manager in mMacAddressManagers) {
-                if (name.StartsWith(manager.FwPrefix)) {
-                    return manager;
+            foreach (JwaooMacAddress address in mMacAddreses) {
+                if (name.StartsWith(address.FwPrefix)) {
+                    return address;
                 }
             }
 
@@ -70,19 +68,15 @@ namespace JwaooOtpProgrammer {
         }
 
         private bool setFwFilePath(String pathname) {
-            MacAddressManager manager = getMacAddressManager(pathname);
-            if (manager == null) {
+            JwaooMacAddress address = getMacAddress(pathname);
+            if (address == null) {
                 MessageBox.Show("固件文件名不正确，请重新选择！");
                 return false;
             }
 
-            mMacAddressManager = manager;
-
-            UInt64 address = 0;
-            UInt32 count = 0;
-            manager.readFromFile(ref address, ref count);
-
-            setBdAddress(address, count);
+            address.readFromFile();
+            mMacAddress = address;
+            updateMacAddressUI();
 
             textBoxFirmware.Text = pathname;
             buttonBurn.Enabled = true;
@@ -161,12 +155,10 @@ namespace JwaooOtpProgrammer {
             textBoxLog.AppendText("\r\n");
         }
 
-        private void setBdAddress(UInt64 addr, UInt32 count) {
-            mBdAddress = addr;
-            mCount = count;
-            textBoxBdAddressNext.Text = MacAddressManager.getBdAddressString(addr);
-
-            textBoxAddressCount.Text = count + " (个)";
+        private void updateMacAddressUI() {
+            textBoxMacAddressStart.Text = mMacAddress.ToString();
+            textBoxMacAddressEnd.Text = mMacAddress.AddressEnd.ToString();
+            textBoxMacAddressCount.Text = mMacAddress.AddressCount + " (个)";
         }
 
         private String findSmartSnippetsPath() {
@@ -238,7 +230,7 @@ namespace JwaooOtpProgrammer {
         }
 
         private bool writeOtpData(String offset, String data) {
-            // appendLog("写裸数据: " + data + " => " + offset);
+            // appendLog("写数据: " + data + " => " + offset);
 
             String line = runOtpCommand(false, "-cmd", "write_field", "-offset", offset, "-data", data);
             if (line == null) {
@@ -252,20 +244,11 @@ namespace JwaooOtpProgrammer {
             return line.StartsWith("Burned");
         }
 
-        public static char valueToChar(int value) {
-            if (value < 10) {
-                return (char)('0' + value);
-            } else {
-                return (char)('A' - 10 + value);
-            }
-        }
-
         private String getBytesHexString(byte[] bytes) {
             StringBuilder builder = new StringBuilder();
 
             foreach (byte value in bytes) {
-                builder.Append(valueToChar(value >> 4));
-                builder.Append(valueToChar(value & 0x0F));
+                CavanString.fromByte(builder, value);
             }
 
             return builder.ToString();
@@ -275,35 +258,25 @@ namespace JwaooOtpProgrammer {
             return writeOtpData(offset, getBytesHexString(data));
         }
 
-        public bool addBdAddress() {
-            UInt64 addr = mBdAddress + 1;
-            UInt32 count = mCount - 1;
+        private bool writeBdAddress() {
+            if (mMacAddress == null || mMacAddress.AddressCount <= 0) {
+                return false;
+            }
 
-            if (mMacAddressManager != null && mMacAddressManager.writeToFile(addr, count)) {
-                setBdAddress(addr, count);
+            appendLog("写MAC地址：" + mMacAddress);
+
+            if (!writeOtpData("0x7FD4", mMacAddress.getBytes())) {
+                return false;
+            }
+
+            textBoxMacAddressNow.Text = mMacAddress.ToString();
+
+            if (mMacAddress.increaseAndSave()) {
+                updateMacAddressUI();
                 return true;
             }
 
             return false;
-        }
-
-        private bool writeBdAddress() {
-            if (mBdAddress == 0 || mCount == 0) {
-                return false;
-            }
-
-            byte[] bytes = MacAddressManager.getBdAddressBytes(mBdAddress);
-            String text = MacAddressManager.getBdAddressString(bytes, 0);
-
-            appendLog("写MAC地址：" + text);
-
-            if (!writeOtpData("0x7FD4", bytes)) {
-                return false;
-            }
-
-            textBoxBdAddressCurrent.Text = MacAddressManager.getBdAddressString(bytes, 0);
-
-            return addBdAddress();
         }
 
         private bool setOtpBootEnable() {
@@ -394,16 +367,6 @@ namespace JwaooOtpProgrammer {
         }
 
         private bool burnOtpFirmwareAll(String pathname) {
-            if (mMacAddressManager == null) {
-                MessageBox.Show("请选择正确的固件文件：" + pathname);
-                return false;
-            }
-
-            if (mMacAddressManager.isInvalidAddress(mBdAddress)) {
-                MessageBox.Show("MAC地址配置文件错误，应该类似：" + MacAddressManager.getBdAddressString(mMacAddressManager.StartValue));
-                return false;
-            }
-
             byte[] bytes = readOtpFirmware();
             if (bytes == null) {
                 MessageBox.Show("读取固件失败！");
@@ -412,7 +375,7 @@ namespace JwaooOtpProgrammer {
 
             appendLog("成功");
 
-            textBoxBdAddressCurrent.Text = MacAddressManager.getBdAddressString(bytes, 0x7FD4);
+            textBoxMacAddressNow.Text = new JwaooMacAddress().fromOtpFirmware(bytes).ToString();
 
             if (isMemoryEmpty(bytes, 0, 0x7F00)) {
                 if (!writeOtpFirmware(pathname)) {
@@ -474,7 +437,7 @@ namespace JwaooOtpProgrammer {
                 labelState.Text = "连接成功";
                 labelState.ForeColor = System.Drawing.Color.LimeGreen;
 
-                textBoxBdAddressCurrent.Text = MacAddressManager.getBdAddressString(bytes, 0xD4);
+                textBoxMacAddressNow.Text = new JwaooMacAddress().fromOtpHeader(bytes).ToString();
                 buttonBurn.Enabled = true;
             } else {
                 appendLog("连接失败！！！");
@@ -498,7 +461,11 @@ namespace JwaooOtpProgrammer {
                 MessageBox.Show("请选择固件文件");
             } else if (!File.Exists(pathname)) {
                 MessageBox.Show("固件文件不存在：" + pathname);
-            } else if (mCount > 0) {
+            } else if (mMacAddress == null) {
+                MessageBox.Show("请选择正确的固件文件：" + pathname);
+            } else if (!mMacAddress.readFromFile()) {
+                MessageBox.Show("读取MAC地址出错：" + mMacAddress.FilePath);
+            } else if (mMacAddress.AddressCount > 0) {
                 buttonConnect.Enabled = false;
                 buttonFirmware.Enabled = false;
 
@@ -534,8 +501,7 @@ namespace JwaooOtpProgrammer {
         }
 
         private void buttonMacAlloc_Click(object sender, EventArgs e) {
-            CavanMacAddress address = (CavanMacAddress)new CavanMacAddress().fromLong((long)mBdAddress);
-            CavanMacAddressManager manager = new CavanMacAddressManager(address, mCount);
+            CavanMacAddressManager manager = new CavanMacAddressManager(new CavanMacAddress(mMacAddress), mMacAddress.AddressCount);
             manager.Show(this);
         }
     }
@@ -543,12 +509,12 @@ namespace JwaooOtpProgrammer {
     public class ShellCommandRunner {
 
         private String mCommand;
-        private Programmer mProgrammer;
+        private JwaooOtpProgrammer mProgrammer;
         private List<String> mErrLines = new List<string>();
         private List<String> mOutLines = new List<string>();
         private List<String> mArgumants = new List<string>();
 
-        public ShellCommandRunner(String command, Programmer programmer) {
+        public ShellCommandRunner(String command, JwaooOtpProgrammer programmer) {
             mCommand = command;
             mProgrammer = programmer;
         }
@@ -702,185 +668,6 @@ namespace JwaooOtpProgrammer {
                 mOutLines.Add(e.Data);
                 mProgrammer.writeLog(e.Data);
             }
-        }
-    }
-
-    public class MacAddressManager {
-
-        private String mFilePath;
-        private String mFwPrefix;
-        private UInt64 mStartValue;
-
-        public MacAddressManager(String fileName, String fwPrefix, UInt64 startValue) {
-            mFilePath = Path.Combine(Application.StartupPath, fileName);
-            mFwPrefix = fwPrefix;
-            mStartValue = startValue;
-        }
-
-        public String FilePath {
-            get {
-                return mFilePath;
-            }
-
-            set {
-                mFilePath = value;
-            }
-        }
-
-        public String FwPrefix {
-            get {
-                return mFwPrefix;
-            }
-
-            set {
-                mFwPrefix = value;
-            }
-        }
-
-        public UInt64 StartValue {
-            get {
-                return mStartValue;
-            }
-        }
-
-        public bool isInvalidAddress(UInt64 address) {
-            return (address & 0xFFFF00000000) != mStartValue;
-        }
-
-        public bool readFromFile(ref UInt64 address, ref UInt32 count) {
-            FileStream stream = null;
-
-            try {
-                stream = File.OpenRead(mFilePath);
-
-                byte[] buff = new byte[32];
-                int length = stream.Read(buff, 0, buff.Length);
-                String text = Encoding.ASCII.GetString(buff, 0, length);
-
-                if (getBdAddressValue(text, ref address, ref count)) {
-                    return true;
-                }
-
-                if (text.Length > 0) {
-                    MessageBox.Show("MAC地址文件：" + mFilePath + "\r\n格式错误：" + text);
-                } else {
-                    MessageBox.Show("MAC地址文件为空：" + mFilePath);
-                }
-            } catch (FileNotFoundException) {
-                address = mStartValue;
-                count = 0;
-                writeToFile(address, 0);
-            } catch (Exception e) {
-                MessageBox.Show("读取MAC地址文件失败：\r\n" + e);
-            } finally {
-                if (stream != null) {
-                    stream.Close();
-                }
-            }
-
-            return false;
-        }
-
-        public bool writeToFile(UInt64 addr, UInt32 count) {
-            String text = getBdAddressString(addr);
-            if (text == null) {
-                return false;
-            }
-
-            byte[] bytes = Encoding.ASCII.GetBytes(text);
-
-            FileStream stream = null;
-
-            try {
-                stream = File.OpenWrite(mFilePath);
-                stream.SetLength(0);
-
-                stream.Write(bytes, 0, bytes.Length);
-
-                bytes = Encoding.ASCII.GetBytes(" " + count);
-                stream.Write(bytes, 0, bytes.Length);
-                return true;
-            } catch (Exception) {
-                return false;
-            } finally {
-                if (stream != null) {
-                    stream.Close();
-                }
-            }
-        }
-
-        public static String getBdAddressString(UInt64 value) {
-            StringBuilder builder = new StringBuilder();
-
-            for (int offset = 40; offset >= 0; offset -= 8) {
-                builder.Append(Programmer.valueToChar((int)((value >> (offset + 4)) & 0x0F)));
-                builder.Append(Programmer.valueToChar((int)((value >> offset) & 0x0F)));
-
-                if (offset > 0) {
-                    builder.Append(':');
-                }
-            }
-
-            return builder.ToString();
-        }
-
-        public static String getBdAddressString(byte[] bytes, int offset) {
-            StringBuilder builder = new StringBuilder();
-
-            for (int i = offset + 5; i >= offset; i--) {
-                byte value = bytes[i];
-                builder.Append(Programmer.valueToChar((value >> 4) & 0x0F));
-                builder.Append(Programmer.valueToChar(value & 0x0F));
-
-                if (i > offset) {
-                    builder.Append(':');
-                }
-            }
-
-            return builder.ToString();
-        }
-
-        public static bool getBdAddressValue(String text, ref UInt64 address, ref UInt32 count) {
-            if (text == null) {
-                return false;
-            }
-
-            String[] texts = Regex.Split(text, "\\s+");
-            if (texts.Length > 1) {
-                text = texts[0];
-                count = Convert.ToUInt32(texts[1]);
-            }
-
-            texts = text.Split(':', '-');
-            if (texts.Length != 6) {
-                return false;
-            }
-
-            address = 0;
-
-            try {
-                foreach (String node in texts) {
-                    if (node.Length != 2) {
-                        return false;
-                    }
-
-                    address = (address << 8) | Convert.ToByte(node, 16);
-                }
-            } catch {
-                return false;
-            }
-
-            return true;
-        }
-
-        public static byte[] getBdAddressBytes(UInt64 addr) {
-            byte[] bytes = new byte[6];
-
-            for (int i = bytes.Length - 1; i >= 0; i--) {
-                bytes[i] = (byte)(addr >> (i * 8));
-            }
-
-            return bytes;
         }
     }
 }

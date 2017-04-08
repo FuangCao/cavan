@@ -83,6 +83,24 @@ namespace JwaooOtpProgrammer {
             return new CavanMacAddress(this);
         }
 
+        public CavanMacAddress getAddressEnd(long count) {
+            CavanMacAddress address = cloneMacAddress();
+
+            if (count > 0) {
+                address.add(count - 1);
+            } else if (address.decrease() != 0) {
+                address.increase();
+            }
+
+            return address;
+        }
+
+        public CavanMacAddress getAddressNext(long count) {
+            CavanMacAddress address = cloneMacAddress();
+            address.add(count);
+            return address;
+        }
+
         public override String ToString() {
             return toString(mSeparator);
         }
