@@ -12,7 +12,6 @@ namespace JwaooOtpProgrammer {
 
         private UInt32 mAddressCount;
         private UInt32 mAddressCountMax;
-        private bool mAddressCountValid;
 
         public CavanMacAddressAddDialog() {
             InitializeComponent();
@@ -34,8 +33,8 @@ namespace JwaooOtpProgrammer {
             }
 
             set {
-                mAddressCountValid = false;
                 mAddressCountMax = value;
+                DialogResult = DialogResult.Cancel;
 
                 if (mAddressCount == 0 || mAddressCount > mAddressCountMax) {
                     mAddressCount = mAddressCountMax;
@@ -45,25 +44,15 @@ namespace JwaooOtpProgrammer {
             }
         }
 
-        public bool AddressCountValid {
-            get {
-                return mAddressCountValid;
-            }
-
-            set {
-                mAddressCountValid = value;
-            }
-        }
-
         private void buttonOK_Click(object sender, EventArgs e) {
             try {
-                UInt32 count  = Convert.ToUInt32(textBoxAddressCount.Text);
+                UInt32 count = Convert.ToUInt32(textBoxAddressCount.Text);
 
                 if (count > 0) {
                     if (count > mAddressCountMax) {
                         MessageBox.Show("输入的地址数过大，请重新输入！");
                     } else {
-                        mAddressCountValid = true;
+                        DialogResult = DialogResult.OK;
                         mAddressCount = count;
                         Close();
                     }

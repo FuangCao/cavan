@@ -19,13 +19,7 @@ namespace JwaooOtpProgrammer {
             InitializeComponent();
 
             mAddressRange = new CavanMacAddressRange(new CavanMacAddress(address), count);
-
-            Rectangle bounds = panelAddresses.Bounds;
-            bounds.X = 0;
-            bounds.Y = 0;
-
-            CavanMacAddressItem item = new CavanMacAddressItem(this, bounds, new CavanMacAddress(address), count);
-            addMacAddressItem(0, item);
+            addMacAddressItemEmpty();
 
             AddressStart = address;
             AddressCount = count;
@@ -126,6 +120,16 @@ namespace JwaooOtpProgrammer {
             listViewAddresses.Items.Insert(index, item);
         }
 
+        private void addMacAddressItemEmpty() {
+            Rectangle bounds = panelAddresses.Bounds;
+            bounds.X = bounds.Y = 0;
+
+            UInt32 count = mAddressRange.AddressCount;
+            CavanMacAddress address = new CavanMacAddress(mAddressRange.AddressStart);
+            CavanMacAddressItem item = new CavanMacAddressItem(this, bounds, address, count);
+            addMacAddressItem(0, item);
+        }
+
         private void buttonMacAddress_MouseCaptureChanged(object sender, EventArgs e) {
             CavanMacAddressButton button = (CavanMacAddressButton)sender;
             button.Focus();
@@ -158,12 +162,58 @@ namespace JwaooOtpProgrammer {
                     }
 
                     mAddressAllocDialog.AddressCountMax = count;
-                    mAddressAllocDialog.ShowDialog(this);
-
-                    if (mAddressAllocDialog.AddressCountValid) {
+                    if (mAddressAllocDialog.ShowDialog(this) == DialogResult.OK) {
                         mAddressCurrent.alloc(mAddressAllocDialog.AddressCount);
                     }
                 }
+            }
+        }
+
+        private void clearMacAddressItems() {
+            panelAddresses.Controls.Clear();
+            listViewAddresses.Items.Clear();
+        }
+
+        private void allocMacAddress(UInt32 count) {
+            clearMacAddressItems();
+
+            CavanMacAddressItem lastItem = null;
+
+            for (UInt32 total = mAddressRange.AddressCount; total > 0; total -= count) {
+                if (total < count) {
+                    count = total;
+                }
+
+                int index;
+                Rectangle bounds;
+                CavanMacAddress address;
+
+                if (lastItem == null) {
+                    index = 0;
+                    bounds = panelAddresses.Bounds;
+                    bounds.X = bounds.Y = 0;
+                    address = new CavanMacAddress(mAddressRange.AddressStart);
+                } else {
+                    index = lastItem.Index + 1;
+                    bounds = lastItem.ButtonBounds;
+                    bounds.X += bounds.Width + 1;
+                    address = lastItem.AddressNext;
+                }
+
+                bounds.Width = (int)(count * panelAddresses.Width / mAddressRange.AddressCount - 1);
+
+                CavanMacAddressItem item = new CavanMacAddressItem(this, bounds, address, count);
+                addMacAddressItem(index, item);
+                item.AddressUsed = true;
+                lastItem = item;
+            }
+
+            if (lastItem == null) {
+                addMacAddressItemEmpty();
+            } else {
+                Rectangle bounds = lastItem.ButtonBounds;
+                bounds.Width = panelAddresses.Width - bounds.X;
+                lastItem.ButtonBounds = bounds;
             }
         }
 
@@ -221,12 +271,7 @@ namespace JwaooOtpProgrammer {
 
                 if (total < count) {
                     if (lastItem == null) {
-                        Rectangle bounds = panelAddresses.Bounds;
-                        bounds.X = 0;
-                        bounds.Y = 0;
-
-                        CavanMacAddressItem item = new CavanMacAddressItem(this, bounds, AddressStart, count);
-                        addMacAddressItem(0, item);
+                        addMacAddressItemEmpty();
                     } else if (lastItem.AddressUsed) {
                         Rectangle bounds = lastItem.ButtonBounds;
                         bounds.X += bounds.Width + 1;
@@ -398,11 +443,22 @@ namespace JwaooOtpProgrammer {
         }
 
         private void buttonAllocAvg_Click(object sender, EventArgs e) {
-
+            CavanMacAddressAllocAvgDialog dialog = new CavanMacAddressAllocAvgDialog(mAddressRange.AddressCount);
+            if (dialog.ShowDialog() == DialogResult.OK) {
+                allocMacAddress((mAddressRange.AddressCount + dialog.Count - 1) / dialog.Count);
+            }
         }
 
         private void buttonAllocFixSize_Click(object sender, EventArgs e) {
+            CavanMacAddressAllocFixSizeDialog dialog = new CavanMacAddressAllocFixSizeDialog(mAddressRange.AddressCount);
+            if (dialog.ShowDialog() == DialogResult.OK) {
+                allocMacAddress(dialog.Count);
+            }
+        }
 
+        private void buttonClear_Click(object sender, EventArgs e) {
+            clearMacAddressItems();
+            addMacAddressItemEmpty();
         }
     }
 

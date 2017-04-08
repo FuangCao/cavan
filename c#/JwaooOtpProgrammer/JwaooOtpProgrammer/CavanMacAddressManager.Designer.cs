@@ -45,6 +45,7 @@
             this.textBoxAddressNext = new System.Windows.Forms.TextBox();
             this.buttonAllocAvg = new System.Windows.Forms.Button();
             this.buttonAllocFixSize = new System.Windows.Forms.Button();
+            this.buttonClear = new System.Windows.Forms.Button();
             this.contextMenuStripAlloc.SuspendLayout();
             this.contextMenuStripFree.SuspendLayout();
             this.SuspendLayout();
@@ -70,7 +71,7 @@
             // labelAddressCount
             // 
             this.labelAddressCount.AutoSize = true;
-            this.labelAddressCount.Location = new System.Drawing.Point(5, 41);
+            this.labelAddressCount.Location = new System.Drawing.Point(5, 40);
             this.labelAddressCount.Name = "labelAddressCount";
             this.labelAddressCount.Size = new System.Drawing.Size(65, 12);
             this.labelAddressCount.TabIndex = 3;
@@ -89,7 +90,7 @@
             // 
             // textBoxAddressCount
             // 
-            this.textBoxAddressCount.Location = new System.Drawing.Point(76, 37);
+            this.textBoxAddressCount.Location = new System.Drawing.Point(76, 36);
             this.textBoxAddressCount.Name = "textBoxAddressCount";
             this.textBoxAddressCount.Size = new System.Drawing.Size(350, 21);
             this.textBoxAddressCount.TabIndex = 5;
@@ -138,7 +139,7 @@
             // 
             // panelAddresses
             // 
-            this.panelAddresses.Location = new System.Drawing.Point(5, 69);
+            this.panelAddresses.Location = new System.Drawing.Point(5, 64);
             this.panelAddresses.Name = "panelAddresses";
             this.panelAddresses.Size = new System.Drawing.Size(900, 89);
             this.panelAddresses.TabIndex = 9;
@@ -154,7 +155,7 @@
             this.listViewAddresses.FullRowSelect = true;
             this.listViewAddresses.GridLines = true;
             this.listViewAddresses.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
-            this.listViewAddresses.Location = new System.Drawing.Point(5, 163);
+            this.listViewAddresses.Location = new System.Drawing.Point(5, 160);
             this.listViewAddresses.MultiSelect = false;
             this.listViewAddresses.Name = "listViewAddresses";
             this.listViewAddresses.Size = new System.Drawing.Size(900, 200);
@@ -192,7 +193,7 @@
             // labelAddressNext
             // 
             this.labelAddressNext.AutoSize = true;
-            this.labelAddressNext.Location = new System.Drawing.Point(448, 41);
+            this.labelAddressNext.Location = new System.Drawing.Point(448, 40);
             this.labelAddressNext.Name = "labelAddressNext";
             this.labelAddressNext.Size = new System.Drawing.Size(101, 12);
             this.labelAddressNext.TabIndex = 11;
@@ -201,7 +202,7 @@
             // textBoxAddressNext
             // 
             this.textBoxAddressNext.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
-            this.textBoxAddressNext.Location = new System.Drawing.Point(555, 37);
+            this.textBoxAddressNext.Location = new System.Drawing.Point(555, 36);
             this.textBoxAddressNext.Name = "textBoxAddressNext";
             this.textBoxAddressNext.Size = new System.Drawing.Size(350, 21);
             this.textBoxAddressNext.TabIndex = 12;
@@ -211,7 +212,7 @@
             // 
             // buttonAllocAvg
             // 
-            this.buttonAllocAvg.Location = new System.Drawing.Point(5, 369);
+            this.buttonAllocAvg.Location = new System.Drawing.Point(5, 367);
             this.buttonAllocAvg.Name = "buttonAllocAvg";
             this.buttonAllocAvg.Size = new System.Drawing.Size(95, 49);
             this.buttonAllocAvg.TabIndex = 13;
@@ -221,13 +222,23 @@
             // 
             // buttonAllocFixSize
             // 
-            this.buttonAllocFixSize.Location = new System.Drawing.Point(810, 369);
+            this.buttonAllocFixSize.Location = new System.Drawing.Point(809, 367);
             this.buttonAllocFixSize.Name = "buttonAllocFixSize";
             this.buttonAllocFixSize.Size = new System.Drawing.Size(95, 49);
             this.buttonAllocFixSize.TabIndex = 14;
             this.buttonAllocFixSize.Text = "固定大小分配";
             this.buttonAllocFixSize.UseVisualStyleBackColor = true;
             this.buttonAllocFixSize.Click += new System.EventHandler(this.buttonAllocFixSize_Click);
+            // 
+            // buttonClear
+            // 
+            this.buttonClear.Location = new System.Drawing.Point(407, 367);
+            this.buttonClear.Name = "buttonClear";
+            this.buttonClear.Size = new System.Drawing.Size(95, 49);
+            this.buttonClear.TabIndex = 15;
+            this.buttonClear.Text = "重新分配";
+            this.buttonClear.UseVisualStyleBackColor = true;
+            this.buttonClear.Click += new System.EventHandler(this.buttonClear_Click);
             // 
             // CavanMacAddressManager
             // 
@@ -236,6 +247,7 @@
             this.AutoScroll = true;
             this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(911, 423);
+            this.Controls.Add(this.buttonClear);
             this.Controls.Add(this.buttonAllocFixSize);
             this.Controls.Add(this.buttonAllocAvg);
             this.Controls.Add(this.textBoxAddressNext);
@@ -282,5 +294,6 @@
         private System.Windows.Forms.TextBox textBoxAddressNext;
         private System.Windows.Forms.Button buttonAllocAvg;
         private System.Windows.Forms.Button buttonAllocFixSize;
+        private System.Windows.Forms.Button buttonClear;
     }
 }

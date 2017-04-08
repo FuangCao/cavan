@@ -44,6 +44,18 @@
   <ItemGroup>
     <Compile Include="CavanLargeValue.cs" />
     <Compile Include="CavanMacAddress.cs" />
+    <Compile Include="CavanMacAddressAllocAvgDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CavanMacAddressAllocAvgDialog.Designer.cs">
+      <DependentUpon>CavanMacAddressAllocAvgDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CavanMacAddressAllocFixSizeDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CavanMacAddressAllocFixSizeDialog.Designer.cs">
+      <DependentUpon>CavanMacAddressAllocFixSizeDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="CavanMacAddressRange.cs" />
     <Compile Include="CavanString.cs" />
     <Compile Include="JwaooMacAddress.cs" />
@@ -67,6 +79,12 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="CavanMacAddressAllocAvgDialog.resx">
+      <DependentUpon>CavanMacAddressAllocAvgDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CavanMacAddressAllocFixSizeDialog.resx">
+      <DependentUpon>CavanMacAddressAllocFixSizeDialog.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CavanMacAddressManager.resx">
       <DependentUpon>CavanMacAddressManager.cs</DependentUpon>
     </EmbeddedResource>

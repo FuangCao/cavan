@@ -291,16 +291,6 @@ namespace JwaooOtpProgrammer {
             return mBytes;
         }
 
-        public byte[] getBytes(int length) {
-            if (mBytes == null || mBytes.Length < length) {
-                mBytes = new byte[length];
-            } else {
-                clear(mBytes, length);
-            }
-
-            return mBytes;
-        }
-
         public byte getByte(int index) {
             return mBytes[index];
         }
@@ -473,12 +463,12 @@ namespace JwaooOtpProgrammer {
         // ============================================================
 
         public CavanLargeValue copyFrom(CavanLargeValue value) {
-            mBytes = (byte[]) value.getBytes().Clone();
+            mBytes = (byte[])value.getBytes().Clone();
             return this;
         }
 
         public CavanLargeValue copyTo(CavanLargeValue value) {
-            value.setBytes((byte[]) mBytes.Clone());
+            value.setBytes((byte[])mBytes.Clone());
             return value;
         }
 
@@ -495,11 +485,12 @@ namespace JwaooOtpProgrammer {
         }
 
         public CavanLargeValue fromBytes(byte[] bytes, int index, int end) {
-            int length = end - index;
-            byte[] dest = getBytes(length);
-
-            for (int i = length - 1; i >= 0; i--) {
-                dest[i] = bytes[index + i];
+            for (int i = 0; i < mBytes.Length; i++) {
+                if (index < end) {
+                    mBytes[i] = bytes[index++];
+                } else {
+                    mBytes[i] = 0;
+                }
             }
 
             return this;
@@ -515,19 +506,20 @@ namespace JwaooOtpProgrammer {
         }
 
         public CavanLargeValue fromStrings(String[] texts, int index, int end, int radix) {
-            int length = end - index;
-            byte[] bytes = getBytes(length);
-
-            for (int i = length - 1; index < end; i--, index++) {
-                String text = texts[index];
-
-                if (text == null || text.Length <= 0) {
-                    bytes[i] = 0;
+            for (int i = 0, j = end - 1; i < mBytes.Length; i++) {
+                if (j < index) {
+                    mBytes[i] = 0;
                 } else {
-                    try {
-                        bytes[i] = Convert.ToByte(text, radix);
-                    } catch {
-                        bytes[i] = 0;
+                    String text = texts[j--];
+
+                    if (text != null && text.Length > 0) {
+                        try {
+                            mBytes[i] = Convert.ToByte(text, radix);
+                        } catch {
+                            mBytes[i] = 0;
+                        }
+                    } else {
+                        mBytes[i] = 0;
                     }
                 }
             }
@@ -552,11 +544,12 @@ namespace JwaooOtpProgrammer {
         }
 
         public CavanLargeValue fromValues(int[] values, int index, int end) {
-            int length = end - index;
-            byte[] bytes = getBytes(length);
-
-            for (int i = length - 1; i >= 0 && index < end; i--, index++) {
-                bytes[i] = (byte)values[index];
+            for (int i = 0, j = end - 1; i < mBytes.Length; i++) {
+                if (j < index) {
+                    mBytes[i] = 0;
+                } else {
+                    mBytes[i] = (byte)values[j++];
+                }
             }
 
             return this;
