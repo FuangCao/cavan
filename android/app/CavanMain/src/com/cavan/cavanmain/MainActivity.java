@@ -47,6 +47,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String ACTION_SEND_WAN_COMMAN = "cavan.intent.action.ACTION_SEND_WAN_COMMAN";
 	public static final String ACTION_UNPACK_QQ = "cavan.intent.action.ACTION_UNPACK_QQ";
 	public static final String ACTION_UNPACK_MM = "cavan.intent.action.ACTION_UNPACK_MM";
+	public static final String ACTION_SERVICE_EXIT = "cavan.intent.action.ACTION_SERVICE_EXIT";
 
 	public static final String KEY_AUTO_UNLOCK = "auto_unlock";
 	public static final String KEY_AUTO_COMMIT = "auto_commit";
@@ -253,11 +254,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 	public static boolean startSogouOcrActivity(Context context) {
 		try {
-			Intent intent = new Intent();
-			intent.setClassName(CavanPackageName.SOGOU_OCR, "com.sogou.ocrplugin.CameraActivity");
-			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			context.startActivity(intent);
-			return true;
+			return CavanAndroid.startActivity(context, CavanPackageName.SOGOU_OCR, "com.sogou.ocrplugin.CameraActivity");
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -583,8 +580,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			if (!CavanAndroid.isNotificationListenerEnabled(this, RedPacketListenerService.class)) {
 				PermissionSettingsActivity.startNotificationListenerSettingsActivity(this);
 				CavanAndroid.showToastLong(this, "请打开通知读取权限");
-			} else if (!CavanAndroid.isAccessibilityServiceEnabled(this, CavanAccessibilityService.class)) {
-				PermissionSettingsActivity.startAccessibilitySettingsActivity(this);
+			} else if (!CavanAccessibilityService.checkAndOpenSettingsActivity(this)) {
 				CavanAndroid.showToast(this, "请打开辅助功能");
 			} else {
 				NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);

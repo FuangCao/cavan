@@ -580,9 +580,23 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	@Override
 	public void onDestroy() {
+		Intent intent = new Intent(MainActivity.ACTION_SERVICE_EXIT);
+		intent.putExtra("service", getClass().getCanonicalName());
+		sendBroadcast(intent);
+
 		unbindService(mConnection);
 		unregisterReceiver(mReceiver);
 
 		super.onDestroy();
+	}
+
+	public static boolean checkAndOpenSettingsActivity(Context context) {
+		if (CavanAndroid.isAccessibilityServiceEnabled(context, CavanAccessibilityService.class)) {
+			return true;
+		}
+
+		PermissionSettingsActivity.startAccessibilitySettingsActivity(context);
+
+		return false;
 	}
 }

@@ -53,11 +53,11 @@ public class PermissionSettingsActivity extends PreferenceActivity {
 	}
 
 	public static void startNotificationListenerSettingsActivity(Context context) {
-		context.startActivity(getNotificationAccessIntent());
+		CavanAndroid.startActivity(context, getNotificationAccessIntent());
 	}
 
 	public static void startAccessibilitySettingsActivity(Context context) {
-		context.startActivity(getAccessibilitySettingsIntent());
+		CavanAndroid.startActivity(context, getAccessibilitySettingsIntent());
 	}
 
 	public static Intent getIntent(Context context) {

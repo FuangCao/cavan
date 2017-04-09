@@ -264,6 +264,17 @@ public class FloatMessageService extends FloatWidowService {
 					mNetSender.sendTcpCommand(command, 0);
 				}
 				break;
+
+			case MainActivity.ACTION_SERVICE_EXIT:
+				String service = intent.getStringExtra("service");
+				if (service == null) {
+					break;
+				}
+
+				if (service.equals(CavanAccessibilityService.class.getCanonicalName())) {
+					CavanAccessibilityService.checkAndOpenSettingsActivity(getApplicationContext());
+				}
+				break;
 			}
 		}
 	};
@@ -599,11 +610,16 @@ public class FloatMessageService extends FloatWidowService {
 
 	@Override
 	public void onCreate() {
+		super.onCreate();
+
+		CavanAccessibilityService.checkAndOpenSettingsActivity(this);
+
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Intent.ACTION_SCREEN_OFF);
 		filter.addAction(Intent.ACTION_SCREEN_ON);
 		filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
 		filter.addAction(MainActivity.ACTION_SEND_WAN_COMMAN);
+		filter.addAction(MainActivity.ACTION_SERVICE_EXIT);
 		registerReceiver(mReceiver, filter );
 
 		mFileObserverQQ.startWatching();
@@ -616,8 +632,6 @@ public class FloatMessageService extends FloatWidowService {
 
 		updateNetworkConnState();
 		setSuspendDisable(MainActivity.isDisableSuspendEnabled(this));
-
-		super.onCreate();
 	}
 
 	@Override

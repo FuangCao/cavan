@@ -121,11 +121,7 @@ public class MessageActivity extends Activity {
 
 					CavanAndroid.showToastLong(this, "支付宝口令: " + code);
 				} else if (CavanMessageView.ACTION_OPEN.equals(action)) {
-					Intent intent = getPackageManager().getLaunchIntentForPackage(uri.getHost());
-					if (intent != null) {
-						intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-						startActivity(intent);
-					}
+					CavanAndroid.startActivity(this, uri.getHost());
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

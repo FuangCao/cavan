@@ -699,6 +699,12 @@ public class CavanAndroid {
 		return startActivity(context, intent);
 	}
 
+	public static boolean startActivity(Context context, String pkgName, String clsName) {
+		Intent intent = new Intent();
+		intent.setClassName(pkgName, clsName);
+		return CavanAndroid.startActivity(context, intent);
+	}
+
 	public static boolean startActivity(Context context, Class<?> cls) {
 		return startActivity(context, new Intent(context, cls));
 	}

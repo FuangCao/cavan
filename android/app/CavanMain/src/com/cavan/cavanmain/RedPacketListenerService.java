@@ -268,14 +268,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 		CavanAndroid.postClipboardText(context, code);
 
-		Intent intent = context.getPackageManager().getLaunchIntentForPackage(CavanPackageName.TMALL);
-		if (intent == null) {
-			return false;
-		}
-
-		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK); //  | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-		context.startActivity(intent);
-		return true;
+		return CavanAndroid.startActivity(context, CavanPackageName.TMALL);
 	}
 
 	private void loadKeywords(SharedPreferences preferences) {
@@ -301,6 +294,8 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 	@Override
 	public void onCreate() {
+		super.onCreate();
+
 		mClipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 		mClipboardManager.addPrimaryClipChangedListener(this);
 
@@ -319,8 +314,6 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			loadKeywords(preferences);
 			preferences.registerOnSharedPreferenceChangeListener(this);
 		}
-
-		super.onCreate();
 	}
 
 	@Override
