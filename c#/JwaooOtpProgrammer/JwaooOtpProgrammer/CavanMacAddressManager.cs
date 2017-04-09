@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
+using System.IO;
+using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
@@ -11,12 +9,13 @@ namespace JwaooOtpProgrammer {
     public partial class CavanMacAddressManager : Form {
 
         private CavanMacAddressAddDialog mAddressAllocDialog;
-        private CavanMacAddressButton mAddressCurrent;
+        private CavanMacAddressButton mButtonCurrent;
         private CavanMacAddressRange mAddressRange;
         private object mSenderLocked;
 
         public CavanMacAddressManager(CavanMacAddress address, UInt32 count) {
             InitializeComponent();
+            saveFileDialogExport.InitialDirectory = Application.StartupPath;
 
             mAddressRange = new CavanMacAddressRange(new CavanMacAddress(address), count);
             addMacAddressItemEmpty();
@@ -82,20 +81,25 @@ namespace JwaooOtpProgrammer {
         }
 
         public void setCurrentMacAddressButton(CavanMacAddressButton button) {
-            if (mAddressCurrent != null) {
-                mAddressCurrent.setHighLight(false);
+            if (button != mButtonCurrent) {
+                if (mButtonCurrent != null) {
+                    mButtonCurrent.setHighLight(false);
+                }
+
+                mButtonCurrent = button;
+
+                if (button != null) {
+                    button.setHighLight(true);
+                }
+
+                updateContextMenuStrip();
             }
-
-            mAddressCurrent = button;
-            mAddressCurrent.setHighLight(true);
-
-            updateContextMenuStrip();
         }
 
         public void updateContextMenuStrip() {
-            if (mAddressCurrent == null || mAddressCurrent.AddressCount == 0) {
+            if (mButtonCurrent == null || mButtonCurrent.AddressCount == 0) {
                 listViewAddresses.ContextMenuStrip = null;
-            } else if (mAddressCurrent.AddressUsed) {
+            } else if (mButtonCurrent.AddressUsed) {
                 listViewAddresses.ContextMenuStrip = contextMenuStripFree;
             } else {
                 listViewAddresses.ContextMenuStrip = contextMenuStripAlloc;
@@ -105,6 +109,7 @@ namespace JwaooOtpProgrammer {
         public void addMacAddressItem(int index, CavanMacAddressItem item) {
             CavanMacAddressButton button = item.AddressButton;
             button.GotFocus += buttonMacAddress_GotFocus;
+            button.LostFocus += buttonMacAddress_LostFocus;
             button.MouseCaptureChanged += buttonMacAddress_MouseCaptureChanged;
             panelAddresses.Controls.Add(button);
 
@@ -121,13 +126,19 @@ namespace JwaooOtpProgrammer {
             addMacAddressItem(0, item);
         }
 
+        private void buttonMacAddress_GotFocus(object sender, EventArgs e) {
+            setCurrentMacAddressButton((CavanMacAddressButton)sender);
+        }
+
         private void buttonMacAddress_MouseCaptureChanged(object sender, EventArgs e) {
             CavanMacAddressButton button = (CavanMacAddressButton)sender;
             button.Focus();
         }
 
-        private void buttonMacAddress_GotFocus(object sender, EventArgs e) {
-            setCurrentMacAddressButton((CavanMacAddressButton)sender);
+        private void buttonMacAddress_LostFocus(object sender, EventArgs e) {
+            if (sender == mButtonCurrent) {
+                setCurrentMacAddressButton(null);
+            }
         }
 
         private void listViewAddresses_SelectedIndexChanged(object sender, EventArgs e) {
@@ -135,18 +146,20 @@ namespace JwaooOtpProgrammer {
             if (items != null && items.Count > 0) {
                 CavanMacAddressItem item = (CavanMacAddressItem)items[0];
                 setCurrentMacAddressButton(item.AddressButton);
+            } else {
+                setCurrentMacAddressButton(null);
             }
         }
 
         private void freeMacAddress() {
-            if (mAddressCurrent != null) {
-                mAddressCurrent.free();
+            if (mButtonCurrent != null) {
+                mButtonCurrent.free();
             }
         }
 
         private void allocMacAddress() {
-            if (mAddressCurrent != null) {
-                UInt32 count = mAddressCurrent.AddressCount;
+            if (mButtonCurrent != null) {
+                UInt32 count = mButtonCurrent.AddressCount;
                 if (count > 0) {
                     if (mAddressAllocDialog == null) {
                         mAddressAllocDialog = new CavanMacAddressAddDialog();
@@ -154,7 +167,7 @@ namespace JwaooOtpProgrammer {
 
                     mAddressAllocDialog.AddressCountMax = count;
                     if (mAddressAllocDialog.ShowDialog(this) == DialogResult.OK) {
-                        mAddressCurrent.alloc(mAddressAllocDialog.AddressCount);
+                        mButtonCurrent.alloc(mAddressAllocDialog.AddressCount);
                     }
                 }
             }
@@ -442,10 +455,33 @@ namespace JwaooOtpProgrammer {
             clearMacAddressItems();
             addMacAddressItemEmpty();
         }
+
+        private void buttonExport_Click(object sender, EventArgs e) {
+            if (saveFileDialogExport.ShowDialog() == DialogResult.OK) {
+                StreamWriter writer = File.CreateText(saveFileDialogExport.FileName);
+                writer.WriteLine("起始地址：" + AddressStart);
+                writer.WriteLine("结束地址：" + AddressEnd);
+                writer.WriteLine("地址个数：" + AddressCount);
+                writer.WriteLine();
+
+                foreach (CavanMacAddressItem item in listViewAddresses.Items) {
+                    writer.WriteLine(item);
+                }
+
+                writer.Close();
+
+                Process.Start("NotePad.exe", saveFileDialogExport.FileName);
+            }
+        }
+
+        private void listViewAddresses_Leave(object sender, EventArgs e) {
+            setCurrentMacAddressButton(null);
+        }
     }
 
     public class CavanMacAddressButton : Button {
 
+        private bool mAddressHighLight;
         private CavanMacAddressItem mAddressItem;
 
         public CavanMacAddressButton(CavanMacAddressItem item, Rectangle bounds) {
@@ -500,6 +536,32 @@ namespace JwaooOtpProgrammer {
             }
         }
 
+        public void setHighLight(bool enable) {
+            mAddressHighLight = enable;
+            updateColor();
+
+            mAddressItem.setHighLight(enable);
+        }
+
+        public void updateColor() {
+            if (mAddressHighLight) {
+                BackColor = Color.Blue;
+                FlatAppearance.BorderColor = Color.Red;
+            } else if (AddressUsed) {
+                BackColor = Color.Green;
+                FlatAppearance.BorderColor = Color.Black;
+            } else {
+                BackColor = Color.White;
+                FlatAppearance.BorderColor = Color.Black;
+            }
+
+            if (AddressUsed) {
+                ForeColor = Color.White;
+            } else {
+                ForeColor = Color.Red;
+            }
+        }
+
         public void updateUI() {
             UInt32 count = AddressCount;
 
@@ -513,20 +575,8 @@ namespace JwaooOtpProgrammer {
                 ContextMenuStrip = AddressManager.getContextMenuStripAlloc();
                 Text = "空闲\n(" + count + ")";
             }
-        }
 
-        public void setHighLight(bool enable) {
-            if (enable) {
-                BackColor = Color.Blue;
-                ForeColor = Color.White;
-                FlatAppearance.BorderColor = Color.Red;
-            } else {
-                BackColor = Color.White;
-                ForeColor = Color.Black;
-                FlatAppearance.BorderColor = Color.Black;
-            }
-
-            mAddressItem.setHighLight(enable);
+            updateColor();
         }
 
         public bool alloc(UInt32 count) {
@@ -592,6 +642,16 @@ namespace JwaooOtpProgrammer {
             }
         }
 
+        public String AddressUsedText {
+            get {
+                if (AddressUsed) {
+                    return "已分配";
+                } else {
+                    return "空闲";
+                }
+            }
+        }
+
         public CavanMacAddress AddressEnd {
             get {
                 return mAddressRange.AddressEnd;
@@ -640,12 +700,7 @@ namespace JwaooOtpProgrammer {
             Text = AddressStart.ToString();
             SubItems[1].Text = AddressEnd.ToString();
             SubItems[2].Text = Convert.ToString(AddressCount);
-
-            if (mAddressUsed) {
-                SubItems[3].Text = "已分配";
-            } else {
-                SubItems[3].Text = "空闲";
-            }
+            SubItems[3].Text = AddressUsedText;
 
             mAddressButton.updateUI();
         }
@@ -697,6 +752,15 @@ namespace JwaooOtpProgrammer {
                 BackColor = Color.White;
                 ForeColor = Color.Black;
             }
+        }
+
+        public override string ToString() {
+            StringBuilder builder = new StringBuilder();
+
+            builder.Append(AddressStart).Append(' ').Append(AddressCount).Append(" - ");
+            builder.Append(AddressEnd).Append(' ').Append(AddressUsedText);
+
+            return builder.ToString(); ;
         }
     }
 }

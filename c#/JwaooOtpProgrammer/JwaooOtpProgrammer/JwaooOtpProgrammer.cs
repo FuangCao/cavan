@@ -2,7 +2,6 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Configuration;
@@ -503,6 +502,18 @@ namespace JwaooOtpProgrammer {
         private void buttonMacAlloc_Click(object sender, EventArgs e) {
             CavanMacAddressManager manager = new CavanMacAddressManager(new CavanMacAddress(mMacAddress), mMacAddress.AddressCount);
             manager.Show(this);
+        }
+
+        private void buttonAddressEdit_Click(object sender, EventArgs e) {
+            if (mMacAddress != null) {
+                JwaooMacAddressEditDialog dialog = new JwaooMacAddressEditDialog(mMacAddress);
+                if (dialog.ShowDialog() == DialogResult.OK) {
+                    mMacAddress.writeToFile();
+                    updateMacAddressUI();
+                }
+            } else {
+                MessageBox.Show("请先选择正确的固件文件！");
+            }
         }
     }
 

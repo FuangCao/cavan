@@ -46,6 +46,8 @@
             this.buttonAllocAvg = new System.Windows.Forms.Button();
             this.buttonAllocFixSize = new System.Windows.Forms.Button();
             this.buttonClear = new System.Windows.Forms.Button();
+            this.buttonExport = new System.Windows.Forms.Button();
+            this.saveFileDialogExport = new System.Windows.Forms.SaveFileDialog();
             this.contextMenuStripAlloc.SuspendLayout();
             this.contextMenuStripFree.SuspendLayout();
             this.SuspendLayout();
@@ -164,6 +166,7 @@
             this.listViewAddresses.View = System.Windows.Forms.View.Details;
             this.listViewAddresses.SelectedIndexChanged += new System.EventHandler(this.listViewAddresses_SelectedIndexChanged);
             this.listViewAddresses.Enter += new System.EventHandler(this.listViewAddresses_SelectedIndexChanged);
+            this.listViewAddresses.Leave += new System.EventHandler(this.listViewAddresses_Leave);
             // 
             // columnHeaderAddressStart
             // 
@@ -222,7 +225,7 @@
             // 
             // buttonAllocFixSize
             // 
-            this.buttonAllocFixSize.Location = new System.Drawing.Point(809, 367);
+            this.buttonAllocFixSize.Location = new System.Drawing.Point(273, 367);
             this.buttonAllocFixSize.Name = "buttonAllocFixSize";
             this.buttonAllocFixSize.Size = new System.Drawing.Size(95, 49);
             this.buttonAllocFixSize.TabIndex = 14;
@@ -232,13 +235,30 @@
             // 
             // buttonClear
             // 
-            this.buttonClear.Location = new System.Drawing.Point(407, 367);
+            this.buttonClear.Location = new System.Drawing.Point(541, 367);
             this.buttonClear.Name = "buttonClear";
             this.buttonClear.Size = new System.Drawing.Size(95, 49);
             this.buttonClear.TabIndex = 15;
             this.buttonClear.Text = "重新分配";
             this.buttonClear.UseVisualStyleBackColor = true;
             this.buttonClear.Click += new System.EventHandler(this.buttonClear_Click);
+            // 
+            // buttonExport
+            // 
+            this.buttonExport.Location = new System.Drawing.Point(809, 367);
+            this.buttonExport.Name = "buttonExport";
+            this.buttonExport.Size = new System.Drawing.Size(95, 49);
+            this.buttonExport.TabIndex = 16;
+            this.buttonExport.Text = "导出";
+            this.buttonExport.UseVisualStyleBackColor = true;
+            this.buttonExport.Click += new System.EventHandler(this.buttonExport_Click);
+            // 
+            // saveFileDialogExport
+            // 
+            this.saveFileDialogExport.DefaultExt = "txt";
+            this.saveFileDialogExport.FileName = "MacAddressMap";
+            this.saveFileDialogExport.Filter = "文本文件|*.txt";
+            this.saveFileDialogExport.Title = "导出MAC地址列表";
             // 
             // CavanMacAddressManager
             // 
@@ -247,6 +267,7 @@
             this.AutoScroll = true;
             this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(911, 423);
+            this.Controls.Add(this.buttonExport);
             this.Controls.Add(this.buttonClear);
             this.Controls.Add(this.buttonAllocFixSize);
             this.Controls.Add(this.buttonAllocAvg);
@@ -264,7 +285,7 @@
             this.MaximizeBox = false;
             this.Name = "CavanMacAddressManager";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "井蛙地址管理器";
+            this.Text = "井蛙MAC地址划分";
             this.contextMenuStripAlloc.ResumeLayout(false);
             this.contextMenuStripFree.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -295,5 +316,7 @@
         private System.Windows.Forms.Button buttonAllocAvg;
         private System.Windows.Forms.Button buttonAllocFixSize;
         private System.Windows.Forms.Button buttonClear;
+        private System.Windows.Forms.Button buttonExport;
+        private System.Windows.Forms.SaveFileDialog saveFileDialogExport;
     }
 }

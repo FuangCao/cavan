@@ -1,13 +1,11 @@
 ﻿using System;
 using System.IO;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace JwaooOtpProgrammer {
-    class JwaooMacAddress : CavanMacAddress {
+    public class JwaooMacAddress : CavanMacAddress {
 
         private String mFilePath;
         private String mFwPrefix;
@@ -46,6 +44,34 @@ namespace JwaooOtpProgrammer {
             get {
                 return mAddressCount;
             }
+
+            set {
+                mAddressCount = value;
+            }
+        }
+
+        public String AddressCountText {
+            get {
+                return Convert.ToString(mAddressCount);
+            }
+
+            set {
+                try {
+                    mAddressCount = Convert.ToUInt32(value);
+                } catch (Exception) {
+                    mAddressCount = 0;
+                }
+            }
+        }
+
+        public CavanMacAddress AddressStart {
+            get {
+                return mAddressStart;
+            }
+
+            set {
+                mAddressStart = value;
+            }
         }
 
         public CavanMacAddress AddressEnd {
@@ -60,27 +86,21 @@ namespace JwaooOtpProgrammer {
             }
         }
 
-        public bool setAddressCount(String text) {
-            try {
-                mAddressCount = Convert.ToUInt32(text);
-            } catch {
-                mAddressCount = 0;
-            }
-
-            return false;
+        public bool isAddressValid(CavanMacAddress address) {
+            return address.startsWith(mAddressStart);
         }
 
-        public new JwaooMacAddress fromString(String text) {
+        public JwaooMacAddress fromStringWithCount(String text) {
             String[] texts = Regex.Split(text, "\\s+");
             if (texts.Length > 1) {
-                setAddressCount(texts[1]);
+                AddressCountText = texts[1];
                 text = texts[0];
             } else {
                 mAddressCount = 0;
             }
 
-            CavanMacAddress address = base.fromString(text);
-            if (address.startsWith(mAddressStart)) {
+            CavanMacAddress address = fromString(text);
+            if (isAddressValid(address)) {
                 return this;
             }
 
@@ -88,16 +108,12 @@ namespace JwaooOtpProgrammer {
         }
 
         public bool readFromFile() {
-            FileStream stream = null;
+            StreamReader reader = null;
 
             try {
-                stream = File.OpenRead(mFilePath);
+                reader = File.OpenText(mFilePath);
 
-                byte[] buff = new byte[32];
-                int length = stream.Read(buff, 0, buff.Length);
-                String text = Encoding.ASCII.GetString(buff, 0, length);
-
-                JwaooMacAddress address = fromString(text);
+                JwaooMacAddress address = fromStringWithCount(reader.ReadLine());
                 if (address != null) {
                     return true;
                 }
@@ -111,8 +127,8 @@ namespace JwaooOtpProgrammer {
             } catch (Exception e) {
                 MessageBox.Show("读MAC地址出错：\n" + e);
             } finally {
-                if (stream != null) {
-                    stream.Close();
+                if (reader != null) {
+                    reader.Close();
                 }
             }
 
@@ -120,21 +136,17 @@ namespace JwaooOtpProgrammer {
         }
 
         public bool writeToFile() {
-            String text = ToString() + " " + mAddressCount;
-            byte[] bytes = Encoding.ASCII.GetBytes(text);
-
-            FileStream stream = null;
+            StreamWriter writer = null;
 
             try {
-                stream = File.OpenWrite(mFilePath);
-                stream.SetLength(0);
-                stream.Write(bytes, 0, bytes.Length);
+                writer = File.CreateText(mFilePath);
+                writer.Write(ToString() + " " + mAddressCount);
             } catch (Exception e) {
                 MessageBox.Show("保存MAC地址出错：\n" + e);
                 return false;
             } finally {
-                if (stream != null) {
-                    stream.Close();
+                if (writer != null) {
+                    writer.Close();
                 }
             }
 
@@ -153,7 +165,7 @@ namespace JwaooOtpProgrammer {
             }
 
             base.decrease();
-            mAddressCount--;
+            mAddressCount++;
 
             return false;
         }

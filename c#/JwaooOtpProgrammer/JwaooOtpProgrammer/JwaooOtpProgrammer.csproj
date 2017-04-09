@@ -71,6 +71,12 @@
     <Compile Include="CavanMacAddressAddDialog.Designer.cs">
       <DependentUpon>CavanMacAddressAddDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="JwaooMacAddressEditDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="JwaooMacAddressEditDialog.Designer.cs">
+      <DependentUpon>JwaooMacAddressEditDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="JwaooOtpProgrammer.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -90,6 +96,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="CavanMacAddressAddDialog.resx">
       <DependentUpon>CavanMacAddressAddDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="JwaooMacAddressEditDialog.resx">
+      <DependentUpon>JwaooMacAddressEditDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="JwaooOtpProgrammer.resx">
       <DependentUpon>JwaooOtpProgrammer.cs</DependentUpon>
