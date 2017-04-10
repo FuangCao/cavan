@@ -74,7 +74,7 @@ namespace JwaooOtpProgrammer {
             }
 
             mMacAddress = address;
-            updateMacAddressUI();
+            readMacAddressFromFile();
 
             textBoxFirmware.Text = pathname;
             buttonAddressEdit.Enabled = true;
@@ -154,19 +154,23 @@ namespace JwaooOtpProgrammer {
             textBoxLog.AppendText("\r\n");
         }
 
-        private void updateMacAddressUI() {
+        private bool readMacAddressFromFile() {
             if (mMacAddress != null && mMacAddress.readFromFile()) {
                 buttonBurn.Enabled = mMacAddress.AddressCount > 0;
 
                 textBoxMacAddressStart.Text = mMacAddress.ToString();
                 textBoxMacAddressEnd.Text = mMacAddress.AddressEnd.ToString();
                 textBoxMacAddressCount.Text = mMacAddress.AddressCount + " (个)";
+
+                return true;
             } else {
                 buttonBurn.Enabled = false;
 
                 textBoxMacAddressStart.Clear();
                 textBoxMacAddressEnd.Clear();
                 textBoxMacAddressCount.Clear();
+
+                return false;
             }
         }
 
@@ -446,7 +450,7 @@ namespace JwaooOtpProgrammer {
                 labelState.ForeColor = System.Drawing.Color.LimeGreen;
 
                 textBoxMacAddressNow.Text = new JwaooMacAddress().fromOtpHeader(bytes).ToString();
-                updateMacAddressUI();
+                readMacAddressFromFile();
             } else {
                 appendLog("连接失败！！！");
                 labelState.Text = "连接失败！";
@@ -471,7 +475,7 @@ namespace JwaooOtpProgrammer {
                 MessageBox.Show("固件文件不存在：" + pathname);
             } else if (mMacAddress == null) {
                 MessageBox.Show("请选择正确的固件文件：" + pathname);
-            } else if (!mMacAddress.readFromFile()) {
+            } else if (!readMacAddressFromFile()) {
                 MessageBox.Show("读取MAC地址出错：" + mMacAddress.FilePath);
             } else if (mMacAddress.AddressCount > 0) {
                 buttonConnect.Enabled = false;
@@ -491,7 +495,7 @@ namespace JwaooOtpProgrammer {
                     labelState.ForeColor = System.Drawing.Color.Red;
                 }
 
-                updateMacAddressUI();
+                readMacAddressFromFile();
                 buttonConnect.Enabled = true;
                 buttonFirmware.Enabled = true;
             } else {
@@ -524,13 +528,11 @@ namespace JwaooOtpProgrammer {
         }
 
         private void buttonAddressEdit_Click(object sender, EventArgs e) {
-            if (mMacAddress != null) {
-                mMacAddress.readFromFile();
-
+            if (readMacAddressFromFile()) {
                 JwaooMacAddressEditDialog dialog = new JwaooMacAddressEditDialog(mMacAddress);
                 if (dialog.ShowDialog() == DialogResult.OK) {
                     mMacAddress.writeToFile();
-                    updateMacAddressUI();
+                    readMacAddressFromFile();
                 }
             } else {
                 MessageBox.Show("请先选择正确的固件文件！");
