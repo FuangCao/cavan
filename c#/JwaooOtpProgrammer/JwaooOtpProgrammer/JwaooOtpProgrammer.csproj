@@ -42,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CavanDelegate.cs" />
     <Compile Include="CavanLargeValue.cs" />
     <Compile Include="CavanMacAddress.cs" />
     <Compile Include="CavanMacAddressAllocAvgDialog.cs">

@@ -5,6 +5,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Configuration;
+using System.Threading;
 
 namespace JwaooOtpProgrammer {
 
@@ -34,8 +35,6 @@ namespace JwaooOtpProgrammer {
             new JwaooMacAddress("JwaooMacModel06.txt", "JwaooFwModel06", new CavanMacAddress().fromString("88:EA:00:00:00:00")),
             new JwaooMacAddress("JwaooMacModel10.txt", "JwaooFwModel10", new CavanMacAddress().fromString("88:EB:00:00:00:00")),
         };
-
-        delegate void Process_OutputDataReceivedDelegate(object sender, DataReceivedEventArgs e);
 
         public JwaooOtpProgrammer() {
             InitializeComponent();
@@ -149,30 +148,33 @@ namespace JwaooOtpProgrammer {
             return writeLogFile(line) && writeLogFile("\r\n");
         }
 
+        private void setTextBoxText(TextBox view, String text) {
+            view.Text = text;
+        }
+
         public void appendLog(String line) {
-            textBoxLog.AppendText(line);
-            textBoxLog.AppendText("\r\n");
+            CavanDelegate.appendText(textBoxLog, line + "\r\n");
         }
 
         private bool readMacAddressFromFile(bool enable) {
             if (mMacAddress != null && mMacAddress.readFromFile()) {
                 if (mMacAddress.AddressCount > 0) {
-                    buttonBurn.Enabled = enable;
+                    CavanDelegate.setEnable(buttonBurn, enable);
                 } else {
-                    buttonBurn.Enabled = false;
+                    CavanDelegate.setEnable(buttonBurn, false);
                 }
 
-                textBoxMacAddressStart.Text = mMacAddress.ToString();
-                textBoxMacAddressEnd.Text = mMacAddress.AddressEnd.ToString();
-                textBoxMacAddressCount.Text = mMacAddress.AddressCount + " (个)";
+                CavanDelegate.setText(textBoxMacAddressStart, mMacAddress.ToString());
+                CavanDelegate.setText(textBoxMacAddressEnd, mMacAddress.AddressEnd.ToString());
+                CavanDelegate.setText(textBoxMacAddressCount, mMacAddress.AddressCount + " (个)");
 
                 return true;
             } else {
-                buttonBurn.Enabled = false;
+                CavanDelegate.setEnable(buttonBurn, false);
 
-                textBoxMacAddressStart.Clear();
-                textBoxMacAddressEnd.Clear();
-                textBoxMacAddressCount.Clear();
+                CavanDelegate.clearText(textBoxMacAddressStart);
+                CavanDelegate.clearText(textBoxMacAddressEnd);
+                CavanDelegate.clearText(textBoxMacAddressCount);
 
                 return false;
             }
@@ -391,7 +393,7 @@ namespace JwaooOtpProgrammer {
 
             appendLog("成功");
 
-            textBoxMacAddressNow.Text = new JwaooMacAddress().fromOtpFirmware(bytes).ToString();
+            CavanDelegate.setText(textBoxMacAddressNow, new JwaooMacAddress().fromOtpFirmware(bytes).ToString());
 
             if (isMemoryEmpty(bytes, 0, 0x7F00)) {
                 if (!writeOtpFirmware(pathname)) {
@@ -440,40 +442,91 @@ namespace JwaooOtpProgrammer {
             }
         }
 
-        private void buttonConnect_Click(object sender, EventArgs e) {
-            buttonConnect.Enabled = false;
-            buttonBurn.Enabled = false;
+        // ================================================================================
 
-            labelState.Text = "正在测试连接...";
-            labelState.ForeColor = System.Drawing.Color.Black;
+        private void backgroundWorkerConnTest_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e) {
+            switch (e.ProgressPercentage) {
+            case 1:
+                labelState.Text = "正在测试连接...";
+                labelState.ForeColor = System.Drawing.Color.Black;
+                break;
 
-            byte[] bytes = readOtpHeader();
-            if (bytes != null) {
+            case 2:
                 appendLog("连接成功");
                 labelState.Text = "连接成功";
                 labelState.ForeColor = System.Drawing.Color.LimeGreen;
 
-                textBoxMacAddressNow.Text = new JwaooMacAddress().fromOtpHeader(bytes).ToString();
-                readMacAddressFromFile(true);
-            } else {
+                textBoxMacAddressNow.Text = new JwaooMacAddress().fromOtpHeader((byte[])e.UserState).ToString();
+                break;
+
+            case 3:
                 appendLog("连接失败！！！");
                 labelState.Text = "连接失败！";
                 labelState.ForeColor = System.Drawing.Color.Red;
+                break;
             }
+        }
 
+        private void backgroundWorkerConnTest_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e) {
             buttonConnect.Enabled = true;
         }
 
-        private void buttonBurn_Click(object sender, EventArgs e) {
-            buttonBurn.Enabled = false;
+        private void backgroundWorkerConnTest_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e) {
 
-            if (mBurnSuccess) {
-                mBurnSuccess = false;
-                textBoxLog.Clear();
+            backgroundWorkerConnTest.ReportProgress(1);
+
+            byte[] bytes = readOtpHeader();
+            if (bytes != null) {
+                backgroundWorkerConnTest.ReportProgress(2, bytes);
+                readMacAddressFromFile(true);
+            } else {
+                backgroundWorkerConnTest.ReportProgress(3);
             }
+        }
 
-            String pathname = textBoxFirmware.Text;
-            if (pathname == null || pathname.Length == 0) {
+        private void buttonConnect_Click(object sender, EventArgs e) {
+            buttonConnect.Enabled = false;
+            buttonBurn.Enabled = false;
+            backgroundWorkerConnTest.RunWorkerAsync();
+        }
+
+        // ================================================================================
+
+        private void backgroundWorkerOtpBurn_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e) {
+            switch (e.ProgressPercentage) {
+            case 1:
+                labelState.Text = "正在烧录...";
+                labelState.ForeColor = System.Drawing.Color.Black;
+                break;
+
+            case 2:
+                appendLog("烧录成功");
+                labelState.Text = "烧录成功";
+                labelState.ForeColor = System.Drawing.Color.LimeGreen;
+                break;
+
+            case 3:
+                appendLog("烧录失败！！！");
+                labelState.Text = "烧录失败！";
+                labelState.ForeColor = System.Drawing.Color.Red;
+                break;
+
+            case 4:
+                labelState.Text = "MAC地址用完了，请重新分配!";
+                labelState.ForeColor = System.Drawing.Color.Red;
+                break;
+            }
+        }
+
+        private void backgroundWorkerOtpBurn_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e) {
+            buttonConnect.Enabled = true;
+            buttonFirmware.Enabled = true;
+        }
+
+        private void backgroundWorkerOtpBurn_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e) {
+            String pathname = (String)e.Argument;
+
+            if (pathname.Length == 0) {
                 MessageBox.Show("请选择固件文件");
             } else if (!File.Exists(pathname)) {
                 MessageBox.Show("固件文件不存在：" + pathname);
@@ -482,31 +535,35 @@ namespace JwaooOtpProgrammer {
             } else if (!readMacAddressFromFile(false)) {
                 MessageBox.Show("读取MAC地址出错：" + mMacAddress.FilePath);
             } else if (mMacAddress.AddressCount > 0) {
-                buttonConnect.Enabled = false;
-                buttonFirmware.Enabled = false;
-
-                labelState.Text = "正在烧录...";
-                labelState.ForeColor = System.Drawing.Color.Black;
+                backgroundWorkerOtpBurn.ReportProgress(1);
 
                 if (burnOtpFirmwareAll(pathname)) {
                     mBurnSuccess = true;
-                    appendLog("烧录成功");
-                    labelState.Text = "烧录成功";
-                    labelState.ForeColor = System.Drawing.Color.LimeGreen;
+                    backgroundWorkerOtpBurn.ReportProgress(2);
                 } else {
-                    appendLog("烧录失败！！！");
-                    labelState.Text = "烧录失败！";
-                    labelState.ForeColor = System.Drawing.Color.Red;
+                    backgroundWorkerOtpBurn.ReportProgress(3);
                 }
 
                 readMacAddressFromFile(true);
-                buttonConnect.Enabled = true;
-                buttonFirmware.Enabled = true;
             } else {
-                labelState.Text = "MAC地址用完了，请重新分配!";
-                labelState.ForeColor = System.Drawing.Color.Red;
+                backgroundWorkerOtpBurn.ReportProgress(4);
             }
         }
+
+        private void buttonBurn_Click(object sender, EventArgs e) {
+            buttonBurn.Enabled = false;
+            buttonConnect.Enabled = false;
+            buttonFirmware.Enabled = false;
+
+            if (mBurnSuccess) {
+                mBurnSuccess = false;
+                textBoxLog.Clear();
+            }
+
+            backgroundWorkerOtpBurn.RunWorkerAsync(textBoxFirmware.Text);
+        }
+
+        // ================================================================================
 
         private void buttonClearLog_Click(object sender, EventArgs e) {
             if (mFileStreamLog != null) {

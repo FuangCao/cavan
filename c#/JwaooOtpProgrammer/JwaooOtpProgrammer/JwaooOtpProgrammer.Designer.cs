@@ -44,6 +44,8 @@
             this.labelMacAddressEnd = new System.Windows.Forms.Label();
             this.textBoxMacAddressEnd = new System.Windows.Forms.TextBox();
             this.buttonAddressEdit = new System.Windows.Forms.Button();
+            this.backgroundWorkerConnTest = new System.ComponentModel.BackgroundWorker();
+            this.backgroundWorkerOtpBurn = new System.ComponentModel.BackgroundWorker();
             this.SuspendLayout();
             // 
             // label1
@@ -237,6 +239,20 @@
             this.buttonAddressEdit.UseVisualStyleBackColor = true;
             this.buttonAddressEdit.Click += new System.EventHandler(this.buttonAddressEdit_Click);
             // 
+            // backgroundWorkerConnTest
+            // 
+            this.backgroundWorkerConnTest.WorkerReportsProgress = true;
+            this.backgroundWorkerConnTest.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorkerConnTest_DoWork);
+            this.backgroundWorkerConnTest.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorkerConnTest_ProgressChanged);
+            this.backgroundWorkerConnTest.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorkerConnTest_RunWorkerCompleted);
+            // 
+            // backgroundWorkerOtpBurn
+            // 
+            this.backgroundWorkerOtpBurn.WorkerReportsProgress = true;
+            this.backgroundWorkerOtpBurn.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorkerOtpBurn_DoWork);
+            this.backgroundWorkerOtpBurn.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorkerOtpBurn_ProgressChanged);
+            this.backgroundWorkerOtpBurn.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorkerOtpBurn_RunWorkerCompleted);
+            // 
             // JwaooOtpProgrammer
             // 
             this.AcceptButton = this.buttonBurn;
@@ -296,6 +312,8 @@
         private System.Windows.Forms.Label labelMacAddressEnd;
         private System.Windows.Forms.TextBox textBoxMacAddressEnd;
         private System.Windows.Forms.Button buttonAddressEdit;
+        private System.ComponentModel.BackgroundWorker backgroundWorkerConnTest;
+        private System.ComponentModel.BackgroundWorker backgroundWorkerOtpBurn;
     }
 }
 
