@@ -30,10 +30,6 @@ namespace JwaooOtpProgrammer {
             return contextMenuStripAlloc;
         }
 
-        public ContextMenuStrip getContextMenuStripFree() {
-            return contextMenuStripFree;
-        }
-
         public void removeMacAddressItem(CavanMacAddressItem item) {
             panelAddresses.Controls.Remove(item.AddressButton);
             listViewAddresses.Items.Remove(item);
@@ -87,21 +83,26 @@ namespace JwaooOtpProgrammer {
                 }
 
                 mButtonCurrent = button;
-
-                if (button != null) {
-                    button.setHighLight(true);
-                }
-
                 updateContextMenuStrip();
+            }
+
+            if (button != null) {
+                button.setHighLight(true);
             }
         }
 
         public void updateContextMenuStrip() {
             if (mButtonCurrent == null || mButtonCurrent.AddressCount == 0) {
                 listViewAddresses.ContextMenuStrip = null;
-            } else if (mButtonCurrent.AddressUsed) {
-                listViewAddresses.ContextMenuStrip = contextMenuStripFree;
             } else {
+                if (mButtonCurrent.AddressUsed) {
+                    toolStripMenuItemFree.Visible = true;
+                    toolStripMenuItemAlloc.Visible = false;
+                } else {
+                    toolStripMenuItemAlloc.Visible = true;
+                    toolStripMenuItemFree.Visible = false;
+                }
+
                 listViewAddresses.ContextMenuStrip = contextMenuStripAlloc;
             }
         }
@@ -477,6 +478,12 @@ namespace JwaooOtpProgrammer {
         private void listViewAddresses_Leave(object sender, EventArgs e) {
             setCurrentMacAddressButton(null);
         }
+
+        private void ToolStripMenuItemCopy_Click(object sender, EventArgs e) {
+            if (mButtonCurrent != null) {
+                Clipboard.SetText(mButtonCurrent.ToString());
+            }
+        }
     }
 
     public class CavanMacAddressButton : Button {
@@ -546,19 +553,22 @@ namespace JwaooOtpProgrammer {
         public void updateColor() {
             if (mAddressHighLight) {
                 BackColor = Color.Blue;
-                FlatAppearance.BorderColor = Color.Red;
-            } else if (AddressUsed) {
-                BackColor = Color.Green;
-                FlatAppearance.BorderColor = Color.Black;
-            } else {
-                BackColor = Color.White;
-                FlatAppearance.BorderColor = Color.Black;
-            }
+                FlatAppearance.BorderColor = Color.MediumVioletRed;
 
-            if (AddressUsed) {
-                ForeColor = Color.White;
+                if (AddressUsed) {
+                    ForeColor = Color.White;
+                } else {
+                    ForeColor = Color.MediumVioletRed;
+                }
             } else {
-                ForeColor = Color.Red;
+                if (AddressUsed) {
+                    BackColor = Color.Green;
+                } else {
+                    BackColor = Color.Gray;
+                }
+
+                ForeColor = Color.White;
+                FlatAppearance.BorderColor = Color.Black;
             }
         }
 
@@ -568,12 +578,14 @@ namespace JwaooOtpProgrammer {
             if (count == 0) {
                 ContextMenuStrip = null;
                 Text = "无可用地址";
-            } else if (AddressUsed) {
-                ContextMenuStrip = AddressManager.getContextMenuStripFree();
-                Text = "已分配\n(" + count + ")";
             } else {
+                if (AddressUsed) {
+                    Text = "已分配\n(" + count + ")";
+                } else {
+                    Text = "空闲\n(" + count + ")";
+                }
+
                 ContextMenuStrip = AddressManager.getContextMenuStripAlloc();
-                Text = "空闲\n(" + count + ")";
             }
 
             updateColor();
@@ -585,6 +597,10 @@ namespace JwaooOtpProgrammer {
 
         public void free() {
             mAddressItem.free();
+        }
+
+        public override string ToString() {
+            return mAddressItem.ToString();
         }
     }
 

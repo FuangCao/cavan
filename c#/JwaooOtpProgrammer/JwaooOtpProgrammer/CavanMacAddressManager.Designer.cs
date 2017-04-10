@@ -32,8 +32,8 @@
             this.textBoxAddressEnd = new System.Windows.Forms.TextBox();
             this.contextMenuStripAlloc = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItemAlloc = new System.Windows.Forms.ToolStripMenuItem();
-            this.contextMenuStripFree = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItemFree = new System.Windows.Forms.ToolStripMenuItem();
+            this.ToolStripMenuItemCopy = new System.Windows.Forms.ToolStripMenuItem();
             this.panelAddresses = new System.Windows.Forms.Panel();
             this.listViewAddresses = new System.Windows.Forms.ListView();
             this.columnHeaderAddressStart = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -49,7 +49,6 @@
             this.buttonExport = new System.Windows.Forms.Button();
             this.saveFileDialogExport = new System.Windows.Forms.SaveFileDialog();
             this.contextMenuStripAlloc.SuspendLayout();
-            this.contextMenuStripFree.SuspendLayout();
             this.SuspendLayout();
             // 
             // labelAddressStart
@@ -114,9 +113,11 @@
             // contextMenuStripAlloc
             // 
             this.contextMenuStripAlloc.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItemAlloc});
+            this.toolStripMenuItemAlloc,
+            this.toolStripMenuItemFree,
+            this.ToolStripMenuItemCopy});
             this.contextMenuStripAlloc.Name = "contextMenuStripAlloc";
-            this.contextMenuStripAlloc.Size = new System.Drawing.Size(137, 26);
+            this.contextMenuStripAlloc.Size = new System.Drawing.Size(137, 70);
             // 
             // toolStripMenuItemAlloc
             // 
@@ -125,19 +126,19 @@
             this.toolStripMenuItemAlloc.Text = "新增地址段";
             this.toolStripMenuItemAlloc.Click += new System.EventHandler(this.toolStripMenuItemAlloc_Click);
             // 
-            // contextMenuStripFree
-            // 
-            this.contextMenuStripFree.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItemFree});
-            this.contextMenuStripFree.Name = "contextMenuStripFree";
-            this.contextMenuStripFree.Size = new System.Drawing.Size(137, 26);
-            // 
             // toolStripMenuItemFree
             // 
             this.toolStripMenuItemFree.Name = "toolStripMenuItemFree";
             this.toolStripMenuItemFree.Size = new System.Drawing.Size(136, 22);
             this.toolStripMenuItemFree.Text = "删除地址段";
             this.toolStripMenuItemFree.Click += new System.EventHandler(this.toolStripMenuItemFree_Click);
+            // 
+            // ToolStripMenuItemCopy
+            // 
+            this.ToolStripMenuItemCopy.Name = "ToolStripMenuItemCopy";
+            this.ToolStripMenuItemCopy.Size = new System.Drawing.Size(136, 22);
+            this.ToolStripMenuItemCopy.Text = "复制";
+            this.ToolStripMenuItemCopy.Click += new System.EventHandler(this.ToolStripMenuItemCopy_Click);
             // 
             // panelAddresses
             // 
@@ -287,7 +288,6 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "井蛙MAC地址划分";
             this.contextMenuStripAlloc.ResumeLayout(false);
-            this.contextMenuStripFree.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -302,8 +302,6 @@
         private System.Windows.Forms.TextBox textBoxAddressEnd;
         private System.Windows.Forms.ContextMenuStrip contextMenuStripAlloc;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemAlloc;
-        private System.Windows.Forms.ContextMenuStrip contextMenuStripFree;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemFree;
         private System.Windows.Forms.Panel panelAddresses;
         private System.Windows.Forms.ListView listViewAddresses;
         private System.Windows.Forms.ColumnHeader columnHeaderAddressStart;
@@ -318,5 +316,7 @@
         private System.Windows.Forms.Button buttonClear;
         private System.Windows.Forms.Button buttonExport;
         private System.Windows.Forms.SaveFileDialog saveFileDialogExport;
+        private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItemCopy;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemFree;
     }
 }

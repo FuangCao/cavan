@@ -73,12 +73,10 @@ namespace JwaooOtpProgrammer {
                 return false;
             }
 
-            address.readFromFile();
+            textBoxFirmware.Text = pathname;
+
             mMacAddress = address;
             updateMacAddressUI();
-
-            textBoxFirmware.Text = pathname;
-            buttonBurn.Enabled = true;
 
             return true;
         }
@@ -155,9 +153,19 @@ namespace JwaooOtpProgrammer {
         }
 
         private void updateMacAddressUI() {
-            textBoxMacAddressStart.Text = mMacAddress.ToString();
-            textBoxMacAddressEnd.Text = mMacAddress.AddressEnd.ToString();
-            textBoxMacAddressCount.Text = mMacAddress.AddressCount + " (个)";
+            if (mMacAddress != null && mMacAddress.readFromFile()) {
+                buttonBurn.Enabled = mMacAddress.AddressCount > 0;
+
+                textBoxMacAddressStart.Text = mMacAddress.ToString();
+                textBoxMacAddressEnd.Text = mMacAddress.AddressEnd.ToString();
+                textBoxMacAddressCount.Text = mMacAddress.AddressCount + " (个)";
+            } else {
+                buttonBurn.Enabled = false;
+
+                textBoxMacAddressStart.Clear();
+                textBoxMacAddressEnd.Clear();
+                textBoxMacAddressCount.Clear();
+            }
         }
 
         private String findSmartSnippetsPath() {
@@ -271,7 +279,6 @@ namespace JwaooOtpProgrammer {
             textBoxMacAddressNow.Text = mMacAddress.ToString();
 
             if (mMacAddress.increaseAndSave()) {
-                updateMacAddressUI();
                 return true;
             }
 
@@ -437,7 +444,7 @@ namespace JwaooOtpProgrammer {
                 labelState.ForeColor = System.Drawing.Color.LimeGreen;
 
                 textBoxMacAddressNow.Text = new JwaooMacAddress().fromOtpHeader(bytes).ToString();
-                buttonBurn.Enabled = true;
+                updateMacAddressUI();
             } else {
                 appendLog("连接失败！！！");
                 labelState.Text = "连接失败！";
@@ -482,7 +489,7 @@ namespace JwaooOtpProgrammer {
                     labelState.ForeColor = System.Drawing.Color.Red;
                 }
 
-                buttonBurn.Enabled = true;
+                updateMacAddressUI();
                 buttonConnect.Enabled = true;
                 buttonFirmware.Enabled = true;
             } else {
