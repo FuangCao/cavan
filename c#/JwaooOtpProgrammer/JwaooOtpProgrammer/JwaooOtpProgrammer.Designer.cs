@@ -40,7 +40,7 @@
             this.labelMacAddressCount = new System.Windows.Forms.Label();
             this.textBoxMacAddressCount = new System.Windows.Forms.TextBox();
             this.checkBoxSaveLog = new System.Windows.Forms.CheckBox();
-            this.buttonMacAlloc = new System.Windows.Forms.Button();
+            this.buttonAddressAlloc = new System.Windows.Forms.Button();
             this.labelMacAddressEnd = new System.Windows.Forms.Label();
             this.textBoxMacAddressEnd = new System.Windows.Forms.TextBox();
             this.buttonAddressEdit = new System.Windows.Forms.Button();
@@ -198,15 +198,16 @@
             this.checkBoxSaveLog.Text = "保存日志到文件";
             this.checkBoxSaveLog.UseVisualStyleBackColor = true;
             // 
-            // buttonMacAlloc
+            // buttonAddressAlloc
             // 
-            this.buttonMacAlloc.Location = new System.Drawing.Point(5, 357);
-            this.buttonMacAlloc.Name = "buttonMacAlloc";
-            this.buttonMacAlloc.Size = new System.Drawing.Size(120, 80);
-            this.buttonMacAlloc.TabIndex = 15;
-            this.buttonMacAlloc.Text = "划分MAC地址";
-            this.buttonMacAlloc.UseVisualStyleBackColor = true;
-            this.buttonMacAlloc.Click += new System.EventHandler(this.buttonMacAlloc_Click);
+            this.buttonAddressAlloc.Enabled = false;
+            this.buttonAddressAlloc.Location = new System.Drawing.Point(5, 357);
+            this.buttonAddressAlloc.Name = "buttonAddressAlloc";
+            this.buttonAddressAlloc.Size = new System.Drawing.Size(120, 80);
+            this.buttonAddressAlloc.TabIndex = 15;
+            this.buttonAddressAlloc.Text = "划分MAC地址";
+            this.buttonAddressAlloc.UseVisualStyleBackColor = true;
+            this.buttonAddressAlloc.Click += new System.EventHandler(this.buttonMacAlloc_Click);
             // 
             // labelMacAddressEnd
             // 
@@ -247,7 +248,7 @@
             this.Controls.Add(this.buttonAddressEdit);
             this.Controls.Add(this.textBoxMacAddressEnd);
             this.Controls.Add(this.labelMacAddressEnd);
-            this.Controls.Add(this.buttonMacAlloc);
+            this.Controls.Add(this.buttonAddressAlloc);
             this.Controls.Add(this.checkBoxSaveLog);
             this.Controls.Add(this.textBoxMacAddressCount);
             this.Controls.Add(this.labelMacAddressCount);
@@ -291,7 +292,7 @@
         private System.Windows.Forms.Label labelMacAddressCount;
         private System.Windows.Forms.TextBox textBoxMacAddressCount;
         private System.Windows.Forms.CheckBox checkBoxSaveLog;
-        private System.Windows.Forms.Button buttonMacAlloc;
+        private System.Windows.Forms.Button buttonAddressAlloc;
         private System.Windows.Forms.Label labelMacAddressEnd;
         private System.Windows.Forms.TextBox textBoxMacAddressEnd;
         private System.Windows.Forms.Button buttonAddressEdit;

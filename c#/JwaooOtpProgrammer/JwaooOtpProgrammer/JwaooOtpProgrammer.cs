@@ -30,7 +30,7 @@ namespace JwaooOtpProgrammer {
         private JwaooMacAddress mMacAddress;
         private bool mBurnSuccess;
 
-        private JwaooMacAddress[] mMacAddreses = {
+        private JwaooMacAddress[] mMacAddressArray = {
             new JwaooMacAddress("JwaooMacModel06.txt", "JwaooFwModel06", new CavanMacAddress().fromString("88:EA:00:00:00:00")),
             new JwaooMacAddress("JwaooMacModel10.txt", "JwaooFwModel10", new CavanMacAddress().fromString("88:EB:00:00:00:00")),
         };
@@ -57,7 +57,7 @@ namespace JwaooOtpProgrammer {
         private JwaooMacAddress getMacAddress(String pathname) {
             String name = Path.GetFileName(pathname);
 
-            foreach (JwaooMacAddress address in mMacAddreses) {
+            foreach (JwaooMacAddress address in mMacAddressArray) {
                 if (name.StartsWith(address.FwPrefix)) {
                     return address;
                 }
@@ -78,6 +78,7 @@ namespace JwaooOtpProgrammer {
 
             textBoxFirmware.Text = pathname;
             buttonAddressEdit.Enabled = true;
+            buttonAddressAlloc.Enabled = true;
 
             return true;
         }
@@ -508,7 +509,17 @@ namespace JwaooOtpProgrammer {
         }
 
         private void buttonMacAlloc_Click(object sender, EventArgs e) {
-            CavanMacAddressManager manager = new CavanMacAddressManager(new CavanMacAddress(mMacAddress), mMacAddress.AddressCount);
+            CavanMacAddress address = new CavanMacAddress();
+            UInt32 count;
+
+            if (mMacAddress != null) {
+                count = mMacAddress.AddressCount;
+                address.copyFrom(mMacAddress);
+            } else {
+                count = 0;
+            }
+
+            CavanMacAddressManager manager = new CavanMacAddressManager(address, count);
             manager.Show(this);
         }
 
