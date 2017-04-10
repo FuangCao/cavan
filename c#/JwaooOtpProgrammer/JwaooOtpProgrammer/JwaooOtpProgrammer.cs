@@ -73,10 +73,11 @@ namespace JwaooOtpProgrammer {
                 return false;
             }
 
-            textBoxFirmware.Text = pathname;
-
             mMacAddress = address;
             updateMacAddressUI();
+
+            textBoxFirmware.Text = pathname;
+            buttonAddressEdit.Enabled = true;
 
             return true;
         }

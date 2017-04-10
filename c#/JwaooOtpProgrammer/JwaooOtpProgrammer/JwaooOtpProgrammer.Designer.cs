@@ -227,6 +227,7 @@
             // 
             // buttonAddressEdit
             // 
+            this.buttonAddressEdit.Enabled = false;
             this.buttonAddressEdit.Location = new System.Drawing.Point(129, 357);
             this.buttonAddressEdit.Name = "buttonAddressEdit";
             this.buttonAddressEdit.Size = new System.Drawing.Size(120, 80);
