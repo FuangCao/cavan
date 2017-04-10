@@ -525,6 +525,8 @@ namespace JwaooOtpProgrammer {
 
         private void buttonAddressEdit_Click(object sender, EventArgs e) {
             if (mMacAddress != null) {
+                mMacAddress.readFromFile();
+
                 JwaooMacAddressEditDialog dialog = new JwaooMacAddressEditDialog(mMacAddress);
                 if (dialog.ShowDialog() == DialogResult.OK) {
                     mMacAddress.writeToFile();
