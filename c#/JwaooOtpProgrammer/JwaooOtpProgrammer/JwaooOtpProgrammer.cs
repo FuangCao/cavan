@@ -521,6 +521,7 @@ namespace JwaooOtpProgrammer {
         private void backgroundWorkerOtpBurn_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e) {
             buttonConnect.Enabled = true;
             buttonFirmware.Enabled = true;
+            buttonAddressEdit.Enabled = true;
         }
 
         private void backgroundWorkerOtpBurn_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e) {
@@ -554,6 +555,7 @@ namespace JwaooOtpProgrammer {
             buttonBurn.Enabled = false;
             buttonConnect.Enabled = false;
             buttonFirmware.Enabled = false;
+            buttonAddressEdit.Enabled = false;
 
             if (mBurnSuccess) {
                 mBurnSuccess = false;
