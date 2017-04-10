@@ -283,7 +283,6 @@
             this.Controls.Add(this.labelAddressEnd);
             this.Controls.Add(this.labelAddressStart);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
             this.Name = "CavanMacAddressManager";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "井蛙MAC地址划分";

@@ -264,7 +264,6 @@
             this.Controls.Add(this.textBoxFirmware);
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
             this.Name = "JwaooOtpProgrammer";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "井蛙OTP烧录器";
