@@ -24,12 +24,19 @@ import com.cavan.resource.CavanKeyboardViewNumber;
 @SuppressLint("HandlerLeak")
 public class MacConvertActivity extends Activity {
 
+	public static final CavanMacAddress sAddressStartModel06 = new CavanMacAddress().fromString("88:EA:00:00:00:00");
+	public static final CavanMacAddress sAddressStartModel10 = new CavanMacAddress().fromString("88:EB:00:00:00:00");
+
 	private static final int MSG_UNLOCK = 1;
 	private static final int MSG_START_ADDR_CHANGED = 2;
 	private static final int MSG_END_ADDR_CHANGED = 3;
 	private static final int MSG_NEXT_ADDR_CHANGED = 4;
 	private static final int MSG_ADDR_COUNT_CHANGED = 5;
 	private static final int MSG_PROJECT_CHANGED = 6;
+
+	private static final int PROJECT_INDEX_NONE = 0;
+	private static final int PROJECT_INDEX_MODEL06 = 1;
+	private static final int PROJECT_INDEX_MODEL10 = 2;
 
 	private CavanMacAddressView mAddressViewStart;
 	private CavanMacAddressView mAddressViewEnd;
@@ -54,7 +61,7 @@ public class MacConvertActivity extends Activity {
 				removeMessages(MSG_UNLOCK);
 			}
 
-			sendEmptyMessageDelayed(MSG_UNLOCK, 100);
+			sendEmptyMessageDelayed(MSG_UNLOCK, 200);
 
 			return true;
 		}
@@ -85,15 +92,13 @@ public class MacConvertActivity extends Activity {
 			case MSG_PROJECT_CHANGED:
 				if (setMessageBusy(msg.what)) {
 					int position = mSpinnerProject.getSelectedItemPosition();
-					if (position > 0) {
+					if (position > PROJECT_INDEX_NONE) {
 						CavanMacAddress address = getAddressStart();
 
-						address.setByte(5, (byte) 0x88);
-
-						if (position == 1) {
-							address.setByte(4, (byte) 0xEA);
+						if (position == PROJECT_INDEX_MODEL06) {
+							address.setPrefix(sAddressStartModel06);
 						} else {
-							address.setByte(4, (byte) 0xEB);
+							address.setPrefix(sAddressStartModel10);
 						}
 
 						mMessageBusy = MSG_START_ADDR_CHANGED;
@@ -106,6 +111,14 @@ public class MacConvertActivity extends Activity {
 			case MSG_ADDR_COUNT_CHANGED:
 				if (setMessageBusy(msg.what)) {
 					CavanMacAddress address = getAddressStart();
+
+					if (address.startsWith(sAddressStartModel06)) {
+						mSpinnerProject.setSelection(PROJECT_INDEX_MODEL06);
+					} else if (address.startsWith(sAddressStartModel10)) {
+						mSpinnerProject.setSelection(PROJECT_INDEX_MODEL10);
+					} else {
+						mSpinnerProject.setSelection(PROJECT_INDEX_NONE);
+					}
 
 					address.add(getAddressCount());
 					mAddressViewNext.setAddress(address);
@@ -202,6 +215,11 @@ public class MacConvertActivity extends Activity {
 			public void onClick(View v) {
 				StringBuilder builder = new StringBuilder();
 				Resources resources = getResources();
+
+				if (mSpinnerProject.getSelectedItemPosition() > 0) {
+					builder.append(resources.getString(R.string.project_name));
+					builder.append(mSpinnerProject.getSelectedItem()).append('\n');
+				}
 
 				builder.append(resources.getString(R.string.start_mac_address));
 				builder.append(getAddressStart()).append('\n');

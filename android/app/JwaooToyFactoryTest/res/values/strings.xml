@@ -71,5 +71,6 @@
     </string-array>
         <string name="text_copy">复制</string>
         <string name="prompt_copied_to_clipboard">文字已复制到剪切板</string>
+        <string name="project_name">项目名称：</string>
 
 </resources>

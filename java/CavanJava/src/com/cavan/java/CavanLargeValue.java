@@ -108,6 +108,42 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 		return startsWith(bytes1, findLsbIndex(bytes1), bytes2, findLsbIndex(bytes2));
 	}
 
+	public static void setPrefix(byte[] bytes1, byte[] bytes2, int lsb) {
+		int length = Math.min(bytes1.length, bytes2.length);
+
+		for (int i = lsb; i < length; i++) {
+			bytes1[i] = bytes2[i];
+		}
+	}
+
+	public static void setPrefix(byte[] bytes1, byte[] bytes2) {
+		setPrefix(bytes1, bytes2, findLsbIndex(bytes2));
+	}
+
+	public static boolean endsWith(byte[] bytes1, byte[] bytes2) {
+		for (int i = 0; i < bytes2.length; i++) {
+			if (i >= bytes1.length || bytes1[i] != bytes2[i]) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public static void setSuffix(byte[] bytes1, byte[] bytes2, int msb) {
+		while (msb > bytes1.length) {
+			msb--;
+		}
+
+		for (int i = msb; i >= 0; i--) {
+			bytes1[i] = bytes2[i];
+		}
+	}
+
+	public static void setSuffix(byte[] bytes1, byte[] bytes2) {
+		setSuffix(bytes1, bytes2, findMsbIndex(bytes2));
+	}
+
 	public static int increase(byte[] bytes) {
 		for (int i = 0; i < bytes.length; i++) {
 			if (bytes[i] != (byte) 0xFF) {
@@ -348,6 +384,30 @@ public class CavanLargeValue implements Cloneable, Comparable<CavanLargeValue> {
 
 	public boolean startsWith(CavanLargeValue value) {
 		return startsWith(value.getBytes());
+	}
+
+	public void setPrefix(byte[] bytes) {
+		setPrefix(mBytes, bytes);
+	}
+
+	public void setPrefix(CavanLargeValue value) {
+		setPrefix(value.getBytes());
+	}
+
+	public boolean endsWith(byte[] bytes) {
+		return endsWith(mBytes, bytes);
+	}
+
+	public boolean endsWith(CavanLargeValue value) {
+		return endsWith(value.getBytes());
+	}
+
+	public void setSuffix(byte[] bytes) {
+		setSuffix(mBytes, bytes);
+	}
+
+	public void setSuffix(CavanLargeValue value) {
+		setSuffix(value.getBytes());
 	}
 
 	// ============================================================
