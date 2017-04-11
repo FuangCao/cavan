@@ -6,8 +6,9 @@
 
     <uses-sdk
         android:minSdkVersion="7"
-        android:targetSdkVersion="23" />
+        android:targetSdkVersion="21" />
 
+    <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.MOUNT_FORMAT_FILESYSTEMS" />
     <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
@@ -146,6 +147,18 @@
         <activity android:name="KeyguardActivity"></activity>
         <activity android:name="RedPacketEditActivity" android:windowSoftInputMode="stateHidden"></activity>
         <receiver android:name="RedPacketAlarmReceiver"></receiver>
+        <activity android:name="com.cavan.qrcode.QRCodeDecodeActivity" android:label="@string/qrcode_scan" android:screenOrientation="portrait" android:permission="android.permission.CAMERA">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="com.cavan.qrcode.QRCodeEncodeActivity" android:label="@string/qrcode_generate" android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
