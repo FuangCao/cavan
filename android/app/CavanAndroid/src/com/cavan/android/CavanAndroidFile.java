@@ -41,11 +41,7 @@ public class CavanAndroidFile extends CavanFile {
 			e.printStackTrace();
 		} finally {
 			if (stream != null) {
-				try {
-					stream.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				close(stream);
 			}
 		}
 
@@ -63,12 +59,7 @@ public class CavanAndroidFile extends CavanFile {
 		}
 
 		boolean success = copyFrom(stream);
-
-		try {
-			stream.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		close(stream);
 
 		return success;
 	}

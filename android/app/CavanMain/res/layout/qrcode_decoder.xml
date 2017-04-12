@@ -3,4 +3,33 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
+    <TextureView
+        android:id="@+id/textureViewQrCode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/editTextQrCode" />
+
+    <Button
+        android:id="@+id/buttonQrCodeCopy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:text="@string/text_copy" />
+
+    <EditText
+        android:id="@+id/editTextQrCode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonQrCodeCopy"
+        android:layout_alignBottom="@+id/buttonQrCodeCopy"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@+id/buttonQrCodeCopy"
+        android:ems="10" >
+
+        <requestFocus />
+    </EditText>
+
 </RelativeLayout>

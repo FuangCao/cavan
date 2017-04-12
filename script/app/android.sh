@@ -386,9 +386,24 @@ function cavan-adb-logcat()
 	cavan-loop_run -wd2 "adb logcat -v threadtime $@" || return 1
 }
 
+function cavan-adb-logcat-runtime()
+{
+	cavan-adb-logcat -s "System,System.err,AndroidRuntime" "$@"
+}
+
 function cavan-adb-logcat-error()
 {
-	cavan-adb-logcat -s "System,System.err,AndroidRuntime" "*:e"
+	cavan-adb-logcat-runtime "*:e"
+}
+
+function cavan-adb-logcat-cavan()
+{
+	cavan-adb-logcat -s "Cavan"
+}
+
+function cavan-adb-logcat-cavan-main()
+{
+	cavan-adb-logcat -s "CavanMain"
 }
 
 function cavan-adb-loop_run()

@@ -3,26 +3,36 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <EditText
-        android:id="@+id/editTextQRCode"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:ems="10" >
-
-        <requestFocus />
-    </EditText>
-
     <ImageView
-        android:id="@+id/imageViewQRCode"
+        android:id="@+id/imageViewQrCode"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/editTextQRCode"
-        android:src="@drawable/ic_launcher" />
+        android:layout_below="@+id/editTextQrCode"
+        android:visibility="invisible" />
+
+    <Button
+        android:id="@+id/buttonQrCodeSave"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:enabled="false"
+        android:text="@string/text_save" />
+
+    <EditText
+        android:id="@+id/editTextQrCode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonQrCodeSave"
+        android:layout_alignBottom="@+id/buttonQrCodeSave"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@+id/buttonQrCodeSave"
+        android:ems="10" >
+
+        <requestFocus />
+    </EditText>
 
 </RelativeLayout>

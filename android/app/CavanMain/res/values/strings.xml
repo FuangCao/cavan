@@ -271,5 +271,7 @@
 	<string name="text_sync">同步</string>
 	<string name="qrcode_generate">生成二维码</string>
 	<string name="qrcode_scan">扫描二维码</string>
+	<string name="text_save">保存</string>
+	<string name="text_saved">已保存：<xliff:g>%1$s</xliff:g></string>
 
 </resources>

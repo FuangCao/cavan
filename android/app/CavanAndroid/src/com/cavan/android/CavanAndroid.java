@@ -37,6 +37,7 @@ import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager.LayoutParams;
 import android.view.inputmethod.InputMethodManager;
@@ -243,19 +244,19 @@ public class CavanAndroid {
 		showToast(context, text, Toast.LENGTH_LONG);
 	}
 
-	public static void showToast(Context context, int resId, int duration) {
-		String text = context.getResources().getString(resId);
+	public static void showToast(Context context, int duration, int resId, Object... formatArgs) {
+		String text = context.getResources().getString(resId, formatArgs);
 		if (text != null) {
 			showToast(context, text, duration);
 		}
 	}
 
-	public static void showToast(Context context, int resId) {
-		showToast(context, resId, Toast.LENGTH_SHORT);
+	public static void showToast(Context context, int resId, Object... formatArgs) {
+		showToast(context, Toast.LENGTH_SHORT, resId, formatArgs);
 	}
 
-	public static void showToastLong(Context context, int resId) {
-		showToast(context, resId, Toast.LENGTH_LONG);
+	public static void showToastLong(Context context, int resId, Object... formatArgs) {
+		showToast(context, Toast.LENGTH_LONG, resId, formatArgs);
 	}
 
 	public static boolean isMainThread() {
@@ -338,7 +339,9 @@ public class CavanAndroid {
 	}
 
 	public static void postClipboardText(ClipboardManager manager, CharSequence label, CharSequence text) {
-		manager.setPrimaryClip(ClipData.newPlainText(label, text));
+		if (text != null && text.length() > 0) {
+			manager.setPrimaryClip(ClipData.newPlainText(label, text));
+		}
 	}
 
 	public static void postClipboardText(ClipboardManager manager, CharSequence text) {
@@ -732,5 +735,18 @@ public class CavanAndroid {
 		}
 
 		return Build.SUPPORTED_ABIS;
+	}
+
+	public static boolean setSoftInputEnable(Context context, View view, boolean enable) {
+		InputMethodManager manager = (InputMethodManager) getCachedSystemService(context, Context.INPUT_METHOD_SERVICE);
+		if (manager == null) {
+			return false;
+		}
+
+		if (enable) {
+			return manager.showSoftInput(view, 0);
+		} else {
+			return manager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+		}
 	}
 }

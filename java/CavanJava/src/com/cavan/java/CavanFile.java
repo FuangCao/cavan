@@ -89,6 +89,56 @@ public class CavanFile extends File {
 		super(uri);
 	}
 
+	public static boolean close(InputStream stream) {
+		try {
+			stream.close();
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public static boolean close(OutputStream stream) {
+		try {
+			stream.close();
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public static boolean close(RandomAccessFile access) {
+		try {
+			access.close();
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public static boolean close(Writer writer) {
+		try {
+			writer.close();
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public static boolean close(Reader reader) {
+		try {
+			reader.close();
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
 	public FileInputStream openInputStream() {
 		try {
 			return new FileInputStream(this);
@@ -186,11 +236,7 @@ public class CavanFile extends File {
 			e.printStackTrace();
 		}
 
-		try {
-			access.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		close(access);
 
 		return null;
 	}
@@ -232,11 +278,7 @@ public class CavanFile extends File {
 			} catch (IOException e) {
 				e.printStackTrace();
 			} finally {
-				try {
-					stream.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				close(stream);
 			}
 		}
 
@@ -275,11 +317,7 @@ public class CavanFile extends File {
 			e.printStackTrace();
 			return -1;
 		} finally {
-			try {
-				stream.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			close(stream);
 		}
 	}
 
@@ -335,12 +373,7 @@ public class CavanFile extends File {
 			e.printStackTrace();
 			return -1;
 		} finally {
-			try {
-				stream.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-				return -1;
-			}
+			close(stream);
 		}
 	}
 
@@ -366,12 +399,7 @@ public class CavanFile extends File {
 			e.printStackTrace();
 			return -1;
 		} finally {
-			try {
-				writer.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-				return -1;
-			}
+			close(writer);
 		}
 	}
 
@@ -418,12 +446,7 @@ public class CavanFile extends File {
 			e.printStackTrace();
 			return false;
 		} finally {
-			try {
-				writer.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-				return false;
-			}
+			close(writer);
 		}
 	}
 
@@ -503,11 +526,7 @@ public class CavanFile extends File {
 			e.printStackTrace();
 			return false;
 		} finally {
-			try {
-				reader.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			close(reader);
 		}
 	}
 
@@ -676,11 +695,7 @@ public class CavanFile extends File {
 			e.printStackTrace();
 		} finally {
 			if (inStream != null) {
-				try {
-					inStream.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				close(inStream);
 			}
 		}
 
@@ -697,11 +712,7 @@ public class CavanFile extends File {
 			e.printStackTrace();
 		} finally {
 			if (inStream != null) {
-				try {
-					inStream.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				close(inStream);
 			}
 		}
 
@@ -718,11 +729,7 @@ public class CavanFile extends File {
 			e.printStackTrace();
 		} finally {
 			if (outStream != null) {
-				try {
-					outStream.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				close(outStream);
 			}
 		}
 
@@ -739,11 +746,7 @@ public class CavanFile extends File {
 			e.printStackTrace();
 		} finally {
 			if (outStream != null) {
-				try {
-					outStream.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				close(outStream);
 			}
 		}
 
@@ -779,11 +782,7 @@ public class CavanFile extends File {
 			return false;
 		} finally {
 			if (inStream != null) {
-				try {
-					inStream.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				close(inStream);
 			}
 		}
 	}
