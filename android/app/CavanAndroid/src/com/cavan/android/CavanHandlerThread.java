@@ -34,7 +34,7 @@ public class CavanHandlerThread extends HandlerThread implements Callback {
 
 	public CavanThreadedHandler getHandler() {
 		synchronized (this) {
-			while (isAlive() && mHandler == null) {
+			while (mHandler == null && isAlive()) {
 				try {
 					wait();
 				} catch (InterruptedException e) {
