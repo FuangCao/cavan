@@ -398,12 +398,7 @@ function cavan-adb-logcat-error()
 
 function cavan-adb-logcat-cavan()
 {
-	cavan-adb-logcat -s "Cavan"
-}
-
-function cavan-adb-logcat-cavan-main()
-{
-	cavan-adb-logcat -s "CavanMain"
+	cavan-adb-logcat -s "Cavan,CavanMain"
 }
 
 function cavan-adb-loop_run()

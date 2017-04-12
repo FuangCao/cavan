@@ -18,6 +18,10 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.qrcode.QRCodeReader;
 import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+import com.google.zxing.qrcode.encoder.ByteMatrix;
+import com.google.zxing.qrcode.encoder.Encoder;
+import com.google.zxing.qrcode.encoder.QRCode;
 
 public class CavanQrCode {
 
@@ -49,7 +53,71 @@ public class CavanQrCode {
 		return Bitmap.createBitmap(colors, width, height, Config.ARGB_8888);
 	}
 
-	public static BitMatrix encode(String text, int width, int height) {
+	public static Bitmap convertByteMatrixToBitmap(ByteMatrix matrix, int foreColor, int backColor) {
+		int width = matrix.getWidth();
+		int height = matrix.getHeight();
+		int[] colors = new int[width * height];
+
+		for (int y = height - 1; y >= 0; y--) {
+			int offset = y * width;
+
+			for (int x = width - 1; x >= 0; x--) {
+				colors[offset + x] = matrix.get(x, y) == 0 ? backColor : foreColor;
+			}
+		}
+
+		return Bitmap.createBitmap(colors, width, height, Config.ARGB_8888);
+	}
+
+	public static Bitmap convertByteMatrixToBitmap(ByteMatrix matrix, int width, int height, int foreColor, int backColor) {
+		int widthRaw = matrix.getWidth();
+		int heightRaw = matrix.getHeight();
+		int zoom = Math.min(width / widthRaw, height / heightRaw);
+
+		if (zoom < 2) {
+			return convertByteMatrixToBitmap(matrix, foreColor, backColor);
+		}
+
+		width = widthRaw * zoom;
+		height = heightRaw * zoom;
+
+		int[] colors = new int[width * height];
+
+		for (int y = heightRaw - 1; y >= 0; y--) {
+			for (int x = widthRaw - 1; x >= 0; x--) {
+				int color = matrix.get(x, y) == 0 ? backColor : foreColor;
+				int yoffset = (y * width + x) * zoom;
+				int yoffset_end = yoffset + width * zoom;
+
+				while (yoffset < yoffset_end) {
+					int xoffset_end = yoffset + zoom;
+
+					for (int i = yoffset; i < xoffset_end; i++) {
+						colors[i] = color;
+					}
+
+					yoffset += width;
+				}
+			}
+		}
+
+		return Bitmap.createBitmap(colors, width, height, Config.ARGB_8888);
+	}
+
+	public static QRCode encode(String text) {
+		if (text == null || text.isEmpty()) {
+			return null;
+		}
+
+		try {
+			return Encoder.encode(text, ErrorCorrectionLevel.H, getEncodeHints());
+		} catch (WriterException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static BitMatrix encodeBitMatrix(String text, int width, int height) {
 		if (text == null || text.isEmpty()) {
 			return null;
 		}
@@ -63,12 +131,12 @@ public class CavanQrCode {
 	}
 
 	public static Bitmap encodeBitmap(String text, int width, int height, int foreColor, int backColor) {
-		BitMatrix matrix = encode(text, width, height);
-		if (matrix == null) {
+		QRCode code = encode(text);
+		if (code == null) {
 			return null;
 		}
 
-		return convertBitMatrixToBitmap(matrix, foreColor, backColor);
+		return convertByteMatrixToBitmap(code.getMatrix(), width, height, foreColor, backColor);
 	}
 
 	public static Bitmap encodeBitmap(String text, int width, int height, int foreColor) {
