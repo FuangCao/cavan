@@ -106,6 +106,8 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 
 			if (gatt != mGatt) {
 				CavanAndroid.eLog("Invalid gatt: " + gatt);
+				gatt.disconnect();
+				gatt.close();
 				return;
 			}
 
@@ -384,6 +386,9 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 
 		mGattState = BluetoothProfile.STATE_DISCONNECTED;
 		mConnThread.setConnState(STATE_GATT_DISCONNECTED, DISCONNECT_WAIT_TIME);
+
+		mService = null;
+		mCharMap.clear();
 
 		if (mGatt != null) {
 			mGatt.disconnect();
