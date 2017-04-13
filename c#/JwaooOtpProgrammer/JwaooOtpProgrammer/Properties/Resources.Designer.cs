@@ -59,5 +59,25 @@ namespace JwaooOtpProgrammer.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   查找 System.Byte[] 类型的本地化资源。
+        /// </summary>
+        internal static byte[] jtag_programmer {
+            get {
+                object obj = ResourceManager.GetObject("jtag_programmer", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Byte[] 类型的本地化资源。
+        /// </summary>
+        internal static byte[] zxing {
+            get {
+                object obj = ResourceManager.GetObject("zxing", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }

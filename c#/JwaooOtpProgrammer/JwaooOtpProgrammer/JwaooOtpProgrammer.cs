@@ -5,7 +5,10 @@ using System.Text;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Configuration;
-using System.Threading;
+using ZXing;
+using ZXing.Common;
+using System.Drawing;
+using ZXing.QrCode;
 
 namespace JwaooOtpProgrammer {
 
@@ -31,6 +34,10 @@ namespace JwaooOtpProgrammer {
         private JwaooMacAddress mMacAddress;
         private bool mBurnSuccess;
 
+        private BarcodeWriter mBarcodeWriter;
+        private Bitmap mBarcodeBitmap;
+        private String mBarcodeText;
+
         private JwaooMacAddress[] mMacAddressArray = {
             new JwaooMacAddress("JwaooMacModel06.txt", "JwaooFwModel06", new CavanMacAddress().fromString("88:EA:00:00:00:00")),
             new JwaooMacAddress("JwaooMacModel10.txt", "JwaooFwModel10", new CavanMacAddress().fromString("88:EB:00:00:00:00")),
@@ -42,6 +49,14 @@ namespace JwaooOtpProgrammer {
             loadConfigFile();
             openFileDialogFirmware.InitialDirectory = Application.StartupPath;
             openFileDialogSmartSnippets.InitialDirectory = Application.StartupPath;
+
+            mBarcodeWriter = new BarcodeWriter();
+            mBarcodeWriter.Format = BarcodeFormat.QR_CODE;
+            mBarcodeWriter.Options = new EncodingOptions {
+                Width = pictureBoxQrCode.Width,
+                Height = pictureBoxQrCode.Height,
+                Margin = 0,
+            };
         }
 
         private void Programmer_FormClosed(object sender, FormClosedEventArgs e) {
@@ -472,7 +487,6 @@ namespace JwaooOtpProgrammer {
         }
 
         private void backgroundWorkerConnTest_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e) {
-
             backgroundWorkerConnTest.ReportProgress(1);
 
             byte[] bytes = readOtpHeader();
@@ -487,7 +501,12 @@ namespace JwaooOtpProgrammer {
         private void buttonConnect_Click(object sender, EventArgs e) {
             buttonConnect.Enabled = false;
             buttonBurn.Enabled = false;
-            backgroundWorkerConnTest.RunWorkerAsync();
+
+            try {
+                backgroundWorkerConnTest.RunWorkerAsync();
+            } catch (Exception err) {
+                MessageBox.Show("启动后台任务失败：" + err);
+            }
         }
 
         // ================================================================================
@@ -562,7 +581,43 @@ namespace JwaooOtpProgrammer {
                 textBoxLog.Clear();
             }
 
-            backgroundWorkerOtpBurn.RunWorkerAsync(textBoxFirmware.Text);
+            try {
+                backgroundWorkerOtpBurn.RunWorkerAsync(textBoxFirmware.Text);
+            } catch (Exception err) {
+                MessageBox.Show("启动后台任务失败：" + err);
+            }
+        }
+
+        // ================================================================================
+
+        private void textBoxMacAddressNow_TextChanged(object sender, EventArgs e) {
+            mBarcodeText = textBoxMacAddressNow.Text;
+
+            if (!backgroundWorkerQrCodeEncode.IsBusy) {
+                pictureBoxQrCode.Image = null;
+                backgroundWorkerQrCodeEncode.RunWorkerAsync();
+            }
+        }
+
+        private void backgroundWorkerQrCodeEncode_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e) {
+            mBarcodeBitmap = null;
+
+            while (mBarcodeText != null) {
+                String text = mBarcodeText;
+
+                mBarcodeText = null;
+
+                if (text.Length > 0) {
+                    Image image = mBarcodeWriter.Write(text);
+                    if (image != null) {
+                        mBarcodeBitmap = new Bitmap(image);
+                    }
+                }
+            }
+        }
+
+        private void backgroundWorkerQrCodeEncode_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e) {
+            pictureBoxQrCode.Image = mBarcodeBitmap;
         }
 
         // ================================================================================
