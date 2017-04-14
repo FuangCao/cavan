@@ -147,16 +147,21 @@ public class CavanQrCode {
 		return encodeBitmap(text, width, height, Color.BLACK);
 	}
 
-	public static Result decode(LuminanceSource source) {
+	public static Result decode(QRCodeReader reader, LuminanceSource source) {
 		BinaryBitmap image = new BinaryBitmap(new HybridBinarizer(source));
 
 		try {
-			return new QRCodeReader().decode(image, getDecodeHints());
+			return reader.decode(image, getDecodeHints());
 		} catch (Exception e) {
 			e.printStackTrace();
+			reader.reset();
 		}
 
 		return null;
+	}
+
+	public static Result decode(LuminanceSource source) {
+		return decode(new QRCodeReader(), source);
 	}
 
 	public static Result decodePlanarYUV(byte[] data, int width, int height) {

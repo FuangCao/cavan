@@ -20,12 +20,9 @@ public class CavanHandlerThread extends HandlerThread implements Callback {
 		}
 	}
 
-	public CavanHandlerThread(String name, int priority) {
-		super(name, priority);
-	}
-
 	public CavanHandlerThread(String name) {
 		super(name);
+		super.start();
 	}
 
 	public CavanHandlerThread() {
@@ -44,6 +41,11 @@ public class CavanHandlerThread extends HandlerThread implements Callback {
 		}
 
 		return mHandler;
+	}
+
+	@Override
+	public synchronized void start() {
+		CavanAndroid.dLog("Nothing to be done");
 	}
 
 	@Override

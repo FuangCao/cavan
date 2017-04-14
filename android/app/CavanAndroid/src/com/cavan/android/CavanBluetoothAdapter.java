@@ -1,6 +1,7 @@
 package com.cavan.android;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -104,6 +105,15 @@ public class CavanBluetoothAdapter {
 		if (mContext != null && mReceiver != null) {
 			mContext.unregisterReceiver(mReceiver);
 			mReceiver = null;
+		}
+	}
+
+	public BluetoothDevice getRemoteDevice(String address) {
+		try {
+			return mAdapter.getRemoteDevice(address);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
 		}
 	}
 
