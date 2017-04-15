@@ -220,7 +220,7 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 	public void surfaceCreated(SurfaceHolder holder) {
 		CavanAndroid.pLog();
 
-		Camera camera = mQrCodeView.openCamera();
+		Camera camera = mQrCodeView.openCamera(mSurfaceView.getWidth(), mSurfaceView.getHeight());
 		if (camera != null) {
 			try {
 				camera.setPreviewDisplay(holder);

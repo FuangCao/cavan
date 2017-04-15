@@ -5,7 +5,6 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
-import android.graphics.Rect;
 import android.hardware.Camera;
 import android.hardware.Camera.AutoFocusCallback;
 import android.hardware.Camera.PreviewCallback;
@@ -15,6 +14,7 @@ import android.os.Message;
 import android.util.AttributeSet;
 import android.view.View;
 
+import com.cavan.java.CavanLuminanceSourceRotate90;
 import com.google.zxing.PlanarYUVLuminanceSource;
 import com.google.zxing.Result;
 import com.google.zxing.qrcode.QRCodeReader;
@@ -22,8 +22,8 @@ import com.google.zxing.qrcode.QRCodeReader;
 @SuppressWarnings("deprecation")
 public class CavanQrCodeView extends View implements PreviewCallback, AutoFocusCallback {
 
-	private static final int MSG_START_DECODE = 0;
-	private static final int MSG_DECODE_COMPLETE = 1;
+	private static final int MSG_AUTO_FOCUS_TIMEOUT = 1;
+	private static final int MSG_DECODE_COMPLETE = 2;
 
 	public interface DecodeEventListener {
 		void onDecodeStart();
@@ -32,12 +32,22 @@ public class CavanQrCodeView extends View implements PreviewCallback, AutoFocusC
 
 	private Paint mPaint = new Paint();
 
-	private int mViewWidth;
-	private int mViewHeight;
+	private int mWinX;
+	private int mWinY;
+	private int mWinWidth;
+
+	private int mVideoWidth;
+	private int mVideoHeight;
+
+	private int mSurfaceWidth;
+	private int mSurfaceHeight;
+
+	private int mQrCodeX;
+	private int mQrCodeY;
+	private int mQrCodeWidth;
+	private int mQrCodeHeight;
 
 	private QRCodeReader mQrCodeReader = new QRCodeReader();
-	private Rect mQrCodeRect = new Rect();
-	private int mQrCodeWidth;
 
 	private Camera mCamera;
 	private DecodeEventListener mListener;
@@ -49,7 +59,7 @@ public class CavanQrCodeView extends View implements PreviewCallback, AutoFocusC
 			removeMessages(msg.what);
 
 			switch (msg.what) {
-			case MSG_START_DECODE:
+			case MSG_AUTO_FOCUS_TIMEOUT:
 				if (mCamera != null) {
 					CavanAndroid.dLog("setOneShotPreviewCallback");
 					mCamera.setOneShotPreviewCallback(CavanQrCodeView.this);
@@ -78,16 +88,19 @@ public class CavanQrCodeView extends View implements PreviewCallback, AutoFocusC
 
 		@Override
 		public boolean handleMessage(Message msg) {
-			if (mViewWidth > 0 && mViewHeight > 0 && mListener != null) {
-				int width = msg.arg1;
-				int height = msg.arg2;
-				int qrLeft = mQrCodeRect.left * height / mViewWidth;
-				int qrTop = mQrCodeRect.top * width / mViewHeight;
-				int qrWidth = mQrCodeWidth * height / mViewWidth;
-				int qrHeight = mQrCodeWidth * width / mViewHeight;
+			if (mListener != null) {
+				Result result;
 
-				PlanarYUVLuminanceSource source = new PlanarYUVLuminanceSource((byte[]) msg.obj, width, height, qrLeft, qrTop, qrWidth, qrHeight, false);
-				onDecodeComplete(CavanQrCode.decode(mQrCodeReader, source));
+				try {
+					PlanarYUVLuminanceSource sourceRaw = new PlanarYUVLuminanceSource((byte[]) msg.obj, mVideoWidth, mVideoHeight, mQrCodeX, mQrCodeY, mQrCodeWidth, mQrCodeHeight, false);
+					CavanLuminanceSourceRotate90 source = new CavanLuminanceSourceRotate90(sourceRaw);
+					result = CavanQrCode.decode(mQrCodeReader, source);
+				} catch (Exception e) {
+					e.printStackTrace();
+					result = null;
+				}
+
+				onDecodeComplete(result);
 			}
 
 			return true;
@@ -124,14 +137,6 @@ public class CavanQrCodeView extends View implements PreviewCallback, AutoFocusC
 		mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
 	}
 
-	public int getViewWidth() {
-		return mViewWidth;
-	}
-
-	public int getViewHeight() {
-		return mViewHeight;
-	}
-
 	public void setDecodeEventListener(DecodeEventListener listener) {
 		mListener = listener;
 	}
@@ -140,7 +145,7 @@ public class CavanQrCodeView extends View implements PreviewCallback, AutoFocusC
 		return mListener;
 	}
 
-	public synchronized Camera openCamera() {
+	public synchronized Camera openCamera(int width, int height) {
 		if (mCamera == null) {
 			mCamera = Camera.open();
 			if (mCamera == null) {
@@ -149,6 +154,15 @@ public class CavanQrCodeView extends View implements PreviewCallback, AutoFocusC
 		}
 
 		mCamera.setDisplayOrientation(90);
+
+		Size size = mCamera.getParameters().getPreviewSize();
+		mVideoWidth = size.width;
+		mVideoHeight = size.height;
+
+		mSurfaceWidth = width;
+		mSurfaceHeight = height;
+
+		updateQrCodeRange();
 
 		return mCamera;
 	}
@@ -162,10 +176,6 @@ public class CavanQrCodeView extends View implements PreviewCallback, AutoFocusC
 	}
 
 	public void startPreview() {
-		if (mHandler.hasMessages(MSG_START_DECODE)) {
-			return;
-		}
-
 		if (mListener != null) {
 			mListener.onDecodeStart();
 		}
@@ -173,32 +183,64 @@ public class CavanQrCodeView extends View implements PreviewCallback, AutoFocusC
 		if (mCamera != null) {
 			mCamera.startPreview();
 			mCamera.autoFocus(this);
-			mHandler.sendEmptyMessageDelayed(MSG_START_DECODE, 1000);
+			mHandler.sendEmptyMessageDelayed(MSG_AUTO_FOCUS_TIMEOUT, 1000);
 		}
+	}
+
+	public void updateQrCodeRange() {
+		CavanAndroid.dLog("mWinX = " + mWinX);
+		CavanAndroid.dLog("mWinY = " + mWinY);
+		CavanAndroid.dLog("mWinWidth = " + mWinWidth);
+		CavanAndroid.dLog("mVideoWidth = " + mVideoWidth);
+		CavanAndroid.dLog("mVideoHeight = " + mVideoHeight);
+		CavanAndroid.dLog("mSurfaceWidth = " + mSurfaceWidth);
+		CavanAndroid.dLog("mSurfaceHeight = " + mSurfaceHeight);
+
+		if (mSurfaceHeight > 0) {
+			mQrCodeX = mWinY * mVideoWidth / mSurfaceHeight;
+			mQrCodeWidth = mWinWidth * mVideoWidth / mSurfaceHeight;
+		}
+
+		if (mSurfaceWidth > 0) {
+			mQrCodeY = mWinX * mVideoHeight / mSurfaceWidth;
+			mQrCodeHeight= mWinWidth * mVideoHeight / mSurfaceWidth;
+		}
+
+		CavanAndroid.pLog("mQrCodeX = " + mQrCodeX);
+		CavanAndroid.pLog("mQrCodeY = " + mQrCodeY);
+		CavanAndroid.pLog("mQrCodeWidth = " + mQrCodeWidth);
+		CavanAndroid.pLog("mQrCodeHeight = " + mQrCodeHeight);
 	}
 
 	@Override
 	protected void onDraw(Canvas canvas) {
-		canvas.drawARGB(0x7F, 0x00, 0x00, 0x00);
-
 		int width = canvas.getWidth();
 		int height = canvas.getHeight();
 
-		if (width != mViewWidth || height != mViewHeight) {
-			mViewWidth = width;
-			mViewHeight = height;
+		CavanAndroid.dLog("width = " + width);
+		CavanAndroid.dLog("height = " + height);
 
-			mQrCodeWidth = Math.min(width, height);
+		int left, right, top, bottom;
 
-			int left = mQrCodeWidth / 5;
-			int right = mQrCodeWidth - left;
+		if (height < width) {
+			top = height / 5;
+			bottom = height - top;
+			mWinWidth = bottom - top + 1;
 
-			mQrCodeWidth = right - left + 1;
-			mQrCodeRect.left = mQrCodeRect.top = left;
-			mQrCodeRect.right = mQrCodeRect.bottom = right;
+			left = (width - mWinWidth) / 2;
+			right = left + mWinWidth - 1;
+		} else {
+			left = top = width / 5;
+			bottom = right = width - left;
+			mWinWidth = right - left + 1;
 		}
 
-		canvas.drawRect(mQrCodeRect, mPaint);
+		mWinX = (int) (getX() + left);
+		mWinY = (int) (getY() + top);
+
+		updateQrCodeRange();
+
+		canvas.drawRect(left, top, right, bottom, mPaint);
 	}
 
 	@Override
@@ -207,7 +249,8 @@ public class CavanQrCodeView extends View implements PreviewCallback, AutoFocusC
 
 		if (mCamera != null) {
 			if (success) {
-				mHandler.sendEmptyMessage(MSG_START_DECODE);
+				mHandler.removeMessages(MSG_AUTO_FOCUS_TIMEOUT);
+				mCamera.setOneShotPreviewCallback(this);
 			} else {
 				mCamera.autoFocus(this);
 			}
