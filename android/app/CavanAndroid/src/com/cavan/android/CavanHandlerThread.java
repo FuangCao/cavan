@@ -7,7 +7,7 @@ import android.os.Message;
 
 public class CavanHandlerThread extends HandlerThread implements Callback {
 
-	protected CavanThreadedHandler mHandler;
+	protected CavanThreadedHandler mThreadedHandler;
 
 	public class CavanThreadedHandler extends Handler {
 
@@ -31,7 +31,7 @@ public class CavanHandlerThread extends HandlerThread implements Callback {
 
 	public CavanThreadedHandler getHandler() {
 		synchronized (this) {
-			while (mHandler == null && isAlive()) {
+			while (mThreadedHandler == null && isAlive()) {
 				try {
 					wait();
 				} catch (InterruptedException e) {
@@ -40,7 +40,7 @@ public class CavanHandlerThread extends HandlerThread implements Callback {
 			}
 		}
 
-		return mHandler;
+		return mThreadedHandler;
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public class CavanHandlerThread extends HandlerThread implements Callback {
 	@Override
 	protected void onLooperPrepared() {
 		super.onLooperPrepared();
-		mHandler = new CavanThreadedHandler();
+		mThreadedHandler = new CavanThreadedHandler();
 	}
 
 	@Override

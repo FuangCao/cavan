@@ -20,6 +20,7 @@ import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleDevice;
@@ -38,6 +39,7 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 	private CavanBleScanner mScanner;
 	private CavanBleDeviceAdapter mAdapter;
 
+	private TextView mTextView;
 	private ListView mListView;
 	private SurfaceView mSurfaceView;
 	private CavanQrCodeView mQrCodeView;
@@ -60,7 +62,6 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 	public void startScan() {
 		if (mScanner != null) {
 			mScanner.startScan(mUuids, mNames, mAddresses);
-			CavanAndroid.showToast(this, R.string.text_scanning);
 		}
 	}
 
@@ -77,13 +78,16 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 	protected void onCreateBle(Bundle savedInstanceState) {
 		setContentView(R.layout.ble_scanner);
 
-		mQrCodeView = (CavanQrCodeView) findViewById(R.id.cavanQrCodeView);
-		mSurfaceView = (SurfaceView) findViewById(R.id.surfaceViewQrCode);
-		mListView = (ListView) findViewById(R.id.listViewDevices);
+		mTextView = (TextView) findViewById(R.id.textViewQrCode);
 
+		mQrCodeView = (CavanQrCodeView) findViewById(R.id.qrCodeView);
 		mQrCodeView.setDecodeEventListener(this);
+
+		mSurfaceView = (SurfaceView) findViewById(R.id.surfaceViewQrCode);
 		mSurfaceHolder = mSurfaceView.getHolder();
 		mSurfaceHolder.addCallback(this);
+
+		mListView = (ListView) findViewById(R.id.listViewDevices);
 
 		Intent intent = getIntent();
 		mNames = intent.getStringArrayExtra("names");
@@ -107,6 +111,11 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 		};
 
 		mScanner = new CavanBleScanner(this) {
+
+			@Override
+			protected void onScanStarted() {
+				CavanAndroid.showToast(getApplicationContext(), R.string.text_scanning);
+			}
 
 			@Override
 			protected void onScanResult(CavanBleDevice[] devices, CavanBleDevice device) {
@@ -244,13 +253,17 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 	}
 
 	@Override
-	public void onDecodeComplete(Result result) {
-		if (result != null) {
-			BluetoothDevice device = mScanner.getRemoteDevice(result.getText());
-			if (device != null) {
-				finishScan(device);
-			}
+	public boolean onDecodeComplete(Result result) {
+		String text = result.getText();
+		mTextView.setText(text);
+
+		BluetoothDevice device = mScanner.getRemoteDevice(text);
+		if (device != null) {
+			finishScan(device);
+			return true;
 		}
+
+		return false;
 	}
 
 	@Override

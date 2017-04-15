@@ -39,5 +39,4 @@ public class CavanLuminanceSourceRotate90 extends LuminanceSource {
 	public byte[] getMatrix() {
 		return mBytes;
 	}
-
 }

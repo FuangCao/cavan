@@ -14,7 +14,7 @@ import android.os.Message;
 
 public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCallback {
 
-	private static final int START_SCAN_OVERTIME = 3000;
+	private static final int START_SCAN_OVERTIME = 5000;
 
 	private static final int MSG_AUTO_SELECT = 1;
 	private static final int MSG_START_SCAN = 2;
@@ -27,6 +27,10 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 	private CavanBleDevice mDeviceBest;
 	private ArrayList<String> mNames = new ArrayList<String>();
 	private HashMap<String, CavanBleDevice> mDeviceMap = new HashMap<String, CavanBleDevice>();
+
+	protected void onScanStarted() {
+		CavanAndroid.dLog("onScanStarted");
+	}
 
 	protected void onScanResult(CavanBleDevice[] devices, CavanBleDevice device) {
 		CavanAndroid.dLog("onScanResult: " + device);
@@ -69,6 +73,7 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 					mHandler.sendEmptyMessageDelayed(MSG_START_SCAN, START_SCAN_OVERTIME);
 					mAdapter.stopLeScan(CavanBleScanner.this);
 					mAdapter.startLeScan(mUuids, CavanBleScanner.this);
+					onScanStarted();
 				}
 				break;
 

@@ -50,17 +50,17 @@ public abstract class CavanBleDeviceAdapter extends BaseAdapter {
 	}
 
 	public View getView(CavanBleDevice device, View convertView, ViewGroup parent) {
-		Button button;
+		Button view;
 
 		if (convertView != null) {
-			button = (Button) convertView;
+			view = (Button) convertView;
 		} else {
-			button = new Button(getContext());
+			view = new Button(getContext());
 		}
 
-		button.setText(device.toString());
+		view.setText(device.toString());
 
-		return button;
+		return view;
 	}
 
 	@Override
