@@ -3,6 +3,7 @@ package com.cavan.resource;
 import java.io.IOException;
 import java.util.UUID;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -20,18 +21,18 @@ import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleDevice;
 import com.cavan.android.CavanBleDeviceAdapter;
 import com.cavan.android.CavanBleScanner;
 import com.cavan.android.CavanQrCodeView;
-import com.cavan.android.CavanQrCodeView.DecodeEventListener;
+import com.cavan.android.CavanQrCodeView.EventListener;
 import com.google.zxing.Result;
 
+@SuppressLint("ClickableViewAccessibility")
 @SuppressWarnings("deprecation")
-public class CavanBleScanActivity extends CavanBleActivity implements OnClickListener, Callback, DecodeEventListener {
+public class CavanBleScanActivity extends CavanBleActivity implements OnClickListener, Callback, EventListener {
 
 	private UUID[] mUuids;
 	private String[] mAddresses;
@@ -39,11 +40,10 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 	private CavanBleScanner mScanner;
 	private CavanBleDeviceAdapter mAdapter;
 
-	private TextView mTextView;
 	private ListView mListView;
-	private SurfaceView mSurfaceView;
+	private SurfaceView mSurface;
+	private SurfaceHolder mHolder;
 	private CavanQrCodeView mQrCodeView;
-	private SurfaceHolder mSurfaceHolder;
 
 	protected void onScanComplete(CavanBleDevice device) {
 		CavanAndroid.dLog("onScanComplete: " + device);
@@ -62,32 +62,36 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 	public void startScan() {
 		if (mScanner != null) {
 			mScanner.startScan(mUuids, mNames, mAddresses);
+			mScanner.addBluetoothDevice("11:22:33:44:55:66");
+			mScanner.addBluetoothDevice("11:22:33:44:55:77");
+			mScanner.addBluetoothDevice("11:22:33:44:55:88");
+			mScanner.addBluetoothDevice("11:22:33:44:55:99");
 		}
-	}
-
-	@Override
-	public boolean onTouchEvent(MotionEvent event) {
-		if (event.getAction() == MotionEvent.ACTION_DOWN && mScanner != null) {
-			mScanner.setAutoSelect(0);
-		}
-
-		return super.onTouchEvent(event);
 	}
 
 	@Override
 	protected void onCreateBle(Bundle savedInstanceState) {
 		setContentView(R.layout.ble_scanner);
 
-		mTextView = (TextView) findViewById(R.id.textViewQrCode);
-
 		mQrCodeView = (CavanQrCodeView) findViewById(R.id.qrCodeView);
-		mQrCodeView.setDecodeEventListener(this);
+		mQrCodeView.setEventListener(this);
 
-		mSurfaceView = (SurfaceView) findViewById(R.id.surfaceViewQrCode);
-		mSurfaceHolder = mSurfaceView.getHolder();
-		mSurfaceHolder.addCallback(this);
+		mSurface = (SurfaceView) findViewById(R.id.surfaceViewQrCode);
+		mHolder = mSurface.getHolder();
+		mHolder.addCallback(this);
 
 		mListView = (ListView) findViewById(R.id.listViewDevices);
+		mListView.setOnTouchListener(new View.OnTouchListener() {
+
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				if (event.getAction() == MotionEvent.ACTION_DOWN && mScanner != null) {
+					mScanner.setAutoSelect(0);
+				}
+
+				return false;
+			}
+		});
 
 		Intent intent = getIntent();
 		mNames = intent.getStringArrayExtra("names");
@@ -228,22 +232,13 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
 		CavanAndroid.pLog();
-
-		Camera camera = mQrCodeView.openCamera(mSurfaceView.getWidth(), mSurfaceView.getHeight());
-		if (camera != null) {
-			try {
-				camera.setPreviewDisplay(holder);
-				mQrCodeView.startPreview();
-			} catch (IOException e) {
-				e.printStackTrace();
-				mQrCodeView.closeCamera();
-			}
-		}
+		mQrCodeView.openCamera(mSurface.getWidth(), mSurface.getHeight());
 	}
 
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 		CavanAndroid.pLog();
+		mQrCodeView.setSurfaceSize(width, height);
 	}
 
 	@Override
@@ -255,7 +250,6 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 	@Override
 	public boolean onDecodeComplete(Result result) {
 		String text = result.getText();
-		mTextView.setText(text);
 
 		BluetoothDevice device = mScanner.getRemoteDevice(text);
 		if (device != null) {
@@ -269,5 +263,25 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 	@Override
 	public void onDecodeStart() {
 		CavanAndroid.pLog();
+	}
+
+	@Override
+	public boolean doCameraInit(Camera camera) {
+		CavanAndroid.pLog();
+
+		try {
+			camera.setPreviewDisplay(mHolder);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
+	public void onCameraOpened(Camera camera) {
+		CavanAndroid.pLog();
+		mQrCodeView.startPreview();
 	}
 }

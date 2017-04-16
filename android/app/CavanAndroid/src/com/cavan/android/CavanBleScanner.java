@@ -195,6 +195,42 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 		mHandler.postDelayed(runnable, delayMillis);
 	}
 
+	public CavanBleDevice putBluetoothDevice(BluetoothDevice device, int rssi, byte[] scanRecord) {
+		CavanBleDevice myDevice;
+
+		synchronized (mDeviceMap) {
+			String address = device.getAddress();
+			myDevice = mDeviceMap.get(address);
+			if (myDevice == null) {
+				myDevice = new CavanBleDevice(device);
+				mDeviceMap.put(address, myDevice);
+			}
+
+			myDevice.setRssi(rssi);
+			myDevice.setScanRecord(scanRecord);
+
+			if (!mHandler.hasMessages(MSG_SCAN_RESULT, myDevice)) {
+				Message message = mHandler.obtainMessage(MSG_SCAN_RESULT, myDevice);
+				mHandler.sendMessageDelayed(message, 500);
+			}
+		}
+
+		return myDevice;
+	}
+
+	public CavanBleDevice addBluetoothDevice(BluetoothDevice device) {
+		return putBluetoothDevice(device, 0, null);
+	}
+
+	public CavanBleDevice addBluetoothDevice(String address) {
+		BluetoothDevice device = getRemoteDevice(address);
+		if (device == null) {
+			return null;
+		}
+
+		return addBluetoothDevice(device);
+	}
+
 	@SuppressWarnings("deprecation")
 	public void stopScan() {
 		mScanEnable = false;
@@ -209,32 +245,17 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 	}
 
 	@Override
-	public void onLeScan(BluetoothDevice btDevice, int rssi, byte[] scanRecord) {
+	public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
 		mHandler.removeMessages(MSG_START_SCAN);
 
 		if (mNames.size() > 0) {
-			String name = btDevice.getName();
+			String name = device.getName();
 			if (name == null || mNames.indexOf(name) < 0) {
 				return;
 			}
 		}
 
-		synchronized (mDeviceMap) {
-			String address = btDevice.getAddress();
-			CavanBleDevice device = mDeviceMap.get(address);
-			if (device == null) {
-				device = new CavanBleDevice(btDevice);
-				mDeviceMap.put(address, device);
-			}
-
-			device.setRssi(rssi);
-			device.setScanRecord(scanRecord);
-
-			if (!mHandler.hasMessages(MSG_SCAN_RESULT, device)) {
-				Message message = mHandler.obtainMessage(MSG_SCAN_RESULT, device);
-				mHandler.sendMessageDelayed(message, 500);
-			}
-		}
+		putBluetoothDevice(device, rssi, scanRecord);
 	}
 
 	@Override
