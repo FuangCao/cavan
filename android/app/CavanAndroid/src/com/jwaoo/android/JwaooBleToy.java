@@ -964,7 +964,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			return false;
 		}
 
-		setReady(true);
+		setGattReady(true);
 
 		String identify = doIdentify();
 		if (identify == null) {

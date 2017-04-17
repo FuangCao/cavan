@@ -62,10 +62,6 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 	public void startScan() {
 		if (mScanner != null) {
 			mScanner.startScan(mUuids, mNames, mAddresses);
-			mScanner.addBluetoothDevice("11:22:33:44:55:66");
-			mScanner.addBluetoothDevice("11:22:33:44:55:77");
-			mScanner.addBluetoothDevice("11:22:33:44:55:88");
-			mScanner.addBluetoothDevice("11:22:33:44:55:99");
 		}
 	}
 
