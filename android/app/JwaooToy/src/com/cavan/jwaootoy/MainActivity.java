@@ -384,32 +384,32 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 	@Override
 	public boolean onInitialize() {
-		if (mBleToy.setClickEnable(mCheckBoxClick.isChecked()) == false && mBleToy.isCommandTimeout()) {
+		if (mBleToy.setClickEnable(mCheckBoxClick.isChecked()) == false && mBleToy.getGattTimeoutCount() > 0) {
 			CavanAndroid.dLog("Failed to setClickEnable");
 			return false;
 		}
 
-		if (mBleToy.setLongClickEnable(mCheckBoxLongClick.isChecked()) == false && mBleToy.isCommandTimeout()) {
+		if (mBleToy.setLongClickEnable(mCheckBoxLongClick.isChecked()) == false && mBleToy.getGattTimeoutCount() > 0) {
 			CavanAndroid.dLog("Failed to setLongClickEnable");
 			return false;
 		}
 
-		if (mBleToy.setMultiClickEnable(mCheckBoxMultiClick.isChecked()) == false && mBleToy.isCommandTimeout()) {
+		if (mBleToy.setMultiClickEnable(mCheckBoxMultiClick.isChecked()) == false && mBleToy.getGattTimeoutCount() > 0) {
 			CavanAndroid.dLog("Failed to setMultiClickEnable");
 			return false;
 		}
 
-		if (mBleToy.setBatteryEventEnable(mCheckBoxBatteryEvent.isChecked()) == false && mBleToy.isCommandTimeout()) {
+		if (mBleToy.setBatteryEventEnable(mCheckBoxBatteryEvent.isChecked()) == false && mBleToy.getGattTimeoutCount() > 0) {
 			CavanAndroid.dLog("Failed to setBatteryEventEnable");
 			return false;
 		}
 
-		if (mBleToy.setFactoryModeEnable(mCheckBoxFactoryMode.isChecked()) == false && mBleToy.isCommandTimeout()) {
+		if (mBleToy.setFactoryModeEnable(mCheckBoxFactoryMode.isChecked()) == false && mBleToy.getGattTimeoutCount() > 0) {
 			CavanAndroid.dLog("Failed to setFactoryModeEnable");
 			return false;
 		}
 
-		if (mBleToy.setMotoEventEnable(mCheckBoxMotoEvent.isChecked()) == false && mBleToy.isCommandTimeout()) {
+		if (mBleToy.setMotoEventEnable(mCheckBoxMotoEvent.isChecked()) == false && mBleToy.getGattTimeoutCount() > 0) {
 			CavanAndroid.dLog("Failed to setMotoEventEnable");
 			return false;
 		}
@@ -417,7 +417,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		mBleToy.setKeyLock(mCheckBoxKeyLock.isChecked());
 
 		if (mMotoMode > 0 || mMotoLevel > 0) {
-			if (setMotoMode() == false && mBleToy.isCommandTimeout()) {
+			if (setMotoMode() == false && mBleToy.getGattTimeoutCount() > 0) {
 				return false;
 			}
 		}

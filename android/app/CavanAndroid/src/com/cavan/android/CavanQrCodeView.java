@@ -18,7 +18,7 @@ import com.google.zxing.Result;
 import com.google.zxing.qrcode.QRCodeReader;
 
 @SuppressWarnings("deprecation")
-public class CavanQrCodeView extends View implements CavanCameraHandler.EventListener {
+public class CavanQrCodeView extends View implements CavanQrCodeCamera.EventListener {
 
 	private static final int MSG_DECODE_START = 1;
 	private static final int MSG_DECODE_COMPLETE = 2;
@@ -52,7 +52,7 @@ public class CavanQrCodeView extends View implements CavanCameraHandler.EventLis
 
 	private EventListener mListener;
 	private QRCodeReader mQrCodeReader = new QRCodeReader();
-	private CavanCameraHandler mCameraHandler = new CavanCameraHandler(this);
+	private CavanQrCodeCamera mCameraHandler = CavanQrCodeCamera.getInstance(this);
 
 	private Handler mHandler = new Handler() {
 
@@ -86,13 +86,13 @@ public class CavanQrCodeView extends View implements CavanCameraHandler.EventLis
 					mVideoHeight = mSurfaceHeight;
 				}
 
-				CavanAndroid.dLog("mWinX = " + mWinX);
+				/* CavanAndroid.dLog("mWinX = " + mWinX);
 				CavanAndroid.dLog("mWinY = " + mWinY);
 				CavanAndroid.dLog("mWinWidth = " + mWinWidth);
 				CavanAndroid.dLog("mVideoWidth = " + mVideoWidth);
 				CavanAndroid.dLog("mVideoHeight = " + mVideoHeight);
 				CavanAndroid.dLog("mSurfaceWidth = " + mSurfaceWidth);
-				CavanAndroid.dLog("mSurfaceHeight = " + mSurfaceHeight);
+				CavanAndroid.dLog("mSurfaceHeight = " + mSurfaceHeight); */
 
 				if (mSurfaceHeight > 0) {
 					mQrCodeX = mWinY * mVideoWidth / mSurfaceHeight;
@@ -104,10 +104,10 @@ public class CavanQrCodeView extends View implements CavanCameraHandler.EventLis
 					mQrCodeHeight= mWinWidth * mVideoHeight / mSurfaceWidth;
 				}
 
-				CavanAndroid.pLog("mQrCodeX = " + mQrCodeX);
-				CavanAndroid.pLog("mQrCodeY = " + mQrCodeY);
-				CavanAndroid.pLog("mQrCodeWidth = " + mQrCodeWidth);
-				CavanAndroid.pLog("mQrCodeHeight = " + mQrCodeHeight);
+				/* CavanAndroid.dLog("mQrCodeX = " + mQrCodeX);
+				CavanAndroid.dLog("mQrCodeY = " + mQrCodeY);
+				CavanAndroid.dLog("mQrCodeWidth = " + mQrCodeWidth);
+				CavanAndroid.dLog("mQrCodeHeight = " + mQrCodeHeight); */
 				break;
 
 			case MSG_CAMERA_OPENED:
@@ -153,7 +153,7 @@ public class CavanQrCodeView extends View implements CavanCameraHandler.EventLis
 	}
 
 	public synchronized void openCamera(int width, int height) {
-		CavanAndroid.dLog("openCamera: width = " + width + ", height = " + height);
+		// CavanAndroid.dLog("openCamera: width = " + width + ", height = " + height);
 
 		mSurfaceWidth = width;
 		mSurfaceHeight = height;
@@ -161,7 +161,7 @@ public class CavanQrCodeView extends View implements CavanCameraHandler.EventLis
 	}
 
 	public synchronized void setSurfaceSize(int width, int height) {
-		CavanAndroid.dLog("setSurfaceSize: width = " + width + ", height = " + height);
+		// CavanAndroid.dLog("setSurfaceSize: width = " + width + ", height = " + height);
 
 		mSurfaceWidth = width;
 		mSurfaceHeight = height;
@@ -169,17 +169,17 @@ public class CavanQrCodeView extends View implements CavanCameraHandler.EventLis
 	}
 
 	public void closeCamera() {
-		CavanAndroid.dLog("closeCamera");
+		// CavanAndroid.dLog("closeCamera");
 		mCameraHandler.closeCamera();
 	}
 
 	public boolean startPreview() {
-		CavanAndroid.dLog("startPreview");
+		// CavanAndroid.dLog("startPreview");
 		return mCameraHandler.startPreview();
 	}
 
 	public void stopPreview() {
-		CavanAndroid.dLog("stopPreview");
+		// CavanAndroid.dLog("stopPreview");
 		mCameraHandler.stopPreview();
 	}
 
@@ -203,8 +203,8 @@ public class CavanQrCodeView extends View implements CavanCameraHandler.EventLis
 		int width = canvas.getWidth();
 		int height = canvas.getHeight();
 
-		CavanAndroid.dLog("width = " + width);
-		CavanAndroid.dLog("height = " + height);
+		// CavanAndroid.dLog("width = " + width);
+		// CavanAndroid.dLog("height = " + height);
 
 		int left, right, top, bottom;
 
@@ -254,7 +254,7 @@ public class CavanQrCodeView extends View implements CavanCameraHandler.EventLis
 		PlanarYUVLuminanceSource sourceYUV = new PlanarYUVLuminanceSource(bytes, mVideoWidth, mVideoHeight, mQrCodeX, mQrCodeY, mQrCodeWidth, mQrCodeHeight, false);
 		CavanLuminanceSourceRotate90 source = new CavanLuminanceSourceRotate90(sourceYUV);
 		Result result = CavanQrCode.decode(mQrCodeReader, source);
-		CavanAndroid.dLog("result = " + result);
+		// CavanAndroid.dLog("result = " + result);
 		mHandler.obtainMessage(MSG_DECODE_COMPLETE, result).sendToTarget();
 	}
 }

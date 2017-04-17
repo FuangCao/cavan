@@ -425,8 +425,20 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 	}
 
-	public boolean isCommandTimeout() {
-		return mCharCommand == null || mCharCommand.isTimeout();
+	public boolean isDeviceModel06() {
+		return getDeviveId() == DEVICE_ID_MODEL06;
+	}
+
+	public boolean isDeviceModel10() {
+		return getDeviveId() == DEVICE_ID_MODEL10;
+	}
+
+	public boolean isDeviceSenseTube() {
+		return isDeviceModel06();
+	}
+
+	public boolean isDeviceSenseBand() {
+		return isDeviceModel10();
 	}
 
 	public String doIdentify() {

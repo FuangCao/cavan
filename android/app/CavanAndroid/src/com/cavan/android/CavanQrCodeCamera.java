@@ -8,7 +8,7 @@ import android.hardware.Camera.Size;
 import android.os.Message;
 
 @SuppressWarnings("deprecation")
-public class CavanCameraHandler extends CavanThreadedHandler implements AutoFocusCallback, PreviewCallback {
+public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocusCallback, PreviewCallback {
 
 	private static final int AUTO_FOCUS_OVERTIME = 3000;
 
@@ -24,10 +24,29 @@ public class CavanCameraHandler extends CavanThreadedHandler implements AutoFocu
 		void onFrameCaptured(byte[] bytes, Camera camera);
 	}
 
+	private static CavanQrCodeCamera mQrCodeCamera;
+
+	public static CavanQrCodeCamera getInstance(EventListener listener) {
+		if (mQrCodeCamera == null) {
+			CavanAndroid.pLog();
+			mQrCodeCamera = new CavanQrCodeCamera(listener);
+		} else {
+			CavanAndroid.pLog();
+			mQrCodeCamera.setEventListener(listener);
+		}
+
+		return mQrCodeCamera;
+	}
+
 	private Camera mCamera;
 	private EventListener mListener;
 
-	public CavanCameraHandler(EventListener listener) {
+	private CavanQrCodeCamera(EventListener listener) {
+		super(CavanQrCodeCamera.class);
+		setEventListener(listener);
+	}
+
+	public synchronized void setEventListener(EventListener listener) {
 		mListener = listener;
 	}
 
@@ -103,7 +122,7 @@ public class CavanCameraHandler extends CavanThreadedHandler implements AutoFocu
 		mListener.onStartAutoFocus(mCamera);
 
 		try {
-			mCamera.autoFocus(CavanCameraHandler.this);
+			mCamera.autoFocus(CavanQrCodeCamera.this);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -128,8 +147,8 @@ public class CavanCameraHandler extends CavanThreadedHandler implements AutoFocu
 			return false;
 		}
 
-		CavanAndroid.dLog("setOneShotPreviewCallback");
-		mCamera.setOneShotPreviewCallback(CavanCameraHandler.this);
+		// CavanAndroid.dLog("setOneShotPreviewCallback");
+		mCamera.setOneShotPreviewCallback(CavanQrCodeCamera.this);
 
 		return true;
 	}
@@ -161,7 +180,7 @@ public class CavanCameraHandler extends CavanThreadedHandler implements AutoFocu
 
 	@Override
 	public void onAutoFocus(boolean success, Camera camera) {
-		CavanAndroid.dLog("onAutoFocus: success = " + success);
+		// CavanAndroid.dLog("onAutoFocus: success = " + success);
 
 		if (mCamera != null) {
 			if (success) {

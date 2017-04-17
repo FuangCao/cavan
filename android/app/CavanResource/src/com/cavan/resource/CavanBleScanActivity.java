@@ -227,19 +227,19 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
-		CavanAndroid.pLog();
+		// CavanAndroid.pLog();
 		mQrCodeView.openCamera(mSurface.getWidth(), mSurface.getHeight());
 	}
 
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-		CavanAndroid.pLog();
+		// CavanAndroid.pLog();
 		mQrCodeView.setSurfaceSize(width, height);
 	}
 
 	@Override
 	public void surfaceDestroyed(SurfaceHolder holder) {
-		CavanAndroid.pLog();
+		// CavanAndroid.pLog();
 		mQrCodeView.closeCamera();
 	}
 
@@ -258,12 +258,12 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 
 	@Override
 	public void onDecodeStart() {
-		CavanAndroid.pLog();
+		// CavanAndroid.pLog();
 	}
 
 	@Override
 	public boolean doCameraInit(Camera camera) {
-		CavanAndroid.pLog();
+		// CavanAndroid.pLog();
 
 		try {
 			camera.setPreviewDisplay(mHolder);
@@ -277,7 +277,7 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 
 	@Override
 	public void onCameraOpened(Camera camera) {
-		CavanAndroid.pLog();
+		// CavanAndroid.pLog();
 		mQrCodeView.startPreview();
 	}
 }
