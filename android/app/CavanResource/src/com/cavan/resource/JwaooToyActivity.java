@@ -32,13 +32,12 @@ public class JwaooToyActivity extends CavanBleActivity implements OnCancelListen
 	private String[] mAddresses;
 	protected ProgressDialog mProgressDialog;
 	protected Handler mHandler = new Handler(this);
-	protected JwaooBleToy mBleToy = new JwaooBleToy();
+	protected JwaooBleToy mBleToy;
 
 	protected List<View> mListViews = new ArrayList<View>();
 
 	public JwaooToyActivity() {
 		super();
-		mBleToy.setEventListener(this);
 	}
 
 	public boolean isUserCanceled() {
@@ -122,7 +121,8 @@ public class JwaooToyActivity extends CavanBleActivity implements OnCancelListen
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		mBleToy.setContext(this);
+		mBleToy = new JwaooBleToy(this);
+		mBleToy.setEventListener(this);
 	}
 
 	@Override
