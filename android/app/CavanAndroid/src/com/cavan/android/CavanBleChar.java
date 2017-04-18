@@ -1,22 +1,24 @@
 package com.cavan.android;
 
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 
+import com.cavan.android.CavanBleGatt.GattInvalidStateException;
 import com.cavan.java.CavanArray;
 import com.cavan.java.CavanProgressListener;
 
 public class CavanBleChar {
 
-	public static final int FRAME_SIZE = 20;
-	public static final long COMMAND_TIMEOUT = 2000;
-	public static final long WRITE_CHAR_TIMEOUT = 3000;
-	public static final long WRITE_DESC_TIMEOUT = 3000;
-
 	public static final UUID CFG_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 	public static final UUID DESC_UUID = UUID.fromString("00002901-0000-1000-8000-00805f9b34fb");
+
+	private static final int FRAME_SIZE = 20;
+	private static final long COMMAND_TIMEOUT = 2000;
+	private static final long WRITE_CHAR_TIMEOUT = 3000;
+	private static final long WRITE_DESC_TIMEOUT = 2000;
 
 	public interface CavanBleDataListener {
 		void onDataReceived(byte[] data);
@@ -35,33 +37,33 @@ public class CavanBleChar {
 	private int mDescReadStatus;
 	private int mDescWriteStatus;
 
-	private CavanBleGatt mGatt;
-	private BluetoothGattCharacteristic mChar;
+	private CavanBleGatt mBleGatt;
+	private BluetoothGattCharacteristic mBleChar;
 	private CavanBleDataListener mListener = mListenerDummy;
 
 	public CavanBleChar(CavanBleGatt bleGatt, BluetoothGattCharacteristic bleChar) {
-		mGatt = bleGatt;
-		mChar = bleChar;
+		mBleGatt = bleGatt;
+		mBleChar = bleChar;
 	}
 
 	synchronized void setBleGatt(CavanBleGatt bleGatt) {
-		mGatt = bleGatt;
+		mBleGatt = bleGatt;
 	}
 
 	synchronized CavanBleGatt getBleGatt() {
-		return mGatt;
+		return mBleGatt;
 	}
 
 	synchronized void setBleChar(BluetoothGattCharacteristic bleChar) {
-		mChar = bleChar;
+		mBleChar = bleChar;
 	}
 
 	synchronized BluetoothGattCharacteristic getBleChar() {
-		return mChar;
+		return mBleChar;
 	}
 
-	synchronized private boolean writeFrame(byte[] data, boolean sync) {
-		if (!mChar.setValue(data)) {
+	synchronized private boolean writeFrame(byte[] data, boolean sync) throws TimeoutException, GattInvalidStateException {
+		if (!mBleChar.setValue(data)) {
 			CavanAndroid.eLog("Failed to setValue");
 			return false;
 		}
@@ -70,42 +72,33 @@ public class CavanBleChar {
 			mWriteStatus = -110;
 
 			for (int i = 0; i < 3; i++) {
-				if (mGatt.writeCharacteristic(mChar)) {
-					try {
-						wait(WRITE_CHAR_TIMEOUT);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-
-					if (mWriteStatus != -110) {
-						return (mWriteStatus == 0);
-					}
-
-					CavanAndroid.eLog("Failed to writeData" + i + ": status = " + mWriteStatus);
-				} else {
-					CavanAndroid.eLog("Failed to writeCharacteristic" + i);
-
-					if (mGatt.isGattReady()) {
-						try {
-							wait(WRITE_CHAR_TIMEOUT);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					} else {
-						return false;
-					}
+				if (!mBleGatt.writeCharacteristic(mBleChar)) {
+					CavanAndroid.eLog("Failed to writeCharacteristic");
+					return false;
 				}
+
+				try {
+					wait(WRITE_CHAR_TIMEOUT);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
+				if (mWriteStatus != -110) {
+					return (mWriteStatus == 0);
+				}
+
+				CavanAndroid.eLog("Failed to writeCharacteristic" + i + ": status = " + mWriteStatus);
 			}
 
-			mGatt.onWriteTimeout(this);
+			mBleGatt.onWriteTimeout(this);
 
-			return false;
+			throw new TimeoutException("writeCharacteristic timeout");
 		} else {
-			return mGatt.writeCharacteristic(mChar);
+			return mBleGatt.writeCharacteristic(mBleChar);
 		}
 	}
 
-	synchronized public boolean writeData(byte[] data, CavanProgressListener listener, boolean sync) {
+	synchronized public boolean writeData(byte[] data, CavanProgressListener listener, boolean sync) throws TimeoutException, GattInvalidStateException {
 		if (listener != null) {
 			listener.setValueRange(data.length);
 			sync = true;
@@ -147,23 +140,23 @@ public class CavanBleChar {
 		return true;
 	}
 
-	synchronized public boolean writeData(byte[] data, boolean sync) {
+	synchronized public boolean writeData(byte[] data, boolean sync) throws GattInvalidStateException, TimeoutException {
 		return writeData(data, null, sync);
 	}
 
-	synchronized public boolean writeData(byte[] data, CavanProgressListener listener) {
+	synchronized public boolean writeData(byte[] data, CavanProgressListener listener) throws GattInvalidStateException, TimeoutException {
 		return writeData(data, listener, true);
 	}
 
-	synchronized public boolean writeData(byte[] data) {
+	synchronized public boolean writeData(byte[] data) throws GattInvalidStateException, TimeoutException {
 		return writeData(data, true);
 	}
 
-	synchronized public byte[] readData(long timeout) {
+	synchronized public byte[] readData(long timeout) throws GattInvalidStateException {
 		mReadStatus = -110;
 
-		if (!mGatt.readCharacteristic(mChar)) {
-			CavanAndroid.eLog("Failed to sendReadCommand");
+		if (!mBleGatt.readCharacteristic(mBleChar)) {
+			CavanAndroid.eLog("Failed to readCharacteristic");
 			return null;
 		}
 
@@ -181,14 +174,10 @@ public class CavanBleChar {
 			return null;
 		}
 
-		return mChar.getValue();
+		return mBleChar.getValue();
 	}
 
-	synchronized public boolean writeDesc(BluetoothGattDescriptor descriptor, byte[] value) {
-		if (mGatt == null) {
-			return false;
-		}
-
+	synchronized public boolean writeDesc(BluetoothGattDescriptor descriptor, byte[] value) throws GattInvalidStateException, TimeoutException {
 		if (!descriptor.setValue(value)) {
 			CavanAndroid.eLog("Failed to descriptor.setValue");
 			return false;
@@ -196,37 +185,44 @@ public class CavanBleChar {
 
 		mDescWriteStatus = -110;
 
-		if (!mGatt.writeDescriptor(descriptor)) {
-			CavanAndroid.eLog("Failed to writeDescriptor");
-			return false;
+		for (int i = 0; i < 3; i++) {
+			if (!mBleGatt.writeDescriptor(descriptor)) {
+				CavanAndroid.eLog("Failed to writeDescriptor");
+				return false;
+			}
+
+			try {
+				wait(WRITE_DESC_TIMEOUT);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			if (mDescWriteStatus != -110) {
+				return (mDescWriteStatus == 0);
+			}
+
+			CavanAndroid.eLog("Failed to writeDescriptor" + i + ": status = " + mDescWriteStatus);
 		}
 
-		try {
-			wait(WRITE_DESC_TIMEOUT);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		mBleGatt.onWriteTimeout(this);
 
-		return (mDescWriteStatus == 0);
+		throw new TimeoutException("writeDescriptor timeout");
 	}
 
-	synchronized public boolean writeDesc(UUID uuid, byte[] value) {
-		if (mChar == null) {
-			return false;
-		}
-
-		BluetoothGattDescriptor descriptor = mChar.getDescriptor(uuid);
+	synchronized public boolean writeDesc(UUID uuid, byte[] value) throws GattInvalidStateException, TimeoutException {
+		BluetoothGattDescriptor descriptor = mBleChar.getDescriptor(uuid);
 		if (descriptor == null) {
+			CavanAndroid.eLog("Failed to getDescriptor");
 			return false;
 		}
 
 		return writeDesc(descriptor, value);
 	}
 
-	synchronized public byte[] readDesc(BluetoothGattDescriptor descriptor, long timeout) {
+	synchronized public byte[] readDesc(BluetoothGattDescriptor descriptor, long timeout) throws GattInvalidStateException {
 		mDescReadStatus = -110;
 
-		if (!mGatt.readDescriptor(descriptor)) {
+		if (!mBleGatt.readDescriptor(descriptor)) {
 			CavanAndroid.eLog("Failed to readDescriptor");
 			return null;
 		}
@@ -244,12 +240,8 @@ public class CavanBleChar {
 		return null;
 	}
 
-	synchronized public byte[] readDesc(UUID uuid, long timeout) {
-		if (mChar == null) {
-			return null;
-		}
-
-		BluetoothGattDescriptor descriptor = mChar.getDescriptor(uuid);
+	synchronized public byte[] readDesc(UUID uuid, long timeout) throws GattInvalidStateException {
+		BluetoothGattDescriptor descriptor = mBleChar.getDescriptor(uuid);
 		if (descriptor == null) {
 			return null;
 		}
@@ -257,12 +249,9 @@ public class CavanBleChar {
 		return readDesc(descriptor, timeout);
 	}
 
-	synchronized public boolean setNotifyEnable(boolean enable) {
-		if (mChar == null) {
-			return false;
-		}
-
-		if (!mGatt.setCharacteristicNotification(mChar, enable)) {
+	synchronized public boolean setNotifyEnable(boolean enable) throws GattInvalidStateException, TimeoutException {
+		if (!mBleGatt.setCharacteristicNotification(mBleChar, enable)) {
+			CavanAndroid.eLog("Failed to setCharacteristicNotification");
 			return false;
 		}
 
@@ -277,7 +266,7 @@ public class CavanBleChar {
 		return writeDesc(CFG_UUID, value);
 	}
 
-	synchronized public byte[] sendCommand(byte[] command) {
+	synchronized public byte[] sendCommand(byte[] command) throws GattInvalidStateException, TimeoutException {
 		if (writeData(command, true)) {
 			return readData(COMMAND_TIMEOUT);
 		}
@@ -329,7 +318,7 @@ public class CavanBleChar {
 		return mWriteStatus == -110 || mReadStatus == -110;
 	}
 
-	synchronized public boolean setDataListener(CavanBleDataListener listener) {
+	synchronized public boolean setDataListener(CavanBleDataListener listener) throws GattInvalidStateException, TimeoutException {
 		boolean enable;
 
 		if (listener == null) {
@@ -345,6 +334,6 @@ public class CavanBleChar {
 	}
 
 	synchronized public final void onDataAvailable() {
-		mListener.onDataReceived(mChar.getValue());
+		mListener.onDataReceived(mBleChar.getValue());
 	}
 }

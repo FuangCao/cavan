@@ -1,6 +1,7 @@
 package com.cavan.android;
 
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
@@ -27,19 +28,19 @@ public class CavanBleUart extends CavanBleGatt {
 		this(context, device, UUID_SERVICE);
 	}
 
-	public boolean sendData(byte[] data) {
+	public boolean sendData(byte[] data) throws GattInvalidStateException, TimeoutException {
 		return mCharacteristicRx != null && mCharacteristicRx.writeData(data, true);
 	}
 
-	public boolean sendText(String text) {
+	public boolean sendText(String text) throws GattInvalidStateException, TimeoutException {
 		return sendData(text.getBytes());
 	}
 
-	public boolean writeOta(byte[] data) {
+	public boolean writeOta(byte[] data) throws GattInvalidStateException, TimeoutException {
 		return mCharacteristicOta != null && mCharacteristicOta.writeData(data, true);
 	}
 
-	public void setDataListener(CavanBleDataListener listener) {
+	public void setDataListener(CavanBleDataListener listener) throws GattInvalidStateException, TimeoutException {
 		mTxDataLinstener = listener;
 		if (mCharacteristicTx != null) {
 			mCharacteristicTx.setDataListener(listener);
@@ -58,7 +59,12 @@ public class CavanBleUart extends CavanBleGatt {
 			return false;
 		}
 
-		mCharacteristicTx.setDataListener(mTxDataLinstener);
+		try {
+			mCharacteristicTx.setDataListener(mTxDataLinstener);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 
 		mCharacteristicOta = openChar(UUID_OTA);
 

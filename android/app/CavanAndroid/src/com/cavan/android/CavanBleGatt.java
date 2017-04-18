@@ -20,18 +20,25 @@ import com.cavan.java.CavanString;
 
 public class CavanBleGatt extends CavanBluetoothAdapter {
 
-	public static final int MAX_CONN_COUNT = 20;
+	private static final int MAX_CONN_COUNT = 20;
 
-	public static final long CONNECT_OVERTIME = 1000;
-	public static final long DISCOVER_OVERTIME = 2000;
-	public static final long CONNECT_WAIT_TIME = 1000;
-	public static final long DISCONNECT_WAIT_TIME = 3000;
+	private static final long CONNECT_OVERTIME = 1000;
+	private static final long DISCOVER_OVERTIME = 2000;
+	private static final long CONNECT_WAIT_TIME = 1000;
 
-	public static final int STATE_GATT_DISCONNECTED = 1;
-	public static final int STATE_GATT_CONNECTED = 2;
-	public static final int STATE_SERVICE_DISCOVERING = 3;
-	public static final int STATE_SERVICE_DISCOVERED = 4;
-	public static final int STATE_SERVICE_CONNECTED = 5;
+	private static final int MSG_CONNECTION_STATE_CHANGE = 1;
+	private static final int MSG_SERVICES_DISCOVERED = 2;
+	private static final int MSG_CHARACTERISTIC_READ = 3;
+	private static final int MSG_CHARACTERISTIC_WRITE = 4;
+	private static final int MSG_CHARACTERISTIC_CHANGED = 5;
+	private static final int MSG_DESCRIPTOR_READ = 6;
+	private static final int MSG_DESCRIPTOR_WRITE = 7;
+	private static final int MSG_RELIABLE_WRITE_COMPLETED = 8;
+	private static final int MSG_READ_REMOTE_RSSI = 9;
+	private static final int MSG_MTU_CHANGED = 10;
+	private static final int MSG_CONNECT = 11;
+	private static final int MSG_DISCONNECT = 12;
+	private static final int MSG_DISCOVER_TIMEOUT = 13;
 
 	public static final int PROPERTY_NOTIFY_ALL = BluetoothGattCharacteristic.PROPERTY_NOTIFY;
 	public static final int PROPERTY_READ_ALL = BluetoothGattCharacteristic.PROPERTY_READ;
@@ -67,162 +74,105 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 		void onBluetoothAdapterStateChanged(boolean enabled);
 	}
 
+	public static class GattInvalidStateException extends Exception {
+
+		private static final long serialVersionUID = 1L;
+
+		public GattInvalidStateException(String message) {
+			super(message);
+		}
+	}
+
 	private int mGattState;
 	private boolean mGattReady;
-	private boolean mConnected;
-	private BleConnHandlerThread mConnThread = new BleConnHandlerThread();
 
-	private boolean mConnEnable;
-	private int mGattTimeoutCount;
-	private int mGattConnectCount;
-	private int mServiceConnectCount;
+	private boolean mConnected;
+	private boolean mConnEnabled;
+
+	private int mGattTimeout;
+	private int mGattConnTimes;
+	private int mServiceConnTimes;
 	private CavanBleGattEventListener mEventListener = sEventListenerDummy;
 
 	private UUID mUuid;
 	private BluetoothGatt mGatt;
 	private BluetoothDevice mDevice;
 	private BluetoothGattService mService;
+	private CavanBleGattHandler mGattHandler = new CavanBleGattHandler();
 	private HashMap<UUID, CavanBleChar> mCharMap = new HashMap<UUID, CavanBleChar>();
 
 	private BluetoothGattCallback mCallback = new BluetoothGattCallback() {
 
 		@Override
 		public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-			CavanAndroid.dLog("onConnectionStateChange: status = " + status + ", state = " + newState);
-
-			if (gatt != mGatt) {
-				CavanAndroid.eLog("Invalid gatt: " + gatt);
-				gatt.disconnect();
-				gatt.close();
-				return;
-			}
-
-			if (status != 0 && newState == BluetoothProfile.STATE_CONNECTED) {
-				mGattState = BluetoothProfile.STATE_DISCONNECTED;
-				disconnect(false);
-			} else {
-				mGattState = newState;
-
-				if (newState == BluetoothProfile.STATE_CONNECTED) {
-					mGattConnectCount = 0;
-
-					if (mConnThread.getConnState() != STATE_SERVICE_CONNECTED) {
-						mConnThread.setConnState(STATE_GATT_CONNECTED, CONNECT_WAIT_TIME);
-					}
-				} else {
-					mConnThread.setConnState(STATE_GATT_DISCONNECTED, DISCONNECT_WAIT_TIME);
-				}
+			if (checkGattValid(gatt)) {
+				mGattHandler.sendMessage(MSG_CONNECTION_STATE_CHANGE, status, newState);
 			}
 		}
 
 		@Override
 		public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-			CavanAndroid.dLog("onServicesDiscovered: status = " + status);
-
-			if (status == 0) {
-				if (mConnThread.getConnState() != STATE_SERVICE_CONNECTED) {
-					mConnThread.setConnState(STATE_SERVICE_DISCOVERED, 0);
-				}
-			} else {
-				disconnect(false);
+			if (checkGattValid(gatt)) {
+				mGattHandler.sendMessage(MSG_SERVICES_DISCOVERED, status);
 			}
 		}
 
 		@Override
 		public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-			// CavanAndroid.dLog("onCharacteristicRead: characteristic = " + characteristic.getUuid() + ", status = " + status);
-
-			CavanBleChar bleChar = mCharMap.get(characteristic.getUuid());
-			if (bleChar != null) {
-				bleChar.setReadStatus(status);
+			if (checkGattValid(gatt)) {
+				CavanBleGatt.this.onCharacteristicRead(characteristic, status);
 			}
 		}
 
 		@Override
 		public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-			CavanBleChar bleChar = mCharMap.get(characteristic.getUuid());
-			if (bleChar != null) {
-				bleChar.setWriteStatus(status);
+			if (checkGattValid(gatt)) {
+				CavanBleGatt.this.onCharacteristicWrite(characteristic, status);
 			}
 		}
 
 		@Override
 		public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-			CavanBleChar bleChar = mCharMap.get(characteristic.getUuid());
-			if (bleChar != null) {
-				bleChar.onDataAvailable();
+			if (checkGattValid(gatt)) {
+				CavanBleGatt.this.onCharacteristicChanged(characteristic);
 			}
 		}
 
 		@Override
 		public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-			// CavanAndroid.dLog("onDescriptorRead: descriptor = " + descriptor.getUuid() + ", status = " + status);
-
-			CavanBleChar bleChar = mCharMap.get(descriptor.getCharacteristic().getUuid());
-			if (bleChar != null) {
-				bleChar.setDescReadStatus(status);
+			if (checkGattValid(gatt)) {
+				CavanBleGatt.this.onDescriptorRead(descriptor, status);
 			}
 		}
 
 		@Override
 		public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-			CavanAndroid.dLog("onDescriptorWrite: descriptor = " + descriptor.getUuid() + ", status = " + status);
-
-			CavanBleChar bleChar = mCharMap.get(descriptor.getCharacteristic().getUuid());
-			if (bleChar != null) {
-				bleChar.setDescWriteStatus(status);
+			if (checkGattValid(gatt)) {
+				CavanBleGatt.this.onDescriptorWrite(descriptor, status);
 			}
 		}
 
 		@Override
 		public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
-			CavanAndroid.dLog("onReliableWriteCompleted: " + ", status = " + status);
+			if (checkGattValid(gatt)) {
+				CavanBleGatt.this.onReliableWriteCompleted(status);
+			}
 		}
 
 		@Override
 		public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
-			CavanAndroid.dLog("onReadRemoteRssi: rssi = " + rssi + ", status = " + status);
+			if (checkGattValid(gatt)) {
+				CavanBleGatt.this.onReadRemoteRssi(rssi, status);
+			}
+		}
+
+		@Override
+		public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+			if (checkGattValid(gatt)) {
+				CavanBleGatt.this.onMtuChanged(mtu, status);
+			}
 		}
 	};
-
-	synchronized public void setEventListener(CavanBleGattEventListener listener) {
-		if (listener != null) {
-			mEventListener = listener;
-		} else {
-			mEventListener = sEventListenerDummy;
-		}
-	}
-
-	protected boolean doInitialize() {
-		CavanAndroid.dLog("doInitialize");
-
-		setGattReady(true);
-
-		return true;
-	}
-
-	protected boolean onInitialize() {
-		return mEventListener.onInitialize();
-	}
-
-	protected void onConnectionStateChanged(boolean connected) {
-		mEventListener.onConnectionStateChanged(connected);
-	}
-
-	protected void onConnectFailed() {
-		mEventListener.onConnectFailed();
-	}
-
-	@Override
-	protected void onBluetoothAdapterStateChanged(boolean enabled) {
-		super.onBluetoothAdapterStateChanged(enabled);
-
-		if (!enabled) {
-			setConnectFailed();
-		}
-
-		mEventListener.onBluetoothAdapterStateChanged(enabled);
-	}
 
 	public CavanBleGatt(Context context, BluetoothDevice device, UUID uuid) {
 		super(context);
@@ -242,13 +192,17 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 
 	@Override
 	protected void finalize() throws Throwable {
-		disconnect();
-
-		if (mConnThread != null) {
-			mConnThread.quit();
-		}
-
+		disconnectGatt(true);
+		mGattHandler.quit();
 		super.finalize();
+	}
+
+	synchronized public void setEventListener(CavanBleGattEventListener listener) {
+		if (listener != null) {
+			mEventListener = listener;
+		} else {
+			mEventListener = sEventListenerDummy;
+		}
 	}
 
 	public BluetoothDevice getDevice() {
@@ -266,15 +220,17 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 	synchronized private void setConnectStatus(boolean connected) {
 		setGattReady(connected);
 
-		if (mConnected != connected) {
+		if (mConnEnabled && mConnected != connected) {
 			mConnected = connected;
 			onConnectionStateChanged(connected);
+		} else {
+			mConnected = false;
 		}
 	}
 
 	synchronized private void setConnectFailed() {
-		if (mConnEnable) {
-			disconnect();
+		if (mConnEnabled) {
+			disconnectGatt(true);
 			onConnectFailed();
 		}
 	}
@@ -292,98 +248,14 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 		}
 
 		CavanBleChar bleChar = new CavanBleChar(this, characteristic);
-		mCharMap.put(uuid, bleChar);
+
+		synchronized (mCharMap) {
+			mCharMap.put(uuid, bleChar);
+		}
+
 		return bleChar;
 	}
 
-	synchronized private boolean connectInternal() {
-		CavanAndroid.dLog("connectInternal: enable = " + mConnEnable);
-
-		if (!mConnEnable) {
-			disconnect();
-			return false;
-		}
-
-		mConnThread.updateConnState(CONNECT_OVERTIME);
-
-		if (mGatt == null) {
-			if (mDevice == null) {
-				CavanAndroid.dLog("mDevice is null");
-				return false;
-			}
-
-			CavanAndroid.dLog("connectGatt: device = " + mDevice);
-
-			mGattState = BluetoothProfile.STATE_DISCONNECTED;
-
-			mGatt = mDevice.connectGatt(mContext, true, mCallback);
-			if (mGatt == null) {
-				CavanAndroid.eLog("Failed to connectGatt");
-				return false;
-			}
-		} else if (isGattConnected()) {
-			CavanAndroid.dLog("gatt is connected");
-			return true;
-		} else {
-			mGatt.disconnect();
-			return  mGatt.connect();
-		}
-
-		return true;
-	}
-
-	synchronized public boolean connect() {
-		mGattConnectCount = 0;
-		mServiceConnectCount = 0;
-
-		if (mConnEnable) {
-			return true;
-		}
-
-		mConnEnable = isPoweredOn();
-
-		return connectInternal();
-	}
-
-	synchronized public boolean connect(BluetoothDevice device) {
-		if (mDevice != device) {
-			mDevice = device;
-			disconnect();
-		}
-
-		return connect();
-	}
-
-	synchronized public void disconnect(boolean cleanup) {
-		CavanAndroid.dLog("disconnect: cleanup = " + cleanup);
-		CavanAndroid.dumpstack();
-
-		mGattReady = false;
-
-		if (cleanup) {
-			mConnEnable = false;
-		}
-
-		mConnThread.setConnState(STATE_GATT_DISCONNECTED, DISCONNECT_WAIT_TIME);
-
-		mService = null;
-		mCharMap.clear();
-
-		CavanAndroid.dLog("mGatt = " + mGatt);
-
-		if (mGatt != null) {
-			mGatt.disconnect();
-
-			if (cleanup) {
-				mGatt.close();
-				mGatt = null;
-			}
-		}
-	}
-
-	synchronized public void disconnect() {
-		disconnect(true);
-	}
 
 	synchronized public int getGattState() {
 		if (mGatt != null) {
@@ -401,8 +273,12 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 		return getGattState() != BluetoothProfile.STATE_CONNECTED;
 	}
 
-	synchronized public boolean isConnected() {
-		return mConnected && isGattConnected();
+	public boolean checkGattConnected() throws GattInvalidStateException {
+		if (isGattConnected()) {
+			return true;
+		}
+
+		throw new GattInvalidStateException("gatt not connected");
 	}
 
 	synchronized public void setGattReady(boolean ready) {
@@ -413,12 +289,24 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 		return mGattReady && isGattConnected();
 	}
 
-	synchronized public boolean isConnectEnabled() {
-		return mConnEnable;
+	public boolean checkGattReady() throws GattInvalidStateException {
+		if (isGattReady()) {
+			return true;
+		}
+
+		throw new GattInvalidStateException("gatt not ready");
 	}
 
-	synchronized public int getGattTimeoutCount() {
-		return mGattTimeoutCount;
+	synchronized public boolean isConnEnabled() {
+		return mConnEnabled;
+	}
+
+	synchronized public boolean isConnected() {
+		return mConnected && isGattConnected();
+	}
+
+	synchronized public int getGattTimeout() {
+		return mGattTimeout;
 	}
 
 	public static String getPropertyName(int property) {
@@ -523,130 +411,375 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 
 	// ================================================================================
 
-	public class BleConnHandlerThread extends CavanThreadedHandler {
+	synchronized public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic) throws GattInvalidStateException {
+		return checkGattReady() && mGatt.writeCharacteristic(characteristic);
+	}
 
-		private int mConnState;
+	synchronized public void onWriteTimeout(CavanBleChar cavanBleChar) {
+		mGattTimeout++;
+		CavanAndroid.dLog("mGattTimeoutCount = " + mGattTimeout);
+	}
 
-		public BleConnHandlerThread() {
-			super(BleConnHandlerThread.class);
+	synchronized public boolean readCharacteristic(BluetoothGattCharacteristic characteristic) throws GattInvalidStateException {
+		return checkGattReady() && mGatt.readCharacteristic(characteristic);
+	}
+
+	synchronized public boolean writeDescriptor(BluetoothGattDescriptor descriptor) throws GattInvalidStateException {
+		return checkGattConnected() && mGatt.writeDescriptor(descriptor);
+	}
+
+	synchronized public boolean readDescriptor(BluetoothGattDescriptor descriptor) throws GattInvalidStateException {
+		return checkGattConnected() && mGatt.readDescriptor(descriptor);
+	}
+
+	synchronized public boolean setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enable) throws GattInvalidStateException {
+		return checkGattConnected() && mGatt.setCharacteristicNotification(characteristic, enable);
+	}
+
+	// ================================================================================
+
+	protected boolean doInitialize() {
+		CavanAndroid.dLog("doInitialize");
+		return true;
+	}
+
+	protected boolean onInitialize() {
+		return mEventListener.onInitialize();
+	}
+
+	protected void onConnectionStateChanged(boolean connected) {
+		mEventListener.onConnectionStateChanged(connected);
+	}
+
+	protected void onConnectFailed() {
+		mEventListener.onConnectFailed();
+	}
+
+	@Override
+	protected void onBluetoothAdapterStateChanged(boolean enabled) {
+		super.onBluetoothAdapterStateChanged(enabled);
+
+		if (!enabled) {
+			setConnectFailed();
 		}
 
-		private void updateConnState(long delay) {
-			removeMessages(0);
-			sendEmptyMessageDelayed(0, delay);
+		mEventListener.onBluetoothAdapterStateChanged(enabled);
+	}
+
+	// ================================================================================
+
+	public boolean checkGattValid(BluetoothGatt gatt) {
+		if (gatt == mGatt) {
+			return true;
 		}
 
-		public void setConnState(int state, long delay) {
-			mConnState = state;
+		CavanAndroid.dLog("Close invalid gatt: " + gatt);
+		gatt.disconnect();
+		gatt.close();
 
-			if (mConnEnable) {
-				if (state == STATE_SERVICE_CONNECTED) {
-					setConnectStatus(true);
-				} else {
-					setConnectStatus(false);
-					updateConnState(delay);
-				}
+		return false;
+	}
+
+	synchronized protected void onConnectionStateChange(int status, int newState) {
+		CavanAndroid.dLog("onConnectionStateChange: status = " + status + ", newState = " + newState);
+
+		if (status != 0) {
+			disconnectGatt(false);
+		} else {
+			mGattState = newState;
+
+			if (newState == BluetoothProfile.STATE_CONNECTED) {
+				mGattHandler.removeMessages(MSG_CONNECT);
+				mGattConnTimes = 0;
+				discoverServices();
+			} else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+				setConnectStatus(false);
+				mGattHandler.sendEmptyMessageDelayed(MSG_CONNECT, CONNECT_WAIT_TIME);
+			}
+		}
+	}
+
+	synchronized protected void onServicesDiscovered(int status) {
+		CavanAndroid.dLog("onServicesDiscovered: status = " + status);
+
+		if (status != 0) {
+			disconnectGatt(false);
+		} else if (isGattConnected()) {
+			mGattHandler.removeMessages(MSG_DISCOVER_TIMEOUT);
+
+			dumpServices();
+
+			mService = mGatt.getService(mUuid);
+			CavanAndroid.dLog("mService = " + mService);
+			CavanAndroid.dLog("mServiceConnTimes = " + mServiceConnTimes);
+
+			mGattTimeout = 0;
+
+			if (mService != null && doInitialize() && onInitialize() && mGattTimeout == 0) {
+				setConnectStatus(true);
+				mServiceConnTimes = 0;
+			} else if (++mServiceConnTimes > MAX_CONN_COUNT) {
+				setConnectFailed();
+			} else {
+				disconnectGatt(false);
+			}
+		}
+	}
+
+	protected void onCharacteristicRead(BluetoothGattCharacteristic characteristic, int status) {
+		synchronized (mCharMap) {
+			CavanBleChar bleChar = mCharMap.get(characteristic.getUuid());
+			if (bleChar != null) {
+				bleChar.setReadStatus(status);
+			}
+		}
+	}
+
+	protected void onCharacteristicWrite(BluetoothGattCharacteristic characteristic, int status) {
+		synchronized (mCharMap) {
+			CavanBleChar bleChar = mCharMap.get(characteristic.getUuid());
+			if (bleChar != null) {
+				bleChar.setWriteStatus(status);
+			}
+		}
+	}
+
+	protected void onCharacteristicChanged(BluetoothGattCharacteristic characteristic) {
+		synchronized (mCharMap) {
+			CavanBleChar bleChar = mCharMap.get(characteristic.getUuid());
+			if (bleChar != null) {
+				bleChar.onDataAvailable();
+			}
+		}
+	}
+
+	protected void onDescriptorRead(BluetoothGattDescriptor descriptor, int status) {
+		synchronized (mCharMap) {
+			CavanBleChar bleChar = mCharMap.get(descriptor.getCharacteristic().getUuid());
+			if (bleChar != null) {
+				bleChar.setDescReadStatus(status);
+			}
+		}
+	}
+
+	protected void onDescriptorWrite(BluetoothGattDescriptor descriptor, int status) {
+		CavanAndroid.dLog("onDescriptorWrite: descriptor = " + descriptor.getUuid() + ", status = " + status);
+
+		synchronized (mCharMap) {
+			CavanBleChar bleChar = mCharMap.get(descriptor.getCharacteristic().getUuid());
+			if (bleChar != null) {
+				bleChar.setDescWriteStatus(status);
+			}
+		}
+	}
+
+	protected void onReliableWriteCompleted(int status) {
+		CavanAndroid.dLog("onReliableWriteCompleted: " + ", status = " + status);
+	}
+
+	protected void onReadRemoteRssi(int rssi, int status) {
+		CavanAndroid.dLog("onReadRemoteRssi: rssi = " + rssi + ", status = " + status);
+	}
+
+	protected void onMtuChanged(int mtu, int status) {
+		CavanAndroid.dLog("onMtuChanged: mtu = " + mtu + ", status = " + status);
+	}
+
+	// ================================================================================
+
+	synchronized private boolean connectGatt() {
+		mGattHandler.removeMessages(MSG_CONNECT);
+
+		CavanAndroid.dLog("connectGatt: enable = " + mConnEnabled);
+		CavanAndroid.dLog("mGattConnTimes = " + mGattConnTimes);
+
+		if (++mGattConnTimes > MAX_CONN_COUNT) {
+			return false;
+		}
+
+		if (!mConnEnabled) {
+			return false;
+		}
+
+		if (!isPoweredOn()) {
+			CavanAndroid.dLog("bluetooth not power on");
+			return false;
+		}
+
+		if (isGattConnected()) {
+			CavanAndroid.dLog("gatt is connected");
+			return true;
+		}
+
+		CavanAndroid.dLog("device = " + mDevice);
+
+		if (mDevice == null) {
+			CavanAndroid.eLog("mDevice is null");
+			return false;
+		}
+
+		mConnected = false;
+
+		if (mGatt == null) {
+			mGattState = BluetoothProfile.STATE_DISCONNECTED;
+
+			mGatt = mDevice.connectGatt(mContext, false, mCallback);
+			if (mGatt == null) {
+				CavanAndroid.eLog("Failed to connectGatt");
+				return false;
+			}
+		} else {
+			mGatt.disconnect();
+
+			if (!mGatt.connect()) {
+				CavanAndroid.eLog("Failed to connect");
+				return false;
 			}
 		}
 
-		public int getConnState() {
-			return mConnState;
+		mGattHandler.sendEmptyMessageDelayed(MSG_CONNECT, CONNECT_OVERTIME);
+
+		return true;
+	}
+
+	synchronized private void disconnectGatt(boolean cleanup) {
+		mGattHandler.removeMessages(MSG_CONNECT);
+
+		CavanAndroid.dLog("disconnectGatt: gatt = " + mGatt + ", cleanup = " + cleanup);
+		CavanAndroid.dumpstack();
+
+		if (cleanup) {
+			mConnEnabled = false;
+		}
+
+		mGattState = BluetoothProfile.STATE_DISCONNECTED;
+		mGattReady = false;
+		mService = null;
+
+		synchronized (mCharMap) {
+			mCharMap.clear();
+		}
+
+		if (mGatt != null) {
+			mGatt.disconnect();
+
+			if (cleanup) {
+				mGatt.close();
+				mGatt = null;
+			} else {
+				mGattHandler.sendEmptyMessageDelayed(MSG_CONNECT, CONNECT_WAIT_TIME);
+			}
+		}
+	}
+
+	synchronized public boolean discoverServices() {
+		mGattHandler.removeMessages(MSG_DISCOVER_TIMEOUT);
+
+		if (isGattConnected()) {
+			if (mGatt.discoverServices()) {
+				mGattHandler.sendEmptyMessageDelayed(MSG_DISCOVER_TIMEOUT, DISCOVER_OVERTIME);
+				return true;
+			}
+
+			disconnectGatt(false);
+		}
+
+		return false;
+	}
+
+	synchronized public boolean connect() {
+		mGattConnTimes = 0;
+		mServiceConnTimes = 0;
+		mConnEnabled = true;
+		return connectGatt();
+	}
+
+	synchronized public boolean connect(BluetoothDevice device) {
+		mDevice = device;
+		return connect();
+	}
+
+	synchronized public void disconnect() {
+		disconnectGatt(true);
+	}
+
+	// ================================================================================
+
+	public class CavanBleGattHandler extends CavanThreadedHandler {
+
+		public CavanBleGattHandler() {
+			super(CavanBleGattHandler.class);
 		}
 
 		@Override
 		public void handleMessage(Message msg) {
-			CavanAndroid.dLog("handleMessage: mConnState = " + mConnState + ", mConnEnable = " + mConnEnable);
+			removeMessages(msg.what);
 
-			removeMessages(0);
+			CavanAndroid.dLog("CavanBleGattHandler: message = " + msg.what);
 
-			if (!mConnEnable) {
-				disconnect();
+			if (!isConnEnabled()) {
+				CavanAndroid.dLog("connect is disabled");
 				return;
 			}
 
-			switch (mConnState) {
-			case STATE_GATT_DISCONNECTED:
-				CavanAndroid.dLog("STATE_GATT_DISCONNECTED: mGattConnectCount = " + mGattConnectCount);
+			switch (msg.what) {
+			case MSG_CONNECTION_STATE_CHANGE:
+				onConnectionStateChange(msg.arg1, msg.arg2);
+				break;
 
-				if (mGattConnectCount < MAX_CONN_COUNT && isPoweredOn()) {
-					if (!connectInternal()) {
-						CavanAndroid.eLog("Failed to connectInternal");
-					}
+			case MSG_SERVICES_DISCOVERED:
+				onServicesDiscovered(msg.arg1);
+				break;
 
-					mGattConnectCount++;
-				} else {
+			case MSG_CHARACTERISTIC_READ:
+				onCharacteristicRead((BluetoothGattCharacteristic) msg.obj, msg.arg1);
+				break;
+
+			case MSG_CHARACTERISTIC_WRITE:
+				onCharacteristicWrite((BluetoothGattCharacteristic) msg.obj, msg.arg1);
+				break;
+
+			case MSG_CHARACTERISTIC_CHANGED:
+				onCharacteristicChanged((BluetoothGattCharacteristic) msg.obj);
+				break;
+
+			case MSG_DESCRIPTOR_READ:
+				onDescriptorRead((BluetoothGattDescriptor) msg.obj, msg.arg1);
+				break;
+
+			case MSG_DESCRIPTOR_WRITE:
+				onDescriptorWrite((BluetoothGattDescriptor) msg.obj, msg.arg1);
+				break;
+
+			case MSG_RELIABLE_WRITE_COMPLETED:
+				onReliableWriteCompleted(msg.arg1);
+				break;
+
+			case MSG_READ_REMOTE_RSSI:
+				onReadRemoteRssi(msg.arg1, msg.arg2);
+				break;
+
+			case MSG_MTU_CHANGED:
+				onMtuChanged(msg.arg1, msg.arg2);
+				break;
+
+			case MSG_CONNECT:
+				CavanAndroid.dLog("MSG_CONNECT");
+				if (!connectGatt()) {
 					setConnectFailed();
 				}
 				break;
 
-			case STATE_GATT_CONNECTED:
-				CavanAndroid.dLog("STATE_GATT_CONNECTED");
-
-				if (mGatt != null && mGatt.discoverServices()) {
-					setConnState(STATE_SERVICE_DISCOVERING, DISCOVER_OVERTIME);
-				} else {
-					disconnect(false);
-				}
+			case MSG_DISCONNECT:
+				CavanAndroid.dLog("MSG_DISCONNECT");
+				disconnectGatt(false);
 				break;
 
-			case STATE_SERVICE_DISCOVERING:
-				CavanAndroid.dLog("STATE_SERVICE_DISCOVERING");
-				disconnect(false);
-				break;
-
-			case STATE_SERVICE_DISCOVERED:
-				CavanAndroid.dLog("STATE_SERVICE_DISCOVERED");
-
-				dumpServices();
-
-				if (mGatt != null) {
-					mService = mGatt.getService(mUuid);
-					CavanAndroid.dLog("mService = " + mService);
-					CavanAndroid.dLog("mServiceConnectCount = " + mServiceConnectCount);
-
-					mGattTimeoutCount = 0;
-
-					if (mService != null && doInitialize() && onInitialize() && mGattTimeoutCount == 0) {
-						setConnState(STATE_SERVICE_CONNECTED, 0);
-						mServiceConnectCount = 0;
-					} else if (mServiceConnectCount < MAX_CONN_COUNT) {
-						disconnect(false);
-						mServiceConnectCount++;
-					} else {
-						setConnectFailed();
-					}
-				}
-				break;
-
-			case STATE_SERVICE_CONNECTED:
-				CavanAndroid.dLog("STATE_SERVICE_CONNECTED");
+			case MSG_DISCOVER_TIMEOUT:
+				CavanAndroid.dLog("MSG_DISCOVER_TIMEOUT");
+				disconnectGatt(false);
 				break;
 			}
 		}
-	}
-
-	synchronized public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic) {
-		return isGattReady() && mGatt.writeCharacteristic(characteristic);
-	}
-
-	synchronized public void onWriteTimeout(CavanBleChar cavanBleChar) {
-		mGattTimeoutCount++;
-		CavanAndroid.dLog("mGattTimeoutCount = " + mGattTimeoutCount);
-	}
-
-	synchronized public boolean readCharacteristic(BluetoothGattCharacteristic characteristic) {
-		return isGattReady() && mGatt.readCharacteristic(characteristic);
-	}
-
-	synchronized public boolean writeDescriptor(BluetoothGattDescriptor descriptor) {
-		return isGattConnected() && mGatt.writeDescriptor(descriptor);
-	}
-
-	synchronized public boolean readDescriptor(BluetoothGattDescriptor descriptor) {
-		return isGattConnected() && mGatt.readDescriptor(descriptor);
-	}
-
-	synchronized public boolean setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enable) {
-		return isGattConnected() && mGatt.setCharacteristicNotification(characteristic, enable);
 	}
 }

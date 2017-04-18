@@ -209,8 +209,14 @@ public class MainActivity extends JwaooToyActivity implements OnCheckedChangeLis
 			return false;
 		}
 
-		mBleToy.setBatteryEventEnable(true);
-		mBleToy.setSensorEnable(true, SENSOR_DELAY);
+		try {
+			mBleToy.setBatteryEventEnable(true);
+			mBleToy.setSensorEnable(true, SENSOR_DELAY);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+
 		mBleToy.setSensorSpeedOptimizeEnable(mCheckBoxOptimizeSensorSpeed.isChecked());
 
 		return true;

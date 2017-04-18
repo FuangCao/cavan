@@ -2,6 +2,7 @@ package com.cavan.jwaootoy;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
@@ -22,6 +23,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanBleGatt.GattInvalidStateException;
 import com.cavan.java.CavanProgressListener;
 import com.cavan.java.CavanString;
 import com.cavan.resource.JwaooToyActivity;
@@ -129,8 +131,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 					CavanAndroid.dLog("mode = " + mMotoMode);
 
-					if (mBleToy.setMotoMode(mMotoMode, JwaooBleToy.MOTO_LEVEL_MAX)) {
-						sendEmptyMessageDelayed(EVENT_MOTO_RAND, 5000);
+					try {
+						if (mBleToy.setMotoMode(mMotoMode, JwaooBleToy.MOTO_LEVEL_MAX)) {
+							sendEmptyMessageDelayed(EVENT_MOTO_RAND, 5000);
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
 				}
 				break;
@@ -214,7 +220,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 				mMotoMode = position;
-				setMotoMode();
+
+				try {
+					setMotoMode();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 
 			@Override
@@ -236,7 +247,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 				mMotoLevel = position;
-				setMotoMode();
+
+				try {
+					setMotoMode();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 
 			@Override
@@ -255,18 +271,15 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		mHandler.obtainMessage(EVENT_PROGRESS_UPDATED, progress, 0).sendToTarget();
 	}
 
-	private boolean setMotoMode() {
+	private boolean setMotoMode() throws GattInvalidStateException, TimeoutException {
 		if (mBleToy != null && mBleToy.isConnected()) {
-			boolean success = mBleToy.setMotoMode(mMotoMode, mMotoLevel);
-
-			if (success) {
+			if (mBleToy.setMotoMode(mMotoMode, mMotoLevel)) {
 				CavanAndroid.dLog("Moto: mode = " + mMotoMode + ", level = " + mMotoLevel);
+				return true;
 			} else {
 				CavanAndroid.dLog("Failed to setMotoMode");
 				CavanAndroid.dumpstack();
 			}
-
-			return success;
 		}
 
 		return false;
@@ -276,26 +289,13 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	public void onClick(View v) {
 		switch (v.getId()) {
 		case R.id.buttonSend:
-			String identify = mBleToy.doIdentify();
-			if (identify == null) {
-				break;
+			try {
+				CavanAndroid.dLog("identify = " + mBleToy.doIdentify());
+				CavanAndroid.dLog("buildDate = " + mBleToy.readBuildDate());
+				CavanAndroid.dLog("version = " + Integer.toHexString(mBleToy.readVersion()));
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-
-			CavanAndroid.dLog("identify = " + identify);
-
-			String buildDate = mBleToy.readBuildDate();
-			if (buildDate == null) {
-				break;
-			}
-
-			CavanAndroid.dLog("buildDate = " + buildDate);
-
-			int version = mBleToy.readVersion();
-			if (version == 0) {
-				break;
-			}
-
-			CavanAndroid.dLog("version = " + Integer.toHexString(version));
 			break;
 
 		case R.id.buttonUpgrade:
@@ -310,16 +310,20 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 				@Override
 				public void run() {
 					mHandler.sendEmptyMessage(EVENT_OTA_START);
-					if (mBleToy.doOtaUpgrade("/mnt/sdcard/jwaoo-toy.hex", new CavanProgressListener() {
+					try {
+						if (mBleToy.doOtaUpgrade("/mnt/sdcard/jwaoo-toy.hex", new CavanProgressListener() {
 
-						@Override
-						public void onProgressUpdated(int progress) {
-							setUpgradeProgress(progress);
+							@Override
+							public void onProgressUpdated(int progress) {
+								setUpgradeProgress(progress);
+							}
+						})) {
+							mHandler.sendEmptyMessage(EVENT_OTA_SUCCESS);
+						} else {
+							mHandler.sendEmptyMessage(EVENT_OTA_FAILED);
 						}
-					})) {
-						mHandler.sendEmptyMessage(EVENT_OTA_SUCCESS);
-					} else {
-						mHandler.sendEmptyMessage(EVENT_OTA_FAILED);
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
 
 					mOtaBusy = false;
@@ -328,11 +332,20 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			break;
 
 		case R.id.buttonReboot:
-			mBleToy.doReboot();
+			try {
+				mBleToy.doReboot();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			break;
 
 		case R.id.buttonShutdown:
-			mBleToy.doShutdown();
+			try {
+				mBleToy.doShutdown();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
 			break;
 
 		case R.id.buttonDisconnect:
@@ -344,27 +357,40 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			break;
 
 		case R.id.buttonReadBdAddr:
-			String addr = mBleToy.readBdAddressString();
-			if (addr != null) {
-				mEditTextBdAddr.setText(addr);
-			} else {
-				CavanAndroid.dLog("Failed to readBdAddress");
+			try {
+				String addr = mBleToy.readBdAddressString();
+				if (addr != null) {
+					mEditTextBdAddr.setText(addr);
+				} else {
+					CavanAndroid.dLog("Failed to readBdAddress");
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 			break;
 
 		case R.id.buttonWriteBdAddr:
-			if (mBleToy.writeBdAddress(mEditTextBdAddr.getText().toString())) {
-				CavanAndroid.dLog("writeBdAddress successfull");
-			} else {
-				CavanAndroid.dLog("Failed to writeBdAddress");
+			try {
+				if (mBleToy.writeBdAddress(mEditTextBdAddr.getText().toString())) {
+					CavanAndroid.dLog("writeBdAddress successfull");
+				} else {
+					CavanAndroid.dLog("Failed to writeBdAddress");
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 			break;
 
 		case R.id.buttonSuspendOvertime:
 			if (mAppSettings == null) {
-				mAppSettings = mBleToy.readAppSettings();
-				if (mAppSettings == null) {
-					mEditTextSuspendOvertime.setText(CavanString.EMPTY_STRING);
+				try {
+					mAppSettings = mBleToy.readAppSettings();
+					if (mAppSettings == null) {
+						mEditTextSuspendOvertime.setText(CavanString.EMPTY_STRING);
+						break;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
 					break;
 				}
 			}
@@ -384,55 +410,53 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 	@Override
 	public boolean onInitialize() {
-		if (mBleToy.setClickEnable(mCheckBoxClick.isChecked()) == false && mBleToy.getGattTimeoutCount() > 0) {
-			CavanAndroid.dLog("Failed to setClickEnable");
-			return false;
-		}
-
-		if (mBleToy.setLongClickEnable(mCheckBoxLongClick.isChecked()) == false && mBleToy.getGattTimeoutCount() > 0) {
-			CavanAndroid.dLog("Failed to setLongClickEnable");
-			return false;
-		}
-
-		if (mBleToy.setMultiClickEnable(mCheckBoxMultiClick.isChecked()) == false && mBleToy.getGattTimeoutCount() > 0) {
-			CavanAndroid.dLog("Failed to setMultiClickEnable");
-			return false;
-		}
-
-		if (mBleToy.setBatteryEventEnable(mCheckBoxBatteryEvent.isChecked()) == false && mBleToy.getGattTimeoutCount() > 0) {
-			CavanAndroid.dLog("Failed to setBatteryEventEnable");
-			return false;
-		}
-
-		if (mBleToy.setFactoryModeEnable(mCheckBoxFactoryMode.isChecked()) == false && mBleToy.getGattTimeoutCount() > 0) {
-			CavanAndroid.dLog("Failed to setFactoryModeEnable");
-			return false;
-		}
-
-		if (mBleToy.setMotoEventEnable(mCheckBoxMotoEvent.isChecked()) == false && mBleToy.getGattTimeoutCount() > 0) {
-			CavanAndroid.dLog("Failed to setMotoEventEnable");
-			return false;
-		}
-
-		mBleToy.setKeyLock(mCheckBoxKeyLock.isChecked());
-
-		if (mMotoMode > 0 || mMotoLevel > 0) {
-			if (setMotoMode() == false && mBleToy.getGattTimeoutCount() > 0) {
-				return false;
+		try {
+			if (!mBleToy.setClickEnable(mCheckBoxClick.isChecked())) {
+				CavanAndroid.dLog("Failed to setClickEnable");
 			}
-		}
 
-		mAppSettings = mBleToy.readAppSettings();
-		CavanAndroid.dLog("JwaooToyAppSettings = " + mAppSettings);
+			if (!mBleToy.setLongClickEnable(mCheckBoxLongClick.isChecked())) {
+				CavanAndroid.dLog("Failed to setLongClickEnable");
+			}
 
-		mKeySettings = mBleToy.readKeySettings();
-		CavanAndroid.dLog("JwaooToyKeySettings = " + mKeySettings);
-		CavanAndroid.dLog("JwaooToyBatteryInfo = " + mBleToy.getBatteryInfo());
+			if (!mBleToy.setMultiClickEnable(mCheckBoxMultiClick.isChecked())) {
+				CavanAndroid.dLog("Failed to setMultiClickEnable");
+			}
 
-		mBleToy.setKeyReportEnable(0x0f);
+			if (!mBleToy.setBatteryEventEnable(mCheckBoxBatteryEvent.isChecked())) {
+				CavanAndroid.dLog("Failed to setBatteryEventEnable");
+			}
 
-		if (!mBleToy.setSensorEnable(mCheckBoxSensor.isChecked(), SENSOR_DELAY)) {
-			CavanAndroid.dLog("Failed to setSensorEnable");
+			if (!mBleToy.setFactoryModeEnable(mCheckBoxFactoryMode.isChecked())) {
+				CavanAndroid.dLog("Failed to setFactoryModeEnable");
+			}
+
+			if (!mBleToy.setMotoEventEnable(mCheckBoxMotoEvent.isChecked())) {
+				CavanAndroid.dLog("Failed to setMotoEventEnable");
+			}
+
+			if (!mBleToy.setKeyLock(mCheckBoxKeyLock.isChecked())) {
+				CavanAndroid.dLog("Failed to setKeyLock");
+			}
+
+			if (mMotoMode > 0 || mMotoLevel > 0) {
+				setMotoMode();
+			}
+
+			mAppSettings = mBleToy.readAppSettings();
+			CavanAndroid.dLog("JwaooToyAppSettings = " + mAppSettings);
+
+			mKeySettings = mBleToy.readKeySettings();
+			CavanAndroid.dLog("JwaooToyKeySettings = " + mKeySettings);
+			CavanAndroid.dLog("JwaooToyBatteryInfo = " + mBleToy.getBatteryInfo());
+
+			mBleToy.setKeyReportEnable(0x0f);
+
+			if (!mBleToy.setSensorEnable(mCheckBoxSensor.isChecked(), SENSOR_DELAY)) {
+				CavanAndroid.dLog("Failed to setSensorEnable");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 			return false;
 		}
 
@@ -451,42 +475,78 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 		switch (buttonView.getId()) {
 		case R.id.checkBoxSensor:
-			mBleToy.setSensorEnable(isChecked, SENSOR_DELAY);
+			try {
+				mBleToy.setSensorEnable(isChecked, SENSOR_DELAY);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			break;
 
 		case R.id.checkBoxClick:
-			mBleToy.setClickEnable(isChecked);
+			try {
+				mBleToy.setClickEnable(isChecked);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			break;
 
 		case R.id.checkBoxLongClick:
-			mBleToy.setLongClickEnable(isChecked);
+			try {
+				mBleToy.setLongClickEnable(isChecked);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			break;
 
 		case R.id.checkBoxMultiClick:
-			mBleToy.setMultiClickEnable(isChecked);
+			try {
+				mBleToy.setMultiClickEnable(isChecked);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			break;
 
 		case R.id.checkBoxBattEvent:
-			mBleToy.setBatteryEventEnable(isChecked);
+			try {
+				mBleToy.setBatteryEventEnable(isChecked);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			break;
 
 		case R.id.checkBoxFactoryMode:
-			mBleToy.setFactoryModeEnable(isChecked);
+			try {
+				mBleToy.setFactoryModeEnable(isChecked);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			break;
 
 		case R.id.checkBoxMotoEvent:
-			mBleToy.setMotoEventEnable(isChecked);
+			try {
+				mBleToy.setMotoEventEnable(isChecked);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			break;
 
 		case R.id.checkBoxKeyLock:
-			mBleToy.setKeyLock(isChecked);
+			try {
+				mBleToy.setKeyLock(isChecked);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			break;
 
 		case R.id.checkBoxMotoRand:
 			if (isChecked) {
 				mHandler.sendEmptyMessage(EVENT_MOTO_RAND);
 			} else if (mBleToy != null) {
-				mBleToy.setMotoMode(0, 0);
+				try {
+					mBleToy.setMotoMode(0, 0);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 			break;
 		}

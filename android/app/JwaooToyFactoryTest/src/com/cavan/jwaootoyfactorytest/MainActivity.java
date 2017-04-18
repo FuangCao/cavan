@@ -187,8 +187,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	protected void onDestroy() {
 		CavanAndroid.releaseWakeLock();
 
-		if (mBleToy != null && mBleToy.isConnected()) {
+		try {
 			mBleToy.setFactoryModeEnable(false);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
 		super.onDestroy();
@@ -284,8 +286,13 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 			return false;
 		}
 
-		if (!mBleToy.setFactoryModeEnable(true)) {
-			CavanAndroid.dLog("Failed to setFactoryModeEnable");
+		try {
+			if (!mBleToy.setFactoryModeEnable(true)) {
+				CavanAndroid.dLog("Failed to setFactoryModeEnable");
+				return false;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 			return false;
 		}
 
@@ -640,12 +647,22 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		@Override
 		protected boolean doInitialize() {
-			return mBleToy.setSensorEnable(true, 30);
+			try {
+				return mBleToy.setSensorEnable(true, 30);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return false;
+			}
 		}
 
 		@Override
 		public void onStop() {
-			mBleToy.setSensorEnable(false);
+			try {
+				mBleToy.setSensorEnable(false);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
 			super.onStop();
 		}
 
@@ -784,12 +801,22 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 			mTextViewBatteryVoltage = (TextView) findViewById(R.id.textViewBatteryVoltage);
 			mTextViewBatteryCapacity = (TextView) findViewById(R.id.textViewBatteryCapacity);
 
-			return mBleToy.setBatteryEventEnable(true);
+			try {
+				return mBleToy.setBatteryEventEnable(true);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return false;
+			}
 		}
 
 		@Override
 		public void onStop() {
-			mBleToy.setBatteryEventEnable(false);
+			try {
+				mBleToy.setBatteryEventEnable(false);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
 			super.onStop();
 		}
 
@@ -878,14 +905,22 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 			switch (buttonView.getId()) {
 			case R.id.checkBoxLedBattery:
-				if (mBleToy.setLedEnable(JwaooBleToy.LED_BATT, isChecked)) {
-					mLedCountBatt++;
+				try {
+					if (mBleToy.setLedEnable(JwaooBleToy.LED_BATT, isChecked)) {
+						mLedCountBatt++;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 				break;
 
 			case R.id.checkBoxLedBluetooth:
-				if (mBleToy.setLedEnable(JwaooBleToy.LED_BT, isChecked)) {
-					mLedCountBt++;
+				try {
+					if (mBleToy.setLedEnable(JwaooBleToy.LED_BT, isChecked)) {
+						mLedCountBt++;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 				break;
 			}
@@ -901,8 +936,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		@Override
 		public void onStop() {
-			mBleToy.setLedEnable(JwaooBleToy.LED_BATT, false);
-			mBleToy.setLedEnable(JwaooBleToy.LED_BT, true);
+			try {
+				mBleToy.setLedEnable(JwaooBleToy.LED_BATT, false);
+				mBleToy.setLedEnable(JwaooBleToy.LED_BT, true);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 
 			super.onStop();
 		}
@@ -916,10 +955,14 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 			@Override
 			public void run() {
-				if (mBleToy.setMotoMode(JwaooBleToy.MOTO_MODE_LINE, mLevel)) {
-					if (mLevel > 0) {
-						setPassEnable();
+				try {
+					if (mBleToy.setMotoMode(JwaooBleToy.MOTO_MODE_LINE, mLevel)) {
+						if (mLevel > 0) {
+							setPassEnable();
+						}
 					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 		};
@@ -969,7 +1012,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		@Override
 		public void onStop() {
 			mHandler.removeCallbacks(mRunnableSetLevel);
-			mBleToy.setMotoMode(JwaooBleToy.MOTO_MODE_IDLE, 0);
+
+			try {
+				mBleToy.setMotoMode(JwaooBleToy.MOTO_MODE_IDLE, 0);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 
 			super.onStop();
 		}
@@ -1015,8 +1063,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		@Override
 		public void onClick(View v) {
-			if (mBleToy.setFactoryModeEnable(false) && mBleToy.doShutdown()) {
-				mSuspendSuccess = true;
+			try {
+				if (mBleToy.setFactoryModeEnable(false) && mBleToy.doShutdown()) {
+					mSuspendSuccess = true;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 	}

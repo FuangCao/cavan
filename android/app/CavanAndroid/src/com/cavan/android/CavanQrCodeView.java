@@ -251,10 +251,14 @@ public class CavanQrCodeView extends View implements CavanQrCodeCamera.EventList
 
 	@Override
 	public void onFrameCaptured(byte[] bytes, Camera camera) {
-		PlanarYUVLuminanceSource sourceYUV = new PlanarYUVLuminanceSource(bytes, mVideoWidth, mVideoHeight, mQrCodeX, mQrCodeY, mQrCodeWidth, mQrCodeHeight, false);
-		CavanLuminanceSourceRotate90 source = new CavanLuminanceSourceRotate90(sourceYUV);
-		Result result = CavanQrCode.decode(mQrCodeReader, source);
-		// CavanAndroid.dLog("result = " + result);
-		mHandler.obtainMessage(MSG_DECODE_COMPLETE, result).sendToTarget();
+		try {
+			PlanarYUVLuminanceSource sourceYUV = new PlanarYUVLuminanceSource(bytes, mVideoWidth, mVideoHeight, mQrCodeX, mQrCodeY, mQrCodeWidth, mQrCodeHeight, false);
+			CavanLuminanceSourceRotate90 source = new CavanLuminanceSourceRotate90(sourceYUV);
+			Result result = CavanQrCode.decode(mQrCodeReader, source);
+			// CavanAndroid.dLog("result = " + result);
+			mHandler.obtainMessage(MSG_DECODE_COMPLETE, result).sendToTarget();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
