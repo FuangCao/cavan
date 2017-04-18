@@ -6,6 +6,8 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanBleChar;
+import com.cavan.android.CavanBleChar.CavanBleDataListener;
 import com.cavan.android.CavanBleGatt;
 import com.cavan.java.CavanArray;
 import com.cavan.java.CavanByteCache;

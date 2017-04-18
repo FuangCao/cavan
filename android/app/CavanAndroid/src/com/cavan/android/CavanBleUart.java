@@ -5,6 +5,8 @@ import java.util.UUID;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 
+import com.cavan.android.CavanBleChar.CavanBleDataListener;
+
 public class CavanBleUart extends CavanBleGatt {
 
 	public static final UUID UUID_SERVICE = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb7");

@@ -16,17 +16,11 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.os.Message;
 
-import com.cavan.java.CavanArray;
-import com.cavan.java.CavanProgressListener;
 import com.cavan.java.CavanString;
 
 public class CavanBleGatt extends CavanBluetoothAdapter {
 
-	public static final int FRAME_SIZE = 20;
 	public static final int MAX_CONN_COUNT = 20;
-	public static final long WRITE_CHAR_TIMEOUT = 3000;
-	public static final long WRITE_DESC_TIMEOUT = 3000;
-	public static final long COMMAND_TIMEOUT = 2000;
 
 	public static final long CONNECT_OVERTIME = 1000;
 	public static final long DISCOVER_OVERTIME = 2000;
@@ -43,9 +37,6 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 	public static final int PROPERTY_READ_ALL = BluetoothGattCharacteristic.PROPERTY_READ;
 	public static final int PROPERTY_WRITE_ALL = BluetoothGattCharacteristic.PROPERTY_WRITE |
 			BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE | BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE;
-
-	public static final UUID CFG_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
-	public static final UUID DESC_UUID = UUID.fromString("00002901-0000-1000-8000-00805f9b34fb");
 
 	public static final CavanBleGattEventListener sEventListenerDummy = new CavanBleGattEventListener() {
 
@@ -76,10 +67,6 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 		void onBluetoothAdapterStateChanged(boolean enabled);
 	}
 
-	public interface CavanBleDataListener {
-		void onDataReceived(byte[] data);
-	}
-
 	private int mGattState;
 	private boolean mGattReady;
 	private boolean mConnected;
@@ -95,7 +82,8 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 	private BluetoothGatt mGatt;
 	private BluetoothDevice mDevice;
 	private BluetoothGattService mService;
-	private HashMap<UUID, CavanBleChar> mCharMap = new HashMap<UUID, CavanBleGatt.CavanBleChar>();
+	private HashMap<UUID, CavanBleChar> mCharMap = new HashMap<UUID, CavanBleChar>();
+
 	private BluetoothGattCallback mCallback = new BluetoothGattCallback() {
 
 		@Override
@@ -138,8 +126,6 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 			} else {
 				disconnect(false);
 			}
-
-			super.onServicesDiscovered(gatt, status);
 		}
 
 		@Override
@@ -150,8 +136,6 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 			if (bleChar != null) {
 				bleChar.setReadStatus(status);
 			}
-
-			super.onCharacteristicRead(gatt, characteristic, status);
 		}
 
 		@Override
@@ -160,8 +144,6 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 			if (bleChar != null) {
 				bleChar.setWriteStatus(status);
 			}
-
-			super.onCharacteristicWrite(gatt, characteristic, status);
 		}
 
 		@Override
@@ -170,8 +152,6 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 			if (bleChar != null) {
 				bleChar.onDataAvailable();
 			}
-
-			super.onCharacteristicChanged(gatt, characteristic);
 		}
 
 		@Override
@@ -182,8 +162,6 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 			if (bleChar != null) {
 				bleChar.setDescReadStatus(status);
 			}
-
-			super.onDescriptorRead(gatt, descriptor, status);
 		}
 
 		@Override
@@ -194,20 +172,16 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 			if (bleChar != null) {
 				bleChar.setDescWriteStatus(status);
 			}
-
-			super.onDescriptorWrite(gatt, descriptor, status);
 		}
 
 		@Override
 		public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
 			CavanAndroid.dLog("onReliableWriteCompleted: " + ", status = " + status);
-			super.onReliableWriteCompleted(gatt, status);
 		}
 
 		@Override
 		public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
 			CavanAndroid.dLog("onReadRemoteRssi: rssi = " + rssi + ", status = " + status);
-			super.onReadRemoteRssi(gatt, rssi, status);
 		}
 	};
 
@@ -306,13 +280,20 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 	}
 
 	synchronized public CavanBleChar openChar(UUID uuid) {
-		try {
-			return new CavanBleChar(uuid);
-		} catch (Exception e) {
-			e.printStackTrace();
+		if (mService == null) {
+			CavanAndroid.dLog("mService == null");
+			return null;
 		}
 
-		return null;
+		BluetoothGattCharacteristic characteristic = mService.getCharacteristic(uuid);
+		if (characteristic == null) {
+			CavanAndroid.eLog("Failed to getCharacteristic: " + uuid);
+			return null;
+		}
+
+		CavanBleChar bleChar = new CavanBleChar(this, characteristic);
+		mCharMap.put(uuid, bleChar);
+		return bleChar;
 	}
 
 	synchronized private boolean connectInternal() {
@@ -644,354 +625,28 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 		}
 	}
 
-	// ================================================================================
-
-	public class CavanBleChar {
-
-		int mReadStatus;
-		int mWriteStatus;
-		int mDescReadStatus;
-		int mDescWriteStatus;
-		private BluetoothGattCharacteristic mChar;
-		private CavanBleDataListener mListener;
-		private final CavanBleDataListener mListenerDefault = new CavanBleDataListener() {
-
-			@Override
-			public void onDataReceived(byte[] data) {
-				CavanAndroid.dLog("onDataReceived: length = " + data.length);
-			}
-		};
-
-		public CavanBleChar(UUID uuid) throws Exception {
-			super();
-
-			synchronized (CavanBleGatt.this) {
-				mListener = mListenerDefault;
-
-				if (mGatt == null || mService == null) {
-					throw new Exception("gatt not connect");
-				}
-
-				mChar = mService.getCharacteristic(uuid);
-				if (mChar == null) {
-					throw new Exception("uuid not found: " + uuid);
-				}
-
-				mCharMap.put(mChar.getUuid(), this);
-			}
-		}
-
-		synchronized public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic) {
-			return isGattReady() && mGatt.writeCharacteristic(characteristic);
-		}
-
-		synchronized private boolean writeFrame(byte[] data, boolean sync) {
-			if (!mChar.setValue(data)) {
-				CavanAndroid.eLog("Failed to setValue");
-				return false;
-			}
-
-			if (sync) {
-				mWriteStatus = -110;
-
-				for (int i = 0; i < 3 && isGattReady(); i++) {
-					if (writeCharacteristic(mChar)) {
-						try {
-							wait(WRITE_CHAR_TIMEOUT);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-
-						if (mWriteStatus != -110) {
-							return (mWriteStatus == 0);
-						}
-
-						CavanAndroid.eLog("Failed to writeData" + i + ": status = " + mWriteStatus);
-					} else {
-						CavanAndroid.eLog("Failed to writeCharacteristic" + i);
-
-						if (isGattReady()) {
-							try {
-								wait(WRITE_CHAR_TIMEOUT);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						} else {
-							return false;
-						}
-					}
-				}
-
-				mGattTimeoutCount++;
-				CavanAndroid.dLog("mGattTimeoutCount = " + mGattTimeoutCount);
-
-				return false;
-			} else {
-				return writeCharacteristic(mChar);
-			}
-		}
-
-		public boolean writeData(byte[] data, CavanProgressListener listener, boolean sync) {
-			if (listener != null) {
-				listener.setValueRange(data.length);
-				sync = true;
-			}
-
-			if (data.length > FRAME_SIZE) {
-				int offset = 0;
-				int last = data.length - FRAME_SIZE;
-				byte[] block = new byte[FRAME_SIZE];
-
-				while (offset <= last) {
-					CavanArray.copy(data, offset, block, 0, FRAME_SIZE);
-					if (!writeFrame(block, sync)) {
-						return false;
-					}
-
-					offset += FRAME_SIZE;
-
-					if (listener != null) {
-						listener.setValue(offset);
-					}
-				}
-
-				if (offset < data.length) {
-					data = CavanArray.clone(data, offset, data.length - offset);
-				} else {
-					return true;
-				}
-			}
-
-			if (!writeFrame(data, sync)) {
-				return false;
-			}
-
-			if (listener != null) {
-				listener.finishValue();
-			}
-
-			return true;
-		}
-
-		public boolean writeData(byte[] data, boolean sync) {
-			return writeData(data, null, sync);
-		}
-
-		public boolean writeData(byte[] data, CavanProgressListener listener) {
-			return writeData(data, listener, true);
-		}
-
-		public boolean writeData(byte[] data) {
-			return writeData(data, true);
-		}
-
-		synchronized public boolean readCharacteristic() {
-			return isGattReady() && mGatt.readCharacteristic(mChar);
-		}
-
-		synchronized public byte[] readData(long timeout) {
-			mReadStatus = -110;
-
-			if (!readCharacteristic()) {
-				CavanAndroid.eLog("Failed to sendReadCommand");
-				return null;
-			}
-
-			try {
-				if (timeout > 0) {
-					wait(timeout);
-				} else {
-					wait();
-				}
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-
-			if (mReadStatus != 0) {
-				return null;
-			}
-
-			return mChar.getValue();
-		}
-
-		synchronized public boolean writeDescriptor(BluetoothGattDescriptor descriptor) {
-			return isGattConnected() && mGatt.writeDescriptor(descriptor);
-		}
-
-		synchronized public boolean writeDesc(BluetoothGattDescriptor descriptor, byte[] value) {
-			if (mGatt == null) {
-				return false;
-			}
-
-			if (!descriptor.setValue(value)) {
-				CavanAndroid.eLog("Failed to descriptor.setValue");
-				return false;
-			}
-
-			mDescWriteStatus = -110;
-
-			if (!writeDescriptor(descriptor)) {
-				CavanAndroid.eLog("Failed to writeDescriptor");
-				return false;
-			}
-
-			try {
-				wait(WRITE_DESC_TIMEOUT);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-
-			return (mDescWriteStatus == 0);
-		}
-
-		synchronized public boolean writeDesc(UUID uuid, byte[] value) {
-			if (mChar == null) {
-				return false;
-			}
-
-			BluetoothGattDescriptor descriptor = mChar.getDescriptor(uuid);
-			if (descriptor == null) {
-				return false;
-			}
-
-			return writeDesc(descriptor, value);
-		}
-
-		synchronized public boolean readDescriptor(BluetoothGattDescriptor descriptor) {
-			return isGattConnected() && mGatt.readDescriptor(descriptor);
-		}
-
-		synchronized public byte[] readDesc(BluetoothGattDescriptor descriptor, long timeout) {
-			if (mGatt == null) {
-				return null;
-			}
-
-			mDescReadStatus = -110;
-
-			if (!readDescriptor(descriptor)) {
-				CavanAndroid.eLog("Failed to readDescriptor");
-				return null;
-			}
-
-			try {
-				wait(timeout);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-
-			if (mDescReadStatus == 0) {
-				return descriptor.getValue();
-			}
-
-			return null;
-		}
-
-		synchronized public byte[] readDesc(UUID uuid, long timeout) {
-			if (mChar == null) {
-				return null;
-			}
-
-			BluetoothGattDescriptor descriptor = mChar.getDescriptor(uuid);
-			if (descriptor == null) {
-				return null;
-			}
-
-			return readDesc(descriptor, timeout);
-		}
-
-		synchronized public boolean setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enable) {
-			return isGattConnected() && mGatt.setCharacteristicNotification(characteristic, enable);
-		}
-
-		synchronized public boolean setNotifyEnable(boolean enable) {
-			if (mChar == null) {
-				return false;
-			}
-
-			if (!setCharacteristicNotification(mChar, enable)) {
-				return false;
-			}
-
-			byte[] value;
-
-			if (enable) {
-				value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE;
-			} else {
-				value = BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
-			}
-
-			return writeDesc(CFG_UUID, value);
-		}
-
-		synchronized public byte[] sendCommand(byte[] command) {
-			if (writeData(command, true)) {
-				return readData(COMMAND_TIMEOUT);
-			}
-
-			return null;
-		}
-
-		synchronized public void setWriteStatus(int status) {
-			mWriteStatus = status;
-			notify();
-		}
-
-		synchronized public int getWriteStatus() {
-			return mWriteStatus;
-		}
-
-		synchronized public void setReadStatus(int status) {
-			mReadStatus = status;
-			notify();
-		}
-
-		synchronized public int getReadStatus() {
-			return mReadStatus;
-		}
-
-		synchronized public void setDescWriteStatus(int status) {
-			mDescWriteStatus = status;
-			notify();
-		}
-
-		synchronized int getDescWriteStatus() {
-			return mDescWriteStatus;
-		}
-
-		synchronized void setDescReadStatus(int status) {
-			mDescReadStatus = status;
-			notify();
-		}
-
-		synchronized int getDescReadStatus() {
-			return mDescReadStatus;
-		}
-
-		synchronized public boolean isNotTimeout() {
-			return mWriteStatus != -110 && mReadStatus != -110;
-		}
-
-		synchronized public boolean isTimeout() {
-			return mWriteStatus == -110 || mReadStatus == -110;
-		}
-
-		synchronized public boolean setDataListener(CavanBleDataListener listener) {
-			boolean enable;
-
-			if (listener == null) {
-				listener = mListenerDefault;
-				enable = false;
-			} else {
-				enable = true;
-			}
-
-			mListener = listener;
-
-			return setNotifyEnable(enable);
-		}
-
-		synchronized public final void onDataAvailable() {
-			mListener.onDataReceived(mChar.getValue());
-		}
+	synchronized public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic) {
+		return isGattReady() && mGatt.writeCharacteristic(characteristic);
+	}
+
+	synchronized public void onWriteTimeout(CavanBleChar cavanBleChar) {
+		mGattTimeoutCount++;
+		CavanAndroid.dLog("mGattTimeoutCount = " + mGattTimeoutCount);
+	}
+
+	synchronized public boolean readCharacteristic(BluetoothGattCharacteristic characteristic) {
+		return isGattReady() && mGatt.readCharacteristic(characteristic);
+	}
+
+	synchronized public boolean writeDescriptor(BluetoothGattDescriptor descriptor) {
+		return isGattConnected() && mGatt.writeDescriptor(descriptor);
+	}
+
+	synchronized public boolean readDescriptor(BluetoothGattDescriptor descriptor) {
+		return isGattConnected() && mGatt.readDescriptor(descriptor);
+	}
+
+	synchronized public boolean setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enable) {
+		return isGattConnected() && mGatt.setCharacteristicNotification(characteristic, enable);
 	}
 }
