@@ -18,7 +18,7 @@ public class CavanBleChar {
 	private static final int FRAME_SIZE = 20;
 	private static final long COMMAND_TIMEOUT = 2000;
 	private static final long WRITE_CHAR_TIMEOUT = 3000;
-	private static final long WRITE_DESC_TIMEOUT = 2000;
+	private static final long WRITE_DESC_TIMEOUT = 3000;
 
 	public interface CavanBleDataListener {
 		void onDataReceived(byte[] data);

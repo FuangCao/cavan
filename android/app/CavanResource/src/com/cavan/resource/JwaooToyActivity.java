@@ -121,7 +121,7 @@ public class JwaooToyActivity extends CavanBleActivity implements OnCancelListen
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		mBleToy = new JwaooBleToy(this);
+		mBleToy = JwaooBleToy.getInstance(this);
 		mBleToy.setEventListener(this);
 	}
 

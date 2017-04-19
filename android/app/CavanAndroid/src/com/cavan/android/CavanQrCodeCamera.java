@@ -24,18 +24,21 @@ public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocus
 		void onFrameCaptured(byte[] bytes, Camera camera);
 	}
 
-	private static CavanQrCodeCamera mQrCodeCamera;
+	private static CavanSingleInstanceHelper<CavanQrCodeCamera> mInstanceHelper = new CavanSingleInstanceHelper<CavanQrCodeCamera>() {
 
-	public static CavanQrCodeCamera getInstance(EventListener listener) {
-		if (mQrCodeCamera == null) {
-			CavanAndroid.pLog();
-			mQrCodeCamera = new CavanQrCodeCamera(listener);
-		} else {
-			CavanAndroid.pLog();
-			mQrCodeCamera.setEventListener(listener);
+		@Override
+		public CavanQrCodeCamera createInstance(Object... args) {
+			return new CavanQrCodeCamera((EventListener) args[0]);
 		}
 
-		return mQrCodeCamera;
+		@Override
+		public void initInstance(CavanQrCodeCamera instance, Object... args) {
+			instance.setEventListener((EventListener) args[0]);
+		}
+	};
+
+	public static CavanQrCodeCamera getInstance(EventListener listener) {
+		return mInstanceHelper.getInstance(listener);
 	}
 
 	private Camera mCamera;

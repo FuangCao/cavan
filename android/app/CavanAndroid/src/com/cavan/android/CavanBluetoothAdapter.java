@@ -11,9 +11,22 @@ public class CavanBluetoothAdapter {
 
 	protected Context mContext;
 	protected BluetoothAdapter mAdapter;
-	private BroadcastReceiver mReceiver;
+
 	private boolean mPoweredOn;
 	private int mLastState = -1;
+
+	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+
+			if (mLastState != state) {
+				mLastState = state;
+				onBluetoothAdapterStateChanged(state);
+			}
+		}
+	};
 
 	protected void onBluetoothAdapterStateChanged(boolean enabled) {
 		CavanAndroid.dLog("onBluetoothAdapterStateChanged: enabled = " + enabled);
@@ -42,43 +55,16 @@ public class CavanBluetoothAdapter {
 	}
 
 	public CavanBluetoothAdapter(Context context) {
+		mContext = context;
 		mAdapter = BluetoothAdapter.getDefaultAdapter();
 		mPoweredOn = isAdapterEnabled();
-		setContext(context);
+
+		IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+		mContext.registerReceiver(mReceiver, filter);
 	}
 
 	public Context getContext() {
 		return mContext;
-	}
-
-	public void setContext(Context context) {
-		if (context == null || context == mContext) {
-			return;
-		}
-
-		if (mContext != null && mReceiver != null) {
-			mContext.unregisterReceiver(mReceiver);
-		}
-
-		mContext = context;
-
-		if (mReceiver == null) {
-			mReceiver = new BroadcastReceiver() {
-
-				@Override
-				public void onReceive(Context context, Intent intent) {
-					int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
-
-					if (mLastState != state) {
-						mLastState = state;
-						onBluetoothAdapterStateChanged(state);
-					}
-				}
-			};
-		}
-
-		IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
-		context.registerReceiver(mReceiver, filter);
 	}
 
 	public BluetoothAdapter getAdapter() {
@@ -101,13 +87,6 @@ public class CavanBluetoothAdapter {
 		return isAdapterEnabled();
 	}
 
-	public void cleaup() {
-		if (mContext != null && mReceiver != null) {
-			mContext.unregisterReceiver(mReceiver);
-			mReceiver = null;
-		}
-	}
-
 	public BluetoothDevice getRemoteDevice(String address) {
 		try {
 			return mAdapter.getRemoteDevice(address);
@@ -119,7 +98,7 @@ public class CavanBluetoothAdapter {
 
 	@Override
 	protected void finalize() throws Throwable {
-		cleaup();
+		mContext.unregisterReceiver(mReceiver);
 		super.finalize();
 	}
 }

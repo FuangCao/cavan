@@ -235,8 +235,6 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 	public void stopScan() {
 		mScanEnable = false;
 		mAdapter.stopLeScan(this);
-
-		cleaup();
 	}
 
 	@Override

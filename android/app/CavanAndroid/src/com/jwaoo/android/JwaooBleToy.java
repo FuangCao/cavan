@@ -3,13 +3,13 @@ package com.jwaoo.android;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
-import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleChar;
 import com.cavan.android.CavanBleChar.CavanBleDataListener;
 import com.cavan.android.CavanBleGatt;
+import com.cavan.android.CavanSingleInstanceHelper;
 import com.cavan.java.CavanArray;
 import com.cavan.java.CavanByteCache;
 import com.cavan.java.CavanHexFile;
@@ -209,6 +209,18 @@ public class JwaooBleToy extends CavanBleGatt {
 		public void onBluetoothAdapterStateChanged(boolean enabled) {}
 	};
 
+	private static CavanSingleInstanceHelper<JwaooBleToy> mInstanceHelper = new CavanSingleInstanceHelper<JwaooBleToy>() {
+
+		@Override
+		public JwaooBleToy createInstance(Object... args) {
+			return new JwaooBleToy((Context) args[0]);
+		}
+	};
+
+	public static JwaooBleToy getInstance(Context context) {
+		return mInstanceHelper.getInstance(context);
+	}
+
 	public interface JwaooBleToyEventListener {
 		boolean onInitialize();
 		void onConnectFailed();
@@ -268,6 +280,16 @@ public class JwaooBleToy extends CavanBleGatt {
 			}
 		}
 	};
+
+	protected JwaooBleToy(Context context) {
+		super(context, null, UUID_SERVICE);
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		setSensorSpeedOptimizeEnable(false);
+		super.finalize();
+	}
 
 	public void setEventListener(JwaooBleToyEventListener listener) {
 		if (listener != null) {
@@ -390,32 +412,6 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	protected void onDebugDataReceived(byte[] data) {
 		mEventListener.onDebugDataReceived(data);
-	}
-
-	public JwaooBleToy(Context context, BluetoothDevice device, UUID uuid) {
-		super(context, device, uuid);
-	}
-
-	public JwaooBleToy(Context context, BluetoothDevice device) {
-		this(context, device, UUID_SERVICE);
-	}
-
-	public JwaooBleToy(Context context) {
-		this(context, null);
-	}
-
-	public JwaooBleToy(BluetoothDevice device) {
-		this(null, device, UUID_SERVICE);
-	}
-
-	public JwaooBleToy() {
-		this(null, null);
-	}
-
-	@Override
-	protected void finalize() throws Throwable {
-		setSensorSpeedOptimizeEnable(false);
-		super.finalize();
 	}
 
 	public JwaooToySensor getSensor() {
@@ -2348,5 +2344,5 @@ public class JwaooBleToy extends CavanBleGatt {
 
 			mSensorOptimizeThread = null;
 		}
-	};
+	}
 }
