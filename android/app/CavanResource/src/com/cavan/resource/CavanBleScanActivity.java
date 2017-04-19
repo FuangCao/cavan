@@ -52,6 +52,7 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 
 	public void finishScan(BluetoothDevice device) {
 		mScanner.stopScan();
+		mQrCodeView.closeCamera();
 
 		Intent intent = new Intent();
 		intent.putExtra("device", device);
@@ -252,6 +253,8 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 			finishScan(device);
 			return true;
 		}
+
+		CavanAndroid.showToast(getApplicationContext(), R.string.mac_address_format_fault, text);
 
 		return false;
 	}

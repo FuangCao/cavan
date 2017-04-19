@@ -153,7 +153,7 @@ public class CavanQrCodeView extends View implements CavanQrCodeCamera.EventList
 	}
 
 	public synchronized void openCamera(int width, int height) {
-		// CavanAndroid.dLog("openCamera: width = " + width + ", height = " + height);
+		CavanAndroid.dLog("openCamera: width = " + width + ", height = " + height);
 
 		mSurfaceWidth = width;
 		mSurfaceHeight = height;
@@ -161,7 +161,7 @@ public class CavanQrCodeView extends View implements CavanQrCodeCamera.EventList
 	}
 
 	public synchronized void setSurfaceSize(int width, int height) {
-		// CavanAndroid.dLog("setSurfaceSize: width = " + width + ", height = " + height);
+		CavanAndroid.dLog("setSurfaceSize: width = " + width + ", height = " + height);
 
 		mSurfaceWidth = width;
 		mSurfaceHeight = height;
@@ -169,7 +169,7 @@ public class CavanQrCodeView extends View implements CavanQrCodeCamera.EventList
 	}
 
 	public void closeCamera() {
-		// CavanAndroid.dLog("closeCamera");
+		CavanAndroid.dLog("closeCamera");
 		mCameraHandler.closeCamera();
 	}
 
@@ -179,7 +179,7 @@ public class CavanQrCodeView extends View implements CavanQrCodeCamera.EventList
 	}
 
 	public void stopPreview() {
-		// CavanAndroid.dLog("stopPreview");
+		CavanAndroid.dLog("stopPreview");
 		mCameraHandler.stopPreview();
 	}
 

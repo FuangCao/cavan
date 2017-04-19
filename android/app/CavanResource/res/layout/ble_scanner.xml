@@ -16,14 +16,14 @@
 	        android:id="@+id/qrCodeView"
 	        android:layout_width="match_parent"
 	        android:layout_height="0dp"
-	        android:layout_weight="0.4"
+	        android:layout_weight="0.3"
 	        android:background="#00000000" />
 
 	    <ListView
 	        android:id="@+id/listViewDevices"
 	        android:layout_width="match_parent"
 	        android:layout_height="0dp"
-	        android:layout_weight="0.6"
+	        android:layout_weight="0.7"
 	        android:background="#00000000"
 	        android:divider="@null" />
 

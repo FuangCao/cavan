@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
     <string name="text_port_setting">端口号设置</string>
     <string name="text_port">端口号</string>
@@ -33,5 +33,6 @@
     <string name="add">增加</string>
     <string name="remove">删除</string>
     <string name="ble_not_support_propmpt">本机硬件不支持蓝牙4.0，无法正常使用！</string>
+    <string name="mac_address_format_fault">MAC地址格式错误：<xliff:g>%1$s</xliff:g></string>
 
 </resources>

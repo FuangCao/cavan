@@ -10,6 +10,7 @@ import android.os.Message;
 @SuppressWarnings("deprecation")
 public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocusCallback, PreviewCallback {
 
+	private static final int MAX_CAPTURE_TIMES = 3;
 	private static final int AUTO_FOCUS_OVERTIME = 3000;
 
 	private static final int MSG_OPEN_CAMERA = 1;
@@ -42,6 +43,7 @@ public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocus
 	}
 
 	private Camera mCamera;
+	private int mCaptureTimes;
 	private EventListener mListener;
 
 	private CavanQrCodeCamera(EventListener listener) {
@@ -72,6 +74,8 @@ public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocus
 
 	public synchronized Camera openCamera() {
 		if (mCamera == null) {
+			mCaptureTimes = 0;
+
 			try {
 				mCamera = Camera.open();
 				if (mCamera != null) {
@@ -124,13 +128,20 @@ public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocus
 
 		mListener.onStartAutoFocus(mCamera);
 
-		try {
-			mCamera.autoFocus(CavanQrCodeCamera.this);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		// CavanAndroid.dLog("mCaptureTimes = " + mCaptureTimes);
 
-		sendEmptyMessageDelayed(MSG_CAPTURE_FRAME, AUTO_FOCUS_OVERTIME);
+		if (mCaptureTimes > 0) {
+			mCaptureTimes--;
+			sendEmptyMessage(MSG_CAPTURE_FRAME);
+		} else {
+			try {
+				mCamera.autoFocus(CavanQrCodeCamera.this);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			sendEmptyMessageDelayed(MSG_CAPTURE_FRAME, AUTO_FOCUS_OVERTIME);
+		}
 
 		return true;
 	}
@@ -187,6 +198,7 @@ public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocus
 
 		if (mCamera != null) {
 			if (success) {
+				mCaptureTimes = MAX_CAPTURE_TIMES;
 				sendEmptyMessage(MSG_CAPTURE_FRAME);
 			} else {
 				mCamera.autoFocus(this);
