@@ -246,7 +246,7 @@ public final class ServerOperation implements Operation, BaseStream {
      * @return <code>true</code> if the operation was completed;
      *         <code>false</code> if no operation took place
      */
-    public synchronized boolean continueOperation(boolean sendEmpty, boolean inStream)
+    synchronized public boolean continueOperation(boolean sendEmpty, boolean inStream)
             throws IOException {
         if (!mGetOperation) {
             if (!finalBitSet) {
@@ -280,7 +280,7 @@ public final class ServerOperation implements Operation, BaseStream {
      *         reply
      * @throws IOException if an IO error occurs
      */
-    public synchronized boolean sendReply(int type) throws IOException {
+    synchronized public boolean sendReply(int type) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         int bytesReceived;
 

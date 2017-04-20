@@ -985,7 +985,7 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		@Override
-		public synchronized void start() {
+		synchronized public void start() {
 			setActive(true);
 			super.start();
 		}

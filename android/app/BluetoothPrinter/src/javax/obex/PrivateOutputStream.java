@@ -79,7 +79,7 @@ public final class PrivateOutputStream extends OutputStream {
      * @throws IOException if an I/O error occurs
      */
     @Override
-    public synchronized void write(int b) throws IOException {
+    synchronized public void write(int b) throws IOException {
         ensureOpen();
         mParent.ensureNotDone();
         mArray.write(b);
@@ -94,7 +94,7 @@ public final class PrivateOutputStream extends OutputStream {
     }
 
     @Override
-    public synchronized void write(byte[] buffer, int offset, int count) throws IOException {
+    synchronized public void write(byte[] buffer, int offset, int count) throws IOException {
         int offset1 = offset;
         int remainLength = count;
 
@@ -127,7 +127,7 @@ public final class PrivateOutputStream extends OutputStream {
      * @param size the size of the array to return
      * @return the byte array that is written
      */
-    public synchronized byte[] readBytes(int size) {
+    synchronized public byte[] readBytes(int size) {
         if (mArray.size() > 0) {
             byte[] temp = mArray.toByteArray();
             mArray.reset();

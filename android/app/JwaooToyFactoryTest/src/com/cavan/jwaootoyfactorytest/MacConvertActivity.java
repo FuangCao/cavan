@@ -17,6 +17,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanBusyLock;
 import com.cavan.android.CavanMacAddressView;
 import com.cavan.java.CavanMacAddress;
 import com.cavan.resource.CavanKeyboardViewNumber;
@@ -27,7 +28,6 @@ public class MacConvertActivity extends Activity {
 	public static final CavanMacAddress sAddressStartModel06 = new CavanMacAddress().fromString("88:EA:00:00:00:00");
 	public static final CavanMacAddress sAddressStartModel10 = new CavanMacAddress().fromString("88:EB:00:00:00:00");
 
-	private static final int MSG_UNLOCK = 1;
 	private static final int MSG_START_ADDR_CHANGED = 2;
 	private static final int MSG_END_ADDR_CHANGED = 3;
 	private static final int MSG_NEXT_ADDR_CHANGED = 4;
@@ -46,25 +46,9 @@ public class MacConvertActivity extends Activity {
 	private Spinner mSpinnerProject;
 	private Button mButtonCopy;
 
+	private CavanBusyLock mLock = new CavanBusyLock(200);
+
 	private Handler mHandler = new Handler() {
-
-		private int mMessageBusy;
-
-		private boolean setMessageBusy(int message) {
-			if (mMessageBusy != message) {
-				if (mMessageBusy != 0) {
-					return false;
-				}
-
-				mMessageBusy = message;
-			} else {
-				removeMessages(MSG_UNLOCK);
-			}
-
-			sendEmptyMessageDelayed(MSG_UNLOCK, 200);
-
-			return true;
-		}
 
 		public long updateAddressCount(CavanMacAddress address) {
 			CavanMacAddress start = getAddressStart();
@@ -85,67 +69,55 @@ public class MacConvertActivity extends Activity {
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
-			case MSG_UNLOCK:
-				mMessageBusy = 0;
-				break;
-
 			case MSG_PROJECT_CHANGED:
-				if (setMessageBusy(msg.what)) {
-					int position = mSpinnerProject.getSelectedItemPosition();
-					if (position > PROJECT_INDEX_NONE) {
-						CavanMacAddress address = getAddressStart();
+				int position = mSpinnerProject.getSelectedItemPosition();
+				if (position > PROJECT_INDEX_NONE) {
+					CavanMacAddress address = getAddressStart();
 
-						if (position == PROJECT_INDEX_MODEL06) {
-							address.setPrefix(sAddressStartModel06);
-						} else {
-							address.setPrefix(sAddressStartModel10);
-						}
-
-						mMessageBusy = MSG_START_ADDR_CHANGED;
-						mAddressViewStart.setAddress(address);
+					if (position == PROJECT_INDEX_MODEL06) {
+						address.setPrefix(sAddressStartModel06);
+					} else {
+						address.setPrefix(sAddressStartModel10);
 					}
+
+					mLock.setOwner(mAddressViewStart);
+					mAddressViewStart.setAddress(address);
 				}
 				break;
 
 			case MSG_START_ADDR_CHANGED:
 			case MSG_ADDR_COUNT_CHANGED:
-				if (setMessageBusy(msg.what)) {
-					CavanMacAddress address = getAddressStart();
+				CavanMacAddress address = getAddressStart();
 
-					if (address.startsWith(sAddressStartModel06)) {
-						mSpinnerProject.setSelection(PROJECT_INDEX_MODEL06);
-					} else if (address.startsWith(sAddressStartModel10)) {
-						mSpinnerProject.setSelection(PROJECT_INDEX_MODEL10);
-					} else {
-						mSpinnerProject.setSelection(PROJECT_INDEX_NONE);
-					}
-
-					address.add(getAddressCount());
-					mAddressViewNext.setAddress(address);
-
-					address.decrease();
-					mAddressViewEnd.setAddress(address);
+				if (address.startsWith(sAddressStartModel06)) {
+					mSpinnerProject.setSelection(PROJECT_INDEX_MODEL06);
+				} else if (address.startsWith(sAddressStartModel10)) {
+					mSpinnerProject.setSelection(PROJECT_INDEX_MODEL10);
+				} else {
+					mSpinnerProject.setSelection(PROJECT_INDEX_NONE);
 				}
+
+				address.add(getAddressCount());
+				mAddressViewNext.setAddress(address);
+
+				address.decrease();
+				mAddressViewEnd.setAddress(address);
 				break;
 
 			case MSG_END_ADDR_CHANGED:
-				if (setMessageBusy(msg.what)) {
-					CavanMacAddress end = getAddressEnd();
+				CavanMacAddress end = getAddressEnd();
 
-					end.increase();
-					mAddressViewNext.setAddress(end);
+				end.increase();
+				mAddressViewNext.setAddress(end);
 
-					updateAddressCount(end);
-				}
+				updateAddressCount(end);
 				break;
 
 			case MSG_NEXT_ADDR_CHANGED:
-				if (setMessageBusy(msg.what)) {
-					CavanMacAddress next = getAddressNext();
+				CavanMacAddress next = getAddressNext();
 
-					mAddressViewEnd.setAddress(next.decreaseMacAddress());
-					updateAddressCount(next);
-				}
+				mAddressViewEnd.setAddress(next.decreaseMacAddress());
+				updateAddressCount(next);
 				break;
 			}
 		}
@@ -201,7 +173,9 @@ public class MacConvertActivity extends Activity {
 
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-				mHandler.sendEmptyMessage(MSG_PROJECT_CHANGED);
+				if (mLock.acquire(mSpinnerProject)) {
+					mHandler.sendEmptyMessage(MSG_PROJECT_CHANGED);
+				}
 			}
 
 			@Override
@@ -243,7 +217,9 @@ public class MacConvertActivity extends Activity {
 
 			@Override
 			public void afterTextChanged(Editable s) {
-				mHandler.sendEmptyMessage(MSG_START_ADDR_CHANGED);
+				if (mLock.acquire(mAddressViewStart)) {
+					mHandler.sendEmptyMessage(MSG_START_ADDR_CHANGED);
+				}
 			}
 		});
 
@@ -257,7 +233,9 @@ public class MacConvertActivity extends Activity {
 
 			@Override
 			public void afterTextChanged(Editable s) {
-				mHandler.sendEmptyMessage(MSG_END_ADDR_CHANGED);
+				if (mLock.acquire(mAddressViewEnd)) {
+					mHandler.sendEmptyMessage(MSG_END_ADDR_CHANGED);
+				}
 			}
 		});
 
@@ -271,7 +249,9 @@ public class MacConvertActivity extends Activity {
 
 			@Override
 			public void afterTextChanged(Editable s) {
-				mHandler.sendEmptyMessage(MSG_NEXT_ADDR_CHANGED);
+				if (mLock.acquire(mAddressViewNext)) {
+					mHandler.sendEmptyMessage(MSG_NEXT_ADDR_CHANGED);
+				}
 			}
 		});
 
@@ -285,7 +265,9 @@ public class MacConvertActivity extends Activity {
 
 			@Override
 			public void afterTextChanged(Editable s) {
-				mHandler.sendEmptyMessage(MSG_ADDR_COUNT_CHANGED);
+				if (mLock.acquire(mEditTextAddressCount)) {
+					mHandler.sendEmptyMessage(MSG_ADDR_COUNT_CHANGED);
+				}
 			}
 		});
 	}

@@ -366,7 +366,7 @@ public final class ClientSession extends ObexSession {
      * Verifies that the connection is open.
      * @throws IOException if the connection is closed
      */
-    public synchronized void ensureOpen() throws IOException {
+    synchronized public void ensureOpen() throws IOException {
         if (!mOpen) {
             throw new IOException("Connection closed");
         }
@@ -384,7 +384,7 @@ public final class ClientSession extends ObexSession {
      * Set request to active.
      * @throws IOException if already active
      */
-    private synchronized void setRequestActive() throws IOException {
+    synchronized private void setRequestActive() throws IOException {
         if (mRequestActive) {
             throw new IOException("OBEX request is already being performed");
         }

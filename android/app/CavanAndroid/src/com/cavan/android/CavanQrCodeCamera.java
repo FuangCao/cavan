@@ -51,15 +51,19 @@ public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocus
 		setEventListener(listener);
 	}
 
-	public synchronized void setEventListener(EventListener listener) {
+	synchronized public void setEventListener(EventListener listener) {
 		mListener = listener;
 	}
 
-	public synchronized Camera getCamera() {
+	synchronized public Camera getCamera() {
 		return mCamera;
 	}
 
-	public synchronized Size getPreviwSize() {
+	synchronized boolean isCameraOpened() {
+		return (mCamera != null);
+	}
+
+	synchronized public Size getPreviwSize() {
 		if (mCamera == null) {
 			return null;
 		}
@@ -72,7 +76,7 @@ public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocus
 		return params.getPreviewSize();
 	}
 
-	public synchronized Camera openCamera() {
+	synchronized public Camera openCamera() {
 		if (mCamera == null) {
 			mCaptureTimes = 0;
 
@@ -99,7 +103,7 @@ public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocus
 		sendEmptyMessage(MSG_OPEN_CAMERA);
 	}
 
-	public synchronized void closeCamera() {
+	synchronized public void closeCamera() {
 		if (mCamera != null) {
 			try {
 				mCamera.cancelAutoFocus();
@@ -113,7 +117,7 @@ public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocus
 		}
 	}
 
-	public synchronized boolean startPreview() {
+	synchronized public boolean startPreview() {
 		if (openCamera() == null) {
 			return false;
 		}
@@ -150,13 +154,13 @@ public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocus
 		sendEmptyMessage(MSG_START_PREVIEW);
 	}
 
-	public synchronized void stopPreview() {
+	synchronized public void stopPreview() {
 		if (mCamera != null) {
 			mCamera.stopPreview();
 		}
 	}
 
-	public synchronized boolean captureFrame() {
+	synchronized public boolean captureFrame() {
 		if (mCamera == null) {
 			return false;
 		}

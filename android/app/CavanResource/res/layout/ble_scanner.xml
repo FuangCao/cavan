@@ -1,10 +1,13 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
 
     <SurfaceView
         android:id="@+id/surfaceViewQrCode"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 
 	<LinearLayout
 	    android:layout_width="match_parent"
@@ -12,20 +15,47 @@
 	    android:background="#7F000000"
 	    android:orientation="vertical" >
 
-	    <com.cavan.android.CavanQrCodeView
-	        android:id="@+id/qrCodeView"
-	        android:layout_width="match_parent"
-	        android:layout_height="0dp"
-	        android:layout_weight="0.3"
-	        android:background="#00000000" />
+		<com.cavan.android.CavanQrCodeView
+		    android:id="@+id/qrCodeView"
+		    android:layout_width="match_parent"
+		    android:layout_height="0dp"
+		    android:layout_weight="0.2"
+		    android:background="#00000000"
+		    android:visibility="gone" />
 
-	    <ListView
-	        android:id="@+id/listViewDevices"
-	        android:layout_width="match_parent"
-	        android:layout_height="0dp"
-	        android:layout_weight="0.7"
-	        android:background="#00000000"
-	        android:divider="@null" />
+		<RelativeLayout
+		    android:layout_width="match_parent"
+		    android:layout_height="wrap_content" >
+
+		    <Button
+		        android:id="@+id/buttonQrCodeScan"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content"
+		        android:layout_alignParentRight="true"
+		        android:layout_alignParentTop="true"
+		        android:text="@string/qrcode_scan" />
+
+		    <EditText
+		        android:id="@+id/editTextAddress"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content"
+		        android:layout_alignBaseline="@+id/buttonQrCodeScan"
+		        android:layout_alignParentLeft="true"
+		        android:layout_toLeftOf="@+id/buttonQrCodeScan"
+		        android:ems="10" >
+		    </EditText>
+
+		</RelativeLayout>
+
+		<ListView
+		    android:id="@+id/listViewDevices"
+		    android:layout_width="match_parent"
+		    android:layout_height="0dp"
+		    android:layout_weight="0.8"
+		    android:background="#00000000"
+		    android:divider="@null" >
+		</ListView>
 
 	</LinearLayout>
+
 </merge>

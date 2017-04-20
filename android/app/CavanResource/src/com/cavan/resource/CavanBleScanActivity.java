@@ -12,20 +12,26 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.graphics.Color;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleDevice;
 import com.cavan.android.CavanBleDeviceAdapter;
 import com.cavan.android.CavanBleScanner;
+import com.cavan.android.CavanBusyLock;
 import com.cavan.android.CavanQrCodeView;
 import com.cavan.android.CavanQrCodeView.EventListener;
 import com.google.zxing.Result;
@@ -37,13 +43,19 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 	private UUID[] mUuids;
 	private String[] mAddresses;
 	private String[] mNames;
+	private BluetoothDevice mDevice;
+
 	private CavanBleScanner mScanner;
 	private CavanBleDeviceAdapter mAdapter;
 
 	private ListView mListView;
 	private SurfaceView mSurface;
 	private SurfaceHolder mHolder;
+	private Button mButtonQrCodeScan;
+	private EditText mEditTextAddress;
 	private CavanQrCodeView mQrCodeView;
+
+	private CavanBusyLock mLock = new CavanBusyLock(200);
 
 	protected void onScanComplete(CavanBleDevice device) {
 		CavanAndroid.dLog("onScanComplete: " + device);
@@ -66,6 +78,12 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 		}
 	}
 
+	private void hiddenSoftInput() {
+		if (mEditTextAddress != null) {
+			CavanAndroid.setSoftInputEnable(getApplicationContext(), mEditTextAddress, false);
+		}
+	}
+
 	@Override
 	protected void onCreateBle(Bundle savedInstanceState) {
 		setContentView(R.layout.ble_scanner);
@@ -84,9 +102,65 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 			public boolean onTouch(View v, MotionEvent event) {
 				if (event.getAction() == MotionEvent.ACTION_DOWN && mScanner != null) {
 					mScanner.setAutoSelect(0);
+					hiddenSoftInput();
 				}
 
 				return false;
+			}
+		});
+
+		mEditTextAddress = (EditText) findViewById(R.id.editTextAddress);
+		mEditTextAddress.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				mScanner.setAutoSelect(0);
+			}
+		});
+		mEditTextAddress.addTextChangedListener(new TextWatcher() {
+
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+			@Override
+			public void afterTextChanged(Editable s) {
+				if (mLock.acquire(mEditTextAddress)) {
+					mDevice = mScanner.getRemoteDevice(s.toString());
+					if (mDevice != null) {
+						mButtonQrCodeScan.setEnabled(true);
+						mButtonQrCodeScan.setText(R.string.text_connect);
+					} else if (mQrCodeView.isCameraOpened()) {
+						mButtonQrCodeScan.setEnabled(false);
+					} else {
+						mButtonQrCodeScan.setEnabled(true);
+						mButtonQrCodeScan.setText(R.string.qrcode_scan);
+					}
+				}
+			}
+		});
+
+		mButtonQrCodeScan = (Button) findViewById(R.id.buttonQrCodeScan);
+		mButtonQrCodeScan.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				mScanner.setAutoSelect(0);
+
+				if (mDevice == null) {
+					hiddenSoftInput();
+
+					mButtonQrCodeScan.setEnabled(false);
+					mButtonQrCodeScan.setTextColor(Color.WHITE);
+					mButtonQrCodeScan.setText(R.string.text_connect);
+
+					mQrCodeView.setVisibility(View.VISIBLE);
+					mSurface.setVisibility(View.VISIBLE);
+				} else {
+					finishScan(mDevice);
+				}
 			}
 		});
 
@@ -254,6 +328,11 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 			return true;
 		}
 
+		if (mLock.acquire(mScanner)) {
+			mButtonQrCodeScan.setEnabled(false);
+			mEditTextAddress.setText(text);
+		}
+
 		CavanAndroid.showToast(getApplicationContext(), R.string.mac_address_format_fault, text);
 
 		return false;
@@ -281,6 +360,7 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 	@Override
 	public void onCameraOpened(Camera camera) {
 		// CavanAndroid.pLog();
+
 		mQrCodeView.startPreview();
 	}
 }

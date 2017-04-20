@@ -650,7 +650,7 @@ public final class ServerSession extends ObexSession implements Runnable {
      * underlying transport layer. Internal flag is also set so that later
      * attempt to read/write will throw an exception.
      */
-    public synchronized void close() {
+    synchronized public void close() {
         if (mListener != null) {
             mListener.onClose();
         }

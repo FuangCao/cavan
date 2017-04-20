@@ -71,7 +71,7 @@ public final class PrivateInputStream extends InputStream {
      * @throws IOException if an I/O error occurs
      */
     @Override
-    public synchronized int available() throws IOException {
+    synchronized public int available() throws IOException {
         ensureOpen();
         return mData.length - mIndex;
     }
@@ -87,7 +87,7 @@ public final class PrivateInputStream extends InputStream {
      * @throws IOException if an I/O error occurs
      */
     @Override
-    public synchronized int read() throws IOException {
+    synchronized public int read() throws IOException {
         ensureOpen();
         while (mData.length == mIndex) {
             if (!mParent.continueOperation(true, true)) {
@@ -103,7 +103,7 @@ public final class PrivateInputStream extends InputStream {
     }
 
     @Override
-    public synchronized int read(byte[] b, int offset, int length) throws IOException {
+    synchronized public int read(byte[] b, int offset, int length) throws IOException {
 
         if (b == null) {
             throw new IOException("buffer is null");
@@ -144,7 +144,7 @@ public final class PrivateInputStream extends InputStream {
      * @param body the data to add to the stream
      * @param start the start of the body to array to copy
      */
-    public synchronized void writeBytes(byte[] body, int start) {
+    synchronized public void writeBytes(byte[] body, int start) {
 
         int length = (body.length - start) + (mData.length - mIndex);
         byte[] temp = new byte[length];

@@ -130,7 +130,7 @@ public final class ClientOperation implements Operation, BaseStream {
      * @throws IOException if the transaction has already ended or if an OBEX
      *         server called this method
      */
-    public synchronized void abort() throws IOException {
+    synchronized public void abort() throws IOException {
         ensureOpen();
         //no compatible with sun-ri
         if ((mOperationDone) && (mReplyHeader.responseCode != ResponseCodes.OBEX_HTTP_CONTINUE)) {
@@ -166,7 +166,7 @@ public final class ClientOperation implements Operation, BaseStream {
      *         <code>createHeaderSet</code> in a <code>ClientSession</code>
      *         object
      */
-    public synchronized int getResponseCode() throws IOException {
+    synchronized public int getResponseCode() throws IOException {
         //avoid dup validateConnection
         if ((mReplyHeader.responseCode == -1)
                 || (mReplyHeader.responseCode == ResponseCodes.OBEX_HTTP_CONTINUE)) {
@@ -535,7 +535,7 @@ public final class ClientOperation implements Operation, BaseStream {
      * will be started to handle additional requests
      * @throws IOException if an IO error occurs
      */
-    private synchronized void startProcessing() throws IOException {
+    synchronized private void startProcessing() throws IOException {
 
         if (mPrivateInput == null) {
             mPrivateInput = new PrivateInputStream(this);
@@ -584,7 +584,7 @@ public final class ClientOperation implements Operation, BaseStream {
      *        output stream
      * @throws IOException if an IO error occurs
      */
-    public synchronized boolean continueOperation(boolean sendEmpty, boolean inStream)
+    synchronized public boolean continueOperation(boolean sendEmpty, boolean inStream)
             throws IOException {
 
         if (mGetOperation) {

@@ -152,7 +152,7 @@ public class CavanQrCodeView extends View implements CavanQrCodeCamera.EventList
 		return mListener;
 	}
 
-	public synchronized void openCamera(int width, int height) {
+	synchronized public void openCamera(int width, int height) {
 		CavanAndroid.dLog("openCamera: width = " + width + ", height = " + height);
 
 		mSurfaceWidth = width;
@@ -160,12 +160,20 @@ public class CavanQrCodeView extends View implements CavanQrCodeCamera.EventList
 		mCameraHandler.openCameraAsync();
 	}
 
-	public synchronized void setSurfaceSize(int width, int height) {
+	synchronized public void setSurfaceSize(int width, int height) {
 		CavanAndroid.dLog("setSurfaceSize: width = " + width + ", height = " + height);
 
 		mSurfaceWidth = width;
 		mSurfaceHeight = height;
 		updateQrCodeMatrix();
+	}
+
+	public Camera getCamera() {
+		return mCameraHandler.getCamera();
+	}
+
+	public boolean isCameraOpened() {
+		return mCameraHandler.isCameraOpened();
 	}
 
 	public void closeCamera() {

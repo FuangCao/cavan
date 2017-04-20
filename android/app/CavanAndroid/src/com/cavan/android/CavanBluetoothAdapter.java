@@ -90,6 +90,10 @@ public class CavanBluetoothAdapter {
 	}
 
 	public BluetoothDevice getRemoteDevice(String address) {
+		if (address == null || address.isEmpty()) {
+			return null;
+		}
+
 		try {
 			return mAdapter.getRemoteDevice(address);
 		} catch (Exception e) {

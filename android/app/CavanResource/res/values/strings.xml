@@ -34,5 +34,7 @@
     <string name="remove">删除</string>
     <string name="ble_not_support_propmpt">本机硬件不支持蓝牙4.0，无法正常使用！</string>
     <string name="mac_address_format_fault">MAC地址格式错误：<xliff:g>%1$s</xliff:g></string>
+    <string name="qrcode_scan">扫码</string>
+    <string name="text_connect">连接</string>
 
 </resources>
