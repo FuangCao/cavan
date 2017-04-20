@@ -2,6 +2,8 @@ package com.cavan.android;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -94,6 +96,28 @@ public class CavanBluetoothAdapter {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	public BluetoothManager getBluetoothManager() {
+		return (BluetoothManager) CavanAndroid.getSystemServiceCached(mContext, Context.BLUETOOTH_SERVICE);
+	}
+
+	public int getConnectionState(BluetoothDevice device, int profile, int defValue) {
+		BluetoothManager manager = getBluetoothManager();
+		if (manager == null) {
+			CavanAndroid.eLog("Failed to getBluetoothManager");
+			return defValue;
+		}
+
+		return manager.getConnectionState(device, profile);
+	}
+
+	public boolean isConnected(int state) {
+		return state == BluetoothProfile.STATE_CONNECTED;
+	}
+
+	public boolean isDisconnected(int state) {
+		return state == BluetoothProfile.STATE_DISCONNECTED || state == BluetoothProfile.STATE_DISCONNECTING;
 	}
 
 	@Override

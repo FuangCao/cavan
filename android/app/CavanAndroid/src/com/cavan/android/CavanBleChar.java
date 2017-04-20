@@ -18,7 +18,7 @@ public class CavanBleChar {
 	private static final int FRAME_SIZE = 20;
 	private static final long COMMAND_TIMEOUT = 2000;
 	private static final long WRITE_CHAR_TIMEOUT = 3000;
-	private static final long WRITE_DESC_TIMEOUT = 3000;
+	private static final long WRITE_DESC_TIMEOUT = 1000;
 
 	public interface CavanBleDataListener {
 		void onDataReceived(byte[] data);
@@ -72,22 +72,27 @@ public class CavanBleChar {
 			mWriteStatus = -110;
 
 			for (int i = 0; i < 3; i++) {
-				if (!mBleGatt.writeCharacteristic(mBleChar)) {
+				if (mBleGatt.writeCharacteristic(mBleChar)) {
+					try {
+						wait(WRITE_CHAR_TIMEOUT);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+
+					if (mWriteStatus != -110) {
+						return (mWriteStatus == 0);
+					}
+
+					CavanAndroid.eLog("Failed to writeCharacteristic" + i + ": status = " + mWriteStatus);
+				} else {
 					CavanAndroid.eLog("Failed to writeCharacteristic");
+
+					if (i > 0) {
+						break;
+					}
+
 					return false;
 				}
-
-				try {
-					wait(WRITE_CHAR_TIMEOUT);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-
-				if (mWriteStatus != -110) {
-					return (mWriteStatus == 0);
-				}
-
-				CavanAndroid.eLog("Failed to writeCharacteristic" + i + ": status = " + mWriteStatus);
 			}
 
 			mBleGatt.onWriteTimeout(this);
@@ -186,22 +191,27 @@ public class CavanBleChar {
 		mDescWriteStatus = -110;
 
 		for (int i = 0; i < 3; i++) {
-			if (!mBleGatt.writeDescriptor(descriptor)) {
+			if (mBleGatt.writeDescriptor(descriptor)) {
+				try {
+					wait(WRITE_DESC_TIMEOUT);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
+				if (mDescWriteStatus != -110) {
+					return (mDescWriteStatus == 0);
+				}
+
+				CavanAndroid.eLog("Failed to writeDescriptor" + i + ": status = " + mDescWriteStatus);
+			} else {
 				CavanAndroid.eLog("Failed to writeDescriptor");
+
+				if (i > 0) {
+					break;
+				}
+
 				return false;
 			}
-
-			try {
-				wait(WRITE_DESC_TIMEOUT);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-
-			if (mDescWriteStatus != -110) {
-				return (mDescWriteStatus == 0);
-			}
-
-			CavanAndroid.eLog("Failed to writeDescriptor" + i + ": status = " + mDescWriteStatus);
 		}
 
 		mBleGatt.onWriteTimeout(this);

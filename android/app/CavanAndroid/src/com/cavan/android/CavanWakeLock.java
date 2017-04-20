@@ -80,7 +80,7 @@ public class CavanWakeLock {
 	}
 
 	synchronized public boolean acquire(Context context, long overtime) {
-		PowerManager manager = (PowerManager) CavanAndroid.getCachedSystemService(context, Context.POWER_SERVICE);
+		PowerManager manager = (PowerManager) CavanAndroid.getSystemServiceCached(context, Context.POWER_SERVICE);
 		if (manager == null) {
 			return false;
 		}

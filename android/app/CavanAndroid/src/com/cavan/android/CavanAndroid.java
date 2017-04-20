@@ -183,11 +183,11 @@ public class CavanAndroid {
 		wLog(new Throwable());
 	}
 
-	public static void putCachedSystemService(String name, Object service) {
+	public static void putSystemServiceCache(String name, Object service) {
 		mSystemServiceMap.put(name, service);
 	}
 
-	public static Object getCachedSystemService(Context context, String name) {
+	public static Object getSystemServiceCached(Context context, String name) {
 		Object service = mSystemServiceMap.get(name);
 		if (service != null) {
 			return service;
@@ -206,7 +206,7 @@ public class CavanAndroid {
 			return null;
 		}
 
-		putCachedSystemService(name, service);
+		putSystemServiceCache(name, service);
 
 		return service;
 	}
@@ -304,7 +304,7 @@ public class CavanAndroid {
 	}
 
 	public static boolean acquireWakeLock(Context context, long overtime) {
-		PowerManager manager = (PowerManager) getCachedSystemService(context, Context.POWER_SERVICE);
+		PowerManager manager = (PowerManager) getSystemServiceCached(context, Context.POWER_SERVICE);
 		if (manager == null) {
 			return false;
 		}
@@ -326,7 +326,7 @@ public class CavanAndroid {
 	}
 
 	public static boolean acquireWakeupLock(Context context, long overtime) {
-		PowerManager manager = (PowerManager) getCachedSystemService(context, Context.POWER_SERVICE);
+		PowerManager manager = (PowerManager) getSystemServiceCached(context, Context.POWER_SERVICE);
 		if (manager == null) {
 			return false;
 		}
@@ -353,7 +353,7 @@ public class CavanAndroid {
 	}
 
 	public static boolean postClipboardText(Context context, CharSequence label, CharSequence text) {
-		ClipboardManager manager = (ClipboardManager) getCachedSystemService(context, Context.CLIPBOARD_SERVICE);
+		ClipboardManager manager = (ClipboardManager) getSystemServiceCached(context, Context.CLIPBOARD_SERVICE);
 		if (manager != null) {
 			postClipboardText(manager, label, text);
 			return true;
@@ -385,7 +385,7 @@ public class CavanAndroid {
 	}
 
 	public static boolean sendNotification(Context context, int id, Notification notification) {
-		NotificationManager manager = (NotificationManager) getCachedSystemService(context, Context.NOTIFICATION_SERVICE);
+		NotificationManager manager = (NotificationManager) getSystemServiceCached(context, Context.NOTIFICATION_SERVICE);
 		if (manager == null) {
 			return false;
 		}
@@ -510,7 +510,7 @@ public class CavanAndroid {
 	}
 
 	public static ActivityManager getActivityManager(Context context) {
-		return (ActivityManager) getCachedSystemService(context, Context.ACTIVITY_SERVICE);
+		return (ActivityManager) getSystemServiceCached(context, Context.ACTIVITY_SERVICE);
 	}
 
 	public static ComponentName getTopActivityInfo(Context context) {
@@ -606,7 +606,7 @@ public class CavanAndroid {
 	}
 
 	public static boolean showInputMethodPicker(Context context) {
-		InputMethodManager manager = (InputMethodManager) getCachedSystemService(context, Context.INPUT_METHOD_SERVICE);
+		InputMethodManager manager = (InputMethodManager) getSystemServiceCached(context, Context.INPUT_METHOD_SERVICE);
 		if (manager == null) {
 			return false;
 		}
@@ -641,7 +641,7 @@ public class CavanAndroid {
 	}
 
 	public static boolean inKeyguardRestrictedInputMode(Context context) {
-		KeyguardManager manager = (KeyguardManager) getCachedSystemService(context, Context.KEYGUARD_SERVICE);
+		KeyguardManager manager = (KeyguardManager) getSystemServiceCached(context, Context.KEYGUARD_SERVICE);
 		if (manager == null) {
 			return false;
 		}
@@ -650,7 +650,7 @@ public class CavanAndroid {
 	}
 
 	public static NetworkInfo getActiveNetworkInfo(Context context) {
-		ConnectivityManager manager = (ConnectivityManager) getCachedSystemService(context, Context.CONNECTIVITY_SERVICE);
+		ConnectivityManager manager = (ConnectivityManager) getSystemServiceCached(context, Context.CONNECTIVITY_SERVICE);
 		if (manager == null) {
 			return null;
 		}
@@ -738,7 +738,7 @@ public class CavanAndroid {
 	}
 
 	public static boolean setSoftInputEnable(Context context, View view, boolean enable) {
-		InputMethodManager manager = (InputMethodManager) getCachedSystemService(context, Context.INPUT_METHOD_SERVICE);
+		InputMethodManager manager = (InputMethodManager) getSystemServiceCached(context, Context.INPUT_METHOD_SERVICE);
 		if (manager == null) {
 			return false;
 		}

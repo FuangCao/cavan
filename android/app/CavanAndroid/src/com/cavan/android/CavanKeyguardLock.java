@@ -38,7 +38,7 @@ public class CavanKeyguardLock {
 	}
 
 	public boolean acquire(Context context) {
-		KeyguardManager manager = (KeyguardManager) CavanAndroid.getCachedSystemService(context, Context.KEYGUARD_SERVICE);
+		KeyguardManager manager = (KeyguardManager) CavanAndroid.getSystemServiceCached(context, Context.KEYGUARD_SERVICE);
 		if (manager == null) {
 			return false;
 		}

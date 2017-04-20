@@ -37,7 +37,7 @@ public class CavanMulticastLock {
 	}
 
 	public boolean acquire(Context context) {
-		WifiManager manager = (WifiManager) CavanAndroid.getCachedSystemService(context, Context.WIFI_SERVICE);
+		WifiManager manager = (WifiManager) CavanAndroid.getSystemServiceCached(context, Context.WIFI_SERVICE);
 		if (manager == null) {
 			return false;
 		}
