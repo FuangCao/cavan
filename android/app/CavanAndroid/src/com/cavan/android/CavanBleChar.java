@@ -3,6 +3,7 @@ package com.cavan.android;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 
@@ -18,7 +19,7 @@ public class CavanBleChar {
 	private static final int FRAME_SIZE = 20;
 	private static final long COMMAND_TIMEOUT = 2000;
 	private static final long WRITE_CHAR_TIMEOUT = 3000;
-	private static final long WRITE_DESC_TIMEOUT = 1000;
+	private static final long WRITE_DESC_TIMEOUT = 3000;
 
 	public interface CavanBleDataListener {
 		void onDataReceived(byte[] data);
@@ -80,7 +81,7 @@ public class CavanBleChar {
 					}
 
 					if (mWriteStatus != -110) {
-						return (mWriteStatus == 0);
+						return (mWriteStatus == BluetoothGatt.GATT_SUCCESS);
 					}
 
 					CavanAndroid.eLog("Failed to writeCharacteristic" + i + ": status = " + mWriteStatus);
@@ -175,11 +176,11 @@ public class CavanBleChar {
 			e.printStackTrace();
 		}
 
-		if (mReadStatus != 0) {
-			return null;
+		if (mReadStatus == BluetoothGatt.GATT_SUCCESS) {
+			return mBleChar.getValue();
 		}
 
-		return mBleChar.getValue();
+		return null;
 	}
 
 	synchronized public boolean writeDesc(BluetoothGattDescriptor descriptor, byte[] value) throws GattInvalidStateException, TimeoutException {
@@ -199,7 +200,7 @@ public class CavanBleChar {
 				}
 
 				if (mDescWriteStatus != -110) {
-					return (mDescWriteStatus == 0);
+					return (mDescWriteStatus == BluetoothGatt.GATT_SUCCESS);
 				}
 
 				CavanAndroid.eLog("Failed to writeDescriptor" + i + ": status = " + mDescWriteStatus);
@@ -243,7 +244,7 @@ public class CavanBleChar {
 			e.printStackTrace();
 		}
 
-		if (mDescReadStatus == 0) {
+		if (mDescReadStatus == BluetoothGatt.GATT_SUCCESS) {
 			return descriptor.getValue();
 		}
 
