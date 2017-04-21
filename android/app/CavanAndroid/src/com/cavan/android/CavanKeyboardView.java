@@ -11,17 +11,21 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.EditText;
 
-public abstract class CavanKeyboardView extends KeyboardView {
+public abstract class CavanKeyboardView extends KeyboardView implements CavanKeyboardViewListener {
 
 	public static final int KEYCODE_DELETE = -1;
 	public static final int KEYCODE_CLEAR = -2;
 
+
 	private EditText mEditText;
 	private Keyboard[] mKeyboards;
 	private int[] mKeyboardResources;
+
+	private boolean mInputDisabled;
+	private CavanKeyboardViewListener mListener = this;
 	private HashMap<View, Integer> mKeyboardMap = new HashMap<View, Integer>();
 
-	private OnKeyboardActionListener mListener = new OnKeyboardActionListener() {
+	private OnKeyboardActionListener mActionListener = new OnKeyboardActionListener() {
 
 		@Override
 		public void swipeUp() {
@@ -82,6 +86,38 @@ public abstract class CavanKeyboardView extends KeyboardView {
 
 	protected abstract int[] getKeyboardResources();
 
+	@Override
+	public void onStartInput(EditText view) {
+		setVisibility(View.VISIBLE);
+	}
+
+	@Override
+	public void onStopInput(EditText view) {
+		setVisibility(View.GONE);
+	}
+
+	@Override
+	public void onEditTextClick(EditText view) {
+		startInput();
+	}
+
+	@Override
+	public void onEditTextLongClick(EditText view) {
+		view.getEditableText().clear();
+	}
+
+	public CavanKeyboardViewListener getEventListener() {
+		return mListener;
+	}
+
+	public void setEventListener(CavanKeyboardViewListener listener) {
+		if (listener != null) {
+			mListener = listener;
+		} else {
+			mListener = this;
+		}
+	}
+
 	public void processText(CharSequence text) {
 		if (mEditText == null) {
 			return;
@@ -120,36 +156,52 @@ public abstract class CavanKeyboardView extends KeyboardView {
 	}
 
 	public void setEditText(EditText view) {
-		mEditText = view;
-		setKeyboard(getKeyboard(view));
+		if (mEditText != view) {
+			mEditText = view;
+
+			setKeyboard(getKeyboard(view));
+			startInput();
+		}
 	}
 
 	public EditText getEditText() {
 		return mEditText;
 	}
 
-	public void setupEditText(EditText view, OnFocusChangeListener listener) {
-		view.setInputType(InputType.TYPE_NULL);
-		view.setSelectAllOnFocus(true);
-		view.setOnFocusChangeListener(listener);
-		view.setOnLongClickListener(new OnLongClickListener() {
+	private OnFocusChangeListener mEditTextFocusChangeListener = new OnFocusChangeListener() {
 
-			@Override
-			public boolean onLongClick(View view) {
-				((EditText) view).getEditableText().clear();
-				return true;
-			}
-		});
-	}
-
-	public void setupEditText(EditText view) {
-		setupEditText(view, new OnFocusChangeListener() {
-
-			@Override
-			public void onFocusChange(View view, boolean hasFocus) {
+		@Override
+		public void onFocusChange(View view, boolean hasFocus) {
+			if (hasFocus) {
 				setEditText((EditText) view);
 			}
-		});
+		}
+	};
+
+	private OnLongClickListener mEditTextLongClickListener = new OnLongClickListener() {
+
+		@Override
+		public boolean onLongClick(View view) {
+			mListener.onEditTextLongClick((EditText) view);
+			return true;
+		}
+	};
+
+	private OnClickListener mEditTextClickListener = new OnClickListener() {
+
+		@Override
+		public void onClick(View view) {
+			mListener.onEditTextClick((EditText) view);
+		}
+	};
+
+	public void setupEditText(EditText view) {
+		view.setInputType(InputType.TYPE_NULL);
+		view.setSelectAllOnFocus(true);
+
+		view.setOnFocusChangeListener(mEditTextFocusChangeListener);
+		view.setOnLongClickListener(mEditTextLongClickListener);
+		view.setOnClickListener(mEditTextClickListener);
 	}
 
 	public Keyboard getKeyboard(int index) {
@@ -197,11 +249,52 @@ public abstract class CavanKeyboardView extends KeyboardView {
 		}
 	}
 
+	public void startInput() {
+		if (mInputDisabled || mEditText == null) {
+			return;
+		}
+
+		mListener.onStartInput(mEditText);
+	}
+
+	public void stopInput() {
+		if (mEditText != null) {
+			mListener.onStopInput(mEditText);
+		}
+	}
+
+	public boolean isInputDisabled() {
+		return mInputDisabled;
+	}
+
+	public void setInputEnable(boolean enable, long delayMillis) {
+		if (enable) {
+			mInputDisabled = false;
+		} else {
+			mInputDisabled = true;
+			stopInput();
+		}
+
+		if (delayMillis > 0) {
+			postDelayed(new Runnable() {
+
+				@Override
+				public void run() {
+					setInputEnable(mInputDisabled, 0);
+				}
+			}, delayMillis);
+		}
+	}
+
+	public void setInputEnable(boolean enable) {
+		setInputEnable(enable, 0);
+	}
+
 	@Override
 	protected void onAttachedToWindow() {
 		setEnabled(true);
 		setPreviewEnabled(false);
-		setOnKeyboardActionListener(mListener);
+		setOnKeyboardActionListener(mActionListener);
 
 		super.onAttachedToWindow();
 	}

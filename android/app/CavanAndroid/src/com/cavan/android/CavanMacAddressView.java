@@ -1,5 +1,7 @@
 package com.cavan.android;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -48,7 +50,8 @@ public class CavanMacAddressView extends LinearLayout {
 			setText("00");
 
 			if (mKeyboardView != null) {
-				mKeyboardView.setupEditText(this, this);
+				mKeyboardView.setupEditText(this);
+				setOnFocusChangeListener(this);
 			}
 
 			setFilters(new InputFilter[] { this });
@@ -60,7 +63,8 @@ public class CavanMacAddressView extends LinearLayout {
 
 		private void setInputType() {
 			if (mKeyboardView != null) {
-				mKeyboardView.setupEditText(this, this);
+				mKeyboardView.setupEditText(this);
+				setOnFocusChangeListener(this);
 				mKeyboardView.setKeyboard(this, mKeyboard);
 			} else {
 				setInputType(InputType.TYPE_CLASS_NUMBER);
@@ -229,6 +233,10 @@ public class CavanMacAddressView extends LinearLayout {
 
 	public void setAddress(CavanMacAddress address) {
 		setTexts(address.toStrings());
+	}
+
+	public BluetoothDevice getBluetoothDevice(BluetoothAdapter adapter) {
+		return adapter.getRemoteDevice(getAddress().toString());
 	}
 
 	public void clear() {

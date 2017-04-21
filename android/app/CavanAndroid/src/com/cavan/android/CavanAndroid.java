@@ -30,6 +30,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.storage.StorageManager;
@@ -69,6 +70,8 @@ public class CavanAndroid {
 	private static final Object sToastLock = new Object();
 
 	private static Context sContext;
+	private static Handler sHandler;
+	private static CavanThreadedHandler sThreadedHandler;
 	private static CavanWakeLock sWakeLock = new CavanWakeLock(false);
 	private static CavanWakeLock sWakeupLock = new CavanWakeLock(true);
 	private static CavanKeyguardLock sKeyguardLock = new CavanKeyguardLock();
@@ -748,5 +751,55 @@ public class CavanAndroid {
 		} else {
 			return manager.hideSoftInputFromWindow(view.getWindowToken(), 0);
 		}
+	}
+
+	public static Handler getHandler() {
+		if (sHandler == null) {
+			sHandler = new Handler();
+		}
+
+		return sHandler;
+	}
+
+	public static CavanThreadedHandler getThreadedHandler() {
+		if (sThreadedHandler == null) {
+			sThreadedHandler = new CavanThreadedHandler(CavanAndroid.class);
+		}
+
+		return sThreadedHandler;
+	}
+
+	public static boolean postRunnable(Handler handler, Runnable runnable) {
+		if (handler != null) {
+			handler.post(runnable);
+			return true;
+		}
+
+		return false;
+	}
+
+	public static boolean postRunnable(Handler handler, Runnable runnable, long delayMillis) {
+		if (handler != null) {
+			handler.postDelayed(runnable, delayMillis);
+			return true;
+		}
+
+		return false;
+	}
+
+	public static boolean postRunnable(Runnable runnable) {
+		return postRunnable(getHandler(), runnable);
+	}
+
+	public static boolean postRunnable(Runnable runnable, long delayMillis) {
+		return postRunnable(getHandler(), runnable, delayMillis);
+	}
+
+	public static boolean postRunnableThreaded(Runnable runnable) {
+		return postRunnable(getThreadedHandler(), runnable);
+	}
+
+	public static boolean postRunnableThreaded(Runnable runnable, long delayMillis) {
+		return postRunnable(getThreadedHandler(), runnable, delayMillis);
 	}
 }
