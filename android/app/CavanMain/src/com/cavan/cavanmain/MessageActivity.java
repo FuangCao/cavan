@@ -269,8 +269,8 @@ public class MessageActivity extends Activity {
 
 			builder.setView(view);
 			builder.setCancelable(false);
-			builder.setPositiveButton(R.string.text_filter, this);
-			builder.setNegativeButton(R.string.text_filter_none, this);
+			builder.setPositiveButton(R.string.filter, this);
+			builder.setNegativeButton(R.string.filter_none, this);
 
 			return builder.create();
 		}

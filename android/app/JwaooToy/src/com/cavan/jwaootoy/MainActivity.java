@@ -95,18 +95,18 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 			case EVENT_OTA_START:
 				updateUI(false);
-				CavanAndroid.showToast(getApplicationContext(), R.string.text_upgrade_start);
+				CavanAndroid.showToast(getApplicationContext(), R.string.upgrade_start);
 				break;
 
 			case EVENT_OTA_FAILED:
 				mButtonUpgrade.setEnabled(true);
 				mButtonSend.setEnabled(true);
-				CavanAndroid.showToast(getApplicationContext(), R.string.text_upgrade_failed);
+				CavanAndroid.showToast(getApplicationContext(), R.string.upgrade_failed);
 				break;
 
 			case EVENT_OTA_SUCCESS:
 				updateUI(true);
-				CavanAndroid.showToast(getApplicationContext(), R.string.text_upgrade_successfull);
+				CavanAndroid.showToast(getApplicationContext(), R.string.upgrade_successfull);
 				break;
 
 			case EVENT_PROGRESS_UPDATED:
@@ -211,7 +211,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		mEditTextBdAddr = (EditText) findViewById(R.id.editTextBdAddr);
 		mTextViewBatteryInfo = (TextView) findViewById(R.id.textViewBatteryInfo);
 
-		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.text_moto_modes, android.R.layout.simple_spinner_item);
+		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.moto_modes, android.R.layout.simple_spinner_item);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		mSpinnerMotoMode = (Spinner) findViewById(R.id.spinnerMotoMode);
 		mSpinnerMotoMode.setAdapter(adapter);
@@ -233,7 +233,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		});
 
 		List<CharSequence> list = new ArrayList<CharSequence>();
-		String text = getResources().getString(R.string.text_moto_level);
+		String text = getResources().getString(R.string.moto_level);
 		for (int i = 0; i <= 18; i++) {
 			list.add(text + i);
 		}

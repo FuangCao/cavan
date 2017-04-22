@@ -166,7 +166,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 
 				if (result != null) {
 					setTitle(result.getShortString());
-					CavanAndroid.showToast(getApplicationContext(), R.string.text_connected);
+					CavanAndroid.showToast(getApplicationContext(), R.string.connected);
 				} else {
 					try {
 						mDiscoveryService.scan(DEFAULT_PORT);
@@ -174,8 +174,8 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 						e.printStackTrace();
 					}
 
-					setTitle(R.string.text_disconnected);
-					CavanAndroid.showToast(getApplicationContext(), R.string.text_disconnected);
+					setTitle(R.string.disconnected);
+					CavanAndroid.showToast(getApplicationContext(), R.string.disconnected);
 				}
 				break;
 
@@ -185,10 +185,10 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 				}
 
 				if (mScanResults.size() > 0) {
-					String text = getResources().getString(R.string.text_scan_complete, mScanResults.size());
+					String text = getResources().getString(R.string.scan_complete, mScanResults.size());
 					CavanAndroid.showToast(getApplicationContext(), text);
 				} else {
-					CavanAndroid.showToast(getApplicationContext(), R.string.text_device_not_found);
+					CavanAndroid.showToast(getApplicationContext(), R.string.device_not_found);
 				}
 
 				if (mClient != null && mClient.isConnected()) {
@@ -198,7 +198,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 				if (mScanResults.size() == 1) {
 					connect(mScanResults.get(0));
 				} else {
-					setTitle(R.string.text_manul_connect);
+					setTitle(R.string.manul_connect);
 				}
 				break;
 			}
@@ -212,7 +212,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		setTitle(R.string.text_not_connect);
+		setTitle(R.string.not_connect);
 
 		mButtonScan = (Button) findViewById(R.id.buttonScan);
 		mButtonScan.setOnClickListener(this);
@@ -351,7 +351,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
 			return true;
 		}
 
-		setTitle(R.string.text_disconnected);
+		setTitle(R.string.disconnected);
 
 		return false;
 	}

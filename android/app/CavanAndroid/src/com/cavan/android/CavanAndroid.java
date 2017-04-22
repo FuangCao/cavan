@@ -341,28 +341,29 @@ public class CavanAndroid {
 		return acquireWakeupLock(context, 0);
 	}
 
-	public static void postClipboardText(ClipboardManager manager, CharSequence label, CharSequence text) {
-		if (text != null && text.length() > 0) {
+	public static boolean postClipboardText(ClipboardManager manager, CharSequence label, CharSequence text) {
+		if (manager != null && text != null && text.length() > 0) {
 			manager.setPrimaryClip(ClipData.newPlainText(label, text));
-		}
-	}
-
-	public static void postClipboardText(ClipboardManager manager, CharSequence text) {
-		postClipboardText(manager, CLIP_LABEL_DEFAULT, text);
-	}
-
-	public static void postClipboardTextTemp(ClipboardManager manager, CharSequence text) {
-		postClipboardText(manager, CLIP_LABEL_TEMP, text);
-	}
-
-	public static boolean postClipboardText(Context context, CharSequence label, CharSequence text) {
-		ClipboardManager manager = (ClipboardManager) getSystemServiceCached(context, Context.CLIPBOARD_SERVICE);
-		if (manager != null) {
-			postClipboardText(manager, label, text);
 			return true;
 		}
 
 		return false;
+	}
+
+	public static boolean postClipboardText(ClipboardManager manager, CharSequence text) {
+		return postClipboardText(manager, CLIP_LABEL_DEFAULT, text);
+	}
+
+	public static boolean postClipboardTextTemp(ClipboardManager manager, CharSequence text) {
+		return postClipboardText(manager, CLIP_LABEL_TEMP, text);
+	}
+
+	public static ClipboardManager getClipboardManager(Context context) {
+		return (ClipboardManager) getSystemServiceCached(context, Context.CLIPBOARD_SERVICE);
+	}
+
+	public static boolean postClipboardText(Context context, CharSequence label, CharSequence text) {
+		return postClipboardText(getClipboardManager(context), label, text);
 	}
 
 	public static boolean postClipboardText(Context context, CharSequence text) {
@@ -385,6 +386,23 @@ public class CavanAndroid {
 		}
 
 		return label.toString();
+	}
+
+	public static String getClipboardText(ClipboardManager manager) {
+		if (manager == null) {
+			return null;
+		}
+
+		CharSequence sequence = manager.getText();
+		if (sequence == null) {
+			return null;
+		}
+
+		return sequence.toString();
+	}
+
+	public static String getClipboardText(Context context) {
+		return getClipboardText(getClipboardManager(context));
 	}
 
 	public static boolean sendNotification(Context context, int id, Notification notification) {
@@ -770,21 +788,35 @@ public class CavanAndroid {
 	}
 
 	public static boolean postRunnable(Handler handler, Runnable runnable) {
-		if (handler != null) {
-			handler.post(runnable);
-			return true;
+		if (handler == null) {
+			return false;
 		}
 
-		return false;
+		handler.removeCallbacks(runnable);
+		handler.post(runnable);
+
+		return true;
 	}
 
 	public static boolean postRunnable(Handler handler, Runnable runnable, long delayMillis) {
-		if (handler != null) {
-			handler.postDelayed(runnable, delayMillis);
-			return true;
+		if (handler == null) {
+			return false;
 		}
 
-		return false;
+		handler.removeCallbacks(runnable);
+		handler.postDelayed(runnable, delayMillis);
+
+		return true;
+	}
+
+	public static boolean removeRunnable(Handler handler, Runnable runnable) {
+		if (handler == null) {
+			return false;
+		}
+
+		handler.removeCallbacks(runnable);
+
+		return true;
 	}
 
 	public static boolean postRunnable(Runnable runnable) {
@@ -795,11 +827,19 @@ public class CavanAndroid {
 		return postRunnable(getHandler(), runnable, delayMillis);
 	}
 
+	public static boolean removeRunnable(Runnable runnable) {
+		return removeRunnable(getHandler(), runnable);
+	}
+
 	public static boolean postRunnableThreaded(Runnable runnable) {
 		return postRunnable(getThreadedHandler(), runnable);
 	}
 
 	public static boolean postRunnableThreaded(Runnable runnable, long delayMillis) {
 		return postRunnable(getThreadedHandler(), runnable, delayMillis);
+	}
+
+	public static boolean removeRunnableThreaded(Runnable runnable) {
+		return removeRunnable(getThreadedHandler(), runnable);
 	}
 }

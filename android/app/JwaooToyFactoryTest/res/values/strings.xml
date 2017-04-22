@@ -2,7 +2,7 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
     <string name="app_name">井蛙工厂测试</string>
-    <string name="text_moto">震动开关</string>
+    <string name="moto">震动开关</string>
     <string name="test_item_button">按键测试</string>
     <string name="test_item_moto">马达测试</string>
     <string name="test_item_depth_sensor">深度传感器测试</string>
@@ -12,13 +12,13 @@
     <string name="test_item_battery">电池测试</string>
     <string name="test_item_suspend">待机测试</string>
 
-    <string-array name="text_keys">
+    <string-array name="keys">
         <item>震动增强键</item>
         <item>震动模式键</item>
         <item>震动减弱键</item>
         <item>高潮键</item>
     </string-array>
-    <string-array name="text_items">
+    <string-array name="items">
         <item>按键</item>
         <item>马达</item>
         <item>充电</item>
@@ -26,22 +26,22 @@
         <item>电容传感器</item>
         <item>重力传感器</item>
     </string-array>
-    <string-array name="text_depths">
+    <string-array name="depths">
         <item>深度1</item>
         <item>深度2</item>
         <item>深度3</item>
         <item>深度4</item>
     </string-array>
 
-    <string name="text_pass">通过</string>
-    <string name="text_fail">失败</string>
+    <string name="pass">通过</string>
+    <string name="fail">失败</string>
     <string name="battery_voltage">电池电压：</string>
     <string name="battery_capacity">电池电量：</string>
     <string name="battery_state">电池状态：</string>
     <string name="led_battery_state">电池状态灯开关</string>
     <string name="led_bluetooth_state">蓝牙状态灯开关</string>
     <string name="auto_test">自动测试</string>
-    <string name="text_start">开始</string>
+    <string name="start">开始</string>
 
     <string-array name="battery_states">
         <item>正在放电</item>
@@ -50,8 +50,8 @@
         <item>已充满电</item>
     </string-array>
 
-    <string name="text_disconnect">断开</string>
-    <string name="text_key">按键</string>
+    <string name="disconnect">断开</string>
+    <string name="key">按键</string>
     <string name="read_test_result_failed">读测试结果失败</string>
     <string name="write_test_result_failed">写测试结果失败</string>
     <string name="into_suspend">进入待机</string>
@@ -63,13 +63,13 @@
     <string name="end_mac_address">结束地址：</string>
     <string name="device_suspend_propmpt">设备已进入待机，请查看待机电流是否正常</string>
     <string name="address_count">地址个数：</string>
-    <string name="text_start_mac_address">下一次起始地址：</string>
+    <string name="start_mac_address">下一次起始地址：</string>
     <string-array name="projects">
         <item >请选择项目</item>
         <item >MODEL-06</item>
         <item >MODEL-10</item>
     </string-array>
-        <string name="text_copy">复制</string>
+        <string name="copy">复制</string>
         <string name="prompt_copied_to_clipboard">文字已复制到剪切板</string>
         <string name="project_name">项目名称：</string>
 

@@ -5,15 +5,15 @@
     android:key="parent">
 
 	<Preference android:key="notification_access"
-	    android:title="@string/text_notification_access" />
+	    android:title="@string/notification_access" />
 
 	<Preference android:key="accessibility_settings"
-	    android:title="@string/text_accessibility_settings" />
+	    android:title="@string/accessibility_settings" />
 
 	<Preference android:key="notification_manager"
-	    android:title="@string/text_notification_manager" />
+	    android:title="@string/notification_manager" />
 
 	<Preference android:key="protected_apps"
-	    android:title="@string/text_protected_apps" />
+	    android:title="@string/protected_apps" />
 
 </PreferenceScreen>

@@ -205,11 +205,11 @@ public abstract class CavanServicePreference extends EditTextPreference {
 	public void updateSummary(int state) {
 
 		if (mService == null) {
-			setSummary(R.string.text_service_disconnected);
+			setSummary(R.string.service_disconnected);
 		} else {
 			Resources resources = getContext().getResources();
 			if (resources == null) {
-				setSummary(R.string.text_service_connected);
+				setSummary(R.string.service_connected);
 			} else {
 				StringBuilder builder = new StringBuilder();
 
@@ -217,24 +217,24 @@ public abstract class CavanServicePreference extends EditTextPreference {
 
 				switch (state) {
 				case CavanService.STATE_PREPARE:
-					resId = R.string.text_prepare;
+					resId = R.string.prepare;
 					break;
 
 				case CavanService.STATE_RUNNING:
-					resId = R.string.text_running;
+					resId = R.string.running;
 					break;
 
 				case CavanService.STATE_WAITING:
-					resId = R.string.text_waiting;
+					resId = R.string.waiting;
 					break;
 
 				default:
-					resId = R.string.text_stopped;
+					resId = R.string.stopped;
 				}
 
 				builder.append(resources.getString(resId));
 				builder.append(", ");
-				builder.append(resources.getString(R.string.text_port));
+				builder.append(resources.getString(R.string.port));
 				builder.append(": ");
 				builder.append(Integer.toString(getPort()));
 
@@ -283,12 +283,12 @@ public abstract class CavanServicePreference extends EditTextPreference {
 
 	@Override
 	protected void onPrepareDialogBuilder(Builder builder) {
-		builder.setMessage(R.string.text_port);
+		builder.setMessage(R.string.port);
 
 		if (mNeedStop) {
-			builder.setPositiveButton(R.string.text_stop, this);
+			builder.setPositiveButton(R.string.stop, this);
 		} else {
-			builder.setPositiveButton(R.string.text_start, this);
+			builder.setPositiveButton(R.string.start, this);
 		}
 
 		super.onPrepareDialogBuilder(builder);

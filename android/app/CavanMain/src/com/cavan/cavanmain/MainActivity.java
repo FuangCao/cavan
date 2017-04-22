@@ -310,34 +310,34 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			switch (action) {
 			case ACTION_WAN_UPDATED:
 				switch (intent.getIntExtra("state", 0)) {
-				case R.string.text_wan_connecting:
-					mPreferenceWanShare.setSummary(R.string.text_connecting);
+				case R.string.wan_connecting:
+					mPreferenceWanShare.setSummary(R.string.connecting);
 					mPreferenceWanServer.setSummary(intent.getStringExtra("summary"));
 					break;
 
-				case R.string.text_wan_connected:
-					mPreferenceWanShare.setSummary(R.string.text_connected);
+				case R.string.wan_connected:
+					mPreferenceWanShare.setSummary(R.string.connected);
 					mPreferenceWanServer.setSummary(intent.getStringExtra("summary"));
 					break;
 
-				case R.string.text_wan_disconnected:
-					mPreferenceWanShare.setSummary(R.string.text_disconnected);
+				case R.string.wan_disconnected:
+					mPreferenceWanShare.setSummary(R.string.disconnected);
 					break;
 				}
 				break;
 
 			case ACTION_BRIDGE_UPDATED:
 				switch (intent.getIntExtra("state", 0)) {
-				case R.string.text_tcp_bridge_running:
-					mPreferenceTcpBridge.setSummary(R.string.text_running);
+				case R.string.tcp_bridge_running:
+					mPreferenceTcpBridge.setSummary(R.string.running);
 					break;
 
-				case R.string.text_tcp_bridge_stopped:
-					mPreferenceTcpBridge.setSummary(R.string.text_stopped);
+				case R.string.tcp_bridge_stopped:
+					mPreferenceTcpBridge.setSummary(R.string.stopped);
 					break;
 
-				case R.string.text_tcp_bridge_exit:
-					mPreferenceTcpBridge.setSummary(R.string.text_exit);
+				case R.string.tcp_bridge_exit:
+					mPreferenceTcpBridge.setSummary(R.string.exit);
 					break;
 				}
 				break;
@@ -393,19 +393,19 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		mPreferenceWanServer.setOnPreferenceChangeListener(this);
 
 		mPreferenceRedPacketNotifyTest = (EditTextPreference) findPreference(KEY_RED_PACKET_NOTIFY_TEST);
-		mPreferenceRedPacketNotifyTest.setPositiveButtonText(R.string.text_test);
+		mPreferenceRedPacketNotifyTest.setPositiveButtonText(R.string.test);
 		mPreferenceRedPacketNotifyTest.setOnPreferenceChangeListener(this);
 
 		mPreferenceRedPacketCodeSend = (EditTextPreference) findPreference(KEY_RED_PACKET_CODE_SEND);
-		mPreferenceRedPacketCodeSend.setPositiveButtonText(R.string.text_send);
+		mPreferenceRedPacketCodeSend.setPositiveButtonText(R.string.send);
 		mPreferenceRedPacketCodeSend.setOnPreferenceChangeListener(this);
 
 		mPreferenceRedPacketCodeRecognize = (EditTextPreference) findPreference(KEY_RED_PACKET_CODE_RECOGNIZE);
-		mPreferenceRedPacketCodeRecognize.setPositiveButtonText(R.string.text_recognize);
+		mPreferenceRedPacketCodeRecognize.setPositiveButtonText(R.string.recognize);
 		mPreferenceRedPacketCodeRecognize.setOnPreferenceChangeListener(this);
 
 		mPreferenceRedPacketCodeSplit = (EditTextPreference) findPreference(KEY_RED_PACKET_CODE_SPLIT);
-		mPreferenceRedPacketCodeSplit.setPositiveButtonText(R.string.text_split);
+		mPreferenceRedPacketCodeSplit.setPositiveButtonText(R.string.split);
 		mPreferenceRedPacketCodeSplit.setOnPreferenceChangeListener(this);
 
 		mPreferenceRedPacketNotifyRingtone = (RingtonePreference) findPreference(KEY_RED_PACKET_NOTIFY_RINGTONE);
@@ -525,7 +525,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 			}
 
 			RedPacketCode.getLastCodes().clear();
-			CavanAndroid.showToast(this, R.string.text_already_clear);
+			CavanAndroid.showToast(this, R.string.already_clear);
 		}
 
 		return super.onPreferenceTreeClick(preferenceScreen, preference);

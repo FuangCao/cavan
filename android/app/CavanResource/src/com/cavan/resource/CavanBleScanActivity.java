@@ -26,11 +26,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.cavan.android.AndroidListeners.CavanKeyboardViewListener;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBleDevice;
 import com.cavan.android.CavanBleDeviceAdapter;
 import com.cavan.android.CavanBleScanner;
-import com.cavan.android.CavanKeyboardViewListener;
 import com.cavan.android.CavanMacAddressView;
 import com.cavan.android.CavanQrCodeView;
 import com.cavan.android.CavanQrCodeView.EventListener;
@@ -86,7 +86,7 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 		}
 
 		if (mConnEnable) {
-			mButtonQrCodeScan.setText(R.string.text_connect);
+			mButtonQrCodeScan.setText(R.string.connect);
 		} else {
 			mButtonQrCodeScan.setText(R.string.qrcode_scan);
 		}
@@ -213,7 +213,7 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 
 			@Override
 			protected void onScanStarted() {
-				CavanAndroid.showToast(getApplicationContext(), R.string.text_scanning);
+				CavanAndroid.showToast(getApplicationContext(), R.string.scanning);
 			}
 
 			@Override
@@ -237,7 +237,7 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 			startScan();
 		} else {
 			AlertDialog.Builder builder = new AlertDialog.Builder(CavanBleScanActivity.this);
-			builder.setMessage(R.string.text_bluetooth_open_prompt);
+			builder.setMessage(R.string.bluetooth_open_prompt);
 			builder.setCancelable(false);
 			builder.setPositiveButton(R.string.open, CavanBleScanActivity.this);
 			builder.setNegativeButton(R.string.exit, CavanBleScanActivity.this);

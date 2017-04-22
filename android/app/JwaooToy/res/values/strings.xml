@@ -2,34 +2,34 @@
 <resources>
 
     <string name="app_name">井蛙游戏</string>
-    <string name="text_scan_start">开始扫描</string>
-    <string name="text_scan_stop">停止扫描</string>
-    <string name="text_send">发送</string>
-    <string name="text_upgrade">升级</string>
-    <string name="text_upgrade_start">开始升级</string>
-    <string name="text_upgrade_failed">升级失败</string>
-    <string name="text_upgrade_successfull">升级成功</string>
-    <string name="text_reboot">重启</string>
-    <string name="text_sensor">传感器</string>
-    <string name="text_open_sensor">打开传感器</string>
-    <string name="text_close_sensor">关闭传感器</string>
-    <string name="text_disconnect">断开连接</string>
-    <string name="text_write_bd_addr">写硬件地址</string>
-    <string name="text_read_bd_addr">读硬件地址</string>
-    <string name="text_long_click">允许长按</string>
-    <string name="text_multi_click">允许多次点击</string>
-    <string name="text_sensor_enable">打开传感器</string>
-    <string name="text_click_enable">允许点击</string>
-    <string name="text_moto_down">震动减弱</string>
-    <string name="text_moto_up">震动增强</string>
-    <string name="text_capacity_up">电容增加</string>
-    <string name="text_capacity_down">电容减小</string>
-    <string name="text_moto_mode">震动模式</string>
-    <string name="text_moto_level">震动强度</string>
-    <string name="text_moto_close">震动关闭</string>
-    <string name="text_batt_event_enable">允许电池事件</string>
-    <string name="text_factory_mode">工厂模式</string>
-    <string-array name="text_moto_modes">
+    <string name="scan_start">开始扫描</string>
+    <string name="scan_stop">停止扫描</string>
+    <string name="send">发送</string>
+    <string name="upgrade">升级</string>
+    <string name="upgrade_start">开始升级</string>
+    <string name="upgrade_failed">升级失败</string>
+    <string name="upgrade_successfull">升级成功</string>
+    <string name="reboot">重启</string>
+    <string name="sensor">传感器</string>
+    <string name="open_sensor">打开传感器</string>
+    <string name="close_sensor">关闭传感器</string>
+    <string name="disconnect">断开连接</string>
+    <string name="write_bd_addr">写硬件地址</string>
+    <string name="read_bd_addr">读硬件地址</string>
+    <string name="long_click">允许长按</string>
+    <string name="multi_click">允许多次点击</string>
+    <string name="sensor_enable">打开传感器</string>
+    <string name="click_enable">允许点击</string>
+    <string name="moto_down">震动减弱</string>
+    <string name="moto_up">震动增强</string>
+    <string name="capacity_up">电容增加</string>
+    <string name="capacity_down">电容减小</string>
+    <string name="moto_mode">震动模式</string>
+    <string name="moto_level">震动强度</string>
+    <string name="moto_close">震动关闭</string>
+    <string name="batt_event_enable">允许电池事件</string>
+    <string name="factory_mode">工厂模式</string>
+    <string-array name="moto_modes">
         <item >停止震动</item>
         <item >持续震动</item>
         <item >强弱交替（慢速）</item>
@@ -38,9 +38,9 @@
         <item >间歇交替（快速）</item>
         <item >无序</item>
     </string-array>
-        <string name="text_shutdown">关机</string>
-        <string name="text_moto_event_enable">允许马达事件</string>
-        <string name="text_key_lock">键盘锁</string>
+        <string name="shutdown">关机</string>
+        <string name="moto_event_enable">允许马达事件</string>
+        <string name="key_lock">键盘锁</string>
         <string name="moto_rand">马达随机震动</string>
         <string name="suspend_overtime_setting">待机超时时间设置</string>
         <string name="setting_success">设置成功</string>

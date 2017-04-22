@@ -55,7 +55,7 @@
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/macAddressViewEnd"
         android:layout_marginTop="5dp"
-        android:text="@string/text_start_mac_address" />
+        android:text="@string/start_mac_address" />
 
     <com.cavan.android.CavanMacAddressView
         android:id="@+id/macAddressViewNext"
@@ -98,6 +98,6 @@
         android:layout_below="@+id/spinnerProject"
         android:layout_alignBaseline="@+id/editTextAddrCount"
         android:layout_alignParentRight="true"
-        android:text="@string/text_copy" />
+        android:text="@string/copy" />
 
 </RelativeLayout>

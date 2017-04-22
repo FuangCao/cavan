@@ -83,7 +83,7 @@ public class QrCodeEncodeActivity extends Activity implements TextWatcher, OnCli
 				if (stream != null) {
 					mBitmap.compress(CompressFormat.PNG, 100, stream);
 					CavanFile.close(stream);
-					CavanAndroid.showToast(this, R.string.text_saved, file.getPath());
+					CavanAndroid.showToast(this, R.string.saved, file.getPath());
 				}
 			}
 		} else {

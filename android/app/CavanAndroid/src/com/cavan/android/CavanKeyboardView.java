@@ -11,6 +11,8 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.EditText;
 
+import com.cavan.android.AndroidListeners.CavanKeyboardViewListener;
+
 public abstract class CavanKeyboardView extends KeyboardView implements CavanKeyboardViewListener {
 
 	public static final int KEYCODE_DELETE = -1;

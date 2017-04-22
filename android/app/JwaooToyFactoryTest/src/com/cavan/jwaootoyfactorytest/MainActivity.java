@@ -571,7 +571,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 					(JwaooKeyTestView) findViewById(R.id.buttonKey2),
 				};
 
-				mButtons[0].setTextRaw(R.string.text_key);
+				mButtons[0].setTextRaw(R.string.key);
 			} else {
 				mButtons = new JwaooKeyTestView[] {
 					(JwaooKeyTestView) findViewById(R.id.buttonKey0),
@@ -580,7 +580,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 					(JwaooKeyTestView) findViewById(R.id.buttonKey3),
 				};
 
-				CharSequence[] texts = getResources().getTextArray(R.array.text_keys);
+				CharSequence[] texts = getResources().getTextArray(R.array.keys);
 
 				for (int i = 0; i < mButtons.length && i < texts.length; i++) {
 					mButtons[i].setTextRaw(texts[i].toString());

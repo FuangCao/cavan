@@ -5,8 +5,8 @@
     android:key="parent">
 
 	<Preference android:key="ip_address"
-	    android:title="@string/text_local_ip_address"
-	    android:summary="@string/text_unknown" />
+	    android:title="@string/local_ip_address"
+	    android:summary="@string/unknown" />
 
 	<com.cavan.cavanjni.TcpRepeaterPreference android:key="tcp_repeater"
 	    android:persistent="true"

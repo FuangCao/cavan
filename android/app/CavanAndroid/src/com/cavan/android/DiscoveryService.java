@@ -38,7 +38,7 @@ public abstract class DiscoveryService extends Service {
 				return false;
 			}
 
-			// Toast.makeText(getApplicationContext(), R.string.text_scanning, Toast.LENGTH_SHORT).show();
+			// Toast.makeText(getApplicationContext(), R.string.scanning, Toast.LENGTH_SHORT).show();
 
 			return true;
 		}

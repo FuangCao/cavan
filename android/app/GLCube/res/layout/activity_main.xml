@@ -21,21 +21,21 @@
         android:id="@+id/buttonRotateX"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:text="@string/text_rotate_x"
+        android:text="@string/rotate_x"
         android:textSize="@dimen/button_text_size" />
 
     <Button
         android:id="@+id/buttonRotateY"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:text="@string/text_rotate_y"
+        android:text="@string/rotate_y"
         android:textSize="@dimen/button_text_size" />
 
     <Button
         android:id="@+id/buttonRotateZ"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:text="@string/text_rotate_z"
+        android:text="@string/rotate_z"
         android:textSize="@dimen/button_text_size" />
     </LinearLayout>
 

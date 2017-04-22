@@ -91,11 +91,11 @@ public class MainActivity extends Activity implements OnClickListener, OnLongCli
 			break;
 
 		case R.id.buttonUpgrade:
-			CavanAndroid.showToast(this, R.string.text_upgrade_start);
+			CavanAndroid.showToast(this, R.string.upgrade_start);
 			if (otaUpgrade()) {
-				CavanAndroid.showToast(this, R.string.text_upgrade_successfull);
+				CavanAndroid.showToast(this, R.string.upgrade_successfull);
 			} else {
-				CavanAndroid.showToast(this, R.string.text_upgrade_failed);
+				CavanAndroid.showToast(this, R.string.upgrade_failed);
 			}
 			break;
 		}

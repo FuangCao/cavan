@@ -108,7 +108,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			switch (action) {
 			case MainActivity.ACTION_CODE_TEST:
 				if (intent.getStringExtra("code") != null) {
-					CavanAndroid.showToast(getApplicationContext(), R.string.text_test_sucess);
+					CavanAndroid.showToast(getApplicationContext(), R.string.test_sucess);
 				}
 				break;
 
@@ -170,7 +170,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 				builder.setView(view);
 				builder.setNegativeButton(android.R.string.cancel, null);
-				builder.setPositiveButton(R.string.text_send, new OnClickListener() {
+				builder.setPositiveButton(R.string.send, new OnClickListener() {
 
 					@Override
 					public void onClick(DialogInterface dialog, int which) {

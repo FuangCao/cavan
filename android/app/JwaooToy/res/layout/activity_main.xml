@@ -31,7 +31,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/editTextSuspendOvertime"
-        android:text="@string/text_click_enable" />
+        android:text="@string/click_enable" />
 
     <CheckBox
         android:id="@+id/checkBoxMultiClick"
@@ -40,7 +40,7 @@
         android:layout_alignBaseline="@+id/checkBoxClick"
         android:layout_alignBottom="@+id/checkBoxClick"
         android:layout_alignParentRight="true"
-        android:text="@string/text_multi_click" />
+        android:text="@string/multi_click" />
 
     <CheckBox
         android:id="@+id/checkBoxLongClick"
@@ -48,7 +48,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/checkBoxClick"
-        android:text="@string/text_long_click" />
+        android:text="@string/long_click" />
 
     <CheckBox
         android:id="@+id/checkBoxSensor"
@@ -57,7 +57,7 @@
         android:layout_alignBaseline="@+id/checkBoxLongClick"
         android:layout_alignBottom="@+id/checkBoxLongClick"
         android:layout_alignLeft="@+id/checkBoxMultiClick"
-        android:text="@string/text_sensor_enable" />
+        android:text="@string/sensor_enable" />
 
     <Spinner
         android:id="@+id/spinnerMotoMode"
@@ -74,7 +74,7 @@
         android:layout_alignBaseline="@+id/buttonReadBdAddr"
         android:layout_alignBottom="@+id/buttonReadBdAddr"
         android:layout_alignParentRight="true"
-        android:text="@string/text_write_bd_addr" />
+        android:text="@string/write_bd_addr" />
 
     <Button
         android:id="@+id/buttonUpgrade"
@@ -82,7 +82,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_below="@+id/buttonWriteBdAddr"
-        android:text="@string/text_upgrade" />
+        android:text="@string/upgrade" />
 
     <Button
         android:id="@+id/buttonSend"
@@ -90,7 +90,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/buttonReadBdAddr"
-        android:text="@string/text_send" />
+        android:text="@string/send" />
 
     <Spinner
         android:id="@+id/spinnerMotoLevel"
@@ -105,7 +105,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/checkBoxLongClick"
-        android:text="@string/text_batt_event_enable" />
+        android:text="@string/batt_event_enable" />
 
     <Button
         android:id="@+id/buttonReadBdAddr"
@@ -113,7 +113,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/checkBoxMotoRand"
-        android:text="@string/text_read_bd_addr" />
+        android:text="@string/read_bd_addr" />
 
     <CheckBox
         android:id="@+id/checkBoxFactoryMode"
@@ -121,7 +121,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/checkBoxSensor"
         android:layout_alignLeft="@+id/checkBoxSensor"
-        android:text="@string/text_factory_mode" />
+        android:text="@string/factory_mode" />
 
     <Button
         android:id="@+id/buttonReboot"
@@ -130,7 +130,7 @@
         android:layout_alignBaseline="@+id/buttonUpgrade"
         android:layout_alignBottom="@+id/buttonUpgrade"
         android:layout_toLeftOf="@+id/buttonUpgrade"
-        android:text="@string/text_reboot" />
+        android:text="@string/reboot" />
 
     <Button
         android:id="@+id/buttonDisconnect"
@@ -139,7 +139,7 @@
         android:layout_alignBaseline="@+id/buttonSend"
         android:layout_alignBottom="@+id/buttonSend"
         android:layout_toRightOf="@+id/buttonSend"
-        android:text="@string/text_disconnect" />
+        android:text="@string/disconnect" />
 
     <Button
         android:id="@+id/buttonShutdown"
@@ -148,7 +148,7 @@
         android:layout_alignBaseline="@+id/buttonDisconnect"
         android:layout_alignBottom="@+id/buttonDisconnect"
         android:layout_toRightOf="@+id/buttonDisconnect"
-        android:text="@string/text_shutdown" />
+        android:text="@string/shutdown" />
 
     <CheckBox
         android:id="@+id/checkBoxMotoEvent"
@@ -156,7 +156,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/checkBoxBattEvent"
-        android:text="@string/text_moto_event_enable" />
+        android:text="@string/moto_event_enable" />
 
     <TextView
         android:id="@+id/textViewBatteryInfo"
@@ -180,7 +180,7 @@
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/checkBoxFactoryMode"
         android:layout_below="@+id/checkBoxFactoryMode"
-        android:text="@string/text_key_lock" />
+        android:text="@string/key_lock" />
 
     <Button
         android:id="@+id/buttonSuspendOvertime"

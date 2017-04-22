@@ -1,12 +1,12 @@
 package com.cavan.android;
 
-import android.os.Handler;
-import android.os.Message;
+import com.cavan.android.AndroidListeners.CavanBusyLockListener;
 
-public class CavanBusyLock extends Handler {
+public class CavanBusyLock implements CavanBusyLockListener, Runnable {
 
 	private long mDelay;
 	private Object mOwner;
+	private CavanBusyLockListener mListener = this;
 
 	public CavanBusyLock(long delay) {
 		mDelay = delay;
@@ -32,6 +32,14 @@ public class CavanBusyLock extends Handler {
 		mOwner = owner;
 	}
 
+	synchronized public CavanBusyLockListener getListener() {
+		return mListener;
+	}
+
+	synchronized public void setListener(CavanBusyLockListener listener) {
+		mListener = listener;
+	}
+
 	synchronized public boolean acquire(Object owner) {
 		if (mOwner != owner) {
 			if (mOwner != null) {
@@ -39,30 +47,50 @@ public class CavanBusyLock extends Handler {
 			}
 
 			mOwner = owner;
+			mListener.onBusyLockAcquired(owner);
 		}
 
-		removeMessages(0);
-		sendEmptyMessageDelayed(0, mDelay);
-
-		return true;
-	}
-
-	synchronized public boolean release(Object owner) {
-		if (mOwner == owner) {
-			removeMessages(0);
-			mOwner = null;
+		if (CavanAndroid.postRunnable(this, mDelay)) {
 			return true;
 		}
+
+		mOwner = null;
 
 		return false;
 	}
 
-	@Override
-	public void handleMessage(Message msg) {
-		removeMessages(msg.what);
+	synchronized private void release() {
+		CavanAndroid.removeRunnable(this);
 
-		synchronized (this) {
+		if (mOwner != null) {
+			Object owner = mOwner;
 			mOwner = null;
+			mListener.onBusyLockReleased(owner);
 		}
+	}
+
+	synchronized public boolean release(Object owner) {
+		if (mOwner != owner) {
+			return false;
+		}
+
+		release();
+
+		return true;
+	}
+
+	@Override
+	public void onBusyLockAcquired(Object owner) {
+		CavanAndroid.dLog("onLockAcquired: owner = " + owner);
+	}
+
+	@Override
+	public void onBusyLockReleased(Object owner) {
+		CavanAndroid.dLog("onLockReleased: owner = " + owner);
+	}
+
+	@Override
+	public void run() {
+		release();
 	}
 }

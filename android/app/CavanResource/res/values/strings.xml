@@ -1,18 +1,18 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
-    <string name="text_port_setting">端口号设置</string>
-    <string name="text_port">端口号</string>
-    <string name="text_running">正在运行</string>
-    <string name="text_stopped">已停止运行</string>
-    <string name="text_service_connected">已连接到服务</string>
-    <string name="text_service_disconnected">已断开服务</string>
-    <string name="text_not_start">未启动</string>
-    <string name="text_start">启动</string>
-    <string name="text_stop">停止</string>
-    <string name="text_scanning">正在扫描</string>
-    <string name="text_sample_rate">采样率</string>
-    <string name="text_connect_inprogress">正在连接，请稍候&#8230;</string>
-    <string name="text_bluetooth_open_prompt">蓝牙没有打开，要打开吗？</string>
+    <string name="port_setting">端口号设置</string>
+    <string name="port">端口号</string>
+    <string name="running">正在运行</string>
+    <string name="stopped">已停止运行</string>
+    <string name="service_connected">已连接到服务</string>
+    <string name="service_disconnected">已断开服务</string>
+    <string name="not_start">未启动</string>
+    <string name="start">启动</string>
+    <string name="stop">停止</string>
+    <string name="scanning">正在扫描</string>
+    <string name="sample_rate">采样率</string>
+    <string name="connect_inprogress">正在连接，请稍候&#8230;</string>
+    <string name="bluetooth_open_prompt">蓝牙没有打开，要打开吗？</string>
     <string name="open">打开</string>
     <string name="no_open">不打开</string>
     <string name="close">关闭</string>
@@ -35,6 +35,6 @@
     <string name="ble_not_support_propmpt">本机硬件不支持蓝牙4.0，无法正常使用！</string>
     <string name="mac_address_format_fault">MAC地址格式错误：<xliff:g>%1$s</xliff:g></string>
     <string name="qrcode_scan">扫码</string>
-    <string name="text_connect">连接</string>
+    <string name="connect">连接</string>
 
 </resources>

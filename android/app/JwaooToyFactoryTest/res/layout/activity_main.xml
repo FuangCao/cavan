@@ -26,7 +26,7 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:background="#00ff00"
-        android:text="@string/text_pass"
+        android:text="@string/pass"
         android:textColor="#000000"
         android:textSize="30sp" />
 
@@ -37,7 +37,7 @@
 		android:layout_alignParentBottom="true"
 		android:layout_alignParentRight="true"
 		android:background="#ff0000"
-		android:text="@string/text_fail"
+		android:text="@string/fail"
 		android:textColor="#000000"
 		android:textSize="30sp" />
 

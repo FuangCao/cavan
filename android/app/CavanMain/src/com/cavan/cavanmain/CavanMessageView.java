@@ -3,6 +3,7 @@ package com.cavan.cavanmain;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -34,8 +35,6 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 	public static final String ACTION_ALIPAY = "alipay";
 	public static final String ACTION_OPEN = "open";
 
-	public static final int HIGH_LIGHT_COLOR = Color.YELLOW;
-
 	private static HashMap<String, HashMap<String, String>> mSchemeMap = new HashMap<String, HashMap<String, String>>();
 
 	public static final Pattern[] sAlipayPatterns = {
@@ -55,6 +54,47 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 			return match.group(match.groupCount());
 		}
 	};
+
+	public static SpannableStringBuilder setBackgroundColorSpan(SpannableStringBuilder builder, int start, int end) {
+		builder.setSpan(new BackgroundColorSpan(Color.YELLOW), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		return builder;
+	}
+
+	public static SpannableStringBuilder setBackgroundColorSpan(SpannableStringBuilder builder, Matcher matcher) {
+		return setBackgroundColorSpan(builder, matcher.start(), matcher.end());
+	}
+
+	public static SpannableStringBuilder setBackgroundColorSpans(SpannableStringBuilder builder, Matcher matcher) {
+		if (matcher != null) {
+			while (matcher.find()) {
+				setBackgroundColorSpan(builder, matcher);
+			}
+		}
+
+		return builder;
+	}
+
+	public static SpannableStringBuilder setBackgroundColorSpans(SpannableStringBuilder builder, Pattern pattern, CharSequence text) {
+		if (pattern == null) {
+			return builder;
+		}
+
+		return setBackgroundColorSpans(builder, pattern.matcher(text));
+	}
+
+	public static SpannableStringBuilder setBackgroundColorSpans(SpannableStringBuilder builder, String pattern, CharSequence text) {
+		if (pattern == null) {
+			return builder;
+		}
+
+		try {
+			return setBackgroundColorSpans(builder, Pattern.compile(pattern, Pattern.CASE_INSENSITIVE), text);
+		} catch (PatternSyntaxException e) {
+			e.printStackTrace();
+		}
+
+		return builder;
+	}
 
 	public static String buildScheme(String pkgName, String action) {
 		HashMap<String, String> map = mSchemeMap.get(action);
@@ -126,11 +166,7 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 
 		if (patterns != null) {
 			for (Pattern pattern : patterns) {
-				Matcher matcher = pattern.matcher(text);
-
-				while (matcher.find()) {
-					builder.setSpan(new BackgroundColorSpan(HIGH_LIGHT_COLOR), matcher.start(), matcher.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-				}
+				setBackgroundColorSpans(builder, pattern, text);
 			}
 		}
 
@@ -170,7 +206,7 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 
 			builder.setView(view);
 			builder.setCancelable(false);
-			builder.setPositiveButton(R.string.text_copy, this);
+			builder.setPositiveButton(R.string.copy, this);
 			builder.setNegativeButton(android.R.string.cancel, null);
 
 			return builder.create();

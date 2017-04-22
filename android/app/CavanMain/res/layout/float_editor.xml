@@ -27,7 +27,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/editTextContent"
-        android:text="@string/text_as_code"
+        android:text="@string/as_code"
         android:textSize="@dimen/float_editor_text_size" />
 
     <Button
@@ -37,7 +37,7 @@
         android:layout_alignBaseline="@+id/buttonExtract"
         android:layout_alignBottom="@+id/buttonExtract"
         android:layout_alignParentRight="true"
-        android:text="@string/text_send"
+        android:text="@string/send"
         android:textSize="@dimen/float_editor_text_size" />
 
     <Button
@@ -47,7 +47,7 @@
         android:layout_alignBaseline="@+id/buttonExtract"
         android:layout_alignBottom="@+id/buttonExtract"
         android:layout_centerHorizontal="true"
-        android:text="@string/text_copy"
+        android:text="@string/copy"
         android:textSize="@dimen/float_editor_text_size" />
 
 </RelativeLayout>

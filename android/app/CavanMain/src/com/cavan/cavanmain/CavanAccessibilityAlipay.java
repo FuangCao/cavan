@@ -414,7 +414,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 
 		if (code.isCompleted()) {
 			code.updateTime();
-			msgResId = R.string.text_completed_please_manual_commit;
+			msgResId = R.string.completed_please_manual_commit;
 		} else if (maxCommitCount > 0) {
 			if (CavanInputMethod.isDefaultInputMethod(mService)) {
 				if (code.getCommitCount() < maxCommitCount) {
@@ -422,7 +422,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 					if (delay > 0) {
 						if (delay != mDelay) {
 							mDelay = delay;
-							String message = mService.getResources().getString(R.string.text_auto_commit_after, delay);
+							String message = mService.getResources().getString(R.string.auto_commit_after, delay);
 							CavanAndroid.showToast(mService, message);
 						}
 
@@ -432,17 +432,17 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 					mService.sendBroadcast(new Intent(MainActivity.ACTION_CODE_COMMIT));
 					return true;
 				} else {
-					msgResId = R.string.text_commit_too_much_please_manual_commit;
+					msgResId = R.string.commit_too_much_please_manual_commit;
 				}
 			} else if (MainActivity.isAutoSwitchImeEnabled(mService)) {
 				String ime = mService.getResources().getString(R.string.cavan_input_method);
 				mService.setInputMethod(ime, 5);
 				return false;
 			} else {
-				msgResId = R.string.text_ime_fault_please_manual_commit;
+				msgResId = R.string.ime_fault_please_manual_commit;
 			}
 		} else {
-			msgResId = R.string.text_auto_commit_not_enable_please_manual_commit;
+			msgResId = R.string.auto_commit_not_enable_please_manual_commit;
 		}
 
 		if (changed || getWindowTimeConsume() < 500) {

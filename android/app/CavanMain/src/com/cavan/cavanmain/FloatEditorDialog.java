@@ -82,7 +82,7 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 		mCopy = copy;
 		mCheckBox.setChecked(checked);
 		mEditText.setText(text);
-		mButtonCopy.setText(copy ? R.string.text_copy : R.string.text_share);
+		mButtonCopy.setText(copy ? R.string.copy : R.string.share);
 	}
 
 	private View findViewById(int id) {

@@ -59,7 +59,7 @@ public class MainActivity extends PreferenceActivity {
 		if (address != null) {
 			mPreferenceIpAddress.setSummary(address.getHostAddress());
 		} else {
-			mPreferenceIpAddress.setSummary(R.string.text_unknown);
+			mPreferenceIpAddress.setSummary(R.string.unknown);
 		}
 	}
 

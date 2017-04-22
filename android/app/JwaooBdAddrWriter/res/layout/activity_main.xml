@@ -44,7 +44,7 @@
         android:layout_alignBaseline="@+id/editTextServerIp"
         android:layout_alignBottom="@+id/editTextServerIp"
         android:layout_alignParentLeft="true"
-        android:text="@string/text_server_ip" />
+        android:text="@string/server_ip" />
 
     <TextView
         android:id="@+id/textViewServerPort"
@@ -53,7 +53,7 @@
         android:layout_alignBaseline="@+id/editTextServerPort"
         android:layout_alignBottom="@+id/editTextServerPort"
         android:layout_alignParentLeft="true"
-        android:text="@string/text_server_port" />
+        android:text="@string/server_port" />
 
     <TextView
         android:id="@+id/textViewBdAddr"
@@ -62,7 +62,7 @@
         android:layout_alignBaseline="@+id/editTextBdAddr"
         android:layout_alignBottom="@+id/editTextBdAddr"
         android:layout_alignParentLeft="true"
-        android:text="@string/text_bd_addr" />
+        android:text="@string/bd_addr" />
 
     <Button
         android:id="@+id/buttonBurn"
@@ -70,7 +70,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:text="@string/text_burn" />
+        android:text="@string/burn" />
 
     <Button
         android:id="@+id/buttonComplete"
@@ -78,7 +78,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
-        android:text="@string/text_complete" />
+        android:text="@string/complete" />
 
     <Button
         android:id="@+id/buttonRequest"
@@ -86,7 +86,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:text="@string/text_request" />
+        android:text="@string/request" />
 
     <EditText
         android:id="@+id/editTextAddrRemain"
@@ -109,6 +109,6 @@
         android:layout_alignBaseline="@+id/editTextAddrRemain"
         android:layout_alignBottom="@+id/editTextAddrRemain"
         android:layout_alignParentLeft="true"
-        android:text="@string/text_addr_remain" />
+        android:text="@string/addr_remain" />
 
 </RelativeLayout>

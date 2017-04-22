@@ -37,7 +37,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/timePicker"
         android:layout_toRightOf="@+id/listViewCodes"
-        android:text="@string/text_ignore" />
+        android:text="@string/ignore" />
 
     <Button
         android:id="@+id/buttonReload"
@@ -45,7 +45,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/checkBoxIgnore"
         android:layout_toRightOf="@+id/listViewCodes"
-        android:text="@string/text_refresh" />
+        android:text="@string/refresh" />
 
     <Button
         android:id="@+id/buttonUpdate"
@@ -54,7 +54,7 @@
         android:layout_alignBaseline="@+id/buttonReload"
         android:layout_alignBottom="@+id/buttonReload"
         android:layout_alignParentRight="true"
-        android:text="@string/text_update" />
+        android:text="@string/update" />
 
     <CheckBox
         android:id="@+id/checkBoxSync"
@@ -63,6 +63,6 @@
         android:layout_alignParentRight="true"
         android:layout_alignBaseline="@+id/checkBoxIgnore"
         android:checked="true"
-        android:text="@string/text_sync" />
+        android:text="@string/sync" />
 
 </RelativeLayout>

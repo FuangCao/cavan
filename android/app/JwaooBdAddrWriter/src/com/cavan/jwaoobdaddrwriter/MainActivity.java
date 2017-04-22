@@ -178,17 +178,17 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		case MSG_ADDR_ALLOC_COMPLETE:
 			JwaooBdAddr addr = (JwaooBdAddr) msg.obj;
 			if (addr == null) {
-				CavanAndroid.showToast(this, R.string.text_no_addr);
+				CavanAndroid.showToast(this, R.string.no_addr);
 			} else {
 				byte[] bytes = addr.getBytes();
 				if (mBleToy.writeBdAddress(bytes)) {
 					mBdAddrBytes = bytes;
 					mHandler.sendEmptyMessage(MSG_UPDATE_VIEW);
 
-					CavanAndroid.showToast(this, R.string.text_burn_success);
+					CavanAndroid.showToast(this, R.string.burn_success);
 				} else {
 					addr.recycle(getContentResolver());
-					CavanAndroid.showToast(this, R.string.text_burn_failed);
+					CavanAndroid.showToast(this, R.string.burn_failed);
 				}
 			}
 
@@ -198,14 +198,14 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		case MSG_ADDR_REQUEST_COMPLETE:
 			addr = (JwaooBdAddr) msg.obj;
 			if (addr == null) {
-				CavanAndroid.showToast(this, R.string.text_request_addr_failed);
+				CavanAndroid.showToast(this, R.string.request_addr_failed);
 			} else {
 				CavanAndroid.putPreference(this, KEY_SERVER_IP, mEditTextIp.getText().toString());
 				CavanAndroid.putPreference(this, KEY_SERVER_PORT, mEditTextPort.getText().toString());
 
 				mHandler.sendEmptyMessage(MSG_UPDATE_VIEW);
 
-				String text = getResources().getString(R.string.text_request_addr_success, addr.getCount());
+				String text = getResources().getString(R.string.request_addr_success, addr.getCount());
 				CavanAndroid.showToast(this, text);
 			}
 
@@ -242,7 +242,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		case R.id.buttonBurn:
 			if (JwaooBdAddr.isValidBdAddr(mBdAddrBytes)) {
-				CavanAndroid.showToast(this, R.string.text_already_burn);
+				CavanAndroid.showToast(this, R.string.already_burn);
 				break;
 			}
 

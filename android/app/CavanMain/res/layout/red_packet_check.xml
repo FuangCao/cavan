@@ -19,7 +19,7 @@
         android:id="@+id/checkBoxAsCode"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/text_as_code" />
+        android:text="@string/as_code" />
 
 
 </LinearLayout>

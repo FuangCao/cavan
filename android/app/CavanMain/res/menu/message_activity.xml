@@ -4,9 +4,9 @@
 
     <item
         android:id="@+id/action_message_clean"
-        android:title="@string/text_message_clean"/>
+        android:title="@string/message_clean"/>
     <item
         android:id="@+id/action_message_finder"
-        android:title="@string/text_message_find"/>
+        android:title="@string/message_find"/>
 
 </menu>

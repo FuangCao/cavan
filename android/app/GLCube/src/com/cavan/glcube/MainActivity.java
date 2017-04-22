@@ -67,10 +67,10 @@ public class MainActivity extends ActionBarActivity implements OnClickListener {
 		SensorManager manager = (SensorManager) getSystemService(SENSOR_SERVICE);
 		Sensor sensor = manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 		if (sensor != null) {
-			Toast.makeText(this, R.string.text_sensor_open_success, Toast.LENGTH_LONG).show();
+			Toast.makeText(this, R.string.sensor_open_success, Toast.LENGTH_LONG).show();
 			manager.registerListener(mSensorEventListener, sensor, SensorManager.SENSOR_DELAY_GAME);
 		} else {
-			Toast.makeText(this, R.string.text_sensor_open_failed, Toast.LENGTH_LONG).show();
+			Toast.makeText(this, R.string.sensor_open_failed, Toast.LENGTH_LONG).show();
 		}
 	}
 

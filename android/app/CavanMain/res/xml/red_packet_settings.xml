@@ -5,7 +5,7 @@
     android:key="parent">
 
 	<Preference android:key="message_show"
-	    android:title="@string/text_message_show" />
+	    android:title="@string/message_show" />
 
 	<com.cavan.resource.EditableMultiSelectListPreference
 	    android:key="keyword_notify"
@@ -22,41 +22,41 @@
 
 	<EditTextPreference android:key="red_packet_code_send"
 	    android:persistent="true"
-	    android:title="@string/text_red_packet_code_send" />
+	    android:title="@string/red_packet_code_send" />
 
 	<CheckBoxPreference android:key="wan_share"
 	    android:persistent="true"
 	    android:defaultValue="true"
-	    android:title="@string/text_wan_share" />
+	    android:title="@string/wan_share" />
 
 	<com.cavan.resource.EditableMultiSelectListPreference android:key="wan_server"
 	    android:persistent="true"
 	    android:defaultValue="192.168.88.88"
-	    android:title="@string/text_wan_server" />
+	    android:title="@string/wan_server" />
 
 	<CheckBoxPreference android:key="wan_receive"
 	    android:persistent="true"
 	    android:defaultValue="true"
-	    android:title="@string/text_wan_receive" />
+	    android:title="@string/wan_receive" />
 
 	<Preference android:key="wan_test"
-	    android:title="@string/text_wan_test" />
+	    android:title="@string/wan_test" />
 
 	<CheckBoxPreference android:key="lan_share"
 	    android:persistent="true"
 	    android:defaultValue="true"
-	    android:title="@string/text_lan_share" />
+	    android:title="@string/lan_share" />
 
 	<Preference android:key="lan_test"
-	    android:title="@string/text_lan_test" />
+	    android:title="@string/lan_test" />
 
 	<Preference android:key="red_packet_code_clear"
-	    android:title="@string/text_red_packet_code_clear" />
+	    android:title="@string/red_packet_code_clear" />
 
 	<CheckBoxPreference android:key="auto_unlock"
 	    android:persistent="true"
 	    android:defaultValue="true"
-	    android:title="@string/text_auto_unlock" />
+	    android:title="@string/auto_unlock" />
 
 	<CheckBoxPreference android:key="disable_suspend"
 	    android:persistent="true"
@@ -79,10 +79,10 @@
 	    android:title="@string/clipboard_share" />
 
 	<Preference android:key="permission_settings"
-	    android:title="@string/text_permission_settings" />
+	    android:title="@string/permission_settings" />
 
 	<Preference android:key="input_method_select"
-	    android:title="@string/text_input_method_select" />
+	    android:title="@string/input_method_select" />
 
 	<CheckBoxPreference android:key="auto_switch_ime"
 	    android:persistent="true"
@@ -95,23 +95,23 @@
 
 	<ListPreference android:key="red_packet_notify_setting"
 	    android:persistent="true"
-		android:entries="@array/text_notify_entries"
-		android:entryValues="@array/text_notify_values"
+		android:entries="@array/notify_entries"
+		android:entryValues="@array/notify_values"
 		android:defaultValue="3"
 	    android:title="@string/red_packet_notify_setting" />
 
 	<EditTextPreference android:key="red_packet_code_recognize"
 	    android:persistent="true"
-	    android:title="@string/text_red_packet_code_recognize" />
+	    android:title="@string/red_packet_code_recognize" />
 
 	<EditTextPreference android:key="red_packet_code_split"
 	    android:persistent="true"
-	    android:title="@string/text_red_packet_code_split" />
+	    android:title="@string/red_packet_code_split" />
 
 	<CheckBoxPreference android:key="auto_open_app"
 	    android:persistent="true"
 	    android:defaultValue="true"
-	    android:title="@string/text_auto_open_app" />
+	    android:title="@string/auto_open_app" />
 
 	<CheckBoxPreference android:key="auto_open_alipay"
 	    android:persistent="true"
@@ -125,46 +125,46 @@
 
 	<ListPreference android:key="qq_auto_unpack"
 	    android:persistent="true"
-		android:entries="@array/text_delay_entries"
-		android:entryValues="@array/text_delay_values"
+		android:entries="@array/delay_entries"
+		android:entryValues="@array/delay_values"
 		android:defaultValue="0"
 	    android:title="@string/qq_auto_unpack" />
 
 	<ListPreference android:key="mm_auto_unpack"
 	    android:persistent="true"
-		android:entries="@array/text_delay_entries"
-		android:entryValues="@array/text_delay_values"
+		android:entries="@array/delay_entries"
+		android:entryValues="@array/delay_values"
 		android:defaultValue="0"
 	    android:title="@string/mm_auto_unpack" />
 
 	<ListPreference android:key="commit_ahead"
 	    android:persistent="true"
-		android:entries="@array/text_ahead_entries"
-		android:entryValues="@array/text_ahead_values"
+		android:entries="@array/ahead_entries"
+		android:entryValues="@array/ahead_values"
 		android:defaultValue="3"
-	    android:title="@string/text_commit_ahead" />
+	    android:title="@string/commit_ahead" />
 
 	<ListPreference android:key="auto_commit"
 	    android:persistent="true"
-		android:entries="@array/text_auto_entries"
-		android:entryValues="@array/text_auto_values"
+		android:entries="@array/auto_entries"
+		android:entryValues="@array/auto_values"
 		android:defaultValue="1"
-	    android:title="@string/text_auto_commit" />
+	    android:title="@string/auto_commit" />
 
 	<CheckBoxPreference android:key="auto_unpack"
 	    android:persistent="true"
 	    android:defaultValue="true"
-	    android:title="@string/text_auto_unpack" />
+	    android:title="@string/auto_unpack" />
 
 	<CheckBoxPreference android:key="listen_click"
 	    android:persistent="true"
 	    android:defaultValue="true"
-	    android:title="@string/text_listen_click" />
+	    android:title="@string/listen_click" />
 
 	<CheckBoxPreference android:key="listen_clip"
 	    android:persistent="true"
 	    android:defaultValue="true"
-	    android:title="@string/text_listen_clip" />
+	    android:title="@string/listen_clip" />
 
 	<CheckBoxPreference android:key="float_timer"
 	    android:persistent="true"
@@ -173,10 +173,10 @@
 
 	<CheckBoxPreference android:key="tcp_bridge"
 	    android:persistent="true"
-	    android:title="@string/text_tcp_bridge" />
+	    android:title="@string/tcp_bridge" />
 
 	<EditTextPreference android:key="tcp_bridge_setting"
 	    android:persistent="true"
-	    android:title="@string/text_tcp_bridge_setting" />
+	    android:title="@string/tcp_bridge_setting" />
 
 </PreferenceScreen>

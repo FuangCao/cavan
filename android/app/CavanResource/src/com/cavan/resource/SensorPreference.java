@@ -56,7 +56,7 @@ public class SensorPreference extends EditTextPreference {
 			mListener = new SensorEventListenerSimple();
 		}
 
-		setSummary(R.string.text_not_start);
+		setSummary(R.string.not_start);
 
 		return true;
 	}
@@ -68,14 +68,14 @@ public class SensorPreference extends EditTextPreference {
 		}
 
 		mRunning = true;
-		setSummary(R.string.text_running);
+		setSummary(R.string.running);
 
 		return true;
 	}
 
 	public void stop() {
 		mManager.unregisterListener(mListener);
-		setSummary(R.string.text_stopped);
+		setSummary(R.string.stopped);
 		mRunning = false;
 	}
 
@@ -111,12 +111,12 @@ public class SensorPreference extends EditTextPreference {
 
 	@Override
 	protected void onPrepareDialogBuilder(Builder builder) {
-		builder.setMessage(R.string.text_sample_rate);
+		builder.setMessage(R.string.sample_rate);
 
 		if (mRunning) {
-			builder.setPositiveButton(R.string.text_stop, this);
+			builder.setPositiveButton(R.string.stop, this);
 		} else {
-			builder.setPositiveButton(R.string.text_start, this);
+			builder.setPositiveButton(R.string.start, this);
 		}
 
 		super.onPrepareDialogBuilder(builder);

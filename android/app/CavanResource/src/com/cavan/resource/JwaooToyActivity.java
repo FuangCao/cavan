@@ -71,7 +71,7 @@ public class JwaooToyActivity extends CavanBleActivity implements OnCancelListen
 	}
 
 	protected String buildProgressDialogMessage() {
-		return getResources().getString(R.string.text_connect_inprogress);
+		return getResources().getString(R.string.connect_inprogress);
 	}
 
 	synchronized public void showProgressDialog(boolean show) {
