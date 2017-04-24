@@ -25,8 +25,6 @@
     <string name="hour">时</string>
     <string name="minute">分</string>
     <string name="second">秒</string>
-    <string name="start">开始</string>
-    <string name="stop">停止</string>
     <string name="clear">清除</string>
     <string name="select_all">全选</string>
     <string name="deselect_all">反选</string>
@@ -36,5 +34,7 @@
     <string name="mac_address_format_fault">MAC地址格式错误：<xliff:g>%1$s</xliff:g></string>
     <string name="qrcode_scan">扫码</string>
     <string name="connect">连接</string>
+    <string name="open_camera_failed">打开相机失败！</string>
+    <string name="request_camera_permission_failed">请求相机权限失败！</string>
 
 </resources>

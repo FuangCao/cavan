@@ -7,10 +7,12 @@ import android.hardware.Camera.PreviewCallback;
 import android.hardware.Camera.Size;
 import android.os.Message;
 
+import com.cavan.android.CavanAndroidListeners.CavanQrCodeCameraListener;
+
 @SuppressWarnings("deprecation")
 public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocusCallback, PreviewCallback {
 
-	private static final int MAX_CAPTURE_TIMES = 3;
+	private static final int MAX_CAPTURE_TIMES = 6;
 	private static final int AUTO_FOCUS_OVERTIME = 3000;
 
 	private static final int MSG_OPEN_CAMERA = 1;
@@ -18,40 +20,37 @@ public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocus
 	private static final int MSG_CAPTURE_FRAME = 3;
 	private static final int MSG_POST_FRAME = 4;
 
-	public static interface EventListener {
-		boolean doCameraInit(Camera camera);
-		void onCameraOpened(Camera camera);
-		void onStartAutoFocus(Camera camera);
-		void onFrameCaptured(byte[] bytes, Camera camera);
-	}
-
 	private static CavanSingleInstanceHelper<CavanQrCodeCamera> mInstanceHelper = new CavanSingleInstanceHelper<CavanQrCodeCamera>() {
 
 		@Override
 		public CavanQrCodeCamera createInstance(Object... args) {
-			return new CavanQrCodeCamera((EventListener) args[0]);
+			return new CavanQrCodeCamera((CavanQrCodeCameraListener) args[0]);
 		}
 
 		@Override
 		public void initInstance(CavanQrCodeCamera instance, Object... args) {
-			instance.setEventListener((EventListener) args[0]);
+			instance.setEventListener((CavanQrCodeCameraListener) args[0]);
 		}
 	};
 
-	public static CavanQrCodeCamera getInstance(EventListener listener) {
+	public static CavanQrCodeCamera getInstance(CavanQrCodeCameraListener listener) {
 		return mInstanceHelper.getInstance(listener);
 	}
 
 	private Camera mCamera;
 	private int mCaptureTimes;
-	private EventListener mListener;
+	private CavanQrCodeCameraListener mListener;
 
-	private CavanQrCodeCamera(EventListener listener) {
+	private CavanQrCodeCamera(CavanQrCodeCameraListener listener) {
 		super(CavanQrCodeCamera.class);
 		setEventListener(listener);
 	}
 
-	synchronized public void setEventListener(EventListener listener) {
+	synchronized public void setEventListener(CavanQrCodeCameraListener listener) {
+		if (listener == null) {
+			throw new IllegalArgumentException("CavanQrCodeCameraListener is null");
+		}
+
 		mListener = listener;
 	}
 
@@ -85,7 +84,6 @@ public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocus
 				if (mCamera != null) {
 					if (mListener.doCameraInit(mCamera)) {
 						mCamera.setDisplayOrientation(90);
-						mListener.onCameraOpened(mCamera);
 					} else {
 						closeCamera();
 					}
@@ -94,6 +92,8 @@ public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocus
 				e.printStackTrace();
 				closeCamera();
 			}
+
+			mListener.onCameraOpened(mCamera);
 		}
 
 		return mCamera;
@@ -118,7 +118,7 @@ public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocus
 	}
 
 	synchronized public boolean startPreview() {
-		if (openCamera() == null) {
+		if (mCamera == null) {
 			return false;
 		}
 

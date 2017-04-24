@@ -3,6 +3,7 @@ package com.cavan.resource;
 import java.io.IOException;
 import java.util.UUID;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -12,6 +13,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
@@ -26,20 +28,20 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
-import com.cavan.android.AndroidListeners.CavanKeyboardViewListener;
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanAndroidListeners.CavanKeyboardViewListener;
+import com.cavan.android.CavanAndroidListeners.CavanQrCodeViewListener;
 import com.cavan.android.CavanBleDevice;
 import com.cavan.android.CavanBleDeviceAdapter;
 import com.cavan.android.CavanBleScanner;
 import com.cavan.android.CavanMacAddressView;
 import com.cavan.android.CavanQrCodeView;
-import com.cavan.android.CavanQrCodeView.EventListener;
 import com.cavan.java.CavanMacAddress;
 import com.google.zxing.Result;
 
 @SuppressLint("ClickableViewAccessibility")
 @SuppressWarnings("deprecation")
-public class CavanBleScanActivity extends CavanBleActivity implements OnClickListener, Callback, EventListener {
+public class CavanBleScanActivity extends CavanBleActivity implements OnClickListener, Callback, CavanQrCodeViewListener {
 
 	private UUID[] mUuids;
 	private String[] mAddresses;
@@ -179,9 +181,11 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 						finishScan(device);
 					}
 				} else if (mQrCodeView.getVisibility() != View.VISIBLE) {
-					mQrCodeView.setVisibility(View.VISIBLE);
-					mSurface.setVisibility(View.VISIBLE);
-					setConnEnable(true);
+					if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+						mSurface.setVisibility(View.VISIBLE);
+					} else {
+						requestPermissions(new String[] { Manifest.permission.CAMERA }, 0);
+					}
 				}
 
 				mKeyboardView.stopInput();
@@ -254,6 +258,23 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 		}
 
 		super.onDestroy();
+	}
+
+	@Override
+	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+		CavanAndroid.pLog("requestCode = " + requestCode);
+
+		for (int i = 0; i < permissions.length; i++) {
+			CavanAndroid.dLog("permission = " + permissions[i] + ", grantResult = " + grantResults[i]);
+
+			if (Manifest.permission.CAMERA.equals(permissions[i])) {
+				if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+					mSurface.setVisibility(View.VISIBLE);
+				} else {
+					CavanAndroid.showToast(this, R.string.request_camera_permission_failed);
+				}
+			}
+		}
 	}
 
 	public static Intent getIntent(Context context) {
@@ -380,6 +401,12 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 	public void onCameraOpened(Camera camera) {
 		// CavanAndroid.pLog();
 
-		mQrCodeView.startPreview();
+		if (camera != null) {
+			mQrCodeView.setVisibility(View.VISIBLE);
+			mQrCodeView.startPreview();
+			setConnEnable(true);
+		} else {
+			CavanAndroid.showToast(this, R.string.open_camera_failed);
+		}
 	}
 }

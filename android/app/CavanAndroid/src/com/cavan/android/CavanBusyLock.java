@@ -1,6 +1,6 @@
 package com.cavan.android;
 
-import com.cavan.android.AndroidListeners.CavanBusyLockListener;
+import com.cavan.android.CavanAndroidListeners.CavanBusyLockListener;
 
 public class CavanBusyLock implements CavanBusyLockListener, Runnable {
 

@@ -2,8 +2,11 @@ package com.cavan.qrcode;
 
 import java.io.IOException;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.hardware.Camera;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.view.SurfaceHolder;
@@ -15,13 +18,13 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanAndroidListeners.CavanQrCodeViewListener;
 import com.cavan.android.CavanQrCodeView;
-import com.cavan.android.CavanQrCodeView.EventListener;
 import com.cavan.cavanmain.R;
 import com.google.zxing.Result;
 
 @SuppressWarnings("deprecation")
-public class QrCodeDecodeActivity extends Activity implements OnClickListener, Callback, EventListener {
+public class QrCodeDecodeActivity extends Activity implements OnClickListener, Callback, CavanQrCodeViewListener {
 
 	private Button mButton;
 	private EditText mEditText;
@@ -61,9 +64,29 @@ public class QrCodeDecodeActivity extends Activity implements OnClickListener, C
 	}
 
 	@Override
+	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+		CavanAndroid.pLog("requestCode = " + requestCode);
+
+		for (int i = permissions.length - 1; i >= 0; i--) {
+			if (Manifest.permission.CAMERA.equals(permissions[i])) {
+				if (PackageManager.PERMISSION_GRANTED == grantResults[i]) {
+					mQrCodeView.openCamera(mSurface.getWidth(), mSurface.getHeight());
+				} else {
+					CavanAndroid.showToast(this, R.string.request_camera_permission_failed);
+				}
+			}
+		}
+	}
+
+	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
 		CavanAndroid.pLog();
-		mQrCodeView.openCamera(mSurface.getWidth(), mSurface.getHeight());
+
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+			mQrCodeView.openCamera(mSurface.getWidth(), mSurface.getHeight());
+		} else {
+			requestPermissions(new String[] { Manifest.permission.CAMERA }, 0);
+		}
 	}
 
 	@Override
@@ -103,6 +126,10 @@ public class QrCodeDecodeActivity extends Activity implements OnClickListener, C
 
 	@Override
 	public void onCameraOpened(Camera camera) {
-		mQrCodeView.startPreview();
+		if (camera != null) {
+			mQrCodeView.startPreview();
+		} else {
+			CavanAndroid.showToast(this, R.string.open_camera_failed);
+		}
 	}
 }

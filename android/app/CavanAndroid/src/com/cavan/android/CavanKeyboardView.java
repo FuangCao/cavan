@@ -11,7 +11,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.EditText;
 
-import com.cavan.android.AndroidListeners.CavanKeyboardViewListener;
+import com.cavan.android.CavanAndroidListeners.CavanKeyboardViewListener;
 
 public abstract class CavanKeyboardView extends KeyboardView implements CavanKeyboardViewListener {
 

@@ -12,25 +12,20 @@ import android.os.Message;
 import android.util.AttributeSet;
 import android.view.View;
 
+import com.cavan.android.CavanAndroidListeners.CavanQrCodeCameraListener;
+import com.cavan.android.CavanAndroidListeners.CavanQrCodeViewListener;
 import com.cavan.java.CavanLuminanceSourceRotate90;
 import com.google.zxing.PlanarYUVLuminanceSource;
 import com.google.zxing.Result;
 import com.google.zxing.qrcode.QRCodeReader;
 
 @SuppressWarnings("deprecation")
-public class CavanQrCodeView extends View implements CavanQrCodeCamera.EventListener {
+public class CavanQrCodeView extends View implements CavanQrCodeCameraListener, CavanQrCodeViewListener {
 
 	private static final int MSG_DECODE_START = 1;
 	private static final int MSG_DECODE_COMPLETE = 2;
 	private static final int MSG_QRCODE_MATRIX = 3;
 	private static final int MSG_CAMERA_OPENED = 4;
-
-	public interface EventListener {
-		void onDecodeStart();
-		boolean onDecodeComplete(Result result);
-		boolean doCameraInit(Camera camera);
-		void onCameraOpened(Camera camera);
-	}
 
 	private double mBorderRatio = 0.1;
 	private Paint mPaint = new Paint();
@@ -50,7 +45,7 @@ public class CavanQrCodeView extends View implements CavanQrCodeCamera.EventList
 	private int mQrCodeWidth;
 	private int mQrCodeHeight;
 
-	private EventListener mListener;
+	private CavanQrCodeViewListener mListener;
 	private QRCodeReader mQrCodeReader = new QRCodeReader();
 	private CavanQrCodeCamera mCameraHandler = CavanQrCodeCamera.getInstance(this);
 
@@ -144,11 +139,11 @@ public class CavanQrCodeView extends View implements CavanQrCodeCamera.EventList
 		mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
 	}
 
-	public void setEventListener(EventListener listener) {
+	public void setEventListener(CavanQrCodeViewListener listener) {
 		mListener = listener;
 	}
 
-	public EventListener getEventListener() {
+	public CavanQrCodeViewListener getEventListener() {
 		return mListener;
 	}
 
@@ -238,6 +233,12 @@ public class CavanQrCodeView extends View implements CavanQrCodeCamera.EventList
 	}
 
 	@Override
+	protected void onDetachedFromWindow() {
+		super.onDetachedFromWindow();
+		closeCamera();
+	}
+
+	@Override
 	public boolean doCameraInit(Camera camera) {
 		if (mListener == null || mListener.doCameraInit(camera)) {
 			updateQrCodeMatrix();
@@ -268,5 +269,15 @@ public class CavanQrCodeView extends View implements CavanQrCodeCamera.EventList
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public void onDecodeStart() {
+		mListener.onDecodeStart();
+	}
+
+	@Override
+	public boolean onDecodeComplete(Result result) {
+		return mListener.onDecodeComplete(result);
 	}
 }
