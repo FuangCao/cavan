@@ -38,8 +38,7 @@
         <activity
             android:name="com.cavan.cavanmain.MainActivity"
             android:label="@string/app_name"
-            android:launchMode="singleInstance"
-            android:multiprocess="false" >
+            android:launchMode="singleTask" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -48,22 +47,17 @@
         </activity>
 
         <service
-            android:name="com.cavan.cavanjni.TcpRepeater"
-            android:persistent="true" />
+            android:name="com.cavan.cavanjni.TcpRepeater"/>
         <service
-            android:name="com.cavan.cavanjni.FtpService"
-            android:persistent="true" />
+            android:name="com.cavan.cavanjni.FtpService"/>
         <service
-            android:name="com.cavan.cavanjni.TcpDdService"
-            android:persistent="true" />
+            android:name="com.cavan.cavanjni.TcpDdService"/>
         <service
-            android:name="com.cavan.cavanjni.WebProxyService"
-            android:persistent="true" />
+            android:name="com.cavan.cavanjni.WebProxyService"/>
         <service
             android:name="RedPacketListenerService"
             android:label="@string/cavan_red_packet_notify"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
-            android:persistent="true" >
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
@@ -83,8 +77,7 @@
 
         <activity
             android:name="com.cavan.cavanmain.MessageActivity"
-            android:launchMode="singleInstance"
-            android:multiprocess="false" >
+            android:launchMode="singleTask" >
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -93,7 +86,7 @@
                 <data android:scheme="cavan" />
             </intent-filter>
         </activity>
-        <activity android:name="com.cavan.cavanmain.PermissionSettingsActivity" >
+        <activity android:name="com.cavan.cavanmain.PermissionSettingsActivity" android:launchMode="singleTask">
         </activity>
 
         <service
@@ -111,10 +104,7 @@
         <service
             android:name="CavanAccessibilityService"
             android:label="@string/cavan_red_packet_notify"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-            android:persistent="true"
-            android:singleUser="true"
-            android:stopWithTask="false" >
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility" />
@@ -124,8 +114,7 @@
             </intent-filter>
         </service>
         <service
-            android:name="com.cavan.cavanjni.HttpService"
-            android:persistent="true" >
+            android:name="com.cavan.cavanjni.HttpService">
         </service>
 
         <activity
@@ -140,7 +129,7 @@
         </activity>
         <activity
             android:name="com.cavan.servicemanager.MainActivity"
-            android:label="@string/app_name_service_settings" >
+            android:label="@string/app_name_service_settings" android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -149,7 +138,7 @@
         </activity>
         <activity
             android:name="com.cavan.radixconverter.MainActivity"
-            android:label="@string/app_name_radix_converter" >
+            android:label="@string/app_name_radix_converter" android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -158,18 +147,18 @@
         </activity>
         <activity
             android:name="com.cavan.resistordecoder.MainActivity"
-            android:label="@string/app_name_resistor_decoder" >
+            android:label="@string/app_name_resistor_decoder" android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="KeyguardActivity" >
+        <activity android:name="KeyguardActivity" android:showOnLockScreen="true" android:launchMode="singleTask" android:excludeFromRecents="true">
         </activity>
         <activity
             android:name="RedPacketEditActivity"
-            android:windowSoftInputMode="stateHidden" >
+            android:windowSoftInputMode="stateHidden" android:launchMode="singleTask">
         </activity>
 
         <receiver android:name="RedPacketAlarmReceiver" >
@@ -178,7 +167,7 @@
         <activity
             android:name="com.cavan.qrcode.QrCodeDecodeActivity"
             android:label="@string/qrcode_scan"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait" android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -188,7 +177,7 @@
         <activity
             android:name="com.cavan.qrcode.QrCodeEncodeActivity"
             android:label="@string/qrcode_generate"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait" android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -197,7 +186,7 @@
         </activity>
         <activity
             android:name="com.cavan.textsearch.MainActivity"
-            android:label="@string/text_search" >
+            android:label="@string/text_search" android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
