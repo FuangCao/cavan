@@ -9,6 +9,7 @@ namespace JwaooOtpProgrammer {
 
         private String mFilePath;
         private String mFwPrefix;
+        private bool mLoadSucceed;
         private UInt32 mAddressCount;
         private CavanMacAddress mAddressStart;
 
@@ -86,6 +87,16 @@ namespace JwaooOtpProgrammer {
             }
         }
 
+        public bool LoadSucceed {
+            get {
+                return mLoadSucceed;
+            }
+
+            set {
+                mLoadSucceed = value;
+            }
+        }
+
         public bool isAddressValid(CavanMacAddress address) {
             return address.startsWith(mAddressStart);
         }
@@ -108,6 +119,8 @@ namespace JwaooOtpProgrammer {
         }
 
         public bool readFromFile() {
+            mLoadSucceed = false;
+
             StreamReader reader = null;
 
             try {
@@ -115,14 +128,14 @@ namespace JwaooOtpProgrammer {
 
                 JwaooMacAddress address = fromStringWithCount(reader.ReadLine());
                 if (address != null) {
-                    return true;
+                    mLoadSucceed = true;
+                } else {
+                    MessageBox.Show("MAC地址配置文件格式错误，应该类似：" + mAddressStart + " 100");
                 }
-
-                MessageBox.Show("MAC地址配置文件格式错误，应该类似：" + mAddressStart + " 100");
             } catch (FileNotFoundException) {
                 copyFrom(mAddressStart);
                 if (writeToFile()) {
-                    return true;
+                    mLoadSucceed = true;
                 }
             } catch (Exception e) {
                 MessageBox.Show("读MAC地址出错：\n" + e);
@@ -132,7 +145,7 @@ namespace JwaooOtpProgrammer {
                 }
             }
 
-            return false;
+            return mLoadSucceed;
         }
 
         public bool writeToFile() {
@@ -183,11 +196,8 @@ namespace JwaooOtpProgrammer {
 
         public bool increaseAndSave() {
             if (increase()) {
-                if (writeToFile()) {
-                    return true;
-                }
-
-                decrease();
+                writeToFile();
+                return true;
             }
 
             return false;

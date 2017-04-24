@@ -88,7 +88,7 @@ namespace JwaooOtpProgrammer {
             }
 
             mMacAddress = address;
-            readMacAddressFromFile(true);
+            updateMacAdressUI(true, true, true);
 
             textBoxFirmware.Text = pathname;
             buttonAddressEdit.Enabled = true;
@@ -163,36 +163,50 @@ namespace JwaooOtpProgrammer {
             return writeLogFile(line) && writeLogFile("\r\n");
         }
 
-        private void setTextBoxText(TextBox view, String text) {
-            view.Text = text;
-        }
-
         public void appendLog(String line) {
             CavanDelegate.appendText(textBoxLog, line + "\r\n");
         }
 
-        private bool readMacAddressFromFile(bool enable) {
-            if (mMacAddress != null && mMacAddress.readFromFile()) {
-                if (mMacAddress.AddressCount > 0) {
-                    CavanDelegate.setEnable(buttonBurn, enable);
+        private bool updateMacAdressUI(bool reload, bool burnEnable, bool checkAddrCount) {
+            bool success;
+
+            if (mMacAddress == null) {
+                success = false;
+                CavanDelegate.setText(labelState, "请选择正确的固件文件！");
+
+                CavanDelegate.clearText(textBoxMacAddressStart);
+                CavanDelegate.clearText(textBoxMacAddressEnd);
+                CavanDelegate.clearText(textBoxMacAddressCount);
+            } else {
+                if (reload) {
+                    success = mMacAddress.readFromFile();
                 } else {
-                    CavanDelegate.setEnable(buttonBurn, false);
+                    success = mMacAddress.LoadSucceed;
+                }
+
+                if (success) {
+                    if (checkAddrCount && mMacAddress.AddressCount <= 0) {
+                        success = false;
+                        CavanDelegate.setText(labelState, "MAC地址用完了，请重新分配！");
+                    }
+                } else {
+                    success = false;
+                    CavanDelegate.setText(labelState, "MAC地址格式错误！");
                 }
 
                 CavanDelegate.setText(textBoxMacAddressStart, mMacAddress.ToString());
                 CavanDelegate.setText(textBoxMacAddressEnd, mMacAddress.AddressEnd.ToString());
                 CavanDelegate.setText(textBoxMacAddressCount, mMacAddress.AddressCount + " (个)");
-
-                return true;
-            } else {
-                CavanDelegate.setEnable(buttonBurn, false);
-
-                CavanDelegate.clearText(textBoxMacAddressStart);
-                CavanDelegate.clearText(textBoxMacAddressEnd);
-                CavanDelegate.clearText(textBoxMacAddressCount);
-
-                return false;
             }
+
+            if (success) {
+                CavanDelegate.setEnable(buttonBurn, burnEnable);
+            } else {
+                CavanDelegate.setForeColor(labelState, Color.Red);
+                CavanDelegate.setEnable(buttonBurn, false);
+            }
+
+            return success;
         }
 
         private String findSmartSnippetsPath() {
@@ -303,13 +317,9 @@ namespace JwaooOtpProgrammer {
                 return false;
             }
 
-            textBoxMacAddressNow.Text = mMacAddress.ToString();
+            CavanDelegate.setText(textBoxMacAddressNow, mMacAddress.ToString());
 
-            if (mMacAddress.increaseAndSave()) {
-                return true;
-            }
-
-            return false;
+            return mMacAddress.increaseAndSave();
         }
 
         private bool setOtpBootEnable() {
@@ -463,13 +473,13 @@ namespace JwaooOtpProgrammer {
             switch (e.ProgressPercentage) {
             case 1:
                 labelState.Text = "正在测试连接...";
-                labelState.ForeColor = System.Drawing.Color.Black;
+                labelState.ForeColor = Color.Black;
                 break;
 
             case 2:
                 appendLog("连接成功");
                 labelState.Text = "连接成功";
-                labelState.ForeColor = System.Drawing.Color.LimeGreen;
+                labelState.ForeColor = Color.LimeGreen;
 
                 textBoxMacAddressNow.Text = new JwaooMacAddress().fromOtpHeader((byte[])e.UserState).ToString();
                 break;
@@ -477,7 +487,7 @@ namespace JwaooOtpProgrammer {
             case 3:
                 appendLog("连接失败！！！");
                 labelState.Text = "连接失败！";
-                labelState.ForeColor = System.Drawing.Color.Red;
+                labelState.ForeColor = Color.Red;
                 break;
             }
         }
@@ -492,7 +502,7 @@ namespace JwaooOtpProgrammer {
             byte[] bytes = readOtpHeader();
             if (bytes != null) {
                 backgroundWorkerConnTest.ReportProgress(2, bytes);
-                readMacAddressFromFile(true);
+                updateMacAdressUI(false, true, false);
             } else {
                 backgroundWorkerConnTest.ReportProgress(3);
             }
@@ -515,24 +525,19 @@ namespace JwaooOtpProgrammer {
             switch (e.ProgressPercentage) {
             case 1:
                 labelState.Text = "正在烧录...";
-                labelState.ForeColor = System.Drawing.Color.Black;
+                labelState.ForeColor = Color.Black;
                 break;
 
             case 2:
                 appendLog("烧录成功");
                 labelState.Text = "烧录成功";
-                labelState.ForeColor = System.Drawing.Color.LimeGreen;
+                labelState.ForeColor = Color.LimeGreen;
                 break;
 
             case 3:
                 appendLog("烧录失败！！！");
                 labelState.Text = "烧录失败！";
-                labelState.ForeColor = System.Drawing.Color.Red;
-                break;
-
-            case 4:
-                labelState.Text = "MAC地址用完了，请重新分配!";
-                labelState.ForeColor = System.Drawing.Color.Red;
+                labelState.ForeColor = Color.Red;
                 break;
             }
         }
@@ -550,11 +555,7 @@ namespace JwaooOtpProgrammer {
                 MessageBox.Show("请选择固件文件");
             } else if (!File.Exists(pathname)) {
                 MessageBox.Show("固件文件不存在：" + pathname);
-            } else if (mMacAddress == null) {
-                MessageBox.Show("请选择正确的固件文件：" + pathname);
-            } else if (!readMacAddressFromFile(false)) {
-                MessageBox.Show("读取MAC地址出错：" + mMacAddress.FilePath);
-            } else if (mMacAddress.AddressCount > 0) {
+            } else if (updateMacAdressUI(false, false, true)) {
                 backgroundWorkerOtpBurn.ReportProgress(1);
 
                 if (burnOtpFirmwareAll(pathname)) {
@@ -564,9 +565,7 @@ namespace JwaooOtpProgrammer {
                     backgroundWorkerOtpBurn.ReportProgress(3);
                 }
 
-                readMacAddressFromFile(true);
-            } else {
-                backgroundWorkerOtpBurn.ReportProgress(4);
+                updateMacAdressUI(false, true, false);
             }
         }
 
@@ -618,6 +617,12 @@ namespace JwaooOtpProgrammer {
 
         private void backgroundWorkerQrCodeEncode_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e) {
             pictureBoxQrCode.Image = mBarcodeBitmap;
+
+            if (mBarcodeBitmap == null) {
+                pictureBoxQrCode.BorderStyle = BorderStyle.FixedSingle;
+            } else {
+                pictureBoxQrCode.BorderStyle = BorderStyle.None;
+            }
         }
 
         // ================================================================================
@@ -646,14 +651,16 @@ namespace JwaooOtpProgrammer {
         }
 
         private void buttonAddressEdit_Click(object sender, EventArgs e) {
-            if (readMacAddressFromFile(true)) {
+            if (mMacAddress == null) {
+                MessageBox.Show("请先选择正确的固件文件！");
+            } else {
                 JwaooMacAddressEditDialog dialog = new JwaooMacAddressEditDialog(mMacAddress);
                 if (dialog.ShowDialog() == DialogResult.OK) {
-                    mMacAddress.writeToFile();
-                    readMacAddressFromFile(true);
+                    if (mMacAddress.writeToFile() && updateMacAdressUI(true, true, false)) {
+                        CavanDelegate.setText(labelState, "修改MAC地址成功");
+                        CavanDelegate.setForeColor(labelState, Color.LimeGreen);
+                    }
                 }
-            } else {
-                MessageBox.Show("请先选择正确的固件文件！");
             }
         }
     }
