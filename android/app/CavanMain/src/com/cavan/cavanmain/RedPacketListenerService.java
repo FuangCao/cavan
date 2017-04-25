@@ -376,4 +376,14 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			loadKeywords(preferences);
 		}
 	}
+
+	public static boolean checkAndOpenSettingsActivity(Context context) {
+		if (CavanAndroid.isNotificationListenerEnabled(context, RedPacketListenerService.class)) {
+			return true;
+		}
+
+		PermissionSettingsActivity.startNotificationListenerSettingsActivity(context);
+
+		return false;
+	}
 }

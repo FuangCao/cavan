@@ -76,6 +76,7 @@ public class FloatMessageService extends FloatWidowService {
 	private static final int MSG_CHECK_KEYGUARD = 9;
 	private static final int MSG_RED_PACKET_UPDATED = 10;
 	private static final int MSG_KEEP_ALIVE = 11;
+	private static final int MSG_CHECK_SERVICE_STATE = 12;
 
 	private int mLastSecond;
 	private boolean mScreenClosed;
@@ -215,6 +216,15 @@ public class FloatMessageService extends FloatWidowService {
 					sendEmptyMessageDelayed(MSG_KEEP_ALIVE, KEEP_ALIVE_DELAY);
 				}
 				break;
+
+			case MSG_CHECK_SERVICE_STATE:
+				removeMessages(MSG_CHECK_SERVICE_STATE);
+				if (checkServiceState()) {
+					break;
+				}
+
+				sendEmptyMessageDelayed(MSG_CHECK_SERVICE_STATE, 5000);
+				break;
 			}
 		}
 	};
@@ -249,7 +259,7 @@ public class FloatMessageService extends FloatWidowService {
 
 				mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_unlock_bg);
 
-				if (CavanAndroid.isPreferenceEnabled(FloatMessageService.this, MainActivity.KEY_AUTO_UNLOCK)) {
+				if (MainActivity.isAutoUnlockEnabled(getApplicationContext())) {
 					mHandler.sendEmptyMessage(MSG_CHECK_KEYGUARD);
 				}
 				break;
@@ -273,6 +283,8 @@ public class FloatMessageService extends FloatWidowService {
 
 				if (service.equals(CavanAccessibilityService.class.getCanonicalName())) {
 					CavanAccessibilityService.checkAndOpenSettingsActivity(getApplicationContext());
+				} else if (service.equals(RedPacketListenerService.class.getCanonicalName())) {
+					RedPacketListenerService.checkAndOpenSettingsActivity(getApplicationContext());
 				}
 				break;
 			}
@@ -472,6 +484,10 @@ public class FloatMessageService extends FloatWidowService {
 		return intent;
 	}
 
+	private boolean checkServiceState() {
+		return CavanAccessibilityService.checkAndOpenSettingsActivity(this) && RedPacketListenerService.checkAndOpenSettingsActivity(this);
+	}
+
 	public boolean isSuspendDisabled() {
 		return mWakeLock.isHeld();
 	}
@@ -612,8 +628,6 @@ public class FloatMessageService extends FloatWidowService {
 	public void onCreate() {
 		super.onCreate();
 
-		CavanAccessibilityService.checkAndOpenSettingsActivity(this);
-
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Intent.ACTION_SCREEN_OFF);
 		filter.addAction(Intent.ACTION_SCREEN_ON);
@@ -632,6 +646,8 @@ public class FloatMessageService extends FloatWidowService {
 
 		updateNetworkConnState();
 		setSuspendDisable(MainActivity.isDisableSuspendEnabled(this));
+
+		mHandler.sendEmptyMessage(MSG_CHECK_SERVICE_STATE);
 	}
 
 	@Override

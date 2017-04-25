@@ -16,9 +16,7 @@ public class KeyguardActivity extends Activity {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			if (MainActivity.isAutoUnlockEnabled(getApplicationContext())) {
-				finish();
-			}
+			finish();
 		}
 	};
 
