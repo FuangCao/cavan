@@ -81,12 +81,12 @@ public class CavanBusyLock implements CavanBusyLockListener, Runnable {
 
 	@Override
 	public void onBusyLockAcquired(Object owner) {
-		CavanAndroid.dLog("onLockAcquired: owner = " + owner);
+		// CavanAndroid.dLog("onLockAcquired: owner = " + owner);
 	}
 
 	@Override
 	public void onBusyLockReleased(Object owner) {
-		CavanAndroid.dLog("onLockReleased: owner = " + owner);
+		// CavanAndroid.dLog("onLockReleased: owner = " + owner);
 	}
 
 	@Override

@@ -773,7 +773,12 @@ public class CavanAndroid {
 
 	public static Handler getHandler() {
 		if (sHandler == null) {
-			sHandler = new Handler();
+			try {
+				sHandler = new Handler();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
 		}
 
 		return sHandler;
@@ -781,7 +786,12 @@ public class CavanAndroid {
 
 	public static CavanThreadedHandler getThreadedHandler() {
 		if (sThreadedHandler == null) {
-			sThreadedHandler = new CavanThreadedHandler(CavanAndroid.class);
+			try {
+				sThreadedHandler = new CavanThreadedHandler(CavanAndroid.class);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
 		}
 
 		return sThreadedHandler;
