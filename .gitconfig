@@ -1,0 +1,29 @@
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = false
+	logallrefupdates = true
+[remote "local"]
+	url = file:///git/cavan.git
+	fetch = +refs/heads/*:refs/remotes/local/*
+[remote "250"]
+	url = git://192.168.10.250/cavan.git
+	fetch = +refs/heads/*:refs/remotes/250/*
+[remote "220"]
+	url = http://192.168.10.220/git/cavan.git
+	fetch = +refs/heads/*:refs/remotes/220/*
+[remote "github"]
+	url = https://github.com/fuangcao/cavan.git
+	fetch = +refs/heads/*:refs/remotes/github/*
+[remote "csdn"]
+	url = https://code.csdn.net/fuangcao/cavan.git
+	fetch = +refs/heads/*:refs/remotes/csdn/*
+[remote "coding"]
+	url = https://git.coding.net/fuangcao/cavan.git
+	fetch = +refs/heads/*:refs/remotes/coding/*
+[remote "oschina"]
+	url = https://git.oschina.net/fuangcao/cavan.git
+	fetch = +refs/heads/*:refs/remotes/oschina/*
+[branch "master"]
+	remote = oschina
+	merge = refs/heads/master
