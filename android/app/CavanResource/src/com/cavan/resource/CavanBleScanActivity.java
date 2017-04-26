@@ -43,6 +43,8 @@ import com.google.zxing.Result;
 @SuppressWarnings("deprecation")
 public class CavanBleScanActivity extends CavanBleActivity implements OnClickListener, Callback, CavanQrCodeViewListener {
 
+	private static BluetoothDevice sLastDevice;
+
 	private UUID[] mUuids;
 	private String[] mAddresses;
 	private String[] mNames;
@@ -56,7 +58,7 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 	private SurfaceHolder mHolder;
 	private Button mButtonQrCodeScan;
 	private CavanQrCodeView mQrCodeView;
-	private CavanMacAddressView mMacView;
+	private CavanMacAddressView mMacAddressView;
 	private CavanKeyboardViewNumber mKeyboardView;
 
 	protected void onScanComplete(CavanBleDevice device) {
@@ -67,6 +69,10 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 	public void finishScan(BluetoothDevice device) {
 		mScanner.stopScan();
 		mQrCodeView.closeCamera();
+
+		if (device != null) {
+			sLastDevice = device;
+		}
 
 		Intent intent = new Intent();
 		intent.putExtra("device", device);
@@ -115,7 +121,7 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 
 				mScanner.setAutoSelect(0);
 
-				CavanMacAddress address = mMacView.getAddress();
+				CavanMacAddress address = mMacAddressView.getAddress();
 				setConnEnable(address.notZero());
 			}
 
@@ -130,9 +136,15 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 			}
 		});
 
-		mMacView = (CavanMacAddressView) findViewById(R.id.macAddressView);
-		mMacView.setKeyboardView(mKeyboardView, CavanKeyboardViewNumber.KEYBOARD_RADIX16);
-		mMacView.addTextChangedListener(new TextWatcher() {
+		mMacAddressView = (CavanMacAddressView) findViewById(R.id.macAddressView);
+		mMacAddressView.setKeyboardView(mKeyboardView, CavanKeyboardViewNumber.KEYBOARD_RADIX16);
+
+		if (sLastDevice != null) {
+			mMacAddressView.setAddress(sLastDevice);
+			mMacAddressView.requestFocusForSubView(5);
+		}
+
+		mMacAddressView.addTextChangedListener(new TextWatcher() {
 
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before, int count) {}
@@ -142,7 +154,7 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 
 			@Override
 			public void afterTextChanged(Editable s) {
-				CavanMacAddress address = mMacView.getAddress();
+				CavanMacAddress address = mMacAddressView.getAddress();
 				setConnEnable(address.notZero());
 			}
 		});
@@ -176,7 +188,7 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 				mScanner.setAutoSelect(0);
 
 				if (mConnEnable) {
-					BluetoothDevice device = mMacView.getBluetoothDevice(mScanner.getAdapter());
+					BluetoothDevice device = mMacAddressView.getBluetoothDevice(mScanner.getAdapter());
 					if (device != null) {
 						finishScan(device);
 					}

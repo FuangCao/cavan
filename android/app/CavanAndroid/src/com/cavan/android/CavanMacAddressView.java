@@ -203,6 +203,19 @@ public class CavanMacAddressView extends LinearLayout {
 		return mSubViews;
 	}
 
+	public boolean requestFocusForSubView(int index) {
+		if (index >= 0 && index < mSubViews.length) {
+			CavanMacAddressSubView view = mSubViews[index];
+			if (view == null) {
+				return false;
+			}
+
+			return view.requestFocus();
+		}
+
+		return false;
+	}
+
 	public String[] getTexts() {
 		String[] texts = new String[mSubViews.length];
 
@@ -233,6 +246,15 @@ public class CavanMacAddressView extends LinearLayout {
 
 	public void setAddress(CavanMacAddress address) {
 		setTexts(address.toStrings());
+	}
+
+	public void setAddress(String address) {
+		mAddress.fromString(address);
+		setAddress(mAddress);
+	}
+
+	public void setAddress(BluetoothDevice device) {
+		setAddress(device.getAddress());
 	}
 
 	public BluetoothDevice getBluetoothDevice(BluetoothAdapter adapter) {
