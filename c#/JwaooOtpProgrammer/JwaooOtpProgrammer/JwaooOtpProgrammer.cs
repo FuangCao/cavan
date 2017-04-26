@@ -88,7 +88,11 @@ namespace JwaooOtpProgrammer {
             }
 
             mMacAddress = address;
-            updateMacAdressUI(true, true, true);
+
+            if (updateMacAdressUI(true, true, true)) {
+                labelState.Text = "就绪";
+                labelState.ForeColor = Color.Black;
+            }
 
             textBoxFirmware.Text = pathname;
             buttonAddressEdit.Enabled = true;

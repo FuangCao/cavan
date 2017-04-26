@@ -10,6 +10,7 @@ namespace JwaooOtpProgrammer {
         private String mFilePath;
         private String mFwPrefix;
         private bool mLoadSucceed;
+        private FileStream mStream;
         private UInt32 mAddressCount;
         private CavanMacAddress mAddressStart;
 
@@ -19,6 +20,10 @@ namespace JwaooOtpProgrammer {
             mFilePath = Path.Combine(Application.StartupPath, fileName);
             mFwPrefix = fwPrefix;
             mAddressStart = startAddress;
+        }
+
+        ~JwaooMacAddress() {
+            closeAddressFileStream();
         }
 
         public String FilePath {
@@ -118,30 +123,107 @@ namespace JwaooOtpProgrammer {
             return null;
         }
 
+        public FileStream openAddressFileStream() {
+            lock (this) {
+                if (mStream == null) {
+                    try {
+                        mStream = File.Open(mFilePath, FileMode.OpenOrCreate);
+                    } catch (Exception) {
+                        return null;
+                    }
+                } else {
+                    try {
+                        mStream.Seek(0, SeekOrigin.Begin);
+                    } catch (Exception) {
+                        closeAddressFileStream();
+                    }
+                }
+
+                return mStream;
+            }
+        }
+
+        public void closeAddressFileStream() {
+            lock (this) {
+                if (mStream != null) {
+                    mStream.Close();
+                    mStream = null;
+                }
+            }
+        }
+
+        public String readAddressFileText() {
+            lock (this) {
+                Stream stream = openAddressFileStream();
+                if (stream == null) {
+                    return null;
+                }
+
+                int length = (int)stream.Length;
+                byte[] bytes = new byte[length];
+
+                try {
+                    length = stream.Read(bytes, 0, length);
+                    if (length < 0) {
+                        return null;
+                    }
+                } catch (Exception) {
+                    closeAddressFileStream();
+                    return null;
+                }
+
+                try {
+                    return Encoding.UTF8.GetString(bytes, 0, length);
+                } catch (Exception) {
+                    return null;
+                }
+            }
+        }
+
+        public bool writeAddressFileText(String text) {
+            lock (this) {
+                Stream stream = openAddressFileStream();
+                if (stream == null) {
+                    return false;
+                }
+
+                byte[] bytes = Encoding.UTF8.GetBytes(text);
+                if (bytes == null) {
+                    return false;
+                }
+
+                try {
+                    stream.Write(bytes, 0, bytes.Length);
+                    stream.SetLength(bytes.Length);
+                    stream.Flush();
+                } catch (Exception) {
+                    closeAddressFileStream();
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
         public bool readFromFile() {
             mLoadSucceed = false;
 
-            StreamReader reader = null;
+            String text = readAddressFileText();
+            if (text == null) {
+                return false;
+            }
 
-            try {
-                reader = File.OpenText(mFilePath);
-
-                JwaooMacAddress address = fromStringWithCount(reader.ReadLine());
+            if (text.Length > 0) {
+                JwaooMacAddress address = fromStringWithCount(text);
                 if (address != null) {
                     mLoadSucceed = true;
                 } else {
                     MessageBox.Show("MAC地址配置文件格式错误，应该类似：" + mAddressStart + " 100");
                 }
-            } catch (FileNotFoundException) {
+            } else {
                 copyFrom(mAddressStart);
                 if (writeToFile()) {
                     mLoadSucceed = true;
-                }
-            } catch (Exception e) {
-                MessageBox.Show("读MAC地址出错：\n" + e);
-            } finally {
-                if (reader != null) {
-                    reader.Close();
                 }
             }
 
@@ -149,21 +231,13 @@ namespace JwaooOtpProgrammer {
         }
 
         public bool writeToFile() {
-            StreamWriter writer = null;
-
-            try {
-                writer = File.CreateText(mFilePath);
-                writer.Write(ToString() + " " + mAddressCount);
-            } catch (Exception e) {
-                MessageBox.Show("保存MAC地址出错：\n" + e);
-                return false;
-            } finally {
-                if (writer != null) {
-                    writer.Close();
-                }
+            if (writeAddressFileText(ToString() + " " + mAddressCount)) {
+                return true;
             }
 
-            return true;
+            MessageBox.Show("保存MAC地址出错！");
+
+            return false;
         }
 
         public new bool increase() {
