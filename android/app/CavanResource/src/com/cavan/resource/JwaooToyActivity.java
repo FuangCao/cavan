@@ -126,6 +126,18 @@ public class JwaooToyActivity extends CavanBleActivity implements OnCancelListen
 	}
 
 	@Override
+	protected void onResume() {
+		super.onResume();
+		mBleToy.registerBroadcastReceiver();
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		mBleToy.unregisterBroadcastReceiver();
+	}
+
+	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		CavanAndroid.dLog("onActivityResult: requestCode = " + requestCode + ", resultCode = " + resultCode + ", data = " + data);
 		if (resultCode == RESULT_OK && data != null) {

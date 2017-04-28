@@ -256,6 +256,7 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 	@Override
 	protected void finalize() throws Throwable {
 		stopScan();
+		super.finalize();
 	}
 
 	@Override

@@ -233,9 +233,11 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				break;
 			}
 
-			TestItemFragment fragment = mTestItemFragmanets[mCurrentItem];
-			if (fragment.isInitialized()) {
-				fragment.handleMessage(msg);
+			if (mCurrentItem < mTestItemFragmanets.length) {
+				TestItemFragment fragment = mTestItemFragmanets[mCurrentItem];
+				if (fragment.isInitialized()) {
+					fragment.handleMessage(msg);
+				}
 			}
 		}
 

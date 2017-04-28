@@ -16,22 +16,31 @@ public class CavanBluetoothAdapter {
 
 	private boolean mPoweredOn;
 	private int mLastState = -1;
+	private boolean mBroadcastReceiverRegistered;
 
-	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+	private IntentFilter mIntentFilter;
+	private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
-
-			if (mLastState != state) {
-				mLastState = state;
-				onBluetoothAdapterStateChanged(state);
-			}
+			onBroadcastReceived(intent);
 		}
 	};
 
+	protected IntentFilter doCreateIntentFilter() {
+		return new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+	}
+
 	protected void onBluetoothAdapterStateChanged(boolean enabled) {
 		CavanAndroid.dLog("onBluetoothAdapterStateChanged: enabled = " + enabled);
+	}
+
+	protected void onBroadcastReceiverRegistered(BroadcastReceiver receiver) {
+		CavanAndroid.dLog("onBroadcastReceiverRegistered");
+	}
+
+	protected void onBroadcastReceiverUnregistered(BroadcastReceiver receiver) {
+		CavanAndroid.dLog("onBroadcastReceiverUnregistered");
 	}
 
 	protected void onBluetoothAdapterStateChanged(int state) {
@@ -60,9 +69,6 @@ public class CavanBluetoothAdapter {
 		mContext = context;
 		mAdapter = BluetoothAdapter.getDefaultAdapter();
 		mPoweredOn = isAdapterEnabled();
-
-		IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
-		mContext.registerReceiver(mReceiver, filter);
 	}
 
 	public Context getContext() {
@@ -124,9 +130,52 @@ public class CavanBluetoothAdapter {
 		return state == BluetoothProfile.STATE_DISCONNECTED || state == BluetoothProfile.STATE_DISCONNECTING;
 	}
 
+	protected void onBroadcastReceived(Intent intent) {
+		String action = intent.getAction();
+
+		CavanAndroid.dLog("onBroadcastReceived: action = " + action);
+
+		if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(action)) {
+			int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+
+			if (mLastState != state) {
+				mLastState = state;
+				onBluetoothAdapterStateChanged(state);
+			}
+		}
+	}
+
+	synchronized public boolean registerBroadcastReceiver() {
+		if (mBroadcastReceiverRegistered) {
+			return false;
+		}
+
+		if (mIntentFilter == null) {
+			mIntentFilter = doCreateIntentFilter();
+			if (mIntentFilter == null) {
+				return false;
+			}
+		}
+
+		mContext.registerReceiver(mReceiver, mIntentFilter);
+		mBroadcastReceiverRegistered = true;
+		onBroadcastReceiverRegistered(mReceiver);
+
+		return true;
+	}
+
+	synchronized public void unregisterBroadcastReceiver() {
+		if (mBroadcastReceiverRegistered) {
+			mContext.unregisterReceiver(mReceiver);
+
+			mBroadcastReceiverRegistered = false;
+			onBroadcastReceiverUnregistered(mReceiver);
+		}
+	}
+
 	@Override
 	protected void finalize() throws Throwable {
-		mContext.unregisterReceiver(mReceiver);
+		unregisterBroadcastReceiver();
 		super.finalize();
 	}
 }
