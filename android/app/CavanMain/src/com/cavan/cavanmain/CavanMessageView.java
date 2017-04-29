@@ -64,36 +64,40 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 		return setBackgroundColorSpan(builder, matcher.start(), matcher.end());
 	}
 
-	public static SpannableStringBuilder setBackgroundColorSpans(SpannableStringBuilder builder, Matcher matcher) {
+	public static int setBackgroundColorSpans(SpannableStringBuilder builder, Matcher matcher) {
+		int index = -1;
+
 		if (matcher != null) {
 			while (matcher.find()) {
 				setBackgroundColorSpan(builder, matcher);
+
+				if (index < 0) {
+					index = matcher.start();
+				}
 			}
 		}
 
-		return builder;
+		return index;
 	}
 
-	public static SpannableStringBuilder setBackgroundColorSpans(SpannableStringBuilder builder, Pattern pattern, CharSequence text) {
-		if (pattern == null) {
-			return builder;
+	public static int setBackgroundColorSpans(SpannableStringBuilder builder, Pattern pattern) {
+		if (pattern != null) {
+			return setBackgroundColorSpans(builder, pattern.matcher(builder));
 		}
 
-		return setBackgroundColorSpans(builder, pattern.matcher(text));
+		return -1;
 	}
 
-	public static SpannableStringBuilder setBackgroundColorSpans(SpannableStringBuilder builder, String pattern, CharSequence text) {
-		if (pattern == null) {
-			return builder;
+	public static int setBackgroundColorSpans(SpannableStringBuilder builder, String pattern) {
+		if (pattern != null) {
+			try {
+				return setBackgroundColorSpans(builder, Pattern.compile(pattern, Pattern.CASE_INSENSITIVE));
+			} catch (PatternSyntaxException e) {
+				e.printStackTrace();
+			}
 		}
 
-		try {
-			return setBackgroundColorSpans(builder, Pattern.compile(pattern, Pattern.CASE_INSENSITIVE), text);
-		} catch (PatternSyntaxException e) {
-			e.printStackTrace();
-		}
-
-		return builder;
+		return -1;
 	}
 
 	public static String buildScheme(String pkgName, String action) {
@@ -166,7 +170,7 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 
 		if (patterns != null) {
 			for (Pattern pattern : patterns) {
-				setBackgroundColorSpans(builder, pattern, text);
+				setBackgroundColorSpans(builder, pattern);
 			}
 		}
 

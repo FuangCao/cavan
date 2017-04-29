@@ -16,6 +16,8 @@ public class CavanAndroidListeners {
 	}
 
 	public interface CavanBusyLockListener {
+		boolean doPostRunnable(Runnable runnable, long delayMillis);
+		void doRemoveRunnable(Runnable runnable);
 		void onBusyLockAcquired(Object owner);
 		void onBusyLockReleased(Object owner);
 	}

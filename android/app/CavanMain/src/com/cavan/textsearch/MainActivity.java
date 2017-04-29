@@ -1,12 +1,14 @@
 package com.cavan.textsearch;
 
 import android.app.Activity;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.Layout;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
+import android.text.method.ScrollingMovementMethod;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -17,15 +19,65 @@ import com.cavan.cavanmain.R;
 
 public class MainActivity extends Activity {
 
-	private Button mButtonPaste;
 	private TextView mTextViewContent;
 	private EditText mEditTextKeyword;
+
+	private int mIndex;
+	private SpannableStringBuilder mBuilder;
 
 	private CavanBusyLock mLock = new CavanBusyLock(500) {
 
 		@Override
 		public void onBusyLockReleased(Object owner) {
-			updateBackgroundColorSpans(mTextViewContent.getText().toString());
+			mIndex = -1;
+
+			if (mBuilder == null) {
+				return;
+			}
+
+			mBuilder.clearSpans();
+
+			for (String keyword : mEditTextKeyword.getText().toString().split("\\s+[\\n\\|]+\\s+")) {
+				keyword = keyword.trim();
+				if (keyword.isEmpty()) {
+					continue;
+				}
+
+				String pattern = keyword.replaceAll("\\*", ".*?").replaceAll("\\s+", ".*?");
+
+				int index = CavanMessageView.setBackgroundColorSpans(mBuilder, pattern);
+				if (mIndex <= 0) {
+					mIndex = index;
+				}
+			}
+
+			mTextViewContent.post(mRunnableUpdate);
+		}
+
+		@Override
+		public boolean doPostRunnable(Runnable runnable, long delayMillis) {
+			return CavanAndroid.postRunnableThreaded(runnable, delayMillis);
+		}
+
+		@Override
+		public void doRemoveRunnable(Runnable runnable) {
+			CavanAndroid.removeRunnableThreaded(runnable);
+		}
+	};
+
+	private Runnable mRunnableUpdate = new Runnable() {
+
+		@Override
+		public void run() {
+			Layout layout = mTextViewContent.getLayout();
+			mTextViewContent.setText(mBuilder);
+
+			if (layout != null && mBuilder != null) {
+				int line = layout.getLineForOffset(mIndex);
+				Rect bounds = new Rect();
+				layout.getLineBounds(line, bounds);
+				mTextViewContent.scrollTo(bounds.left, bounds.top);
+			}
 		}
 	};
 
@@ -33,15 +85,6 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.text_search);
-
-		mButtonPaste = (Button) findViewById(R.id.buttonPaste);
-		mButtonPaste.setOnClickListener(new View.OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				updateBackgroundColorSpans(null);
-			}
-		});
 
 		mEditTextKeyword = (EditText) findViewById(R.id.editTextKeyword);
 		mEditTextKeyword.addTextChangedListener(new TextWatcher() {
@@ -66,38 +109,20 @@ public class MainActivity extends Activity {
 				CavanAndroid.setSoftInputEnable(getApplicationContext(), mEditTextKeyword, false);
 			}
 		});
-	}
 
-	public void updateBackgroundColorSpans(String text) {
-		if (text == null) {
-			text = CavanAndroid.getClipboardText(this);
-			if (text == null) {
-				return;
-			}
-		}
-
-		SpannableStringBuilder builder = new SpannableStringBuilder(text);
-
-		for (String keyword : mEditTextKeyword.getText().toString().split("\\s+[\\n\\|]+\\s+")) {
-			keyword = keyword.trim();
-			if (keyword.isEmpty()) {
-				continue;
-			}
-
-			String pattern = keyword.replaceAll("\\*", ".*").replaceAll("\\s+", ".*");
-			CavanMessageView.setBackgroundColorSpans(builder, pattern, text);
-		}
-
-		mTextViewContent.setText(builder);
+		mTextViewContent.setMovementMethod(ScrollingMovementMethod.getInstance());
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 
-		Editable editable = mTextViewContent.getEditableText();
-		if (editable == null || editable.length() == 0) {
-			updateBackgroundColorSpans(null);
+		if (mBuilder == null) {
+			String text = CavanAndroid.getClipboardText(this);
+			if (text != null && text.length() > 0) {
+				mBuilder = new SpannableStringBuilder(text);
+				mTextViewContent.setText(mBuilder);
+			}
 		}
 	}
 }

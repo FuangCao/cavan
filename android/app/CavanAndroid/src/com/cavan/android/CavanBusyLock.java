@@ -50,7 +50,7 @@ public class CavanBusyLock implements CavanBusyLockListener, Runnable {
 			mListener.onBusyLockAcquired(owner);
 		}
 
-		if (CavanAndroid.postRunnable(this, mDelay)) {
+		if (mListener.doPostRunnable(this, mDelay)) {
 			return true;
 		}
 
@@ -60,7 +60,7 @@ public class CavanBusyLock implements CavanBusyLockListener, Runnable {
 	}
 
 	synchronized private void release() {
-		CavanAndroid.removeRunnable(this);
+		mListener.doRemoveRunnable(this);
 
 		if (mOwner != null) {
 			Object owner = mOwner;
@@ -77,6 +77,16 @@ public class CavanBusyLock implements CavanBusyLockListener, Runnable {
 		release();
 
 		return true;
+	}
+
+	@Override
+	public boolean doPostRunnable(Runnable runnable, long delayMillis) {
+		return CavanAndroid.postRunnable(runnable, delayMillis);
+	}
+
+	@Override
+	public void doRemoveRunnable(Runnable runnable) {
+		CavanAndroid.removeRunnable(runnable);
 	}
 
 	@Override

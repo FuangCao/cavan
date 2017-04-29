@@ -3,22 +3,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <Button
-        android:id="@+id/buttonPaste"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:text="@string/paste" />
-
     <EditText
         android:id="@+id/editTextKeyword"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/buttonPaste"
-        android:layout_alignBottom="@+id/buttonPaste"
         android:layout_alignParentLeft="true"
-        android:layout_toLeftOf="@+id/buttonPaste"
+        android:layout_alignParentRight="true"
         android:ems="10"
         android:inputType="text" />
 
@@ -29,7 +19,7 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/buttonPaste"
+        android:layout_below="@+id/editTextKeyword"
         android:inputType="textMultiLine" />
 
 </RelativeLayout>
