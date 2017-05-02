@@ -2,7 +2,9 @@ package com.cavan.android;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Paint.Style;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.hardware.Camera;
@@ -22,13 +24,16 @@ import com.google.zxing.qrcode.QRCodeReader;
 @SuppressWarnings("deprecation")
 public class CavanQrCodeView extends View implements CavanQrCodeCameraListener, CavanQrCodeViewListener {
 
+	private static final int BORDER_WIDTH = 6;
+
 	private static final int MSG_DECODE_START = 1;
 	private static final int MSG_DECODE_COMPLETE = 2;
 	private static final int MSG_QRCODE_MATRIX = 3;
 	private static final int MSG_CAMERA_OPENED = 4;
 
 	private double mBorderRatio = 0.1;
-	private Paint mPaint = new Paint();
+	private Paint mPaintWin = new Paint();
+	private Paint mPaintBorder = new Paint();
 
 	private int mWinX;
 	private int mWinY;
@@ -135,8 +140,12 @@ public class CavanQrCodeView extends View implements CavanQrCodeCameraListener, 
 	}
 
 	private void init() {
-		mPaint.setARGB(0x00, 0x00, 0x00, 0x00);
-		mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
+		mPaintWin.setARGB(0x00, 0x00, 0x00, 0x00);
+		mPaintWin.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
+
+		mPaintBorder.setColor(Color.RED);
+		mPaintBorder.setStyle(Style.STROKE);
+		mPaintBorder.setStrokeWidth(BORDER_WIDTH);
 	}
 
 	public void setEventListener(CavanQrCodeViewListener listener) {
@@ -229,7 +238,8 @@ public class CavanQrCodeView extends View implements CavanQrCodeCameraListener, 
 
 		updateQrCodeMatrix();
 
-		canvas.drawRect(left, top, right, bottom, mPaint);
+		canvas.drawRect(left, top, right, bottom, mPaintWin);
+		canvas.drawRect(left, top, right, bottom, mPaintBorder);
 	}
 
 	@Override
