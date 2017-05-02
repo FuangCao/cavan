@@ -12,7 +12,7 @@ import com.cavan.android.CavanAndroidListeners.CavanQrCodeCameraListener;
 @SuppressWarnings("deprecation")
 public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocusCallback, PreviewCallback {
 
-	private static final int MAX_CAPTURE_TIMES = 6;
+	private static final int MAX_CAPTURE_TIMES = 16;
 	private static final int AUTO_FOCUS_OVERTIME = 3000;
 
 	private static final int MSG_OPEN_CAMERA = 1;

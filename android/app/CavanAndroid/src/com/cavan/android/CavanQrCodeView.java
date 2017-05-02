@@ -1,6 +1,8 @@
 package com.cavan.android;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -16,7 +18,8 @@ import android.view.View;
 
 import com.cavan.android.CavanAndroidListeners.CavanQrCodeCameraListener;
 import com.cavan.android.CavanAndroidListeners.CavanQrCodeViewListener;
-import com.cavan.java.CavanLuminanceSourceRotate90;
+import com.cavan.java.CavanLuminanceSource;
+import com.google.zxing.LuminanceSource;
 import com.google.zxing.PlanarYUVLuminanceSource;
 import com.google.zxing.Result;
 import com.google.zxing.qrcode.QRCodeReader;
@@ -50,6 +53,9 @@ public class CavanQrCodeView extends View implements CavanQrCodeCameraListener, 
 	private int mQrCodeWidth;
 	private int mQrCodeHeight;
 
+	private Bitmap mQrCodeBitmap;
+	private boolean mShowBitmapEnabled;
+
 	private CavanQrCodeViewListener mListener;
 	private QRCodeReader mQrCodeReader = new QRCodeReader();
 	private CavanQrCodeCamera mCameraHandler = CavanQrCodeCamera.getInstance(this);
@@ -73,6 +79,10 @@ public class CavanQrCodeView extends View implements CavanQrCodeCameraListener, 
 					stopPreview();
 				} else {
 					startPreview();
+				}
+
+				if (mQrCodeBitmap != null) {
+					invalidate();
 				}
 				break;
 
@@ -210,6 +220,19 @@ public class CavanQrCodeView extends View implements CavanQrCodeCameraListener, 
 		}
 	}
 
+	public boolean isShowBitmapEnabled() {
+		return mShowBitmapEnabled;
+	}
+
+	public void setShowBitmapEnable(boolean enable) {
+		mShowBitmapEnabled = enable;
+
+		if (!enable) {
+			mQrCodeBitmap = null;
+			postInvalidate();
+		}
+	}
+
 	@Override
 	protected void onDraw(Canvas canvas) {
 		int width = canvas.getWidth();
@@ -238,7 +261,12 @@ public class CavanQrCodeView extends View implements CavanQrCodeCameraListener, 
 
 		updateQrCodeMatrix();
 
-		canvas.drawRect(left, top, right, bottom, mPaintWin);
+		if (mQrCodeBitmap != null) {
+			canvas.drawBitmap(mQrCodeBitmap, mWinX, mWinY, mPaintBorder);
+		} else {
+			canvas.drawRect(left, top, right, bottom, mPaintWin);
+		}
+
 		canvas.drawRect(left, top, right, bottom, mPaintBorder);
 	}
 
@@ -271,10 +299,16 @@ public class CavanQrCodeView extends View implements CavanQrCodeCameraListener, 
 	@Override
 	public void onFrameCaptured(byte[] bytes, Camera camera) {
 		try {
-			PlanarYUVLuminanceSource sourceYUV = new PlanarYUVLuminanceSource(bytes, mVideoWidth, mVideoHeight, mQrCodeX, mQrCodeY, mQrCodeWidth, mQrCodeHeight, false);
-			CavanLuminanceSourceRotate90 source = new CavanLuminanceSourceRotate90(sourceYUV);
+			LuminanceSource source = new PlanarYUVLuminanceSource(bytes, mVideoWidth, mVideoHeight, mQrCodeX, mQrCodeY, mQrCodeWidth, mQrCodeHeight, false);
+
+			if (mShowBitmapEnabled) {
+				CavanLuminanceSource sourceRotated = CavanLuminanceSource.createLuminanceSource(source, 90);
+				Bitmap bitmap = Bitmap.createBitmap(sourceRotated.getColors(), sourceRotated.getWidth(), sourceRotated.getHeight(), Config.ARGB_8888);
+				mQrCodeBitmap = Bitmap.createScaledBitmap(bitmap, mWinWidth, mWinWidth, false);
+				source = sourceRotated;
+			}
+
 			Result result = CavanQrCode.decode(mQrCodeReader, source);
-			// CavanAndroid.dLog("result = " + result);
 			mHandler.obtainMessage(MSG_DECODE_COMPLETE, result).sendToTarget();
 		} catch (Exception e) {
 			e.printStackTrace();
