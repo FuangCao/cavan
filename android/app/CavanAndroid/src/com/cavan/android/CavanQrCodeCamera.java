@@ -1,5 +1,7 @@
 package com.cavan.android;
 
+import android.Manifest;
+import android.app.Activity;
 import android.hardware.Camera;
 import android.hardware.Camera.AutoFocusCallback;
 import android.hardware.Camera.Parameters;
@@ -12,6 +14,10 @@ import com.cavan.android.CavanAndroidListeners.CavanQrCodeCameraListener;
 @SuppressWarnings("deprecation")
 public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocusCallback, PreviewCallback {
 
+	public static final String[] PERMISSIONS = {
+		Manifest.permission.CAMERA,
+	};
+
 	private static final int MAX_CAPTURE_TIMES = 16;
 	private static final int AUTO_FOCUS_OVERTIME = 3000;
 
@@ -19,6 +25,14 @@ public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocus
 	private static final int MSG_START_PREVIEW = 2;
 	private static final int MSG_CAPTURE_FRAME = 3;
 	private static final int MSG_POST_FRAME = 4;
+
+	public static boolean checkAndRequestPermissions(Activity activity, int requestCode) {
+		return CavanAndroid.checkAndRequestPermissions(activity, PERMISSIONS, requestCode);
+	}
+
+	public static boolean checkAndRequestPermissions(Activity activity) {
+		return checkAndRequestPermissions(activity, 0);
+	}
 
 	private static CavanSingleInstanceHelper<CavanQrCodeCamera> mInstanceHelper = new CavanSingleInstanceHelper<CavanQrCodeCamera>() {
 

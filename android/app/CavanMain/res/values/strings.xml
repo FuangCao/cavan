@@ -275,5 +275,6 @@
 	<string name="save">保存</string>
 	<string name="text_search">文字查找</string>
 	<string name="paste">粘贴</string>
+	<string name="wifi_detector">WiFi探测器</string>
 
 </resources>

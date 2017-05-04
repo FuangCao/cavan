@@ -852,4 +852,64 @@ public class CavanAndroid {
 	public static boolean removeRunnableThreaded(Runnable runnable) {
 		return removeRunnable(getThreadedHandler(), runnable);
 	}
+
+	public static boolean checkPermissions(int[] grantResults) {
+		for (int grantResult : grantResults) {
+			if (grantResult != PackageManager.PERMISSION_GRANTED) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public static boolean checkPermissions(String[] permissions, int[] grantResults, String permission) {
+		for (int i = permissions.length - 1; i >= 0; i--) {
+			if (permission.equals(permissions[i])) {
+				if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	public static boolean checkPermissions(Context context, String[] permissions) {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+			return true;
+		}
+
+		for (String permission : permissions) {
+			if (context.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public static boolean checkAndRequestPermissions(Activity activity, String[] permissions, int requestCode) {
+		if (checkPermissions(activity, permissions)) {
+			return true;
+		}
+
+		activity.requestPermissions(permissions, requestCode);
+
+		return false;
+	}
+
+	public static boolean checkAndRequestPermissions(Activity activity, String[] permissions) {
+		return checkAndRequestPermissions(activity, permissions, 0);
+	}
+
+	public static boolean checkAndRequestPermission(Activity activity, String permission, int requestCode) {
+		return checkAndRequestPermissions(activity, new String[] { permission }, requestCode);
+	}
+
+	public static boolean checkAndRequestPermission(Activity activity, String permission) {
+		return checkAndRequestPermission(activity, permission, 0);
+	}
 }

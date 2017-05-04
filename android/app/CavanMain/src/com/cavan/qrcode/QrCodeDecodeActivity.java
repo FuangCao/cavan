@@ -4,9 +4,7 @@ import java.io.IOException;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.pm.PackageManager;
 import android.hardware.Camera;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.view.SurfaceHolder;
@@ -19,6 +17,7 @@ import android.widget.EditText;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanAndroidListeners.CavanQrCodeViewListener;
+import com.cavan.android.CavanQrCodeCamera;
 import com.cavan.android.CavanQrCodeView;
 import com.cavan.cavanmain.R;
 import com.google.zxing.Result;
@@ -67,14 +66,10 @@ public class QrCodeDecodeActivity extends Activity implements OnClickListener, C
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 		CavanAndroid.pLog("requestCode = " + requestCode);
 
-		for (int i = permissions.length - 1; i >= 0; i--) {
-			if (Manifest.permission.CAMERA.equals(permissions[i])) {
-				if (PackageManager.PERMISSION_GRANTED == grantResults[i]) {
-					mQrCodeView.openCamera(mSurface.getWidth(), mSurface.getHeight());
-				} else {
-					CavanAndroid.showToast(this, R.string.request_camera_permission_failed);
-				}
-			}
+		if (CavanAndroid.checkPermissions(permissions, grantResults, Manifest.permission.CAMERA)) {
+			mQrCodeView.openCamera(mSurface.getWidth(), mSurface.getHeight());
+		} else {
+			CavanAndroid.showToast(this, R.string.request_camera_permission_failed);
 		}
 	}
 
@@ -82,10 +77,8 @@ public class QrCodeDecodeActivity extends Activity implements OnClickListener, C
 	public void surfaceCreated(SurfaceHolder holder) {
 		CavanAndroid.pLog();
 
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+		if (CavanQrCodeCamera.checkAndRequestPermissions(this)) {
 			mQrCodeView.openCamera(mSurface.getWidth(), mSurface.getHeight());
-		} else {
-			requestPermissions(new String[] { Manifest.permission.CAMERA }, 0);
 		}
 	}
 

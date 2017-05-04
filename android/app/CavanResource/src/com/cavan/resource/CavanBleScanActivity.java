@@ -13,7 +13,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
@@ -35,6 +34,7 @@ import com.cavan.android.CavanBleDevice;
 import com.cavan.android.CavanBleDeviceAdapter;
 import com.cavan.android.CavanBleScanner;
 import com.cavan.android.CavanMacAddressView;
+import com.cavan.android.CavanQrCodeCamera;
 import com.cavan.android.CavanQrCodeView;
 import com.cavan.java.CavanMacAddress;
 import com.google.zxing.Result;
@@ -193,10 +193,8 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 						finishScan(device);
 					}
 				} else if (mQrCodeView.getVisibility() != View.VISIBLE) {
-					if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+					if (CavanQrCodeCamera.checkAndRequestPermissions(CavanBleScanActivity.this)) {
 						mSurface.setVisibility(View.VISIBLE);
-					} else {
-						requestPermissions(new String[] { Manifest.permission.CAMERA }, 0);
 					}
 				}
 
@@ -276,16 +274,10 @@ public class CavanBleScanActivity extends CavanBleActivity implements OnClickLis
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 		CavanAndroid.pLog("requestCode = " + requestCode);
 
-		for (int i = 0; i < permissions.length; i++) {
-			CavanAndroid.dLog("permission = " + permissions[i] + ", grantResult = " + grantResults[i]);
-
-			if (Manifest.permission.CAMERA.equals(permissions[i])) {
-				if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-					mSurface.setVisibility(View.VISIBLE);
-				} else {
-					CavanAndroid.showToast(this, R.string.request_camera_permission_failed);
-				}
-			}
+		if (CavanAndroid.checkPermissions(permissions, grantResults, Manifest.permission.CAMERA)) {
+			mSurface.setVisibility(View.VISIBLE);
+		} else {
+			CavanAndroid.showToast(this, R.string.request_camera_permission_failed);
 		}
 	}
 

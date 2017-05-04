@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -42,6 +43,10 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 	private static final int MSG_COPY_START = 3;
 	private static final int MSG_COPY_END = 4;
 	private static final int MSG_CLEAR = 5;
+
+	private static final String[] PERMISSIONS = {
+		Manifest.permission.WRITE_EXTERNAL_STORAGE,
+	};
 
 	private ProgressBar mProgressBar;
 	private TextView mTextViewState;
@@ -386,6 +391,8 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 
 		mAdapter.updateData();
 		setBackupEnable(true);
+
+		CavanAndroid.checkAndRequestPermissions(this, PERMISSIONS);
 	}
 
 	@Override
