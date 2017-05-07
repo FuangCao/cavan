@@ -658,13 +658,11 @@ char *bcrypt_hashpw(const char *key, const char *salt, char *buff, size_t size)
 		return NULL;
 	}
 
-	salt += off + 3;
-
 	if (minor >= 'a') {
 		klen++;
 	}
 
-	slen = bcrypt_decode_base64(salt, 22, BCRYPT_SALT_LEN, saltb) - saltb;
+	slen = bcrypt_decode_base64(salt + off + 3, 22, BCRYPT_SALT_LEN, saltb) - saltb;
 	bcrypt_crypt_raw((const uint8_t *) key, klen, (const uint8_t *) saltb, slen, rounds, bf_crypt_ciphertext, NELEM(bf_crypt_ciphertext), hashb);
 
 	*buff++ = '$';
