@@ -20,6 +20,11 @@
 #include <cavan.h>
 #include <cavan/bcrypt.h>
 
+#define P_COUNT		NELEM(P_ORIG)
+#define S_COUNT		NELEM(S_ORIG)
+#define P_SIZE		sizeof(P_ORIG)
+#define S_SIZE		sizeof(S_ORIG)
+
 static const uint32_t P_ORIG[] = {
 	0x243f6a88, 0x85a308d3, 0x13198a2e, 0x03707344,
 	0xa4093822, 0x299f31d0, 0x082efa98, 0xec4e6c89,
@@ -366,7 +371,7 @@ char *bcrypt_encode_base64(const char data[], int length, char buff[])
  */
 char bcrypt_char64(int x)
 {
-	if (x >= 0 && x < (int)sizeof(index_64)) {
+	if (x >= 0 && x < (int) sizeof(index_64)) {
 		return index_64[x];
 	}
 
@@ -491,17 +496,17 @@ static void bcrypt_key(uint32_t P[], uint32_t S[], const uint8_t key[], int klen
 	int koff = 0;
 	uint32_t lr[] = { 0, 0 };
 
-	for (int i = 0; i < NELEM(P_ORIG); i++) {
+	for (int i = 0; i < P_COUNT; i++) {
 		P[i] = P[i] ^ bcrypt_streamtoword(key, klen, &koff);
 	}
 
-	for (int i = 0; i < NELEM(P_ORIG); i += 2) {
+	for (int i = 0; i < P_COUNT; i += 2) {
 		bcrypt_encipher(P, S, lr, 0);
 		P[i] = lr[0];
 		P[i + 1] = lr[1];
 	}
 
-	for (int i = 0; i < NELEM(S_ORIG); i += 2) {
+	for (int i = 0; i < S_COUNT; i += 2) {
 		bcrypt_encipher(P, S, lr, 0);
 		S[i] = lr[0];
 		S[i + 1] = lr[1];
@@ -521,11 +526,11 @@ static void bcrypt_ekskey(uint32_t P[], uint32_t S[], const uint8_t data[], int 
 	int koff = 0, doff = 0;
 	uint32_t lr[] = { 0, 0 };
 
-	for (i = 0; i < NELEM(P_ORIG); i++) {
+	for (i = 0; i < P_COUNT; i++) {
 		P[i] ^= bcrypt_streamtoword(key, klen, &koff);
 	}
 
-	for (i = 0; i < NELEM(P_ORIG); i += 2) {
+	for (i = 0; i < P_COUNT; i += 2) {
 		lr[0] ^= bcrypt_streamtoword(data, dlen, &doff);
 		lr[1] ^= bcrypt_streamtoword(data, dlen, &doff);
 
@@ -535,7 +540,7 @@ static void bcrypt_ekskey(uint32_t P[], uint32_t S[], const uint8_t data[], int 
 		P[i + 1] = lr[1];
 	}
 
-	for (i = 0; i < NELEM(S_ORIG); i += 2) {
+	for (i = 0; i < S_COUNT; i += 2) {
 		lr[0] ^= bcrypt_streamtoword(data, dlen, &doff);
 		lr[1] ^= bcrypt_streamtoword(data, dlen, &doff);
 
@@ -566,15 +571,15 @@ char *bcrypt_crypt_raw(const uint8_t key[], int klen, const uint8_t salt[], int 
 		return NULL;
 	}
 
-	P = malloc(sizeof(P_ORIG) + sizeof(S_ORIG));
+	P = malloc(P_SIZE + S_SIZE);
 	if (P == NULL) {
 		pr_err_info("malloc");
 		return NULL;
 	}
 
-	S = P + NELEM(P_ORIG);
-	memcpy(P, P_ORIG, sizeof(P_ORIG));
-	memcpy(S, S_ORIG, sizeof(S_ORIG));
+	S = P + P_COUNT;
+	memcpy(P, P_ORIG, P_SIZE);
+	memcpy(S, S_ORIG, S_SIZE);
 
 	rounds = 1 << log_rounds;
 
@@ -586,10 +591,8 @@ char *bcrypt_crypt_raw(const uint8_t key[], int klen, const uint8_t salt[], int 
 	}
 
 	for (i = 0; i < 64; i++) {
-		int length = clen >> 1;
-
-		for (j = 0; j < length; j++) {
-			bcrypt_encipher(P, S, cdata, j << 1);
+		for (j = 0; j < clen; j += 2) {
+			bcrypt_encipher(P, S, cdata, j);
 		}
 	}
 
