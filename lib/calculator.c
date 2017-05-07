@@ -250,7 +250,7 @@ char *double2text_base(u64 value, char *text, int size, char fill, int flags)
 
 	for (i = 0; i < 32 && frational_value; i++) {
 		frational_value *= base;
-		*text++ = value2char(frational_value >> offset);
+		*text++ = value2char_uppercase(frational_value >> offset);
 		frational_value &= mask;
 	}
 

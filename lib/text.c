@@ -7,6 +7,14 @@
 
 #define USE_SYSTEM_PRINTF	1
 
+static const char VALUE_CHAR_MAP_UPPERCASE[] = {
+	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+};
+
+static const char VALUE_CHAR_MAP_LOWERCASE[] = {
+	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+};
+
 char *text_tail(const char *text)
 {
 	while (*text) {
@@ -663,6 +671,16 @@ int char2value(char c)
 	}
 }
 
+char value2char_uppercase(int value)
+{
+	return VALUE_CHAR_MAP_UPPERCASE[value]; // [value & 0x0F];
+}
+
+char value2char_lowercase(int value)
+{
+	return VALUE_CHAR_MAP_LOWERCASE[value]; // [value & 0x0F];
+}
+
 int text2byte(const char text[2])
 {
 	return char2value(text[0]) << 4 | char2value(text[1]);
@@ -784,6 +802,31 @@ s64 text2value(const char *text, const char **last, int base)
 	}
 
 	return text2value_unsigned(text, last, base);
+}
+
+ulong text2ulong(const char *text, const char *text_end, int base)
+{
+	ulong value;
+
+	for (value = 0; text < text_end; text++) {
+		int bit = char2value(*text);
+		if (bit < 0 || bit >= base) {
+			break;
+		}
+
+		value = value * base + bit;
+	}
+
+	return value;
+}
+
+long text2long(const char *text, const char *text_end, int base)
+{
+	if (text < text_end && *text == '-') {
+		return -text2ulong(text + 1, text_end, base);
+	}
+
+	return text2ulong(text, text_end, base);
 }
 
 int text2value_array(const char *text, const char *text_end, const char **last, char sep, int values[], size_t count, int base)
@@ -924,7 +967,7 @@ char *reverse_value2text_base16(u64 value, char *buff, size_t size)
 	char *buff_end;
 
 	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value >>= 4) {
-		*buff = value2char(value & 0x0F);
+		*buff = value2char_uppercase(value & 0x0F);
 	}
 
 	*buff = 0;
@@ -937,7 +980,7 @@ char *reverse_value2text_base32(u64 value, char *buff, size_t size)
 	char *buff_end;
 
 	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value >>= 5) {
-		*buff = value2char(value & 0x1F);
+		*buff = value2char_uppercase(value & 0x1F);
 	}
 
 	*buff = 0;
@@ -950,7 +993,7 @@ char *reverse_value2text_all(u64 value, char *buff, size_t size, int base)
 	char *buff_end;
 
 	for (buff_end = buff + size - 1; buff < buff_end && value; buff++, value /= base) {
-		*buff = value2char(value % base);
+		*buff = value2char_uppercase(value % base);
 	}
 
 	*buff = 0;
@@ -2095,7 +2138,7 @@ char *text_skip_chars(const char *text, const char *chars)
 
 char *text_to_uppercase(const char *src, char *dest)
 {
-	while ((*dest = char2uppercase(*src))) {
+	while ((*dest = cavan_uppercase(*src))) {
 		dest++;
 		src++;
 	}
@@ -2105,7 +2148,7 @@ char *text_to_uppercase(const char *src, char *dest)
 
 char *text_to_lowercase(const char *src, char *dest)
 {
-	while ((*dest = char2lowercase(*src))) {
+	while ((*dest = cavan_lowercase(*src))) {
 		dest++;
 		src++;
 	}
@@ -2117,7 +2160,7 @@ char *text_to_nuppercase(const char *src, char *dest, size_t size)
 {
 	const char *end_src;
 
-	for (end_src = src + size; src < end_src && (*dest = char2uppercase(*src)); src++, dest++);
+	for (end_src = src + size; src < end_src && (*dest = cavan_uppercase(*src)); src++, dest++);
 
 	return dest;
 }
@@ -2126,7 +2169,7 @@ char *text_to_nlowercase(const char *src, char *dest, size_t size)
 {
 	const char *end_src;
 
-	for (end_src = src + size; src < end_src && (*dest = char2lowercase(*src)); src++, dest++);
+	for (end_src = src + size; src < end_src && (*dest = cavan_lowercase(*src)); src++, dest++);
 
 	return dest;
 }

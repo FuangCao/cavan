@@ -84,10 +84,14 @@ char *text_dup(const char *text);
 char *text_tok(char *text, const char *delim);
 
 int char2value(char c);
+char value2char_uppercase(int value);
+char value2char_lowercase(int value);
 int text2byte(const char text[2]);
 int prefix2base(const char *prefix, const char *prefix_end, const char **last, int base);
 u64 text2value_unsigned(const char *text, const char **last, int base);
 s64 text2value(const char *text, const char **last, int base);
+ulong text2ulong(const char *text, const char *text_end, int base);
+long text2long(const char *text, const char *text_end, int base);
 int text2value_array(const char *text, const char *text_end, const char **last, char sep, int values[], size_t count, int base);
 double text2double_unsigned(const char *text, const char *text_end, const char **last, int base);
 double text2double(const char *text, const char *text_end, const char **last, int base);
@@ -289,15 +293,6 @@ static inline char *text_delete_sub(char *text, const char *sub)
 	return text_delete_sub_base(text, text, sub, text_len(sub));
 }
 
-static inline char value2char(int index)
-{
-	if (index < 10) {
-		return index + '0';
-	}
-
-	return index - 10 + 'A';
-}
-
 static inline int text2value_array2(const char *text, const char **last, char sep, int values[], size_t count, int base)
 {
 	return text2value_array(text, NULL, last, sep, values, count, base);
@@ -311,16 +306,6 @@ static inline char *value2text_array2(int values[], size_t count, char sep, char
 static inline int is_empty_character(char c)
 {
 	return text_has_char(" \t\n\r", c);
-}
-
-static inline char char2uppercase(char c)
-{
-	return IS_LOWERCASE(c) ? c - 'a' + 'A' : c;
-}
-
-static inline char char2lowercase(char c)
-{
-	return IS_UPPERCASE(c) ? c - 'A' + 'a' : c;
 }
 
 static inline char *text_replace_text(const char *text_old, char *text_new, const char *src, const char *dest)
@@ -349,6 +334,26 @@ static inline char *text_substring(const char *text, char *sub, int start, int c
 	sub[count] = 0;
 
 	return sub;
+}
+
+static inline ulong text2ulong2(const char *text, int length, int base)
+{
+	return text2ulong(text, text + length, base);
+}
+
+static inline long text2long2(const char *text, int length, int base)
+{
+	return text2long(text, text + length, base);
+}
+
+static inline ulong text2ulong3(const char *text, int base)
+{
+	return text2ulong2(text, strlen(text), base);
+}
+
+static inline long text2long3(const char *text, int base)
+{
+	return text2long2(text, strlen(text), base);
 }
 
 static inline const char *cavan_bool_tostring(bool value)

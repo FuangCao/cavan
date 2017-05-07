@@ -125,7 +125,7 @@ char *math_memory2text(const byte *mem, size_t mem_size, char *text, size_t text
 
 	for (text_bak = text, text_end = text + text_size - 1; text < text_end && mem_size; text++) {
 		value = math_memory_div_single(buff, mem_size, base, NULL, &mem_size);
-		*text = value2char(value);
+		*text = value2char_uppercase(value);
 	}
 
 	if (fill) {
@@ -185,7 +185,7 @@ char *math_memory_remain2text(const byte *left, size_t lsize, const byte *right,
 			math_memory_sub(buff, sizeof(buff), mult_buff, sizeof(mult_buff), NULL, 0);
 		}
 
-		*text = value2char(mult);
+		*text = value2char_uppercase(mult);
 	}
 
 	if (fill) {

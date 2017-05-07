@@ -533,8 +533,8 @@ char *mem_tostring(const byte *mem, size_t memlen, char *buff, size_t size)
 	*p++ = '[';
 
 	for (mem_end = mem + size; mem < mem_end && p < p_end; mem++) {
-		*p++ = value2char((*mem) >> 4);
-		*p++ = value2char((*mem) & 0x0F);
+		*p++ = value2char_uppercase((*mem) >> 4);
+		*p++ = value2char_uppercase((*mem) & 0x0F);
 	}
 
 	*p++ = ']';

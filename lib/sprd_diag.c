@@ -91,12 +91,12 @@ char *sprd_diag_imei_tostring(const byte *imei, size_t isize, char *buff, size_t
 	const byte *imei_end;
 
 	for (buff_end = buff + size - 1, imei_end = imei + isize - 1; buff < buff_end && imei < imei_end; buff += 2, imei++) {
-		buff[0] = value2char((imei[0] >> 4) & 0x0F);
-		buff[1] = value2char(imei[1] & 0x0F);
+		buff[0] = value2char_uppercase((imei[0] >> 4) & 0x0F);
+		buff[1] = value2char_uppercase(imei[1] & 0x0F);
 	}
 
 	if (buff < buff_end) {
-		*buff++ = value2char((imei[0] >> 4) & 0x0F);
+		*buff++ = value2char_uppercase((imei[0] >> 4) & 0x0F);
 	}
 
 	*buff = 0;
