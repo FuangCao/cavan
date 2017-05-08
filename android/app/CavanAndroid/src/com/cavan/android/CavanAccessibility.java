@@ -307,6 +307,25 @@ public class CavanAccessibility {
 		return getNodeCountAndRecycle(nodes);
 	}
 
+	public static int getNodeCountByTextWhole(AccessibilityNodeInfo root, String text) {
+		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(text);
+		if (nodes == null) {
+			return 0;
+		}
+
+		int count = 0;
+
+		for (AccessibilityNodeInfo node : nodes) {
+			if (text.equals(node.getText())) {
+				count++;
+			}
+		}
+
+		recycleNodes(nodes);
+
+		return count;
+	}
+
 	public static int getChildCountByViewId(AccessibilityNodeInfo parent, String viewId) {
 		int count = 0;
 
@@ -332,25 +351,15 @@ public class CavanAccessibility {
 	}
 
 	public static boolean containsText(AccessibilityNodeInfo root, String text) {
-		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(text);
-		if (nodes == null || nodes.isEmpty()) {
-			return false;
-		}
+		return getNodeCountByText(root, text) > 0;
+	}
 
-		recycleNodes(nodes);
-
-		return true;
+	public static boolean containsTextWhole(AccessibilityNodeInfo root, String text) {
+		return getNodeCountByTextWhole(root, text) > 0;
 	}
 
 	public static boolean containsViewId(AccessibilityNodeInfo root, String viewId) {
-		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(viewId);
-		if (nodes == null || nodes.isEmpty()) {
-			return false;
-		}
-
-		recycleNodes(nodes);
-
-		return true;
+		return getNodeCountByViewId(root, viewId) > 0;
 	}
 
 	public static int traverseNodes(AccessibilityNodeInfo root, Closure closure) {

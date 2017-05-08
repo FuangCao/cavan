@@ -28,6 +28,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 
 	private int mChatIndex;
 	private int mRetryCount;
+	private int mUnpackTimes;
 	private boolean mUnpackPending;
 	private String mMessageBoxText;
 	private List<Integer> mFinishNodes = new ArrayList<Integer>();
@@ -92,18 +93,26 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 
 	private void setUnpackPending(AccessibilityNodeInfo root, boolean pending) {
 		CavanAndroid.dLog("setUnpackPending: " + mUnpackPending + " -> " + pending);
+		CavanAndroid.dLog("mUnpackTimes = " + mUnpackTimes);
 
 		if (pending) {
+			mUnpackTimes = 0;
 			mUnpackPending = true;
 			setLockEnable(POLL_DELAY_UNPACK, false);
 		} else if (mUnpackPending) {
 			AccessibilityNodeInfo backNode = getRedPacketBackNode(root);
 			if (backNode != null) {
+				mUnpackTimes = 0;
 				mUnpackPending = false;
 				CavanAccessibility.performClick(backNode);
 			}
 
 			setLockEnable(POLL_DELAY, false);
+		} else if (mUnpackTimes > 10) {
+			mUnpackTimes = 0;
+			performGlobalBack(POLL_DELAY);
+		} else {
+			mUnpackTimes++;
 		}
 	}
 
@@ -249,8 +258,28 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 		return null;
 	}
 
+	private AccessibilityNodeInfo findBackNode(AccessibilityNodeInfo root) {
+		AccessibilityNodeInfo node = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/ivTitleBtnLeft");
+		if (node != null) {
+			return node;
+		}
+
+		AccessibilityNodeInfo parent = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/rlCommenTitle");
+		if (parent == null) {
+			return null;
+		}
+
+		if (parent.getChildCount() > 0) {
+			node = parent.getChild(0);
+		}
+
+		parent.recycle();
+
+		return node;
+	}
+
 	private long doFindAndUnpack(AccessibilityNodeInfo root) {
-		AccessibilityNodeInfo backNode = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/ivTitleBtnLeft");
+		AccessibilityNodeInfo backNode = findBackNode(root);
 		if (backNode != null) {
 			mRunnableClick.cancel();
 
@@ -387,6 +416,25 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 		case "cooperation.qwallet.plugin.QWalletPluginProxyActivity":
 			if (getPacketCount() > 0) {
 				setLockEnable(POLL_DELAY, true);
+
+				AccessibilityNodeInfo root = getRootInActiveWindow();
+				if (root == null) {
+					break;
+				}
+
+				if (CavanAccessibility.containsTextWhole(root, "群公告")) {
+					AccessibilityNodeInfo node = CavanAccessibility.findNodeByText(root, "我知道了");
+					if (node != null) {
+						CavanAccessibility.performClickAndRecycle(node);
+						break;
+					}
+
+					node = CavanAccessibility.findNodeByClassName(root, CavanAccessibility.CLASS_BUTTON);
+					if (node != null) {
+						CavanAccessibility.performClickAndRecycle(node);
+						break;
+					}
+				}
 			}
 			break;
 
