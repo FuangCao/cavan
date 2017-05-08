@@ -25,11 +25,11 @@
 #define BCRYPT_SALT_LEN					16
 #define BLOWFISH_NUM_ROUNDS				16
 
-char *bcrypt_encode_base64(const char data[], int length, char buff[]);
+char *bcrypt_encode_base64(const char *data, int length, char *buff);
 char bcrypt_char64(int x);
 char *bcrypt_decode_base64(const char *data, int dlen, int maxolen, char *buff);
-uint32_t bcrypt_streamtoword(const uint8_t data[], int length, int *offp);
-char *bcrypt_crypt_raw(const uint8_t key[], int klen, const uint8_t salt[], int slen, int log_rounds, uint32_t cdata[], int clen, char *buff);
+uint32_t bcrypt_streamtoword(const uint8_t *data, int length, int *offp);
+char *bcrypt_crypt_raw(const uint8_t *key, int klen, const uint8_t *salt, int slen, int log_rounds, uint32_t *cdata, int clen, char *buff);
 char *bcrypt_hashpw(const char *password, const char *salt, char *buff, size_t size);
 char *bcrypt_gensalt(int log_rounds, char *buff, size_t size);
 char *bcrypt_gensalt2(int log_rounds, char *buff, size_t size);

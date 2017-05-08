@@ -329,7 +329,7 @@ static const char index_64[] = {
  * @return	base64-encoded char *
  * @exception IllegalArgumentException if the length is invalid
  */
-char *bcrypt_encode_base64(const char data[], int length, char buff[])
+char *bcrypt_encode_base64(const char *data, int length, char *buff)
 {
 	int c1, c2;
 	int off = 0;
@@ -438,7 +438,7 @@ char *bcrypt_decode_base64(const char *data, int dlen, int max_olen, char *buff)
  * @param lr	an array containing the two 32-bit half blocks
  * @param off	the position in the array of the blocks
  */
-static void bcrypt_encipher(const uint32_t P[], const uint32_t S[], uint32_t lr[], int off)
+static void bcrypt_encipher(const uint32_t *P, const uint32_t *S, uint32_t *lr, int off)
 {
 	uint32_t l = lr[off] ^ P[0];
 	uint32_t r = lr[off + 1];
@@ -472,7 +472,7 @@ static void bcrypt_encipher(const uint32_t P[], const uint32_t S[], uint32_t lr[
  * current offset into data
  * @return	the next word of material from data
  */
-uint32_t bcrypt_streamtoword(const uint8_t data[], int length, int *offp)
+uint32_t bcrypt_streamtoword(const uint8_t *data, int length, int *offp)
 {
 	uint32_t word = 0;
 	int off = *offp;
@@ -491,7 +491,7 @@ uint32_t bcrypt_streamtoword(const uint8_t data[], int length, int *offp)
  * Key the Blowfish cipher
  * @param key	an array containing the key
  */
-static void bcrypt_key(uint32_t P[], uint32_t S[], const uint8_t key[], int klen)
+static void bcrypt_key(uint32_t *P, uint32_t *S, const uint8_t *key, int klen)
 {
 	int koff = 0;
 	uint32_t lr[] = { 0, 0 };
@@ -520,7 +520,7 @@ static void bcrypt_key(uint32_t P[], uint32_t S[], const uint8_t key[], int klen
  * @param data	salt information
  * @param key	password information
  */
-static void bcrypt_ekskey(uint32_t P[], uint32_t S[], const uint8_t data[], int dlen, const uint8_t key[], int klen)
+static void bcrypt_ekskey(uint32_t *P, uint32_t *S, const uint8_t *data, int dlen, const uint8_t *key, int klen)
 {
 	int i;
 	int koff = 0, doff = 0;
@@ -561,7 +561,7 @@ static void bcrypt_ekskey(uint32_t P[], uint32_t S[], const uint8_t data[], int 
  * @param cdata         the plaintext to encrypt
  * @return	an array containing the binary hashed password
  */
-char *bcrypt_crypt_raw(const uint8_t key[], int klen, const uint8_t salt[], int slen, int log_rounds, uint32_t cdata[], int clen, char *buff)
+char *bcrypt_crypt_raw(const uint8_t *key, int klen, const uint8_t *salt, int slen, int log_rounds, uint32_t *cdata, int clen, char *buff)
 {
 	int rounds, i, j;
 	uint32_t *P, *S;

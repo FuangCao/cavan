@@ -148,6 +148,18 @@ public class CavanString {
 		chars[index + 1] = convertValueToCharUppercase(value & 0x0F);
 	}
 
+	public static String fromBytes(byte[] bytes) {
+		char [] chars = new char[bytes.length << 1];
+		int index = 0;
+
+		for (byte value : bytes) {
+			fromByte(chars, index, value);
+			index += 2;
+		}
+
+		return new String(chars);
+	}
+
 	public static String deleteSpace(String text) {
 		Matcher matcher = PATTERN_SPACE.matcher(text);
 
@@ -325,6 +337,22 @@ public class CavanString {
 		}
 
 		return true;
+	}
+
+	public static byte[] toBytes(String text) {
+		byte[] bytes = new byte[(text.length() + 1) / 2];
+		int end = text.length() - 1;
+		int i;
+
+		for (i = 0; i < end; i += 2) {
+			bytes[i / 2] = (byte) (convertCharToValue(text.charAt(i)) << 4 | convertCharToValue(text.charAt(i + 1)));
+		}
+
+		if (i < text.length()) {
+			bytes[i / 2] = (byte) convertCharToValue(text.charAt(i));
+		}
+
+		return bytes;
 	}
 
 	@Override
