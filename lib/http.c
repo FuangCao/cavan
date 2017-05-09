@@ -1385,3 +1385,122 @@ int cavan_http_service_run(struct cavan_dynamic_service *service)
 
 	return cavan_dynamic_service_run(service);
 }
+
+// ================================================================================
+
+#ifdef CONFIG_CAVAN_CURL
+static size_t http_client_write_callback(char *buffer, size_t size, size_t nitems, void *outstream)
+{
+	size_t remain;
+	struct cavan_http_stream *stream = outstream;
+
+	remain = stream->size - stream->used;
+
+	size *= nitems;
+	if (size > remain) {
+		size = remain;
+	}
+
+	memcpy(stream->buff + stream->used, buffer, size);
+	stream->used += size;
+
+	return size;
+}
+
+#if 0
+static size_t http_client_read_callback(char *buffer, size_t size, size_t nitems, void *instream)
+{
+	size_t remain;
+	struct cavan_http_stream *stream = instream;
+
+	pr_pos_info();
+
+	remain = stream->size - stream->used;
+
+	size *= nitems;
+	if (remain > size) {
+		remain = size;
+	}
+
+	memcpy(buffer, stream->buff + stream->used, remain);
+	stream->used += remain;
+
+	return remain;
+}
+#endif
+
+ssize_t http_client_send_request(const char *url, const char *post, const char *headers[], size_t header_size, void *rsp, size_t rsp_size)
+{
+	CURLcode err = 0;
+	ssize_t length = -EFAULT;
+	CURL *curl = curl_easy_init();
+	struct curl_slist *slist = NULL;
+	struct cavan_http_stream outstream;
+
+	if(curl == NULL) {
+		pr_red_info("curl_easy_init");
+		return length;
+	}
+
+	if (headers && header_size > 0) {
+		int i;
+
+		for ( i = 0; i < (int) header_size; i++) {
+			slist = curl_slist_append(slist, headers[i]);
+		}
+
+	    err |= curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
+	}
+
+	if (post) {
+	    err |= curl_easy_setopt(curl, CURLOPT_POST, 1);
+	    err |= curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post);
+	}
+
+	outstream.used = 0;
+
+	if (rsp && rsp_size > 0) {
+		outstream.buff = rsp;
+		outstream.size = rsp_size;
+	    err |= curl_easy_setopt(curl, CURLOPT_WRITEDATA, &outstream);
+	    err |= curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, http_client_write_callback);
+	}
+
+	err |= curl_easy_setopt(curl, CURLOPT_URL, url);
+    err |= curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 1);
+
+    err |= curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+    err |= curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 3);
+    err |= curl_easy_setopt(curl, CURLOPT_TIMEOUT, 3);
+	err |= curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
+	err |= curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, false);
+
+	if (err != CURLE_OK) {
+		pr_red_info("curl_easy_setopt: %d", err);
+		goto out_curl_easy_cleanup;
+	}
+
+	err = curl_easy_perform(curl);
+	if (err != CURLE_OK) {
+		pr_red_info("curl_easy_perform: %d", err);
+		goto out_curl_easy_cleanup;
+	}
+
+	length = outstream.used;
+
+out_curl_easy_cleanup:
+	if (slist) {
+		curl_slist_free_all(slist);
+	}
+
+    curl_easy_cleanup(curl);
+
+    return length;
+}
+#else
+ssize_t http_client_send_request(const char *url, const char *post, const char *headers[], size_t header_size, void *rsp, size_t rsp_size)
+{
+	pr_red_info("Need CONFIG_CAVAN_CURL");
+	return -EFAULT;
+}
+#endif

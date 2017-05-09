@@ -83,6 +83,11 @@ endif
 LDFLAGS += -lssl
 endif
 
+ifeq ($(CONFIG_CAVAN_CURL),true)
+CFLAGS += -DCONFIG_CAVAN_CURL
+LDFLAGS += -lcurl
+endif
+
 ifneq ($(BUILD_ENTRY),cavan)
 CFLAGS += -Wmissing-declarations
 endif

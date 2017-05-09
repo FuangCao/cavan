@@ -22,6 +22,9 @@
 #include <cavan.h>
 #include <cavan/network.h>
 #include <cavan/service.h>
+#ifdef CONFIG_CAVAN_CURL
+#include <curl/curl.h>
+#endif
 
 #define CAVAN_HTTP_PORT				80
 
@@ -36,11 +39,6 @@ typedef enum {
 	HTTP_REQ_TRACE,
 	HTTP_REQ_PROPFIND,
 } http_request_type_t;
-
-struct cavan_http_client {
-	struct cavan_epoll_client epoll;
-	struct network_client network;
-};
 
 struct cavan_http_service {
 	struct network_service service;
@@ -68,6 +66,12 @@ struct cavan_http_request {
 	struct cavan_http_prop *params;
 	size_t param_size;
 	size_t param_used;
+};
+
+struct cavan_http_stream {
+	char *buff;
+	size_t size;
+	size_t used;
 };
 
 void cavan_http_dump_prop(const struct cavan_http_prop *prop);
@@ -111,6 +115,10 @@ int cavan_http_process_post(struct cavan_fifo *fifo, struct cavan_http_request *
 int cavan_http_process_propfind(struct cavan_fifo *fifo, struct cavan_http_request *req);
 
 int cavan_http_service_run(struct cavan_dynamic_service *service);
+
+ssize_t http_client_send_request(const char *url, const char *post, const char *headers[], size_t header_size, void *rsp, size_t rsp_size);
+
+// ================================================================================
 
 static inline int cavan_http_send_html(struct network_client *client, int fd)
 {
