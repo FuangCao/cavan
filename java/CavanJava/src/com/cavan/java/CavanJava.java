@@ -417,7 +417,7 @@ public class CavanJava {
 	public static byte[] AesCrypt(byte[] bytes, byte[] password, int opmode) {
 		try {
 			SecretKeySpec key = new SecretKeySpec(password, "AES");
-			Cipher cipher = Cipher.getInstance("AES");
+			Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
 			cipher.init(opmode, key);
 			return cipher.doFinal(bytes);
 		} catch (Exception e) {

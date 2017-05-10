@@ -221,11 +221,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mInstanceHelper.getInstance(context);
 	}
 
-	public interface JwaooBleToyEventListener {
-		boolean onInitialize();
-		void onConnectFailed();
-		void onConnectionStateChanged(boolean connected);
-		void onBluetoothAdapterStateChanged(boolean enabled);
+	public interface JwaooBleToyEventListener extends CavanBleGattEventListener {
 		void onBatteryStateChanged(int state, int level, double voltage);
 		void onKeyStateChanged(int code, int state);
 		void onKeyClicked(int code, int count);
