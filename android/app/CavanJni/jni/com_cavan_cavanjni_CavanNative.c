@@ -268,6 +268,13 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doHeartRate(JNIEnv *env, jcla
 	return CavanMainExecute(env, args, "heart_rate", do_cavan_heart_rate);
 }
 
+extern int do_cavan_http_client(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doHttpClient(JNIEnv *env, jclass clazz, jobjectArray args)
+{
+	return CavanMainExecute(env, args, "http_client", do_cavan_http_client);
+}
+
 extern int do_cavan_http_service(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doHttpService(JNIEnv *env, jclass clazz, jobjectArray args)

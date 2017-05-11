@@ -293,7 +293,7 @@ static const uint32_t S_ORIG[] = {
 };
 
 // Table for Base64 encoding
-static const char base64_code[] = {
+static const char base64_code_table[] = {
 	'.', '/', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
 	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
 	'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
@@ -303,17 +303,17 @@ static const char base64_code[] = {
 };
 
 // Table for Base64 decoding
-static const char index_64[] = {
+static const uint8_t base64_value_table[] = {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, 0, 1, 54, 55,
+	-1, -1, -1, -1, -1, -1,  0,  1, 54, 55,
 	56, 57, 58, 59, 60, 61, 62, 63, -1, -1,
-	-1, -1, -1, -1, -1, 2, 3, 4, 5, 6,
-	7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-	17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
-	-1, -1, -1, -1, -1, -1, 28, 29, 30,
+	-1, -1, -1, -1, -1,  2,  3,  4,  5,  6,
+	 7,  8,  9, 10, 11, 12, 13, 14, 15, 16,
+	17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+	27, -1, -1, -1, -1, -1, -1, 28, 29, 30,
 	31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
 	41, 42, 43, 44, 45, 46, 47, 48, 49, 50,
 	51, 52, 53, -1, -1, -1, -1, -1
@@ -329,53 +329,53 @@ static const char index_64[] = {
  * @return	base64-encoded char *
  * @exception IllegalArgumentException if the length is invalid
  */
-char *bcrypt_encode_base64(const char *data, int length, char *buff)
+char *bcrypt_encode_base64(const uint8_t *data, size_t length, char *buff, size_t size)
 {
-	int c1, c2;
-	int off = 0;
+	uint8_t c1, c2, c3;
+	char *buff_end = buff + size;
+	const uint8_t *data_end = data + length;
 
-	while (off < length) {
-		c1 = data[off++];
-		*buff++ = base64_code[(c1 >> 2) & 0x3f];
+	while (data < data_end && buff < buff_end) {
+		c1 = *data++;
+		*buff++ = base64_code_table[c1 >> 2];
 		c1 = (c1 & 0x03) << 4;
 
-		if (off >= length) {
-			*buff++ = base64_code[c1 & 0x3f];
+		if (data < data_end && buff < buff_end) {
+			c2 = *data++;
+			*buff++ = base64_code_table[c1 | c2 >> 4];
+			c2 = (c2 & 0x0f) << 2;
+		} else {
+			if (buff < buff_end) {
+				*buff++ = base64_code_table[c1];
+			}
+
 			break;
 		}
 
-		c2 = data[off++];
-		c1 |= (c2 >> 4) & 0x0f;
-		*buff++ = base64_code[c1 & 0x3f];
-		c1 = (c2 & 0x0f) << 2;
+		if (data < data_end && buff < buff_end) {
+			c3 = *data++;
+			*buff++ = base64_code_table[c2 | c3 >> 6];
+		} else {
+			if (buff < buff_end) {
+				*buff++ = base64_code_table[c2];
+			}
 
-		if (off >= length) {
-			*buff++ = base64_code[c1 & 0x3f];
 			break;
 		}
 
-		c2 = data[off++];
-		c1 |= (c2 >> 6) & 0x03;
-		*buff++ = base64_code[c1 & 0x3f];
-		*buff++ = base64_code[c2 & 0x3f];
+		if (buff < buff_end) {
+			*buff++ = base64_code_table[c3 & 0x3f];
+		} else {
+			break;
+		}
 	}
 
 	return buff;
 }
 
-/**
- * Look up the 3 bits base64-encoded by the specified character,
- * range-checking againt conversion table
- * @param x	the base64-encoded value
- * @return	the decoded value of x
- */
-char bcrypt_char64(int x)
+uint8_t bcrypt_base64_value(char c)
 {
-	if (x >= 0 && x < (int) sizeof(index_64)) {
-		return index_64[x];
-	}
-
-	return -1;
+	return base64_value_table[c & 0x7f];
 }
 
 /**
@@ -387,46 +387,54 @@ char bcrypt_char64(int x)
  * @return	an array containing the decoded chars
  * @throws IllegalArgumentException if maxolen is invalid
  */
-char *bcrypt_decode_base64(const char *data, int dlen, int max_olen, char *buff)
+uint8_t *bcrypt_decode_base64(const char *data, size_t length, uint8_t *buff, size_t size)
 {
-	char c1, c2, c3, c4, o;
-	int off = 0, olen = 0;
+	char c1, c2, c3, c4;
+	uint8_t *buff_end = buff + size;
+	const char *data_end = data + length;
 
-	while (off < dlen - 1 && olen < max_olen) {
-		c1 = bcrypt_char64(data[off++]);
-		c2 = bcrypt_char64(data[off++]);
-		if (c1 == -1 || c2 == -1) {
+	while (1) {
+		if (data < data_end) {
+			c1 = bcrypt_base64_value(*data++);
+		} else {
 			break;
 		}
 
-		o = (char) (c1 << 2);
-		o |= (c2 & 0x30) >> 4;
-
-		*buff++ = o;
-
-		if (++olen >= max_olen || off >= dlen) {
+		if (data < data_end) {
+			c2 = bcrypt_base64_value(*data++);
+		} else {
 			break;
 		}
 
-		c3 = bcrypt_char64(data[off++]);
-		if (c3 == -1) {
+		if (buff < buff_end) {
+			*buff++ = c1 << 2 | ((c2 >> 4) & 0x03);
+		} else {
 			break;
 		}
 
-		o = (char) ((c2 & 0x0f) << 4);
-		o |= (c3 & 0x3c) >> 2;
-
-		*buff++ = o;
-
-		if (++olen >= max_olen || off >= dlen) {
+		if (data < data_end) {
+			c3 = bcrypt_base64_value(*data++);
+		} else {
 			break;
 		}
 
-		c4 = bcrypt_char64(data[off++]);
-		o = (char) ((c3 & 0x03) << 6);
-		o |= c4;
-		*buff++ = o;
-		++olen;
+		if (buff < buff_end) {
+			*buff++ = c2 << 4 | ((c3 >> 2) & 0x0f);
+		} else {
+			break;
+		}
+
+		if (data < data_end) {
+			c4 = bcrypt_base64_value(*data++);
+		} else {
+			break;
+		}
+
+		if (buff < buff_end) {
+			*buff++ = c3 << 6 | c4;
+		} else {
+			break;
+		}
 	}
 
 	return buff;
@@ -472,12 +480,13 @@ static void bcrypt_encipher(const uint32_t *P, const uint32_t *S, uint32_t *lr, 
  * current offset into data
  * @return	the next word of material from data
  */
-uint32_t bcrypt_streamtoword(const uint8_t *data, int length, int *offp)
+uint32_t bcrypt_build_word(const uint8_t *data, int length, int *offp)
 {
 	uint32_t word = 0;
 	int off = *offp;
+	int i;
 
-	for (int i = 0; i < 4; i++) {
+	for (i = 0; i < 4; i++) {
 		word = (word << 8) | data[off];
 		off = (off + 1) % length;
 	}
@@ -493,20 +502,21 @@ uint32_t bcrypt_streamtoword(const uint8_t *data, int length, int *offp)
  */
 static void bcrypt_key(uint32_t *P, uint32_t *S, const uint8_t *key, int klen)
 {
+	int i;
 	int koff = 0;
 	uint32_t lr[] = { 0, 0 };
 
-	for (int i = 0; i < P_COUNT; i++) {
-		P[i] = P[i] ^ bcrypt_streamtoword(key, klen, &koff);
+	for (i = 0; i < P_COUNT; i++) {
+		P[i] = P[i] ^ bcrypt_build_word(key, klen, &koff);
 	}
 
-	for (int i = 0; i < P_COUNT; i += 2) {
+	for (i = 0; i < P_COUNT; i += 2) {
 		bcrypt_encipher(P, S, lr, 0);
 		P[i] = lr[0];
 		P[i + 1] = lr[1];
 	}
 
-	for (int i = 0; i < S_COUNT; i += 2) {
+	for (i = 0; i < S_COUNT; i += 2) {
 		bcrypt_encipher(P, S, lr, 0);
 		S[i] = lr[0];
 		S[i + 1] = lr[1];
@@ -527,12 +537,12 @@ static void bcrypt_ekskey(uint32_t *P, uint32_t *S, const uint8_t *data, int dle
 	uint32_t lr[] = { 0, 0 };
 
 	for (i = 0; i < P_COUNT; i++) {
-		P[i] ^= bcrypt_streamtoword(key, klen, &koff);
+		P[i] ^= bcrypt_build_word(key, klen, &koff);
 	}
 
 	for (i = 0; i < P_COUNT; i += 2) {
-		lr[0] ^= bcrypt_streamtoword(data, dlen, &doff);
-		lr[1] ^= bcrypt_streamtoword(data, dlen, &doff);
+		lr[0] ^= bcrypt_build_word(data, dlen, &doff);
+		lr[1] ^= bcrypt_build_word(data, dlen, &doff);
 
 		bcrypt_encipher(P, S, lr, 0);
 
@@ -541,8 +551,8 @@ static void bcrypt_ekskey(uint32_t *P, uint32_t *S, const uint8_t *data, int dle
 	}
 
 	for (i = 0; i < S_COUNT; i += 2) {
-		lr[0] ^= bcrypt_streamtoword(data, dlen, &doff);
-		lr[1] ^= bcrypt_streamtoword(data, dlen, &doff);
+		lr[0] ^= bcrypt_build_word(data, dlen, &doff);
+		lr[1] ^= bcrypt_build_word(data, dlen, &doff);
 
 		bcrypt_encipher(P, S, lr, 0);
 
@@ -561,8 +571,9 @@ static void bcrypt_ekskey(uint32_t *P, uint32_t *S, const uint8_t *data, int dle
  * @param cdata         the plaintext to encrypt
  * @return	an array containing the binary hashed password
  */
-char *bcrypt_crypt_raw(const uint8_t *key, int klen, const uint8_t *salt, int slen, int log_rounds, uint32_t *cdata, int clen, char *buff)
+uint8_t *bcrypt_crypt_raw(const uint8_t *key, int klen, const uint8_t *salt, int slen, int log_rounds, uint32_t *cdata, int clen, uint8_t *buff, size_t size)
 {
+	uint8_t *buff_end;
 	int rounds, i, j;
 	uint32_t *P, *S;
 
@@ -597,8 +608,9 @@ char *bcrypt_crypt_raw(const uint8_t *key, int klen, const uint8_t *salt, int sl
 	}
 
 	free(P);
+	buff_end = buff + size - 3;
 
-	for (i = 0; i < clen; i++) {
+	for (i = 0; i < clen && buff < buff_end; i++) {
 		uint32_t value = cdata[i];
 
 		*buff++ = (value >> 24) & 0xff;
@@ -623,8 +635,8 @@ char *bcrypt_hashpw(const char *key, const char *salt, char *buff, size_t size)
 		0x4f727068, 0x65616e42, 0x65686f6c,
 		0x64657253, 0x63727944, 0x6f756274
 	};
-	char hashb[sizeof(bf_crypt_ciphertext)];
-	char saltb[BCRYPT_SALT_LEN];
+	uint8_t hashb[sizeof(bf_crypt_ciphertext)];
+	uint8_t saltb[BCRYPT_SALT_LEN];
 	int slen;
 	char *buff_end = buff + size;
 	int klen = strlen(key);
@@ -665,8 +677,8 @@ char *bcrypt_hashpw(const char *key, const char *salt, char *buff, size_t size)
 		klen++;
 	}
 
-	slen = bcrypt_decode_base64(salt + off + 3, 22, BCRYPT_SALT_LEN, saltb) - saltb;
-	bcrypt_crypt_raw((const uint8_t *) key, klen, (const uint8_t *) saltb, slen, rounds, bf_crypt_ciphertext, NELEM(bf_crypt_ciphertext), hashb);
+	slen = bcrypt_decode_base64(salt + off + 3, 22, saltb, sizeof(saltb)) - saltb;
+	bcrypt_crypt_raw((const uint8_t *) key, klen, (const uint8_t *) saltb, slen, rounds, bf_crypt_ciphertext, NELEM(bf_crypt_ciphertext), hashb, sizeof(hashb));
 
 	*buff++ = '$';
 	*buff++ = '2';
@@ -684,8 +696,8 @@ char *bcrypt_hashpw(const char *key, const char *salt, char *buff, size_t size)
 	buff = value2text_unsigned_simple(rounds, buff, buff_end - buff, 10);
 	*buff++ = '$';
 
-	buff = bcrypt_encode_base64(saltb, slen, buff);
-	buff = bcrypt_encode_base64(hashb, sizeof(bf_crypt_ciphertext) - 1, buff);
+	buff = bcrypt_encode_base64(saltb, slen, buff, buff_end - buff);
+	buff = bcrypt_encode_base64((const uint8_t *) hashb, sizeof(bf_crypt_ciphertext) - 1, buff, buff_end - buff);
 
 	return buff;
 }
@@ -720,7 +732,7 @@ char *bcrypt_gensalt(int log_rounds, char *buff, size_t size)
 
 	file_read_urandom(rnd, sizeof(rnd));
 
-	return bcrypt_encode_base64(rnd, sizeof(rnd), buff);
+	return bcrypt_encode_base64((const uint8_t *) rnd, sizeof(rnd), buff, buff_end - buff);
 }
 
 /**

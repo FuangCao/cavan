@@ -21,6 +21,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
+import android.os.Build;
 import android.os.Environment;
 import android.os.FileObserver;
 import android.os.Handler;
@@ -485,7 +486,15 @@ public class FloatMessageService extends FloatWidowService {
 	}
 
 	private boolean checkServiceState() {
-		return CavanAccessibilityService.checkAndOpenSettingsActivity(this) && RedPacketListenerService.checkAndOpenSettingsActivity(this);
+		if (!CavanAccessibilityService.checkAndOpenSettingsActivity(this)) {
+			return false;
+		}
+
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+			return true;
+		}
+
+		return RedPacketListenerService.checkAndOpenSettingsActivity(this);
 	}
 
 	public boolean isSuspendDisabled() {

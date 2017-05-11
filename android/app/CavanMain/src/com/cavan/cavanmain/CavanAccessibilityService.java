@@ -559,9 +559,11 @@ public class CavanAccessibilityService extends AccessibilityService {
 	public void onCreate() {
 		super.onCreate();
 
-		WindowManager manager = (WindowManager) getSystemService(WINDOW_SERVICE);
-		if (manager != null) {
-			manager.getDefaultDisplay().getSize(mDisplaySize);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+			WindowManager manager = (WindowManager) getSystemService(WINDOW_SERVICE);
+			if (manager != null) {
+				manager.getDefaultDisplay().getSize(mDisplaySize);
+			}
 		}
 
 		IntentFilter filter = new IntentFilter();
