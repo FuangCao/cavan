@@ -17,8 +17,7 @@ namespace FFMpegConvert
     public partial class FFMpegConvert : Form
     {
         private static String FILENAME_BACKUP = "ffmpeg-backup";
-        private static String[] VIDEO_EXT_LIST =
-        {
+        private static String[] VIDEO_EXT_LIST = {
             "mkv", "mp4", "rm", "rmvb", "avi", "wmv", "flv", "mov", "m2v", "vob", "3gp", "mpeg", "mpg", "mpe", "ra", "ram", "asf"
         };
 
@@ -32,6 +31,7 @@ namespace FFMpegConvert
         private String mVideoCodec;
         private String mVideoBitRate;
         private String mVideoCodecParam;
+        private String mOutputFormat;
         private String mAudioCodec;
         private String mAudioBitRate;
         private String mCommandParam;
@@ -47,6 +47,19 @@ namespace FFMpegConvert
             comboBoxVideoBitRate.SelectedIndex = 0;
             comboBoxAudioCodec.SelectedIndex = 0;
             comboBoxAudioBitRate.SelectedIndex = 0;
+            comboBoxOutputFormat.SelectedIndex = 0;
+
+            StringBuilder builder = new StringBuilder("视频文件|");
+
+            for (int i = 0; i < VIDEO_EXT_LIST.Length; i++) {
+                if (i > 0) {
+                    builder.Append(';');
+                }
+
+                builder.Append("*.").Append(VIDEO_EXT_LIST[i]);
+            }
+
+            openFileDialogInFile.Filter = builder.ToString();
 
             updateStartButtonState();
         }
@@ -122,6 +135,8 @@ namespace FFMpegConvert
             builder.Append("\"");
             String arguments = builder.ToString();
 
+            MessageBox.Show("arguments = " + arguments);
+
             try
             {
                 ProcessStartInfo info = new ProcessStartInfo("ffmpeg", arguments);
@@ -190,8 +205,13 @@ namespace FFMpegConvert
 
             if (isVideo)
             {
-                fnOut = doConvertFilename(fnIn);
-                fileOut = Path.Combine(dirOut, fnOut + ".mp4");
+                if (mAudioCodec != null && mAudioBitRate != null) {
+                    fnOut = doConvertFilename(fnIn);
+                } else {
+                    fnOut = fnIn;
+                }
+
+                fileOut = Path.Combine(dirOut, fnOut + "." + mOutputFormat);
             }
             else
             {
@@ -211,7 +231,7 @@ namespace FFMpegConvert
 
             if (isVideo)
             {
-                fileTmp = Path.Combine(dirOut, fnOut + ".ffmpeg.cache.mp4");
+                fileTmp = Path.Combine(dirOut, fnOut + ".ffmpeg.cache." + mOutputFormat);
                 success = doConvertVideo(fileInfo.FullName, fileTmp);
             }
             else
@@ -339,11 +359,12 @@ namespace FFMpegConvert
 
             bool enable = !running;
 
-            textBoxInDir.Enabled = enable;
-            textBoxOutDir.Enabled = enable;
+            textBoxInPath.Enabled = enable;
+            textBoxOutPath.Enabled = enable;
+            comboBoxOutputFormat.Enabled = enable;
             comboBoxVideoCodec.Enabled = enable;
             comboBoxVideoBitRate.Enabled = enable;
-            textBoxVidecCodecParam.Enabled = enable;
+            textBoxParam.Enabled = enable;
             comboBoxAudioCodec.Enabled = enable;
             comboBoxAudioBitRate.Enabled = enable;
             textBoxLogFile.Enabled = enable;
@@ -369,8 +390,11 @@ namespace FFMpegConvert
         {
             StringBuilder builder = new StringBuilder();
 
-            builder.Append("-acodec " + mAudioCodec);
-            builder.Append(" -b:a " + mAudioBitRate);
+            if (mAudioCodec != null && mAudioBitRate != null) {
+                builder.Append("-acodec " + mAudioCodec);
+                builder.Append(" -b:a " + mAudioBitRate);
+            }
+
             builder.Append(" -vcodec " + mVideoCodec);
             builder.Append(" -b:v " + mVideoBitRate);
 
@@ -390,6 +414,7 @@ namespace FFMpegConvert
 
             mStopRequired = false;
             mCommandParam = buildCommandParam();
+            MessageBox.Show("mCommandParam = " + mCommandParam);
             mStreamWriterLog = new StreamWriter(mLogFilePath, true);
 
             setConvertState(true);
@@ -440,7 +465,7 @@ namespace FFMpegConvert
 
         private void updateStartButtonState()
         {
-            if (textBoxInDir.Text.Length > 0 && textBoxOutDir.Text.Length > 0)
+            if (textBoxInPath.Text.Length > 0 && textBoxOutPath.Text.Length > 0)
             {
                 buttonStart.Enabled = true;
                 setConvertState("点击“开始”按钮开始转换");
@@ -449,54 +474,18 @@ namespace FFMpegConvert
             {
                 buttonStart.Enabled = false;
 
-                if (textBoxInDir.Text.Length > 0)
+                if (textBoxInPath.Text.Length > 0)
                 {
-                    setConvertState("请选择输出文件夹路径");
+                    setConvertState("请选择输出路径");
                 }
-                else if (textBoxOutDir.Text.Length > 0)
+                else if (textBoxOutPath.Text.Length > 0)
                 {
-                    setConvertState("请选择输入文件夹路径");
+                    setConvertState("请选择输入路径");
                 }
                 else
                 {
-                    setConvertState("请选择输入和输出文件夹路径");
+                    setConvertState("请选择输入和输出路径");
                 }
-            }
-        }
-
-        private void textBoxInputDir_Click(object sender, EventArgs e)
-        {
-            if (textBoxInDir.Text.Length > 0)
-            {
-                folderBrowserDialogInDir.SelectedPath = textBoxInDir.Text;
-            }
-            else
-            {
-                folderBrowserDialogInDir.SelectedPath = "D:\\test-input";
-            }
-
-            if (folderBrowserDialogInDir.ShowDialog() == DialogResult.OK)
-            {
-                textBoxInDir.Text = folderBrowserDialogInDir.SelectedPath;
-                updateStartButtonState();
-            }
-        }
-
-        private void textBoxOutputDir_Click(object sender, EventArgs e)
-        {
-            if (textBoxOutDir.Text.Length > 0)
-            {
-                folderBrowserDialogOutDir.SelectedPath = textBoxOutDir.Text;
-            }
-            else
-            {
-                folderBrowserDialogOutDir.SelectedPath = "D:\\test-output";
-            }
-
-            if (folderBrowserDialogOutDir.ShowDialog() == DialogResult.OK)
-            {
-                textBoxOutDir.Text = folderBrowserDialogOutDir.SelectedPath;
-                updateStartButtonState();
             }
         }
 
@@ -507,16 +496,28 @@ namespace FFMpegConvert
                 return;
             }
 
-            mDirInput = textBoxInDir.Text;
+            mDirInput = textBoxInPath.Text;
             mVideoCodec = comboBoxVideoCodec.Text;
+            mOutputFormat = comboBoxOutputFormat.Text;
             mVideoBitRate = comboBoxVideoBitRate.Text;
-            mVideoCodecParam = textBoxVidecCodecParam.Text;
-            mAudioCodec = comboBoxAudioCodec.Text;
-            mAudioBitRate = comboBoxAudioBitRate.Text;
+            mVideoCodecParam = textBoxParam.Text;
+
+            if (comboBoxAudioCodec.SelectedIndex > 0) {
+                mAudioCodec = comboBoxAudioCodec.Text;
+            } else {
+                mAudioCodec = null;
+            }
+
+            if (comboBoxAudioBitRate.SelectedIndex > 0) {
+                mAudioBitRate = comboBoxAudioBitRate.Text;
+            } else {
+                mAudioBitRate = null;
+            }
+
             mOverride = checkBoxOverride.Checked;
             mHiddenCmdline = !checkBoxShowCmdline.Checked;
 
-            mDirOutput = Path.Combine(textBoxOutDir.Text, DateTime.Now.ToString("yyyyMMdd"));
+            mDirOutput = Path.Combine(textBoxOutPath.Text, DateTime.Now.ToString("yyyyMMdd"));
 
             mLogFilePath = textBoxLogFile.Text;
             if (mLogFilePath.Length <= 0)
@@ -552,9 +553,9 @@ namespace FFMpegConvert
             {
                 saveFileDialogLogFile.FileName = textBoxLogFile.Text;
             }
-            else if (textBoxOutDir.Text.Length > 0)
+            else if (textBoxOutPath.Text.Length > 0)
             {
-                saveFileDialogLogFile.InitialDirectory = textBoxOutDir.Text;
+                saveFileDialogLogFile.InitialDirectory = textBoxOutPath.Text;
             }
 
             if (saveFileDialogLogFile.ShowDialog() == DialogResult.OK)
@@ -566,6 +567,69 @@ namespace FFMpegConvert
         private void buttonClear_Click(object sender, EventArgs e)
         {
             textBoxLog.Clear();
+        }
+
+        private void comboBoxOutputFormat_SelectedIndexChanged(object sender, EventArgs e) {
+            switch (comboBoxOutputFormat.SelectedIndex) {
+            case 1:
+                textBoxParam.Text = "-x264-params \"level = 5.0\" -bf 0";
+                break;
+
+            default:
+                textBoxParam.Text = "-r 30";
+                break;
+            }
+        }
+
+        private void buttonInFile_Click(object sender, EventArgs e) {
+            if (openFileDialogInFile.ShowDialog() == DialogResult.OK) {
+                textBoxInPath.Text = openFileDialogInFile.FileName;
+                updateStartButtonState();
+                buttonOutFile.Enabled = true;
+            }
+        }
+
+        private void buttonInDir_Click(object sender, EventArgs e) {
+            if (textBoxInPath.Text.Length > 0) {
+                folderBrowserDialogInDir.SelectedPath = textBoxInPath.Text;
+            } else {
+                folderBrowserDialogInDir.SelectedPath = "D:\\test-input";
+            }
+
+            if (folderBrowserDialogInDir.ShowDialog() == DialogResult.OK) {
+                textBoxInPath.Text = folderBrowserDialogInDir.SelectedPath;
+                updateStartButtonState();
+                buttonOutFile.Enabled = false;
+
+                String pathname = textBoxOutPath.Text;
+                if (pathname.Length > 0 && !Directory.Exists(pathname)) {
+                    textBoxOutPath.Clear();
+                }
+            }
+        }
+
+        private void buttonOutFile_Click(object sender, EventArgs e) {
+            String format = comboBoxOutputFormat.Text;
+
+            saveFileDialogOutFile.Filter = format + "文件|*." + format;
+
+            if (saveFileDialogOutFile.ShowDialog() == DialogResult.OK) {
+                textBoxOutPath.Text = saveFileDialogOutFile.FileName;
+                updateStartButtonState();
+            }
+        }
+
+        private void buttonOutDir_Click(object sender, EventArgs e) {
+            if (textBoxOutPath.Text.Length > 0) {
+                folderBrowserDialogOutDir.SelectedPath = textBoxOutPath.Text;
+            } else {
+                folderBrowserDialogOutDir.SelectedPath = "D:\\test-output";
+            }
+
+            if (folderBrowserDialogOutDir.ShowDialog() == DialogResult.OK) {
+                textBoxOutPath.Text = folderBrowserDialogOutDir.SelectedPath;
+                updateStartButtonState();
+            }
         }
     }
 }
