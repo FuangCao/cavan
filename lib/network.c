@@ -4118,7 +4118,6 @@ int cavan_inet_find_default_route(struct cavan_inet_route routes[], int count)
 
 int cavan_inet_get_default_route(struct cavan_inet_route *route)
 {
-	int ret;
 	int index;
 	int count;
 	struct cavan_inet_route routes[16];
@@ -4134,11 +4133,11 @@ int cavan_inet_get_default_route(struct cavan_inet_route *route)
 	}
 
 	if (count > 1) {
-		ret = cavan_inet_find_default_route(routes, count);
-		if (ret < 0) {
+		index = cavan_inet_find_default_route(routes, count);
+		if (index < 0) {
 #if 0
-			pr_red_info("cavan_inet_find_default_route: %d", ret);
-			return ret;
+			pr_red_info("cavan_inet_find_default_route: %d", index);
+			return index;
 #else
 			index = 0;
 #endif
