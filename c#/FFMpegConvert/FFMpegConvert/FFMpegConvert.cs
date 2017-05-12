@@ -12,13 +12,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace FFMpegConvert
-{
-    public partial class FFMpegConvert : Form
-    {
+namespace FFMpegConvert {
+    public partial class FFMpegConvert : Form {
         private static String FILENAME_BACKUP = "ffmpeg-backup";
         private static String[] VIDEO_EXT_LIST = {
+#if false
             "mkv", "mp4", "rm", "rmvb", "avi", "wmv", "flv", "mov", "m2v", "vob", "3gp", "mpeg", "mpg", "mpe", "ra", "ram", "asf"
+#else
+            "mp4"
+#endif
         };
 
         private bool mHiddenCmdline;
@@ -39,8 +41,7 @@ namespace FFMpegConvert
         private String mDirOutput;
         private String mLogFilePath;
 
-        public FFMpegConvert()
-        {
+        public FFMpegConvert() {
             InitializeComponent();
 
             comboBoxVideoCodec.SelectedIndex = 0;
@@ -66,34 +67,25 @@ namespace FFMpegConvert
 
         private delegate void WriteLogCallback(String line);
 
-        private void writeLog(String log)
-        {
-            if (textBoxLog.InvokeRequired)
-            {
+        private void writeLog(String log) {
+            if (textBoxLog.InvokeRequired) {
                 Invoke(new WriteLogCallback(writeLog), new object[] { log });
-            }
-            else
-            {
+            } else {
                 textBoxLog.AppendText(log);
             }
         }
 
-        private void print(String log)
-        {
+        private void print(String log) {
             writeLog(log);
         }
 
-        private void println(String log)
-        {
+        private void println(String log) {
             print(log + "\n");
         }
 
-        private bool isVideoFile(String ext)
-        {
-            foreach (String item in VIDEO_EXT_LIST)
-            {
-                if (String.Compare(ext, "." + item, true) == 0)
-                {
+        private bool isVideoFile(String ext) {
+            foreach (String item in VIDEO_EXT_LIST) {
+                if (String.Compare(ext, "." + item, true) == 0) {
                     return true;
                 }
             }
@@ -101,28 +93,20 @@ namespace FFMpegConvert
             return false;
         }
 
-        private bool doCopyFile(String fileIn, String fileOut)
-        {
+        private bool doCopyFile(String fileIn, String fileOut) {
             println("复制：" + fileIn);
             setConvertState("正在复制：" + fileIn);
 
-            try
-            {
+            try {
                 File.Copy(fileIn, fileOut, true);
-            }
-            catch (Exception)
-            {
+            } catch (Exception) {
                 return false;
             }
 
             return true;
         }
 
-        private bool doConvertVideo(String fileIn, String fileOut)
-        {
-            File.Delete(fileOut);
-
-            println("转换: " + fileIn);
+        private bool doConvertVideo(String fileIn, String fileOut) {
             setConvertState("正在转换：" + fileIn);
 
             StringBuilder builder = new StringBuilder();
@@ -135,43 +119,35 @@ namespace FFMpegConvert
             builder.Append("\"");
             String arguments = builder.ToString();
 
-            MessageBox.Show("arguments = " + arguments);
+            println("ffmpeg " + arguments);
 
-            try
-            {
+            try {
                 ProcessStartInfo info = new ProcessStartInfo("ffmpeg", arguments);
 
-                if (mHiddenCmdline)
-                {
+                if (mHiddenCmdline) {
                     info.CreateNoWindow = true;
                     info.UseShellExecute = false;
                     info.WindowStyle = ProcessWindowStyle.Hidden;
                 }
 
                 Process process = Process.Start(info);
-                if (process == null)
-                {
+                if (process == null) {
+                    MessageBox.Show("启动ffmpeg失败！");
                     return false;
                 }
 
                 mConvertProcess = process;
-
                 process.WaitForExit();
-                if (process.ExitCode != 0)
-                {
+
+                if (process.ExitCode != 0) {
                     return false;
                 }
-            }
-            catch (Exception)
-            {
+            } catch (Exception e) {
+                MessageBox.Show(e.ToString());
                 return false;
-            }
-            finally
-            {
-                if (mConvertProcess != null)
-                {
-                    if (!mConvertProcess.HasExited)
-                    {
+            } finally {
+                if (mConvertProcess != null) {
+                    if (!mConvertProcess.HasExited) {
                         mConvertProcess.Kill();
                     }
 
@@ -183,12 +159,10 @@ namespace FFMpegConvert
             return true;
         }
 
-        private String doConvertFilename(String filename)
-        {
+        private String doConvertFilename(String filename) {
             filename = Path.GetFileNameWithoutExtension(filename);
 
-            if (mVideoCodec.Equals("libx265"))
-            {
+            if (mVideoCodec.Equals("libx265")) {
                 filename = Regex.Replace(filename, "x264", "x265", RegexOptions.IgnoreCase);
             }
 
@@ -197,123 +171,112 @@ namespace FFMpegConvert
             return filename;
         }
 
-        private bool doConvertFile(FileInfo fileInfo, DirectoryInfo dirInfo, String dirOut, String dirBak)
-        {
-            String fnIn = fileInfo.Name;
-            String fnOut, fileOut, fileTmp;
-            bool isVideo = isVideoFile(Path.GetExtension(fnIn));
-
-            if (isVideo)
-            {
-                if (mAudioCodec != null && mAudioBitRate != null) {
-                    fnOut = doConvertFilename(fnIn);
-                } else {
-                    fnOut = fnIn;
-                }
-
-                fileOut = Path.Combine(dirOut, fnOut + "." + mOutputFormat);
-            }
-            else
-            {
-                fnOut = fnIn;
-                fileOut = Path.Combine(dirOut, fnOut);
+        private bool doConvertFile(FileInfo inInfo, FileInfo outInfo) {
+            if (!isVideoFile(Path.GetExtension(inInfo.Name))) {
+                println(inInfo.FullName + " is not video file.");
+                return true;
             }
 
-            if (File.Exists(fileOut))
-            {
-                if (!mOverride)
-                {
+            if (outInfo.Exists) {
+                if (mOverride) {
+                    println(outInfo.FullName + " is exists.");
                     return true;
                 }
+
+                println("Delete: " + outInfo.FullName);
+                outInfo.Delete();
             }
 
-            bool success;
+            FileInfo cacheInfo = new FileInfo(Path.Combine(outInfo.DirectoryName, outInfo.Name + ".ffmpeg.cache" + outInfo.Extension));
 
-            if (isVideo)
-            {
-                fileTmp = Path.Combine(dirOut, fnOut + ".ffmpeg.cache." + mOutputFormat);
-                success = doConvertVideo(fileInfo.FullName, fileTmp);
-            }
-            else
-            {
-                fileTmp = Path.Combine(dirOut, fnOut + ".ffmpeg.cache.dat");
-                success = doCopyFile(fileInfo.FullName, fileTmp);
+            if (cacheInfo.Exists) {
+                println("Delete: " + cacheInfo.FullName);
+                cacheInfo.Delete();
             }
 
-            if (!success)
-            {
-                File.Delete(fileTmp);
-                println("失败！");
+            if (!doConvertVideo(inInfo.FullName, cacheInfo.FullName)) {
+                cacheInfo.Delete();
                 return false;
             }
 
-            try
-            {
-                File.Delete(fileOut);
-                File.Move(fileTmp, fileOut);
-
-                String fileBak = Path.Combine(dirBak, fnIn);
-                File.Delete(fileBak);
-                fileInfo.MoveTo(fileBak);
-            }
-            catch (Exception)
-            {
+            try {
+                println("Move: " + cacheInfo.FullName + " -> " + outInfo.FullName);
+                cacheInfo.MoveTo(outInfo.FullName);
+            } catch (Exception) {
+                cacheInfo.Delete();
                 return false;
             }
 
-            if (isVideo)
-            {
-                mStreamWriterLog.WriteLine(fileInfo.FullName + " " + fileOut + " " + mCommandParam);
-                mStreamWriterLog.Flush();
-            }
-
-            println("成功");
+            mStreamWriterLog.WriteLine(inInfo.FullName + " " + outInfo.FullName + " " + mCommandParam);
+            mStreamWriterLog.Flush();
 
             return true;
         }
 
-        private int doConvertDir(DirectoryInfo dirInfo, String dirOut, String dirBak)
-        {
+        private bool doConvertFile(String inPath, String outPath) {
+            FileInfo inInfo = new FileInfo(inPath);
+            FileInfo outInfo;
+
+            if (Directory.Exists(outPath)) {
+                outInfo = new FileInfo(Path.Combine(outPath, Path.GetFileNameWithoutExtension(inInfo.Name) + "." + mOutputFormat));
+            } else {
+                outInfo = new FileInfo(outPath);
+            }
+
+            return doConvertFile(inInfo, outInfo);
+        }
+
+        private bool doConvertFile(FileInfo inInfo, String outDir, String bakDir) {
+            FileInfo outInfo = new FileInfo(Path.Combine(outDir, Path.GetFileNameWithoutExtension(inInfo.Name) + "." + mOutputFormat));
+
+            if (!doConvertFile(inInfo, outInfo)) {
+                return false;
+            }
+
+            try {
+                String bakFile = Path.Combine(bakDir, inInfo.Name);
+                File.Delete(bakFile);
+                inInfo.MoveTo(bakFile);
+            } catch (Exception) {
+                return false;
+            }
+
+            return true;
+        }
+
+        private int doConvertDir(DirectoryInfo dirInfo, String dirOut, String dirBak) {
             int failCount = 0;
 
-            if (mStopRequired)
-            {
+            if (mStopRequired) {
                 return -1;
             }
 
-            if (dirInfo.FullName.StartsWith(dirOut))
-            {
+            if (dirInfo.FullName.StartsWith(dirOut)) {
                 return 0;
             }
 
             Directory.CreateDirectory(dirOut);
             Directory.CreateDirectory(dirBak);
 
-            foreach (FileInfo info in dirInfo.GetFiles())
-            {
-                if (mStopRequired)
-                {
+            foreach (FileInfo info in dirInfo.GetFiles()) {
+                if (mStopRequired) {
                     return -1;
                 }
 
-                if (!doConvertFile(info, dirInfo, dirOut, dirBak))
-                {
+                if (!doConvertFile(info, dirOut, dirBak)) {
                     failCount++;
                 }
             }
 
-            foreach (DirectoryInfo info in dirInfo.GetDirectories())
-            {
-                if (info.FullName.Equals(dirBak))
-                {
+            foreach (DirectoryInfo info in dirInfo.GetDirectories()) {
+                if (info.FullName.Equals(dirBak)) {
                     continue;
                 }
 
                 String basename = info.Name;
 
                 int count = doConvertDir(info, Path.Combine(dirOut, basename), Path.Combine(dirBak, basename));
-                if (count < 0)
-                {
+                if (count < 0) {
                     return count;
                 }
 
@@ -323,11 +286,9 @@ namespace FFMpegConvert
             return failCount;
         }
 
-        private int doConvertDir(String dirIn, String dirOut)
-        {
+        private int doConvertDir(String dirIn, String dirOut) {
             DirectoryInfo dirInfo = new DirectoryInfo(dirIn);
-            if (dirInfo == null)
-            {
+            if (dirInfo == null) {
                 return -1;
             }
 
@@ -338,20 +299,14 @@ namespace FFMpegConvert
 
         private delegate void SetConvertStateCallback(bool running);
 
-        private void setConvertState(bool running)
-        {
-            if (buttonStart.InvokeRequired)
-            {
+        private void setConvertState(bool running) {
+            if (buttonStart.InvokeRequired) {
                 Invoke(new SetConvertStateCallback(setConvertState), new object[] { running });
-            }
-            else if (running)
-            {
+            } else if (running) {
                 buttonStart.Enabled = false;
                 buttonStop.Enabled = true;
                 setConvertState("正在转换");
-            }
-            else
-            {
+            } else {
                 buttonStart.Enabled = true;
                 buttonStop.Enabled = false;
                 setConvertState("已停止转换");
@@ -369,25 +324,20 @@ namespace FFMpegConvert
             comboBoxAudioBitRate.Enabled = enable;
             textBoxLogFile.Enabled = enable;
             checkBoxOverride.Enabled = enable;
-            checkBoxShowCmdline.Enabled = enable;
+            checkBoxHiddenCmdline.Enabled = enable;
         }
 
         private delegate void SetConvertStateMessageCallback(String state);
 
-        private void setConvertState(String state)
-        {
-            if (labelState.InvokeRequired)
-            {
+        private void setConvertState(String state) {
+            if (labelState.InvokeRequired) {
                 Invoke(new SetConvertStateMessageCallback(setConvertState), new object[] { state });
-            }
-            else
-            {
+            } else {
                 labelState.Text = state;
             }
         }
 
-        private String buildCommandParam()
-        {
+        private String buildCommandParam() {
             StringBuilder builder = new StringBuilder();
 
             if (mAudioCodec != null && mAudioBitRate != null) {
@@ -398,44 +348,33 @@ namespace FFMpegConvert
             builder.Append(" -vcodec " + mVideoCodec);
             builder.Append(" -b:v " + mVideoBitRate);
 
-            if (mVideoCodecParam.Length > 0)
-            {
+            if (mVideoCodecParam.Length > 0) {
                 builder.Append(" " + mVideoCodecParam);
             }
 
             return builder.ToString();
         }
 
-        private void doConvert()
-        {
+        private void doConvert() {
             int count;
 
             Directory.CreateDirectory(mDirOutput);
 
             mStopRequired = false;
             mCommandParam = buildCommandParam();
-            MessageBox.Show("mCommandParam = " + mCommandParam);
             mStreamWriterLog = new StreamWriter(mLogFilePath, true);
 
             setConvertState(true);
 
-            if (File.Exists(mDirInput))
-            {
-                if (doConvertVideo(mDirInput, mDirOutput))
-                {
+            if (File.Exists(mDirInput)) {
+                if (doConvertFile(mDirInput, mDirOutput)) {
                     count = 0;
-                }
-                else
-                {
+                } else {
                     count = -1;
                 }
-            }
-            else if (Directory.Exists(mDirInput))
-            {
+            } else if (Directory.Exists(mDirInput)) {
                 count = doConvertDir(mDirInput, mDirOutput);
-            }
-            else
-            {
+            } else {
                 count = -1;
             }
 
@@ -444,18 +383,12 @@ namespace FFMpegConvert
 
             mConvertThread = null;
 
-            if (!mStopRequired)
-            {
-                if (count == 0)
-                {
+            if (!mStopRequired) {
+                if (count == 0) {
                     MessageBox.Show(" 恭喜，转换成功");
-                }
-                else if (count < 0)
-                {
+                } else if (count < 0) {
                     MessageBox.Show("转换失败，请检查！");
-                }
-                else
-                {
+                } else {
                     MessageBox.Show("有" + count + "个文件转换失败，请检查！");
                 }
             }
@@ -463,36 +396,25 @@ namespace FFMpegConvert
             setConvertState(false);
         }
 
-        private void updateStartButtonState()
-        {
-            if (textBoxInPath.Text.Length > 0 && textBoxOutPath.Text.Length > 0)
-            {
+        private void updateStartButtonState() {
+            if (textBoxInPath.Text.Length > 0 && textBoxOutPath.Text.Length > 0) {
                 buttonStart.Enabled = true;
                 setConvertState("点击“开始”按钮开始转换");
-            }
-            else
-            {
+            } else {
                 buttonStart.Enabled = false;
 
-                if (textBoxInPath.Text.Length > 0)
-                {
+                if (textBoxInPath.Text.Length > 0) {
                     setConvertState("请选择输出路径");
-                }
-                else if (textBoxOutPath.Text.Length > 0)
-                {
+                } else if (textBoxOutPath.Text.Length > 0) {
                     setConvertState("请选择输入路径");
-                }
-                else
-                {
+                } else {
                     setConvertState("请选择输入和输出路径");
                 }
             }
         }
 
-        private void buttonStart_Click(object sender, EventArgs e)
-        {
-            if (mConvertThread != null)
-            {
+        private void buttonStart_Click(object sender, EventArgs e) {
+            if (mConvertThread != null) {
                 return;
             }
 
@@ -515,13 +437,12 @@ namespace FFMpegConvert
             }
 
             mOverride = checkBoxOverride.Checked;
-            mHiddenCmdline = !checkBoxShowCmdline.Checked;
+            mHiddenCmdline = checkBoxHiddenCmdline.Checked;
 
             mDirOutput = Path.Combine(textBoxOutPath.Text, DateTime.Now.ToString("yyyyMMdd"));
 
             mLogFilePath = textBoxLogFile.Text;
-            if (mLogFilePath.Length <= 0)
-            {
+            if (mLogFilePath.Length <= 0) {
                 mLogFilePath = Path.Combine(mDirOutput, "ffmpeg-convert.log");
                 textBoxLogFile.Text = mLogFilePath;
             }
@@ -530,42 +451,33 @@ namespace FFMpegConvert
             mConvertThread.Start();
         }
 
-        private void buttonStop_Click(object sender, EventArgs e)
-        {
+        private void buttonStop_Click(object sender, EventArgs e) {
             mStopRequired = true;
 
-            if (mConvertThread == null)
-            {
+            if (mConvertThread == null) {
                 return;
             }
 
             setConvertState("正在停止，请稍候");
 
-            if (mConvertProcess != null)
-            {
+            if (mConvertProcess != null) {
                 mConvertProcess.Kill();
             }
         }
 
-        private void textBoxLogFile_Click(object sender, EventArgs e)
-        {
-            if (textBoxLogFile.Text.Length > 0)
-            {
+        private void textBoxLogFile_Click(object sender, EventArgs e) {
+            if (textBoxLogFile.Text.Length > 0) {
                 saveFileDialogLogFile.FileName = textBoxLogFile.Text;
-            }
-            else if (textBoxOutPath.Text.Length > 0)
-            {
+            } else if (textBoxOutPath.Text.Length > 0) {
                 saveFileDialogLogFile.InitialDirectory = textBoxOutPath.Text;
             }
 
-            if (saveFileDialogLogFile.ShowDialog() == DialogResult.OK)
-            {
+            if (saveFileDialogLogFile.ShowDialog() == DialogResult.OK) {
                 textBoxLogFile.Text = saveFileDialogLogFile.FileName;
             }
         }
 
-        private void buttonClear_Click(object sender, EventArgs e)
-        {
+        private void buttonClear_Click(object sender, EventArgs e) {
             textBoxLog.Clear();
         }
 
@@ -585,7 +497,6 @@ namespace FFMpegConvert
             if (openFileDialogInFile.ShowDialog() == DialogResult.OK) {
                 textBoxInPath.Text = openFileDialogInFile.FileName;
                 updateStartButtonState();
-                buttonOutFile.Enabled = true;
             }
         }
 
@@ -598,23 +509,6 @@ namespace FFMpegConvert
 
             if (folderBrowserDialogInDir.ShowDialog() == DialogResult.OK) {
                 textBoxInPath.Text = folderBrowserDialogInDir.SelectedPath;
-                updateStartButtonState();
-                buttonOutFile.Enabled = false;
-
-                String pathname = textBoxOutPath.Text;
-                if (pathname.Length > 0 && !Directory.Exists(pathname)) {
-                    textBoxOutPath.Clear();
-                }
-            }
-        }
-
-        private void buttonOutFile_Click(object sender, EventArgs e) {
-            String format = comboBoxOutputFormat.Text;
-
-            saveFileDialogOutFile.Filter = format + "文件|*." + format;
-
-            if (saveFileDialogOutFile.ShowDialog() == DialogResult.OK) {
-                textBoxOutPath.Text = saveFileDialogOutFile.FileName;
                 updateStartButtonState();
             }
         }

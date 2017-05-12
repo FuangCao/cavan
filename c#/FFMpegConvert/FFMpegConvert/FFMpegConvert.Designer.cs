@@ -53,12 +53,11 @@
             this.textBoxLog = new System.Windows.Forms.TextBox();
             this.buttonClear = new System.Windows.Forms.Button();
             this.labelState = new System.Windows.Forms.Label();
-            this.checkBoxShowCmdline = new System.Windows.Forms.CheckBox();
+            this.checkBoxHiddenCmdline = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
             this.comboBoxOutputFormat = new System.Windows.Forms.ComboBox();
             this.buttonInFile = new System.Windows.Forms.Button();
             this.buttonInDir = new System.Windows.Forms.Button();
-            this.buttonOutFile = new System.Windows.Forms.Button();
             this.buttonOutDir = new System.Windows.Forms.Button();
             this.openFileDialogInFile = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialogOutFile = new System.Windows.Forms.SaveFileDialog();
@@ -179,7 +178,7 @@
             this.textBoxOutPath.Location = new System.Drawing.Point(74, 316);
             this.textBoxOutPath.Name = "textBoxOutPath";
             this.textBoxOutPath.ReadOnly = true;
-            this.textBoxOutPath.Size = new System.Drawing.Size(414, 21);
+            this.textBoxOutPath.Size = new System.Drawing.Size(460, 21);
             this.textBoxOutPath.TabIndex = 11;
             // 
             // folderBrowserDialogInDir
@@ -232,7 +231,7 @@
             // checkBoxOverride
             // 
             this.checkBoxOverride.AutoSize = true;
-            this.checkBoxOverride.Location = new System.Drawing.Point(460, 236);
+            this.checkBoxOverride.Location = new System.Drawing.Point(3, 260);
             this.checkBoxOverride.Name = "checkBoxOverride";
             this.checkBoxOverride.Size = new System.Drawing.Size(120, 16);
             this.checkBoxOverride.TabIndex = 16;
@@ -292,15 +291,17 @@
             this.labelState.TabIndex = 21;
             this.labelState.Text = "unknown";
             // 
-            // checkBoxShowCmdline
+            // checkBoxHiddenCmdline
             // 
-            this.checkBoxShowCmdline.AutoSize = true;
-            this.checkBoxShowCmdline.Location = new System.Drawing.Point(460, 260);
-            this.checkBoxShowCmdline.Name = "checkBoxShowCmdline";
-            this.checkBoxShowCmdline.Size = new System.Drawing.Size(108, 16);
-            this.checkBoxShowCmdline.TabIndex = 22;
-            this.checkBoxShowCmdline.Text = "显示命令提示符";
-            this.checkBoxShowCmdline.UseVisualStyleBackColor = true;
+            this.checkBoxHiddenCmdline.AutoSize = true;
+            this.checkBoxHiddenCmdline.Checked = true;
+            this.checkBoxHiddenCmdline.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxHiddenCmdline.Location = new System.Drawing.Point(460, 260);
+            this.checkBoxHiddenCmdline.Name = "checkBoxHiddenCmdline";
+            this.checkBoxHiddenCmdline.Size = new System.Drawing.Size(120, 16);
+            this.checkBoxHiddenCmdline.TabIndex = 22;
+            this.checkBoxHiddenCmdline.Text = "不显示命令提示符";
+            this.checkBoxHiddenCmdline.UseVisualStyleBackColor = true;
             // 
             // label1
             // 
@@ -344,17 +345,6 @@
             this.buttonInDir.UseVisualStyleBackColor = true;
             this.buttonInDir.Click += new System.EventHandler(this.buttonInDir_Click);
             // 
-            // buttonOutFile
-            // 
-            this.buttonOutFile.Enabled = false;
-            this.buttonOutFile.Location = new System.Drawing.Point(494, 315);
-            this.buttonOutFile.Name = "buttonOutFile";
-            this.buttonOutFile.Size = new System.Drawing.Size(40, 23);
-            this.buttonOutFile.TabIndex = 27;
-            this.buttonOutFile.Text = "文件";
-            this.buttonOutFile.UseVisualStyleBackColor = true;
-            this.buttonOutFile.Click += new System.EventHandler(this.buttonOutFile_Click);
-            // 
             // buttonOutDir
             // 
             this.buttonOutDir.Location = new System.Drawing.Point(540, 315);
@@ -373,12 +363,11 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(584, 535);
             this.Controls.Add(this.buttonOutDir);
-            this.Controls.Add(this.buttonOutFile);
             this.Controls.Add(this.buttonInDir);
             this.Controls.Add(this.buttonInFile);
             this.Controls.Add(this.comboBoxOutputFormat);
             this.Controls.Add(this.label1);
-            this.Controls.Add(this.checkBoxShowCmdline);
+            this.Controls.Add(this.checkBoxHiddenCmdline);
             this.Controls.Add(this.labelState);
             this.Controls.Add(this.buttonClear);
             this.Controls.Add(this.textBoxLog);
@@ -437,12 +426,11 @@
         private System.Windows.Forms.TextBox textBoxLog;
         private System.Windows.Forms.Button buttonClear;
         private System.Windows.Forms.Label labelState;
-        private System.Windows.Forms.CheckBox checkBoxShowCmdline;
+        private System.Windows.Forms.CheckBox checkBoxHiddenCmdline;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox comboBoxOutputFormat;
         private System.Windows.Forms.Button buttonInFile;
         private System.Windows.Forms.Button buttonInDir;
-        private System.Windows.Forms.Button buttonOutFile;
         private System.Windows.Forms.Button buttonOutDir;
         private System.Windows.Forms.OpenFileDialog openFileDialogInFile;
         private System.Windows.Forms.SaveFileDialog saveFileDialogOutFile;
