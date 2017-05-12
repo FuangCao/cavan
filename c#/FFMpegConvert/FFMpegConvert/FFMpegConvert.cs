@@ -162,13 +162,11 @@ namespace FFMpegConvert {
             setConvertState("正在转换：" + fileIn);
 
             StringBuilder builder = new StringBuilder();
-            builder.Append("-i \"");
-            builder.Append(fileIn);
-            builder.Append("\" ");
+
+            builder.Append("-i \"").Append(fileIn).Append("\" ");
             builder.Append(mCommandParam);
-            builder.Append(" \"");
-            builder.Append(fileOut);
-            builder.Append("\"");
+            builder.Append(" \"").Append(fileOut).Append("\"");
+
             String arguments = builder.ToString();
 
             println("ffmpeg " + arguments);
@@ -367,15 +365,15 @@ namespace FFMpegConvert {
             StringBuilder builder = new StringBuilder();
 
             if (mAudioCodec != null && mAudioBitRate != null) {
-                builder.Append("-acodec " + mAudioCodec);
-                builder.Append(" -b:a " + mAudioBitRate);
+                builder.Append("-acodec ").Append(mAudioCodec);
+                builder.Append(" -b:a ").Append(mAudioBitRate);
             }
 
-            builder.Append(" -vcodec " + mVideoCodec);
-            builder.Append(" -b:v " + mVideoBitRate);
+            builder.Append(" -vcodec ").Append(mVideoCodec);
+            builder.Append(" -b:v ").Append(mVideoBitRate);
 
             if (mVideoCodecParam.Length > 0) {
-                builder.Append(" " + mVideoCodecParam);
+                builder.Append(" ").Append(mVideoCodecParam);
             }
 
             return builder.ToString();
@@ -406,7 +404,7 @@ namespace FFMpegConvert {
 
             if (!backgroundWorkerConvert.CancellationPending) {
                 if (count == 0) {
-                    MessageBox.Show(" 恭喜，转换成功");
+                    MessageBox.Show("恭喜，转换成功");
                 } else if (count < 0) {
                     MessageBox.Show("转换失败，请检查！");
                 } else {
