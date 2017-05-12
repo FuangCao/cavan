@@ -294,13 +294,11 @@
             // checkBoxHiddenCmdline
             // 
             this.checkBoxHiddenCmdline.AutoSize = true;
-            this.checkBoxHiddenCmdline.Checked = true;
-            this.checkBoxHiddenCmdline.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxHiddenCmdline.Location = new System.Drawing.Point(460, 260);
+            this.checkBoxHiddenCmdline.Location = new System.Drawing.Point(472, 260);
             this.checkBoxHiddenCmdline.Name = "checkBoxHiddenCmdline";
-            this.checkBoxHiddenCmdline.Size = new System.Drawing.Size(120, 16);
+            this.checkBoxHiddenCmdline.Size = new System.Drawing.Size(108, 16);
             this.checkBoxHiddenCmdline.TabIndex = 22;
-            this.checkBoxHiddenCmdline.Text = "不显示命令提示符";
+            this.checkBoxHiddenCmdline.Text = "隐藏命令提示符";
             this.checkBoxHiddenCmdline.UseVisualStyleBackColor = true;
             // 
             // label1
@@ -357,11 +355,8 @@
             // 
             // backgroundWorkerConvert
             // 
-            this.backgroundWorkerConvert.WorkerReportsProgress = true;
             this.backgroundWorkerConvert.WorkerSupportsCancellation = true;
             this.backgroundWorkerConvert.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorkerConvert_DoWork);
-            this.backgroundWorkerConvert.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorkerConvert_ProgressChanged);
-            this.backgroundWorkerConvert.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorkerConvert_RunWorkerCompleted);
             // 
             // FFMpegConvert
             // 

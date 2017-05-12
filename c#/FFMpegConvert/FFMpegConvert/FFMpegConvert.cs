@@ -231,12 +231,12 @@ namespace FFMpegConvert {
 
             if (outInfo.Exists) {
                 if (mOverride) {
+                    println("Override: " + outInfo.FullName);
+                    outInfo.Delete();
+                } else {
                     println(outInfo.FullName + " is exists.");
                     return true;
                 }
-
-                println("Delete: " + outInfo.FullName);
-                outInfo.Delete();
             }
 
             FileInfo tmpInfo = new FileInfo(Path.Combine(outInfo.DirectoryName, Path.GetFileNameWithoutExtension(outInfo.Name) + ".ffmpeg.temp" + outInfo.Extension));
@@ -316,11 +316,8 @@ namespace FFMpegConvert {
 
         private int doConvertDir(String dirIn, String dirOut) {
             DirectoryInfo dirInfo = new DirectoryInfo(dirIn);
-            if (dirInfo == null) {
-                return -1;
-            }
 
-            return doConvertDir(dirInfo, dirOut);
+            return doConvertDir(dirInfo, Path.Combine(dirOut, dirInfo.Name));
         }
 
         private delegate void SetConvertStateCallback(bool running);
@@ -440,6 +437,44 @@ namespace FFMpegConvert {
                 return;
             }
 
+            mInPath = textBoxInPath.Text;
+            if (String.IsNullOrEmpty(mInPath)) {
+                MessageBox.Show("请选择输入文件或文件夹");
+                return;
+            }
+
+            mOutPath = textBoxOutPath.Text;
+            if (String.IsNullOrEmpty(mOutPath)) {
+                MessageBox.Show("请选择输出文件夹");
+                return;
+            }
+
+            mVideoCodec = comboBoxVideoCodec.Text;
+            mOutputFormat = comboBoxOutputFormat.Text;
+            mVideoBitRate = comboBoxVideoBitRate.Text;
+            mVideoCodecParam = textBoxParam.Text;
+
+            if (comboBoxAudioCodec.SelectedIndex > 0) {
+                mAudioCodec = comboBoxAudioCodec.Text;
+            } else {
+                mAudioCodec = null;
+            }
+
+            if (comboBoxAudioBitRate.SelectedIndex > 0) {
+                mAudioBitRate = comboBoxAudioBitRate.Text;
+            } else {
+                mAudioBitRate = null;
+            }
+
+            mOverride = checkBoxOverride.Checked;
+            mHiddenCmdline = checkBoxHiddenCmdline.Checked;
+
+            mLogFilePath = textBoxLogFile.Text;
+            if (mLogFilePath.Length <= 0) {
+                mLogFilePath = Path.Combine(mOutPath, "ffmpeg-convert.log");
+                textBoxLogFile.Text = mLogFilePath;
+            }
+
             backgroundWorkerConvert.RunWorkerAsync();
         }
 
@@ -517,57 +552,15 @@ namespace FFMpegConvert {
         }
 
         private void backgroundWorkerConvert_DoWork(object sender, DoWorkEventArgs args) {
-            backgroundWorkerConvert.ReportProgress(0);
+            setConvertState(true);
 
             try {
                 doConvert();
             } catch (Exception e) {
                 MessageBox.Show(e.ToString());
             }
-        }
 
-        private void backgroundWorkerConvert_ProgressChanged(object sender, ProgressChangedEventArgs e) {
-            switch (e.ProgressPercentage) {
-            case 0:
-                Cursor = Cursors.WaitCursor;
-
-                setConvertState(true);
-
-                mInPath = textBoxInPath.Text;
-                mOutPath = textBoxOutPath.Text;
-
-                mVideoCodec = comboBoxVideoCodec.Text;
-                mOutputFormat = comboBoxOutputFormat.Text;
-                mVideoBitRate = comboBoxVideoBitRate.Text;
-                mVideoCodecParam = textBoxParam.Text;
-
-                if (comboBoxAudioCodec.SelectedIndex > 0) {
-                    mAudioCodec = comboBoxAudioCodec.Text;
-                } else {
-                    mAudioCodec = null;
-                }
-
-                if (comboBoxAudioBitRate.SelectedIndex > 0) {
-                    mAudioBitRate = comboBoxAudioBitRate.Text;
-                } else {
-                    mAudioBitRate = null;
-                }
-
-                mOverride = checkBoxOverride.Checked;
-                mHiddenCmdline = checkBoxHiddenCmdline.Checked;
-
-                mLogFilePath = textBoxLogFile.Text;
-                if (mLogFilePath.Length <= 0) {
-                    mLogFilePath = Path.Combine(mOutPath, "ffmpeg-convert.log");
-                    textBoxLogFile.Text = mLogFilePath;
-                }
-                break;
-            }
-        }
-
-        private void backgroundWorkerConvert_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e) {
             setConvertState(false);
-            Cursor = Cursors.Default;
         }
 
         private void FFMpegConvert_FormClosing(object sender, FormClosingEventArgs args) {
