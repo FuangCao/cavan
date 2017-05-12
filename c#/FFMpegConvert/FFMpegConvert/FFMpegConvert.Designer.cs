@@ -60,7 +60,7 @@
             this.buttonInDir = new System.Windows.Forms.Button();
             this.buttonOutDir = new System.Windows.Forms.Button();
             this.openFileDialogInFile = new System.Windows.Forms.OpenFileDialog();
-            this.saveFileDialogOutFile = new System.Windows.Forms.SaveFileDialog();
+            this.backgroundWorkerConvert = new System.ComponentModel.BackgroundWorker();
             this.SuspendLayout();
             // 
             // labelVidecCodec
@@ -355,6 +355,14 @@
             this.buttonOutDir.UseVisualStyleBackColor = true;
             this.buttonOutDir.Click += new System.EventHandler(this.buttonOutDir_Click);
             // 
+            // backgroundWorkerConvert
+            // 
+            this.backgroundWorkerConvert.WorkerReportsProgress = true;
+            this.backgroundWorkerConvert.WorkerSupportsCancellation = true;
+            this.backgroundWorkerConvert.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorkerConvert_DoWork);
+            this.backgroundWorkerConvert.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorkerConvert_ProgressChanged);
+            this.backgroundWorkerConvert.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorkerConvert_RunWorkerCompleted);
+            // 
             // FFMpegConvert
             // 
             this.AcceptButton = this.buttonStart;
@@ -433,7 +441,7 @@
         private System.Windows.Forms.Button buttonInDir;
         private System.Windows.Forms.Button buttonOutDir;
         private System.Windows.Forms.OpenFileDialog openFileDialogInFile;
-        private System.Windows.Forms.SaveFileDialog saveFileDialogOutFile;
+        private System.ComponentModel.BackgroundWorker backgroundWorkerConvert;
     }
 }
 

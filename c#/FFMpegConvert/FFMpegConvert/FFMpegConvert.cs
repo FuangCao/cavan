@@ -24,8 +24,6 @@ namespace FFMpegConvert {
         };
 
         private bool mHiddenCmdline;
-        private bool mStopRequired;
-        private Thread mConvertThread;
         private Process mConvertProcess;
         private StreamWriter mStreamWriterLog;
 
@@ -247,7 +245,7 @@ namespace FFMpegConvert {
         private int doConvertDir(DirectoryInfo dirInfo, String dirOut, String dirBak) {
             int failCount = 0;
 
-            if (mStopRequired) {
+            if (backgroundWorkerConvert.CancellationPending) {
                 return -1;
             }
 
@@ -259,7 +257,7 @@ namespace FFMpegConvert {
             Directory.CreateDirectory(dirBak);
 
             foreach (FileInfo info in dirInfo.GetFiles()) {
-                if (mStopRequired) {
+                if (backgroundWorkerConvert.CancellationPending) {
                     return -1;
                 }
 
@@ -325,6 +323,9 @@ namespace FFMpegConvert {
             textBoxLogFile.Enabled = enable;
             checkBoxOverride.Enabled = enable;
             checkBoxHiddenCmdline.Enabled = enable;
+            buttonInDir.Enabled = enable;
+            buttonInFile.Enabled = enable;
+            buttonOutDir.Enabled = enable;
         }
 
         private delegate void SetConvertStateMessageCallback(String state);
@@ -360,11 +361,8 @@ namespace FFMpegConvert {
 
             Directory.CreateDirectory(mDirOutput);
 
-            mStopRequired = false;
             mCommandParam = buildCommandParam();
             mStreamWriterLog = new StreamWriter(mLogFilePath, true);
-
-            setConvertState(true);
 
             if (File.Exists(mDirInput)) {
                 if (doConvertFile(mDirInput, mDirOutput)) {
@@ -381,9 +379,7 @@ namespace FFMpegConvert {
             mStreamWriterLog.Close();
             mStreamWriterLog = null;
 
-            mConvertThread = null;
-
-            if (!mStopRequired) {
+            if (!backgroundWorkerConvert.CancellationPending) {
                 if (count == 0) {
                     MessageBox.Show(" 恭喜，转换成功");
                 } else if (count < 0) {
@@ -392,8 +388,6 @@ namespace FFMpegConvert {
                     MessageBox.Show("有" + count + "个文件转换失败，请检查！");
                 }
             }
-
-            setConvertState(false);
         }
 
         private void updateStartButtonState() {
@@ -414,54 +408,22 @@ namespace FFMpegConvert {
         }
 
         private void buttonStart_Click(object sender, EventArgs e) {
-            if (mConvertThread != null) {
+            if (backgroundWorkerConvert.IsBusy) {
                 return;
             }
 
-            mDirInput = textBoxInPath.Text;
-            mVideoCodec = comboBoxVideoCodec.Text;
-            mOutputFormat = comboBoxOutputFormat.Text;
-            mVideoBitRate = comboBoxVideoBitRate.Text;
-            mVideoCodecParam = textBoxParam.Text;
-
-            if (comboBoxAudioCodec.SelectedIndex > 0) {
-                mAudioCodec = comboBoxAudioCodec.Text;
-            } else {
-                mAudioCodec = null;
-            }
-
-            if (comboBoxAudioBitRate.SelectedIndex > 0) {
-                mAudioBitRate = comboBoxAudioBitRate.Text;
-            } else {
-                mAudioBitRate = null;
-            }
-
-            mOverride = checkBoxOverride.Checked;
-            mHiddenCmdline = checkBoxHiddenCmdline.Checked;
-
-            mDirOutput = Path.Combine(textBoxOutPath.Text, DateTime.Now.ToString("yyyyMMdd"));
-
-            mLogFilePath = textBoxLogFile.Text;
-            if (mLogFilePath.Length <= 0) {
-                mLogFilePath = Path.Combine(mDirOutput, "ffmpeg-convert.log");
-                textBoxLogFile.Text = mLogFilePath;
-            }
-
-            mConvertThread = new Thread(new ThreadStart(doConvert));
-            mConvertThread.Start();
+            backgroundWorkerConvert.RunWorkerAsync();
         }
 
         private void buttonStop_Click(object sender, EventArgs e) {
-            mStopRequired = true;
+            if (backgroundWorkerConvert.IsBusy) {
+                backgroundWorkerConvert.CancelAsync();
 
-            if (mConvertThread == null) {
-                return;
-            }
+                setConvertState("正在停止，请稍候");
 
-            setConvertState("正在停止，请稍候");
-
-            if (mConvertProcess != null) {
-                mConvertProcess.Kill();
+                if (mConvertProcess != null) {
+                    mConvertProcess.Kill();
+                }
             }
         }
 
@@ -524,6 +486,60 @@ namespace FFMpegConvert {
                 textBoxOutPath.Text = folderBrowserDialogOutDir.SelectedPath;
                 updateStartButtonState();
             }
+        }
+
+        private void backgroundWorkerConvert_DoWork(object sender, DoWorkEventArgs args) {
+            backgroundWorkerConvert.ReportProgress(0);
+
+            try {
+                doConvert();
+            } catch (Exception e) {
+                MessageBox.Show(e.ToString());
+            }
+        }
+
+        private void backgroundWorkerConvert_ProgressChanged(object sender, ProgressChangedEventArgs e) {
+            switch (e.ProgressPercentage) {
+            case 0:
+                Cursor = Cursors.WaitCursor;
+
+                setConvertState(true);
+
+                mDirInput = textBoxInPath.Text;
+                mVideoCodec = comboBoxVideoCodec.Text;
+                mOutputFormat = comboBoxOutputFormat.Text;
+                mVideoBitRate = comboBoxVideoBitRate.Text;
+                mVideoCodecParam = textBoxParam.Text;
+
+                if (comboBoxAudioCodec.SelectedIndex > 0) {
+                    mAudioCodec = comboBoxAudioCodec.Text;
+                } else {
+                    mAudioCodec = null;
+                }
+
+                if (comboBoxAudioBitRate.SelectedIndex > 0) {
+                    mAudioBitRate = comboBoxAudioBitRate.Text;
+                } else {
+                    mAudioBitRate = null;
+                }
+
+                mOverride = checkBoxOverride.Checked;
+                mHiddenCmdline = checkBoxHiddenCmdline.Checked;
+
+                mDirOutput = Path.Combine(textBoxOutPath.Text, DateTime.Now.ToString("yyyyMMdd"));
+
+                mLogFilePath = textBoxLogFile.Text;
+                if (mLogFilePath.Length <= 0) {
+                    mLogFilePath = Path.Combine(mDirOutput, "ffmpeg-convert.log");
+                    textBoxLogFile.Text = mLogFilePath;
+                }
+                break;
+            }
+        }
+
+        private void backgroundWorkerConvert_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e) {
+            setConvertState(false);
+            Cursor = Cursors.Default;
         }
     }
 }
