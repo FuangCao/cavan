@@ -1,19 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Configuration;
 
 namespace FFMpegConvert {
     public partial class FFMpegConvert : Form {
+
+        private const String CONFIG_INPUT_PATH = "inPath";
+        private const String CONFIG_OUTPUT_PATH = "outPath";
+        private const String CONFIG_LOG_PATH = "logPath";
+        private const String CONFIG_VIDEO_CODEC = "video_codec";
+        private const String CONFIG_VIDEO_BITRATE = "video_bitrate";
+        private const String CONFIG_AUDIO_CODEC = "audio_codec";
+        private const String CONFIG_AUDIO_BITRATE = "audio_bitrate";
+        private const String CONFIG_FORMAT = "format";
+        private const String CONFIG_PARAMS = "params";
+
         private static String FILENAME_BACKUP = "ffmpeg-backup";
         private static String[] VIDEO_EXT_LIST = {
 #if false
@@ -42,11 +48,60 @@ namespace FFMpegConvert {
         public FFMpegConvert() {
             InitializeComponent();
 
-            comboBoxVideoCodec.SelectedIndex = 0;
-            comboBoxVideoBitRate.SelectedIndex = 0;
-            comboBoxAudioCodec.SelectedIndex = 0;
-            comboBoxAudioBitRate.SelectedIndex = 0;
-            comboBoxOutputFormat.SelectedIndex = 0;
+            String text = ConfigurationManager.AppSettings[CONFIG_INPUT_PATH];
+            if (text != null && text.Length > 0 && (File.Exists(text) || Directory.Exists(text))) {
+                textBoxInPath.Text = text;
+            }
+
+            text = ConfigurationManager.AppSettings[CONFIG_OUTPUT_PATH];
+            if (text != null && text.Length > 0) {
+                textBoxOutPath.Text = text;
+            }
+
+            text = ConfigurationManager.AppSettings[CONFIG_LOG_PATH];
+            if (text != null && text.Length > 0) {
+                textBoxLogFile.Text = text;
+            }
+
+            text = ConfigurationManager.AppSettings[CONFIG_VIDEO_CODEC];
+            if (text != null && text.Length > 0) {
+                comboBoxVideoCodec.Text = text;
+            } else {
+                comboBoxVideoCodec.SelectedIndex = 0;
+            }
+
+            text = ConfigurationManager.AppSettings[CONFIG_VIDEO_BITRATE];
+            if (text != null && text.Length > 0) {
+                comboBoxVideoBitRate.Text = text;
+            } else {
+                comboBoxVideoBitRate.SelectedIndex = 0;
+            }
+
+            text = ConfigurationManager.AppSettings[CONFIG_AUDIO_CODEC];
+            if (text != null && text.Length > 0) {
+                comboBoxAudioCodec.Text = text;
+            } else {
+                comboBoxAudioCodec.SelectedIndex = 0;
+            }
+
+            text = ConfigurationManager.AppSettings[CONFIG_AUDIO_BITRATE];
+            if (text != null && text.Length > 0) {
+                comboBoxAudioBitRate.Text = text;
+            } else {
+                comboBoxAudioBitRate.SelectedIndex = 0;
+            }
+
+            text = ConfigurationManager.AppSettings[CONFIG_FORMAT];
+            if (text != null && text.Length > 0) {
+                comboBoxOutputFormat.Text = text;
+            } else {
+                comboBoxOutputFormat.SelectedIndex = 0;
+            }
+
+            text = ConfigurationManager.AppSettings[CONFIG_PARAMS];
+            if (text != null && text.Length > 0) {
+                textBoxParam.Text = text;
+            }
 
             StringBuilder builder = new StringBuilder("视频文件|");
 
@@ -540,6 +595,52 @@ namespace FFMpegConvert {
         private void backgroundWorkerConvert_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e) {
             setConvertState(false);
             Cursor = Cursors.Default;
+        }
+
+        private void FFMpegConvert_FormClosing(object sender, FormClosingEventArgs args) {
+            buttonStop_Click(null, null);
+
+            try {
+                Configuration config = ConfigurationManager.OpenExeConfiguration(Application.ExecutablePath);
+                if (config == null) {
+                    return;
+                }
+
+                KeyValueConfigurationCollection settings = config.AppSettings.Settings;
+                settings.Clear();
+
+                String text = textBoxInPath.Text;
+                if (text.Length > 0) {
+                    settings.Add(CONFIG_INPUT_PATH, text);
+                }
+
+                text = textBoxOutPath.Text;
+                if (text.Length > 0) {
+                    settings.Add(CONFIG_OUTPUT_PATH, text);
+                }
+
+                text = textBoxLogFile.Text;
+                if (text.Length > 0) {
+                    settings.Add(CONFIG_LOG_PATH, text);
+                }
+
+                settings.Add(CONFIG_VIDEO_CODEC, comboBoxVideoCodec.Text);
+                settings.Add(CONFIG_VIDEO_BITRATE, comboBoxVideoBitRate.Text);
+                settings.Add(CONFIG_FORMAT, comboBoxOutputFormat.Text);
+                settings.Add(CONFIG_PARAMS, textBoxParam.Text);
+
+                if (comboBoxAudioCodec.SelectedIndex > 0) {
+                    settings.Add(CONFIG_AUDIO_CODEC, comboBoxAudioCodec.Text);
+                }
+
+                if (comboBoxAudioBitRate.SelectedIndex > 0) {
+                    settings.Add(CONFIG_AUDIO_BITRATE, comboBoxAudioBitRate.Text);
+                }
+
+                config.Save(ConfigurationSaveMode.Full);
+            } catch (Exception e) {
+                MessageBox.Show(e.ToString());
+            }
         }
     }
 }

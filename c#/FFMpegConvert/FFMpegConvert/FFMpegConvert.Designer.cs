@@ -402,6 +402,7 @@
             this.Name = "FFMpegConvert";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "视频格式转换器";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FFMpegConvert_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
 

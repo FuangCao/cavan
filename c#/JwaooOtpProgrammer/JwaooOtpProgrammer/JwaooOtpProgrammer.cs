@@ -8,7 +8,6 @@ using System.Configuration;
 using ZXing;
 using ZXing.Common;
 using System.Drawing;
-using ZXing.QrCode;
 
 namespace JwaooOtpProgrammer {
 
