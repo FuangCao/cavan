@@ -20,7 +20,6 @@ namespace FFMpegConvert {
         private const String CONFIG_FORMAT = "format";
         private const String CONFIG_PARAMS = "params";
 
-        private static String FILENAME_BACKUP = "ffmpeg-backup";
         private static String[] VIDEO_EXT_LIST = {
 #if false
             "mkv", "mp4", "rm", "rmvb", "avi", "wmv", "flv", "mov", "m2v", "vob", "3gp", "mpeg", "mpg", "mpe", "ra", "ram", "asf"
@@ -41,8 +40,8 @@ namespace FFMpegConvert {
         private String mAudioCodec;
         private String mAudioBitRate;
         private String mCommandParam;
-        private String mDirInput;
-        private String mDirOutput;
+        private String mInPath;
+        private String mOutPath;
         private String mLogFilePath;
 
         public FFMpegConvert() {
@@ -59,7 +58,7 @@ namespace FFMpegConvert {
             }
 
             text = ConfigurationManager.AppSettings[CONFIG_LOG_PATH];
-            if (text != null && text.Length > 0) {
+            if (text != null && text.Length > 0 && File.Exists(text)) {
                 textBoxLogFile.Text = text;
             }
 
@@ -240,23 +239,23 @@ namespace FFMpegConvert {
                 outInfo.Delete();
             }
 
-            FileInfo cacheInfo = new FileInfo(Path.Combine(outInfo.DirectoryName, outInfo.Name + ".ffmpeg.cache" + outInfo.Extension));
+            FileInfo tmpInfo = new FileInfo(Path.Combine(outInfo.DirectoryName, Path.GetFileNameWithoutExtension(outInfo.Name) + ".ffmpeg.temp" + outInfo.Extension));
 
-            if (cacheInfo.Exists) {
-                println("Delete: " + cacheInfo.FullName);
-                cacheInfo.Delete();
+            if (tmpInfo.Exists) {
+                println("Delete: " + tmpInfo.FullName);
+                tmpInfo.Delete();
             }
 
-            if (!doConvertVideo(inInfo.FullName, cacheInfo.FullName)) {
-                cacheInfo.Delete();
+            if (!doConvertVideo(inInfo.FullName, tmpInfo.FullName)) {
+                tmpInfo.Delete();
                 return false;
             }
 
             try {
-                println("Move: " + cacheInfo.FullName + " -> " + outInfo.FullName);
-                cacheInfo.MoveTo(outInfo.FullName);
+                println("Move: " + tmpInfo.FullName + " -> " + outInfo.FullName);
+                tmpInfo.MoveTo(outInfo.FullName);
             } catch (Exception) {
-                cacheInfo.Delete();
+                tmpInfo.Delete();
                 return false;
             }
 
@@ -266,8 +265,7 @@ namespace FFMpegConvert {
             return true;
         }
 
-        private bool doConvertFile(String inPath, String outPath) {
-            FileInfo inInfo = new FileInfo(inPath);
+        private bool doConvertFile(FileInfo inInfo, String outPath) {
             FileInfo outInfo;
 
             if (Directory.Exists(outPath)) {
@@ -279,25 +277,7 @@ namespace FFMpegConvert {
             return doConvertFile(inInfo, outInfo);
         }
 
-        private bool doConvertFile(FileInfo inInfo, String outDir, String bakDir) {
-            FileInfo outInfo = new FileInfo(Path.Combine(outDir, Path.GetFileNameWithoutExtension(inInfo.Name) + "." + mOutputFormat));
-
-            if (!doConvertFile(inInfo, outInfo)) {
-                return false;
-            }
-
-            try {
-                String bakFile = Path.Combine(bakDir, inInfo.Name);
-                File.Delete(bakFile);
-                inInfo.MoveTo(bakFile);
-            } catch (Exception) {
-                return false;
-            }
-
-            return true;
-        }
-
-        private int doConvertDir(DirectoryInfo dirInfo, String dirOut, String dirBak) {
+        private int doConvertDir(DirectoryInfo dirInfo, String dirOut) {
             int failCount = 0;
 
             if (backgroundWorkerConvert.CancellationPending) {
@@ -309,26 +289,21 @@ namespace FFMpegConvert {
             }
 
             Directory.CreateDirectory(dirOut);
-            Directory.CreateDirectory(dirBak);
 
             foreach (FileInfo info in dirInfo.GetFiles()) {
                 if (backgroundWorkerConvert.CancellationPending) {
                     return -1;
                 }
 
-                if (!doConvertFile(info, dirOut, dirBak)) {
+                if (!doConvertFile(info, dirOut)) {
                     failCount++;
                 }
             }
 
             foreach (DirectoryInfo info in dirInfo.GetDirectories()) {
-                if (info.FullName.Equals(dirBak)) {
-                    continue;
-                }
-
                 String basename = info.Name;
 
-                int count = doConvertDir(info, Path.Combine(dirOut, basename), Path.Combine(dirBak, basename));
+                int count = doConvertDir(info, Path.Combine(dirOut, basename));
                 if (count < 0) {
                     return count;
                 }
@@ -345,9 +320,7 @@ namespace FFMpegConvert {
                 return -1;
             }
 
-            String dirBack = Path.Combine(dirIn, FILENAME_BACKUP);
-
-            return doConvertDir(dirInfo, dirOut, dirBack);
+            return doConvertDir(dirInfo, dirOut);
         }
 
         private delegate void SetConvertStateCallback(bool running);
@@ -414,19 +387,19 @@ namespace FFMpegConvert {
         private void doConvert() {
             int count;
 
-            Directory.CreateDirectory(mDirOutput);
+            Directory.CreateDirectory(mOutPath);
 
             mCommandParam = buildCommandParam();
             mStreamWriterLog = new StreamWriter(mLogFilePath, true);
 
-            if (File.Exists(mDirInput)) {
-                if (doConvertFile(mDirInput, mDirOutput)) {
+            if (File.Exists(mInPath)) {
+                if (doConvertFile(new FileInfo(mInPath), mOutPath)) {
                     count = 0;
                 } else {
                     count = -1;
                 }
-            } else if (Directory.Exists(mDirInput)) {
-                count = doConvertDir(mDirInput, mDirOutput);
+            } else if (Directory.Exists(mInPath)) {
+                count = doConvertDir(mInPath, mOutPath);
             } else {
                 count = -1;
             }
@@ -560,7 +533,9 @@ namespace FFMpegConvert {
 
                 setConvertState(true);
 
-                mDirInput = textBoxInPath.Text;
+                mInPath = textBoxInPath.Text;
+                mOutPath = textBoxOutPath.Text;
+
                 mVideoCodec = comboBoxVideoCodec.Text;
                 mOutputFormat = comboBoxOutputFormat.Text;
                 mVideoBitRate = comboBoxVideoBitRate.Text;
@@ -581,11 +556,9 @@ namespace FFMpegConvert {
                 mOverride = checkBoxOverride.Checked;
                 mHiddenCmdline = checkBoxHiddenCmdline.Checked;
 
-                mDirOutput = Path.Combine(textBoxOutPath.Text, DateTime.Now.ToString("yyyyMMdd"));
-
                 mLogFilePath = textBoxLogFile.Text;
                 if (mLogFilePath.Length <= 0) {
-                    mLogFilePath = Path.Combine(mDirOutput, "ffmpeg-convert.log");
+                    mLogFilePath = Path.Combine(mOutPath, "ffmpeg-convert.log");
                     textBoxLogFile.Text = mLogFilePath;
                 }
                 break;
