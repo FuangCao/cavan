@@ -37,7 +37,9 @@ public class CavanApplicationActivity extends PreferenceActivity {
 
 				Class<?> cls = sHashMapKeyActivity.get(preference.getKey());
 				if (cls != null) {
-					preference.setIntent(new Intent(this, cls));
+					Intent intent = new Intent(this, cls);
+					intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+					preference.setIntent(intent);
 				} else {
 					CavanAndroid.eLog("Invalid preference: " + preference);
 				}

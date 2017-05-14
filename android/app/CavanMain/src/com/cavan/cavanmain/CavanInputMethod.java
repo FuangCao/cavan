@@ -74,7 +74,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 			CavanAndroid.dLog("action = " + action);
 
-			if (action.equals(CavanWalletActivity.ACTION_CODE_COMMIT)) {
+			if (action.equals(CavanMessageActivity.ACTION_CODE_COMMIT)) {
 				InputConnection conn = getCurrentInputConnection();
 				if (conn != null) {
 					sendFinishAction(conn);
@@ -141,7 +141,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		mManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
 
 		IntentFilter filter = new IntentFilter();
-		filter.addAction(CavanWalletActivity.ACTION_CODE_COMMIT);
+		filter.addAction(CavanMessageActivity.ACTION_CODE_COMMIT);
 		registerReceiver(mReceiver, filter);
 
 		super.onCreate();
@@ -323,7 +323,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			break;
 
 		case KEYCODE_OCR:
-			CavanWalletActivity.startSogouOcrActivity(getApplicationContext());
+			CavanMessageActivity.startSogouOcrActivity(getApplicationContext());
 			break;
 		}
 	}

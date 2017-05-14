@@ -177,7 +177,7 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 			dialog.show(6000);
 		}
 
-		Intent intent = new Intent(CavanWalletActivity.ACTION_CONTENT_RECEIVED);
+		Intent intent = new Intent(CavanMessageActivity.ACTION_CONTENT_RECEIVED);
 		intent.putExtra("package", node.getPackageName());
 		intent.putExtra("desc", "用户点击");
 		intent.putExtra("content", text);

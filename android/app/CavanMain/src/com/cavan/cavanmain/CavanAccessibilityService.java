@@ -106,13 +106,13 @@ public class CavanAccessibilityService extends AccessibilityService {
 			CavanAndroid.dLog("action = " + action);
 
 			switch (action) {
-			case CavanWalletActivity.ACTION_CODE_TEST:
+			case CavanMessageActivity.ACTION_CODE_TEST:
 				if (intent.getStringExtra("code") != null) {
 					CavanAndroid.showToast(getApplicationContext(), R.string.test_sucess);
 				}
 				break;
 
-			case CavanWalletActivity.ACTION_CODE_ADD:
+			case CavanMessageActivity.ACTION_CODE_ADD:
 				RedPacketCode node = RedPacketCode.getInstence(intent);
 				if (node != null) {
 					mAccessibilityAlipay.addCode(node);
@@ -120,7 +120,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				}
 				break;
 
-			case CavanWalletActivity.ACTION_CODE_REMOVE:
+			case CavanMessageActivity.ACTION_CODE_REMOVE:
 				node = RedPacketCode.getInstence(intent);
 				if (node != null) {
 					mAccessibilityAlipay.removeCode(node);
@@ -132,14 +132,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 				CavanAndroid.dLog("reason = " + intent.getStringExtra("reason"));
 				break;
 
-			case CavanWalletActivity.ACTION_UNPACK_MM:
+			case CavanMessageActivity.ACTION_UNPACK_MM:
 				String chat = intent.getStringExtra("chat");
 				if (chat != null) {
 					mAccessibilityMM.addPacket(chat);
 				}
 				break;
 
-			case CavanWalletActivity.ACTION_UNPACK_QQ:
+			case CavanMessageActivity.ACTION_UNPACK_QQ:
 				chat = intent.getStringExtra("chat");
 				if (chat != null) {
 					mAccessibilityQQ.addPacket(chat);
@@ -184,7 +184,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 									String code = RedPacketCode.filtration(line);
 
 									if (code.length() > 0) {
-										Intent intent = new Intent(CavanWalletActivity.ACTION_CODE_RECEIVED);
+										Intent intent = new Intent(CavanMessageActivity.ACTION_CODE_RECEIVED);
 										intent.putExtra("type", "图片识别");
 										intent.putExtra("code", code);
 										intent.putExtra("shared", false);
@@ -193,7 +193,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 								}
 							}
 						} else {
-							Intent intent = new Intent(CavanWalletActivity.ACTION_CONTENT_RECEIVED);
+							Intent intent = new Intent(CavanMessageActivity.ACTION_CONTENT_RECEIVED);
 							intent.putExtra("desc", "图片识别");
 							intent.putExtra("priority", 1);
 							intent.putExtra("content", text);
@@ -229,10 +229,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 				removeMessages(MSG_CHECK_AUTO_OPEN_APP);
 
 				if (needDisableAutoOpenApp()) {
-					CavanWalletActivity.setAutoOpenAppEnable(false);
+					CavanMessageActivity.setAutoOpenAppEnable(false);
 					sendEmptyMessageDelayed(MSG_CHECK_AUTO_OPEN_APP, 2000);
 				} else {
-					CavanWalletActivity.setAutoOpenAppEnable(true);
+					CavanMessageActivity.setAutoOpenAppEnable(true);
 				}
 				break;
 
@@ -256,7 +256,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	public void setAutoOpenAppEnable(boolean enable) {
 		if (enable) {
 			mHandler.removeMessages(MSG_CHECK_AUTO_OPEN_APP);
-			CavanWalletActivity.setAutoOpenAppEnable(true);
+			CavanMessageActivity.setAutoOpenAppEnable(true);
 			mAccessibilityAlipay.setAutoOpenAlipayEnable(true);
 		} else {
 			mHandler.sendEmptyMessage(MSG_CHECK_AUTO_OPEN_APP);
@@ -334,7 +334,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	public boolean startNextPendingActivity() {
 		if (getMessageCount() > 0) {
-			if (CavanWalletActivity.isAutoOpenAppEnabled(this)) {
+			if (CavanMessageActivity.isAutoOpenAppEnabled(this)) {
 				for (CavanAccessibilityBase<?> node : mAccessibilityMap.values()) {
 					if (node.getPacketCount() > 0) {
 						CavanAndroid.startActivity(this, node.getPackageName());
@@ -352,13 +352,13 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public boolean startIdleActivity() {
-		if (CavanWalletActivity.isAutoBackDesktopEnabled(this)) {
+		if (CavanMessageActivity.isAutoBackDesktopEnabled(this)) {
 			performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
 			return true;
 		} else if (CavanAndroid.startActivity(this, CavanPackageName.ALIPAY)) {
 			return true;
 		} else {
-			return CavanAndroid.startActivity(this, CavanWalletActivity.class);
+			return CavanAndroid.startActivity(this, CavanMessageActivity.class);
 		}
 	}
 
@@ -478,7 +478,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				CavanAccessibility.dumpEvent(event, "debug.cavan.dump.click");
 			}
 
-			if (CavanWalletActivity.isListenClickEnabled(CavanAccessibilityService.this)) {
+			if (CavanMessageActivity.isListenClickEnabled(CavanAccessibilityService.this)) {
 				accessibility.onViewClicked(event);
 			}
 			break;
@@ -567,12 +567,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 
 		IntentFilter filter = new IntentFilter();
-		filter.addAction(CavanWalletActivity.ACTION_CODE_TEST);
-		filter.addAction(CavanWalletActivity.ACTION_CODE_ADD);
-		filter.addAction(CavanWalletActivity.ACTION_CODE_REMOVE);
+		filter.addAction(CavanMessageActivity.ACTION_CODE_TEST);
+		filter.addAction(CavanMessageActivity.ACTION_CODE_ADD);
+		filter.addAction(CavanMessageActivity.ACTION_CODE_REMOVE);
 		filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
-		filter.addAction(CavanWalletActivity.ACTION_UNPACK_MM);
-		filter.addAction(CavanWalletActivity.ACTION_UNPACK_QQ);
+		filter.addAction(CavanMessageActivity.ACTION_UNPACK_MM);
+		filter.addAction(CavanMessageActivity.ACTION_UNPACK_QQ);
 
 		registerReceiver(mReceiver, filter);
 
@@ -582,7 +582,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	@Override
 	public void onDestroy() {
-		Intent intent = new Intent(CavanWalletActivity.ACTION_SERVICE_EXIT);
+		Intent intent = new Intent(CavanMessageActivity.ACTION_SERVICE_EXIT);
 		intent.putExtra("service", getClass().getCanonicalName());
 		sendBroadcast(intent);
 

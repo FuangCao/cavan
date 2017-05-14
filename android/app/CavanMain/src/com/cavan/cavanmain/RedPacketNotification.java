@@ -62,8 +62,8 @@ public class RedPacketNotification extends CavanNotification {
 	private StatusBarNotification mNotification;
 
 	static {
-		sNormalActionMap.put("QQ", CavanWalletActivity.ACTION_UNPACK_QQ);
-		sNormalActionMap.put("微信", CavanWalletActivity.ACTION_UNPACK_MM);
+		sNormalActionMap.put("QQ", CavanMessageActivity.ACTION_UNPACK_QQ);
+		sNormalActionMap.put("微信", CavanMessageActivity.ACTION_UNPACK_MM);
 	}
 
 	public RedPacketNotification(RedPacketListenerService service, StatusBarNotification sbn, boolean test) {
@@ -191,7 +191,7 @@ public class RedPacketNotification extends CavanNotification {
 	public Uri getRingtoneUri() {
 		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(mService);
 		if (preferences != null) {
-			String value = preferences.getString(CavanWalletActivity.KEY_RED_PACKET_NOTIFY_RINGTONE, null);
+			String value = preferences.getString(CavanMessageActivity.KEY_RED_PACKET_NOTIFY_RINGTONE, null);
 			if (value != null) {
 				Uri uri = Uri.parse(value);
 				Ringtone ringtone = RingtoneManager.getRingtone(mService, uri);
@@ -226,7 +226,7 @@ public class RedPacketNotification extends CavanNotification {
 			.setContentIntent(intent);
 
 		int defaluts = Notification.DEFAULT_LIGHTS;
-		int setting = CavanWalletActivity.getNotifySetting(mService);
+		int setting = CavanMessageActivity.getNotifySetting(mService);
 
 		if ((setting & 1) != 0) {
 			Uri ringtone = getRingtoneUri();
@@ -356,8 +356,8 @@ public class RedPacketNotification extends CavanNotification {
 		if (mNotification != null) {
 			intent = mNotification.getNotification().contentIntent;
 
-			if (send && intent != null && CavanWalletActivity.isAutoOpenAppEnabled(mService) &&
-					(CavanWalletActivity.isAutoOpenAlipayEnabled(mService) == false || mService.getCodePending() == 0)) {
+			if (send && intent != null && CavanMessageActivity.isAutoOpenAppEnabled(mService) &&
+					(CavanMessageActivity.isAutoOpenAlipayEnabled(mService) == false || mService.getCodePending() == 0)) {
 				try {
 					intent.send();
 				} catch (CanceledException e) {
@@ -393,7 +393,7 @@ public class RedPacketNotification extends CavanNotification {
 	}
 
 	public String getRedPacketCodeNormal() {
-		return mFinder.getNormalCode(getPackageName(), CavanWalletActivity.isFuDaiNotifyEnabled(mService));
+		return mFinder.getNormalCode(getPackageName(), CavanMessageActivity.isFuDaiNotifyEnabled(mService));
 	}
 
 	public boolean sendRedPacketNotifyNormal() {

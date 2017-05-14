@@ -63,9 +63,9 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.cavan.cavanmain.CavanWalletActivity"
+            android:name="com.cavan.cavanmain.CavanMessageActivity"
             android:documentLaunchMode="always"
-            android:label="@string/my_wallet"
+            android:label="@string/my_message"
             android:launchMode="singleTask" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

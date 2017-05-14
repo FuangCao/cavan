@@ -278,6 +278,6 @@
 	<string name="wifi_detector">WiFi探测器</string>
 	<string name="my_service">我的服务</string>
 	<string name="my_application">我的应用</string>
-	<string name="my_wallet">我的钱包</string>
+	<string name="my_message">我的消息</string>
 
 </resources>

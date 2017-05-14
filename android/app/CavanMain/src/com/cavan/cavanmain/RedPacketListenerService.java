@@ -132,7 +132,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			CavanAndroid.dLog("action = " + action);
 
 			switch (action) {
-			case CavanWalletActivity.ACTION_CODE_RECEIVED:
+			case CavanMessageActivity.ACTION_CODE_RECEIVED:
 				String[] codes = intent.getStringArrayExtra("codes");
 				if (codes == null) {
 					String code = intent.getStringExtra("code");
@@ -156,7 +156,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				}
 				break;
 
-			case CavanWalletActivity.ACTION_CONTENT_RECEIVED:
+			case CavanMessageActivity.ACTION_CONTENT_RECEIVED:
 				String desc = intent.getStringExtra("desc");
 				String content = intent.getStringExtra("content");
 				String packageName = intent.getStringExtra("package");
@@ -248,7 +248,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	}
 
 	public static boolean startAlipayActivity(Context context) {
-		if (CavanWalletActivity.isAutoOpenAlipayEnabled(context)) {
+		if (CavanMessageActivity.isAutoOpenAlipayEnabled(context)) {
 			return CavanAndroid.startActivity(context, CavanPackageName.ALIPAY);
 		}
 
@@ -272,7 +272,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	}
 
 	private void loadKeywords(SharedPreferences preferences) {
-		ArrayList<String> keywords = EditableMultiSelectListPreference.load(preferences, CavanWalletActivity.KEY_KEYWORD_NOTIFY);
+		ArrayList<String> keywords = EditableMultiSelectListPreference.load(preferences, CavanMessageActivity.KEY_KEYWORD_NOTIFY);
 		if (keywords != null) {
 			mKeywords = keywords;
 		} else {
@@ -305,8 +305,8 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		bindService(service, mFloatMessageConnection, 0);
 
 		IntentFilter filter = new IntentFilter();
-		filter.addAction(CavanWalletActivity.ACTION_CODE_RECEIVED);
-		filter.addAction(CavanWalletActivity.ACTION_CONTENT_RECEIVED);
+		filter.addAction(CavanMessageActivity.ACTION_CODE_RECEIVED);
+		filter.addAction(CavanMessageActivity.ACTION_CONTENT_RECEIVED);
 		registerReceiver(mReceiver, filter);
 
 		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -340,7 +340,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 	@Override
 	public void onPrimaryClipChanged() {
-		if (CavanWalletActivity.isListenClipEnabled(this)) {
+		if (CavanMessageActivity.isListenClipEnabled(this)) {
 			ClipData clip = mClipboardManager.getPrimaryClip();
 			if (clip == null || clip.getItemCount() <= 0) {
 				return;
@@ -358,7 +358,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				if (label.equals(CavanAndroid.CLIP_LABEL_TEMP)) {
 					return;
 				}
-			} else if (CavanWalletActivity.isClipboardShareEnabled(this) && CavanString.getLineCount(text) == 1) {
+			} else if (CavanMessageActivity.isClipboardShareEnabled(this) && CavanString.getLineCount(text) == 1) {
 				FloatEditorDialog dialog = FloatEditorDialog.getInstance(this, text, false, false);
 				dialog.show(6000);
 			}
@@ -372,7 +372,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 	@Override
 	public void onSharedPreferenceChanged(SharedPreferences preferences, String key) {
-		if (CavanWalletActivity.KEY_KEYWORD_NOTIFY.equals(key)) {
+		if (CavanMessageActivity.KEY_KEYWORD_NOTIFY.equals(key)) {
 			loadKeywords(preferences);
 		}
 	}
