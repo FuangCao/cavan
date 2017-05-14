@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:settings="http://schemas.android.com/apk/res/com.android.settings"
+    android:key="parent">
+
+    <Preference android:key="text_search"
+	    android:title="@string/text_search"/>
+	<Preference android:key="apk_backup"
+	    android:title="@string/app_name_apk_backup"/>
+	<Preference android:key="qr_code_encode"
+	    android:title="@string/qrcode_generate"/>
+	<Preference android:key="qrcode_decode"
+	    android:title="@string/qrcode_scan"/>
+	<Preference android:key="radix_converter"
+	    android:title="@string/app_name_radix_converter"/>
+	<Preference android:key="resistor_decoder"
+	    android:title="@string/app_name_resistor_decoder"/>
+	<Preference android:key="wifi_detector"
+	    android:title="@string/wifi_detector"/>
+
+</PreferenceScreen>

@@ -14,7 +14,7 @@ public class RedPacketAlarmReceiver extends BroadcastReceiver {
 		CavanAndroid.dLog("RedPacketAlarmReceiver: code = " + code);
 
 		if (code != null) {
-			intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
+			intent = new Intent(CavanWalletActivity.ACTION_CODE_RECEIVED);
 			intent.putExtra("code", code).putExtra("type", "定时器");
 			context.sendBroadcast(intent);
 		}

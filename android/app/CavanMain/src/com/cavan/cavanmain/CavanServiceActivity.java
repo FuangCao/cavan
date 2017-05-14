@@ -1,4 +1,4 @@
-package com.cavan.servicemanager;
+package com.cavan.cavanmain;
 
 import java.net.InetAddress;
 
@@ -11,7 +11,7 @@ import com.cavan.cavanjni.CavanServicePreference;
 import com.cavan.cavanmain.R;
 import com.cavan.java.CavanJava;
 
-public class MainActivity extends PreferenceActivity {
+public class CavanServiceActivity extends PreferenceActivity {
 
 	public static final String KEY_IP_ADDRESS = "ip_address";
 	public static final String KEY_FTP = "ftp";

@@ -33,7 +33,7 @@ import com.cavan.cavanmain.R;
 import com.cavan.java.CavanString;
 import com.cavan.resource.EditableMultiSelectListPreference;
 
-public class MainActivity extends PreferenceActivity implements OnPreferenceChangeListener {
+public class CavanWalletActivity extends PreferenceActivity implements OnPreferenceChangeListener {
 
 	public static final String ACTION_CODE_ADD = "cavan.intent.action.ACTION_CODE_ADD";
 	public static final String ACTION_CODE_TEST = "cavan.intent.action.ACTION_CODE_TEST";
@@ -559,7 +559,7 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 			String text = (String) object;
 			if (text != null) {
-				Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
+				Intent intent = new Intent(CavanWalletActivity.ACTION_CONTENT_RECEIVED);
 				intent.putExtra("desc", "手动输入");
 				intent.putExtra("content", CavanString.fromCharSequence(text));
 				sendBroadcast(intent);

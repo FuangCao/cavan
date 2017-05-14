@@ -465,7 +465,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 			}
 
 			if (!CavanAndroid.inKeyguardRestrictedInputMode(mService)) {
-				Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
+				Intent intent = new Intent(CavanWalletActivity.ACTION_CONTENT_RECEIVED);
 				intent.putExtra("package", source.getPackageName());
 				intent.putExtra("desc", "QQ消息盒子");
 				intent.putExtra("content", text);
@@ -502,7 +502,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 
 	@Override
 	public boolean addPacket(String packet) {
-		int delay = MainActivity.getAutoUnpackQQ(mService);
+		int delay = CavanWalletActivity.getAutoUnpackQQ(mService);
 		if (delay < 0) {
 			return false;
 		}

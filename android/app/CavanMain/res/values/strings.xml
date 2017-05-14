@@ -276,5 +276,8 @@
 	<string name="text_search">文字查找</string>
 	<string name="paste">粘贴</string>
 	<string name="wifi_detector">WiFi探测器</string>
+	<string name="my_service">我的服务</string>
+	<string name="my_application">我的应用</string>
+	<string name="my_wallet">我的钱包</string>
 
 </resources>

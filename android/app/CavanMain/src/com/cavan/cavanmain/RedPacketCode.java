@@ -325,7 +325,7 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 	synchronized public void updateRepeatTime(Context context) {
 		mRepeatable = true;
 		mRepeatTime = TimeAlign();
-		mTime = mRepeatTime - MainActivity.getCommitAhead(context);
+		mTime = mRepeatTime - CavanWalletActivity.getCommitAhead(context);
 	}
 
 	synchronized public long getRepeatTime() {

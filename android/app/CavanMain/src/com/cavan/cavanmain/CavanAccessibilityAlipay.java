@@ -168,7 +168,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 			break;
 
 		case "com.alipay.android.phone.discovery.envelope.HomeActivity":
-			MainActivity.setRedPacketCodeReceiveEnabled(true);
+			CavanWalletActivity.setRedPacketCodeReceiveEnabled(true);
 
 			if (code == null) {
 				break;
@@ -208,7 +208,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 				mService.sendRedPacketCode(mCode);
 			}
 
-			if (MainActivity.isAutoUnpackEnabled(mService)) {
+			if (CavanWalletActivity.isAutoUnpackEnabled(mService)) {
 				unpackRedPacket(root);
 				startAutoCommitRedPacketCode(500);
 			}
@@ -260,7 +260,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 		case "com.alipay.mobile.commonui.widget.APNoticePopDialog":
 			mAutoOpenAlipay = false;
 		case "com.alipay.mobile.security.login.ui.AlipayUserLoginActivity":
-			MainActivity.setRedPacketCodeReceiveEnabled(false);
+			CavanWalletActivity.setRedPacketCodeReceiveEnabled(false);
 			if (mCode != null) {
 				mCode.setPostPending(false);
 			}
@@ -410,7 +410,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 		mCode = code;
 
 		int msgResId;
-		int maxCommitCount = MainActivity.getAutoCommitCount(mService);
+		int maxCommitCount = CavanWalletActivity.getAutoCommitCount(mService);
 
 		if (code.isCompleted()) {
 			code.updateTime();
@@ -429,12 +429,12 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 						return false;
 					}
 
-					mService.sendBroadcast(new Intent(MainActivity.ACTION_CODE_COMMIT));
+					mService.sendBroadcast(new Intent(CavanWalletActivity.ACTION_CODE_COMMIT));
 					return true;
 				} else {
 					msgResId = R.string.commit_too_much_please_manual_commit;
 				}
-			} else if (MainActivity.isAutoSwitchImeEnabled(mService)) {
+			} else if (CavanWalletActivity.isAutoSwitchImeEnabled(mService)) {
 				String ime = mService.getResources().getString(R.string.cavan_input_method);
 				mService.setInputMethod(ime, 5);
 				return false;

@@ -116,7 +116,7 @@ public class FloatMessageService extends FloatWidowService {
 				break;
 
 			case MSG_TCP_SERVICE_STATE_CHANGED:
-				Intent intent = new Intent(MainActivity.ACTION_WAN_UPDATED);
+				Intent intent = new Intent(CavanWalletActivity.ACTION_WAN_UPDATED);
 				intent.putExtra("state", msg.arg1);
 				intent.putExtra("summary", (String) msg.obj);
 				sendStickyBroadcast(intent);
@@ -131,7 +131,7 @@ public class FloatMessageService extends FloatWidowService {
 				break;
 
 			case MSG_TCP_SERVICE_UPDATED:
-				if (mNetworkConnected && MainActivity.isWanShareEnabled(FloatMessageService.this)) {
+				if (mNetworkConnected && CavanWalletActivity.isWanShareEnabled(FloatMessageService.this)) {
 					if (mTcpDaemon == null) {
 						mTcpDaemon = new TcpDaemonThread();
 						mTcpDaemon.start();
@@ -144,7 +144,7 @@ public class FloatMessageService extends FloatWidowService {
 				break;
 
 			case MSG_TCP_BRIDGE_STATE_CHANGED:
-				intent = new Intent(MainActivity.ACTION_BRIDGE_UPDATED);
+				intent = new Intent(CavanWalletActivity.ACTION_BRIDGE_UPDATED);
 				intent.putExtra("state", msg.arg1);
 				sendStickyBroadcast(intent);
 
@@ -152,7 +152,7 @@ public class FloatMessageService extends FloatWidowService {
 				break;
 
 			case MSG_TCP_BRIDGE_UPDATED:
-				if (mNetworkConnected && MainActivity.isTcpBridgeEnabled(FloatMessageService.this)) {
+				if (mNetworkConnected && CavanWalletActivity.isTcpBridgeEnabled(FloatMessageService.this)) {
 					if (mTcpBridge == null) {
 						mTcpBridge = new TcpBridgeThread();
 						mTcpBridge.start();
@@ -177,7 +177,7 @@ public class FloatMessageService extends FloatWidowService {
 				break;
 
 			case MSG_START_OCR:
-				MainActivity.startSogouOcrActivity(getApplicationContext());
+				CavanWalletActivity.startSogouOcrActivity(getApplicationContext());
 				break;
 
 			case MSG_CLIPBOARD_RECEIVED:
@@ -240,7 +240,7 @@ public class FloatMessageService extends FloatWidowService {
 
 			switch (action) {
 			case Intent.ACTION_SCREEN_OFF:
-				if (MainActivity.isDisableKeyguardEnabled(getApplicationContext())) {
+				if (CavanWalletActivity.isDisableKeyguardEnabled(getApplicationContext())) {
 					CavanAndroid.acquireWakeLock(getApplicationContext(), 5000);
 					CavanAndroid.startActivity(getApplicationContext(), KeyguardActivity.class);
 				}
@@ -254,13 +254,13 @@ public class FloatMessageService extends FloatWidowService {
 				mHandler.sendEmptyMessage(MSG_UPDATE_TIME);
 
 
-				if (getTextCount() > 0 || MainActivity.isAutoUnlockEnabled(getApplicationContext())) {
+				if (getTextCount() > 0 || CavanWalletActivity.isAutoUnlockEnabled(getApplicationContext())) {
 					setLockScreenEnable(false);
 				}
 
 				mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_unlock_bg);
 
-				if (MainActivity.isAutoUnlockEnabled(getApplicationContext())) {
+				if (CavanWalletActivity.isAutoUnlockEnabled(getApplicationContext())) {
 					mHandler.sendEmptyMessage(MSG_CHECK_KEYGUARD);
 				}
 				break;
@@ -269,14 +269,14 @@ public class FloatMessageService extends FloatWidowService {
 				updateNetworkConnState();
 				break;
 
-			case MainActivity.ACTION_SEND_WAN_COMMAN:
+			case CavanWalletActivity.ACTION_SEND_WAN_COMMAN:
 				if (mNetSender != null) {
 					String command = intent.getStringExtra("command");
 					mNetSender.sendTcpCommand(command, 0);
 				}
 				break;
 
-			case MainActivity.ACTION_SERVICE_EXIT:
+			case CavanWalletActivity.ACTION_SERVICE_EXIT:
 				String service = intent.getStringExtra("service");
 				if (service == null) {
 					break;
@@ -337,11 +337,11 @@ public class FloatMessageService extends FloatWidowService {
 				RedPacketCode node = RedPacketCode.getInstence(code);
 				if (node != null) {
 					if (node.isTestOnly()) {
-						sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_TEST, code);
+						sendCodeUpdateBroadcast(CavanWalletActivity.ACTION_CODE_TEST, code);
 					} else {
 						mMessageCodeMap.put(message, node);
 
-						sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_ADD, code);
+						sendCodeUpdateBroadcast(CavanWalletActivity.ACTION_CODE_ADD, code);
 
 						if (node.isSendEnabled() && mNetSender != null) {
 							long delay = node.getTime() - System.currentTimeMillis();
@@ -373,7 +373,7 @@ public class FloatMessageService extends FloatWidowService {
 			if (code != null) {
 				code.setNetworkEnable();
 				mMessageCodeMap.remove(message);
-				sendCodeUpdateBroadcast(MainActivity.ACTION_CODE_REMOVE, code.getCode());
+				sendCodeUpdateBroadcast(CavanWalletActivity.ACTION_CODE_REMOVE, code.getCode());
 			}
 		}
 
@@ -510,7 +510,7 @@ public class FloatMessageService extends FloatWidowService {
 	}
 
 	public boolean setLockScreenEnable(boolean enable) {
-		if (MainActivity.isDisableKeyguardEnabled(this)) {
+		if (CavanWalletActivity.isDisableKeyguardEnabled(this)) {
 			enable = true;
 		}
 
@@ -573,10 +573,10 @@ public class FloatMessageService extends FloatWidowService {
 			if (code.equals(NET_CMD_TEST)) {
 				command = getResources().getString(R.string.network_test_success, type);
 				mHandler.obtainMessage(MSG_SHOW_TOAST, command).sendToTarget();
-			} else if (MainActivity.isRedPacketCodeReceiveEnabled()) {
+			} else if (CavanWalletActivity.isRedPacketCodeReceiveEnabled()) {
 				RedPacketCode node = RedPacketCode.getInstence(code);
 				if (node == null || node.isRecvEnabled()) {
-					Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
+					Intent intent = new Intent(CavanWalletActivity.ACTION_CODE_RECEIVED);
 					intent.putExtra("type", type);
 					intent.putExtra("code", code);
 					intent.putExtra("shared", true);
@@ -641,8 +641,8 @@ public class FloatMessageService extends FloatWidowService {
 		filter.addAction(Intent.ACTION_SCREEN_OFF);
 		filter.addAction(Intent.ACTION_SCREEN_ON);
 		filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-		filter.addAction(MainActivity.ACTION_SEND_WAN_COMMAN);
-		filter.addAction(MainActivity.ACTION_SERVICE_EXIT);
+		filter.addAction(CavanWalletActivity.ACTION_SEND_WAN_COMMAN);
+		filter.addAction(CavanWalletActivity.ACTION_SERVICE_EXIT);
 		registerReceiver(mReceiver, filter );
 
 		mFileObserverQQ.startWatching();
@@ -654,7 +654,7 @@ public class FloatMessageService extends FloatWidowService {
 		mUdpDaemon.start();
 
 		updateNetworkConnState();
-		setSuspendDisable(MainActivity.isDisableSuspendEnabled(this));
+		setSuspendDisable(CavanWalletActivity.isDisableSuspendEnabled(this));
 
 		mHandler.sendEmptyMessage(MSG_CHECK_SERVICE_STATE);
 	}
@@ -719,7 +719,7 @@ public class FloatMessageService extends FloatWidowService {
 		mTextViewTime.setTextSize(TEXT_SIZE_TIME);
 		mTextViewTime.setTextColor(TEXT_COLOR_TIME);
 
-		if (MainActivity.isFloatTimerEnabled(this)) {
+		if (CavanWalletActivity.isFloatTimerEnabled(this)) {
 			setTimerEnable(true);
 		} else {
 			setTimerEnable(false);
@@ -757,7 +757,7 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		public boolean sendTcpCommand(String command, long delay) {
-			if (MainActivity.isWanShareEnabled(getApplicationContext())) {
+			if (CavanWalletActivity.isWanShareEnabled(getApplicationContext())) {
 				return sendCommand(MSG_SEND_TCP_COMMAND, command, delay, 0);
 			}
 
@@ -765,7 +765,7 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		public boolean sendUdpCommand(String command, long delay, int retry) {
-			if (MainActivity.isLanShareEnabled(getApplicationContext())) {
+			if (CavanWalletActivity.isLanShareEnabled(getApplicationContext())) {
 				return sendCommand(MSG_SEND_UDP_COMMAND, command, delay, retry);
 			}
 
@@ -895,7 +895,7 @@ public class FloatMessageService extends FloatWidowService {
 					try {
 						mSocket.receive(pack);
 
-						if (MainActivity.isLanShareEnabled(FloatMessageService.this)) {
+						if (CavanWalletActivity.isLanShareEnabled(FloatMessageService.this)) {
 							String text = new String(pack.getData(), 0, pack.getLength());
 							onNetworkCommandReceived("内网分享", text);
 						}
@@ -991,7 +991,7 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		synchronized private boolean isRunEnabled() {
-			return mActive && MainActivity.isWanShareEnabled(getApplicationContext());
+			return mActive && CavanWalletActivity.isWanShareEnabled(getApplicationContext());
 		}
 
 		synchronized public void setConnDelay(long delay) {
@@ -1020,7 +1020,7 @@ public class FloatMessageService extends FloatWidowService {
 			while (isRunEnabled()) {
 				mReload = false;
 
-				List<String> lines = MainActivity.getWanShareServer(getApplicationContext());
+				List<String> lines = CavanWalletActivity.getWanShareServer(getApplicationContext());
 				if (lines == null || lines.isEmpty()) {
 					break;
 				}
@@ -1081,7 +1081,7 @@ public class FloatMessageService extends FloatWidowService {
 							try {
 								if (NET_CMD_KEEP_ALIVE.equals(line)) {
 									CavanAndroid.dLog("Received: " + line);
-								} else if (MainActivity.isWanReceiveEnabled(getApplicationContext())) {
+								} else if (CavanWalletActivity.isWanReceiveEnabled(getApplicationContext())) {
 									onNetworkCommandReceived("外网分享", line);
 								}
 							} catch (Exception e) {
@@ -1147,8 +1147,8 @@ public class FloatMessageService extends FloatWidowService {
 		public void run() {
 			mActive = true;
 
-			while (mActive && MainActivity.isTcpBridgeEnabled(getApplicationContext())) {
-				String setting = MainActivity.getTcpBridgeSetting(getApplicationContext());
+			while (mActive && CavanWalletActivity.isTcpBridgeEnabled(getApplicationContext())) {
+				String setting = CavanWalletActivity.getTcpBridgeSetting(getApplicationContext());
 				if (setting == null) {
 					break;
 				}

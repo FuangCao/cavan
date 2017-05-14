@@ -57,6 +57,33 @@ public class CavanAndroid {
 	public static boolean ELOG_ENABLE = true;
 	public static boolean PLOG_ENABLE = true;
 
+	public static final int SDK_VERSION = Build.VERSION.SDK_INT;
+	public static final int SDK_VERSION_10  = Build.VERSION_CODES.BASE;
+	public static final int SDK_VERSION_11  = Build.VERSION_CODES.BASE_1_1;
+	public static final int SDK_VERSION_15  = Build.VERSION_CODES.CUPCAKE;
+	public static final int SDK_VERSION_16  = Build.VERSION_CODES.DONUT;
+	public static final int SDK_VERSION_20  = Build.VERSION_CODES.ECLAIR;
+	public static final int SDK_VERSION_201 = Build.VERSION_CODES.ECLAIR_0_1;
+	public static final int SDK_VERSION_21  = Build.VERSION_CODES.ECLAIR_MR1;
+	public static final int SDK_VERSION_22  = Build.VERSION_CODES.FROYO;
+	public static final int SDK_VERSION_23  = Build.VERSION_CODES.GINGERBREAD;
+	public static final int SDK_VERSION_233 = Build.VERSION_CODES.GINGERBREAD_MR1;
+	public static final int SDK_VERSION_30  = Build.VERSION_CODES.HONEYCOMB;
+	public static final int SDK_VERSION_31  = Build.VERSION_CODES.HONEYCOMB_MR1;
+	public static final int SDK_VERSION_32  = Build.VERSION_CODES.HONEYCOMB_MR2;
+	public static final int SDK_VERSION_40  = Build.VERSION_CODES.ICE_CREAM_SANDWICH;
+	public static final int SDK_VERSION_403 = Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1;
+	public static final int SDK_VERSION_41  = Build.VERSION_CODES.JELLY_BEAN;
+	public static final int SDK_VERSION_42  = Build.VERSION_CODES.JELLY_BEAN_MR1;
+	public static final int SDK_VERSION_43  = Build.VERSION_CODES.JELLY_BEAN_MR2;
+	public static final int SDK_VERSION_44  = Build.VERSION_CODES.KITKAT;
+	public static final int SDK_VERSION_44W = Build.VERSION_CODES.KITKAT_WATCH;
+	public static final int SDK_VERSION_50  = Build.VERSION_CODES.LOLLIPOP;
+	public static final int SDK_VERSION_51  = Build.VERSION_CODES.LOLLIPOP_MR1;
+	public static final int SDK_VERSION_60  = Build.VERSION_CODES.M;
+	public static final int SDK_VERSION_70  = 24;
+	public static final int SDK_VERSION_71  = 25;
+
 	public static final String CLIP_LABEL_DEFAULT = "Cavan";
 	public static final String CLIP_LABEL_TEMP = CLIP_LABEL_DEFAULT + "Temp";
 

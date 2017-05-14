@@ -41,7 +41,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 	@Override
 	public boolean addPacket(String packet) {
-		int delay = MainActivity.getAutoUnpackMM(mService);
+		int delay = CavanWalletActivity.getAutoUnpackMM(mService);
 		if (delay < 0) {
 			return false;
 		}

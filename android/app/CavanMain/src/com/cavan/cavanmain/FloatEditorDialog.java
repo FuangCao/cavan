@@ -183,7 +183,7 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 
 			if (length > 0) {
 				if (length % 8 == 0) {
-					Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
+					Intent intent = new Intent(CavanWalletActivity.ACTION_CODE_RECEIVED);
 					intent.putExtra("codes", RedPacketFinder.splitRedPacketDigitCodes(text));
 					mContext.sendBroadcast(intent);
 					dismiss();
@@ -198,14 +198,14 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 				CavanAndroid.postClipboardText(mContext, text);
 			}
 
-			Intent intent = new Intent(MainActivity.ACTION_SEND_WAN_COMMAN);
+			Intent intent = new Intent(CavanWalletActivity.ACTION_SEND_WAN_COMMAN);
 			intent.putExtra("command", FloatMessageService.NET_CMD_CLIPBOARD + text);
 			mContext.sendBroadcast(intent);
 			dismiss();
 		} else if (v == mButtonSend) {
 			String text = mEditText.getText().toString();
 
-			MainActivity.setAutoOpenAppEnable(true);
+			CavanWalletActivity.setAutoOpenAppEnable(true);
 
 			if (mCheckBox != null && mCheckBox.isChecked()) {
 				if (text != null) {
@@ -213,7 +213,7 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 						String code = RedPacketCode.filtration(line);
 
 						if (code.length() > 0) {
-							Intent intent = new Intent(MainActivity.ACTION_CODE_RECEIVED);
+							Intent intent = new Intent(CavanWalletActivity.ACTION_CODE_RECEIVED);
 							intent.putExtra("type", "手动输入");
 							intent.putExtra("code", code);
 							intent.putExtra("shared", false);
@@ -222,7 +222,7 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 					}
 				}
 			} else {
-				Intent intent = new Intent(MainActivity.ACTION_CONTENT_RECEIVED);
+				Intent intent = new Intent(CavanWalletActivity.ACTION_CONTENT_RECEIVED);
 				intent.putExtra("desc", "手动输入");
 				intent.putExtra("priority", 1);
 				intent.putExtra("content", text);
