@@ -24,7 +24,7 @@ namespace FFMpegConvert {
 #if false
             "mkv", "mp4", "rm", "rmvb", "avi", "wmv", "flv", "mov", "m2v", "vob", "3gp", "mpeg", "mpg", "mpe", "ra", "ram", "asf"
 #else
-            "mp4"
+            "mp4", "mov"
 #endif
         };
 
