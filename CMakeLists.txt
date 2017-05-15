@@ -16,6 +16,7 @@ add_definitions(-g -Os -DCAVAN -DCAVAN_OS_NAME="${CAVAN_OS_NAME}" -DCAVAN_PLAT="
 aux_source_directory(lib LIB_SOURCES)
 aux_source_directory(cpp LIB_SOURCES)
 aux_source_directory(app APP_SOURCES)
+aux_source_directory(test APP_SOURCES)
 
 add_library(cavan SHARED ${LIB_SOURCES})
 # set_target_properties(cavan PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/out/host/lib")
