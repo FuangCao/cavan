@@ -39,7 +39,6 @@ namespace FFMpegConvert {
         private String mOutputFormat;
         private String mAudioCodec;
         private String mAudioBitRate;
-        private String mCommandParam;
         private String mInPath;
         private String mOutPath;
         private String mLogFilePath;
@@ -158,13 +157,13 @@ namespace FFMpegConvert {
             return true;
         }
 
-        private bool doConvertVideo(String fileIn, String fileOut) {
+        private bool doConvertVideo(String fileIn, String fileOut, String param) {
             setConvertState("正在转换：" + fileIn);
 
             StringBuilder builder = new StringBuilder();
 
             builder.Append("-i \"").Append(fileIn).Append("\" ");
-            builder.Append(mCommandParam);
+            builder.Append(param);
             builder.Append(" \"").Append(fileOut).Append("\"");
 
             String arguments = builder.ToString();
@@ -244,7 +243,9 @@ namespace FFMpegConvert {
                 tmpInfo.Delete();
             }
 
-            if (!doConvertVideo(inInfo.FullName, tmpInfo.FullName)) {
+            String param = buildCommandParam(inInfo);
+
+            if (!doConvertVideo(inInfo.FullName, tmpInfo.FullName, param)) {
                 tmpInfo.Delete();
                 return false;
             }
@@ -257,7 +258,7 @@ namespace FFMpegConvert {
                 return false;
             }
 
-            mStreamWriterLog.WriteLine(inInfo.FullName + " " + outInfo.FullName + " " + mCommandParam);
+            mStreamWriterLog.WriteLine(inInfo.FullName + " " + outInfo.FullName + " " + param);
             mStreamWriterLog.Flush();
 
             return true;
@@ -361,7 +362,7 @@ namespace FFMpegConvert {
             }
         }
 
-        private String buildCommandParam() {
+        private String buildCommandParam(FileInfo info) {
             StringBuilder builder = new StringBuilder();
 
             if (mAudioCodec != null && mAudioBitRate != null) {
@@ -376,6 +377,13 @@ namespace FFMpegConvert {
                 builder.Append(" ").Append(mVideoCodecParam);
             }
 
+            if (mOutputFormat.Equals("h264")) {
+                String name = Path.GetFileNameWithoutExtension(info.Name);
+                if (name.EndsWith("_idle", true, null)) {
+                    builder.Append(" -r 30");
+                }
+            }
+
             return builder.ToString();
         }
 
@@ -384,7 +392,6 @@ namespace FFMpegConvert {
 
             Directory.CreateDirectory(mOutPath);
 
-            mCommandParam = buildCommandParam();
             mStreamWriterLog = new StreamWriter(mLogFilePath, true);
 
             if (File.Exists(mInPath)) {

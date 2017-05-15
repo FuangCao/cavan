@@ -50,7 +50,6 @@
             this.labelLogFile = new System.Windows.Forms.Label();
             this.textBoxLogFile = new System.Windows.Forms.TextBox();
             this.saveFileDialogLogFile = new System.Windows.Forms.SaveFileDialog();
-            this.textBoxLog = new System.Windows.Forms.TextBox();
             this.buttonClear = new System.Windows.Forms.Button();
             this.labelState = new System.Windows.Forms.Label();
             this.checkBoxHiddenCmdline = new System.Windows.Forms.CheckBox();
@@ -61,6 +60,7 @@
             this.buttonOutDir = new System.Windows.Forms.Button();
             this.openFileDialogInFile = new System.Windows.Forms.OpenFileDialog();
             this.backgroundWorkerConvert = new System.ComponentModel.BackgroundWorker();
+            this.textBoxLog = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // labelVidecCodec
@@ -261,16 +261,6 @@
             this.saveFileDialogLogFile.FileName = "ffmpeg-convert.log";
             this.saveFileDialogLogFile.Title = "选择日志文件";
             // 
-            // textBoxLog
-            // 
-            this.textBoxLog.Location = new System.Drawing.Point(3, 3);
-            this.textBoxLog.Multiline = true;
-            this.textBoxLog.Name = "textBoxLog";
-            this.textBoxLog.ReadOnly = true;
-            this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBoxLog.Size = new System.Drawing.Size(577, 225);
-            this.textBoxLog.TabIndex = 19;
-            // 
             // buttonClear
             // 
             this.buttonClear.Location = new System.Drawing.Point(3, 468);
@@ -358,6 +348,16 @@
             this.backgroundWorkerConvert.WorkerSupportsCancellation = true;
             this.backgroundWorkerConvert.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorkerConvert_DoWork);
             // 
+            // textBoxLog
+            // 
+            this.textBoxLog.Location = new System.Drawing.Point(3, 3);
+            this.textBoxLog.Multiline = true;
+            this.textBoxLog.Name = "textBoxLog";
+            this.textBoxLog.ReadOnly = true;
+            this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.textBoxLog.Size = new System.Drawing.Size(577, 225);
+            this.textBoxLog.TabIndex = 19;
+            // 
             // FFMpegConvert
             // 
             this.AcceptButton = this.buttonStart;
@@ -427,7 +427,6 @@
         private System.Windows.Forms.Label labelLogFile;
         private System.Windows.Forms.TextBox textBoxLogFile;
         private System.Windows.Forms.SaveFileDialog saveFileDialogLogFile;
-        private System.Windows.Forms.TextBox textBoxLog;
         private System.Windows.Forms.Button buttonClear;
         private System.Windows.Forms.Label labelState;
         private System.Windows.Forms.CheckBox checkBoxHiddenCmdline;
@@ -438,6 +437,7 @@
         private System.Windows.Forms.Button buttonOutDir;
         private System.Windows.Forms.OpenFileDialog openFileDialogInFile;
         private System.ComponentModel.BackgroundWorker backgroundWorkerConvert;
+        private System.Windows.Forms.TextBox textBoxLog;
     }
 }
 
