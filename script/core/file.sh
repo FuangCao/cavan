@@ -405,3 +405,30 @@ function cavan-path-copy()
 
 	return 0
 }
+
+function cavan-remove-fuse-hidden()
+{
+	local mnt_point source_dir fuse_hidden
+
+	source_dir="${1-.}"
+	echo "source_dir = ${source_dir}"
+
+	mnt_point=$(df "${source_dir}" | sed -n '2,1p' | awk '{print $6}')
+	echo "mnt_point = ${mnt_point}"
+
+	[ "${mnt_point}" ] ||
+	{
+		echo "Mount point not found!"
+		return 1
+	}
+
+	fuse_hidden="${mnt_point}/fuse_hidden"
+	echo "fuse_hidden = ${fuse_hidden}"
+
+	mkdir -pv "${fuse_hidden}" || return 1
+
+	for fn in $(find "${source_dir}" -name ".fuse_hidden*")
+	do
+		mv -v "${fn}" "${fuse_hidden}"
+	done
+}
