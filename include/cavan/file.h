@@ -192,6 +192,8 @@ char *file_permition_tostring(mode_t mode, char *buff, char *buff_end);
 const char *month_tostring(int month);
 const char *week_tostring(int week);
 
+int remove_fuse_hidden(const char *pathname, const char *basename);
+int remove_file(const char *pathname, const char *basename);
 int remove_directory(const char *pathname);
 int remove_auto(const char *pathname);
 

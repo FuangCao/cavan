@@ -5,6 +5,7 @@
 #include <linux/hdreg.h>
 #include <linux/loop.h>
 #include <sys/vfs.h>
+#include <mntent.h>
 
 #define TEMP_MOUNT_POINT	"/tmp/tmp_mount_point"
 #define TEMP_DEVICE_NODE	"/tmp/tmp_deivce_node"
@@ -218,6 +219,9 @@ bool cavan_remount_ro_done(void);
 int cavan_remount_ro(int retry);
 int bdev_set_read_only2(const char *pathname, int enable);
 int bdev_remount(const char *mount_dir, const void *data);
+
+const char *cavan_find_mtab(void);
+struct mntent *cavan_find_mntent(const char *name);
 
 static inline int parse_mount_table_simple(const char *buff, struct mount_table *mtab)
 {

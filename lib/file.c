@@ -2310,12 +2310,58 @@ const char *week_tostring(int week)
 	return "Unknown";
 }
 
+int remove_fuse_hidden(const char *pathname, const char *basename)
+{
+	char *filename;
+	char buff[1024];
+	struct mntent *entry = cavan_find_mntent(pathname);
+
+	if (entry == NULL) {
+		pr_red_info("cavan_find_mntent: %s", pathname);
+		return -EFAULT;
+	}
+
+	filename = cavan_path_cat(buff, sizeof(buff), entry->mnt_dir, "fuse_hidden", true);
+
+	if (mkdir(buff, 0777) < 0 && errno != EEXIST) {
+		pr_err_info("mkdir: %s", buff);
+		return -EFAULT;
+	}
+
+	strcpy(filename, basename);
+
+	println("rename file: %s -> %s", pathname, buff);
+
+	if (rename(pathname, buff) < 0) {
+		pr_err_info("rename: %s", pathname);
+		return -EFAULT;
+	}
+
+	return 0;
+}
+
+int remove_file(const char *pathname, const char *basename)
+{
+	if (basename && text_lhcmp(".fuse_hidden", basename) == 0) {
+		return remove_fuse_hidden(pathname, basename);
+	}
+
+	println("remove file: \"%s\"", pathname);
+
+	if (remove(pathname) < 0) {
+		pr_err_info("remove: %s", pathname);
+		return -EFAULT;
+	}
+
+	return 0;
+}
+
 int remove_directory(const char *pathname)
 {
 	int ret;
-	char tmppath[1024], *name_p;
 	DIR *dp;
 	struct dirent *en;
+	char tmppath[1024], *name_p;
 
 	dp = opendir(pathname);
 	if (dp == NULL) {
@@ -2335,8 +2381,7 @@ int remove_directory(const char *pathname)
 		if (en->d_type == DT_DIR) {
 			ret = remove_directory(tmppath);
 		} else {
-			println("remove file \"%s\"", tmppath);
-			ret = remove(tmppath);
+			ret = remove_file(tmppath, en->d_name);
 		}
 
 		if (ret < 0) {
@@ -2345,7 +2390,7 @@ int remove_directory(const char *pathname)
 		}
 	}
 
-	println("remove directory \"%s\"", pathname);
+	println("remove directory: \"%s\"", pathname);
 	ret = rmdir(pathname);
 
 out_close_dp:
@@ -2365,7 +2410,7 @@ int remove_auto(const char *pathname)
 		return ret;
 	}
 
-	return S_ISDIR(st.st_mode) ? remove_directory(pathname) : remove(pathname);
+	return S_ISDIR(st.st_mode) ? remove_directory(pathname) : remove_file(pathname, cavan_path_basename_simple(pathname));
 }
 
 int file_type_test(const char *pathname, mode_t type)

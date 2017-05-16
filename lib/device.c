@@ -3,7 +3,6 @@
 #include <cavan/text.h>
 #include <cavan/file.h>
 #include <cavan/math.h>
-#include <sys/vfs.h>
 
 #define MAX_MOUNT_COUNT				100
 #define CAVAN_BLOCK_DEVICE_DEBUG	0
@@ -2036,4 +2035,66 @@ int bdev_remount(const char *mount_dir, const void *data)
 	pr_func_info("dev_path = %s", dev_path);
 
 	return mount(dev_path, mount_dir, "none", MS_REMOUNT, data);
+}
+
+const char *cavan_find_mtab(void)
+{
+	static const char *paths[] = {
+		"/etc/mtab", "/proc/self/mounts", "/proc/mounts"
+	};
+	int i;
+
+	for (i = 0; i < NELEM(paths); i++) {
+		if (file_access_r(paths[i])) {
+			return paths[i];
+		}
+	}
+
+	return NULL;
+}
+
+struct mntent *cavan_find_mntent(const char *name)
+{
+	int ret;
+	FILE *fp;
+	dev_t st_dev;
+	dev_t st_rdev;
+	struct stat st;
+	const char *mtab;
+	struct mntent *entry;
+
+	ret = stat(name, &st);
+	if (ret < 0) {
+		pr_err_info("stat");
+		return NULL;
+	}
+
+	mtab = cavan_find_mtab();
+	if (mtab == NULL) {
+		pr_red_info("mtab not found!");
+		return NULL;
+	}
+
+	st_dev = st.st_dev;
+	st_rdev = st.st_rdev;
+
+	fp = setmntent(mtab, "r");
+	if (fp == NULL) {
+		pr_err_info("setmntent");
+		return NULL;
+	}
+
+	while ((entry = getmntent(fp))) {
+		if (st_rdev) {
+			if (stat(entry->mnt_fsname, &st) == 0 && st.st_rdev == st_rdev) {
+				break;
+			}
+		} else if (stat(entry->mnt_dir, &st) == 0 && st.st_dev == st_dev) {
+			break;
+		}
+	}
+
+	endmntent(fp);
+
+	return entry;
 }
