@@ -2078,7 +2078,11 @@ struct mntent *cavan_find_mntent(const char *name)
 	st_dev = st.st_dev;
 	st_rdev = st.st_rdev;
 
+#ifdef CONFIG_ANDROID
+	fp = fopen(mtab, "r");
+#else
 	fp = setmntent(mtab, "r");
+#endif
 	if (fp == NULL) {
 		pr_err_info("setmntent");
 		return NULL;
@@ -2094,7 +2098,11 @@ struct mntent *cavan_find_mntent(const char *name)
 		}
 	}
 
+#ifdef CONFIG_ANDROID
+	fclose(fp);
+#else
 	endmntent(fp);
+#endif
 
 	return entry;
 }

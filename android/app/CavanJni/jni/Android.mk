@@ -1,7 +1,11 @@
 LOCAL_PATH := $(call my-dir)/../../../..
 
+CAVAN_RES_PATH := $(call my-dir)/../res
+CAVAN_RAW_PATH := $(CAVAN_RES_PATH)/raw
+CAVAN_MAIN_PATH := $(CAVAN_RAW_PATH)/cavan_main_$(TARGET_ARCH_ABI)
+
 CAVAN_PROJECT_PATH := android/app/CavanJni
-CAVAN_JNI_PATH = $(CAVAN_PROJECT_PATH)/jni
+CAVAN_JNI_PATH := $(CAVAN_PROJECT_PATH)/jni
 CAVAN_MAKEFILE := $(LOCAL_PATH)/$(CAVAN_JNI_PATH)/Android.mk
 
 define cavan-all-files-under
@@ -72,6 +76,11 @@ LOCAL_MODULE := cavan-main
 LOCAL_LDLIBS := $(CAVAN_LDLIBS)
 LOCAL_STATIC_LIBRARIES := $(CAVAN_APP_LIBRARIES)
 include $(BUILD_EXECUTABLE)
+
+$(CAVAN_MAIN_PATH): $(call map,module-get-installed,$(LOCAL_MODULE)) | $(CAVAN_RAW_PATH)
+	@cp -av "$<" "$@"
+
+WANTED_INSTALLED_MODULES += $(CAVAN_MAIN_PATH)
 
 $(addprefix $(LOCAL_PATH)/,$(CAVAN_APP_CORE_SRC_FILES)): $(CAVAN_MAP_H) $(CAVAN_MAP_C)
 
@@ -164,5 +173,5 @@ $(CAVAN_NATIVE_JAVA): $(addprefix $(LOCAL_PATH)/,$(CAVAN_APP_SRC_FILES)) $(CAVAN
 		echo "}"; \
 	} > $@
 
-$(CAVAN_OUT_PATH):
-	$(hide) mkdir -pv $@
+$(CAVAN_OUT_PATH) $(CAVAN_RAW_PATH):
+	$(hide) mkdir -pv "$@"
