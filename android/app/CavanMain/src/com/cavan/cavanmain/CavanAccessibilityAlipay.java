@@ -24,6 +24,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 	private static final long UNPACK_OVERTIME = 2000;
 	private static final long COMMIT_OVERTIME = 300000;
 	private static final long REPEAT_OVERTIME = 10000;
+	private static final long POLL_OVERTIME = 60000;
+	private static final long CLEAN_OVERTIME = 120000;
 	private static final int REPEAT_COUNT = 5;
 
 	private static final int MSG_COMMIT_TIMEOUT = 1;
@@ -32,6 +34,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 	private RedPacketCode mCode;
 	private String mInputtedCode;
 	private long mDelay;
+	private long mLastAddTime;
 	private boolean mXiuXiu;
 	private boolean mXiuXiuPending;
 	private boolean mAutoOpenAlipay;
@@ -76,12 +79,24 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 	}
 
 	private int getRedPacketCodeCount() {
-		int count = mService.getRedPacketCodeCount();
-		if (count< 0) {
+		long time = System.currentTimeMillis() - mLastAddTime;
+
+		CavanAndroid.dLog("getRedPacketCodeCount: time = " + time);
+
+		if (mPackets.size() > 0) {
+			if (time > CLEAN_OVERTIME) {
+				mPackets.clear();
+				return 0;
+			}
+
 			return mPackets.size();
 		}
 
-		return count;
+		if (time > POLL_OVERTIME) {
+			return 0;
+		}
+
+		return mService.getRedPacketCodeCount();
 	}
 
 	public boolean startAutoCommitRedPacketCode(long delayMillis) {
@@ -524,6 +539,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 	}
 
 	public boolean addCode(RedPacketCode code) {
+		mLastAddTime = System.currentTimeMillis();
+
 		if (mPackets.contains(code)) {
 			return true;
 		}

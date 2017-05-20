@@ -40,7 +40,6 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name="CavanApplicationActivity"
-            android:documentLaunchMode="always"
             android:label="@string/my_application"
             android:launchMode="singleTask" >
             <intent-filter>
@@ -52,7 +51,6 @@
         </activity>
         <activity
             android:name="com.cavan.cavanmain.CavanServiceActivity"
-            android:documentLaunchMode="always"
             android:label="@string/my_service"
             android:launchMode="singleTask" >
             <intent-filter>
@@ -64,7 +62,6 @@
         </activity>
         <activity
             android:name="com.cavan.cavanmain.CavanMessageActivity"
-            android:documentLaunchMode="always"
             android:label="@string/my_message"
             android:launchMode="singleTask" >
             <intent-filter>
@@ -102,7 +99,6 @@
 
         <activity
             android:name="com.cavan.cavanmain.MessageActivity"
-            android:documentLaunchMode="always"
             android:launchMode="singleTask" >
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -115,7 +111,6 @@
         </activity>
         <activity
             android:name="com.cavan.cavanmain.PermissionSettingsActivity"
-            android:documentLaunchMode="always"
             android:launchMode="singleTask" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -153,7 +148,6 @@
 
         <activity
             android:name="com.cavan.apkbackup.MainActivity"
-            android:documentLaunchMode="always"
             android:label="@string/app_name_apk_backup"
             android:launchMode="singleTask" >
             <intent-filter>
@@ -164,7 +158,6 @@
         </activity>
         <activity
             android:name="com.cavan.radixconverter.MainActivity"
-            android:documentLaunchMode="always"
             android:label="@string/app_name_radix_converter"
             android:launchMode="singleTask" >
             <intent-filter>
@@ -175,7 +168,6 @@
         </activity>
         <activity
             android:name="com.cavan.resistordecoder.MainActivity"
-            android:documentLaunchMode="always"
             android:label="@string/app_name_resistor_decoder"
             android:launchMode="singleTask" >
             <intent-filter>
@@ -197,7 +189,6 @@
         </activity>
         <activity
             android:name="RedPacketEditActivity"
-            android:documentLaunchMode="always"
             android:launchMode="singleTask"
             android:windowSoftInputMode="stateHidden" >
             <intent-filter>
@@ -212,7 +203,6 @@
 
         <activity
             android:name="com.cavan.qrcode.QrCodeDecodeActivity"
-            android:documentLaunchMode="always"
             android:label="@string/qrcode_scan"
             android:launchMode="singleTask"
             android:screenOrientation="portrait" >
@@ -224,7 +214,6 @@
         </activity>
         <activity
             android:name="com.cavan.qrcode.QrCodeEncodeActivity"
-            android:documentLaunchMode="always"
             android:label="@string/qrcode_generate"
             android:launchMode="singleTask"
             android:screenOrientation="portrait" >
@@ -236,7 +225,6 @@
         </activity>
         <activity
             android:name="com.cavan.textsearch.MainActivity"
-            android:documentLaunchMode="always"
             android:label="@string/text_search"
             android:launchMode="singleTask" >
             <intent-filter>
@@ -247,7 +235,6 @@
         </activity>
         <activity
             android:name="com.cavan.wifi.WifiDetectorActivity"
-            android:documentLaunchMode="always"
             android:label="@string/wifi_detector"
             android:launchMode="singleTask" >
             <intent-filter>

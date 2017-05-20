@@ -341,7 +341,11 @@ public class FloatMessageService extends FloatWidowService {
 					} else {
 						mMessageCodeMap.put(message, node);
 
-						sendCodeUpdateBroadcast(CavanMessageActivity.ACTION_CODE_ADD, code);
+						if (node.isCompleted()) {
+							CavanAndroid.showToast(getApplicationContext(), R.string.ignore_completed_code, code);
+						} else {
+							sendCodeUpdateBroadcast(CavanMessageActivity.ACTION_CODE_ADD, code);
+						}
 
 						if (node.isSendEnabled() && mNetSender != null) {
 							long delay = node.getTime() - System.currentTimeMillis();

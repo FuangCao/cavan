@@ -325,7 +325,7 @@ public class RedPacketNotification extends CavanNotification {
 				continue;
 			}
 
-			if (needStartAlipay) {
+			if (needStartAlipay && !node.isCompleted()) {
 				needStartAlipay = false;
 				mService.startAlipayActivity();
 			}
