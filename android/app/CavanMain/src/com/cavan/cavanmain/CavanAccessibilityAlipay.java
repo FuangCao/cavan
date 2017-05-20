@@ -287,6 +287,20 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 			}
 			break;
 
+		case "com.alipay.mobile.about.widget.UpdateCommonDialog":
+			AccessibilityNodeInfo node = CavanAccessibility.findNodeByViewId(root, "com.alipay.mobile.accountauthbiz:id/update_cancel_tv");
+			if (node != null) {
+				CavanAccessibility.performClickAndRecycle(node);
+				break;
+			}
+
+			node = CavanAccessibility.findNodeByText(root, "稍后再说");
+			if (node != null) {
+				CavanAccessibility.performClickAndRecycle(node);
+				break;
+			}
+			break;
+
 		default:
 			if (mCode != null) {
 				mCode.setPostPending(false);
