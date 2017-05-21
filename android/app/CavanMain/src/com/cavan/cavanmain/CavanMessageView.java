@@ -12,6 +12,7 @@ import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Spannable;
@@ -28,6 +29,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.java.CavanString;
 
 public class CavanMessageView extends LinearLayout implements OnClickListener {
 
@@ -211,6 +213,7 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 			builder.setView(view);
 			builder.setCancelable(false);
 			builder.setPositiveButton(R.string.copy, this);
+			builder.setNeutralButton(R.string.share, this);
 			builder.setNegativeButton(android.R.string.cancel, null);
 
 			return builder.create();
@@ -219,6 +222,7 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 		@Override
 		public void onClick(DialogInterface dialog, int which) {
 			switch (which) {
+			case DialogInterface.BUTTON_NEUTRAL:
 			case DialogInterface.BUTTON_POSITIVE:
 				CharSequence text = mEditTextMessage.getText();
 				int start = mEditTextMessage.getSelectionStart();
@@ -229,6 +233,12 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 				}
 
 				CavanAndroid.postClipboardText(mActivity, text);
+
+				if (which == DialogInterface.BUTTON_NEUTRAL || CavanString.getLineCount(text) < 2) {
+					Intent intent = new Intent(CavanMessageActivity.ACTION_SEND_WAN_COMMAN);
+					intent.putExtra("command", FloatMessageService.NET_CMD_CLIPBOARD + text.toString().replace('\n', ' '));
+					getContext().sendBroadcast(intent);
+				}
 				break;
 			}
 		}
