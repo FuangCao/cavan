@@ -270,7 +270,7 @@ public class RedPacketNotification extends CavanNotification {
 
 		sCodeTimeMap.put(code, timeNow);
 
-		Intent intent = new Intent(mService, RedPacketBroadcastReceiver.class).putExtra("code", code);
+		Intent intent = new Intent(mService, CavanBroadcastReceiver.class).putExtra("code", code);
 
 		return buildNotification(code, PendingIntent.getBroadcast(mService, mService.createRequestCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT));
 	}

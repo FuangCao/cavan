@@ -40,9 +40,13 @@ import com.cavan.java.CavanString;
 
 public class CavanAccessibilityService extends AccessibilityService {
 
+	public static boolean sBootComplete;
+
 	private static final int MSG_CHECK_CONTENT = 1;
 	private static final int MSG_CHECK_AUTO_OPEN_APP = 2;
 	private static final int MSG_SELECT_INPUT_METHOD = 3;
+	private static final int MSG_PERFORM_GLOBAL_ACTION = 4;
+	private static final int MSG_BOOT_COMPLETED = 5;
 
 	private static final String[] PACKAGE_NAMES = {
 		CavanPackageName.QQ,
@@ -145,6 +149,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 					mAccessibilityQQ.addPacket(chat);
 				}
 				break;
+
+			case CavanMessageActivity.ACTION_BOOT_COMPLETED:
+				mHandler.sendEmptyMessage(MSG_BOOT_COMPLETED);
+				break;
 			}
 		}
 	};
@@ -153,6 +161,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 		@Override
 		public void handleMessage(Message msg) {
+			removeMessages(msg.what);
+
 			switch (msg.what) {
 			case MSG_CHECK_CONTENT:
 				if (mCheckContentDialog != null && mCheckContentDialog.isShowing()) {
@@ -226,8 +236,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 				break;
 
 			case MSG_CHECK_AUTO_OPEN_APP:
-				removeMessages(MSG_CHECK_AUTO_OPEN_APP);
-
 				if (needDisableAutoOpenApp()) {
 					CavanMessageActivity.setAutoOpenAppEnable(false);
 					sendEmptyMessageDelayed(MSG_CHECK_AUTO_OPEN_APP, 2000);
@@ -238,6 +246,21 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 			case MSG_SELECT_INPUT_METHOD:
 				setInputMethod((String) msg.obj, msg.arg1);
+				break;
+
+			case MSG_PERFORM_GLOBAL_ACTION:
+				CavanAndroid.dLog("performGlobalAction: " + msg.arg1);
+				performGlobalAction(msg.arg1);
+				break;
+
+			case MSG_BOOT_COMPLETED:
+				CavanAndroid.dLog("MSG_BOOT_COMPLETE");
+				sBootComplete = false;
+				if (Build.MODEL.equals("ZTE Q301C")) {
+					Message message = obtainMessage(MSG_PERFORM_GLOBAL_ACTION);
+					message.arg1 = GLOBAL_ACTION_BACK;
+					sendMessageDelayed(message, 20000);
+				}
 				break;
 			}
 		}
@@ -573,11 +596,16 @@ public class CavanAccessibilityService extends AccessibilityService {
 		filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
 		filter.addAction(CavanMessageActivity.ACTION_UNPACK_MM);
 		filter.addAction(CavanMessageActivity.ACTION_UNPACK_QQ);
+		filter.addAction(CavanMessageActivity.ACTION_BOOT_COMPLETED);
 
 		registerReceiver(mReceiver, filter);
 
 		Intent service = FloatMessageService.startService(this);
 		bindService(service, mConnection, 0);
+
+		if (sBootComplete) {
+			mHandler.sendEmptyMessage(MSG_BOOT_COMPLETED);
+		}
 	}
 
 	@Override

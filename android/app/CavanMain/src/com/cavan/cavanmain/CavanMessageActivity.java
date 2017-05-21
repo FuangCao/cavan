@@ -35,6 +35,7 @@ import com.cavan.resource.EditableMultiSelectListPreference;
 
 public class CavanMessageActivity extends PreferenceActivity implements OnPreferenceChangeListener {
 
+	public static final String ACTION_BOOT_COMPLETED = "cavan.intent.action.ACTION_BOOT_COMPLETED";
 	public static final String ACTION_CODE_ADD = "cavan.intent.action.ACTION_CODE_ADD";
 	public static final String ACTION_CODE_TEST = "cavan.intent.action.ACTION_CODE_TEST";
 	public static final String ACTION_CODE_REMOVE = "cavan.intent.action.ACTION_CODE_REMOVE";

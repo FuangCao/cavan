@@ -154,7 +154,7 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 
 		AlarmManager manager = (AlarmManager) CavanAndroid.getSystemServiceCached(context, Context.ALARM_SERVICE);
 		if (manager != null) {
-			Intent intent = new Intent(context, RedPacketAlarmReceiver.class).putExtra("code", code);
+			Intent intent = new Intent(context, CavanBroadcastReceiver.class).setAction(CavanMessageActivity.ACTION_CODE_RECEIVED).putExtra("code", code);
 			PendingIntent operation = PendingIntent.getBroadcast(context, code.hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 			manager.cancel(operation);

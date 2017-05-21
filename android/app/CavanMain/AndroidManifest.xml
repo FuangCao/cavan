@@ -31,6 +31,7 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application
         android:allowBackup="false"
@@ -85,7 +86,10 @@
             </intent-filter>
         </service>
 
-        <receiver android:name="RedPacketBroadcastReceiver" >
+        <receiver android:name="CavanBroadcastReceiver" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
         </receiver>
 
         <service android:name="FloatMessageService" >
@@ -197,9 +201,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-
-        <receiver android:name="RedPacketAlarmReceiver" >
-        </receiver>
 
         <activity
             android:name="com.cavan.qrcode.QrCodeDecodeActivity"
