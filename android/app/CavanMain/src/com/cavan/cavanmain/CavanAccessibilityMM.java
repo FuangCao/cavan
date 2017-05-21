@@ -3,7 +3,6 @@ package com.cavan.cavanmain;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.os.Build;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Button;
@@ -13,11 +12,15 @@ import android.widget.LinearLayout;
 import com.cavan.android.CavanAccessibility;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
+import com.cavan.java.CavanArray;
 
 public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 	private static final int POLL_DELAY = 500;
 	private static final int POLL_DELAY_UNPACK = 2000;
+	private static final String[] MESSAGE_ITEM_IDS = {
+		"com.tencent.mm:id/ib", "com.tencent.mm:id/if"
+	};
 
 	private List<Integer> mFinishNodes = new ArrayList<Integer>();
 
@@ -26,9 +29,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	}
 
 	private boolean isMessageItemNode(AccessibilityNodeInfo node) {
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-			String id = node.getViewIdResourceName();
-			return "com.tencent.mm:id/ib".equals(id);
+		String id = node.getViewIdResourceName();
+		if (id != null) {
+			return CavanArray.contains(MESSAGE_ITEM_IDS, id);
 		}
 
 		return node.isMultiLine() && CavanAccessibility.isTextView(node);
