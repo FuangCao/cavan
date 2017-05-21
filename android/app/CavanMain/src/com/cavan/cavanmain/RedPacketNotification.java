@@ -26,7 +26,8 @@ import com.cavan.java.RedPacketFinder;
 
 public class RedPacketNotification extends CavanNotification {
 
-	private static final long OVER_TIME = 3600000;
+	private static final long CODE_OVERTIME = 3600000;
+	private static final long REPEAT_CODE_OVERTIME = 20000;
 
 	private static String[] sSoundExtensions = {
 		"m4a", "ogg", "wav", "mp3", "ac3", "wma"
@@ -247,18 +248,24 @@ public class RedPacketNotification extends CavanNotification {
 		return builder.build();
 	}
 
-	public Notification buildRedPacketNotifyAlipay(String code) {
+	public Notification buildRedPacketNotifyAlipay(RedPacketCode node) {
+		String code = node.getCode();
+
 		if (sExcludeCodes.indexOf(code) >= 0) {
 			CavanAndroid.dLog("exclude code = " + code);
 			return null;
 		}
 
 		long timeNow = System.currentTimeMillis();
-		Long time = sCodeTimeMap.get(code);
 
-		if (time != null && timeNow - time < OVER_TIME) {
-			CavanAndroid.dLog("skip time = " + time);
-			return null;
+		Long time = sCodeTimeMap.get(code);
+		if (time != null) {
+			long overtime = node.isRepeatable() ? REPEAT_CODE_OVERTIME : CODE_OVERTIME;
+
+			if (timeNow - time < overtime) {
+				CavanAndroid.dLog("skip time = " + time);
+				return null;
+			}
 		}
 
 		sCodeTimeMap.put(code, timeNow);
@@ -330,7 +337,7 @@ public class RedPacketNotification extends CavanNotification {
 				mService.startAlipayActivity();
 			}
 
-			Notification notification = buildRedPacketNotifyAlipay(code);
+			Notification notification = buildRedPacketNotifyAlipay(node);
 			if (notification != null) {
 				node.setTime(time);
 

@@ -272,6 +272,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 			performBackActionH5(root);
 			break;
 
+		case "com.ali.user.mobile.login.ui.AliuserGuideActivity":
 		case "com.alipay.mobile.commonui.widget.APNoticePopDialog":
 			mAutoOpenAlipay = false;
 		case "com.alipay.mobile.security.login.ui.AlipayUserLoginActivity":

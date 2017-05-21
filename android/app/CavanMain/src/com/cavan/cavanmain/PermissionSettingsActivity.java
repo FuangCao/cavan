@@ -13,13 +13,16 @@ public class PermissionSettingsActivity extends PreferenceActivity {
 
 	public static final String ACTION_HSM_PROTECTED_APPS = "huawei.intent.action.HSM_PROTECTED_APPS";
 	public static final String ACTION_NOTIFICATIONMANAGER = "huawei.intent.action.NOTIFICATIONMANAGER";
+	public static final String ACTION_HSM_PERMISSION_MANAGER = "huawei.intent.action.HSM_PERMISSION_MANAGER";
 
 	private static final String KEY_PROTECTED_APPS = "protected_apps";
+	private static final String KEY_PERMISSION_MANAGER = "permission_manager";
 	private static final String KEY_NOTIFICATION_ACCESS = "notification_access";
 	private static final String KEY_NOTIFICATION_MANAGER = "notification_manager";
 	private static final String KEY_ACCESSIBILITY_SETTINGS = "accessibility_settings";
 
 	private Preference mPreferenceProtectedApps;
+	private Preference mPreferencePermissionManager;;
 	private Preference mPreferenceNotificationAccess;
 	private Preference mPreferenceNotificationManager;
 	private Preference mPreferenceAccessibilitySettings;
@@ -31,6 +34,7 @@ public class PermissionSettingsActivity extends PreferenceActivity {
 		addPreferencesFromResource(R.xml.permission_settings);
 
 		mPreferenceProtectedApps = findPreference(KEY_PROTECTED_APPS);
+		mPreferencePermissionManager = findPreference(KEY_PERMISSION_MANAGER);
 		mPreferenceNotificationAccess = findPreference(KEY_NOTIFICATION_ACCESS);
 		mPreferenceNotificationManager = findPreference(KEY_NOTIFICATION_MANAGER);
 		mPreferenceAccessibilitySettings = findPreference(KEY_ACCESSIBILITY_SETTINGS);
@@ -40,6 +44,7 @@ public class PermissionSettingsActivity extends PreferenceActivity {
 
 		if (CavanAndroid.isHuaweiPhone()) {
 			mPreferenceProtectedApps.setIntent(new Intent(ACTION_HSM_PROTECTED_APPS));
+			mPreferencePermissionManager.setIntent(new Intent(ACTION_HSM_PERMISSION_MANAGER));
 			mPreferenceNotificationManager.setIntent(new Intent(ACTION_NOTIFICATIONMANAGER));
 		}
 	}
