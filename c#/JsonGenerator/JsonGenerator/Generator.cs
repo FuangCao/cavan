@@ -12,29 +12,46 @@ namespace JsonGenerator {
             InitializeComponent();
         }
 
-        private void addBackAudio() {
-        }
-
         private void buttonBackAudioAdd_Click(object sender, EventArgs e) {
             if (openFileDialogAudio.ShowDialog() == DialogResult.OK) {
-                FileButton button = new FileButton();
-                button.ToolTip = toolTipPath;
-                button.ContextMenuStrip = contextMenuStripEdit;
-                button.Dialog = openFileDialogAudio;
-                controlListViewBackAudio.addControl(button);
+                OpenFileButton button = new OpenFileButton(buttonListViewBackAudio, openFileDialogAudio, toolTip);
+                button.ContextMenuStrip = contextMenuStrip;
             }
         }
 
         private void buttonInteractionAdd_Click(object sender, EventArgs e) {
-
+            Interaction form = new Interaction();
+            if (form.ShowDialog() == DialogResult.OK) {
+                OpenDialogButton button = new OpenDialogButton(buttonListViewInteraction, form);
+                button.ContextMenuStrip = contextMenuStrip;
+            }
         }
 
         private void addToolStripMenuItem_Click(object sender, EventArgs e) {
-            Control control = contextMenuStripEdit.SourceControl;
-            Control parent = control.Parent;
-            if (parent is ControlListView) {
-                ((ControlListView)parent).removeControl(control);
+            Control source = contextMenuStrip.SourceControl;
+            if (source is OpenFileButton) {
+                ((OpenFileButton)source).removeSelf();
+            } else if (source is OpenDialogButton) {
+                ((OpenDialogButton)source).removeSelf();
             }
+        }
+
+        private void textBoxStartVideo_Click(object sender, EventArgs e) {
+            openFileDialogVideoMp4.FileName = textBoxStartVideo.Text;
+            if (openFileDialogVideoMp4.ShowDialog() == DialogResult.OK) {
+                textBoxStartVideo.Text = openFileDialogVideoMp4.FileName;
+            }
+        }
+
+        private void textBoxEndingVideo_Click(object sender, EventArgs e) {
+            openFileDialogVideoMp4.FileName = textBoxEndingVideo.Text;
+            if (openFileDialogVideoMp4.ShowDialog() == DialogResult.OK) {
+                textBoxEndingVideo.Text = openFileDialogVideoMp4.FileName;
+            }
+        }
+
+        private void buttonGenerate_Click(object sender, EventArgs e) {
+
         }
     }
 }

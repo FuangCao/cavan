@@ -5,16 +5,22 @@ using System.Text;
 using System.Windows.Forms;
 
 namespace JsonGenerator {
-    class FileButton : Button {
+    class OpenFileButton : Button {
+        private ButtonListView mListView;
         private OpenFileDialog mDialog;
         private FileInfo mFileInfo;
         private ToolTip mToolTip;
 
-        public FileButton() {
-            Click += FileButton_Click;
+        public OpenFileButton(ButtonListView listView, OpenFileDialog dialog, ToolTip tooltip) {
+            mListView = listView;
+            mDialog = dialog;
+            mToolTip = tooltip;
+            FullName = dialog.FileName;
+            Click += OpenFileButton_Click;
+            listView.addButton(this);
         }
 
-        private void FileButton_Click(object sender, EventArgs e) {
+        private void OpenFileButton_Click(object sender, EventArgs e) {
             if (mDialog == null) {
                 return;
             }
@@ -27,17 +33,7 @@ namespace JsonGenerator {
             
             if (mDialog.ShowDialog() == DialogResult.OK) {
                 FullName = mDialog.FileName;
-            }
-        }
-
-        public OpenFileDialog Dialog {
-            get {
-                return mDialog;
-            }
-
-            set {
-                mDialog = value;
-                FullName = mDialog.FileName;
+                mListView.updateButtonBounds();
             }
         }
 
@@ -50,9 +46,7 @@ namespace JsonGenerator {
                 mFileInfo = value;
                 Text = mFileInfo.Name;
 
-                if (mToolTip != null) {
-                    mToolTip.SetToolTip(this, mFileInfo.FullName);
-                }
+                mToolTip.SetToolTip(this, mFileInfo.FullName);
             }
         }
 
@@ -90,6 +84,10 @@ namespace JsonGenerator {
             set {
                 mToolTip = value;
             }
+        }
+
+        public void removeSelf() {
+            mListView.removeButton(this);
         }
     }
 }
