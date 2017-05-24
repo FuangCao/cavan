@@ -17,6 +17,12 @@ namespace JsonGenerator {
             listView.addButton(this);
         }
 
+        public Form Dialog {
+            get {
+                return mDialog;
+            }
+        }
+
         public int Index {
             get {
                 return mIndex;

@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Text;
 using System.Windows.Forms;
 
 namespace JsonGenerator {
@@ -70,5 +72,28 @@ namespace JsonGenerator {
                 x += bounds.Width;
             }
         }
+
+        public StringBuilder generate(StringBuilder builder, string prefix, string name) {
+            builder.Append(prefix).Append('"').Append(name).Append("\":[");
+
+            int count = 0;
+
+            foreach (Control control in Controls) {
+                if (control is OpenFileButton) {
+                    OpenFileButton button = (OpenFileButton)control;
+                    if (count > 0) {
+                        builder.Append(',');
+                    }
+
+                    builder.Append('"').Append(button.FullName).Append('"');
+
+                    count++;
+                }
+            }
+
+            builder.Append(']');
+
+            return builder;
+        } 
     }
 }

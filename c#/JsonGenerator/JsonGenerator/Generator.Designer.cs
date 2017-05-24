@@ -48,6 +48,7 @@
             this.buttonListViewInteraction = new JsonGenerator.ButtonListView();
             this.buttonListViewBackAudio = new JsonGenerator.ButtonListView();
             this.buttonCancel = new System.Windows.Forms.Button();
+            this.saveFileDialogJson = new System.Windows.Forms.SaveFileDialog();
             this.groupBoxVideoType.SuspendLayout();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
@@ -250,6 +251,11 @@
             this.buttonCancel.Text = "Cancel";
             this.buttonCancel.UseVisualStyleBackColor = true;
             // 
+            // saveFileDialogJson
+            // 
+            this.saveFileDialogJson.DefaultExt = "json";
+            this.saveFileDialogJson.Filter = "Json|*.json";
+            // 
             // Generator
             // 
             this.AcceptButton = this.buttonGenerate;
@@ -307,6 +313,7 @@
         private System.Windows.Forms.Button buttonGenerate;
         private ButtonListView buttonListViewInteraction;
         private System.Windows.Forms.Button buttonCancel;
+        private System.Windows.Forms.SaveFileDialog saveFileDialogJson;
     }
 }
 

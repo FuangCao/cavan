@@ -14,6 +14,36 @@ namespace JsonGenerator {
             InitializeComponent();
         }
 
+        public StringBuilder generate(StringBuilder builder, String prefix, int index) {
+            String localPrefix = prefix + "    ";
+
+            builder.Append(prefix).AppendLine("{");
+
+            builder.Append(localPrefix).AppendLine("\"main\":" + index + ",");
+            builder.Append(localPrefix).Append("\"fov\":").Append(textBoxFov.Text).AppendLine(",");
+            builder.Append(localPrefix).Append("\"name\":\"").Append(textBoxName.Text).AppendLine("\",");
+            builder.Append(localPrefix).Append("\"video\":[\"").Append(textBoxVideo.Text).AppendLine("\"],");
+            builder.Append(localPrefix).AppendLine("\"subaction\":[");
+
+            int count = 0;
+
+            foreach (Control control in buttonListViewSubaction.Controls) {
+                Subaction subaction = (Subaction)(((OpenDialogButton)control).Dialog);
+                if (count > 0) {
+                    builder.AppendLine(",");
+                }
+
+                subaction.generate(builder, localPrefix + "    ", count++);
+            }
+
+            builder.AppendLine();
+            builder.Append(localPrefix).AppendLine("]");
+
+            builder.Append(prefix).Append('}');
+
+            return builder;
+        }
+
         public OpenDialogButton Button {
             get {
                 return mButton;
