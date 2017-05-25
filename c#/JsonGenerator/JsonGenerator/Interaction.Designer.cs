@@ -38,13 +38,14 @@
             this.buttonListViewSubaction = new JsonGenerator.ButtonListView();
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.removeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.buttonDelete = new System.Windows.Forms.Button();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // buttonOK
             // 
             this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.buttonOK.Location = new System.Drawing.Point(12, 186);
+            this.buttonOK.Location = new System.Drawing.Point(12, 177);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(75, 23);
             this.buttonOK.TabIndex = 0;
@@ -54,7 +55,7 @@
             // buttonCancel
             // 
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Location = new System.Drawing.Point(561, 186);
+            this.buttonCancel.Location = new System.Drawing.Point(796, 177);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(75, 23);
             this.buttonCancel.TabIndex = 1;
@@ -73,7 +74,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(10, 56);
+            this.label2.Location = new System.Drawing.Point(10, 53);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(35, 12);
             this.label2.TabIndex = 3;
@@ -82,7 +83,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(10, 96);
+            this.label3.Location = new System.Drawing.Point(10, 90);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(41, 12);
             this.label3.TabIndex = 4;
@@ -91,7 +92,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(10, 137);
+            this.label4.Location = new System.Drawing.Point(10, 128);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(65, 12);
             this.label4.TabIndex = 5;
@@ -99,7 +100,7 @@
             // 
             // buttonSubactionAdd
             // 
-            this.buttonSubactionAdd.Location = new System.Drawing.Point(82, 132);
+            this.buttonSubactionAdd.Location = new System.Drawing.Point(81, 123);
             this.buttonSubactionAdd.Name = "buttonSubactionAdd";
             this.buttonSubactionAdd.Size = new System.Drawing.Size(38, 23);
             this.buttonSubactionAdd.TabIndex = 7;
@@ -111,23 +112,23 @@
             // 
             this.textBoxFov.Location = new System.Drawing.Point(82, 12);
             this.textBoxFov.Name = "textBoxFov";
-            this.textBoxFov.Size = new System.Drawing.Size(554, 21);
+            this.textBoxFov.Size = new System.Drawing.Size(790, 21);
             this.textBoxFov.TabIndex = 8;
             this.textBoxFov.Text = "0";
             // 
             // textBoxName
             // 
-            this.textBoxName.Location = new System.Drawing.Point(82, 52);
+            this.textBoxName.Location = new System.Drawing.Point(81, 49);
             this.textBoxName.Name = "textBoxName";
-            this.textBoxName.Size = new System.Drawing.Size(554, 21);
+            this.textBoxName.Size = new System.Drawing.Size(791, 21);
             this.textBoxName.TabIndex = 9;
             // 
             // textBoxVideo
             // 
-            this.textBoxVideo.Location = new System.Drawing.Point(82, 92);
+            this.textBoxVideo.Location = new System.Drawing.Point(82, 86);
             this.textBoxVideo.Name = "textBoxVideo";
             this.textBoxVideo.ReadOnly = true;
-            this.textBoxVideo.Size = new System.Drawing.Size(554, 21);
+            this.textBoxVideo.Size = new System.Drawing.Size(790, 21);
             this.textBoxVideo.TabIndex = 10;
             this.textBoxVideo.Click += new System.EventHandler(this.textBoxVideo_Click);
             // 
@@ -138,9 +139,9 @@
             // 
             // buttonListViewSubaction
             // 
-            this.buttonListViewSubaction.Location = new System.Drawing.Point(126, 132);
+            this.buttonListViewSubaction.Location = new System.Drawing.Point(125, 123);
             this.buttonListViewSubaction.Name = "buttonListViewSubaction";
-            this.buttonListViewSubaction.Size = new System.Drawing.Size(510, 23);
+            this.buttonListViewSubaction.Size = new System.Drawing.Size(747, 23);
             this.buttonListViewSubaction.TabIndex = 6;
             // 
             // contextMenuStrip
@@ -148,14 +149,24 @@
             this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.removeToolStripMenuItem});
             this.contextMenuStrip.Name = "contextMenuStrip";
-            this.contextMenuStrip.Size = new System.Drawing.Size(124, 26);
+            this.contextMenuStrip.Size = new System.Drawing.Size(114, 26);
             // 
             // removeToolStripMenuItem
             // 
             this.removeToolStripMenuItem.Name = "removeToolStripMenuItem";
-            this.removeToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
-            this.removeToolStripMenuItem.Text = "Remove";
+            this.removeToolStripMenuItem.Size = new System.Drawing.Size(113, 22);
+            this.removeToolStripMenuItem.Text = "Delete";
             this.removeToolStripMenuItem.Click += new System.EventHandler(this.removeToolStripMenuItem_Click);
+            // 
+            // buttonDelete
+            // 
+            this.buttonDelete.DialogResult = System.Windows.Forms.DialogResult.No;
+            this.buttonDelete.Location = new System.Drawing.Point(404, 177);
+            this.buttonDelete.Name = "buttonDelete";
+            this.buttonDelete.Size = new System.Drawing.Size(75, 23);
+            this.buttonDelete.TabIndex = 11;
+            this.buttonDelete.Text = "Delete";
+            this.buttonDelete.UseVisualStyleBackColor = true;
             // 
             // Interaction
             // 
@@ -163,7 +174,8 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonCancel;
-            this.ClientSize = new System.Drawing.Size(648, 220);
+            this.ClientSize = new System.Drawing.Size(884, 212);
+            this.Controls.Add(this.buttonDelete);
             this.Controls.Add(this.textBoxVideo);
             this.Controls.Add(this.textBoxName);
             this.Controls.Add(this.textBoxFov);
@@ -200,5 +212,6 @@
         private System.Windows.Forms.OpenFileDialog openFileDialogMp4;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem removeToolStripMenuItem;
+        private System.Windows.Forms.Button buttonDelete;
     }
 }

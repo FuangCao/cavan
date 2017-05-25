@@ -7,12 +7,12 @@ using System.Windows.Forms;
 namespace JsonGenerator {
 
     public class ButtonListView : Panel {
-        public void addButton(Button button) {
+        public void addButton(GenerableButton button) {
             Controls.Add(button);
             updateButtonBounds();
         }
 
-        public void removeButton(Button button) {
+        public void removeButton(GenerableButton button) {
             Controls.Remove(button);
             updateButtonBounds();
         }
@@ -76,24 +76,37 @@ namespace JsonGenerator {
         public StringBuilder generate(StringBuilder builder, string prefix, string name) {
             builder.Append(prefix).Append('"').Append(name).Append("\":[");
 
-            int count = 0;
+            String localPrefix = prefix + "    ";
+            int fileIndex = 0;
+            int formIndex = 0;
 
             foreach (Control control in Controls) {
                 if (control is OpenFileButton) {
                     OpenFileButton button = (OpenFileButton)control;
-                    if (count > 0) {
+                    if (fileIndex > 0) {
                         builder.Append(',');
                     }
 
-                    builder.Append('"').Append(button.FullName).Append('"');
+                    button.generate(builder, localPrefix, fileIndex++);
+                } else if (control is OpenDialogButton) {
+                    OpenDialogButton button = (OpenDialogButton)control;
+                    if (formIndex > 0) {
+                        builder.Append(',');
+                    }
 
-                    count++;
+                    builder.AppendLine();
+
+                    button.generate(builder, localPrefix, formIndex++);
                 }
+            }
+
+            if (formIndex > 0) {
+                builder.AppendLine().Append(prefix);
             }
 
             builder.Append(']');
 
             return builder;
-        } 
+        }
     }
 }

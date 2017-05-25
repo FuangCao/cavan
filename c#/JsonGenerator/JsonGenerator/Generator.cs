@@ -16,31 +16,14 @@ namespace JsonGenerator {
         public StringBuilder generate(StringBuilder builder) {
             String localPrefix = "    ";
 
-            builder.AppendLine("{");
-
+            builder.Append('{').AppendLine();
             builder.Append(localPrefix).AppendLine("\"version\":1,");
-            builder.Append(localPrefix).AppendLine("\"sourcetype\":\"" + getSourceType() + "\",");
-            builder.Append(localPrefix).AppendLine("\"desc\":\"" + textBoxDesc.Text  + "\",");
-            buttonListViewBackAudio.generate(builder, localPrefix, "audioback").AppendLine();
-            builder.Append(localPrefix).AppendLine("\"startvideo\":\"" + textBoxStartVideo.Text + "\",");
-            builder.Append(localPrefix).AppendLine("\"endingvideo\":\"" + textBoxEndingVideo.Text + "\",");
-
-            builder.Append(localPrefix).AppendLine("\"action\":[");
-
-            int count = 0;
-
-            foreach (Control control in buttonListViewInteraction.Controls) {
-                Interaction interaction = (Interaction)(((OpenDialogButton)control).Dialog);
-                if (count > 0) {
-                    builder.AppendLine(",");
-                }
-
-                interaction.generate(builder, localPrefix + "    ", count++);
-            }
-
-            builder.AppendLine();
-            builder.Append(localPrefix).AppendLine("]");
-
+            builder.Append(localPrefix).Append("\"sourcetype\":\"").Append(getSourceType()).AppendLine("\",");
+            builder.Append(localPrefix).Append("\"desc\":\"").Append(textBoxDesc.Text).AppendLine("\",");
+            buttonListViewBackAudio.generate(builder, localPrefix, "audioback").Append(',').AppendLine();
+            builder.Append(localPrefix).Append("\"startvideo\":\"").Append(Path.GetFileName(textBoxStartVideo.Text)).AppendLine("\",");
+            builder.Append(localPrefix).Append("\"endingvideo\":\"").Append(Path.GetFileName(textBoxEndingVideo.Text)).AppendLine("\",");
+            buttonListViewInteraction.generate(builder, localPrefix, "action").AppendLine();
             builder.Append('}');
 
             return builder;
@@ -54,6 +37,7 @@ namespace JsonGenerator {
                 StringBuilder builder = new StringBuilder();
                 generate(builder);
                 writer.Write(builder.ToString());
+                return true;
             } catch (Exception e) {
                 MessageBox.Show(e.ToString());
             } finally {
@@ -61,17 +45,17 @@ namespace JsonGenerator {
                     writer.Close();
                 }
             }
-            
+
             return false;
         }
 
         public int getSourceType() {
             if (radioButtonVideoType2D.Checked) {
-                return 1;
+                return 2;
             }
 
             if (radioButtonVideoTypeVrSingle.Checked) {
-                return 2;
+                return 1;
             }
 
             if (radioButtonVideoTypeVr.Checked) {
@@ -90,7 +74,7 @@ namespace JsonGenerator {
 
         private void buttonInteractionAdd_Click(object sender, EventArgs e) {
             Interaction form = new Interaction();
-            if (form.ShowDialog() == DialogResult.OK) {
+            if (form.ShowDialog(false) == DialogResult.OK) {
                 OpenDialogButton button = new OpenDialogButton(buttonListViewInteraction, form);
                 button.ContextMenuStrip = contextMenuStrip;
             }
@@ -121,8 +105,14 @@ namespace JsonGenerator {
 
         private void buttonGenerate_Click(object sender, EventArgs e) {
             if (saveFileDialogJson.ShowDialog() == DialogResult.OK) {
-                generate(saveFileDialogJson.FileName);
+                if (generate(saveFileDialogJson.FileName)) {
+                    MessageBox.Show("Successfully generated");
+                }
             }
+        }
+
+        private void buttonClose_Click(object sender, EventArgs e) {
+            Close();
         }
     }
 }

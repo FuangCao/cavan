@@ -45,10 +45,10 @@
             this.addToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.buttonGenerate = new System.Windows.Forms.Button();
+            this.buttonClose = new System.Windows.Forms.Button();
+            this.saveFileDialogJson = new System.Windows.Forms.SaveFileDialog();
             this.buttonListViewInteraction = new JsonGenerator.ButtonListView();
             this.buttonListViewBackAudio = new JsonGenerator.ButtonListView();
-            this.buttonCancel = new System.Windows.Forms.Button();
-            this.saveFileDialogJson = new System.Windows.Forms.SaveFileDialog();
             this.groupBoxVideoType.SuspendLayout();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
@@ -56,7 +56,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 91);
+            this.label2.Location = new System.Drawing.Point(12, 85);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(77, 12);
             this.label2.TabIndex = 1;
@@ -65,7 +65,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 135);
+            this.label3.Location = new System.Drawing.Point(12, 123);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(107, 12);
             this.label3.TabIndex = 2;
@@ -74,7 +74,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(12, 179);
+            this.label4.Location = new System.Drawing.Point(12, 161);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(77, 12);
             this.label4.TabIndex = 3;
@@ -83,7 +83,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(12, 222);
+            this.label5.Location = new System.Drawing.Point(12, 198);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(83, 12);
             this.label5.TabIndex = 4;
@@ -92,7 +92,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(12, 266);
+            this.label6.Location = new System.Drawing.Point(12, 236);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(77, 12);
             this.label6.TabIndex = 5;
@@ -101,7 +101,7 @@
             // radioButtonVideoType2D
             // 
             this.radioButtonVideoType2D.AutoSize = true;
-            this.radioButtonVideoType2D.Location = new System.Drawing.Point(19, 21);
+            this.radioButtonVideoType2D.Location = new System.Drawing.Point(14, 21);
             this.radioButtonVideoType2D.Name = "radioButtonVideoType2D";
             this.radioButtonVideoType2D.Size = new System.Drawing.Size(35, 16);
             this.radioButtonVideoType2D.TabIndex = 6;
@@ -116,7 +116,7 @@
             this.groupBoxVideoType.Controls.Add(this.radioButtonVideoType2D);
             this.groupBoxVideoType.Location = new System.Drawing.Point(12, 12);
             this.groupBoxVideoType.Name = "groupBoxVideoType";
-            this.groupBoxVideoType.Size = new System.Drawing.Size(771, 53);
+            this.groupBoxVideoType.Size = new System.Drawing.Size(860, 53);
             this.groupBoxVideoType.TabIndex = 7;
             this.groupBoxVideoType.TabStop = false;
             this.groupBoxVideoType.Text = "Video Type";
@@ -124,7 +124,7 @@
             // radioButtonVideoTypeVr
             // 
             this.radioButtonVideoTypeVr.AutoSize = true;
-            this.radioButtonVideoTypeVr.Location = new System.Drawing.Point(729, 21);
+            this.radioButtonVideoTypeVr.Location = new System.Drawing.Point(808, 21);
             this.radioButtonVideoTypeVr.Name = "radioButtonVideoTypeVr";
             this.radioButtonVideoTypeVr.Size = new System.Drawing.Size(35, 16);
             this.radioButtonVideoTypeVr.TabIndex = 8;
@@ -135,7 +135,7 @@
             // radioButtonVideoTypeVrSingle
             // 
             this.radioButtonVideoTypeVrSingle.AutoSize = true;
-            this.radioButtonVideoTypeVrSingle.Location = new System.Drawing.Point(362, 21);
+            this.radioButtonVideoTypeVrSingle.Location = new System.Drawing.Point(399, 21);
             this.radioButtonVideoTypeVrSingle.Name = "radioButtonVideoTypeVrSingle";
             this.radioButtonVideoTypeVrSingle.Size = new System.Drawing.Size(59, 16);
             this.radioButtonVideoTypeVrSingle.TabIndex = 7;
@@ -145,26 +145,26 @@
             // 
             // textBoxDesc
             // 
-            this.textBoxDesc.Location = new System.Drawing.Point(125, 87);
+            this.textBoxDesc.Location = new System.Drawing.Point(118, 81);
             this.textBoxDesc.Name = "textBoxDesc";
-            this.textBoxDesc.Size = new System.Drawing.Size(658, 21);
+            this.textBoxDesc.Size = new System.Drawing.Size(754, 21);
             this.textBoxDesc.TabIndex = 8;
             // 
             // textBoxStartVideo
             // 
-            this.textBoxStartVideo.Location = new System.Drawing.Point(125, 175);
+            this.textBoxStartVideo.Location = new System.Drawing.Point(125, 157);
             this.textBoxStartVideo.Name = "textBoxStartVideo";
             this.textBoxStartVideo.ReadOnly = true;
-            this.textBoxStartVideo.Size = new System.Drawing.Size(658, 21);
+            this.textBoxStartVideo.Size = new System.Drawing.Size(747, 21);
             this.textBoxStartVideo.TabIndex = 10;
             this.textBoxStartVideo.Click += new System.EventHandler(this.textBoxStartVideo_Click);
             // 
             // textBoxEndingVideo
             // 
-            this.textBoxEndingVideo.Location = new System.Drawing.Point(125, 218);
+            this.textBoxEndingVideo.Location = new System.Drawing.Point(125, 194);
             this.textBoxEndingVideo.Name = "textBoxEndingVideo";
             this.textBoxEndingVideo.ReadOnly = true;
-            this.textBoxEndingVideo.Size = new System.Drawing.Size(658, 21);
+            this.textBoxEndingVideo.Size = new System.Drawing.Size(747, 21);
             this.textBoxEndingVideo.TabIndex = 11;
             this.textBoxEndingVideo.Click += new System.EventHandler(this.textBoxEndingVideo_Click);
             // 
@@ -180,7 +180,7 @@
             // 
             // buttonBackAudioAdd
             // 
-            this.buttonBackAudioAdd.Location = new System.Drawing.Point(125, 130);
+            this.buttonBackAudioAdd.Location = new System.Drawing.Point(125, 118);
             this.buttonBackAudioAdd.Name = "buttonBackAudioAdd";
             this.buttonBackAudioAdd.Size = new System.Drawing.Size(36, 23);
             this.buttonBackAudioAdd.TabIndex = 12;
@@ -190,7 +190,7 @@
             // 
             // buttonInteractionAdd
             // 
-            this.buttonInteractionAdd.Location = new System.Drawing.Point(125, 261);
+            this.buttonInteractionAdd.Location = new System.Drawing.Point(125, 231);
             this.buttonInteractionAdd.Name = "buttonInteractionAdd";
             this.buttonInteractionAdd.Size = new System.Drawing.Size(32, 23);
             this.buttonInteractionAdd.TabIndex = 13;
@@ -208,18 +208,19 @@
             this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.addToolStripMenuItem});
             this.contextMenuStrip.Name = "contextMenuStripEdit";
-            this.contextMenuStrip.Size = new System.Drawing.Size(124, 26);
+            this.contextMenuStrip.Size = new System.Drawing.Size(114, 26);
             // 
             // addToolStripMenuItem
             // 
             this.addToolStripMenuItem.Name = "addToolStripMenuItem";
-            this.addToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
-            this.addToolStripMenuItem.Text = "Remove";
+            this.addToolStripMenuItem.Size = new System.Drawing.Size(113, 22);
+            this.addToolStripMenuItem.Text = "Delete";
             this.addToolStripMenuItem.Click += new System.EventHandler(this.addToolStripMenuItem_Click);
             // 
             // buttonGenerate
             // 
-            this.buttonGenerate.Location = new System.Drawing.Point(12, 311);
+            this.buttonGenerate.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.buttonGenerate.Location = new System.Drawing.Point(12, 286);
             this.buttonGenerate.Name = "buttonGenerate";
             this.buttonGenerate.Size = new System.Drawing.Size(75, 23);
             this.buttonGenerate.TabIndex = 15;
@@ -227,43 +228,45 @@
             this.buttonGenerate.UseVisualStyleBackColor = true;
             this.buttonGenerate.Click += new System.EventHandler(this.buttonGenerate_Click);
             // 
-            // buttonListViewInteraction
+            // buttonClose
             // 
-            this.buttonListViewInteraction.Location = new System.Drawing.Point(167, 261);
-            this.buttonListViewInteraction.Name = "buttonListViewInteraction";
-            this.buttonListViewInteraction.Size = new System.Drawing.Size(616, 23);
-            this.buttonListViewInteraction.TabIndex = 16;
-            // 
-            // buttonListViewBackAudio
-            // 
-            this.buttonListViewBackAudio.Location = new System.Drawing.Point(167, 130);
-            this.buttonListViewBackAudio.Name = "buttonListViewBackAudio";
-            this.buttonListViewBackAudio.Size = new System.Drawing.Size(616, 23);
-            this.buttonListViewBackAudio.TabIndex = 14;
-            // 
-            // buttonCancel
-            // 
-            this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Location = new System.Drawing.Point(708, 310);
-            this.buttonCancel.Name = "buttonCancel";
-            this.buttonCancel.Size = new System.Drawing.Size(75, 23);
-            this.buttonCancel.TabIndex = 17;
-            this.buttonCancel.Text = "Cancel";
-            this.buttonCancel.UseVisualStyleBackColor = true;
+            this.buttonClose.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.buttonClose.Location = new System.Drawing.Point(797, 286);
+            this.buttonClose.Name = "buttonClose";
+            this.buttonClose.Size = new System.Drawing.Size(75, 23);
+            this.buttonClose.TabIndex = 17;
+            this.buttonClose.Text = "Close";
+            this.buttonClose.UseVisualStyleBackColor = true;
+            this.buttonClose.Click += new System.EventHandler(this.buttonClose_Click);
             // 
             // saveFileDialogJson
             // 
             this.saveFileDialogJson.DefaultExt = "json";
+            this.saveFileDialogJson.FileName = "VideoGame";
             this.saveFileDialogJson.Filter = "Json|*.json";
+            // 
+            // buttonListViewInteraction
+            // 
+            this.buttonListViewInteraction.Location = new System.Drawing.Point(167, 231);
+            this.buttonListViewInteraction.Name = "buttonListViewInteraction";
+            this.buttonListViewInteraction.Size = new System.Drawing.Size(705, 23);
+            this.buttonListViewInteraction.TabIndex = 16;
+            // 
+            // buttonListViewBackAudio
+            // 
+            this.buttonListViewBackAudio.Location = new System.Drawing.Point(167, 118);
+            this.buttonListViewBackAudio.Name = "buttonListViewBackAudio";
+            this.buttonListViewBackAudio.Size = new System.Drawing.Size(705, 23);
+            this.buttonListViewBackAudio.TabIndex = 14;
             // 
             // Generator
             // 
             this.AcceptButton = this.buttonGenerate;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.CancelButton = this.buttonCancel;
-            this.ClientSize = new System.Drawing.Size(795, 345);
-            this.Controls.Add(this.buttonCancel);
+            this.CancelButton = this.buttonClose;
+            this.ClientSize = new System.Drawing.Size(884, 321);
+            this.Controls.Add(this.buttonClose);
             this.Controls.Add(this.buttonListViewInteraction);
             this.Controls.Add(this.buttonGenerate);
             this.Controls.Add(this.buttonListViewBackAudio);
@@ -279,6 +282,7 @@
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Name = "Generator";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "JsonGenerator";
             this.groupBoxVideoType.ResumeLayout(false);
             this.groupBoxVideoType.PerformLayout();
@@ -312,7 +316,7 @@
         private System.Windows.Forms.ToolTip toolTip;
         private System.Windows.Forms.Button buttonGenerate;
         private ButtonListView buttonListViewInteraction;
-        private System.Windows.Forms.Button buttonCancel;
+        private System.Windows.Forms.Button buttonClose;
         private System.Windows.Forms.SaveFileDialog saveFileDialogJson;
     }
 }

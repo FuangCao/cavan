@@ -5,7 +5,7 @@ using System.Text;
 using System.Windows.Forms;
 
 namespace JsonGenerator {
-    class OpenFileButton : Button {
+    class OpenFileButton : GenerableButton {
         private ButtonListView mListView;
         private OpenFileDialog mDialog;
         private FileInfo mFileInfo;
@@ -88,6 +88,10 @@ namespace JsonGenerator {
 
         public void removeSelf() {
             mListView.removeButton(this);
+        }
+
+        public override StringBuilder generate(StringBuilder builder, string prefix, int index) {
+            return builder.Append('"').Append(mFileInfo.Name).Append('"');
         }
     }
 }

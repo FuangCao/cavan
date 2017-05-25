@@ -8,26 +8,32 @@ using System.Text;
 using System.Windows.Forms;
 
 namespace JsonGenerator {
-    public partial class Subaction : Form {
+    public partial class Subaction : GenerableForm {
         public Subaction() {
             InitializeComponent();
+            buttonDelete.Visible = (GenerableButton != null);
         }
 
-        public StringBuilder generate(StringBuilder builder, String prefix, int index) {
+        public override StringBuilder generate(StringBuilder builder, String prefix, int index) {
             String localPrefix = prefix + "    ";
 
-            builder.AppendLine(prefix + '{');
+            builder.Append(prefix).Append('{').AppendLine();
 
-            builder.AppendLine(localPrefix + "\"mirror\":" + index);
-            buttonListViewVideo.generate(builder, localPrefix, "videofile").AppendLine(",");
-            buttonListViewAudioIdle.generate(builder, localPrefix, "audioidle").AppendLine(",");
-            buttonListViewAudioLow.generate(builder, localPrefix, "audiolow").AppendLine(",");
-            buttonListViewAudioMid.generate(builder, localPrefix, "audiomid").AppendLine(",");
+            builder.Append(localPrefix).Append("\"minor\":").Append(index).Append(',').AppendLine();
+            buttonListViewVideo.generate(builder, localPrefix, "videofile").Append(',').AppendLine();
+            buttonListViewAudioIdle.generate(builder, localPrefix, "audioidle").Append(',').AppendLine();
+            buttonListViewAudioLow.generate(builder, localPrefix, "audiolow").Append(',').AppendLine();
+            buttonListViewAudioMid.generate(builder, localPrefix, "audiomid").Append(',').AppendLine();
             buttonListViewAudioHigh.generate(builder, localPrefix, "audiohigh").AppendLine();
 
             builder.Append(prefix).Append('}');
 
             return builder;
+        }
+
+        public override DialogResult ShowDialog(bool deleteEn) {
+            buttonDelete.Visible = deleteEn;
+            return ShowDialog();
         }
 
         private void buttonVideoAdd_Click(object sender, EventArgs e) {

@@ -4,14 +4,15 @@ using System.Text;
 using System.Windows.Forms;
 
 namespace JsonGenerator {
-    public class OpenDialogButton : Button {
+    public class OpenDialogButton : GenerableButton {
         private ButtonListView mListView;
-        private Form mDialog;
+        private GenerableForm mDialog;
         private int mIndex;
 
-        public OpenDialogButton(ButtonListView listView, Form form) {
+        public OpenDialogButton(ButtonListView listView, GenerableForm form) {
             mListView = listView;
             mDialog = form;
+            form.GenerableButton = this;
             Index = listView.Controls.Count;
             Click += OpenDialogButton_Click;
             listView.addButton(this);
@@ -35,7 +36,9 @@ namespace JsonGenerator {
         }
 
         private void OpenDialogButton_Click(object sender, EventArgs e) {
-            mDialog.ShowDialog();
+            if (mDialog.ShowDialog(true) == DialogResult.No) {
+                removeSelf();
+            }
         }
 
         public void removeSelf() {
@@ -46,6 +49,10 @@ namespace JsonGenerator {
             foreach (Control control in mListView.Controls) {
                 ((OpenDialogButton)control).Index = index++;
             }
+        }
+
+        public override StringBuilder generate(StringBuilder builder, string prefix, int index) {
+            return mDialog.generate(builder, prefix, index);
         }
     }
 }
