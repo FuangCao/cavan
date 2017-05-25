@@ -145,9 +145,9 @@
             // 
             // textBoxDesc
             // 
-            this.textBoxDesc.Location = new System.Drawing.Point(118, 81);
+            this.textBoxDesc.Location = new System.Drawing.Point(125, 81);
             this.textBoxDesc.Name = "textBoxDesc";
-            this.textBoxDesc.Size = new System.Drawing.Size(754, 21);
+            this.textBoxDesc.Size = new System.Drawing.Size(747, 21);
             this.textBoxDesc.TabIndex = 8;
             // 
             // textBoxStartVideo
@@ -182,7 +182,7 @@
             // 
             this.buttonBackAudioAdd.Location = new System.Drawing.Point(125, 118);
             this.buttonBackAudioAdd.Name = "buttonBackAudioAdd";
-            this.buttonBackAudioAdd.Size = new System.Drawing.Size(36, 23);
+            this.buttonBackAudioAdd.Size = new System.Drawing.Size(32, 23);
             this.buttonBackAudioAdd.TabIndex = 12;
             this.buttonBackAudioAdd.Text = "Add";
             this.buttonBackAudioAdd.UseVisualStyleBackColor = true;
@@ -247,16 +247,16 @@
             // 
             // buttonListViewInteraction
             // 
-            this.buttonListViewInteraction.Location = new System.Drawing.Point(167, 231);
+            this.buttonListViewInteraction.Location = new System.Drawing.Point(163, 231);
             this.buttonListViewInteraction.Name = "buttonListViewInteraction";
-            this.buttonListViewInteraction.Size = new System.Drawing.Size(705, 23);
+            this.buttonListViewInteraction.Size = new System.Drawing.Size(709, 23);
             this.buttonListViewInteraction.TabIndex = 16;
             // 
             // buttonListViewBackAudio
             // 
-            this.buttonListViewBackAudio.Location = new System.Drawing.Point(167, 118);
+            this.buttonListViewBackAudio.Location = new System.Drawing.Point(163, 118);
             this.buttonListViewBackAudio.Name = "buttonListViewBackAudio";
-            this.buttonListViewBackAudio.Size = new System.Drawing.Size(705, 23);
+            this.buttonListViewBackAudio.Size = new System.Drawing.Size(709, 23);
             this.buttonListViewBackAudio.TabIndex = 14;
             // 
             // Generator

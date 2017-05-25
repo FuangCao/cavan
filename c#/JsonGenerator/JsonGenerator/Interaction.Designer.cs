@@ -102,7 +102,7 @@
             // 
             this.buttonSubactionAdd.Location = new System.Drawing.Point(81, 123);
             this.buttonSubactionAdd.Name = "buttonSubactionAdd";
-            this.buttonSubactionAdd.Size = new System.Drawing.Size(38, 23);
+            this.buttonSubactionAdd.Size = new System.Drawing.Size(32, 23);
             this.buttonSubactionAdd.TabIndex = 7;
             this.buttonSubactionAdd.Text = "Add";
             this.buttonSubactionAdd.UseVisualStyleBackColor = true;
@@ -139,9 +139,9 @@
             // 
             // buttonListViewSubaction
             // 
-            this.buttonListViewSubaction.Location = new System.Drawing.Point(125, 123);
+            this.buttonListViewSubaction.Location = new System.Drawing.Point(119, 123);
             this.buttonListViewSubaction.Name = "buttonListViewSubaction";
-            this.buttonListViewSubaction.Size = new System.Drawing.Size(747, 23);
+            this.buttonListViewSubaction.Size = new System.Drawing.Size(753, 23);
             this.buttonListViewSubaction.TabIndex = 6;
             // 
             // contextMenuStrip

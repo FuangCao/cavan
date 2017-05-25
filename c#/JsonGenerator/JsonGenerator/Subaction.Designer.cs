@@ -99,7 +99,7 @@
             // 
             this.buttonVideoAdd.Location = new System.Drawing.Point(89, 12);
             this.buttonVideoAdd.Name = "buttonVideoAdd";
-            this.buttonVideoAdd.Size = new System.Drawing.Size(34, 23);
+            this.buttonVideoAdd.Size = new System.Drawing.Size(32, 23);
             this.buttonVideoAdd.TabIndex = 5;
             this.buttonVideoAdd.Text = "Add";
             this.buttonVideoAdd.UseVisualStyleBackColor = true;
@@ -109,7 +109,7 @@
             // 
             this.buttonAudioMidAdd.Location = new System.Drawing.Point(89, 135);
             this.buttonAudioMidAdd.Name = "buttonAudioMidAdd";
-            this.buttonAudioMidAdd.Size = new System.Drawing.Size(34, 23);
+            this.buttonAudioMidAdd.Size = new System.Drawing.Size(32, 23);
             this.buttonAudioMidAdd.TabIndex = 6;
             this.buttonAudioMidAdd.Text = "Add";
             this.buttonAudioMidAdd.UseVisualStyleBackColor = true;
@@ -119,7 +119,7 @@
             // 
             this.buttonAudioHighAdd.Location = new System.Drawing.Point(89, 176);
             this.buttonAudioHighAdd.Name = "buttonAudioHighAdd";
-            this.buttonAudioHighAdd.Size = new System.Drawing.Size(34, 23);
+            this.buttonAudioHighAdd.Size = new System.Drawing.Size(32, 23);
             this.buttonAudioHighAdd.TabIndex = 7;
             this.buttonAudioHighAdd.Text = "Add";
             this.buttonAudioHighAdd.UseVisualStyleBackColor = true;
@@ -129,7 +129,7 @@
             // 
             this.buttonAudioLowAdd.Location = new System.Drawing.Point(89, 94);
             this.buttonAudioLowAdd.Name = "buttonAudioLowAdd";
-            this.buttonAudioLowAdd.Size = new System.Drawing.Size(34, 23);
+            this.buttonAudioLowAdd.Size = new System.Drawing.Size(32, 23);
             this.buttonAudioLowAdd.TabIndex = 8;
             this.buttonAudioLowAdd.Text = "Add";
             this.buttonAudioLowAdd.UseVisualStyleBackColor = true;
@@ -139,7 +139,7 @@
             // 
             this.buttonAudioIdleAdd.Location = new System.Drawing.Point(89, 53);
             this.buttonAudioIdleAdd.Name = "buttonAudioIdleAdd";
-            this.buttonAudioIdleAdd.Size = new System.Drawing.Size(34, 23);
+            this.buttonAudioIdleAdd.Size = new System.Drawing.Size(32, 23);
             this.buttonAudioIdleAdd.TabIndex = 9;
             this.buttonAudioIdleAdd.Text = "Add";
             this.buttonAudioIdleAdd.UseVisualStyleBackColor = true;
@@ -147,37 +147,37 @@
             // 
             // buttonListViewVideo
             // 
-            this.buttonListViewVideo.Location = new System.Drawing.Point(129, 12);
+            this.buttonListViewVideo.Location = new System.Drawing.Point(127, 12);
             this.buttonListViewVideo.Name = "buttonListViewVideo";
-            this.buttonListViewVideo.Size = new System.Drawing.Size(743, 23);
+            this.buttonListViewVideo.Size = new System.Drawing.Size(745, 23);
             this.buttonListViewVideo.TabIndex = 10;
             // 
             // buttonListViewAudioHigh
             // 
-            this.buttonListViewAudioHigh.Location = new System.Drawing.Point(129, 176);
+            this.buttonListViewAudioHigh.Location = new System.Drawing.Point(127, 176);
             this.buttonListViewAudioHigh.Name = "buttonListViewAudioHigh";
-            this.buttonListViewAudioHigh.Size = new System.Drawing.Size(743, 23);
+            this.buttonListViewAudioHigh.Size = new System.Drawing.Size(745, 23);
             this.buttonListViewAudioHigh.TabIndex = 11;
             // 
             // buttonListViewAudioMid
             // 
-            this.buttonListViewAudioMid.Location = new System.Drawing.Point(129, 135);
+            this.buttonListViewAudioMid.Location = new System.Drawing.Point(127, 135);
             this.buttonListViewAudioMid.Name = "buttonListViewAudioMid";
-            this.buttonListViewAudioMid.Size = new System.Drawing.Size(743, 23);
+            this.buttonListViewAudioMid.Size = new System.Drawing.Size(745, 23);
             this.buttonListViewAudioMid.TabIndex = 11;
             // 
             // buttonListViewAudioIdle
             // 
-            this.buttonListViewAudioIdle.Location = new System.Drawing.Point(129, 53);
+            this.buttonListViewAudioIdle.Location = new System.Drawing.Point(127, 53);
             this.buttonListViewAudioIdle.Name = "buttonListViewAudioIdle";
-            this.buttonListViewAudioIdle.Size = new System.Drawing.Size(743, 23);
+            this.buttonListViewAudioIdle.Size = new System.Drawing.Size(745, 23);
             this.buttonListViewAudioIdle.TabIndex = 11;
             // 
             // buttonListViewAudioLow
             // 
-            this.buttonListViewAudioLow.Location = new System.Drawing.Point(129, 94);
+            this.buttonListViewAudioLow.Location = new System.Drawing.Point(127, 94);
             this.buttonListViewAudioLow.Name = "buttonListViewAudioLow";
-            this.buttonListViewAudioLow.Size = new System.Drawing.Size(743, 23);
+            this.buttonListViewAudioLow.Size = new System.Drawing.Size(745, 23);
             this.buttonListViewAudioLow.TabIndex = 11;
             // 
             // buttonOK
