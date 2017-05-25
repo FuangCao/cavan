@@ -228,6 +228,10 @@ public class CavanAccessibility {
 	}
 
 	public static AccessibilityNodeInfo findNodeByViewId(AccessibilityNodeInfo root, String viewId) {
+		if (CavanAndroid.SDK_VERSION < 18) {
+			return null;
+		}
+
 		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(viewId);
 		return getFirstNode(nodes);
 	}
@@ -242,6 +246,10 @@ public class CavanAccessibility {
 	}
 
 	public static String getNodeViewId(AccessibilityNodeInfo node) {
+		if (CavanAndroid.SDK_VERSION < 18) {
+			return null;
+		}
+
 		CharSequence text = node.getViewIdResourceName();
 		if (text != null) {
 			return text.toString();
@@ -298,6 +306,10 @@ public class CavanAccessibility {
 	}
 
 	public static int getNodeCountByViewId(AccessibilityNodeInfo root, String viewId) {
+		if (CavanAndroid.SDK_VERSION < 18) {
+			return 0;
+		}
+
 		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(viewId);
 		return getNodeCountAndRecycle(nodes);
 	}
@@ -404,6 +416,10 @@ public class CavanAccessibility {
 	}
 
 	public static int traverseChildsByViewId(AccessibilityNodeInfo root, String viewId, Closure closure) {
+		if (CavanAndroid.SDK_VERSION < 18) {
+			return 0;
+		}
+
 		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(viewId);
 		if (nodes == null) {
 			return 0;
@@ -439,6 +455,10 @@ public class CavanAccessibility {
 	}
 
 	public static int traverseNodesByViewId(AccessibilityNodeInfo root, String viewId, Closure closure) {
+		if (CavanAndroid.SDK_VERSION < 18) {
+			return 0;
+		}
+
 		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(viewId);
 		if (nodes == null) {
 			return 0;
@@ -486,6 +506,10 @@ public class CavanAccessibility {
 
 	public static boolean performSelection(AccessibilityNodeInfo node, int start, int length) {
 		if (length > 0) {
+			if (CavanAndroid.SDK_VERSION < 18) {
+				return false;
+			}
+
 			Bundle arguments = new Bundle();
 			arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, start);
 			arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, start + length);
@@ -529,7 +553,7 @@ public class CavanAccessibility {
 			return false;
 		}
 
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+		if (CavanAndroid.SDK_VERSION >= 21) {
 			Bundle arguments = new Bundle(1);
 			arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text);
 
@@ -601,14 +625,22 @@ public class CavanAccessibility {
 	}
 
 	public static boolean hasAction(AccessibilityNodeInfo node, AccessibilityAction action) {
-		return node.getActionList().contains(action);
+		if (CavanAndroid.SDK_VERSION < 21) {
+			return (node.getActions() & action.getId()) != 0;
+		} else {
+			return node.getActionList().contains(action);
+		}
 	}
 
 	public static boolean hasAction(AccessibilityNodeInfo node, int value) {
-		for (AccessibilityAction action : node.getActionList()) {
-			if (action.getId() == value) {
-				return true;
+		if (CavanAndroid.SDK_VERSION < 21) {
+			for (AccessibilityAction action : node.getActionList()) {
+				if (action.getId() == value) {
+					return true;
+				}
 			}
+		} else {
+			return (node.getActions() & value) != 0;
 		}
 
 		return false;
@@ -707,7 +739,11 @@ public class CavanAccessibility {
 				builder.append(node.getClassName());
 				builder.append('[').append(Integer.toHexString(node.hashCode())).append(']');
 				builder.append("@");
-				builder.append(node.getViewIdResourceName());
+
+				if (CavanAndroid.SDK_VERSION >= 18) {
+					builder.append(node.getViewIdResourceName());
+				}
+
 				builder.append(": ");
 				builder.append(node.getText());
 			}
