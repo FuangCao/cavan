@@ -105,7 +105,6 @@
             this.radioButtonVideoType2D.Name = "radioButtonVideoType2D";
             this.radioButtonVideoType2D.Size = new System.Drawing.Size(35, 16);
             this.radioButtonVideoType2D.TabIndex = 6;
-            this.radioButtonVideoType2D.TabStop = true;
             this.radioButtonVideoType2D.Text = "2D";
             this.radioButtonVideoType2D.UseVisualStyleBackColor = true;
             // 
@@ -128,13 +127,13 @@
             this.radioButtonVideoTypeVr.Name = "radioButtonVideoTypeVr";
             this.radioButtonVideoTypeVr.Size = new System.Drawing.Size(35, 16);
             this.radioButtonVideoTypeVr.TabIndex = 8;
-            this.radioButtonVideoTypeVr.TabStop = true;
             this.radioButtonVideoTypeVr.Text = "VR";
             this.radioButtonVideoTypeVr.UseVisualStyleBackColor = true;
             // 
             // radioButtonVideoTypeVrSingle
             // 
             this.radioButtonVideoTypeVrSingle.AutoSize = true;
+            this.radioButtonVideoTypeVrSingle.Checked = true;
             this.radioButtonVideoTypeVrSingle.Location = new System.Drawing.Point(399, 21);
             this.radioButtonVideoTypeVrSingle.Name = "radioButtonVideoTypeVrSingle";
             this.radioButtonVideoTypeVrSingle.Size = new System.Drawing.Size(59, 16);
