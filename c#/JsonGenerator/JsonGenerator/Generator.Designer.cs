@@ -36,11 +36,10 @@
             this.textBoxDesc = new System.Windows.Forms.TextBox();
             this.textBoxStartVideo = new System.Windows.Forms.TextBox();
             this.textBoxEndingVideo = new System.Windows.Forms.TextBox();
-            this.openFileDialogAudio = new System.Windows.Forms.OpenFileDialog();
-            this.openFileDialogVideoMp4 = new System.Windows.Forms.OpenFileDialog();
+            this.openFileDialogMp3 = new System.Windows.Forms.OpenFileDialog();
+            this.openFileDialogMp4 = new System.Windows.Forms.OpenFileDialog();
             this.buttonBackAudioAdd = new System.Windows.Forms.Button();
             this.buttonInteractionAdd = new System.Windows.Forms.Button();
-            this.openFileDialogVideoH264 = new System.Windows.Forms.OpenFileDialog();
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.addToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
@@ -167,15 +166,15 @@
             this.textBoxEndingVideo.TabIndex = 11;
             this.textBoxEndingVideo.Click += new System.EventHandler(this.textBoxEndingVideo_Click);
             // 
-            // openFileDialogAudio
+            // openFileDialogMp3
             // 
-            this.openFileDialogAudio.DefaultExt = "mp3";
-            this.openFileDialogAudio.Filter = "Audio|*.mp3";
+            this.openFileDialogMp3.DefaultExt = "mp3";
+            this.openFileDialogMp3.Filter = "Audio|*.mp3";
             // 
-            // openFileDialogVideoMp4
+            // openFileDialogMp4
             // 
-            this.openFileDialogVideoMp4.DefaultExt = "mp4";
-            this.openFileDialogVideoMp4.Filter = "Video|*.mp4";
+            this.openFileDialogMp4.DefaultExt = "mp4";
+            this.openFileDialogMp4.Filter = "Video|*.mp4";
             // 
             // buttonBackAudioAdd
             // 
@@ -196,11 +195,6 @@
             this.buttonInteractionAdd.Text = "Add";
             this.buttonInteractionAdd.UseVisualStyleBackColor = true;
             this.buttonInteractionAdd.Click += new System.EventHandler(this.buttonInteractionAdd_Click);
-            // 
-            // openFileDialogVideoH264
-            // 
-            this.openFileDialogVideoH264.DefaultExt = "h264";
-            this.openFileDialogVideoH264.Filter = "Video|*.h264";
             // 
             // contextMenuStrip
             // 
@@ -304,11 +298,10 @@
         private System.Windows.Forms.TextBox textBoxDesc;
         private System.Windows.Forms.TextBox textBoxStartVideo;
         private System.Windows.Forms.TextBox textBoxEndingVideo;
-        private System.Windows.Forms.OpenFileDialog openFileDialogAudio;
-        private System.Windows.Forms.OpenFileDialog openFileDialogVideoMp4;
+        private System.Windows.Forms.OpenFileDialog openFileDialogMp3;
+        private System.Windows.Forms.OpenFileDialog openFileDialogMp4;
         private System.Windows.Forms.Button buttonBackAudioAdd;
         private System.Windows.Forms.Button buttonInteractionAdd;
-        private System.Windows.Forms.OpenFileDialog openFileDialogVideoH264;
         private ButtonListView buttonListViewBackAudio;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem addToolStripMenuItem;

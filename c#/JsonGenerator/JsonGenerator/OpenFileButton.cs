@@ -11,13 +11,13 @@ namespace JsonGenerator {
         private FileInfo mFileInfo;
         private ToolTip mToolTip;
 
-        public OpenFileButton(ButtonListView listView, OpenFileDialog dialog, ToolTip tooltip) {
+        public OpenFileButton(ButtonListView listView, OpenFileDialog dialog, String filename, ContextMenuStrip menu, ToolTip tooltip) {
             mListView = listView;
             mDialog = dialog;
             mToolTip = tooltip;
-            FullName = dialog.FileName;
+            FullName = filename;
+            ContextMenuStrip = menu;
             Click += OpenFileButton_Click;
-            listView.addButton(this);
         }
 
         private void OpenFileButton_Click(object sender, EventArgs e) {
@@ -25,12 +25,14 @@ namespace JsonGenerator {
                 return;
             }
 
+            mDialog.Multiselect = false;
+
             if (mFileInfo != null) {
                 mDialog.FileName = mFileInfo.FullName;
             } else {
                 mDialog.FileName = null;
             }
-            
+
             if (mDialog.ShowDialog() == DialogResult.OK) {
                 FullName = mDialog.FileName;
                 mListView.updateButtonBounds();

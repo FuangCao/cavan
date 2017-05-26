@@ -17,6 +17,32 @@ namespace JsonGenerator {
             updateButtonBounds();
         }
 
+        public int addOpenFileButtons(OpenFileDialog dialog, ContextMenuStrip menu, ToolTip toolTip) {
+            dialog.Multiselect = true;
+
+            if (dialog.ShowDialog() != DialogResult.OK) {
+                return 0;
+            }
+
+            int count = 0;
+
+            if (dialog.Multiselect) {
+                foreach (String filename in dialog.FileNames) {
+                    OpenFileButton button = new OpenFileButton(this, dialog, filename, menu, toolTip);
+                    Controls.Add(button);
+                    count++;
+                }
+            } else {
+                OpenFileButton button = new OpenFileButton(this, dialog, dialog.FileName, menu, toolTip);
+                Controls.Add(button);
+                count++;
+            }
+
+            updateButtonBounds();
+
+            return count;
+        }
+
         public void updateButtonBounds() {
             ControlCollection controls = Controls;
             int count = controls.Count;
@@ -73,30 +99,32 @@ namespace JsonGenerator {
             }
         }
 
-        public StringBuilder generate(StringBuilder builder, string prefix, string name) {
-            builder.Append(prefix).Append('"').Append(name).Append("\":[");
-
-            String localPrefix = prefix + "    ";
+        public static StringBuilder generate(StringBuilder builder, string prefix, string name, params ButtonListView[] lists) {
+            string subPrefix = prefix + "    ";
             int fileIndex = 0;
             int formIndex = 0;
 
-            foreach (Control control in Controls) {
-                if (control is OpenFileButton) {
-                    OpenFileButton button = (OpenFileButton)control;
-                    if (fileIndex > 0) {
-                        builder.Append(',');
+            builder.Append(prefix).Append('"').Append(name).Append("\":[");
+
+            foreach (ButtonListView list in lists) {
+                foreach (Control control in list.Controls) {
+                    if (control is OpenFileButton) {
+                        OpenFileButton button = (OpenFileButton)control;
+                        if (fileIndex > 0) {
+                            builder.Append(',');
+                        }
+
+                        button.generate(builder, subPrefix, fileIndex++);
+                    } else if (control is OpenDialogButton) {
+                        OpenDialogButton button = (OpenDialogButton)control;
+                        if (formIndex > 0) {
+                            builder.Append(',');
+                        }
+
+                        builder.AppendLine();
+
+                        button.generate(builder, subPrefix, formIndex++);
                     }
-
-                    button.generate(builder, localPrefix, fileIndex++);
-                } else if (control is OpenDialogButton) {
-                    OpenDialogButton button = (OpenDialogButton)control;
-                    if (formIndex > 0) {
-                        builder.Append(',');
-                    }
-
-                    builder.AppendLine();
-
-                    button.generate(builder, localPrefix, formIndex++);
                 }
             }
 
@@ -107,6 +135,10 @@ namespace JsonGenerator {
             builder.Append(']');
 
             return builder;
+        }
+
+        public StringBuilder generate(StringBuilder builder, string prefix, string name) {
+            return generate(builder, prefix, name, this);
         }
     }
 }

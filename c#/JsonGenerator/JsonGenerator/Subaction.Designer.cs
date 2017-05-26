@@ -47,6 +47,9 @@
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.removeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.buttonDelete = new System.Windows.Forms.Button();
+            this.label6 = new System.Windows.Forms.Label();
+            this.buttonVideoIdleAdd = new System.Windows.Forms.Button();
+            this.buttonListViewVideoIdle = new JsonGenerator.ButtonListView();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -62,7 +65,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 58);
+            this.label2.Location = new System.Drawing.Point(12, 93);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(71, 12);
             this.label2.TabIndex = 1;
@@ -71,7 +74,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 99);
+            this.label3.Location = new System.Drawing.Point(12, 131);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(65, 12);
             this.label3.TabIndex = 2;
@@ -80,7 +83,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(12, 140);
+            this.label4.Location = new System.Drawing.Point(12, 169);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(65, 12);
             this.label4.TabIndex = 3;
@@ -89,7 +92,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(12, 181);
+            this.label5.Location = new System.Drawing.Point(12, 207);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(71, 12);
             this.label5.TabIndex = 4;
@@ -107,7 +110,7 @@
             // 
             // buttonAudioMidAdd
             // 
-            this.buttonAudioMidAdd.Location = new System.Drawing.Point(89, 135);
+            this.buttonAudioMidAdd.Location = new System.Drawing.Point(89, 164);
             this.buttonAudioMidAdd.Name = "buttonAudioMidAdd";
             this.buttonAudioMidAdd.Size = new System.Drawing.Size(32, 23);
             this.buttonAudioMidAdd.TabIndex = 6;
@@ -117,7 +120,7 @@
             // 
             // buttonAudioHighAdd
             // 
-            this.buttonAudioHighAdd.Location = new System.Drawing.Point(89, 176);
+            this.buttonAudioHighAdd.Location = new System.Drawing.Point(89, 202);
             this.buttonAudioHighAdd.Name = "buttonAudioHighAdd";
             this.buttonAudioHighAdd.Size = new System.Drawing.Size(32, 23);
             this.buttonAudioHighAdd.TabIndex = 7;
@@ -127,7 +130,7 @@
             // 
             // buttonAudioLowAdd
             // 
-            this.buttonAudioLowAdd.Location = new System.Drawing.Point(89, 94);
+            this.buttonAudioLowAdd.Location = new System.Drawing.Point(89, 126);
             this.buttonAudioLowAdd.Name = "buttonAudioLowAdd";
             this.buttonAudioLowAdd.Size = new System.Drawing.Size(32, 23);
             this.buttonAudioLowAdd.TabIndex = 8;
@@ -137,7 +140,7 @@
             // 
             // buttonAudioIdleAdd
             // 
-            this.buttonAudioIdleAdd.Location = new System.Drawing.Point(89, 53);
+            this.buttonAudioIdleAdd.Location = new System.Drawing.Point(89, 88);
             this.buttonAudioIdleAdd.Name = "buttonAudioIdleAdd";
             this.buttonAudioIdleAdd.Size = new System.Drawing.Size(32, 23);
             this.buttonAudioIdleAdd.TabIndex = 9;
@@ -154,28 +157,28 @@
             // 
             // buttonListViewAudioHigh
             // 
-            this.buttonListViewAudioHigh.Location = new System.Drawing.Point(127, 176);
+            this.buttonListViewAudioHigh.Location = new System.Drawing.Point(127, 202);
             this.buttonListViewAudioHigh.Name = "buttonListViewAudioHigh";
             this.buttonListViewAudioHigh.Size = new System.Drawing.Size(745, 23);
             this.buttonListViewAudioHigh.TabIndex = 11;
             // 
             // buttonListViewAudioMid
             // 
-            this.buttonListViewAudioMid.Location = new System.Drawing.Point(127, 135);
+            this.buttonListViewAudioMid.Location = new System.Drawing.Point(127, 164);
             this.buttonListViewAudioMid.Name = "buttonListViewAudioMid";
             this.buttonListViewAudioMid.Size = new System.Drawing.Size(745, 23);
             this.buttonListViewAudioMid.TabIndex = 11;
             // 
             // buttonListViewAudioIdle
             // 
-            this.buttonListViewAudioIdle.Location = new System.Drawing.Point(127, 53);
+            this.buttonListViewAudioIdle.Location = new System.Drawing.Point(127, 88);
             this.buttonListViewAudioIdle.Name = "buttonListViewAudioIdle";
             this.buttonListViewAudioIdle.Size = new System.Drawing.Size(745, 23);
             this.buttonListViewAudioIdle.TabIndex = 11;
             // 
             // buttonListViewAudioLow
             // 
-            this.buttonListViewAudioLow.Location = new System.Drawing.Point(127, 94);
+            this.buttonListViewAudioLow.Location = new System.Drawing.Point(127, 126);
             this.buttonListViewAudioLow.Name = "buttonListViewAudioLow";
             this.buttonListViewAudioLow.Size = new System.Drawing.Size(745, 23);
             this.buttonListViewAudioLow.TabIndex = 11;
@@ -183,7 +186,7 @@
             // buttonOK
             // 
             this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.buttonOK.Location = new System.Drawing.Point(12, 227);
+            this.buttonOK.Location = new System.Drawing.Point(13, 257);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(75, 23);
             this.buttonOK.TabIndex = 12;
@@ -193,7 +196,7 @@
             // buttonCancel
             // 
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Location = new System.Drawing.Point(796, 227);
+            this.buttonCancel.Location = new System.Drawing.Point(797, 257);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(75, 23);
             this.buttonCancel.TabIndex = 13;
@@ -227,12 +230,38 @@
             // buttonDelete
             // 
             this.buttonDelete.DialogResult = System.Windows.Forms.DialogResult.No;
-            this.buttonDelete.Location = new System.Drawing.Point(404, 227);
+            this.buttonDelete.Location = new System.Drawing.Point(405, 257);
             this.buttonDelete.Name = "buttonDelete";
             this.buttonDelete.Size = new System.Drawing.Size(75, 23);
             this.buttonDelete.TabIndex = 14;
             this.buttonDelete.Text = "Delete";
             this.buttonDelete.UseVisualStyleBackColor = true;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(11, 55);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(71, 12);
+            this.label6.TabIndex = 15;
+            this.label6.Text = "Video Idle:";
+            // 
+            // buttonVideoIdleAdd
+            // 
+            this.buttonVideoIdleAdd.Location = new System.Drawing.Point(89, 50);
+            this.buttonVideoIdleAdd.Name = "buttonVideoIdleAdd";
+            this.buttonVideoIdleAdd.Size = new System.Drawing.Size(32, 23);
+            this.buttonVideoIdleAdd.TabIndex = 16;
+            this.buttonVideoIdleAdd.Text = "Add";
+            this.buttonVideoIdleAdd.UseVisualStyleBackColor = true;
+            this.buttonVideoIdleAdd.Click += new System.EventHandler(this.buttonVideoIdleAdd_Click);
+            // 
+            // buttonListViewVideoIdle
+            // 
+            this.buttonListViewVideoIdle.Location = new System.Drawing.Point(127, 50);
+            this.buttonListViewVideoIdle.Name = "buttonListViewVideoIdle";
+            this.buttonListViewVideoIdle.Size = new System.Drawing.Size(745, 23);
+            this.buttonListViewVideoIdle.TabIndex = 11;
             // 
             // Subaction
             // 
@@ -240,7 +269,10 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonCancel;
-            this.ClientSize = new System.Drawing.Size(884, 262);
+            this.ClientSize = new System.Drawing.Size(884, 292);
+            this.Controls.Add(this.buttonListViewVideoIdle);
+            this.Controls.Add(this.buttonVideoIdleAdd);
+            this.Controls.Add(this.label6);
             this.Controls.Add(this.buttonDelete);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
@@ -293,5 +325,8 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem removeToolStripMenuItem;
         private System.Windows.Forms.Button buttonDelete;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Button buttonVideoIdleAdd;
+        private ButtonListView buttonListViewVideoIdle;
     }
 }

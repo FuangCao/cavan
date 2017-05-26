@@ -15,15 +15,15 @@ namespace JsonGenerator {
         }
 
         public override StringBuilder generate(StringBuilder builder, String prefix, int index) {
-            String localPrefix = prefix + "    ";
+            String subPrefix = prefix + "    ";
 
             builder.Append(prefix).AppendLine("{");
 
-            builder.Append(localPrefix).Append("\"main\":").Append(index).Append(',').AppendLine();
-            builder.Append(localPrefix).Append("\"fov\":").Append(textBoxFov.Text).Append(',').AppendLine();
-            builder.Append(localPrefix).Append("\"name\":\"").Append(textBoxName.Text).AppendLine("\",");
-            builder.Append(localPrefix).Append("\"video\":[\"").Append(Path.GetFileName(textBoxVideo.Text)).AppendLine("\"],");
-            buttonListViewSubaction.generate(builder, localPrefix, "subaction").AppendLine();
+            builder.Append(subPrefix).Append("\"main\":").Append(index).Append(',').AppendLine();
+            builder.Append(subPrefix).Append("\"fov\":").Append(textBoxFov.Text).Append(',').AppendLine();
+            builder.Append(subPrefix).Append("\"name\":\"").Append(textBoxName.Text).AppendLine("\",");
+            builder.Append(subPrefix).Append("\"video\":[\"").Append(Path.GetFileName(textBoxVideo.Text)).AppendLine("\"],");
+            buttonListViewSubaction.generate(builder, subPrefix, "subaction").AppendLine();
 
             builder.Append(prefix).Append('}');
 

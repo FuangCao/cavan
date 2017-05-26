@@ -14,16 +14,16 @@ namespace JsonGenerator {
         }
 
         public StringBuilder generate(StringBuilder builder) {
-            String localPrefix = "    ";
+            String subPrefix = "    ";
 
             builder.Append('{').AppendLine();
-            builder.Append(localPrefix).AppendLine("\"version\":1,");
-            builder.Append(localPrefix).Append("\"sourcetype\":\"").Append(getSourceType()).AppendLine("\",");
-            builder.Append(localPrefix).Append("\"desc\":\"").Append(textBoxDesc.Text).AppendLine("\",");
-            buttonListViewBackAudio.generate(builder, localPrefix, "audioback").Append(',').AppendLine();
-            builder.Append(localPrefix).Append("\"startvideo\":\"").Append(Path.GetFileName(textBoxStartVideo.Text)).AppendLine("\",");
-            builder.Append(localPrefix).Append("\"endingvideo\":\"").Append(Path.GetFileName(textBoxEndingVideo.Text)).AppendLine("\",");
-            buttonListViewInteraction.generate(builder, localPrefix, "action").AppendLine();
+            builder.Append(subPrefix).AppendLine("\"version\":1,");
+            builder.Append(subPrefix).Append("\"sourcetype\":\"").Append(getSourceType()).AppendLine("\",");
+            builder.Append(subPrefix).Append("\"desc\":\"").Append(textBoxDesc.Text).AppendLine("\",");
+            buttonListViewBackAudio.generate(builder, subPrefix, "audioback").Append(',').AppendLine();
+            builder.Append(subPrefix).Append("\"startvideo\":\"").Append(Path.GetFileName(textBoxStartVideo.Text)).AppendLine("\",");
+            builder.Append(subPrefix).Append("\"endingvideo\":\"").Append(Path.GetFileName(textBoxEndingVideo.Text)).AppendLine("\",");
+            buttonListViewInteraction.generate(builder, subPrefix, "action").AppendLine();
             builder.Append('}');
 
             return builder;
@@ -66,10 +66,7 @@ namespace JsonGenerator {
         }
 
         private void buttonBackAudioAdd_Click(object sender, EventArgs e) {
-            if (openFileDialogAudio.ShowDialog() == DialogResult.OK) {
-                OpenFileButton button = new OpenFileButton(buttonListViewBackAudio, openFileDialogAudio, toolTip);
-                button.ContextMenuStrip = contextMenuStrip;
-            }
+            buttonListViewBackAudio.addOpenFileButtons(openFileDialogMp3, contextMenuStrip, toolTip);
         }
 
         private void buttonInteractionAdd_Click(object sender, EventArgs e) {
@@ -90,23 +87,23 @@ namespace JsonGenerator {
         }
 
         private void textBoxStartVideo_Click(object sender, EventArgs e) {
-            openFileDialogVideoMp4.FileName = textBoxStartVideo.Text;
-            if (openFileDialogVideoMp4.ShowDialog() == DialogResult.OK) {
-                textBoxStartVideo.Text = openFileDialogVideoMp4.FileName;
+            openFileDialogMp4.FileName = textBoxStartVideo.Text;
+            if (openFileDialogMp4.ShowDialog() == DialogResult.OK) {
+                textBoxStartVideo.Text = openFileDialogMp4.FileName;
             }
         }
 
         private void textBoxEndingVideo_Click(object sender, EventArgs e) {
-            openFileDialogVideoMp4.FileName = textBoxEndingVideo.Text;
-            if (openFileDialogVideoMp4.ShowDialog() == DialogResult.OK) {
-                textBoxEndingVideo.Text = openFileDialogVideoMp4.FileName;
+            openFileDialogMp4.FileName = textBoxEndingVideo.Text;
+            if (openFileDialogMp4.ShowDialog() == DialogResult.OK) {
+                textBoxEndingVideo.Text = openFileDialogMp4.FileName;
             }
         }
 
         private void buttonGenerate_Click(object sender, EventArgs e) {
             if (saveFileDialogJson.ShowDialog() == DialogResult.OK) {
                 if (generate(saveFileDialogJson.FileName)) {
-                    MessageBox.Show("Successfully generated");
+                    MessageBox.Show("Successfully generated!");
                 }
             }
         }
