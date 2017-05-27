@@ -169,12 +169,12 @@
             // openFileDialogMp3
             // 
             this.openFileDialogMp3.DefaultExt = "mp3";
-            this.openFileDialogMp3.Filter = "Audio|*.mp3";
+            this.openFileDialogMp3.Filter = "Audio|*.mp3|All|*.*";
             // 
             // openFileDialogMp4
             // 
             this.openFileDialogMp4.DefaultExt = "mp4";
-            this.openFileDialogMp4.Filter = "Video|*.mp4";
+            this.openFileDialogMp4.Filter = "Video|*.mp4|All|*.*";
             // 
             // buttonBackAudioAdd
             // 

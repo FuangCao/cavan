@@ -41,7 +41,7 @@
             this.buttonListViewAudioLow = new JsonGenerator.ButtonListView();
             this.buttonOK = new System.Windows.Forms.Button();
             this.buttonCancel = new System.Windows.Forms.Button();
-            this.openFileDialogH264 = new System.Windows.Forms.OpenFileDialog();
+            this.openFileDialogStream = new System.Windows.Forms.OpenFileDialog();
             this.openFileDialogMp3 = new System.Windows.Forms.OpenFileDialog();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -203,15 +203,15 @@
             this.buttonCancel.Text = "Cancel";
             this.buttonCancel.UseVisualStyleBackColor = true;
             // 
-            // openFileDialogH264
+            // openFileDialogStream
             // 
-            this.openFileDialogH264.DefaultExt = "h264";
-            this.openFileDialogH264.Filter = "Video|*.h264";
+            this.openFileDialogStream.DefaultExt = "stream";
+            this.openFileDialogStream.Filter = "Video|*.stream|All|*.*";
             // 
             // openFileDialogMp3
             // 
             this.openFileDialogMp3.DefaultExt = "mp3";
-            this.openFileDialogMp3.Filter = "Audio|*.mp3";
+            this.openFileDialogMp3.Filter = "Audio|*.mp3|All|*.*";
             // 
             // contextMenuStrip
             // 
@@ -319,7 +319,7 @@
         private ButtonListView buttonListViewAudioLow;
         private System.Windows.Forms.Button buttonOK;
         private System.Windows.Forms.Button buttonCancel;
-        private System.Windows.Forms.OpenFileDialog openFileDialogH264;
+        private System.Windows.Forms.OpenFileDialog openFileDialogStream;
         private System.Windows.Forms.OpenFileDialog openFileDialogMp3;
         private System.Windows.Forms.ToolTip toolTip;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip;

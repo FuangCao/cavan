@@ -37,11 +37,11 @@ namespace JsonGenerator {
         }
 
         private void buttonVideoAdd_Click(object sender, EventArgs e) {
-            buttonListViewVideo.addOpenFileButtons(openFileDialogH264, contextMenuStrip, toolTip);
+            buttonListViewVideo.addOpenFileButtons(openFileDialogStream, contextMenuStrip, toolTip);
         }
 
         private void buttonVideoIdleAdd_Click(object sender, EventArgs e) {
-            buttonListViewVideoIdle.addOpenFileButtons(openFileDialogH264, contextMenuStrip, toolTip);
+            buttonListViewVideoIdle.addOpenFileButtons(openFileDialogStream, contextMenuStrip, toolTip);
         }
 
         private void buttonAudioIdleAdd_Click(object sender, EventArgs e) {

@@ -135,7 +135,7 @@
             // openFileDialogMp4
             // 
             this.openFileDialogMp4.DefaultExt = "mp4";
-            this.openFileDialogMp4.Filter = "Video|*.mp4";
+            this.openFileDialogMp4.Filter = "Video|*.mp4|All|*.*";
             // 
             // buttonListViewSubaction
             // 
