@@ -6,12 +6,6 @@
 [remote "local"]
 	url = file:///git/cavan.git
 	fetch = +refs/heads/*:refs/remotes/local/*
-[remote "250"]
-	url = git://192.168.10.250/cavan.git
-	fetch = +refs/heads/*:refs/remotes/250/*
-[remote "220"]
-	url = http://192.168.10.220/git/cavan.git
-	fetch = +refs/heads/*:refs/remotes/220/*
 [remote "github"]
 	url = https://github.com/fuangcao/cavan.git
 	fetch = +refs/heads/*:refs/remotes/github/*
