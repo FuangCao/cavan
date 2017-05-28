@@ -25,3 +25,5 @@ less /tmp/123.txt
 getconf LONG_BIT # 64
 pgrep cavan-main
 pkill cavan-main
+htop
+free -h
