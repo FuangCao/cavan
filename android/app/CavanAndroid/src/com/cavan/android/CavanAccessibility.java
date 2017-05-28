@@ -7,7 +7,6 @@ import java.util.List;
 import android.accessibilityservice.AccessibilityService;
 import android.content.Context;
 import android.graphics.Rect;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
@@ -624,6 +623,7 @@ public class CavanAccessibility {
 		return performChildAction(parent, index, AccessibilityNodeInfo.ACTION_CLICK);
 	}
 
+	@SuppressWarnings("deprecation")
 	public static boolean hasAction(AccessibilityNodeInfo node, AccessibilityAction action) {
 		if (CavanAndroid.SDK_VERSION < 21) {
 			return (node.getActions() & action.getId()) != 0;
@@ -632,6 +632,7 @@ public class CavanAccessibility {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	public static boolean hasAction(AccessibilityNodeInfo node, int value) {
 		if (CavanAndroid.SDK_VERSION < 21) {
 			for (AccessibilityAction action : node.getActionList()) {
