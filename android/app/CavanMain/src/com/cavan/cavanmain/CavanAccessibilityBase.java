@@ -11,12 +11,17 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import com.cavan.android.CavanAccessibility;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.DelayedRunnable;
+import com.cavan.java.CavanArray;
 import com.cavan.java.CavanString;
 import com.cavan.java.RedPacketFinder;
 
 public abstract class CavanAccessibilityBase<E> extends Handler implements Runnable {
 
 	private static final long POLL_DELAY = 200;
+
+	private static final String[] EXCLUDE_MESSAGES = {
+		"发送", "完成", "单选", "多选"
+	};
 
 	private boolean mForceUnpack;
 	private boolean mGotoIdleEnable;
@@ -171,6 +176,10 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 
 	public void postMessageNode(AccessibilityNodeInfo node) {
 		String text = CavanString.fromCharSequence(node.getText());
+		if (CavanArray.contains(EXCLUDE_MESSAGES, text)) {
+			CavanAndroid.dLog("Exclude message: " + text);
+			return;
+		}
 
 		if (text.length() > 0 && RedPacketFinder.containsUrl(text) == false) {
 			FloatEditorDialog dialog = FloatEditorDialog.getInstance(mService, text, true, true);

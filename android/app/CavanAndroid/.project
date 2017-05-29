@@ -36,5 +36,10 @@
 			<type>2</type>
 			<location>/mnt/sda5/ubuntu/cavan/java/CavanJava/src</location>
 		</link>
+		<link>
+			<name>lib</name>
+			<type>2</type>
+			<location>/mnt/sda5/ubuntu/project/jwaoo-im/java/lib</location>
+		</link>
 	</linkedResources>
 </projectDescription>

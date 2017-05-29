@@ -18,8 +18,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 	private static final int POLL_DELAY = 500;
 	private static final int POLL_DELAY_UNPACK = 2000;
+
 	private static final String[] MESSAGE_ITEM_IDS = {
-		"com.tencent.mm:id/ib", "com.tencent.mm:id/if"
+		"com.tencent.mm:id/ib", "com.tencent.mm:id/if", "com.tencent.mm:id/im"
 	};
 
 	private List<Integer> mFinishNodes = new ArrayList<Integer>();
