@@ -210,7 +210,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		case MSG_CONNECT_STATE_CHANGED:
 			if ((Boolean) msg.obj) {
-				mTextViewInfo.setText(getResources().getString(R.string.device_connected, mBleToy.getAddress() + " - " + mBleToy.getDeviceName()));
+				mTextViewInfo.setText(getResources().getString(R.string.device_connected, mBleToy.getAddress()) + " - " + mBleToy.getDeviceName());
 
 				if (mBleToy.getDeviveId() == JwaooBleToy.DEVICE_ID_MODEL10) {
 					mTestItemFragmanets = mTestItemFragmanetsModel10;
@@ -432,6 +432,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 	public class TestResultFragment extends BaseTestFragment implements OnItemClickListener {
 
+		private TextView mTextView;
 		private ListView mListView;
 		private BaseAdapter mAdapter = new BaseAdapter() {
 
@@ -487,6 +488,14 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		@Override
 		public boolean doInitialize() {
+			mTextView = (TextView) findViewById(R.id.textViewVersion);
+
+			try {
+				mTextView.setText(getResources().getString(R.string.version, mBleToy.getVersionString()) + " - " + mBleToy.getBuildDateString());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
 			mListView = (ListView) findViewById(R.id.listViewTestResult);
 			mListView.setAdapter(mAdapter);
 			mListView.setOnItemClickListener(this);
@@ -837,7 +846,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				}
 
 				mTextViewBatteryVoltage.setText(voltage + " (v)");
-				mTextViewBatteryCapacity.setText(msg.arg2 + "%");
+				mTextViewBatteryCapacity.setText(info.getLevel() + "%");
 
 				if (mBleToy.getDeviveId() == JwaooBleToy.DEVICE_ID_MODEL10) {
 					if (voltage > 1.8 && voltage < 3.5) {

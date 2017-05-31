@@ -36,5 +36,6 @@
     <string name="connect">连接</string>
     <string name="open_camera_failed">打开相机失败！</string>
     <string name="request_camera_permission_failed">请求相机权限失败！</string>
+    <string name="version">版本号：<xliff:g>%1$s</xliff:g></string>
 
 </resources>

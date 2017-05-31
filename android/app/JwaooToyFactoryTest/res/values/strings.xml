@@ -72,5 +72,6 @@
         <string name="copy">复制</string>
         <string name="prompt_copied_to_clipboard">文字已复制到剪切板</string>
         <string name="project_name">项目名称：</string>
+        <string name="build_date">编译时间：<xliff:g>%1$s</xliff:g></string>
 
 </resources>

@@ -234,7 +234,7 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	private byte mFlashCrc;
 	private int mVersion;
-	private Date mBuildDate;
+	private String mBuildDate;
 	private int mDeviceId;
 	private String mDeviceName;
 
@@ -249,7 +249,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	protected int mSensorDelayNanos;
 	protected boolean mSensorSpeedOptimize;
 	protected long mSensorDelayMillis = SENSOR_DELAY_DEFAULT;
-	protected VoltageCapacityTable mBatteryCapacityTable = new VoltageCapacityTable(3.4, 4.2);
+	protected VoltageCapacityTable mBatteryCapacityTable = new VoltageCapacityTable(3.4, 4.15);
 	private CavanOverrideQueue<byte[]> mSensorDataQueue = new CavanOverrideQueue<byte[]>(SENSOR_QUEUE_SIZE);
 	private SensorSpeedOptimizeThread mSensorOptimizeThread;
 
@@ -516,14 +516,8 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mCommand.readText(JWAOO_TOY_CMD_IDENTIFY);
 	}
 
-	@SuppressWarnings("deprecation")
-	public Date readBuildDate() throws Exception {
-		String text = mCommand.readText(JWAOO_TOY_CMD_BUILD_DATE);
-		if (text == null) {
-			return null;
-		}
-
-		return new Date(text);
+	public String readBuildDate() throws Exception {
+		return mCommand.readText(JWAOO_TOY_CMD_BUILD_DATE);
 	}
 
 	public int readVersion() throws Exception {
@@ -940,12 +934,26 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mVersion;
 	}
 
-	public Date getBuildDate() throws Exception {
+	public String getVersionString() throws Exception {
+		return Integer.toHexString(getVersion());
+	}
+
+	public String getBuildDateString() throws Exception {
 		if (mBuildDate == null) {
 			mBuildDate = readBuildDate();
 		}
 
 		return mBuildDate;
+	}
+
+	@SuppressWarnings("deprecation")
+	public Date getBuildDate() throws Exception {
+		String text = getBuildDateString();
+		if (text == null) {
+			return null;
+		}
+
+		return new Date(text);
 	}
 
 	public int getDeviveId() {

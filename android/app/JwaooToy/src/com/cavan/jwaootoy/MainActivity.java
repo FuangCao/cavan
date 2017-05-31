@@ -88,6 +88,15 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case EVENT_INIT_COMPLETE:
+				try {
+					StringBuilder builder = new StringBuilder();
+					builder.append(getResources().getString(R.string.version, Integer.toHexString(mBleToy.getVersion())));
+					builder.append(" - ").append(mBleToy.getBuildDateString());
+					mTextViewHardwareInfo.setText(builder);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
 				if (mAppSettings != null) {
 					mEditTextSuspendOvertime.setText(Integer.toString(mAppSettings.getSuspendDelay()));
 				}
@@ -400,11 +409,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	@Override
 	public boolean onInitialize() {
 		try {
-			StringBuilder builder = new StringBuilder();
-			builder.append(Integer.toHexString(mBleToy.getVersion()));
-			builder.append(" - ").append(mBleToy.getBuildDate());
-			mTextViewHardwareInfo.setText(builder);
-
 			if (!mBleToy.setClickEnable(mCheckBoxClick.isChecked())) {
 				CavanAndroid.dLog("Failed to setClickEnable");
 			}
