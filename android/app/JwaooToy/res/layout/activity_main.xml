@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
+        android:layout_below="@+id/textViewHardwareInfo"
         android:ems="10">
 
     </EditText>
@@ -84,14 +84,6 @@
         android:layout_below="@+id/buttonWriteBdAddr"
         android:text="@string/upgrade" />
 
-    <Button
-        android:id="@+id/buttonSend"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/buttonReadBdAddr"
-        android:text="@string/send" />
-
     <Spinner
         android:id="@+id/spinnerMotoLevel"
         android:layout_width="150dp"
@@ -131,15 +123,6 @@
         android:layout_alignBottom="@+id/buttonUpgrade"
         android:layout_toLeftOf="@+id/buttonUpgrade"
         android:text="@string/reboot" />
-
-    <Button
-        android:id="@+id/buttonDisconnect"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/buttonSend"
-        android:layout_alignBottom="@+id/buttonSend"
-        android:layout_toRightOf="@+id/buttonSend"
-        android:text="@string/disconnect" />
 
     <Button
         android:id="@+id/buttonShutdown"
@@ -199,5 +182,21 @@
         android:layout_toLeftOf="@+id/buttonSuspendOvertime"
         android:ems="10"
         android:inputType="number" />
+
+    <TextView
+        android:id="@+id/textViewHardwareInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true" />
+
+    <Button
+        android:id="@+id/buttonDisconnect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/buttonReadBdAddr"
+        android:text="@string/disconnect" />
 
 </RelativeLayout>

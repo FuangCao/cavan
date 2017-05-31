@@ -18,6 +18,7 @@ import android.view.View;
 import com.cavan.android.CavanAndroid;
 import com.jwaoo.android.JwaooBleToy;
 import com.jwaoo.android.JwaooBleToy.JwaooBleToyEventListener;
+import com.jwaoo.android.JwaooBleToy.JwaooToyBatteryInfo;
 import com.jwaoo.android.JwaooToySensor;
 
 @SuppressLint("HandlerLeak")
@@ -254,8 +255,8 @@ public class JwaooToyActivity extends CavanBleActivity implements OnCancelListen
 	}
 
 	@Override
-	public void onBatteryStateChanged(int state, int level, double voltage) {
-		CavanAndroid.dLog("onBatteryStateChanged: state = " + state + ", level = " + level + ", voltage = " + voltage);
+	public void onBatteryStateChanged(JwaooToyBatteryInfo info) {
+		CavanAndroid.dLog("onBatteryStateChanged: " + info);
 	}
 
 	@Override

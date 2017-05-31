@@ -1,7 +1,7 @@
 package com.jwaoo.android;
 
+import java.util.Date;
 import java.util.UUID;
-import java.util.concurrent.TimeoutException;
 
 import android.content.Context;
 
@@ -195,8 +195,8 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		@Override
-		public void onBatteryStateChanged(int state, int level, double voltage) {
-			CavanAndroid.dLog("onBatteryStateChanged: state = " + state + ", level = " + level + ", voltage = " + voltage);
+		public void onBatteryStateChanged(JwaooToyBatteryInfo info) {
+			CavanAndroid.dLog("onBatteryStateChanged: " + info);
 		}
 
 		@Override
@@ -222,7 +222,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	}
 
 	public interface JwaooBleToyEventListener extends CavanBleGattEventListener {
-		void onBatteryStateChanged(int state, int level, double voltage);
+		void onBatteryStateChanged(JwaooToyBatteryInfo info);
 		void onKeyStateChanged(int code, int state);
 		void onKeyClicked(int code, int count);
 		void onKeyLongClicked(int code);
@@ -233,6 +233,8 @@ public class JwaooBleToy extends CavanBleGatt {
 	}
 
 	private byte mFlashCrc;
+	private int mVersion;
+	private Date mBuildDate;
 	private int mDeviceId;
 	private String mDeviceName;
 
@@ -247,7 +249,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	protected int mSensorDelayNanos;
 	protected boolean mSensorSpeedOptimize;
 	protected long mSensorDelayMillis = SENSOR_DELAY_DEFAULT;
-	protected VoltageCapacityTable mBatteryCapacityTable = new VoltageCapacityTable(3200, 4200);
+	protected VoltageCapacityTable mBatteryCapacityTable = new VoltageCapacityTable(3.4, 4.2);
 	private CavanOverrideQueue<byte[]> mSensorDataQueue = new CavanOverrideQueue<byte[]>(SENSOR_QUEUE_SIZE);
 	private SensorSpeedOptimizeThread mSensorOptimizeThread;
 
@@ -318,8 +320,8 @@ public class JwaooBleToy extends CavanBleGatt {
 		mEventListener.onBluetoothAdapterStateChanged(enabled);
 	}
 
-	protected void onBatteryStateChanged(int state, int level, double voltage) {
-		mEventListener.onBatteryStateChanged(state, level, voltage);
+	protected void onBatteryStateChanged(JwaooToyBatteryInfo info) {
+		mEventListener.onBatteryStateChanged(info);
 	}
 
 	protected void onKeyStateChanged(int code, int state) {
@@ -346,10 +348,8 @@ public class JwaooBleToy extends CavanBleGatt {
 		if (event.length > 0) {
 			switch (event[0]) {
 			case JWAOO_TOY_EVT_BATT_INFO:
-				if (event.length == 5) {
-					CavanByteCache cache = new CavanByteCache(event);
-					cache.setOffset(1);
-					onBatteryStateChanged(cache.readValue8(), cache.readValue8(), ((double) cache.readValue16()) / 1000);
+				if (event.length >= 4) {
+					onBatteryStateChanged(new JwaooToyBatteryInfo(event, 1));
 				}
 				break;
 
@@ -436,19 +436,101 @@ public class JwaooBleToy extends CavanBleGatt {
 		return isDeviceModel10();
 	}
 
-	public String doIdentify() throws GattInvalidStateException, TimeoutException {
+	public boolean getBool(JwaooToyResponse response) {
+		return response != null && response.getBool();
+	}
+
+	public byte getValue8(JwaooToyResponse response, byte defValue) {
+		if (response == null) {
+			return defValue;
+		}
+
+		return response.getValue8(defValue);
+	}
+
+	public short getValueU8(JwaooToyResponse response, short defValue) {
+		if (response == null) {
+			return defValue;
+		}
+
+		return response.getValueU8(defValue);
+	}
+
+	public short getValue16(JwaooToyResponse response, short defValue) {
+		if (response == null) {
+			return defValue;
+		}
+
+		return response.getValue16(defValue);
+	}
+
+	public int getValueU16(JwaooToyResponse response, int defValue) {
+		if (response == null) {
+			return defValue;
+		}
+
+		return response.getValueU16(defValue);
+	}
+
+	public int getValue32(JwaooToyResponse response, int defValue) {
+		if (response == null) {
+			return defValue;
+		}
+
+		return response.getValue32(defValue);
+	}
+
+	public long getValueU32(JwaooToyResponse response, long defValue) {
+		if (response == null) {
+			return defValue;
+		}
+
+		return response.getValueU32(defValue);
+	}
+
+	public String getText(JwaooToyResponse response) {
+		if (response == null) {
+			return null;
+		}
+
+		return response.getText();
+	}
+
+	public byte[] getData(JwaooToyResponse response) {
+		if (response == null) {
+			return null;
+		}
+
+		return response.getData();
+	}
+
+	public boolean getArray16(JwaooToyResponse response, short[] array, int offset, int count) {
+		if (response == null) {
+			return false;
+		}
+
+		return response.getArray16(array, offset, count);
+	}
+
+	public String doIdentify() throws Exception {
 		return mCommand.readText(JWAOO_TOY_CMD_IDENTIFY);
 	}
 
-	public String readBuildDate() throws GattInvalidStateException, TimeoutException {
-		return mCommand.readText(JWAOO_TOY_CMD_BUILD_DATE);
+	@SuppressWarnings("deprecation")
+	public Date readBuildDate() throws Exception {
+		String text = mCommand.readText(JWAOO_TOY_CMD_BUILD_DATE);
+		if (text == null) {
+			return null;
+		}
+
+		return new Date(text);
 	}
 
-	public int readVersion() throws GattInvalidStateException, TimeoutException {
-		return mCommand.readValue32(JWAOO_TOY_CMD_VERSION, -1);
+	public int readVersion() throws Exception {
+		return mCommand.readValue32(JWAOO_TOY_CMD_VERSION, 0);
 	}
 
-	synchronized public byte[] readFlash(int address) throws GattInvalidStateException, TimeoutException {
+	synchronized public byte[] readFlash(int address) throws Exception {
 		if (mCharFlash == null) {
 			return null;
 		}
@@ -460,35 +542,35 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mCharFlash.readData(DATA_TIMEOUT);
 	}
 
-	public int getFlashId() throws GattInvalidStateException, TimeoutException {
+	public int getFlashId() throws Exception {
 		return mCommand.readValue32(JWAOO_TOY_CMD_FLASH_ID, -1);
 	}
 
-	public int getFlashSize() throws GattInvalidStateException, TimeoutException {
+	public int getFlashSize() throws Exception {
 		return mCommand.readValue32(JWAOO_TOY_CMD_FLASH_SIZE, -1);
 	}
 
-	public int getFlashPageSize() throws GattInvalidStateException, TimeoutException {
+	public int getFlashPageSize() throws Exception {
 		return mCommand.readValue32(JWAOO_TOY_CMD_FLASH_PAGE_SIZE, -1);
 	}
 
-	public boolean setFlashWriteEnable(boolean enable) throws GattInvalidStateException, TimeoutException {
+	public boolean setFlashWriteEnable(boolean enable) throws Exception {
 		return mCommand.readBool(JWAOO_TOY_CMD_FLASH_WRITE_ENABLE, enable);
 	}
 
-	public boolean eraseFlash() throws GattInvalidStateException, TimeoutException {
+	public boolean eraseFlash() throws Exception {
 		return mCommand.readBool(JWAOO_TOY_CMD_FLASH_ERASE);
 	}
 
-	public boolean seekFlash(int address) throws GattInvalidStateException, TimeoutException {
+	public boolean seekFlash(int address) throws Exception {
 		return mCommand.readBool(JWAOO_TOY_CMD_FLASH_SEEK, address);
 	}
 
-	public boolean startFlashWrite() throws GattInvalidStateException, TimeoutException {
+	public boolean startFlashWrite() throws Exception {
 		return mCommand.readBool(JWAOO_TOY_CMD_FLASH_WRITE_START);
 	}
 
-	synchronized public boolean finishWriteFlash(int length) throws GattInvalidStateException, TimeoutException {
+	synchronized public boolean finishWriteFlash(int length) throws Exception {
 		byte[] command = { JWAOO_TOY_CMD_FLASH_WRITE_FINISH, mFlashCrc, (byte) (length & 0xFF), (byte) ((length >> 8) & 0xFF) };
 
 		for (int i = 0; i < 10; i++) {
@@ -504,7 +586,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		return false;
 	}
 
-	synchronized public boolean writeFlash(byte[] data, CavanProgressListener listener) throws GattInvalidStateException, TimeoutException {
+	synchronized public boolean writeFlash(byte[] data, CavanProgressListener listener) throws Exception {
 		if (mCharFlash == null) {
 			return false;
 		}
@@ -520,7 +602,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		return true;
 	}
 
-	synchronized private boolean writeFlashHeader(int length) throws GattInvalidStateException, TimeoutException {
+	synchronized private boolean writeFlashHeader(int length) throws Exception {
 		length = (length + 7) & (~0x07);
 
 		byte[] header = { 0x70, 0x50, 0x00, 0x00, 0x00, 0x00, (byte) ((length >> 8) & 0xFF), (byte) (length & 0xFF) };
@@ -528,7 +610,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		return writeFlash(header, null);
 	}
 
-	synchronized public boolean doOtaUpgrade(String pathname, CavanProgressListener listener) throws GattInvalidStateException, TimeoutException {
+	synchronized public boolean doOtaUpgrade(String pathname, CavanProgressListener listener) throws Exception {
 		listener.setProgressRange(0, 99);;
 		listener.startProgress();
 
@@ -622,7 +704,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		return false;
 	}
 
-	public boolean setSensorEnable(boolean enable) throws GattInvalidStateException, TimeoutException {
+	public boolean setSensorEnable(boolean enable) throws Exception {
 		mSensorDataSkip = SENSOR_DATA_SKIP;
 
 		return mCommand.readBool(JWAOO_TOY_CMD_SENSOR_ENABLE, enable);
@@ -641,7 +723,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 	}
 
-	public boolean setSensorEnable(boolean enable, int delay) throws GattInvalidStateException, TimeoutException {
+	public boolean setSensorEnable(boolean enable, int delay) throws Exception {
 		mSensorDataSkip = SENSOR_DATA_SKIP;
 		mSensorDelayMillis = delay;
 		mSensorDelayNanos = 0;
@@ -649,12 +731,12 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mCommand.readBool(JWAOO_TOY_CMD_SENSOR_ENABLE, enable, delay);
 	}
 
-	public boolean setMotoMode(int mode, int level) throws GattInvalidStateException, TimeoutException {
+	public boolean setMotoMode(int mode, int level) throws Exception {
 		byte[] command = { JWAOO_TOY_CMD_MOTO_SET_MODE, (byte) mode, (byte) level };
 		return mCommand.readBool(command);
 	}
 
-	public JwaooToyMotoMode getMotoMode() throws GattInvalidStateException, TimeoutException {
+	public JwaooToyMotoMode getMotoMode() throws Exception {
 		JwaooToyResponse response = mCommand.send(JWAOO_TOY_CMD_MOTO_GET_MODE);
 		if (response == null) {
 			return null;
@@ -663,27 +745,27 @@ public class JwaooBleToy extends CavanBleGatt {
 		return response.getMotoMode();
 	}
 
-	public boolean setMotoEventEnable(boolean enable) throws GattInvalidStateException, TimeoutException {
+	public boolean setMotoEventEnable(boolean enable) throws Exception {
 		return mCommand.readBool(JWAOO_TOY_CMD_MOTO_EVENT_ENABLE, enable);
 	}
 
-	public boolean setFactoryModeEnable(boolean enable) throws GattInvalidStateException, TimeoutException {
+	public boolean setFactoryModeEnable(boolean enable) throws Exception {
 		return mCommand.readBool(JWAOO_TOY_CMD_FACTORY_ENABLE, enable);
 	}
 
-	public boolean setBatteryEventEnable(boolean enable) throws GattInvalidStateException, TimeoutException {
+	public boolean setBatteryEventEnable(boolean enable) throws Exception {
 		return mCommand.readBool(JWAOO_TOY_CMD_BATT_EVENT_ENABLE, enable);
 	}
 
-	public boolean doReboot() throws GattInvalidStateException, TimeoutException {
+	public boolean doReboot() throws Exception {
 		return mCommand.readBool(JWAOO_TOY_CMD_REBOOT);
 	}
 
-	public boolean doShutdown() throws GattInvalidStateException, TimeoutException {
+	public boolean doShutdown() throws Exception {
 		return mCommand.readBool(JWAOO_TOY_CMD_SHUTDOWN);
 	}
 
-	public byte[] readBdAddress() throws GattInvalidStateException, TimeoutException {
+	public byte[] readBdAddress() throws Exception {
 		byte[] bytes = mCommand.readData(JWAOO_TOY_CMD_FLASH_READ_BD_ADDR);
 		if (bytes != null && bytes.length == 6) {
 			return bytes;
@@ -692,7 +774,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		return null;
 	}
 
-	public String readBdAddressString() throws GattInvalidStateException, TimeoutException {
+	public String readBdAddressString() throws Exception {
 		byte[] bytes = readBdAddress();
 		if (bytes == null) {
 			return null;
@@ -701,7 +783,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		return CavanString.fromBdAddr(bytes);
 	}
 
-	public boolean writeBdAddress(byte[] bytes) throws GattInvalidStateException, TimeoutException {
+	public boolean writeBdAddress(byte[] bytes) throws Exception {
 		if (!setFlashWriteEnable(true)) {
 			CavanAndroid.eLog("Failed to setFlashWriteEnable true");
 			return false;
@@ -714,7 +796,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		return setFlashWriteEnable(false);
 	}
 
-	public boolean writeBdAddress(String addr) throws GattInvalidStateException, TimeoutException {
+	public boolean writeBdAddress(String addr) throws Exception {
 		byte[] bytes = CavanString.parseBdAddr(addr);
 		if (bytes == null) {
 			return false;
@@ -723,27 +805,27 @@ public class JwaooBleToy extends CavanBleGatt {
 		return writeBdAddress(bytes);
 	}
 
-	public boolean setClickEnable(boolean enable) throws GattInvalidStateException, TimeoutException {
+	public boolean setClickEnable(boolean enable) throws Exception {
 		return mCommand.readBool(JWAOO_TOY_CMD_KEY_CLICK_ENABLE, enable);
 	}
 
-	public boolean setMultiClickEnable(boolean enable) throws GattInvalidStateException, TimeoutException {
+	public boolean setMultiClickEnable(boolean enable) throws Exception {
 		return mCommand.readBool(JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE, enable);
 	}
 
-	public boolean setMultiClickEnable(boolean enable, short delay) throws GattInvalidStateException, TimeoutException {
+	public boolean setMultiClickEnable(boolean enable, short delay) throws Exception {
 		return mCommand.readBool(JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE, enable, delay);
 	}
 
-	public boolean setLongClickEnable(boolean enable) throws GattInvalidStateException, TimeoutException {
+	public boolean setLongClickEnable(boolean enable) throws Exception {
 		return mCommand.readBool(JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE, enable);
 	}
 
-	public boolean setLongClickEnable(boolean enable, short delay) throws GattInvalidStateException, TimeoutException {
+	public boolean setLongClickEnable(boolean enable, short delay) throws Exception {
 		return mCommand.readBool(JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE, enable, delay);
 	}
 
-	public JwaooToyKeySettings readKeySettings() throws GattInvalidStateException, TimeoutException {
+	public JwaooToyKeySettings readKeySettings() throws Exception {
 		JwaooToyResponse response = mCommand.send(JWAOO_TOY_CMD_KEY_SETTINGS);
 		if (response == null) {
 			return null;
@@ -752,15 +834,15 @@ public class JwaooBleToy extends CavanBleGatt {
 		return response.getKeySettings();
 	}
 
-	public boolean writeKeySettings(JwaooToyKeySettings settings) throws GattInvalidStateException, TimeoutException {
+	public boolean writeKeySettings(JwaooToyKeySettings settings) throws Exception {
 		return mCommand.readBool(settings.buildCommand());
 	}
 
-	public boolean readSpeedTable(int index, short[] table, int offset) throws GattInvalidStateException, TimeoutException {
+	public boolean readSpeedTable(int index, short[] table, int offset) throws Exception {
 		return mCommand.readArray16(new byte[] { JWAOO_TOY_CMD_MOTO_SPEED_TABLE, (byte) index }, table, offset, 9);
 	}
 
-	public short[] readSpeedTable() throws GattInvalidStateException, TimeoutException {
+	public short[] readSpeedTable() throws Exception {
 		short[] table = new short[18];
 
 		if (readSpeedTable(1, table, 0) && readSpeedTable(10, table, 9)) {
@@ -770,7 +852,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		return null;
 	}
 
-	public boolean writeSpeedTable(int index, short[] array, int offset) throws GattInvalidStateException, TimeoutException {
+	public boolean writeSpeedTable(int index, short[] array, int offset) throws Exception {
 		CavanByteCache cache = new CavanByteCache(20);
 		cache.writeValue8(JWAOO_TOY_CMD_MOTO_SPEED_TABLE);
 		cache.writeValue8((byte) index);
@@ -782,7 +864,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mCommand.readBool(cache.getBytes());
 	}
 
-	public boolean writeSpeedTable(short[] table) throws GattInvalidStateException, TimeoutException {
+	public boolean writeSpeedTable(short[] table) throws Exception {
 		return writeSpeedTable(1, table, 0) && writeSpeedTable(10, table, 9);
 	}
 
@@ -798,27 +880,27 @@ public class JwaooBleToy extends CavanBleGatt {
 		return new JwaooToyFdc1004();
 	}
 
-	public boolean getGpioValue(int port, int pin) throws GattInvalidStateException, TimeoutException {
+	public boolean getGpioValue(int port, int pin) throws Exception {
 		byte[] command = { JWAOO_TOY_CMD_GPIO_GET, (byte) port, (byte) pin };
 		return mCommand.readValue8(command, (byte) -1) > 0;
 	}
 
-	public boolean setGpioValue(int port, int pin, boolean value) throws GattInvalidStateException, TimeoutException {
+	public boolean setGpioValue(int port, int pin, boolean value) throws Exception {
 		byte[] command = { JWAOO_TOY_CMD_GPIO_GET, (byte) port, (byte) pin, CavanJava.getBoolValueByte(value) };
 		return mCommand.readBool(command);
 	}
 
-	public boolean doConfigGpio(int port, int pin, int mode, int function, boolean high) throws GattInvalidStateException, TimeoutException {
+	public boolean doConfigGpio(int port, int pin, int mode, int function, boolean high) throws Exception {
 		byte[] command = { JWAOO_TOY_CMD_GPIO_CFG, (byte) port, (byte) pin, (byte) mode, (byte) function, CavanJava.getBoolValueByte(high) };
 		return mCommand.readBool(command);
 	}
 
-	public boolean setLedEnable(int index, boolean enable) throws GattInvalidStateException, TimeoutException {
+	public boolean setLedEnable(int index, boolean enable) throws Exception {
 		byte[] command = { JWAOO_TOY_CMD_LED_ENABLE, (byte) index, CavanJava.getBoolValueByte(enable) };
 		return mCommand.readBool(command);
 	}
 
-	public JwaooToyTestResult readTestResult() throws GattInvalidStateException, TimeoutException {
+	public JwaooToyTestResult readTestResult() throws Exception {
 		JwaooToyResponse response = mCommand.send(JWAOO_TOY_CMD_READ_TEST_RESULT);
 		if (response == null) {
 			return null;
@@ -832,12 +914,12 @@ public class JwaooBleToy extends CavanBleGatt {
 		return new JwaooToyTestResult();
 	}
 
-	public boolean writeTestResult(JwaooToyTestResult result) throws GattInvalidStateException, TimeoutException {
+	public boolean writeTestResult(JwaooToyTestResult result) throws Exception {
 		mCommand.readBool(result.buildCommand());
 		return true;
 	}
 
-	public JwaooToyAppSettings readAppSettings() throws GattInvalidStateException, TimeoutException {
+	public JwaooToyAppSettings readAppSettings() throws Exception {
 		JwaooToyResponse response = mCommand.send(JWAOO_TOY_CMD_APP_SETTINGS);
 		if (response == null) {
 			return null;
@@ -846,8 +928,24 @@ public class JwaooBleToy extends CavanBleGatt {
 		return response.getAppSettings();
 	}
 
-	public boolean writeAppSettings(JwaooToyAppSettings settings) throws GattInvalidStateException, TimeoutException {
+	public boolean writeAppSettings(JwaooToyAppSettings settings) throws Exception {
 		return mCommand.readBool(settings.buildCommand());
+	}
+
+	public int getVersion() throws Exception {
+		if (mVersion == 0) {
+			mVersion = readVersion();
+		}
+
+		return mVersion;
+	}
+
+	public Date getBuildDate() throws Exception {
+		if (mBuildDate == null) {
+			mBuildDate = readBuildDate();
+		}
+
+		return mBuildDate;
 	}
 
 	public int getDeviveId() {
@@ -862,19 +960,19 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mSensor.getCapacityValueCount();
 	}
 
-	public boolean getKeyLockState() throws GattInvalidStateException, TimeoutException {
+	public boolean getKeyLockState() throws Exception {
 		return mCommand.readValue8(JWAOO_TOY_CMD_KEY_LOCK, (byte) 0) > 0;
 	}
 
-	public boolean setKeyLock(boolean enable) throws GattInvalidStateException, TimeoutException {
+	public boolean setKeyLock(boolean enable) throws Exception {
 		return mCommand.readBool(JWAOO_TOY_CMD_KEY_LOCK, enable);
 	}
 
-	public boolean setKeyReportEnable(int mask) throws GattInvalidStateException, TimeoutException {
+	public boolean setKeyReportEnable(int mask) throws Exception {
 		return mCommand.readBool(JWAOO_TOY_CMD_KEY_REPORT_ENABLE, (byte) mask);
 	}
 
-	public boolean writeAppData(byte[] bytes) throws GattInvalidStateException, TimeoutException {
+	public boolean writeAppData(byte[] bytes) throws Exception {
 		byte[] command = new byte[bytes.length + 1];
 
 		command[0] = JWAOO_TOY_CMD_APP_DATA;
@@ -883,50 +981,27 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mCommand.readBool(command);
 	}
 
-	public byte[] readAppData() throws GattInvalidStateException, TimeoutException {
+	public byte[] readAppData() throws Exception {
 		return mCommand.readData(JWAOO_TOY_CMD_APP_DATA);
 	}
 
-	public boolean setSuspendDelay(int delay) throws GattInvalidStateException, TimeoutException {
+	public boolean setSuspendDelay(int delay) throws Exception {
 		return mCommand.readBool(JWAOO_TOY_CMD_SUSPEND_DELAY, (short) delay);
 	}
 
-	public int getSuspendDelay() throws GattInvalidStateException, TimeoutException {
+	public int getSuspendDelay() throws Exception {
 		return mCommand.readValue16(JWAOO_TOY_CMD_SUSPEND_DELAY, (short) -1);
 	}
 
-	public boolean setShutdownVoltage(int voltage) throws GattInvalidStateException, TimeoutException {
+	public boolean setShutdownVoltage(int voltage) throws Exception {
 		return mCommand.readBool(JWAOO_TOY_CMD_BATT_SHUTDOWN_VOLTAGE, (short) voltage);
 	}
 
-	public int getShutdownVoltage() throws GattInvalidStateException, TimeoutException {
+	public int getShutdownVoltage() throws Exception {
 		return mCommand.readValue16(JWAOO_TOY_CMD_BATT_SHUTDOWN_VOLTAGE, (short) -1);
 	}
 
-	public static String getBatteryStateString(int state) {
-		switch (state) {
-		case BATTERY_STATE_NORMAL:
-			return "Discharging";
-
-		case BATTERY_STATE_LOW:
-			return "Low";
-
-		case BATTERY_STATE_CHARGING:
-			return "Charging";
-
-		case BATTERY_STATE_FULL:
-			return "Full";
-
-		default:
-			return "Unknown";
-		}
-	}
-
-	public double getBatteryCapacityByVoltage(double voltage) {
-		return mBatteryCapacityTable.getCapacity(voltage);
-	}
-
-	public JwaooToyBatteryInfo getBatteryInfo() throws GattInvalidStateException, TimeoutException {
+	public JwaooToyBatteryInfo getBatteryInfo() throws Exception {
 		JwaooToyResponse response = mCommand.send(JWAOO_TOY_CMD_BATT_INFO);
 		if (response == null) {
 			return null;
@@ -937,6 +1012,9 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	@Override
 	protected boolean doInitialize() {
+		mVersion = 0;
+		mBuildDate = null;
+
 		mCharCommand = openChar(UUID_COMMAND);
 		if (mCharCommand == null) {
 			CavanAndroid.eLog("uuid not found: " + UUID_COMMAND);
@@ -1020,22 +1098,21 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	// ================================================================================
 
-	public static class JwaooToyBatteryInfo {
+	public class JwaooToyBatteryInfo {
 
 		private int mState;
-		private int mCapacity;
 		private double mVoltage;
 
-		public static JwaooToyBatteryInfo getInstance(byte[] bytes, int start) {
-			return new JwaooToyBatteryInfo(bytes, start);
-		}
-
-		private JwaooToyBatteryInfo(byte[] bytes, int start) {
+		private JwaooToyBatteryInfo(byte[] bytes, int offset) {
 			CavanByteCache cache = new CavanByteCache(bytes);
-			cache.setOffset(start);
+			cache.setOffset(offset);
 
 			mState = cache.readValue8();
-			mCapacity = cache.readValue8();
+
+			if (cache.getLength() + 2 < bytes.length) {
+				cache.seek(1);
+			}
+
 			mVoltage = ((double) cache.readValue16()) / 1000;
 		}
 
@@ -1043,23 +1120,45 @@ public class JwaooBleToy extends CavanBleGatt {
 			return mState;
 		}
 
-		public int getCapacity() {
-			return mCapacity;
-		}
-
 		public double getVoltage() {
 			return mVoltage;
+		}
+
+		public int getLevel() {
+			int level = mBatteryCapacityTable.getCapacityInt(mVoltage);
+			if (level > 99 && mState == BATTERY_STATE_CHARGING) {
+				return 99;
+			}
+
+			return level;
+		}
+
+		public String getStateString() {
+			switch (mState) {
+			case BATTERY_STATE_NORMAL:
+				return "Discharging";
+
+			case BATTERY_STATE_LOW:
+				return "Low";
+
+			case BATTERY_STATE_CHARGING:
+				return "Charging";
+
+			case BATTERY_STATE_FULL:
+				return "Full";
+
+			default:
+				return "Unknown";
+			}
 		}
 
 		@Override
 		public String toString() {
 			StringBuilder builder = new StringBuilder();
 
-			builder.append('[');
-			builder.append("state:").append(getBatteryStateString(mState)).append(", ");
-			builder.append("capacity:").append(mCapacity).append(", ");
 			builder.append("voltage:").append(mVoltage);
-			builder.append(']');
+			builder.append(", level:").append(getLevel());
+			builder.append(", state:").append(getStateString());
 
 			return builder.toString();
 		}
@@ -1076,6 +1175,8 @@ public class JwaooBleToy extends CavanBleGatt {
 		private int mMotoRandMax;
 		private int mMotoRandDelay;
 		private int mMotoSpeedMin;
+		private int mVoltageLow;
+		private int mVoltageLowMax;
 
 		private static JwaooToyAppSettings getInstance(byte[] response) {
 			return new JwaooToyAppSettings(response);
@@ -1092,6 +1193,8 @@ public class JwaooBleToy extends CavanBleGatt {
 			mMotoRandDelay = cache.readValue8();
 			mMotoRandMax = cache.readValue8();
 			mMotoSpeedMin = cache.readValue8();
+			mVoltageLow = cache.readValue16();
+			mVoltageLowMax = cache.readValue16();
 		}
 
 		public byte[] buildCommand() {
@@ -1104,6 +1207,8 @@ public class JwaooBleToy extends CavanBleGatt {
 			cache.writeValue8((byte) mMotoRandDelay);
 			cache.writeValue8((byte) mMotoRandMax);
 			cache.writeValue8((byte) mMotoSpeedMin);
+			cache.writeValue16((short) mVoltageLow);
+			cache.writeValue16((short) mVoltageLowMax);
 			return cache.getBytes();
 		}
 
@@ -1139,7 +1244,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			mBtLedCloseTime = time;
 		}
 
-		public boolean commit(JwaooBleToy ble) throws GattInvalidStateException, TimeoutException {
+		public boolean commit(JwaooBleToy ble) throws Exception {
 			return ble.writeAppSettings(this);
 		}
 
@@ -1147,26 +1252,21 @@ public class JwaooBleToy extends CavanBleGatt {
 		public String toString() {
 			StringBuilder builder = new StringBuilder();
 
-			builder.append("suspend_delay: ");
-			builder.append(mSuspendDelay);
-			builder.append(", shutdown_voltage: ");
-			builder.append(mShutdownVoltage);
-			builder.append(", bt_led_open_time: ");
-			builder.append(mBtLedOpenTime);
-			builder.append(", bt_led_close_time: ");
-			builder.append(mBtLedCloseTime);
-			builder.append(", moto_rand_delay: ");
-			builder.append(mMotoRandDelay);
-			builder.append(", moto_rand_max: ");
-			builder.append(mMotoRandMax);
-			builder.append(", moto_speed_min: ");
-			builder.append(mMotoSpeedMin);
+			builder.append("suspend_delay:").append(mSuspendDelay);
+			builder.append(", shutdown_voltage:").append(mShutdownVoltage);
+			builder.append(", bt_led_open_time:").append(mBtLedOpenTime);
+			builder.append(", bt_led_close_time:").append(mBtLedCloseTime);
+			builder.append(", moto_rand_delay:").append(mMotoRandDelay);
+			builder.append(", moto_rand_max:").append(mMotoRandMax);
+			builder.append(", moto_speed_min:").append(mMotoSpeedMin);
+			builder.append(", voltage_low:").append(mVoltageLow);
+			builder.append(", voltage_low_max:").append(mVoltageLowMax);
 
 			return builder.toString();
 		}
 	}
 
-	public static class JwaooToyKeySettings {
+	public class JwaooToyKeySettings {
 
 		public static final int COMMAND_LENGTH = 10;
 
@@ -1176,10 +1276,6 @@ public class JwaooBleToy extends CavanBleGatt {
 		private boolean mLongClickEnable;
 		private int mLongClickDelay;
 		private int mLedBlinkDelay;
-
-		private static JwaooToyKeySettings getInstance(byte[] response) {
-			return new JwaooToyKeySettings(response);
-		}
 
 		private JwaooToyKeySettings(byte[] response) {
 			CavanByteCache cache = new CavanByteCache(response);
@@ -1257,7 +1353,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			mLongClickDelay = delay;
 		}
 
-		public boolean commit(JwaooBleToy ble) throws GattInvalidStateException, TimeoutException {
+		public boolean commit(JwaooBleToy ble) throws Exception {
 			return ble.writeKeySettings(this);
 		}
 
@@ -1273,18 +1369,12 @@ public class JwaooBleToy extends CavanBleGatt {
 		public String toString() {
 			StringBuilder builder = new StringBuilder();
 
-			builder.append("click_enable: ");
-			builder.append(mClickEnable);
-			builder.append(", multi_click_enable: ");
-			builder.append(mMultiClickEnable);
-			builder.append(", multi_click_delay: ");
-			builder.append(mMultiClickDelay);
-			builder.append(", long_click_enable: ");
-			builder.append(mLongClickEnable);
-			builder.append(", long_click_delay: ");
-			builder.append(mLongClickDelay);
-			builder.append(", blink_delay: ");
-			builder.append(mLedBlinkDelay);
+			builder.append("click_enable:").append(mClickEnable);
+			builder.append(", multi_click_enable:").append(mMultiClickEnable);
+			builder.append(", multi_click_delay:").append(mMultiClickDelay);
+			builder.append(", long_click_enable:").append(mLongClickEnable);
+			builder.append(", long_click_delay:").append(mLongClickDelay);
+			builder.append(", blink_delay:").append(mLedBlinkDelay);
 
 			return builder.toString();
 		}
@@ -1292,7 +1382,7 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	// ================================================================================
 
-	public static class JwaooToyMotoMode {
+	public class JwaooToyMotoMode {
 
 		private int mMode;
 		private int mLevel;
@@ -1324,7 +1414,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 	}
 
-	public static class JwaooToyTestResult {
+	public class JwaooToyTestResult {
 
 		private int mTestValid;
 		private int mTestResult;
@@ -1384,7 +1474,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 	}
 
-	public static class JwaooToyResponse {
+	public class JwaooToyResponse {
 
 		private byte[] mBytes;
 
@@ -1420,6 +1510,14 @@ public class JwaooBleToy extends CavanBleGatt {
 			return mBytes[2];
 		}
 
+		public short getValueU8(short defValue) {
+			if (getType() != JWAOO_TOY_RSP_U8 || length() != 3) {
+				return defValue;
+			}
+
+			return (short) (mBytes[2] & 0xFF);
+		}
+
 		public short getValue16(short defValue) {
 			if (getType() != JWAOO_TOY_RSP_U16 || length() != 4) {
 				return defValue;
@@ -1428,12 +1526,28 @@ public class JwaooBleToy extends CavanBleGatt {
 			return CavanJava.buildValue16(mBytes, 2);
 		}
 
+		public int getValueU16(int defValue) {
+			if (getType() != JWAOO_TOY_RSP_U16 || length() != 4) {
+				return defValue;
+			}
+
+			return CavanJava.buildValueU16(mBytes, 2);
+		}
+
 		public int getValue32(int defValue) {
 			if (getType() != JWAOO_TOY_RSP_U32 || length() != 6) {
 				return defValue;
 			}
 
 			return CavanJava.buildValue32(mBytes, 2);
+		}
+
+		public long getValueU32(long defValue) {
+			if (getType() != JWAOO_TOY_RSP_U32 || length() != 6) {
+				return defValue;
+			}
+
+			return CavanJava.buildValueU32(mBytes, 2);
 		}
 
 		public boolean getArray16(short[] array, int offset, int count) {
@@ -1493,7 +1607,7 @@ public class JwaooBleToy extends CavanBleGatt {
 				return null;
 			}
 
-			return JwaooToyKeySettings.getInstance(mBytes);
+			return new JwaooToyKeySettings(mBytes);
 		}
 
 		public JwaooToyBatteryInfo getBatteryInfo() {
@@ -1501,59 +1615,7 @@ public class JwaooBleToy extends CavanBleGatt {
 				return null;
 			}
 
-			return JwaooToyBatteryInfo.getInstance(mBytes, 2);
-		}
-
-		public static boolean getBool(JwaooToyResponse response) {
-			return response != null && response.getBool();
-		}
-
-		public static byte getValue8(JwaooToyResponse response, byte defValue) {
-			if (response == null) {
-				return defValue;
-			}
-
-			return response.getValue8(defValue);
-		}
-
-		public static short getValue16(JwaooToyResponse response, short defValue) {
-			if (response == null) {
-				return defValue;
-			}
-
-			return response.getValue16(defValue);
-		}
-
-		public static int getValue32(JwaooToyResponse response, int defValue) {
-			if (response == null) {
-				return defValue;
-			}
-
-			return response.getValue32(defValue);
-		}
-
-		public static String getText(JwaooToyResponse response) {
-			if (response == null) {
-				return null;
-			}
-
-			return response.getText();
-		}
-
-		public static byte[] getData(JwaooToyResponse response) {
-			if (response == null) {
-				return null;
-			}
-
-			return response.getData();
-		}
-
-		public static boolean getArray16(JwaooToyResponse response, short[] array, int offset, int count) {
-			if (response == null) {
-				return false;
-			}
-
-			return response.getArray16(array, offset, count);
+			return new JwaooToyBatteryInfo(mBytes, 2);
 		}
 	}
 
@@ -1561,7 +1623,7 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public class JwaooToyCommand {
 
-		synchronized public JwaooToyResponse send(byte[] command) throws GattInvalidStateException, TimeoutException {
+		synchronized public JwaooToyResponse send(byte[] command) throws Exception {
 			for (int i = 0; i < 10; i++) {
 				if (mCharCommand == null) {
 					break;
@@ -1589,7 +1651,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			return null;
 		}
 
-		public JwaooToyResponse send(byte type) throws GattInvalidStateException, TimeoutException {
+		public JwaooToyResponse send(byte type) throws Exception {
 			return send(new byte[] { type });
 		}
 
@@ -1602,20 +1664,20 @@ public class JwaooBleToy extends CavanBleGatt {
 			return command;
 		}
 
-		public JwaooToyResponse send(byte type, byte[] data) throws GattInvalidStateException, TimeoutException {
+		public JwaooToyResponse send(byte type, byte[] data) throws Exception {
 			return send(buildCommand(type, data));
 		}
 
-		public JwaooToyResponse send(byte type, String text) throws GattInvalidStateException, TimeoutException {
+		public JwaooToyResponse send(byte type, String text) throws Exception {
 			return send(type, text.getBytes());
 		}
 
-		public JwaooToyResponse send(byte type, byte value) throws GattInvalidStateException, TimeoutException {
+		public JwaooToyResponse send(byte type, byte value) throws Exception {
 			byte[] command = { type, value };
 			return send(command);
 		}
 
-		public JwaooToyResponse send(byte type, short value) throws GattInvalidStateException, TimeoutException {
+		public JwaooToyResponse send(byte type, short value) throws Exception {
 			CavanByteCache cache = new CavanByteCache(3);
 
 			cache.writeValue8(type);
@@ -1624,7 +1686,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			return send(cache.getBytes());
 		}
 
-		public JwaooToyResponse send(byte type, int value) throws GattInvalidStateException, TimeoutException {
+		public JwaooToyResponse send(byte type, int value) throws Exception {
 			CavanByteCache cache = new CavanByteCache(5);
 
 			cache.writeValue8(type);
@@ -1633,16 +1695,16 @@ public class JwaooBleToy extends CavanBleGatt {
 			return send(cache.getBytes());
 		}
 
-		public JwaooToyResponse send(byte type, boolean value) throws GattInvalidStateException, TimeoutException {
+		public JwaooToyResponse send(byte type, boolean value) throws Exception {
 			return send(type, CavanJava.getBoolValueByte(value));
 		}
 
-		public JwaooToyResponse send(byte type, boolean enable, byte value) throws GattInvalidStateException, TimeoutException {
+		public JwaooToyResponse send(byte type, boolean enable, byte value) throws Exception {
 			byte[] command = { type, CavanJava.getBoolValueByte(enable) , value };
 			return send(command);
 		}
 
-		public JwaooToyResponse send(byte type, boolean enable, short value) throws GattInvalidStateException, TimeoutException {
+		public JwaooToyResponse send(byte type, boolean enable, short value) throws Exception {
 			CavanByteCache cache = new CavanByteCache(4);
 
 			cache.writeValue8(type);
@@ -1652,7 +1714,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			return send(cache.getBytes());
 		}
 
-		public JwaooToyResponse send(byte type, boolean enable, int value) throws GattInvalidStateException, TimeoutException {
+		public JwaooToyResponse send(byte type, boolean enable, int value) throws Exception {
 			CavanByteCache cache = new CavanByteCache(6);
 
 			cache.writeValue8(type);
@@ -1662,80 +1724,80 @@ public class JwaooBleToy extends CavanBleGatt {
 			return send(cache.getBytes());
 		}
 
-		public boolean readBool(byte[] command) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getBool(send(command));
+		public boolean readBool(byte[] command) throws Exception {
+			return getBool(send(command));
 		}
 
-		public boolean readBool(byte type) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getBool(send(type));
+		public boolean readBool(byte type) throws Exception {
+			return getBool(send(type));
 		}
 
-		public boolean readBool(byte type, byte value) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getBool(send(type, value));
+		public boolean readBool(byte type, byte value) throws Exception {
+			return getBool(send(type, value));
 		}
 
-		public boolean readBool(byte type, short value) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getBool(send(type, value));
+		public boolean readBool(byte type, short value) throws Exception {
+			return getBool(send(type, value));
 		}
 
-		public boolean readBool(byte type, int value) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getBool(send(type, value));
+		public boolean readBool(byte type, int value) throws Exception {
+			return getBool(send(type, value));
 		}
 
-		public boolean readBool(byte type, String text) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getBool(send(type, text));
+		public boolean readBool(byte type, String text) throws Exception {
+			return getBool(send(type, text));
 		}
 
-		public boolean readBool(byte type, byte[] data) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getBool(send(type, data));
+		public boolean readBool(byte type, byte[] data) throws Exception {
+			return getBool(send(type, data));
 		}
 
-		public boolean readBool(byte type, boolean enable) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getBool(send(type, enable));
+		public boolean readBool(byte type, boolean enable) throws Exception {
+			return getBool(send(type, enable));
 		}
 
-		public boolean readBool(byte type, boolean enable, byte value) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getBool(send(type, enable, value));
+		public boolean readBool(byte type, boolean enable, byte value) throws Exception {
+			return getBool(send(type, enable, value));
 		}
 
-		public boolean readBool(byte type, boolean enable, short value) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getBool(send(type, enable, value));
+		public boolean readBool(byte type, boolean enable, short value) throws Exception {
+			return getBool(send(type, enable, value));
 		}
 
-		public boolean readBool(byte type, boolean enable, int value) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getBool(send(type, enable, value));
+		public boolean readBool(byte type, boolean enable, int value) throws Exception {
+			return getBool(send(type, enable, value));
 		}
 
-		public byte readValue8(byte[] command, byte defValue) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getValue8(send(command), defValue);
+		public byte readValue8(byte[] command, byte defValue) throws Exception {
+			return getValue8(send(command), defValue);
 		}
 
-		public byte readValue8(byte type, byte defValue) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getValue8(send(type), defValue);
+		public byte readValue8(byte type, byte defValue) throws Exception {
+			return getValue8(send(type), defValue);
 		}
 
-		public short readValue16(byte type, short defValue) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getValue16(send(type), defValue);
+		public short readValue16(byte type, short defValue) throws Exception {
+			return getValue16(send(type), defValue);
 		}
 
-		public int readValue32(byte type, int defValue) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getValue32(send(type), defValue);
+		public int readValue32(byte type, int defValue) throws Exception {
+			return getValue32(send(type), defValue);
 		}
 
-		public String readText(byte type) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getText(send(type));
+		public String readText(byte type) throws Exception {
+			return getText(send(type));
 		}
 
-		public byte[] readData(byte[] command) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getData(send(command));
+		public byte[] readData(byte[] command) throws Exception {
+			return getData(send(command));
 		}
 
-		public byte[] readData(byte type) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getData(send(type));
+		public byte[] readData(byte type) throws Exception {
+			return getData(send(type));
 		}
 
-		public boolean readArray16(byte[] command, short[] array, int offset, int count) throws GattInvalidStateException, TimeoutException {
-			return JwaooToyResponse.getArray16(send(command), array, offset, count);
+		public boolean readArray16(byte[] command, short[] array, int offset, int count) throws Exception {
+			return getArray16(send(command), array, offset, count);
 		}
 	}
 

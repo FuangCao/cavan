@@ -234,16 +234,32 @@ public class CavanJava {
 		return (short) ((bytes[offset] & 0xFF) | (bytes[offset + 1] & 0xFF) << 8);
 	}
 
+	public static int buildValueU16(byte[] bytes, int offset) {
+		return buildValue16(bytes, offset) & 0xFFFF;
+	}
+
 	public static int buildValue32(byte[] bytes, int offset) {
 		return (buildValue16(bytes, offset) & 0xFFFF) | (buildValue16(bytes, offset + 2) & 0xFFFF) << 16;
+	}
+
+	public static long buildValueU32(byte[] bytes, int offset) {
+		return buildValue32(bytes, offset) & 0xFFFFFFFF;
 	}
 
 	public static short buildValueBe16(byte[] bytes, int offset) {
 		return (short) ((bytes[offset + 1] & 0xFF) | (bytes[offset] & 0xFF) << 8);
 	}
 
+	public static int buildValueBeU16(byte[] bytes, int offset) {
+		return buildValueBe16(bytes, offset) & 0xFFFF;
+	}
+
 	public static int buildValueBe32(byte[] bytes, int offset) {
 		return (buildValue16(bytes, offset + 2) & 0xFFFF) | (buildValue16(bytes, offset) & 0xFFFF) << 16;
+	}
+
+	public static long buildValueBeU32(byte[] bytes, int offset) {
+		return buildValueBe32(bytes, offset) & 0xFFFFFFFF;
 	}
 
 	public static byte[] getValueBytes(byte value) {

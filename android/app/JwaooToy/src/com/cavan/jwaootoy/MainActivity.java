@@ -2,7 +2,6 @@ package com.cavan.jwaootoy;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
@@ -23,12 +22,12 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
-import com.cavan.android.CavanBleGatt.GattInvalidStateException;
 import com.cavan.java.CavanProgressListener;
 import com.cavan.java.CavanString;
 import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
 import com.jwaoo.android.JwaooBleToy.JwaooToyAppSettings;
+import com.jwaoo.android.JwaooBleToy.JwaooToyBatteryInfo;
 import com.jwaoo.android.JwaooBleToy.JwaooToyKeySettings;
 import com.jwaoo.android.JwaooToySensor;
 
@@ -72,6 +71,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private Spinner mSpinnerMotoMode;
 	private Spinner mSpinnerMotoLevel;
 	private TextView mTextViewBatteryInfo;
+	private TextView mTextViewHardwareInfo;
 
 	private Button mButtonSuspendOvertime;
 	private EditText mEditTextSuspendOvertime;
@@ -114,7 +114,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 				break;
 
 			case EVENT_BATTERY_INFO:
-				mTextViewBatteryInfo.setText((CharSequence) msg.obj);
+				JwaooToyBatteryInfo info = (JwaooToyBatteryInfo) msg.obj;
+				mTextViewBatteryInfo.setText(info.toString());
 				break;
 
 			case EVENT_MOTO_RAND:
@@ -158,9 +159,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	@Override
 	protected void onCreateBle(Bundle savedInstanceState) {
 		setContentView(R.layout.activity_main);
-
-		mButtonSend = (Button) findViewById(R.id.buttonSend);
-		mButtonSend.setOnClickListener(this);
 
 		mButtonUpgrade = (Button) findViewById(R.id.buttonUpgrade);
 		mButtonUpgrade.setOnClickListener(this);
@@ -210,6 +208,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		mProgressBar = (ProgressBar) findViewById(R.id.progressBarUpgrade);
 		mEditTextBdAddr = (EditText) findViewById(R.id.editTextBdAddr);
 		mTextViewBatteryInfo = (TextView) findViewById(R.id.textViewBatteryInfo);
+		mTextViewHardwareInfo = (TextView) findViewById(R.id.textViewHardwareInfo);
 
 		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.moto_modes, android.R.layout.simple_spinner_item);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -271,7 +270,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		mHandler.obtainMessage(EVENT_PROGRESS_UPDATED, progress, 0).sendToTarget();
 	}
 
-	private boolean setMotoMode() throws GattInvalidStateException, TimeoutException {
+	private boolean setMotoMode() throws Exception {
 		if (mBleToy != null && mBleToy.isConnected()) {
 			if (mBleToy.setMotoMode(mMotoMode, mMotoLevel)) {
 				CavanAndroid.dLog("Moto: mode = " + mMotoMode + ", level = " + mMotoLevel);
@@ -288,16 +287,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
-		case R.id.buttonSend:
-			try {
-				CavanAndroid.dLog("identify = " + mBleToy.doIdentify());
-				CavanAndroid.dLog("buildDate = " + mBleToy.readBuildDate());
-				CavanAndroid.dLog("version = " + Integer.toHexString(mBleToy.readVersion()));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			break;
-
 		case R.id.buttonUpgrade:
 			if (mOtaBusy) {
 				break;
@@ -411,6 +400,11 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	@Override
 	public boolean onInitialize() {
 		try {
+			StringBuilder builder = new StringBuilder();
+			builder.append(Integer.toHexString(mBleToy.getVersion()));
+			builder.append(" - ").append(mBleToy.getBuildDate());
+			mTextViewHardwareInfo.setText(builder);
+
 			if (!mBleToy.setClickEnable(mCheckBoxClick.isChecked())) {
 				CavanAndroid.dLog("Failed to setClickEnable");
 			}
@@ -553,13 +547,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	}
 
 	@Override
-	public void onBatteryStateChanged(int state, int level, double voltage) {
-		CavanAndroid.dLog("capacity = " + mBleToy.getBatteryCapacityByVoltage(voltage));
-
-		StringBuilder builder = new StringBuilder();
-		builder.append("level = ").append(level);
-		builder.append(", voltage = ").append(voltage);
-		builder.append(", state = ").append(JwaooBleToy.getBatteryStateString(state));
-		mHandler.obtainMessage(EVENT_BATTERY_INFO, builder.toString()).sendToTarget();
+	public void onBatteryStateChanged(JwaooToyBatteryInfo info) {
+		super.onBatteryStateChanged(info);
+		mHandler.obtainMessage(EVENT_BATTERY_INFO, info).sendToTarget();
 	}
 }

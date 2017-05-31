@@ -30,6 +30,7 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanMacAddress;
 import com.cavan.resource.JwaooToyActivity;
 import com.jwaoo.android.JwaooBleToy;
+import com.jwaoo.android.JwaooBleToy.JwaooToyBatteryInfo;
 import com.jwaoo.android.JwaooToySensor;
 
 public class MainActivity extends JwaooToyActivity implements OnClickListener {
@@ -314,8 +315,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	}
 
 	@Override
-	public void onBatteryStateChanged(int state, int level, double voltage) {
-		mHandler.obtainMessage(MSG_BATTERY_STATE, state, level, voltage).sendToTarget();
+	public void onBatteryStateChanged(JwaooToyBatteryInfo info) {
+		mHandler.obtainMessage(MSG_BATTERY_STATE, info).sendToTarget();
 	}
 
 	public class MyGridViewAdapter extends BaseAdapter {
@@ -825,8 +826,9 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		@Override
 		protected void handleMessage(Message msg) {
 			if (msg.what == MSG_BATTERY_STATE) {
-				int state = msg.arg1;
-				double voltage = (Double) msg.obj;
+				JwaooToyBatteryInfo info = (JwaooToyBatteryInfo) msg.obj;
+				double voltage = info.getVoltage();
+				int state = info.getState();
 
 				if (state >= 0 && state < mBatteryStates.length) {
 					mTextViewBatteryState.setText(mBatteryStates[state]);
