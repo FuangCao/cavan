@@ -348,7 +348,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		if (event.length > 0) {
 			switch (event[0]) {
 			case JWAOO_TOY_EVT_BATT_INFO:
-				if (event.length >= 4) {
+				if (event.length == 5) {
 					onBatteryStateChanged(new JwaooToyBatteryInfo(event, 1));
 				}
 				break;
@@ -1109,6 +1109,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	public class JwaooToyBatteryInfo {
 
 		private int mState;
+		private int mLevel;
 		private double mVoltage;
 
 		private JwaooToyBatteryInfo(byte[] bytes, int offset) {
@@ -1116,11 +1117,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			cache.setOffset(offset);
 
 			mState = cache.readValue8();
-
-			if (cache.getLength() + 2 < bytes.length) {
-				cache.seek(1);
-			}
-
+			mLevel = cache.readValue8();
 			mVoltage = ((double) cache.readValue16()) / 1000;
 		}
 
@@ -1133,6 +1130,10 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		public int getLevel() {
+			return mLevel;
+		}
+
+		public int getLevelByVoltage() {
 			int level = mBatteryCapacityTable.getCapacityInt(mVoltage);
 			if (level > 99 && mState == BATTERY_STATE_CHARGING) {
 				return 99;
@@ -1183,8 +1184,8 @@ public class JwaooBleToy extends CavanBleGatt {
 		private int mMotoRandMax;
 		private int mMotoRandDelay;
 		private int mMotoSpeedMin;
-		private int mVoltageLow;
-		private int mVoltageLowMax;
+		private int mBattLevelLow;
+		private int mBattLevelNormal;
 
 		private static JwaooToyAppSettings getInstance(byte[] response) {
 			return new JwaooToyAppSettings(response);
@@ -1201,8 +1202,8 @@ public class JwaooBleToy extends CavanBleGatt {
 			mMotoRandDelay = cache.readValue8();
 			mMotoRandMax = cache.readValue8();
 			mMotoSpeedMin = cache.readValue8();
-			mVoltageLow = cache.readValue16();
-			mVoltageLowMax = cache.readValue16();
+			mBattLevelLow = cache.readValue8();
+			mBattLevelNormal = cache.readValue8();
 		}
 
 		public byte[] buildCommand() {
@@ -1215,8 +1216,8 @@ public class JwaooBleToy extends CavanBleGatt {
 			cache.writeValue8((byte) mMotoRandDelay);
 			cache.writeValue8((byte) mMotoRandMax);
 			cache.writeValue8((byte) mMotoSpeedMin);
-			cache.writeValue16((short) mVoltageLow);
-			cache.writeValue16((short) mVoltageLowMax);
+			cache.writeValue8((byte) mBattLevelLow);
+			cache.writeValue8((byte) mBattLevelNormal);
 			return cache.getBytes();
 		}
 
@@ -1252,6 +1253,14 @@ public class JwaooBleToy extends CavanBleGatt {
 			mBtLedCloseTime = time;
 		}
 
+		public int getBattLevelLow() {
+			return mBattLevelLow;
+		}
+
+		public int getBattLevelNormal() {
+			return mBattLevelNormal;
+		}
+
 		public boolean commit(JwaooBleToy ble) throws Exception {
 			return ble.writeAppSettings(this);
 		}
@@ -1267,8 +1276,8 @@ public class JwaooBleToy extends CavanBleGatt {
 			builder.append(", moto_rand_delay:").append(mMotoRandDelay);
 			builder.append(", moto_rand_max:").append(mMotoRandMax);
 			builder.append(", moto_speed_min:").append(mMotoSpeedMin);
-			builder.append(", voltage_low:").append(mVoltageLow);
-			builder.append(", voltage_low_max:").append(mVoltageLowMax);
+			builder.append(", batt_level_low:").append(mBattLevelLow);
+			builder.append(", batt_level_normal:").append(mBattLevelNormal);
 
 			return builder.toString();
 		}
