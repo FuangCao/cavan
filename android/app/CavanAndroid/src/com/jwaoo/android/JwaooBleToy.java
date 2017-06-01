@@ -1186,6 +1186,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		private int mMotoSpeedMin;
 		private int mBattLevelLow;
 		private int mBattLevelNormal;
+		private int mBattPollDelay;
 
 		private static JwaooToyAppSettings getInstance(byte[] response) {
 			return new JwaooToyAppSettings(response);
@@ -1204,6 +1205,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			mMotoSpeedMin = cache.readValue8();
 			mBattLevelLow = cache.readValue8();
 			mBattLevelNormal = cache.readValue8();
+			mBattPollDelay = cache.readValue8();
 		}
 
 		public byte[] buildCommand() {
@@ -1218,6 +1220,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			cache.writeValue8((byte) mMotoSpeedMin);
 			cache.writeValue8((byte) mBattLevelLow);
 			cache.writeValue8((byte) mBattLevelNormal);
+			cache.writeValue8((byte) mBattPollDelay);
 			return cache.getBytes();
 		}
 
@@ -1261,6 +1264,10 @@ public class JwaooBleToy extends CavanBleGatt {
 			return mBattLevelNormal;
 		}
 
+		public int getBattPollDelay() {
+			return mBattPollDelay;
+		}
+
 		public boolean commit(JwaooBleToy ble) throws Exception {
 			return ble.writeAppSettings(this);
 		}
@@ -1278,6 +1285,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			builder.append(", moto_speed_min:").append(mMotoSpeedMin);
 			builder.append(", batt_level_low:").append(mBattLevelLow);
 			builder.append(", batt_level_normal:").append(mBattLevelNormal);
+			builder.append(", batt_poll_delay:").append(mBattPollDelay);
 
 			return builder.toString();
 		}
