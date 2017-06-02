@@ -1,0 +1,65 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="${relativePackage}.${activityClass}" >
+
+    <Spinner
+        android:id="@+id/spinnerGpioPin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/spinnerGpioPort"
+        android:layout_toRightOf="@+id/spinnerGpioPort"
+        android:entries="@array/gpio_pins" />
+
+    <CheckBox
+        android:id="@+id/checkBoxToggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignBaseline="@+id/spinnerGpioPin"
+        android:text="@string/toggle" />
+
+    <Spinner
+        android:id="@+id/spinnerGpioPort"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:entries="@array/gpio_ports" />
+
+    <Button
+        android:id="@+id/buttonStart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:text="@string/start" />
+
+    <Button
+        android:id="@+id/buttonStop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:text="@string/stop" />
+
+    <EditText
+        android:id="@+id/editTextLog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonStart"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/spinnerGpioPort"
+        android:editable="false"
+        android:ems="10"
+        android:focusable="false"
+        android:gravity="top|left"
+        android:scrollbars="horizontal|vertical"
+        android:text="none" >
+
+        <requestFocus />
+    </EditText>
+
+</RelativeLayout>

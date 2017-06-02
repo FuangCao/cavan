@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.cavan.jwaootoy"
+<manifest package="com.cavan.jwaootoy"
     android:versionCode="1"
-    android:versionName="1.0" >
+    android:versionName="1.0" xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-sdk
         android:minSdkVersion="18"
         android:targetSdkVersion="21" />
-    <uses-permission android:name="android.permission.BLUETOOTH"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -24,7 +26,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.cavan.resource.CavanBleScanActivity"></activity>
+        <activity
+            android:name="BatteryCalibrator"
+            android:launchMode="singleTask" android:label="@string/battery_calibrator">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.cavan.resource.CavanBleScanActivity"
+            android:launchMode="singleTask" >
+        </activity>
     </application>
 
 </manifest>

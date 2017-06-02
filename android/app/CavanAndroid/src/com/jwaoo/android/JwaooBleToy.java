@@ -880,7 +880,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	}
 
 	public boolean setGpioValue(int port, int pin, boolean value) throws Exception {
-		byte[] command = { JWAOO_TOY_CMD_GPIO_GET, (byte) port, (byte) pin, CavanJava.getBoolValueByte(value) };
+		byte[] command = { JWAOO_TOY_CMD_GPIO_SET, (byte) port, (byte) pin, CavanJava.getBoolValueByte(value) };
 		return mCommand.readBool(command);
 	}
 

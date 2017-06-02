@@ -29,20 +29,42 @@
     <string name="moto_close">震动关闭</string>
     <string name="batt_event_enable">允许电池事件</string>
     <string name="factory_mode">工厂模式</string>
+
     <string-array name="moto_modes">
-        <item >停止震动</item>
-        <item >持续震动</item>
-        <item >强弱交替（慢速）</item>
-        <item >强弱交替（快速）</item>
-        <item >间歇交替（慢速）</item>
-        <item >间歇交替（快速）</item>
-        <item >无序</item>
+        <item>停止震动</item>
+        <item>持续震动</item>
+        <item>强弱交替（慢速）</item>
+        <item>强弱交替（快速）</item>
+        <item>间歇交替（慢速）</item>
+        <item>间歇交替（快速）</item>
+        <item>无序</item>
     </string-array>
-        <string name="shutdown">关机</string>
-        <string name="moto_event_enable">允许马达事件</string>
-        <string name="key_lock">键盘锁</string>
-        <string name="moto_rand">马达随机震动</string>
-        <string name="suspend_overtime_setting">待机超时时间设置</string>
-        <string name="setting_success">设置成功</string>
+
+    <string name="shutdown">关机</string>
+    <string name="moto_event_enable">允许马达事件</string>
+    <string name="key_lock">键盘锁</string>
+    <string name="moto_rand">马达随机震动</string>
+    <string name="suspend_overtime_setting">待机超时时间设置</string>
+    <string name="setting_success">设置成功</string>
+    <string name="battery_calibrator">井蛙电池校准器</string>
+
+    <string-array name="gpio_ports">
+        <item>PORT0</item>
+        <item>PORT1</item>
+        <item>PORT2</item>
+        <item>PORT3</item>
+    </string-array>
+    <string-array name="gpio_pins">
+        <item>PIN0</item>
+        <item>PIN1</item>
+        <item>PIN2</item>
+        <item>PIN3</item>
+        <item>PIN4</item>
+        <item>PIN5</item>
+        <item>PIN6</item>
+        <item>PIN7</item>
+        <item>PIN8</item>
+        <item>PIN9</item>
+    </string-array>
 
 </resources>
