@@ -32,6 +32,9 @@ public class BatteryCalibrator extends JwaooToyActivity implements OnItemSelecte
 
 	private static final int MSG_SET_TOGGLE = 1;
 	private static final int MSG_APPEND_LOG = 2;
+	private static final int MSG_CONNECTED = 3;
+	private static final int MSG_THREAD_ENTER = 4;
+	private static final int MSG_THREAD_EXIT = 5;
 
 	private Spinner mSpinnerPort;
 	private Spinner mSpinnerPin;
@@ -56,12 +59,33 @@ public class BatteryCalibrator extends JwaooToyActivity implements OnItemSelecte
 			case MSG_APPEND_LOG:
 				mEditTextLog.append((CharSequence) msg.obj);
 				break;
+
+			case MSG_CONNECTED:
+				if (mLock.acquire(this)) {
+					getGpioValue();
+				}
+				break;
+
+			case MSG_THREAD_ENTER:
+				mCheckboxToggle.setEnabled(false);
+				mSpinnerPin.setEnabled(false);
+				mSpinnerPort.setEnabled(false);
+				mButtonStart.setEnabled(false);
+				mButtonStop.setEnabled(true);
+				break;
+
+			case MSG_THREAD_EXIT:
+				mCheckboxToggle.setEnabled(true);
+				mSpinnerPin.setEnabled(true);
+				mSpinnerPort.setEnabled(true);
+				mButtonStart.setEnabled(true);
+				mButtonStop.setEnabled(false);
+				break;
 			}
 		}
 	};
 
-	@Override
-	public boolean onInitialize() {
+	public boolean getGpioValue() {
 		try {
 			mCheckboxToggle.setChecked(mBleToy.getGpioValue(mSpinnerPort.getSelectedItemPosition(), mSpinnerPin.getSelectedItemPosition()));
 		} catch (Exception e) {
@@ -69,7 +93,39 @@ public class BatteryCalibrator extends JwaooToyActivity implements OnItemSelecte
 			return false;
 		}
 
+		return true;
+	}
+
+	public boolean setGpioValue(boolean value) {
+		try {
+			mBleToy.setGpioValue(mSpinnerPort.getSelectedItemPosition(), mSpinnerPin.getSelectedItemPosition(), value);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
+	public boolean onInitialize() {
+		try {
+			mBleToy.setBatteryEventEnable(true);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+
 		return super.onInitialize();
+	}
+
+	@Override
+	public void onConnectionStateChanged(boolean connected) {
+		super.onConnectionStateChanged(connected);
+
+		if (connected) {
+			mHandler.sendEmptyMessage(MSG_CONNECTED);
+		}
 	}
 
 	@Override
@@ -85,6 +141,7 @@ public class BatteryCalibrator extends JwaooToyActivity implements OnItemSelecte
 
 		mSpinnerPort.setSelection(2);
 		mSpinnerPin.setSelection(7);
+		mButtonStop.setEnabled(false);
 
 		mSpinnerPort.setOnItemSelectedListener(this);
 		mSpinnerPin.setOnItemSelectedListener(this);
@@ -98,11 +155,7 @@ public class BatteryCalibrator extends JwaooToyActivity implements OnItemSelecte
 	@Override
 	public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 		if (mLock.acquire(view)) {
-			try {
-				mCheckboxToggle.setChecked(mBleToy.getGpioValue(mSpinnerPort.getSelectedItemPosition(), mSpinnerPin.getSelectedItemPosition()));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			getGpioValue();
 		}
 	}
 
@@ -113,11 +166,7 @@ public class BatteryCalibrator extends JwaooToyActivity implements OnItemSelecte
 	@Override
 	public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 		if (mLock.acquire(buttonView)) {
-			try {
-				mBleToy.setGpioValue(mSpinnerPort.getSelectedItemPosition(), mSpinnerPin.getSelectedItemPosition(), isChecked);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			setGpioValue(isChecked);
 		}
 	}
 
@@ -135,7 +184,10 @@ public class BatteryCalibrator extends JwaooToyActivity implements OnItemSelecte
 			if (mThread != null) {
 				BatteryCalibrationThread thread = mThread;
 				mThread = null;
-				thread.notifyAll();
+
+				synchronized (thread) {
+					thread.notifyAll();
+				}
 			}
 		}
 	}
@@ -144,61 +196,66 @@ public class BatteryCalibrator extends JwaooToyActivity implements OnItemSelecte
 
 		@Override
 		public void run() {
-			CavanFile file = new CavanFile(Environment.getExternalStorageDirectory(), "model06_battery.txt");
-			FileOutputStream stream = file.openOutputStream();
-			if (stream == null) {
-				CavanAndroid.eLog("openOutputStream");
-				mThread = null;
-				return;
-			}
+			mHandler.sendEmptyMessage(MSG_THREAD_ENTER);
 
-			long time = System.currentTimeMillis();
-
-			while (mThread != null) {
-				try {
-					mHandler.obtainMessage(MSG_SET_TOGGLE, 1, 0).sendToTarget();
-
-					synchronized (this) {
-						wait(TOGGLE_OPEN_TIME);
-						if (mThread == null) {
-							break;
-						}
-					}
-
-					JwaooToyBatteryInfo info0 = mBleToy.getBatteryInfo();
-					CavanAndroid.dLog("info0 = " + info0);
-
-					mHandler.obtainMessage(MSG_SET_TOGGLE, 0, 0).sendToTarget();
-
-					synchronized (this) {
-						wait(TOGGLE_CLOSE_TIME);
-						if (mThread == null) {
-							break;
-						}
-					}
-
-					JwaooToyBatteryInfo info1 = mBleToy.getBatteryInfo();
-					CavanAndroid.dLog("info1 = " + info1);
-
-					String text = "{ " + info0.getVoltage() + ", "+ info1.getVoltage() +" }, // " + (System.currentTimeMillis() - time) + "\n";
-					mHandler.obtainMessage(MSG_APPEND_LOG, text).sendToTarget();
-
-					stream.write(text.getBytes());
-					stream.flush();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				} catch (Exception e) {
-					e.printStackTrace();
+			do {
+				CavanFile file = new CavanFile(Environment.getExternalStorageDirectory(), "model06_battery.txt");
+				FileOutputStream stream = file.openOutputStream();
+				if (stream == null) {
+					CavanAndroid.eLog("openOutputStream");
 					break;
 				}
-			}
 
-			try {
-				stream.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+				long time = System.currentTimeMillis();
 
+				while (mThread != null) {
+					try {
+						mHandler.obtainMessage(MSG_SET_TOGGLE, 1, 0).sendToTarget();
+
+						synchronized (this) {
+							wait(TOGGLE_OPEN_TIME);
+							if (mThread == null) {
+								break;
+							}
+						}
+
+						JwaooToyBatteryInfo info0 = mBleToy.getBatteryInfo();
+						CavanAndroid.dLog("info0 = " + info0);
+
+						mHandler.obtainMessage(MSG_SET_TOGGLE, 0, 0).sendToTarget();
+
+						synchronized (this) {
+							wait(TOGGLE_CLOSE_TIME);
+							if (mThread == null) {
+								break;
+							}
+						}
+
+						JwaooToyBatteryInfo info1 = mBleToy.getBatteryInfo();
+						CavanAndroid.dLog("info1 = " + info1);
+
+						String text = "{ " + info0.getVoltage() + ", "+ info1.getVoltage() +" }, // " + (System.currentTimeMillis() - time) + "\n";
+						mHandler.obtainMessage(MSG_APPEND_LOG, text).sendToTarget();
+
+						stream.write(text.getBytes());
+						stream.flush();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					} catch (Exception e) {
+						e.printStackTrace();
+						break;
+					}
+				}
+
+				try {
+					stream.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+			} while (false);
+
+			mHandler.sendEmptyMessage(MSG_THREAD_EXIT);
 			mThread = null;
 		}
 	}
