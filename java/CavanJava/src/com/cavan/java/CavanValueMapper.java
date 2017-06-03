@@ -52,47 +52,114 @@ public class CavanValueMapper {
 		};
 
 		CavanValueMapper mapper = new CavanValueMapper(entries);
-		CavanJava.dLog("v1 = " + mapper.getValue1(3.4));
-		CavanJava.dLog("v1 = " + mapper.getValue1(3.6));
-		CavanJava.dLog("v1 = " + mapper.getValue1(4.2));
-		CavanJava.dLog("v0 = " + mapper.getValue0(0));
-		CavanJava.dLog("v0 = " + mapper.getValue0(10));
-		CavanJava.dLog("v0 = " + mapper.getValue0(20));
-		CavanJava.dLog("v0 = " + mapper.getValue0(25));
-		CavanJava.dLog("v0 = " + mapper.getValue0(100));
+		mapper.setOverflowUpEnable();
+
+		CavanJava.dLog("v1 = " + mapper.getDouble1(3.4));
+		CavanJava.dLog("v1 = " + mapper.getDouble1(3.6));
+		CavanJava.dLog("v1 = " + mapper.getDouble1(4.2));
+		CavanJava.dLog("v1 = " + mapper.getDouble1(4.3));
+
+		CavanJava.dLog("v0 = " + mapper.getDouble0(0));
+		CavanJava.dLog("v0 = " + mapper.getDouble0(10));
+		CavanJava.dLog("v0 = " + mapper.getDouble0(20));
+		CavanJava.dLog("v0 = " + mapper.getDouble0(25));
+		CavanJava.dLog("v0 = " + mapper.getDouble0(100));
 	}
 
-	private int mIndex0 = 0;
-	private int mIndex1 = 1;
-	private Entry[] mEntries;
+	private static Entry[] sDefaultEntries = {
+		new Entry(0, 0), new Entry(1, 1)
+	};
+
+	private int mIndex0;
+	private int mIndex1;
+	private boolean mOverflowUpEnabled;
+	private boolean mOverflowDownEnabled;
+	private Entry[] mEntries = sDefaultEntries;
 
 	public CavanValueMapper(Entry[] entries) {
-		if (entries.length < 2) {
-			Entry entry0, entry1;
-
-			entry0 = new Entry(0, 0);
-
-			if (entries.length > 0) {
-				entry1 = entries[0];
-			} else {
-				entry1 = new Entry(1, 1);
-			}
-
-			entries = new Entry[] { entry0, entry1 };
-		}
-
-		mEntries = entries;
+		setEntries(entries);
 	}
 
 	public CavanValueMapper(double v0, double v1) {
-		mEntries = new Entry[] {
-			new Entry(0, 0),
+		setEntries(v0, v1);
+	}
+
+	public int getIndex0() {
+		return mIndex0;
+	}
+
+	public void setIndex0(int index0) {
+		mIndex0 = index0;
+	}
+
+	public int getIndex1() {
+		return mIndex1;
+	}
+
+	public void setIndex1(int index1) {
+		mIndex1 = index1;
+	}
+
+	public Entry[] getEntries() {
+		return mEntries;
+	}
+
+	public void setEntries(Entry[] entries) {
+		if (entries.length < 2) {
+			if (entries.length > 0) {
+				mEntries = new Entry[] {
+					sDefaultEntries[0], entries[0]
+				};
+			} else {
+				mEntries = sDefaultEntries;
+			}
+		} else {
+			mEntries = entries;
+		}
+
+		mIndex0 = 0;
+		mIndex1 = 1;
+	}
+
+	public void setEntries(double v0, double v1) {
+		Entry[] entries = new Entry[] {
+			sDefaultEntries[0],
 			new Entry(v0, v1)
 		};
+
+		setEntries(entries);
 	}
 
 	public Entry getEntry(int index) {
 		return mEntries[index];
+	}
+
+	public void setEntry(int index, Entry entry) {
+		mEntries[index] = entry;
+	}
+
+	public boolean isOverflowUpEnabled() {
+		return mOverflowUpEnabled;
+	}
+
+	public void setOverflowUpEnable(boolean enable) {
+		mOverflowUpEnabled = enable;
+	}
+
+	public void setOverflowUpEnable() {
+		mOverflowUpEnabled = true;
+	}
+
+	public boolean isOverflowDownEnabled() {
+		return mOverflowDownEnabled;
+	}
+
+	public void setOverflowDownEnable(boolean enable) {
+		mOverflowDownEnabled = enable;
+	}
+
+	public void setOverflowDownEnable() {
+		mOverflowDownEnabled = true;
 	}
 
 	public Entry getMinEntry() {
@@ -127,12 +194,16 @@ public class CavanValueMapper {
 		return mEntries[mIndex1].getValue1() - mEntries[mIndex0].getValue1();
 	}
 
-	public double getValue0(double v1) {
+	public double getDouble0(double v1) {
 		if (v1 < mEntries[mIndex0].getValue1()) {
 			do {
 				if (mIndex0 > 0) {
 					mIndex1 = mIndex0--;
 				} else {
+					if (mOverflowDownEnabled) {
+						break;
+					}
+
 					return mEntries[mIndex0].getValue0();
 				}
 			} while (v1 < mEntries[mIndex0].getValue1());
@@ -143,6 +214,10 @@ public class CavanValueMapper {
 					mIndex0 = mIndex1;
 					mIndex1 = index;
 				} else {
+					if (mOverflowUpEnabled) {
+						break;
+					}
+
 					return mEntries[mIndex1].getValue0();
 				}
 			}
@@ -151,12 +226,16 @@ public class CavanValueMapper {
 		return getMinValue0() + (v1 - getMinValue1()) * getRange0() / getRange1();
 	}
 
-	public double getValue1(double v0) {
+	public double getDouble1(double v0) {
 		if (v0 < mEntries[mIndex0].getValue0()) {
 			do {
 				if (mIndex0 > 0) {
 					mIndex1 = mIndex0--;
 				} else {
+					if (mOverflowDownEnabled) {
+						break;
+					}
+
 					return mEntries[mIndex0].getValue1();
 				}
 			} while (v0 < mEntries[mIndex0].getValue0());
@@ -167,11 +246,23 @@ public class CavanValueMapper {
 					mIndex0 = mIndex1;
 					mIndex1 = index;
 				} else {
+					if (mOverflowUpEnabled) {
+						break;
+					}
+
 					return mEntries[mIndex1].getValue1();
 				}
 			}
 		}
 
 		return getMinValue1() + (v0 - getMinValue0()) * getRange1() / getRange0();
+	}
+
+	public long getLong0(double v1) {
+		return Math.round(getDouble0(v1));
+	}
+
+	public long getLong1(double v0) {
+		return Math.round(getDouble1(v0));
 	}
 }
