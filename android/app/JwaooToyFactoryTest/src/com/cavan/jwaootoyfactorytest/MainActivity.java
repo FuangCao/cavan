@@ -284,18 +284,13 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	}
 
 	@Override
-	public boolean onInitialize() {
+	public boolean onInitialize() throws Exception {
 		if (!super.onInitialize()) {
 			return false;
 		}
 
-		try {
-			if (!mBleToy.setFactoryModeEnable(true)) {
-				CavanAndroid.dLog("Failed to setFactoryModeEnable");
-				return false;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
+		if (!mBleToy.setFactoryModeEnable(true)) {
+			CavanAndroid.dLog("Failed to setFactoryModeEnable");
 			return false;
 		}
 

@@ -407,55 +407,50 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	}
 
 	@Override
-	public boolean onInitialize() {
-		try {
-			if (!mBleToy.setClickEnable(mCheckBoxClick.isChecked())) {
-				CavanAndroid.dLog("Failed to setClickEnable");
-			}
+	public boolean onInitialize() throws Exception {
+		if (!mBleToy.setClickEnable(mCheckBoxClick.isChecked())) {
+			CavanAndroid.dLog("Failed to setClickEnable");
+		}
 
-			if (!mBleToy.setLongClickEnable(mCheckBoxLongClick.isChecked())) {
-				CavanAndroid.dLog("Failed to setLongClickEnable");
-			}
+		if (!mBleToy.setLongClickEnable(mCheckBoxLongClick.isChecked())) {
+			CavanAndroid.dLog("Failed to setLongClickEnable");
+		}
 
-			if (!mBleToy.setMultiClickEnable(mCheckBoxMultiClick.isChecked())) {
-				CavanAndroid.dLog("Failed to setMultiClickEnable");
-			}
+		if (!mBleToy.setMultiClickEnable(mCheckBoxMultiClick.isChecked())) {
+			CavanAndroid.dLog("Failed to setMultiClickEnable");
+		}
 
-			if (!mBleToy.setBatteryEventEnable(mCheckBoxBatteryEvent.isChecked())) {
-				CavanAndroid.dLog("Failed to setBatteryEventEnable");
-			}
+		if (!mBleToy.setBatteryEventEnable(mCheckBoxBatteryEvent.isChecked())) {
+			CavanAndroid.dLog("Failed to setBatteryEventEnable");
+		}
 
-			if (!mBleToy.setFactoryModeEnable(mCheckBoxFactoryMode.isChecked())) {
-				CavanAndroid.dLog("Failed to setFactoryModeEnable");
-			}
+		if (!mBleToy.setFactoryModeEnable(mCheckBoxFactoryMode.isChecked())) {
+			CavanAndroid.dLog("Failed to setFactoryModeEnable");
+		}
 
-			if (!mBleToy.setMotoEventEnable(mCheckBoxMotoEvent.isChecked())) {
-				CavanAndroid.dLog("Failed to setMotoEventEnable");
-			}
+		if (!mBleToy.setMotoEventEnable(mCheckBoxMotoEvent.isChecked())) {
+			CavanAndroid.dLog("Failed to setMotoEventEnable");
+		}
 
-			if (!mBleToy.setKeyLock(mCheckBoxKeyLock.isChecked())) {
-				CavanAndroid.dLog("Failed to setKeyLock");
-			}
+		if (!mBleToy.setKeyLock(mCheckBoxKeyLock.isChecked())) {
+			CavanAndroid.dLog("Failed to setKeyLock");
+		}
 
-			if (mMotoMode > 0 || mMotoLevel > 0) {
-				setMotoMode();
-			}
+		if (mMotoMode > 0 || mMotoLevel > 0) {
+			setMotoMode();
+		}
 
-			mAppSettings = mBleToy.readAppSettings();
-			CavanAndroid.dLog("JwaooToyAppSettings = " + mAppSettings);
+		mAppSettings = mBleToy.readAppSettings();
+		CavanAndroid.dLog("JwaooToyAppSettings = " + mAppSettings);
 
-			mKeySettings = mBleToy.readKeySettings();
-			CavanAndroid.dLog("JwaooToyKeySettings = " + mKeySettings);
-			CavanAndroid.dLog("JwaooToyBatteryInfo = " + mBleToy.getBatteryInfo());
+		mKeySettings = mBleToy.readKeySettings();
+		CavanAndroid.dLog("JwaooToyKeySettings = " + mKeySettings);
+		CavanAndroid.dLog("JwaooToyBatteryInfo = " + mBleToy.getBatteryInfo());
 
-			mBleToy.setKeyReportEnable(0x0f);
+		mBleToy.setKeyReportEnable(0x0f);
 
-			if (!mBleToy.setSensorEnable(mCheckBoxSensor.isChecked(), SENSOR_DELAY)) {
-				CavanAndroid.dLog("Failed to setSensorEnable");
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
+		if (!mBleToy.setSensorEnable(mCheckBoxSensor.isChecked(), SENSOR_DELAY)) {
+			CavanAndroid.dLog("Failed to setSensorEnable");
 		}
 
 		mHandler.sendEmptyMessage(EVENT_INIT_COMPLETE);
