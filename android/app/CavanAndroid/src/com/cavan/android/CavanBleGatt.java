@@ -72,7 +72,7 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 	};
 
 	public interface CavanBleGattEventListener {
-		boolean onInitialize();
+		boolean onInitialize() throws Exception;
 		void onConnectFailed();
 		void onConnectionStateChanged(boolean connected);
 		void onBluetoothAdapterStateChanged(boolean enabled);
@@ -444,12 +444,12 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 
 	// ================================================================================
 
-	protected boolean doInitialize() {
+	protected boolean doInitialize() throws Exception {
 		CavanAndroid.dLog("doInitialize");
 		return true;
 	}
 
-	protected boolean onInitialize() {
+	protected boolean onInitialize() throws Exception {
 		return mEventListener.onInitialize();
 	}
 
@@ -713,7 +713,16 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 
 			mGattTimeoutCount = 0;
 
-			if (service != null && doInitialize() && onInitialize() && mGattTimeoutCount == 0) {
+			boolean success;
+
+			try {
+				success = (service != null && doInitialize() && onInitialize() && mGattTimeoutCount == 0);
+			} catch (Exception e) {
+				e.printStackTrace();
+				success = false;
+			}
+
+			if (success) {
 				setConnectStatus(true);
 				mInitTimes = 0;
 			} else if (++mInitTimes > MAX_INIT_TIMES) {

@@ -194,7 +194,7 @@ public class JwaooToyActivity extends CavanBleActivity implements OnCancelListen
 	}
 
 	@Override
-	public boolean onInitialize() {
+	public boolean onInitialize() throws Exception {
 		CavanAndroid.dLog("onInitialize");
 		return true;
 	}

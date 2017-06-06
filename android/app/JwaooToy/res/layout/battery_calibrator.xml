@@ -51,15 +51,32 @@
         android:layout_above="@+id/buttonStart"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/spinnerGpioPort"
+        android:layout_below="@+id/editTextVoltage"
         android:editable="false"
         android:ems="10"
         android:focusable="false"
         android:gravity="top|left"
-        android:scrollbars="horizontal|vertical"
-        android:text="none" >
+        android:scrollbars="horizontal|vertical" >
 
         <requestFocus />
     </EditText>
+
+    <EditText
+        android:id="@+id/editTextVoltage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/spinnerGpioPort"
+        android:layout_toLeftOf="@+id/buttonCalibration"
+        android:ems="10"
+        android:inputType="number|numberDecimal" />
+
+    <Button
+        android:id="@+id/buttonCalibration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/editTextVoltage"
+        android:layout_alignParentRight="true"
+        android:text="@string/calibration" />
 
 </RelativeLayout>

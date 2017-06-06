@@ -237,6 +237,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	private String mBuildDate;
 	private int mDeviceId;
 	private String mDeviceName;
+	private double mVoltageRatio;
 
 	protected CavanBleChar mCharCommand;
 	protected CavanBleChar mCharEvent;
@@ -298,7 +299,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	}
 
 	@Override
-	protected boolean onInitialize() {
+	protected boolean onInitialize() throws Exception {
 		return mEventListener.onInitialize();
 	}
 
@@ -828,10 +829,6 @@ public class JwaooBleToy extends CavanBleGatt {
 		return response.getKeySettings();
 	}
 
-	public boolean writeKeySettings(JwaooToyKeySettings settings) throws Exception {
-		return mCommand.readBool(settings.buildCommand());
-	}
-
 	public boolean readSpeedTable(int index, short[] table, int offset) throws Exception {
 		return mCommand.readArray16(new byte[] { JWAOO_TOY_CMD_MOTO_SPEED_TABLE, (byte) index }, table, offset, 9);
 	}
@@ -920,10 +917,6 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		return response.getAppSettings();
-	}
-
-	public boolean writeAppSettings(JwaooToyAppSettings settings) throws Exception {
-		return mCommand.readBool(settings.buildCommand());
 	}
 
 	public int getVersion() throws Exception {
@@ -1022,6 +1015,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	protected boolean doInitialize() {
 		mVersion = 0;
 		mBuildDate = null;
+		mVoltageRatio = 1;
 
 		mCharCommand = openChar(UUID_COMMAND);
 		if (mCharCommand == null) {
@@ -1133,13 +1127,17 @@ public class JwaooBleToy extends CavanBleGatt {
 			return mLevel;
 		}
 
-		public int getLevelByVoltage() {
-			int level = mBatteryCapacityTable.getCapacityInt(mVoltage);
+		public int getLevelByVoltage(double voltage) {
+			int level = mBatteryCapacityTable.getCapacityInt(voltage);
 			if (level > 99 && mState == BATTERY_STATE_CHARGING) {
 				return 99;
 			}
 
 			return level;
+		}
+
+		public int getLevelByVoltage() {
+			return getLevelByVoltage(mVoltage);
 		}
 
 		public String getStateString() {
@@ -1161,6 +1159,24 @@ public class JwaooBleToy extends CavanBleGatt {
 			}
 		}
 
+		public void calibration(double voltage) {
+			CavanAndroid.dLog("voltage = " + voltage + ", mVoltage = " + mVoltage);
+
+			if (mVoltage > 0) {
+				mVoltageRatio = voltage / mVoltage;
+			}
+
+			CavanAndroid.dLog("mVoltageRatio = " + mVoltageRatio);
+		}
+
+		public double getFixedVoltage() {
+			return mVoltage * mVoltageRatio;
+		}
+
+		public double getFixedLevel() {
+			return getLevelByVoltage(getFixedVoltage());
+		}
+
 		@Override
 		public String toString() {
 			StringBuilder builder = new StringBuilder();
@@ -1175,7 +1191,7 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public class JwaooToyAppSettings {
 
-		public static final int COMMAND_LENGTH = 11;
+		public static final int COMMAND_LENGTH = 15;
 
 		private int mSuspendDelay;
 		private int mShutdownVoltage;
@@ -1288,7 +1304,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		public boolean commit() throws Exception {
-			return writeAppSettings(this);
+			return mCommand.readBool(buildCommand());
 		}
 
 		@Override
@@ -1398,10 +1414,6 @@ public class JwaooBleToy extends CavanBleGatt {
 			mLongClickDelay = delay;
 		}
 
-		public boolean commit(JwaooBleToy ble) throws Exception {
-			return ble.writeKeySettings(this);
-		}
-
 		public void setLedBlinkDelay(int delay) {
 			mLedBlinkDelay = delay;
 		}
@@ -1411,7 +1423,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		public boolean commit() throws Exception {
-			return writeKeySettings(this);
+			return mCommand.readBool(buildCommand());
 		}
 
 		@Override

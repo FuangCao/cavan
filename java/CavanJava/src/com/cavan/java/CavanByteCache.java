@@ -4,6 +4,7 @@ public class CavanByteCache {
 	private byte[] mBytes;
 	private int mOffset;
 	private int mLength;
+	private boolean mAutoExtend = true;
 
 	public CavanByteCache(byte[] bytes, int offset, int length) {
 		setBytes(bytes, offset, length);
@@ -22,7 +23,15 @@ public class CavanByteCache {
 	}
 
 	public CavanByteCache() {
-		this(null, 0);
+		this(0);
+	}
+
+	public boolean isAutoExtend() {
+		return mAutoExtend;
+	}
+
+	public void setAutoExtend(boolean enable) {
+		mAutoExtend = enable;
 	}
 
 	public void setBytes(byte[] bytes, int offset, int length) {
@@ -44,7 +53,11 @@ public class CavanByteCache {
 	}
 
 	public byte[] getBytes() {
-		return mBytes;
+		if (mAutoExtend && mOffset < mLength) {
+			return CavanArray.cloneByLength(mBytes, mOffset);
+		} else {
+			return mBytes;
+		}
 	}
 
 	public int getLength() {
@@ -65,12 +78,23 @@ public class CavanByteCache {
 	}
 
 	public boolean writeValue8(byte value) {
-		if (mOffset < mLength) {
-			mBytes[mOffset++] = value;
-			return true;
+		if (mOffset >= mLength) {
+			if (mAutoExtend) {
+				if (mLength > 0) {
+					mBytes = CavanArray.cloneByLength(mBytes, mLength * 2);
+				} else {
+					mBytes = new byte[16];
+				}
+
+				mLength = mBytes.length;
+			} else {
+				return false;
+			}
 		}
 
-		return false;
+		mBytes[mOffset++] = value;
+
+		return true;
 	}
 
 	public boolean writeBool(boolean value) {

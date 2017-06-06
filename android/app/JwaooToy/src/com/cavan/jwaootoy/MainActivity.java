@@ -396,7 +396,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			try {
 				int delay = Integer.valueOf(mEditTextSuspendOvertime.getText().toString());
 				mAppSettings.setSuspendDelay(delay);
-				if (mBleToy.writeAppSettings(mAppSettings)) {
+				if (mAppSettings.commit()) {
 					CavanAndroid.showToast(this, R.string.setting_success);
 				}
 			} catch (Exception e) {

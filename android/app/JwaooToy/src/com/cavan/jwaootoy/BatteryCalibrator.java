@@ -23,12 +23,13 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanBusyLock;
 import com.cavan.java.CavanFile;
 import com.cavan.resource.JwaooToyActivity;
+import com.jwaoo.android.JwaooBleToy.JwaooToyAppSettings;
 import com.jwaoo.android.JwaooBleToy.JwaooToyBatteryInfo;
 
 public class BatteryCalibrator extends JwaooToyActivity implements OnItemSelectedListener, OnCheckedChangeListener, OnClickListener {
 
 	private static final int TOGGLE_OPEN_TIME = 600000;
-	private static final int TOGGLE_CLOSE_TIME = 60000;
+	private static final int TOGGLE_CLOSE_TIME = 120000;
 
 	private static final int MSG_SET_TOGGLE = 1;
 	private static final int MSG_APPEND_LOG = 2;
@@ -41,6 +42,8 @@ public class BatteryCalibrator extends JwaooToyActivity implements OnItemSelecte
 	private CheckBox mCheckboxToggle;
 	private Button mButtonStart;
 	private Button mButtonStop;
+	private Button mButtonCalibration;
+	private EditText mEditTextVoltage;
 	private EditText mEditTextLog;
 	private BatteryCalibrationThread mThread;
 	private CavanBusyLock mLock = new CavanBusyLock(1000);
@@ -63,6 +66,15 @@ public class BatteryCalibrator extends JwaooToyActivity implements OnItemSelecte
 			case MSG_CONNECTED:
 				if (mLock.acquire(this)) {
 					getGpioValue();
+				}
+
+				try {
+					JwaooToyBatteryInfo info = mBleToy.getBatteryInfo();
+					if (info != null) {
+						mEditTextVoltage.setText(Double.toString(info.getFixedVoltage()));
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 				break;
 
@@ -108,13 +120,15 @@ public class BatteryCalibrator extends JwaooToyActivity implements OnItemSelecte
 	}
 
 	@Override
-	public boolean onInitialize() {
-		try {
-			mBleToy.setBatteryEventEnable(true);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
+	public boolean onInitialize() throws Exception {
+		JwaooToyAppSettings settings = mBleToy.readAppSettings();
+		if (settings != null) {
+			CavanAndroid.dLog("JwaooToyAppSettings = " + settings);
+			settings.setBattFlags(0);
+			settings.commit();
 		}
+
+		mBleToy.setBatteryEventEnable(true);
 
 		return super.onInitialize();
 	}
@@ -129,6 +143,12 @@ public class BatteryCalibrator extends JwaooToyActivity implements OnItemSelecte
 	}
 
 	@Override
+	public void onBatteryStateChanged(JwaooToyBatteryInfo info) {
+		super.onBatteryStateChanged(info);
+		CavanAndroid.dLog("getFixedVoltage = " + info.getFixedVoltage());
+	}
+
+	@Override
 	protected void onCreateBle(Bundle savedInstanceState) {
 		setContentView(R.layout.battery_calibrator);
 
@@ -137,7 +157,9 @@ public class BatteryCalibrator extends JwaooToyActivity implements OnItemSelecte
 		mCheckboxToggle = (CheckBox) findViewById(R.id.checkBoxToggle);
 		mButtonStart = (Button) findViewById(R.id.buttonStart);
 		mButtonStop = (Button) findViewById(R.id.buttonStop);
+		mButtonCalibration = (Button) findViewById(R.id.buttonCalibration);
 		mEditTextLog = (EditText) findViewById(R.id.editTextLog);
+		mEditTextVoltage = (EditText) findViewById(R.id.editTextVoltage);
 
 		mSpinnerPort.setSelection(2);
 		mSpinnerPin.setSelection(7);
@@ -148,6 +170,7 @@ public class BatteryCalibrator extends JwaooToyActivity implements OnItemSelecte
 		mCheckboxToggle.setOnCheckedChangeListener(this);
 		mButtonStart.setOnClickListener(this);
 		mButtonStop.setOnClickListener(this);
+		mButtonCalibration.setOnClickListener(this);
 
 		showScanActivity();
 	}
@@ -188,6 +211,16 @@ public class BatteryCalibrator extends JwaooToyActivity implements OnItemSelecte
 				synchronized (thread) {
 					thread.notifyAll();
 				}
+			}
+		} else if (v == mButtonCalibration) {
+			try {
+				double voltage = Double.parseDouble(mEditTextVoltage.getText().toString());
+				JwaooToyBatteryInfo info = mBleToy.getBatteryInfo();
+				if (info != null) {
+					info.calibration(voltage);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 	}
@@ -234,7 +267,7 @@ public class BatteryCalibrator extends JwaooToyActivity implements OnItemSelecte
 						JwaooToyBatteryInfo info1 = mBleToy.getBatteryInfo();
 						CavanAndroid.dLog("info1 = " + info1);
 
-						String text = "{ " + info0.getVoltage() + ", "+ info1.getVoltage() +" }, // " + (System.currentTimeMillis() - time) + "\n";
+						String text = "{ " + info0.getFixedVoltage() + ", " + info1.getFixedVoltage() + " }, // " + (System.currentTimeMillis() - time) + "\n";
 						mHandler.obtainMessage(MSG_APPEND_LOG, text).sendToTarget();
 
 						stream.write(text.getBytes());

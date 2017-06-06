@@ -66,5 +66,6 @@
         <item>PIN8</item>
         <item>PIN9</item>
     </string-array>
+        <string name="calibration">校准</string>
 
 </resources>
