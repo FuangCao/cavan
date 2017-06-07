@@ -27,7 +27,7 @@ public class CavanQrCodeCamera extends CavanThreadedHandler implements AutoFocus
 	private static final int MSG_POST_FRAME = 4;
 
 	public static boolean checkAndRequestPermissions(Activity activity, int requestCode) {
-		return CavanAndroid.checkAndRequestPermissions(activity, PERMISSIONS, requestCode);
+		return CavanAndroid.checkAndRequestPermissions(activity, requestCode, PERMISSIONS);
 	}
 
 	public static boolean checkAndRequestPermissions(Activity activity) {

@@ -281,5 +281,6 @@
 	<string name="my_service">我的服务</string>
 	<string name="my_application">我的应用</string>
 	<string name="my_message">我的消息</string>
+	<string name="show_wifi_password">WiFi密码查看</string>
 
 </resources>

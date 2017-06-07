@@ -197,7 +197,7 @@ public class WifiDetectorActivity extends Activity {
 		mListViewAccessPoints.setOnItemClickListener(mAdapter);
 		mListViewAccessPoints.setAdapter(mAdapter);
 
-		CavanAndroid.checkAndRequestPermissions(this, PERMISSIONS, 100);
+		CavanAndroid.checkAndRequestPermissions(this, 100, PERMISSIONS);
 	}
 
 	@Override

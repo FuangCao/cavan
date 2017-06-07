@@ -904,7 +904,7 @@ public class CavanAndroid {
 		return false;
 	}
 
-	public static boolean checkPermissions(Context context, String[] permissions) {
+	public static boolean checkPermissions(Context context, String... permissions) {
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
 			return true;
 		}
@@ -918,7 +918,7 @@ public class CavanAndroid {
 		return true;
 	}
 
-	public static boolean checkAndRequestPermissions(Activity activity, String[] permissions, int requestCode) {
+	public static boolean checkAndRequestPermissions(Activity activity, int requestCode, String... permissions) {
 		if (checkPermissions(activity, permissions)) {
 			return true;
 		}
@@ -928,15 +928,7 @@ public class CavanAndroid {
 		return false;
 	}
 
-	public static boolean checkAndRequestPermissions(Activity activity, String[] permissions) {
-		return checkAndRequestPermissions(activity, permissions, 0);
-	}
-
-	public static boolean checkAndRequestPermission(Activity activity, String permission, int requestCode) {
-		return checkAndRequestPermissions(activity, new String[] { permission }, requestCode);
-	}
-
-	public static boolean checkAndRequestPermission(Activity activity, String permission) {
-		return checkAndRequestPermission(activity, permission, 0);
+	public static boolean checkAndRequestPermissions(Activity activity, String... permissions) {
+		return checkAndRequestPermissions(activity, 0, permissions);
 	}
 }

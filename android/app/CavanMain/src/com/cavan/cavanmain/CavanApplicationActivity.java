@@ -23,6 +23,7 @@ public class CavanApplicationActivity extends PreferenceActivity {
 		sHashMapKeyActivity.put("radix_converter", com.cavan.radixconverter.MainActivity.class);
 		sHashMapKeyActivity.put("resistor_decoder", com.cavan.resistordecoder.MainActivity.class);
 		sHashMapKeyActivity.put("wifi_detector", com.cavan.wifi.WifiDetectorActivity.class);
+		sHashMapKeyActivity.put("wifi_password", com.cavan.wifi.WifiPasswordActivity.class);
 	};
 
 	@Override
@@ -34,14 +35,17 @@ public class CavanApplicationActivity extends PreferenceActivity {
 		if (screen != null) {
 			for (int i = screen.getPreferenceCount() - 1; i >= 0; i--) {
 				Preference preference = screen.getPreference(i);
+				String key = preference.getKey();
 
-				Class<?> cls = sHashMapKeyActivity.get(preference.getKey());
+				Class<?> cls = sHashMapKeyActivity.get(key);
 				if (cls != null) {
+					CavanAndroid.dLog(key + " => " + cls.getCanonicalName());
+
 					Intent intent = new Intent(this, cls);
 					intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
 					preference.setIntent(intent);
 				} else {
-					CavanAndroid.eLog("Invalid preference: " + preference);
+					CavanAndroid.eLog("Invalid preference: " + key);
 				}
 			}
 		}

@@ -18,5 +18,7 @@
 	    android:title="@string/app_name_resistor_decoder"/>
 	<Preference android:key="wifi_detector"
 	    android:title="@string/wifi_detector"/>
+	<Preference android:key="wifi_password"
+	    android:title="@string/show_wifi_password"/>
 
 </PreferenceScreen>
