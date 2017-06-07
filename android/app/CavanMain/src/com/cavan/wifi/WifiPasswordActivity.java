@@ -2,6 +2,7 @@ package com.cavan.wifi;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import android.Manifest;
@@ -154,6 +155,8 @@ public class WifiPasswordActivity extends Activity implements OnItemSelectedList
 				}
 			}
 		}
+
+		Collections.sort(files);
 
 		return files;
 	}

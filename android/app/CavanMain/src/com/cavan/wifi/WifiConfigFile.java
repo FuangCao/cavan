@@ -43,7 +43,10 @@ public class WifiConfigFile extends CavanAndroidFile {
 			Cursor cursor = database.query("wifiConfig", new String[] { "ssid", "psk" }, null, null, null, null, null);
 			if (cursor != null && cursor.moveToFirst()) {
 				do {
-					points.add(cursor.getString(0) + " - " + cursor.getString(1));
+					String psk = cursor.getString(1);
+					if (psk != null) {
+						points.add(cursor.getString(0) + " - " + psk);
+					}
 				} while (cursor.moveToNext());
 			}
 		} catch (Exception e) {
