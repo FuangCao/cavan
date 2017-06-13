@@ -72,7 +72,7 @@ namespace FFMpegConvert {
             if (text != null && text.Length > 0) {
                 comboBoxVideoBitRate.Text = text;
             } else {
-                comboBoxVideoBitRate.SelectedIndex = 0;
+                comboBoxVideoBitRate.SelectedIndex = 1;
             }
 
             text = ConfigurationManager.AppSettings[CONFIG_AUDIO_CODEC];
@@ -518,7 +518,7 @@ namespace FFMpegConvert {
                 break;
 
             default:
-                textBoxParam.Text = "-r 30";
+                textBoxParam.Text = "-r 25";
                 break;
             }
         }

@@ -98,6 +98,7 @@
             this.comboBoxVideoBitRate.FormattingEnabled = true;
             this.comboBoxVideoBitRate.Items.AddRange(new object[] {
             "8000k",
+            "3500k",
             "2000k"});
             this.comboBoxVideoBitRate.Location = new System.Drawing.Point(319, 375);
             this.comboBoxVideoBitRate.Name = "comboBoxVideoBitRate";
