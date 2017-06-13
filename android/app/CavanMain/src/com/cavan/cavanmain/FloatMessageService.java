@@ -25,8 +25,6 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.FileObserver;
 import android.os.Handler;
-import android.os.Handler.Callback;
-import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
@@ -37,6 +35,7 @@ import android.view.WindowManager.LayoutParams;
 import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanThreadedHandler;
 import com.cavan.android.CavanWakeLock;
 import com.cavan.android.FloatWidowService;
 import com.cavan.cavanjni.CavanJni;
@@ -76,8 +75,11 @@ public class FloatMessageService extends FloatWidowService {
 	private static final int MSG_CLIPBOARD_RECEIVED = 8;
 	private static final int MSG_CHECK_KEYGUARD = 9;
 	private static final int MSG_RED_PACKET_UPDATED = 10;
-	private static final int MSG_KEEP_ALIVE = 11;
-	private static final int MSG_CHECK_SERVICE_STATE = 12;
+	private static final int MSG_CHECK_SERVICE_STATE = 11;
+
+	public static final int MSG_SEND_UDP_COMMAND = 1;
+	public static final int MSG_SEND_TCP_COMMAND = 2;
+	private static final int MSG_KEEP_ALIVE = 3;
 
 	private int mLastSecond;
 	private boolean mScreenClosed;
@@ -88,9 +90,9 @@ public class FloatMessageService extends FloatWidowService {
 	private UdpDaemonThread mUdpDaemon;
 	private TcpDaemonThread mTcpDaemon;
 	private TcpBridgeThread mTcpBridge;
-	private NetworkSendThread mNetSender;
 
 	private boolean mNetworkConnected;
+	private NetworkSendHandler mNetworkSendHandler = new NetworkSendHandler();
 
 	private Handler mHandler = new Handler() {
 
@@ -207,17 +209,6 @@ public class FloatMessageService extends FloatWidowService {
 				CavanAndroid.showToast(getApplicationContext(), text);
 				break;
 
-			case MSG_KEEP_ALIVE:
-				removeMessages(MSG_KEEP_ALIVE);
-
-				if (mTcpDaemon != null && mTcpDaemon.isRunning()) {
-					CavanAndroid.dLog("Send: " + NET_CMD_KEEP_ALIVE);
-
-					mTcpDaemon.sendCommand(NET_CMD_KEEP_ALIVE);
-					sendEmptyMessageDelayed(MSG_KEEP_ALIVE, KEEP_ALIVE_DELAY);
-				}
-				break;
-
 			case MSG_CHECK_SERVICE_STATE:
 				removeMessages(MSG_CHECK_SERVICE_STATE);
 				if (checkServiceState()) {
@@ -270,10 +261,8 @@ public class FloatMessageService extends FloatWidowService {
 				break;
 
 			case CavanMessageActivity.ACTION_SEND_WAN_COMMAN:
-				if (mNetSender != null) {
-					String command = intent.getStringExtra("command");
-					mNetSender.sendTcpCommand(command, 0);
-				}
+				String command = intent.getStringExtra("command");
+				mNetworkSendHandler.sendTcpCommand(command, 0);
 				break;
 
 			case CavanMessageActivity.ACTION_SERVICE_EXIT:
@@ -347,9 +336,9 @@ public class FloatMessageService extends FloatWidowService {
 							sendCodeUpdateBroadcast(CavanMessageActivity.ACTION_CODE_ADD, code);
 						}
 
-						if (node.isSendEnabled() && mNetSender != null) {
+						if (node.isSendEnabled()) {
 							long delay = node.getTime() - System.currentTimeMillis();
-							mNetSender.sendCode(code, delay);
+							mNetworkSendHandler.sendCode(code, delay);
 						}
 					}
 				}
@@ -443,29 +432,17 @@ public class FloatMessageService extends FloatWidowService {
 
 		@Override
 		public boolean sendRedPacketCode(String code) throws RemoteException {
-			if (mNetSender == null) {
-				return false;
-			}
-
-			return mNetSender.sendCode(code, 0);
+			return mNetworkSendHandler.sendCode(code, 0);
 		}
 
 		@Override
 		public boolean sendUdpCommand(String command) throws RemoteException {
-			if (mNetSender == null) {
-				return false;
-			}
-
-			return mNetSender.sendUdpCommand(command, 0, 0);
+			return mNetworkSendHandler.sendUdpCommand(command, 0, 0);
 		}
 
 		@Override
 		public boolean sendTcpCommand(String command) throws RemoteException {
-			if (mNetSender == null) {
-				return false;
-			}
-
-			return mNetSender.sendTcpCommand(command, 0);
+			return mNetworkSendHandler.sendTcpCommand(command, 0);
 		}
 
 		@Override
@@ -651,9 +628,6 @@ public class FloatMessageService extends FloatWidowService {
 
 		mFileObserverQQ.startWatching();
 
-		mNetSender = new NetworkSendThread();
-		mNetSender.start();
-
 		mUdpDaemon = new UdpDaemonThread();
 		mUdpDaemon.start();
 
@@ -673,8 +647,8 @@ public class FloatMessageService extends FloatWidowService {
 			mUdpDaemon.setActive(false);
 		}
 
-		if (mNetSender != null) {
-			mNetSender.quit();
+		if (mNetworkSendHandler != null) {
+			mNetworkSendHandler.quit();
 		}
 
 		mFileObserverQQ.stopWatching();
@@ -732,37 +706,28 @@ public class FloatMessageService extends FloatWidowService {
 		return super.doInitialize();
 	}
 
-	public class NetworkSendThread extends HandlerThread implements Callback {
+	public class NetworkSendHandler extends CavanThreadedHandler {
 
-		public static final int MSG_SEND_UDP_COMMAND = 2;
-		public static final int MSG_SEND_TCP_COMMAND = 3;
-
-		private Handler mNetSendHandler;
 		private MulticastSocket mUdpSocket;
 
-		public NetworkSendThread() {
-			super("NetworkSendThread");
+		public NetworkSendHandler() {
+			super(NetworkSendHandler.class);
 		}
 
-		public boolean sendCommand(int what, String command, long delay, int retry) {
-			if (mNetSendHandler == null) {
-				return false;
-			}
-
-			Message message = mNetSendHandler.obtainMessage(what, retry, 0, command);
+		public void sendCommand(int what, String command, long delay, int retry) {
+			Message message = obtainMessage(what, retry, 0, command);
 
 			if (delay > 0) {
-				mNetSendHandler.sendMessageDelayed(message, delay);
+				sendMessageDelayed(message, delay);
 			} else {
-				mNetSendHandler.sendMessage(message);
+				sendMessage(message);
 			}
-
-			return true;
 		}
 
 		public boolean sendTcpCommand(String command, long delay) {
 			if (CavanMessageActivity.isWanShareEnabled(getApplicationContext())) {
-				return sendCommand(MSG_SEND_TCP_COMMAND, command, delay, 0);
+				sendCommand(MSG_SEND_TCP_COMMAND, command, delay, 0);
+				return true;
 			}
 
 			return false;
@@ -770,7 +735,8 @@ public class FloatMessageService extends FloatWidowService {
 
 		public boolean sendUdpCommand(String command, long delay, int retry) {
 			if (CavanMessageActivity.isLanShareEnabled(getApplicationContext())) {
-				return sendCommand(MSG_SEND_UDP_COMMAND, command, delay, retry);
+				sendCommand(MSG_SEND_UDP_COMMAND, command, delay, retry);
+				return true;
 			}
 
 			return false;
@@ -794,12 +760,7 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		@Override
-		protected void onLooperPrepared() {
-			mNetSendHandler = new Handler(getLooper(), this);
-		}
-
-		@Override
-		public boolean handleMessage(Message msg) {
+		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case MSG_SEND_TCP_COMMAND:
 				if (mTcpDaemon != null) {
@@ -833,13 +794,22 @@ public class FloatMessageService extends FloatWidowService {
 				}
 
 				if (msg.arg1 > 0) {
-					Message message = mNetSendHandler.obtainMessage(msg.what, msg.arg1 - 1, 0, msg.obj);
-					mNetSendHandler.sendMessageDelayed(message, 1000);
+					Message message = obtainMessage(msg.what, msg.arg1 - 1, 0, msg.obj);
+					sendMessageDelayed(message, 1000);
+				}
+				break;
+
+			case MSG_KEEP_ALIVE:
+				removeMessages(MSG_KEEP_ALIVE);
+
+				if (mTcpDaemon != null && mTcpDaemon.isRunning()) {
+					CavanAndroid.dLog("Send: " + NET_CMD_KEEP_ALIVE);
+
+					mTcpDaemon.sendCommand(NET_CMD_KEEP_ALIVE);
+					sendEmptyMessageDelayed(MSG_KEEP_ALIVE, KEEP_ALIVE_DELAY);
 				}
 				break;
 			}
-
-			return true;
 		}
 	}
 
@@ -1068,7 +1038,7 @@ public class FloatMessageService extends FloatWidowService {
 						BufferedReader reader = new BufferedReader(new InputStreamReader(mInputStream));
 
 						mRunning = true;
-						mHandler.sendEmptyMessage(MSG_KEEP_ALIVE);
+						mNetworkSendHandler.sendEmptyMessage(MSG_KEEP_ALIVE);
 
 						while (true) {
 							try {
