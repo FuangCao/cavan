@@ -540,7 +540,12 @@ public class RedPacketFinder {
 				return null;
 			}
 
-			if (mLines.get(0).contains("[" + code + "红包]")) {
+			String line = mLines.get(0);
+			if (line.length() > 100) {
+				return null;
+			}
+
+			if (line.contains("[" + code + "红包]")) {
 				return code;
 			}
 

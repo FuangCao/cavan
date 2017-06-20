@@ -201,10 +201,14 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI":
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI":
-			AccessibilityNodeInfo backNode = findDetailUiBackNode(root);
-			if (backNode != null) {
-				setLockEnable(POLL_DELAY, false);
-				CavanAccessibility.performClickAndRecycle(backNode);
+			if (getPacketCount() > 0) {
+				AccessibilityNodeInfo backNode = findDetailUiBackNode(root);
+				if (backNode != null) {
+					setLockEnable(POLL_DELAY, false);
+					CavanAccessibility.performClickAndRecycle(backNode);
+				}
+			} else {
+				setForceUnpackEnable(false);
 			}
 			break;
 
@@ -255,11 +259,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 				if (getPacketCount() > 0) {
 					setLockEnable(POLL_DELAY, true);
 				}
-
-				break;
-			}
-
-			if (getPacketCount() > 0) {
+			} else if (getPacketCount() > 0) {
 				setLockEnable(POLL_DELAY, false);
 			}
 		}
