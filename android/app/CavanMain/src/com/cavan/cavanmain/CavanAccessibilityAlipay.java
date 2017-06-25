@@ -20,8 +20,9 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 	private static final String CLASS_NAME_EDIT_TEXT = EditText.class.getName();
 
 	private static final long POLL_DELAY = 500;
+	private static final long OPEN_APP_DELAY = 1000;
 	private static final long POLL_DELAY_XIUXIU = 2000;
-	private static final long UNPACK_OVERTIME = 2000;
+	private static final long UNPACK_OVERTIME = 3000;
 	private static final long COMMIT_OVERTIME = 300000;
 	private static final long REPEAT_OVERTIME = 10000;
 	private static final long POLL_OVERTIME = 60000;
@@ -69,6 +70,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 
 				if (mAutoOpenAlipay && mPackets.size() > 0) {
 					RedPacketListenerService.startAlipayActivity(mService);
+					startAutoCommitRedPacketCode(OPEN_APP_DELAY);
 				}
 			}
 		}
@@ -114,6 +116,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 		if (mCodeCount <= 0 && mXiuXiu == false) {
 			return false;
 		}
+
+		CavanAndroid.dumpstack();
 
 		List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(backViewId);
 		if (nodes != null && nodes.size() > 0) {
@@ -191,9 +195,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 
 			if (code.maybeInvalid()) {
 				if (getWindowTimeConsume() > 1000) {
-					setRedPacketCodeInvalid(code);
-					startAutoCommitRedPacketCode(0);
-					postRedPacketCode(root, null);
+					setRedPacketCodeInvalid(root, code);
 				}
 
 				break;
@@ -209,9 +211,13 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 
 		case "com.alipay.mobile.framework.app.ui.DialogHelper$APGenericProgressDialog":
 			if (getWindowTimeConsume() > UNPACK_OVERTIME && isCurrentRedPacketCode(mCode)) {
-				mCode.setCommitCount(0);
-				if (!mCode.isValid()) {
-					mCode.updateTime();
+				if (CavanAndroid.SDK_VERSION < CavanAndroid.SDK_VERSION_70) {
+					mCode.setCommitCount(0);
+					if (!mCode.isValid()) {
+						mCode.updateTime();
+					}
+				} else {
+					setRedPacketCodeInvalid(root);
 				}
 
 				performBackAction(root, true);
@@ -356,19 +362,25 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 		return false;
 	}
 
-	private void setRedPacketCodeInvalid(RedPacketCode code) {
+	private void setRedPacketCodeInvalid(AccessibilityNodeInfo root, RedPacketCode code) {
 		CavanAndroid.dLog("add invalid code: " + code.getCode());
 		removeRedPacketCode(code);
 		code.setInvalid();
+
+		if (root != null) {
+			postRedPacketCode(root, null);
+		}
+
+		startAutoCommitRedPacketCode(0);
 	}
 
-	private boolean setRedPacketCodeInvalid() {
+	private boolean setRedPacketCodeInvalid(AccessibilityNodeInfo root) {
 		if (isCurrentRedPacketCode(mCode) && mCode.canRemove()) {
 			if (mCode.isValid()) {
 				return false;
 			}
 
-			setRedPacketCodeInvalid(mCode);
+			setRedPacketCodeInvalid(root, mCode);
 			return true;
 		}
 
@@ -549,7 +561,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 				}
 			}
 		} else if (mCodeCount > 0) {
-			setRedPacketCodeInvalid();
+			setRedPacketCodeInvalid(null);
 		}
 	}
 

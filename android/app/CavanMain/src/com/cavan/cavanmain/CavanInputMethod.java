@@ -50,6 +50,8 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	public static final int KEYCODE_SPACE = 13;
 	public static final int KEYCODE_OCR = 14;
 
+	private static CavanInputMethod sInstance;
+
 	private GridView mCodeGridView;
 	private RedPacketCode[] mUiCodes;
 	private RedPacketViewAdapter mAdapter = new RedPacketViewAdapter();
@@ -65,6 +67,18 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	private int mSelection;
 	private int mSelectionStart;
 	private int mSelectionEnd;
+
+	public static CavanInputMethod getInstance() {
+		return sInstance;
+	}
+
+	public static EditorInfo getCurrentInputEditorInfoStatic() {
+		if (sInstance == null) {
+			return null;
+		}
+
+		return sInstance.getCurrentInputEditorInfo();
+	}
 
 	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
 
@@ -144,11 +158,14 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		filter.addAction(CavanMessageActivity.ACTION_CODE_COMMIT);
 		registerReceiver(mReceiver, filter);
 
+		sInstance = this;
+
 		super.onCreate();
 	}
 
 	@Override
 	public void onDestroy() {
+		sInstance = null;
 		unregisterReceiver(mReceiver);
 		super.onDestroy();
 	}
