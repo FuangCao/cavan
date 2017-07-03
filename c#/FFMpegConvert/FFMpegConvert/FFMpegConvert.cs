@@ -372,6 +372,7 @@ namespace FFMpegConvert {
 
             builder.Append(" -vcodec ").Append(mVideoCodec);
             builder.Append(" -b:v ").Append(mVideoBitRate);
+            builder.Append(" -preset slower ");
 
             if (mVideoCodecParam.Length > 0) {
                 builder.Append(" ").Append(mVideoCodecParam);
