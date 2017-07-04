@@ -9,7 +9,7 @@ function cavan-ubuntu-info()
 	cat "${FILE_LSB_RELEASE}"
 }
 
-function cavan-ubuntu-source()
+function cavan-apt-get-source()
 {
 	local server
 	
@@ -26,8 +26,20 @@ function cavan-ubuntu-source()
 	done
 }
 
-alias cavan-ubuntu-source-aliyun="cavan-ubuntu-source mirrors.aliyun.com"
-alias cavan-ubuntu-source-cn99="cavan-ubuntu-source mirrors.cn99.com"
-alias cavan-ubuntu-source-sohu="cavan-ubuntu-source mirrors.sohu.com"
-alias cavan-ubuntu-source-ustc="cavan-ubuntu-source mirrors.ustc.edu.cn"
-alias cavan-ubuntu-source-sjtu="cavan-ubuntu-source ftp.sjtu.edu.cn"
+alias cavan-apt-get-source-aliyun="cavan-apt-get-source mirrors.aliyun.com"
+alias cavan-apt-get-source-cn99="cavan-apt-get-source mirrors.cn99.com"
+alias cavan-apt-get-source-sohu="cavan-apt-get-source mirrors.sohu.com"
+alias cavan-apt-get-source-ustc="cavan-apt-get-source mirrors.ustc.edu.cn"
+alias cavan-apt-get-source-sjtu="cavan-apt-get-source ftp.sjtu.edu.cn"
+
+function cavan-nginx-restart()
+{
+	sudo killall nginx
+
+	if $(sudo nginx)
+	then
+		echo "start nginx successfull"
+	else
+		echo "start nginx failed"
+	fi
+}

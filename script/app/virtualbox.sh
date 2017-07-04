@@ -91,3 +91,5 @@ function cavan-virtualbox-setup()
 
 	return 1
 }
+
+alias cavan-virtualbox-set-uuid="VBoxManage internalcommands sethduuid"

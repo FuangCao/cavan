@@ -41,6 +41,7 @@ alias cavan-netstat="netstat -napdl"
 alias cavan-ps-ef="ps -ef"
 alias cavan-ps-aux="ps -aux"
 alias cavan-ps="cavan-ps-ef"
+alias cavan-timestamp="date +%s"
 
 CMD_TCP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tcp_dd_server"
 CMD_TFTP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tftp_dd_server"
