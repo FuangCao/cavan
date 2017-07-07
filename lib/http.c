@@ -347,7 +347,7 @@ const struct cavan_http_prop *cavan_http_find_prop(const struct cavan_http_prop 
 	const struct cavan_http_prop *prop_end;
 
 	for (prop_end = props + size; props < prop_end; props++) {
-		if (strcmp(props->key, key) == 0) {
+		if (strcasecmp(props->key, key) == 0) {
 			return props;
 		}
 	}
@@ -360,7 +360,7 @@ const char *cavan_http_find_prop_simple(const struct cavan_http_prop *props, siz
 	const struct cavan_http_prop *prop_end;
 
 	for (prop_end = props + size; props < prop_end; props++) {
-		if (strcmp(props->key, key) == 0) {
+		if (strcasecmp(props->key, key) == 0) {
 			return props->value;
 		}
 	}
@@ -812,12 +812,6 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 	println("filter = %s", filter);
 #endif
 
-	dp = opendir(dirname);
-	if (dp == NULL) {
-		pr_err_info("opendir: %s", dirname);
-		return -EFAULT;
-	}
-
 	fd = cavan_http_open_html_file(dirname, NULL);
 	if (fd < 0) {
 		ret = fd;
@@ -874,91 +868,99 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 		ffile_printf(fd, " [<a href=\"%s/\">SDcard%d</a>]", env, i);
 	}
 
-	ffile_puts(fd, "</h5>\r\n\t\t<form enctype=\"multipart/form-data\" onsubmit=\"return onUploadSubmit(this)\" action=\".\" method=\"post\">\r\n");
-	ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"Upload\">\r\n");
-	ffile_puts(fd, "\t\t\t<input id=\"upload\" name=\"pathname\" type=\"file\">\r\n");
-	ffile_puts(fd, "\t\t</form>\r\n");
-	ffile_puts(fd, "\t\t<form method=\"get\">\r\n");
-	ffile_printf(fd, "\t\t\t<input name=\"filter\" type=\"text\" value=\"%s\">\r\n", text_fixup_null_simple(filter));
-	ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"Search\">\r\n");
-	ffile_puts(fd, "\t\t</form>\r\n");
-	ffile_puts(fd, "\t\t<table id=\"dirlisting\" summary=\"Directory Listing\">\r\n");
-	ffile_puts(fd, "\t\t\t<tr><td><b>type</b></td><td><b>filename</b></td><td><b>size</b></td><td><b>date</b></td></tr>\r\n");
+	ffile_puts(fd, "</h5>\r\n");
 
-	filter = text_fixup_empty_simple(filter);
+	dp = opendir(dirname);
+	if (dp == NULL) {
+		pr_err_info("opendir: %s", dirname);
+		ffile_printf(fd, "\t\t<h5><font color=\"#FF0000\">Failed to open: %s</font></h5>\r\n", strerror(errno));
+	} else {
+		filter = text_fixup_empty_simple(filter);
 
-	while ((entry = readdir(dp))) {
-		char buff[32];
-		struct tm time;
-		const char *type;
+		ffile_printf(fd, "\t\t<form enctype=\"multipart/form-data\" onsubmit=\"return onUploadSubmit(this)\" action=\"%s\" method=\"post\">\r\n", dirname);
+		ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"Upload\">\r\n");
+		ffile_puts(fd, "\t\t\t<input id=\"upload\" name=\"pathname\" type=\"file\">\r\n");
+		ffile_puts(fd, "\t\t</form>\r\n");
+		ffile_puts(fd, "\t\t<form method=\"get\">\r\n");
+		ffile_printf(fd, "\t\t\t<input name=\"filter\" type=\"text\" value=\"%s\">\r\n", text_fixup_null_simple(filter));
+		ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"Search\">\r\n");
+		ffile_puts(fd, "\t\t</form>\r\n");
+		ffile_puts(fd, "\t\t<table id=\"dirlisting\" summary=\"Directory Listing\">\r\n");
+		ffile_puts(fd, "\t\t\t<tr><td><b>type</b></td><td><b>filename</b></td><td><b>size</b></td><td><b>date</b></td></tr>\r\n");
 
-		if (cavan_path_is_dot_name(entry->d_name)) {
-			continue;
+		while ((entry = readdir(dp))) {
+			char buff[32];
+			struct tm time;
+			const char *type;
+
+			if (cavan_path_is_dot_name(entry->d_name)) {
+				continue;
+			}
+
+			if (filter != NULL && strcasestr(entry->d_name, filter) == NULL) {
+				continue;
+			}
+
+			strcpy(filename, entry->d_name);
+
+			if (file_stat(pathname, &st) < 0) {
+				continue;
+			}
+
+			ffile_puts(fd, "\t\t\t<tr>");
+
+			switch (st.st_mode & S_IFMT) {
+			case S_IFLNK:
+				type = "LINK";
+				break;
+
+			case S_IFIFO:
+				type = "FIFO";
+				break;
+
+			case S_IFCHR:
+				type = "CHR";
+				break;
+
+			case S_IFBLK:
+				type = "BLK";
+				break;
+
+			case S_IFDIR:
+				type = "DIR";
+				break;
+
+			case S_IFSOCK:
+				type = "SOCK";
+				break;
+
+			default:
+				type = "FILE";
+			}
+
+			ffile_printf(fd, "<td>[%s]</td><td>", type);
+
+			if ((st.st_mode & S_IFMT) == S_IFDIR) {
+				ffile_printf(fd, "<a href=\"%s/\">%s</a>", entry->d_name, entry->d_name);
+			} else {
+				ffile_printf(fd, "<a href=\"%s\">%s</a>", entry->d_name, entry->d_name);
+			}
+
+			ffile_puts(fd, "</td><td>");
+			ffile_write(fd, buff, mem_size_tostring_simple(st.st_size, buff, sizeof(buff)) - buff);
+
+			if (localtime_r((time_t *) &st.st_mtime, &time) == NULL) {
+				memset(&time, 0x00, sizeof(time));
+			}
+
+			ffile_printf(fd, "</td><td>%04d-%02d-%02d %02d:%02d:%02d</td>",
+				time.tm_year + 1900, time.tm_mon + 1, time.tm_mday, time.tm_hour, time.tm_min, time.tm_sec);
+
+			ffile_printf(fd, "</tr>\r\n");
 		}
 
-		if (filter != NULL && strcasestr(entry->d_name, filter) == NULL) {
-			continue;
-		}
-
-		strcpy(filename, entry->d_name);
-
-		if (file_stat(pathname, &st) < 0) {
-			continue;
-		}
-
-		ffile_puts(fd, "\t\t\t<tr>");
-
-		switch (st.st_mode & S_IFMT) {
-		case S_IFLNK:
-			type = "LINK";
-			break;
-
-		case S_IFIFO:
-			type = "FIFO";
-			break;
-
-		case S_IFCHR:
-			type = "CHR";
-			break;
-
-		case S_IFBLK:
-			type = "BLK";
-			break;
-
-		case S_IFDIR:
-			type = "DIR";
-			break;
-
-		case S_IFSOCK:
-			type = "SOCK";
-			break;
-
-		default:
-			type = "FILE";
-		}
-
-		ffile_printf(fd, "<td>[%s]</td><td>", type);
-
-		if ((st.st_mode & S_IFMT) == S_IFDIR) {
-			ffile_printf(fd, "<a href=\"%s/\">%s</a>", entry->d_name, entry->d_name);
-		} else {
-			ffile_printf(fd, "<a href=\"%s\">%s</a>", entry->d_name, entry->d_name);
-		}
-
-		ffile_puts(fd, "</td><td>");
-		ffile_write(fd, buff, mem_size_tostring_simple(st.st_size, buff, sizeof(buff)) - buff);
-
-		if (localtime_r((time_t *) &st.st_mtime, &time) == NULL) {
-			memset(&time, 0x00, sizeof(time));
-		}
-
-		ffile_printf(fd, "</td><td>%04d-%02d-%02d %02d:%02d:%02d</td>",
-			time.tm_year + 1900, time.tm_mon + 1, time.tm_mday, time.tm_hour, time.tm_min, time.tm_sec);
-
-		ffile_printf(fd, "</tr>\r\n");
+		ffile_puts(fd, "\t\t</table>\r\n");
 	}
-
-	ffile_puts(fd, "\t\t</table>\r\n");
 
 	ret = cavan_http_flush_html_file(fd);
 	if (ret < 0) {
@@ -972,8 +974,12 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 	}
 
 	close(fd);
+
 out_closedir:
-	closedir(dp);
+	if (dp != NULL) {
+		closedir(dp);
+	}
+
 	return ret;
 }
 
@@ -984,8 +990,12 @@ int cavan_http_process_get(struct network_client *client, struct cavan_http_requ
 
 	ret = file_stat(req->url, &st);
 	if (ret < 0) {
-		cavan_http_send_reply(client, 404, "File not found: %s", req->url);
-		return ret;
+		if (errno == ENOENT) {
+			cavan_http_send_reply(client, 404, "File not found: %s", req->url);
+			return ret;
+		}
+
+		return cavan_http_list_directory(client, req->url, NULL);
 	}
 
 	switch (st.st_mode & S_IFMT) {

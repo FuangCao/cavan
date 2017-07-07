@@ -51,7 +51,7 @@ public class TcpDdService extends CavanService {
 	@Override
 	protected void onServiceStateChanged(int state) {
 		if (state == STATE_PREPARE) {
-			File dir = getDir("bin", 0777);
+			File dir = getDir("bin", MODE_PRIVATE);
 			if (dir != null) {
 				int id = getResourceByAbi();
 				if (id > 0) {
