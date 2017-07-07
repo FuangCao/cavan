@@ -801,7 +801,7 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 	int i;
 	int fd;
 	DIR *dp;
-	int ret;
+	int ret = 0;
 	struct stat st;
 	const char *env;
 	char *filename;
@@ -814,45 +814,54 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 
 	fd = cavan_http_open_html_file(dirname, NULL);
 	if (fd < 0) {
-		ret = fd;
 		pr_red_info("web_proxy_open_html_file");
-		goto out_closedir;
+		return fd;
 	}
 
-	ffile_puts(fd, "\t\t<script type=\"text/javascript\">\r\n");
-	ffile_puts(fd, "\t\tfunction onUploadSubmit(form) {\r\n");
-	ffile_puts(fd, "\t\t\tif (form.pathname.value.length > 0) {\r\n");
-	ffile_puts(fd, "\t\t\t\treturn true;\r\n");
-	ffile_puts(fd, "\t\t\t}\r\n");
-	ffile_puts(fd, "\t\t\talert(\"Please select a file!\");\r\n");
-	ffile_puts(fd, "\t\t\treturn false;\r\n");
-	ffile_puts(fd, "\t\t}\r\n");
-	ffile_puts(fd, "\t\t</script>\r\n");
-	ffile_puts(fd, "\t\t<h5>Current directory: ");
+	ret |= ffile_puts(fd, "\t\t<script type=\"text/javascript\">\r\n");
+	ret |= ffile_puts(fd, "\t\tfunction onUploadSubmit(form) {\r\n");
+	ret |= ffile_puts(fd, "\t\t\tif (form.pathname.value.length > 0) {\r\n");
+	ret |= ffile_puts(fd, "\t\t\t\treturn true;\r\n");
+	ret |= ffile_puts(fd, "\t\t\t}\r\n");
+	ret |= ffile_puts(fd, "\t\t\talert(\"Please select a file!\");\r\n");
+	ret |= ffile_puts(fd, "\t\t\treturn false;\r\n");
+	ret |= ffile_puts(fd, "\t\t}\r\n");
+	ret |= ffile_puts(fd, "\t\t</script>\r\n");
+	ret |= ffile_puts(fd, "\t\t<h5>Current directory: ");
+
+	if (ret < 0) {
+		pr_red_info("ffile_puts");
+		return ret;
+	}
 
 	filename = cavan_path_copy(pathname, sizeof(pathname), dirname, true);
 
 	ret = cavan_http_write_path_hrefs(fd, pathname);
 	if (ret < 0) {
 		pr_red_info("cavan_http_write_path_html: %d", ret);
-		goto out_closedir;
+		return ret;
 	}
 
-	ffile_puts(fd, "</h5>\r\n\t\t<h5>[<a href=\"..\">Parent</a>]");
+	ret |= ffile_puts(fd, "</h5>\r\n\t\t<h5>[<a href=\"..\">Parent</a>]");
 
 	env = cavan_getenv("HOME", NULL);
 	if (env != NULL) {
-		ffile_printf(fd, " [<a href=\"%s/\">Home</a>]", env);
+		ret |= ffile_printf(fd, " [<a href=\"%s/\">Home</a>]", env);
 	}
 
 	env = cavan_path_get_tmp_directory();
 	if (env != NULL) {
-		ffile_printf(fd, " [<a href=\"%s/\">Temp</a>]", env);
+		ret |= ffile_printf(fd, " [<a href=\"%s/\">Temp</a>]", env);
 	}
 
 	env = cavan_getenv("APP_PATH", NULL);
 	if (env != NULL) {
-		ffile_printf(fd, " [<a href=\"%s/\">App</a>]", env);
+		ret |= ffile_printf(fd, " [<a href=\"%s/\">App</a>]", env);
+	}
+
+	if (ret < 0) {
+		pr_red_info("ffile_printf");
+		return ret;
 	}
 
 	for (i = 0; i < 10; i++) {
@@ -865,28 +874,41 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 			break;
 		}
 
-		ffile_printf(fd, " [<a href=\"%s/\">SDcard%d</a>]", env, i);
+		ret = ffile_printf(fd, " [<a href=\"%s/\">SDcard%d</a>]", env, i);
+		if (ret < 0) {
+			pr_red_info("ffile_printf");
+			return ret;
+		}
 	}
 
-	ffile_puts(fd, "</h5>\r\n");
+	ret |= ffile_puts(fd, "</h5>\r\n");
+	if (ret < 0) {
+		pr_red_info("ffile_puts");
+		return ret;
+	}
 
 	dp = opendir(dirname);
 	if (dp == NULL) {
 		pr_err_info("opendir: %s", dirname);
-		ffile_printf(fd, "\t\t<h5><font color=\"#FF0000\">Failed to open: %s</font></h5>\r\n", strerror(errno));
+		ret |= ffile_printf(fd, "\t\t<h5><font color=\"#FF0000\">Failed to open: %s</font></h5>\r\n", strerror(errno));
 	} else {
 		filter = text_fixup_empty_simple(filter);
 
-		ffile_printf(fd, "\t\t<form enctype=\"multipart/form-data\" onsubmit=\"return onUploadSubmit(this)\" action=\"%s\" method=\"post\">\r\n", dirname);
-		ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"Upload\">\r\n");
-		ffile_puts(fd, "\t\t\t<input id=\"upload\" name=\"pathname\" type=\"file\">\r\n");
-		ffile_puts(fd, "\t\t</form>\r\n");
-		ffile_puts(fd, "\t\t<form method=\"get\">\r\n");
-		ffile_printf(fd, "\t\t\t<input name=\"filter\" type=\"text\" value=\"%s\">\r\n", text_fixup_null_simple(filter));
-		ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"Search\">\r\n");
-		ffile_puts(fd, "\t\t</form>\r\n");
-		ffile_puts(fd, "\t\t<table id=\"dirlisting\" summary=\"Directory Listing\">\r\n");
-		ffile_puts(fd, "\t\t\t<tr><td><b>type</b></td><td><b>filename</b></td><td><b>size</b></td><td><b>date</b></td></tr>\r\n");
+		ret |= ffile_printf(fd, "\t\t<form enctype=\"multipart/form-data\" onsubmit=\"return onUploadSubmit(this)\" action=\"%s\" method=\"post\">\r\n", dirname);
+		ret |= ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"Upload\">\r\n");
+		ret |= ffile_puts(fd, "\t\t\t<input id=\"upload\" name=\"pathname\" type=\"file\">\r\n");
+		ret |= ffile_puts(fd, "\t\t</form>\r\n");
+		ret |= ffile_puts(fd, "\t\t<form method=\"get\">\r\n");
+		ret |= ffile_printf(fd, "\t\t\t<input name=\"filter\" type=\"text\" value=\"%s\">\r\n", text_fixup_null_simple(filter));
+		ret |= ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"Search\">\r\n");
+		ret |= ffile_puts(fd, "\t\t</form>\r\n");
+		ret |= ffile_puts(fd, "\t\t<table id=\"dirlisting\" summary=\"Directory Listing\">\r\n");
+		ret |= ffile_puts(fd, "\t\t\t<tr><td><b>type</b></td><td><b>filename</b></td><td><b>size</b></td><td><b>date</b></td></tr>\r\n");
+
+		if (ret < 0) {
+			pr_red_info("ffile_puts");
+			goto out_closedir;
+		}
 
 		while ((entry = readdir(dp))) {
 			char buff[32];
@@ -907,7 +929,7 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 				continue;
 			}
 
-			ffile_puts(fd, "\t\t\t<tr>");
+			ret |= ffile_puts(fd, "\t\t\t<tr>");
 
 			switch (st.st_mode & S_IFMT) {
 			case S_IFLNK:
@@ -938,28 +960,38 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 				type = "FILE";
 			}
 
-			ffile_printf(fd, "<td>[%s]</td><td>", type);
+			ret |= ffile_printf(fd, "<td>[%s]</td><td>", type);
 
 			if ((st.st_mode & S_IFMT) == S_IFDIR) {
-				ffile_printf(fd, "<a href=\"%s/\">%s</a>", entry->d_name, entry->d_name);
+				ret |= ffile_printf(fd, "<a href=\"%s/\">%s</a>", entry->d_name, entry->d_name);
 			} else {
-				ffile_printf(fd, "<a href=\"%s\">%s</a>", entry->d_name, entry->d_name);
+				ret |= ffile_printf(fd, "<a href=\"%s\">%s</a>", entry->d_name, entry->d_name);
 			}
 
-			ffile_puts(fd, "</td><td>");
-			ffile_write(fd, buff, mem_size_tostring_simple(st.st_size, buff, sizeof(buff)) - buff);
+			ret |= ffile_puts(fd, "</td><td>");
+			ret |= ffile_write(fd, buff, mem_size_tostring_simple(st.st_size, buff, sizeof(buff)) - buff);
 
 			if (localtime_r((time_t *) &st.st_mtime, &time) == NULL) {
 				memset(&time, 0x00, sizeof(time));
 			}
 
-			ffile_printf(fd, "</td><td>%04d-%02d-%02d %02d:%02d:%02d</td>",
+			ret |= ffile_printf(fd, "</td><td>%04d-%02d-%02d %02d:%02d:%02d</td>",
 				time.tm_year + 1900, time.tm_mon + 1, time.tm_mday, time.tm_hour, time.tm_min, time.tm_sec);
 
-			ffile_printf(fd, "</tr>\r\n");
+			ret |= ffile_printf(fd, "</tr>\r\n");
+
+			if (ret < 0) {
+				pr_red_info("ffile_printf");
+				goto out_closedir;
+			}
 		}
 
-		ffile_puts(fd, "\t\t</table>\r\n");
+		ret |= ffile_puts(fd, "\t\t</table>\r\n");
+	}
+
+	if (ret < 0) {
+		pr_red_info("ffile_puts");
+		goto out_closedir;
 	}
 
 	ret = cavan_http_flush_html_file(fd);
