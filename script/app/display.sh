@@ -65,3 +65,23 @@ Section "Screen"
 EndSection
 EOF
 }
+
+function cavan-xorg-setup-x11r6()
+{
+	local x11r6="/usr/X11R6"
+
+	mkdir -pv "${x11r6}" || return 1
+
+	for fn in lib lib64
+	do
+		rm "${x11r6}/${fn}"
+		ln -vsf "/usr/lib/xorg" "${x11r6}/${fn}" || return 1
+	done
+}
+
+function cavan-display-install-mga-driver()
+{
+	cavan-xorg-setup-x11r6 || return 1
+	sed -e 's#^\(\s*\)GetXPath#\1export XPATH=\"/usr/X11R6\"#g' -e 's#^\(\s*\)GetXVersion#\1export XPRESENT=1\n\1export XVERSION=\"7.0.0\"#g' -i install.sh || return 1
+	bash install.sh || return 1
+}
