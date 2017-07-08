@@ -145,6 +145,8 @@ function mount_disk()
 
 function swap_init()
 {
+	cat /proc/swaps | grep partition && return 0
+
 	[ -f "${FILE_SWAP_IMG}" ] ||
 	{
 		dd if=/dev/zero of=${FILE_SWAP_IMG} bs=4M count=1024 || return 1
