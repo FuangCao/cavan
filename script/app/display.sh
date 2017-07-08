@@ -1,5 +1,10 @@
 #!/bin/bash
 
+alias cavan-xorg-start="sudo service lightdm start"
+alias cavan-xorg-stop="sudo service lightdm stop"
+alias cavan-xorg-configure="sudo Xorg -configure"
+alias cavan-xorg-config="sudo X -config"
+
 function cavan-display-list()
 {
 	xrandr | grep "^\S\+\s\+connected" | awk '{ print $1 }' || return 1
@@ -32,4 +37,31 @@ function cavan-display-add-resolution()
 		echo "Output"
 		xrandr --output "${display}" --mode "${name}" || return 1
 	done
+}
+
+function cavan-xorg-gen-config()
+{
+	cat << EOF
+Section "Device"
+	Identifier	"Configured Video Device"
+EndSection
+
+Section "Monitor"
+	Identifier	"Configured Monitor"
+EOF
+
+	{
+		cvt 1920 1080
+		cvt 1280 720
+	} | sed 's/^/\t/g'
+
+	cat << EOF
+EndSection
+
+Section "Screen"
+	Identifier	"Default Screen"
+	Monitor		"Configured Monitor"
+	Device		"Configured Device"
+EndSection
+EOF
 }
