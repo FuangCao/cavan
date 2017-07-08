@@ -17,7 +17,8 @@ function cavan-disk-gen-fstab-single()
 	case "${type}" in
 		ext[2-4] | vfat | ntfs)
 			sudo mkdir -p "${point}" || return 1
-			echo "UUID=${uuid} ${point} ${type} errors=remount-ro 0 0"
+			echo "# ${point} was on $1 during installation"
+			printf "UUID=%-36s %-15s %-7s errors=remount-ro 0 0\n" "${uuid}" "${point}" "${type}"
 			;;
 
 		*)
