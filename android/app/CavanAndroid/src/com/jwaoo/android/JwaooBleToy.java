@@ -28,7 +28,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	private static final int SENSOR_DELAY_STEP = 100000;
 
 	public static final String[] BT_NAMES = {
-		"JwaooToy", "SenseTube", "SenseBand"
+		"JwaooToy", "SenseTube", "SenseBand", "Sensevibe warm"
 	};
 
 	public static final UUID[] BT_UUIDS = {
@@ -73,11 +73,17 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final String DEVICE_NAME_K101 = "K101";
 	public static final String DEVICE_NAME_MODEL06 = "MODEL-06";
 	public static final String DEVICE_NAME_MODEL10 = "MODEL-10";
+	public static final String DEVICE_NAME_MODEL11 = "MODEL-11";
+	public static final String DEVICE_NAME_MODEL01 = "MODEL-01";
+	public static final String DEVICE_NAME_MODEL03 = "MODEL-03";
 
 	public static final int DEVICE_ID_K100 = 100;
 	public static final int DEVICE_ID_K101 = 101;
 	public static final int DEVICE_ID_MODEL06 = 102;
 	public static final int DEVICE_ID_MODEL10 = 105;
+	public static final int DEVICE_ID_MODEL11 = 106;
+	public static final int DEVICE_ID_MODEL01 = 107;
+	public static final int DEVICE_ID_MODEL03 = 108;
 
 	public static final UUID UUID_SERVICE = UUID.fromString("00001888-0000-1000-8000-00805f9b34fb");
 	public static final UUID UUID_COMMAND = UUID.fromString("00001889-0000-1000-8000-00805f9b34fb");
@@ -1090,6 +1096,18 @@ public class JwaooBleToy extends CavanBleGatt {
 			mDeviceName = DEVICE_NAME_MODEL10;
 			mDeviceId = DEVICE_ID_MODEL10;
 			mBatteryCapacityTable = new VoltageCapacityTable(sBatteryCapacityEntriesCR1632);
+		} else if (identify.equals(DEVICE_NAME_MODEL11)) {
+			mSensor = new JwaooToySensorModel10();
+			mDeviceName = DEVICE_NAME_MODEL11;
+			mDeviceId = DEVICE_ID_MODEL11;
+		} else if (identify.equals(DEVICE_NAME_MODEL01)) {
+			mSensor = new JwaooToySensorModel10();
+			mDeviceName = DEVICE_NAME_MODEL01;
+			mDeviceId = DEVICE_ID_MODEL01;
+		} else if (identify.equals(DEVICE_NAME_MODEL03)) {
+			mSensor = new JwaooToySensorModel10();
+			mDeviceName = DEVICE_NAME_MODEL03;
+			mDeviceId = DEVICE_ID_MODEL03;
 		} else {
 			CavanAndroid.eLog("Invalid identify");
 			return false;
