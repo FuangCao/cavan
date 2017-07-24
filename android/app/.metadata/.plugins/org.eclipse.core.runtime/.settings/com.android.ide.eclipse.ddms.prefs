@@ -1,3 +1,10 @@
+allocPanel.Col0=34
+allocPanel.Col00=88
+allocPanel.Col1=113
+allocPanel.Col2=34
+allocPanel.Col3=50
+allocPanel.Col4=666
+allocPanel.stack.col0=1011
 ddms.logcat.auotmonitor.level=error
 ddms.logcat.automonitor.userprompt=true
 eclipse.preferences.version=1

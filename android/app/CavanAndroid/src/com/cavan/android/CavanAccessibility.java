@@ -635,13 +635,13 @@ public class CavanAccessibility {
 	@SuppressWarnings("deprecation")
 	public static boolean hasAction(AccessibilityNodeInfo node, int value) {
 		if (CavanAndroid.SDK_VERSION < 21) {
+			return (node.getActions() & value) != 0;
+		} else {
 			for (AccessibilityAction action : node.getActionList()) {
 				if (action.getId() == value) {
 					return true;
 				}
 			}
-		} else {
-			return (node.getActions() & value) != 0;
 		}
 
 		return false;
