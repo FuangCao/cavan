@@ -40,6 +40,9 @@ namespace JwaooOtpProgrammer {
         private JwaooMacAddress[] mMacAddressArray = {
             new JwaooMacAddress("JwaooMacModel06.txt", "JwaooFwModel06", new CavanMacAddress().fromString("88:EA:00:00:00:00")),
             new JwaooMacAddress("JwaooMacModel10.txt", "JwaooFwModel10", new CavanMacAddress().fromString("88:EB:00:00:00:00")),
+            new JwaooMacAddress("JwaooMacModel01.txt", "JwaooFwModel01", new CavanMacAddress().fromString("88:EC:00:00:00:00")),
+            new JwaooMacAddress("JwaooMacModel03.txt", "JwaooFwModel03", new CavanMacAddress().fromString("88:ED:00:00:00:00")),
+            new JwaooMacAddress("JwaooMacModel11.txt", "JwaooFwModel11", new CavanMacAddress().fromString("88:EE:00:00:00:00")),
         };
 
         public JwaooOtpProgrammer() {
