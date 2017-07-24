@@ -25,7 +25,7 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 	private static final int MAX_DISCONN_TIMES = 3;
 
 	private static final long CONNECT_OVERTIME = 6000;
-	private static final long DISCOVER_OVERTIME = 2000;
+	private static final long DISCOVER_OVERTIME = 5000;
 	private static final long CONNECT_WAIT_TIME = 1000;
 	private static final long DISCONN_WAIT_TIME = 3000;
 
