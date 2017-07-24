@@ -27,3 +27,5 @@ pgrep cavan-main
 pkill cavan-main
 htop
 free -h
+systemctl status tcp-dd.service
+journalctl -xe
