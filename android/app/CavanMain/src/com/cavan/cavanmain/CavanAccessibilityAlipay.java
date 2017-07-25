@@ -247,6 +247,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 			break;
 
 		case "com.alipay.mobile.nebulacore.ui.H5Activity":
+		case "com.alipay.mobile.nebulacore.ui.H5LoadingDialog":
 			if (isCurrentRedPacketCode(mCode)) {
 				mCode.setValid();
 

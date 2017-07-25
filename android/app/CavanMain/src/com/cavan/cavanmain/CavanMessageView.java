@@ -237,7 +237,7 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 				if (which == DialogInterface.BUTTON_NEUTRAL || CavanString.getLineCount(text) < 2) {
 					Intent intent = new Intent(CavanMessageActivity.ACTION_SEND_WAN_COMMAN);
 					intent.putExtra("command", FloatMessageService.NET_CMD_CLIPBOARD + text.toString().replace('\n', ' '));
-					getContext().sendBroadcast(intent);
+					mActivity.sendBroadcast(intent);
 				}
 				break;
 			}
