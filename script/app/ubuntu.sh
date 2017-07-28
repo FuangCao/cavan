@@ -2,7 +2,7 @@
 
 FILE_LSB_RELEASE="/etc/lsb-release"
 
-source "${FILE_LSB_RELEASE}"
+[ -f "${FILE_LSB_RELEASE}" ] && source "${FILE_LSB_RELEASE}"
 
 function cavan-ubuntu-info()
 {
