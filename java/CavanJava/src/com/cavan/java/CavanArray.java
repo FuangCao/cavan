@@ -1,5 +1,8 @@
 package com.cavan.java;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 public class CavanArray {
 
 	public static void copy(byte[] src, int srcPos, byte[] dest, int destPos, int length) {
@@ -74,5 +77,25 @@ public class CavanArray {
 			array[end] = temp;
 			index++;
 		}
+	}
+
+	public static boolean fill(InputStream stream, byte[] bytes) {
+		int offset = 0;
+
+		while (offset < bytes.length) {
+			try {
+				int length = stream.read(bytes, offset, bytes.length - offset);
+				if (length < 0) {
+					return false;
+				}
+
+				offset += length;
+			} catch (IOException e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
+
+		return true;
 	}
 }
