@@ -108,6 +108,8 @@ public class CavanTcpClient {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+
+			mSocket = null;
 		}
 	}
 
