@@ -6,12 +6,16 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
-public class CavanTcpClient {
+public class CavanTcpClient implements Runnable {
 
 	private Socket mSocket;
-	private InetSocketAddress mAddress;
 	private InputStream mInputStream;
 	private OutputStream mOutputStream;
+	private InetSocketAddress mAddress;
+
+	private Thread mConnThread = new Thread(this);
+	private boolean mConnDisabled;
+	private boolean mConnected;
 
 	public synchronized Socket getSocket() {
 		return mSocket;
@@ -19,18 +23,6 @@ public class CavanTcpClient {
 
 	public synchronized void setSocket(Socket socket) {
 		mSocket = socket;
-	}
-
-	public synchronized InetSocketAddress getAddress() {
-		return mAddress;
-	}
-
-	public synchronized void setAddress(InetSocketAddress address) {
-		mAddress = address;
-	}
-
-	public synchronized void setAddress(String host, int port) {
-		mAddress = new InetSocketAddress(host, port);
 	}
 
 	public synchronized InputStream getInputStream() {
@@ -49,26 +41,50 @@ public class CavanTcpClient {
 		mOutputStream = outputStream;
 	}
 
-	protected synchronized Socket createSocket() {
+	public synchronized boolean isConnected() {
+		return mConnected;
+	}
+
+	public synchronized void setConnected(boolean connected) {
+		mConnected = connected;
+	}
+
+	public synchronized InetSocketAddress getAddress() {
+		return mAddress;
+	}
+
+	public synchronized boolean setAddress(InetSocketAddress address) {
+		if (mAddress != null && mAddress.equals(address)) {
+			return false;
+		}
+
+		mAddress = address;
+
+		closeSocket();
+
+		return true;
+	}
+
+	public synchronized boolean setAddress(String host, int port) {
+		return setAddress(new InetSocketAddress(host, port));
+	}
+
+	protected Socket createSocket() {
 		return new Socket();
 	}
 
 	public synchronized boolean connect() {
-		if (mAddress == null) {
-			return false;
-		}
-
-		disconnect();
-
-		mSocket = createSocket();
-		if (mSocket == null) {
-			return false;
-		}
+		mConnDisabled = false;
 
 		try {
-			mSocket.connect(mAddress);
-			mInputStream = mSocket.getInputStream();
-			mOutputStream = mSocket.getOutputStream();
+			synchronized (mConnThread) {
+				if (mConnThread.isAlive()) {
+					mConnThread.notify();
+				} else {
+					mConnThread.start();
+				}
+			}
+
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -76,21 +92,18 @@ public class CavanTcpClient {
 		}
 	}
 
-	public synchronized boolean connect(String host, int port) {
-		mAddress = new InetSocketAddress(host, port);
+	public synchronized boolean connect(InetSocketAddress address) {
+		setAddress(address);
 		return connect();
 	}
 
-	public synchronized void disconnect() {
-		if (mInputStream != null) {
-			try {
-				mInputStream.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+	public synchronized boolean connect(String host, int port) {
+		return connect(new InetSocketAddress(host, port));
+	}
 
-			mInputStream = null;
-		}
+	public synchronized void disconnect() {
+		mConnDisabled = true;
+		mConnected = false;
 
 		if (mOutputStream != null) {
 			try {
@@ -111,6 +124,17 @@ public class CavanTcpClient {
 
 			mSocket = null;
 		}
+	}
+
+	public boolean join() {
+		try {
+			mConnThread.join();
+			return true;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		return false;
 	}
 
 	public boolean send(byte[] bytes) {
@@ -145,27 +169,189 @@ public class CavanTcpClient {
 	public boolean fill(byte[] bytes) {
 		InputStream stream = getInputStream();
 
-		if (stream == null) {
+		if (stream != null) {
+			return CavanArray.fill(stream, bytes);
+		}
+
+		return false;
+	}
+
+	public boolean openSocket(InetSocketAddress address) {
+		closeSocket();
+
+		Socket socket = createSocket();
+		if (socket == null) {
+			CavanJava.eLog("createSocket");
 			return false;
 		}
 
-		int offset = 0;
-
-		while (offset < bytes.length) {
-			try {
-				int length = stream.read(bytes, offset, bytes.length - offset);
-				if (length < 0) {
-					return false;
-				}
-
-				offset += length;
-			} catch (IOException e) {
-				e.printStackTrace();
-				return false;
-			}
+		synchronized (this) {
+			mSocket = socket;
 		}
 
+		try {
+			socket.connect(address, 10000);
+
+			synchronized (this) {
+				mOutputStream = socket.getOutputStream();
+				mInputStream = socket.getInputStream();
+				mConnected = true;
+			}
+
+			if (onTcpConnected(socket)) {
+				return true;
+			}
+
+			synchronized (this) {
+				mConnected = false;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		closeSocket();
+
+		return false;
+	}
+
+	public synchronized void closeSocket() {
+		if (mInputStream != null) {
+			try {
+				mInputStream.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			mInputStream = null;
+		}
+
+		if (mOutputStream != null) {
+			try {
+				mOutputStream.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			mOutputStream = null;
+		}
+
+		if (mSocket != null) {
+			try {
+				mSocket.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			mSocket = null;
+		}
+	}
+
+	@Override
+	public void run() {
+		while (true) {
+			int times = 0;
+
+			while (true) {
+				InetSocketAddress address;
+
+				synchronized (this) {
+					if (mConnDisabled) {
+						break;
+					}
+
+					if (mAddress == null) {
+						break;
+					}
+
+					address = mAddress;
+				}
+
+				if (openSocket(address)) {
+					InputStream stream = getInputStream();
+					if (stream != null) {
+						mainLoop(stream);
+					}
+
+					times = 0;
+
+					synchronized (this) {
+						mConnected = false;
+
+						if (mConnDisabled) {
+							break;
+						}
+					}
+
+					onTcpDisconnected();
+				} else {
+					synchronized (this) {
+						if (mConnDisabled) {
+							break;
+						}
+					}
+
+					if (onTcpConnFailed(++times)) {
+						int delay;
+
+						if (times < 15) {
+							delay = 1 << times;
+						} else {
+							delay = 1 << 15;
+						}
+
+						CavanJava.dLog("delay = " + delay);
+
+						synchronized (mConnThread) {
+							try {
+								mConnThread.wait(delay);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						}
+					} else {
+						break;
+					}
+				}
+			}
+
+			synchronized (mConnThread) {
+				try {
+					mConnThread.wait();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	protected boolean onTcpConnected(Socket socket) {
 		return true;
+	}
+
+	protected void onTcpDisconnected() {
+	}
+
+	protected boolean onTcpConnFailed(int times) {
+		return true;
+	}
+
+	protected void onDataReceived(byte[] bytes, int length) {
+	}
+
+	protected void mainLoop(InputStream stream) {
+		byte[] bytes = new byte[4096];
+
+		while (true) {
+			try {
+				int length = stream.read(bytes);
+				if (length > 0) {
+					onDataReceived(bytes, length);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				break;
+			}
+		}
 	}
 
 	public static void main(String[] args) {

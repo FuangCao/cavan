@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
     <issue id="DefaultLocale" severity="ignore" />
+    <issue id="FieldGetter" severity="ignore" />
     <issue id="NewApi" severity="ignore" />
     <issue id="TrulyRandom">
         <ignore path="src/org/mindrot/jbcrypt/BCrypt.java" />

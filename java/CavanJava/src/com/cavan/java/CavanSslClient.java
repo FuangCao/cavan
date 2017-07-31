@@ -27,12 +27,14 @@ public class CavanSslClient extends CavanTcpClient {
 	}
 
 	@Override
-	protected synchronized Socket createSocket() {
-		if (mSslContext == null) {
+	protected Socket createSocket() {
+		SSLContext context = getSslContext();
+		if (context == null) {
+			CavanJava.eLog("getSslContext");
 			return null;
 		}
 
-		SSLSocketFactory factory = mSslContext.getSocketFactory();
+		SSLSocketFactory factory = context.getSocketFactory();
 		if (factory != null) {
 			try {
 				return factory.createSocket();
