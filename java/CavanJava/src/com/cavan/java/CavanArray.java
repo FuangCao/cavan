@@ -79,17 +79,16 @@ public class CavanArray {
 		}
 	}
 
-	public static boolean fill(InputStream stream, byte[] bytes) {
-		int offset = 0;
-
-		while (offset < bytes.length) {
+	public static boolean fill(InputStream stream, byte[] bytes, int offset, int length) {
+		while (length > 0) {
 			try {
-				int length = stream.read(bytes, offset, bytes.length - offset);
-				if (length < 0) {
+				int rdlen = stream.read(bytes, offset, length);
+				if (rdlen < 0) {
 					return false;
 				}
 
-				offset += length;
+				offset += rdlen;
+				length -= rdlen;
 			} catch (IOException e) {
 				e.printStackTrace();
 				return false;

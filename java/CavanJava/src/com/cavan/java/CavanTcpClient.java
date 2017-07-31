@@ -166,11 +166,11 @@ public class CavanTcpClient implements Runnable {
 		return -1;
 	}
 
-	public boolean fill(byte[] bytes) {
+	public boolean fill(byte[] bytes, int offset, int length) {
 		InputStream stream = getInputStream();
 
 		if (stream != null) {
-			return CavanArray.fill(stream, bytes);
+			return CavanArray.fill(stream, bytes, offset, length);
 		}
 
 		return false;
@@ -259,11 +259,11 @@ public class CavanTcpClient implements Runnable {
 						break;
 					}
 
-					if (mAddress == null) {
-						break;
-					}
-
 					address = mAddress;
+				}
+
+				if (address == null) {
+					break;
 				}
 
 				if (openSocket(address)) {
@@ -298,8 +298,6 @@ public class CavanTcpClient implements Runnable {
 						} else {
 							delay = 1 << 15;
 						}
-
-						CavanJava.dLog("delay = " + delay);
 
 						synchronized (mConnThread) {
 							try {
