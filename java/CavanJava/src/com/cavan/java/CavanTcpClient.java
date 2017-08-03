@@ -69,6 +69,18 @@ public class CavanTcpClient implements Runnable {
 		return setAddress(new InetSocketAddress(host, port));
 	}
 
+	public void prErrInfo(String message) {
+		CavanJava.eLog(message);
+	}
+
+	public void prWarnInfo(String message) {
+		prErrInfo(message);
+	}
+
+	public void prDbgInfo(String message) {
+		CavanJava.dLog(message);
+	}
+
 	protected Socket createSocket() {
 		return new Socket();
 	}
@@ -181,7 +193,7 @@ public class CavanTcpClient implements Runnable {
 
 		Socket socket = createSocket();
 		if (socket == null) {
-			CavanJava.eLog("createSocket");
+			prErrInfo("createSocket");
 			return false;
 		}
 
@@ -254,6 +266,8 @@ public class CavanTcpClient implements Runnable {
 			while (true) {
 				InetSocketAddress address;
 
+				prDbgInfo("mConnDisabled = " + mConnDisabled);
+
 				synchronized (this) {
 					if (mConnDisabled) {
 						break;
@@ -298,6 +312,8 @@ public class CavanTcpClient implements Runnable {
 						} else {
 							delay = 1 << 15;
 						}
+
+						prDbgInfo("delay = " + delay);
 
 						synchronized (mConnThread) {
 							try {

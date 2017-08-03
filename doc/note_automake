@@ -1,0 +1,218 @@
+Makefile.am将指明工程需要哪些源文件，建造的是什么，如何安装它们。
+具体语法如下：
+option_where_PRIMARY = targets …
+targets是要建造的目标
+PRIMARY可以是下面的一个：
+可能值 	解释
+PROGRAMS 	目标是可执行程序
+LIBRARIES 	目标是静态库
+LTLIBRARIES 	目标是动态库
+HEADERS 	目标是头文件
+SCRIPTS 	目标是脚本
+DATA 	目标是数据
+
+where 表示目标被安装那里，可以是下面的值:
+可能项 	解释
+bin 	$(bindir)
+lib 	$(libdir)
+custom 	自定义目录
+noinst 	不安装
+check 	由’make check’建造。
+
+详细的文件结构看以前的文章。
+[Autotools 使用一，文件结构]
+(http://blog.csdn.net/john_crash/article/details/49887721#t1)
+
+在where前面还可以有一个可选项option
+dist_ 分发目标(默认)。
+nodist_ 不分发。
+
+举例：Makefile.am
+
+bin_PROGRAMS = foo run-me
+foo_SOURCES = foo.c foo.h print.c print.h
+run_me_SOURCES = run.c run.h print.c
+
+    1
+    2
+    3
+
+首先第一句表示产生两个程序foo,run-me，并且将它们安装到bin中。
+foo_SOURCES 表示foo需要的源文件。
+run_me_SOURCES 表示run-me需要的源文件。
+注意：不能转换的符号用’_’代替。
+头文件不参加编译，列出来用于分发。automake将自动计算列表对象并编译链接它们。
+
+第二个例子：Makefile.am
+
+lib_LIBRARIES = libfoo.a libbar.a
+libfoo_a_SOURCES = foo.c privfoo.h
+libbar_a_SOURCES = bar.c privbar.h
+include_HEADERS = foo.h bar.h
+
+    1
+    2
+    3
+    4
+
+这将产生两个静态库文件libfoo.a,libbar.a。
+libfoo_a_SOURCES 表明编译libfoo.a需要的源文件。
+libbar_a_SOURCES 表明编译libbar.a需要的源文件。
+include_HEADERS 表明需要安装的头文件。
+
+也许你在几个目录里面编译，这些目录里面都放置Makefile.am文件。它们必须在configure.ac文件中声明。例如：configure.ac、
+
+AC_CONFIG_FILES([Makefile lib/Makefile src/Makefile
+src/dira/Makefile src/dirb/Makefile])
+
+    1
+    2
+
+‘make’ 运行在根目录中。
+使用SUBDIRS指定一个递归。
+Makefile.am
+
+SUBDIRS=lib src
+
+    1
+
+src/Makefile.am
+
+SUBDIRS = dira dirb
+
+    1
+
+记住使用VPATH和$(srcdir)编译，源文件不需要在当前目录。
+中间库
+
+你可以使用noinst_LIBRARIES创建一个不安装的库，该库仅用在随后的链接中。如：lib/Makefile.am
+
+noinst_LIBRARIES = libcompat.a
+libcompat_a_SOURCES = xalloc.c xalloc.h
+
+    1
+    2
+
+另一个要编译的程序使用这个库。如：src/Makefile.am
+
+src/Makele.am
+LDADD = ../lib/libcompat.a
+AM_CPPFLAGS = -I$(srcdir)/../lib
+bin_PROGRAMS = foo run-me
+foo_SOURCES = foo.c foo.h print.c print.h
+run_me_SOURCES = run.c run.h print.c
+
+    1
+    2
+    3
+    4
+    5
+    6
+
+LDADD在所有的链接时都附加该选项。
+AM_CFFLAGS在所有的编译中使用附加的预处理选项。
+你可以给LDADD和CFFLAGS增加前缀，将它们限定在特定的编译和链接中。如：
+
+run_me_LDADD = ../lib/libcompat.a
+run_me_CPPFLAGS = -I$(srcdir)/../lib
+
+    1
+    2
+
+假设foo是一个程序或者库：
+可能项 	解释
+foo_CFLAGS 	为foo附加编译选项
+foo_CPPFLAGS 	为foo附加预处理选项（-Is and -Ds）
+foo_LDADD 	为foo链接附加库，-ls 和 -Ls (foo必须是一个程序)
+foo_LIBADD 	为foo链接附加库，-ls 和 -Ls (foo必须是一个库)
+foo_LDFLAGS 	为foo链接选项
+
+通过使用AC_CHECK_LIB可以判断库是否存在，并在这里附加它们。
+例如：configure.ac
+
+AC_CHECK_LIB([efence], [malloc], [EFENCELIB=-lefence])
+AC_SUBST([EFENCELIB])
+
+    1
+    2
+
+run_me_LDADD = ../lib/libcompat.a $(EFENCELIB)
+
+    1
+
+分发
+
+‘make dist’和’make distacheck’将创建一个tarball包含下面列出的文件。
+所有在_SOURCES中声明的。
+所有在_HEADERS中声明的。
+所有的在dist_…_SCRIPTS中声明的脚本。
+所有在dist_…_DATA中声明的数据文件。
+…
+公共文件例如ChangeLog，NEWS,等。使用automake –help可以列出这些文件。
+所有在EXTRA_DIST中列出的路径和文件。
+条件编译
+
+可以根据某些条件来编译附加的程序或者关闭。例如：Makefile.am
+
+bin_PROGRAMS = foo
+if WANT_BAR
+bin_PROGRAMS += bar
+endif
+foo_SOURCES = foo.c
+bar_SOURCES = bar.c
+
+    1
+    2
+    3
+    4
+    5
+    6
+
+如果WANT_BAR被设置为true将编译程序bar。
+在所有的情况下都会分发foo.c和bar.c。
+
+bin_PROGRAMS = foo
+foo_SOURCES = foo.c
+if WANT_BAR
+foo_SOURCES += bar.c
+endif
+
+    1
+    2
+    3
+    4
+    5
+
+上面代码显示，根据WANT_BAR打开bar.c的分发。
+上面的代码的前提是必须在configure.ac中声明WANT_BAR变量。
+可以使用AM_CONDITIONAL宏。参考编写configure.ac
+
+AC_CHECK_HEADER([bar.h], [use_bar=yes])
+AM_CONDITIONAL([WANT_BAR], [test "$use_bar" = yes])
+
+    1
+    2
+
+扩展Automake规则
+
+Makefile.am的内容几乎被完整的复制到Makefile.in文件里。
+‘automake’在Makefile.in附加新的规则和变量，你能实现特别的变量和宏。
+你是可以在Makefile.am中定义你自己的规则
+经验
+
+如果你make失败，试着重新建造configure文件。你可以运行autoreconf。
+
+autoreconf --install
+
+    1
+
+如果没有帮助，可以试试
+
+autoreconf --install --force
+
+    1
+
+如果仍然没有帮助，试试
+
+make -k maintainer-clean
+autoreconf --install --force
