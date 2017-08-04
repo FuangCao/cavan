@@ -90,7 +90,6 @@ public class CavanArray {
 				offset += rdlen;
 				length -= rdlen;
 			} catch (IOException e) {
-				e.printStackTrace();
 				return false;
 			}
 		}

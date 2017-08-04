@@ -207,14 +207,13 @@ public class CavanTcpClient implements Runnable {
 			synchronized (this) {
 				mOutputStream = socket.getOutputStream();
 				mInputStream = socket.getInputStream();
+
 				mConnected = true;
-			}
 
-			if (onTcpConnected(socket)) {
-				return true;
-			}
+				if (onTcpConnected(socket)) {
+					return true;
+				}
 
-			synchronized (this) {
 				mConnected = false;
 			}
 		} catch (IOException e) {
@@ -290,13 +289,12 @@ public class CavanTcpClient implements Runnable {
 
 					synchronized (this) {
 						mConnected = false;
+						onTcpDisconnected();
 
 						if (mConnDisabled) {
 							break;
 						}
 					}
-
-					onTcpDisconnected();
 				} else {
 					synchronized (this) {
 						if (mConnDisabled) {
