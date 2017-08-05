@@ -4,14 +4,12 @@ import java.util.ArrayList;
 
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ClipboardManager.OnPrimaryClipChangedListener;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -40,6 +38,12 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	private static final int MSG_POST_NOTIFICATION = 1;
 	private static final int MSG_REMOVE_NOTIFICATION = 2;
 	private static final int MSG_RED_PACKET_NOTIFICATION = 3;
+
+	private static RedPacketListenerService sInstance;
+
+	public static RedPacketListenerService getInstance() {
+		return sInstance;
+	}
 
 	private CharSequence mClipText;
 	private ClipboardManager mClipboardManager;
@@ -123,57 +127,29 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		}
 	};
 
-	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+	public void addRedPacketCode(String code, String type, boolean shared) {
+		CavanAndroid.dLog("code = " + code);
 
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			String action = intent.getAction();
+		RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, type, code, true, shared);
+		notification.setPriority(1);
+		mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
+	}
 
-			CavanAndroid.dLog("action = " + action);
-
-			switch (action) {
-			case CavanMessageActivity.ACTION_CODE_RECEIVED:
-				String[] codes = intent.getStringArrayExtra("codes");
-				if (codes == null) {
-					String code = intent.getStringExtra("code");
-
-					if (code == null) {
-						break;
-					}
-
-					codes = new String[] { code };
-				}
-
-				String type = intent.getStringExtra("type");
-				boolean shared = intent.getBooleanExtra("shared", false);
-
-				for (String code : codes) {
-					CavanAndroid.dLog("code = " + code);
-
-					RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, type, code, true, shared);
-					notification.setPriority(1);
-					mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
-				}
-				break;
-
-			case CavanMessageActivity.ACTION_CONTENT_RECEIVED:
-				String desc = intent.getStringExtra("desc");
-				String content = intent.getStringExtra("content");
-				String packageName = intent.getStringExtra("package");
-				boolean hasPrefix = intent.getBooleanExtra("hasPrefix", false);
-				int priority = intent.getIntExtra("priority", 0);
-
-				if (packageName == null) {
-					packageName = getPackageName();
-				}
-
-				RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, packageName, content, desc, hasPrefix);
-				notification.setPriority(priority);
-				mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
-				break;
-			}
+	public void addRedPacketCodes(String[] codes, String type, boolean shared) {
+		for (String code : codes) {
+			addRedPacketCode(code, type, shared);
 		}
-	};
+	}
+
+	public void addRedPacketContent(CharSequence packageName, String content, String desc, boolean hasPrefix, int priority) {
+		if (packageName == null) {
+			packageName = getPackageName();
+		}
+
+		RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, packageName.toString(), content, desc, hasPrefix);
+		notification.setPriority(priority);
+		mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
+	}
 
 	public int createRequestCode() {
 		return mGeneratorRequestCode.genIndex();
@@ -304,26 +280,24 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		Intent service = FloatMessageService.startService(this);
 		bindService(service, mFloatMessageConnection, 0);
 
-		IntentFilter filter = new IntentFilter();
-		filter.addAction(CavanMessageActivity.ACTION_CODE_RECEIVED);
-		filter.addAction(CavanMessageActivity.ACTION_CONTENT_RECEIVED);
-		registerReceiver(mReceiver, filter);
-
 		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 		if (preferences != null) {
 			loadKeywords(preferences);
 			preferences.registerOnSharedPreferenceChangeListener(this);
 		}
+
+		sInstance = this;
 	}
 
 	@Override
 	public void onDestroy() {
+		sInstance = null;
+
 		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 		if (preferences != null) {
 			preferences.unregisterOnSharedPreferenceChangeListener(this);
 		}
 
-		unregisterReceiver(mReceiver);
 		unbindService(mFloatMessageConnection);
 		super.onDestroy();
 	}

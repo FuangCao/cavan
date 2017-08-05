@@ -2,7 +2,6 @@ package com.cavan.cavanmain;
 
 import java.util.LinkedList;
 
-import android.content.Intent;
 import android.os.Handler;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
@@ -186,11 +185,10 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 			dialog.show(6000);
 		}
 
-		Intent intent = new Intent(CavanMessageActivity.ACTION_CONTENT_RECEIVED);
-		intent.putExtra("package", node.getPackageName());
-		intent.putExtra("desc", "用户点击");
-		intent.putExtra("content", text);
-		mService.sendBroadcast(intent);
+		RedPacketListenerService listener = RedPacketListenerService.getInstance();
+		if (listener != null) {
+			listener.addRedPacketContent(node.getPackageName(), text, "用户点击", false, 0);
+		}
 	}
 
 	public void performGlobalBack() {

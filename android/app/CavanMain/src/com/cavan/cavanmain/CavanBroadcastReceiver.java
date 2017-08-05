@@ -16,9 +16,10 @@ public class CavanBroadcastReceiver extends BroadcastReceiver {
 		if (CavanMessageActivity.ACTION_CODE_RECEIVED.equals(action)) {
 			String code = intent.getStringExtra("code");
 			if (code != null) {
-				intent = new Intent(CavanMessageActivity.ACTION_CODE_RECEIVED);
-				intent.putExtra("code", code).putExtra("type", "定时器");
-				context.sendBroadcast(intent);
+				RedPacketListenerService listener = RedPacketListenerService.getInstance();
+				if (listener != null) {
+					listener.addRedPacketCode(code, "定时器", false);
+				}
 			}
 		} else if (Intent.ACTION_BOOT_COMPLETED.equals(action)) {
 			CavanAccessibilityService.sBootComplete = true;

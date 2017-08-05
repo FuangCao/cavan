@@ -205,7 +205,7 @@ public class CavanNotification {
 		mPackageName = packageName;
 	}
 
-	public CharSequence getUserName() {
+	public String getUserName() {
 		return mUserName;
 	}
 
@@ -213,7 +213,7 @@ public class CavanNotification {
 		mUserName = name;
 	}
 
-	public CharSequence getGroupName() {
+	public String getGroupName() {
 		return mGroupName;
 	}
 
@@ -221,7 +221,7 @@ public class CavanNotification {
 		mGroupName = name;
 	}
 
-	public CharSequence getTitle() {
+	public String getTitle() {
 		return mTitle;
 	}
 
@@ -272,7 +272,7 @@ public class CavanNotification {
 		values.put(KEY_TIMESTAMP, mTimestamp);
 
 		if (mPackageName != null) {
-			values.put(KEY_PACKAGE, mPackageName);
+			values.put(KEY_PACKAGE, mPackageName.toString());
 		}
 
 		if (mTitle != null) {

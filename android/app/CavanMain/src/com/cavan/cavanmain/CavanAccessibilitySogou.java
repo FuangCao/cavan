@@ -12,10 +12,17 @@ import com.cavan.java.CavanString;
 
 public class CavanAccessibilitySogou extends CavanAccessibilityBase<String> {
 
+	private static CavanAccessibilitySogou sInstance;
+
+	public static CavanAccessibilitySogou getInstance() {
+		return sInstance;
+	}
+
 	private String mLastClassName = CavanString.EMPTY_STRING;
 
 	public CavanAccessibilitySogou(CavanAccessibilityService service) {
 		super(service);
+		sInstance = this;
 	}
 
 	@Override

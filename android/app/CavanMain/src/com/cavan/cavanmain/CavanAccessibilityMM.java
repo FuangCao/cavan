@@ -23,10 +23,18 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		"com.tencent.mm:id/ib", "com.tencent.mm:id/if", "com.tencent.mm:id/im"
 	};
 
+	private static CavanAccessibilityMM sInstance;
+
+	public static CavanAccessibilityMM getInstance() {
+		return sInstance;
+	}
+
+	private long mUnpackTime;
 	private List<Integer> mFinishNodes = new ArrayList<Integer>();
 
 	public CavanAccessibilityMM(CavanAccessibilityService service) {
 		super(service);
+		sInstance = this;
 	}
 
 	private boolean isMessageItemNode(AccessibilityNodeInfo node) {
@@ -48,6 +56,13 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		int delay = CavanMessageActivity.getAutoUnpackMM(mService);
 		if (delay < 0) {
 			return false;
+		}
+
+		if (delay > 0) {
+			long time = System.currentTimeMillis();
+			if (mUnpackTime < time) {
+				mUnpackTime = time + delay * 1000;
+			}
 		}
 
 		if (super.addPacket(packet)) {
@@ -111,10 +126,20 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		return node;
 	}
 
-	private boolean doUnpack(AccessibilityNodeInfo root) {
+	private long doUnpack(AccessibilityNodeInfo root) {
+		long time = System.currentTimeMillis();
+		if (mUnpackTime > time) {
+			FloatMessageService service = FloatMessageService.getInstance();
+			if (service != null) {
+				service.setCountDownTime(mUnpackTime);
+			}
+
+			return mUnpackTime - time;
+		}
+
 		AccessibilityNodeInfo backNode = findReceiveUiBackNode(root);
 		if (backNode == null) {
-			return false;
+			return POLL_DELAY;
 		}
 
 		setLockEnable(POLL_DELAY, false);
@@ -130,7 +155,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 		backNode.recycle();
 
-		return true;
+		return POLL_DELAY;
 	}
 
 	private boolean isValidMessage(AccessibilityNodeInfo node) {
@@ -196,8 +221,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI":
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiReceiveUI":
-			doUnpack(root);
-			break;
+			return doUnpack(root);
 
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI":
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI":
@@ -217,8 +241,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 		default:
 			if (mClassName.startsWith("com.tencent.mm.plugin.luckymoney.ui.En_")) {
-				doUnpack(root);
-				break;
+				return doUnpack(root);
 			}
 			return 0;
 		}

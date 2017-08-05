@@ -5,11 +5,9 @@ import java.util.List;
 
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -28,27 +26,14 @@ import android.preference.RingtonePreference;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
-import com.cavan.cavanmain.IFloatMessageService;
-import com.cavan.cavanmain.R;
 import com.cavan.java.CavanString;
 import com.cavan.resource.EditableMultiSelectListPreference;
 
 public class CavanMessageActivity extends PreferenceActivity implements OnPreferenceChangeListener {
 
-	public static final String ACTION_BOOT_COMPLETED = "cavan.intent.action.ACTION_BOOT_COMPLETED";
-	public static final String ACTION_CODE_ADD = "cavan.intent.action.ACTION_CODE_ADD";
-	public static final String ACTION_CODE_TEST = "cavan.intent.action.ACTION_CODE_TEST";
-	public static final String ACTION_CODE_REMOVE = "cavan.intent.action.ACTION_CODE_REMOVE";
-	public static final String ACTION_CODE_COMMIT = "cavan.intent.action.ACTION_CODE_COMMIT";
-	public static final String ACTION_CODE_RECEIVED = "cavan.intent.action.ACTION_CODE_RECEIVED";
-	public static final String ACTION_CONTENT_RECEIVED = "cavan.intent.action.ACTION_CONTENT_RECEIVED";
-	public static final String ACTION_TEXT_RECEIVED = "cavan.intent.action.ACTION_TEXT_RECEIVED";
-	public static final String ACTION_WAN_UPDATED = "cavan.intent.action.ACTION_WAN_UPDATED";
-	public static final String ACTION_BRIDGE_UPDATED = "cavan.intent.action.ACTION_BRIDGE_UPDATED";
-	public static final String ACTION_SEND_WAN_COMMAN = "cavan.intent.action.ACTION_SEND_WAN_COMMAN";
-	public static final String ACTION_UNPACK_QQ = "cavan.intent.action.ACTION_UNPACK_QQ";
-	public static final String ACTION_UNPACK_MM = "cavan.intent.action.ACTION_UNPACK_MM";
-	public static final String ACTION_SERVICE_EXIT = "cavan.intent.action.ACTION_SERVICE_EXIT";
+	public static final String ACTION_BOOT_COMPLETED = "com.cavan.ACTION_BOOT_COMPLETED";
+	public static final String ACTION_SERVICE_EXIT = "com.cavan.ACTION_SERVICE_EXIT";
+	public static final String ACTION_CODE_RECEIVED = "com.cavan.ACTION_CODE_RECEIVED";
 
 	public static final String KEY_AUTO_UNLOCK = "auto_unlock";
 	public static final String KEY_AUTO_COMMIT = "auto_commit";
@@ -87,6 +72,12 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	public static final String KEY_CLIPBOARD_SHARE = "clipboard_share";
 	public static final String KEY_DISABLE_SUSPEND = "disable_suspend";
 	public static final String KEY_RED_PACKET_EDIT = "red_packet_edit";
+
+	private static CavanMessageActivity sInstance;
+
+	public static CavanMessageActivity getInstance() {
+		return sInstance;
+	}
 
 	private static boolean sAutoOpenAppEnable = true;
 	private static boolean sRedPacketCodeReceiveEnabled = true;
@@ -300,51 +291,55 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		}
 	};
 
-	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+	public void updateWanState(int state, CharSequence summary) {
+		switch (state) {
+		case R.string.wan_connecting:
+			mPreferenceWanShare.setSummary(R.string.connecting);
+			mPreferenceWanServer.setSummary(summary);
+			break;
 
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			String action = intent.getAction();
+		case R.string.wan_connected:
+			mPreferenceWanShare.setSummary(R.string.connected);
+			mPreferenceWanServer.setSummary(summary);
+			break;
 
-			CavanAndroid.dLog("action = " + action);
-
-			switch (action) {
-			case ACTION_WAN_UPDATED:
-				switch (intent.getIntExtra("state", 0)) {
-				case R.string.wan_connecting:
-					mPreferenceWanShare.setSummary(R.string.connecting);
-					mPreferenceWanServer.setSummary(intent.getStringExtra("summary"));
-					break;
-
-				case R.string.wan_connected:
-					mPreferenceWanShare.setSummary(R.string.connected);
-					mPreferenceWanServer.setSummary(intent.getStringExtra("summary"));
-					break;
-
-				case R.string.wan_disconnected:
-					mPreferenceWanShare.setSummary(R.string.disconnected);
-					break;
-				}
-				break;
-
-			case ACTION_BRIDGE_UPDATED:
-				switch (intent.getIntExtra("state", 0)) {
-				case R.string.tcp_bridge_running:
-					mPreferenceTcpBridge.setSummary(R.string.running);
-					break;
-
-				case R.string.tcp_bridge_stopped:
-					mPreferenceTcpBridge.setSummary(R.string.stopped);
-					break;
-
-				case R.string.tcp_bridge_exit:
-					mPreferenceTcpBridge.setSummary(R.string.exit);
-					break;
-				}
-				break;
-			}
+		case R.string.wan_disconnected:
+			mPreferenceWanShare.setSummary(R.string.disconnected);
+			break;
 		}
-	};
+	}
+
+	public void updateWanState() {
+		FloatMessageService service = FloatMessageService.getInstance();
+
+		if (service != null) {
+			updateWanState(service.getWanState(), service.getWanSummary());
+		}
+	}
+
+	public void updateBridgeState(int state) {
+		switch (state) {
+		case R.string.tcp_bridge_running:
+			mPreferenceTcpBridge.setSummary(R.string.running);
+			break;
+
+		case R.string.tcp_bridge_stopped:
+			mPreferenceTcpBridge.setSummary(R.string.stopped);
+			break;
+
+		case R.string.tcp_bridge_exit:
+			mPreferenceTcpBridge.setSummary(R.string.exit);
+			break;
+		}
+	}
+
+	public void updateBridgeState() {
+		FloatMessageService service = FloatMessageService.getInstance();
+
+		if (service != null) {
+			updateBridgeState(service.getBridgeState());
+		}
+	}
 
 	@SuppressWarnings("deprecation")
 	private ListPreference findListPreference(String key) {
@@ -436,15 +431,15 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		startService(service);
 		bindService(service, mFloatMessageConnection, 0);
 
-		IntentFilter filter = new IntentFilter();
-		filter.addAction(ACTION_WAN_UPDATED);
-		filter.addAction(ACTION_BRIDGE_UPDATED);
-		registerReceiver(mReceiver, filter);
+		sInstance = this;
+
+		updateWanState();
+		updateBridgeState();
 	}
 
 	@Override
 	protected void onDestroy() {
-		unregisterReceiver(mReceiver);
+		sInstance = null;
 		unbindService(mFloatMessageConnection);
 
 		super.onDestroy();
@@ -546,11 +541,10 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 					String code = RedPacketCode.filtration(line);
 
 					if (code.length() > 0) {
-						Intent intent = new Intent(ACTION_CODE_RECEIVED);
-						intent.putExtra("type", "手动输入");
-						intent.putExtra("code", code);
-						intent.putExtra("shared", false);
-						sendBroadcast(intent);
+						RedPacketListenerService listener = RedPacketListenerService.getInstance();
+						if (listener != null) {
+							listener.addRedPacketCode(code, "手动输入", false);
+						}
 					}
 				}
 			}
@@ -560,10 +554,10 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 
 			String text = (String) object;
 			if (text != null) {
-				Intent intent = new Intent(CavanMessageActivity.ACTION_CONTENT_RECEIVED);
-				intent.putExtra("desc", "手动输入");
-				intent.putExtra("content", CavanString.fromCharSequence(text));
-				sendBroadcast(intent);
+				RedPacketListenerService listener = RedPacketListenerService.getInstance();
+				if (listener != null) {
+					listener.addRedPacketContent(null, CavanString.fromCharSequence(text), "手动输入", false, 0);
+				}
 			}
 		} else if (preference == mPreferenceRedPacketCodeSplit) {
 			String text = (String) object;

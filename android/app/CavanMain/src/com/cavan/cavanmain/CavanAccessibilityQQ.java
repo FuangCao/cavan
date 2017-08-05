@@ -3,7 +3,6 @@ package com.cavan.cavanmain;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Build;
 import android.view.accessibility.AccessibilityEvent;
@@ -26,6 +25,12 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 	private static final int MAX_SCROLL_COUNT = 2;
 	private static final int MAX_RETRY_COUNT = 3;
 
+	private static CavanAccessibilityQQ sInstance;
+
+	public static CavanAccessibilityQQ getInstance() {
+		return sInstance;
+	}
+
 	private int mChatIndex;
 	private int mRetryCount;
 	private int mUnpackTimes;
@@ -43,6 +48,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 
 	public CavanAccessibilityQQ(CavanAccessibilityService service) {
 		super(service);
+		sInstance = this;
 	}
 
 	public boolean isMessageBoxNode(AccessibilityNodeInfo node) {
@@ -465,12 +471,10 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 			}
 
 			if (!CavanAndroid.inKeyguardRestrictedInputMode(mService)) {
-				Intent intent = new Intent(CavanMessageActivity.ACTION_CONTENT_RECEIVED);
-				intent.putExtra("package", source.getPackageName());
-				intent.putExtra("desc", "QQ消息盒子");
-				intent.putExtra("content", text);
-				intent.putExtra("hasPrefix", true);
-				mService.sendBroadcast(intent);
+				RedPacketListenerService listener = RedPacketListenerService.getInstance();
+				if (listener != null) {
+					listener.addRedPacketContent(source.getPackageName(), text, "QQ消息盒子", true, 0);
+				}
 			}
 		}
 	}

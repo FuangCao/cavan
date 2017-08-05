@@ -153,9 +153,9 @@ public class CavanMessageAdapter extends BaseAdapter {
 
 		view.setTitle(notification.buildTitle());
 
-		String content = notification.getContent();
+		CharSequence content = notification.getContent();
 		if (content != null) {
-			view.setContent(content, notification.getPackageName(), mActivity.getFilterPatterns());
+			view.setContent(content, notification.getPackageName().toString(), mActivity.getFilterPatterns());
 		}
 
 		return view;

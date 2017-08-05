@@ -12,7 +12,6 @@ import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Spannable;
@@ -153,7 +152,7 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 		mTextViewTitle.setText(text);
 	}
 
-	public void setContent(String text, String pkgName, Pattern[] patterns) {
+	public void setContent(CharSequence text, String pkgName, Pattern[] patterns) {
 		SpannableStringBuilder builder = new SpannableStringBuilder(text);
 
 		Linkify.addLinks(builder, Linkify.WEB_URLS);
@@ -235,9 +234,10 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 				CavanAndroid.postClipboardText(mActivity, text);
 
 				if (which == DialogInterface.BUTTON_NEUTRAL || CavanString.getLineCount(text) < 2) {
-					Intent intent = new Intent(CavanMessageActivity.ACTION_SEND_WAN_COMMAN);
-					intent.putExtra("command", FloatMessageService.NET_CMD_CLIPBOARD + text.toString().replace('\n', ' '));
-					mActivity.sendBroadcast(intent);
+					FloatMessageService service = FloatMessageService.getInstance();
+					if (service != null) {
+						service.sendWanCommand(FloatMessageService.NET_CMD_CLIPBOARD + text.toString().replace('\n', ' '));
+					}
 				}
 				break;
 			}

@@ -212,6 +212,17 @@
         <item>延时7秒</item>
         <item>延时8秒</item>
         <item>延时9秒</item>
+        <item>延时10秒</item>
+        <item>延时11秒</item>
+        <item>延时12秒</item>
+        <item>延时13秒</item>
+        <item>延时14秒</item>
+        <item>延时15秒</item>
+        <item>延时16秒</item>
+        <item>延时17秒</item>
+        <item>延时18秒</item>
+        <item>延时19秒</item>
+        <item>延时20秒</item>
     </string-array>
     <string-array name="delay_values">
         <item>-1</item>
@@ -225,6 +236,17 @@
         <item>7</item>
         <item>8</item>
         <item>9</item>
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+        <item>13</item>
+        <item>14</item>
+        <item>15</item>
+        <item>16</item>
+        <item>17</item>
+        <item>18</item>
+        <item>19</item>
+        <item>20</item>
     </string-array>
     <string name="clean_message_confirm">确定要清除所有消息吗？</string>
     <string name="keyguard_disabled">已禁止锁屏</string>

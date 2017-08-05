@@ -3,7 +3,6 @@ package com.cavan.cavanmain;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.Handler;
@@ -183,9 +182,10 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 
 			if (length > 0) {
 				if (length % 8 == 0) {
-					Intent intent = new Intent(CavanMessageActivity.ACTION_CODE_RECEIVED);
-					intent.putExtra("codes", RedPacketFinder.splitRedPacketDigitCodes(text));
-					mContext.sendBroadcast(intent);
+					RedPacketListenerService listener = RedPacketListenerService.getInstance();
+					if (listener != null) {
+						listener.addRedPacketCodes(RedPacketFinder.splitRedPacketDigitCodes(text), "手动提取", false);
+					}
 					dismiss();
 				} else {
 					mEditText.setText(text);
@@ -198,9 +198,10 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 				CavanAndroid.postClipboardText(mContext, text);
 			}
 
-			Intent intent = new Intent(CavanMessageActivity.ACTION_SEND_WAN_COMMAN);
-			intent.putExtra("command", FloatMessageService.NET_CMD_CLIPBOARD + text);
-			mContext.sendBroadcast(intent);
+			FloatMessageService service = FloatMessageService.getInstance();
+			if (service != null) {
+				service.sendWanCommand(FloatMessageService.NET_CMD_CLIPBOARD + text);
+			}
 			dismiss();
 		} else if (v == mButtonSend) {
 			String text = mEditText.getText().toString();
@@ -213,20 +214,18 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 						String code = RedPacketCode.filtration(line);
 
 						if (code.length() > 0) {
-							Intent intent = new Intent(CavanMessageActivity.ACTION_CODE_RECEIVED);
-							intent.putExtra("type", "手动输入");
-							intent.putExtra("code", code);
-							intent.putExtra("shared", false);
-							mContext.sendBroadcast(intent);
+							RedPacketListenerService listener = RedPacketListenerService.getInstance();
+							if (listener != null) {
+								listener.addRedPacketCode(code, "手动输入", false);
+							}
 						}
 					}
 				}
 			} else {
-				Intent intent = new Intent(CavanMessageActivity.ACTION_CONTENT_RECEIVED);
-				intent.putExtra("desc", "手动输入");
-				intent.putExtra("priority", 1);
-				intent.putExtra("content", text);
-				mContext.sendBroadcast(intent);
+				RedPacketListenerService listener = RedPacketListenerService.getInstance();
+				if (listener != null) {
+					listener.addRedPacketContent(null, text, "手动输入", false, 1);;
+				}
 			}
 
 			dismiss();

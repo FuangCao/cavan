@@ -2,10 +2,7 @@ package com.cavan.cavanmain;
 
 import java.util.List;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Color;
 import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
@@ -52,6 +49,10 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 	private static CavanInputMethod sInstance;
 
+	public static CavanInputMethod getInstance() {
+		return sInstance;
+	}
+
 	private GridView mCodeGridView;
 	private RedPacketCode[] mUiCodes;
 	private RedPacketViewAdapter mAdapter = new RedPacketViewAdapter();
@@ -68,40 +69,11 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	private int mSelectionStart;
 	private int mSelectionEnd;
 
-	public static CavanInputMethod getInstance() {
-		return sInstance;
-	}
-
-	public static EditorInfo getCurrentInputEditorInfoStatic() {
-		if (sInstance == null) {
-			return null;
-		}
-
-		return sInstance.getCurrentInputEditorInfo();
-	}
-
-	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
-
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			String action = intent.getAction();
-
-			CavanAndroid.dLog("action = " + action);
-
-			if (action.equals(CavanMessageActivity.ACTION_CODE_COMMIT)) {
-				InputConnection conn = getCurrentInputConnection();
-				if (conn != null) {
-					sendFinishAction(conn);
-				}
-			}
-		}
-	};
-
 	public static boolean isDefaultInputMethod(Context context) {
 		return "com.cavan.cavanmain/.CavanInputMethod".equals(CavanAndroid.getDefaultInputMethod(context));
 	}
 
-	public void sendFinishAction(InputConnection conn) {
+	public boolean sendFinishAction(InputConnection conn) {
 		int action = EditorInfo.IME_ACTION_GO;
 		EditorInfo info = getCurrentInputEditorInfo();
 
@@ -109,7 +81,16 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			action = info.actionId;
 		}
 
-		conn.performEditorAction(action);
+		return conn.performEditorAction(action);
+	}
+
+	public boolean sendFinishAction() {
+		InputConnection conn = getCurrentInputConnection();
+		if (conn == null) {
+			return false;
+		}
+
+		return sendFinishAction(conn);
 	}
 
 	public boolean sendRedPacketCode(CharSequence code, boolean execute) {
@@ -152,21 +133,15 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 	@Override
 	public void onCreate() {
-		mManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-
-		IntentFilter filter = new IntentFilter();
-		filter.addAction(CavanMessageActivity.ACTION_CODE_COMMIT);
-		registerReceiver(mReceiver, filter);
-
-		sInstance = this;
-
 		super.onCreate();
+
+		mManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+		sInstance = this;
 	}
 
 	@Override
 	public void onDestroy() {
 		sInstance = null;
-		unregisterReceiver(mReceiver);
 		super.onDestroy();
 	}
 

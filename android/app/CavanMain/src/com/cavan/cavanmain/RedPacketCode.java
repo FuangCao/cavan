@@ -112,15 +112,6 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 		return getInstence(code, 0, false, false, false);
 	}
 
-	public static RedPacketCode getInstence(Intent intent) {
-		String code = intent.getStringExtra("code");
-		if (code == null) {
-			return null;
-		}
-
-		return getInstence(code, 0, false, false, false);
-	}
-
 	public static List<RedPacketCode> getLastCodes() {
 		synchronized (mLastCodes) {
 			updateLastCodes();

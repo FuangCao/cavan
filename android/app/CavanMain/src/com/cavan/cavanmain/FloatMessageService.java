@@ -41,7 +41,6 @@ import com.cavan.android.FloatWidowService;
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.java.CavanString;
 
-@SuppressWarnings("deprecation")
 public class FloatMessageService extends FloatWidowService {
 
 	public static final long KEEP_ALIVE_DELAY = 120000;
@@ -81,14 +80,10 @@ public class FloatMessageService extends FloatWidowService {
 	public static final int MSG_SEND_TCP_COMMAND = 2;
 	private static final int MSG_KEEP_ALIVE = 3;
 
-	private static FloatMessageService mInstance;
+	private static FloatMessageService sInstance;
 
-	public static synchronized FloatMessageService getInstance() {
-		return mInstance;
-	}
-
-	private static synchronized void setInstance(FloatMessageService instance) {
-		mInstance = instance;
+	public static FloatMessageService getInstance() {
+		return sInstance;
 	}
 
 	private long mCountDownTime;
@@ -103,6 +98,10 @@ public class FloatMessageService extends FloatWidowService {
 
 	private boolean mNetworkConnected;
 	private NetworkSendHandler mNetworkSendHandler = new NetworkSendHandler();
+
+	private String mWanSummary;
+	private int mWanState = R.string.wan_disconnected;
+	private int mBridgeState = R.string.tcp_bridge_exit;
 
 	private Handler mHandler = new Handler() {
 
@@ -131,7 +130,7 @@ public class FloatMessageService extends FloatWidowService {
 								sendEmptyMessageDelayed(MSG_UPDATE_TIME, delay);
 							}
 
-							mTextViewTime.setText(getTimeText(calendar) + "-" + delay);
+							mTextViewTime.setText(getTimeText(calendar) + "-" + (delay / 100));
 							break;
 						}
 
@@ -144,18 +143,19 @@ public class FloatMessageService extends FloatWidowService {
 				}
 				break;
 
-			case MSG_TCP_SERVICE_STATE_CHANGED:
-				Intent intent = new Intent(CavanMessageActivity.ACTION_WAN_UPDATED);
-				intent.putExtra("state", msg.arg1);
-				intent.putExtra("summary", (String) msg.obj);
-				sendStickyBroadcast(intent);
-
-				if (msg.arg1 == R.string.wan_connected) {
-					if (mTcpDaemon != null) {
-						mTcpDaemon.setConnDelay(0);
+			case MSG_TCP_SERVICE_STATE_CHANGED: {
+					CavanMessageActivity activity = CavanMessageActivity.getInstance();
+					if (activity != null) {
+						activity.updateWanState(mWanState, mWanSummary);
 					}
 
-					CavanAndroid.showToast(getApplicationContext(), msg.arg1);
+					if (mWanState == R.string.wan_connected) {
+						if (mTcpDaemon != null) {
+							mTcpDaemon.setConnDelay(0);
+						}
+
+						CavanAndroid.showToast(getApplicationContext(), mWanState);
+					}
 				}
 				break;
 
@@ -172,12 +172,12 @@ public class FloatMessageService extends FloatWidowService {
 				}
 				break;
 
-			case MSG_TCP_BRIDGE_STATE_CHANGED:
-				intent = new Intent(CavanMessageActivity.ACTION_BRIDGE_UPDATED);
-				intent.putExtra("state", msg.arg1);
-				sendStickyBroadcast(intent);
-
-				// CavanAndroid.showToast(getApplicationContext(), msg.arg1);
+			case MSG_TCP_BRIDGE_STATE_CHANGED: {
+					CavanMessageActivity activity = CavanMessageActivity.getInstance();
+					if (activity != null) {
+						activity.updateBridgeState(mBridgeState);
+					}
+				}
 				break;
 
 			case MSG_TCP_BRIDGE_UPDATED:
@@ -293,11 +293,6 @@ public class FloatMessageService extends FloatWidowService {
 				updateNetworkConnState();
 				break;
 
-			case CavanMessageActivity.ACTION_SEND_WAN_COMMAN:
-				String command = intent.getStringExtra("command");
-				mNetworkSendHandler.sendTcpCommand(command, 0);
-				break;
-
 			case CavanMessageActivity.ACTION_SERVICE_EXIT:
 				String service = intent.getStringExtra("service");
 				if (service == null) {
@@ -334,12 +329,6 @@ public class FloatMessageService extends FloatWidowService {
 
 	private IFloatMessageService.Stub mBinder = new IFloatMessageService.Stub() {
 
-		private void sendCodeUpdateBroadcast(String action, String code) {
-			Intent intent = new Intent(action);
-			intent.putExtra("code", code);
-			sendBroadcast(intent);
-		}
-
 		@Override
 		public boolean setTimerEnable(boolean enable) throws RemoteException {
 			return FloatMessageService.this.setTimerEnable(enable);
@@ -359,14 +348,20 @@ public class FloatMessageService extends FloatWidowService {
 				RedPacketCode node = RedPacketCode.getInstence(code);
 				if (node != null) {
 					if (node.isTestOnly()) {
-						sendCodeUpdateBroadcast(CavanMessageActivity.ACTION_CODE_TEST, code);
+						CavanAccessibilityService service = CavanAccessibilityService.getInstance();
+						if (service != null) {
+							CavanAndroid.showToast(getApplicationContext(), R.string.test_sucess);
+						}
 					} else {
 						mMessageCodeMap.put(message, node);
 
 						if (node.isCompleted()) {
 							CavanAndroid.showToast(getApplicationContext(), R.string.ignore_completed_code, code);
 						} else {
-							sendCodeUpdateBroadcast(CavanMessageActivity.ACTION_CODE_ADD, code);
+							CavanAccessibilityAlipay alipay = CavanAccessibilityAlipay.getInstance();
+							if (alipay != null) {
+								alipay.addCode(node);
+							}
 						}
 
 						if (node.isSendEnabled()) {
@@ -399,7 +394,10 @@ public class FloatMessageService extends FloatWidowService {
 			if (code != null) {
 				code.setNetworkEnable();
 				mMessageCodeMap.remove(message);
-				sendCodeUpdateBroadcast(CavanMessageActivity.ACTION_CODE_REMOVE, code.getCode());
+				CavanAccessibilityAlipay alipay = CavanAccessibilityAlipay.getInstance();
+				if (alipay != null) {
+					alipay.removeCode(code);
+				}
 			}
 		}
 
@@ -593,11 +591,10 @@ public class FloatMessageService extends FloatWidowService {
 			} else if (CavanMessageActivity.isRedPacketCodeReceiveEnabled()) {
 				RedPacketCode node = RedPacketCode.getInstence(code);
 				if (node == null || node.isRecvEnabled()) {
-					Intent intent = new Intent(CavanMessageActivity.ACTION_CODE_RECEIVED);
-					intent.putExtra("type", type);
-					intent.putExtra("code", code);
-					intent.putExtra("shared", true);
-					sendBroadcast(intent);
+					RedPacketListenerService listener = RedPacketListenerService.getInstance();
+					if (listener != null) {
+						listener.addRedPacketCode(code, type, true);
+					}
 				}
 			}
 		} else if (command.startsWith(NET_CMD_UPDATE)) {
@@ -658,7 +655,6 @@ public class FloatMessageService extends FloatWidowService {
 		filter.addAction(Intent.ACTION_SCREEN_OFF);
 		filter.addAction(Intent.ACTION_SCREEN_ON);
 		filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-		filter.addAction(CavanMessageActivity.ACTION_SEND_WAN_COMMAN);
 		filter.addAction(CavanMessageActivity.ACTION_SERVICE_EXIT);
 		registerReceiver(mReceiver, filter );
 
@@ -672,12 +668,12 @@ public class FloatMessageService extends FloatWidowService {
 
 		mHandler.sendEmptyMessage(MSG_CHECK_SERVICE_STATE);
 
-		setInstance(this);
+		sInstance = this;
 	}
 
 	@Override
 	public void onDestroy() {
-		setInstance(null);
+		sInstance = null;
 
 		if (mTcpDaemon != null) {
 			mTcpDaemon.setActive(false);
@@ -1062,9 +1058,10 @@ public class FloatMessageService extends FloatWidowService {
 
 						CavanAndroid.dLog("host = " + host + ", port = " + port);
 
-						String summary = host + ':' + port;
+						mWanState = R.string.wan_connecting;
+						mWanSummary = host + ':' + port;
 
-						mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.wan_connecting, 0, summary).sendToTarget();
+						mHandler.sendEmptyMessage(MSG_TCP_SERVICE_STATE_CHANGED);
 
 						mSocket = new Socket();
 						mSocket.connect(new InetSocketAddress(host, port), 6000);
@@ -1072,8 +1069,8 @@ public class FloatMessageService extends FloatWidowService {
 						mInputStream = mSocket.getInputStream();
 						mOutputStream = mSocket.getOutputStream();
 
-						Message message = mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.wan_connected, 0, summary);
-						mHandler.sendMessageDelayed(message, 1000);
+						mWanState = R.string.wan_connected;
+						mHandler.sendEmptyMessageDelayed(MSG_TCP_SERVICE_STATE_CHANGED, 1000);
 
 						BufferedReader reader = new BufferedReader(new InputStreamReader(mInputStream));
 
@@ -1175,9 +1172,13 @@ public class FloatMessageService extends FloatWidowService {
 				String url1 = "tcp://" + CavanString.deleteSpace(settings[0]);
 				String url2 = "tcp://" + CavanString.deleteSpace(settings[1]);
 
-				mHandler.obtainMessage(MSG_TCP_BRIDGE_STATE_CHANGED, R.string.tcp_bridge_running, 0).sendToTarget();
+				mBridgeState = R.string.tcp_bridge_running;
+				mHandler.sendEmptyMessage(MSG_TCP_BRIDGE_STATE_CHANGED);
+
 				CavanJni.doTcpBridge(url1, url2);
-				mHandler.obtainMessage(MSG_TCP_BRIDGE_STATE_CHANGED, R.string.tcp_bridge_exit, 0).sendToTarget();
+
+				mBridgeState = R.string.tcp_bridge_exit;
+				mHandler.sendEmptyMessage(MSG_TCP_BRIDGE_STATE_CHANGED);
 
 				if (mActive) {
 					synchronized (this) {
@@ -1193,5 +1194,21 @@ public class FloatMessageService extends FloatWidowService {
 			mTcpBridge = null;
 			mHandler.obtainMessage(MSG_TCP_BRIDGE_STATE_CHANGED, R.string.tcp_bridge_stopped, 0).sendToTarget();
 		}
+	}
+
+	public int getWanState() {
+		return mWanState;
+	}
+
+	public CharSequence getWanSummary() {
+		return mWanSummary;
+	}
+
+	public int getBridgeState() {
+		return mBridgeState;
+	}
+
+	public void sendWanCommand(String command) {
+		mNetworkSendHandler.sendTcpCommand(command, 0);
 	}
 }

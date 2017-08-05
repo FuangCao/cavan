@@ -56,6 +56,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 		CavanPackageName.SOGOU_OCR,
 	};
 
+	private static CavanAccessibilityService sInstance;
+
+	public static CavanAccessibilityService getInstance() {
+		return sInstance;
+	}
+
 	private Dialog mCheckContentDialog;
 
 	private long mWindowStartTime;
@@ -110,44 +116,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 			CavanAndroid.dLog("action = " + action);
 
 			switch (action) {
-			case CavanMessageActivity.ACTION_CODE_TEST:
-				if (intent.getStringExtra("code") != null) {
-					CavanAndroid.showToast(getApplicationContext(), R.string.test_sucess);
-				}
-				break;
-
-			case CavanMessageActivity.ACTION_CODE_ADD:
-				RedPacketCode node = RedPacketCode.getInstence(intent);
-				if (node != null) {
-					mAccessibilityAlipay.addCode(node);
-					mAccessibilityAlipay.startAlipayActivity();
-				}
-				break;
-
-			case CavanMessageActivity.ACTION_CODE_REMOVE:
-				node = RedPacketCode.getInstence(intent);
-				if (node != null) {
-					mAccessibilityAlipay.removeCode(node);
-				}
-				break;
-
 			case Intent.ACTION_CLOSE_SYSTEM_DIALOGS:
 				mAccessibilityAlipay.setAutoOpenAlipayEnable(false);
 				CavanAndroid.dLog("reason = " + intent.getStringExtra("reason"));
-				break;
-
-			case CavanMessageActivity.ACTION_UNPACK_MM:
-				String chat = intent.getStringExtra("chat");
-				if (chat != null) {
-					mAccessibilityMM.addPacket(chat);
-				}
-				break;
-
-			case CavanMessageActivity.ACTION_UNPACK_QQ:
-				chat = intent.getStringExtra("chat");
-				if (chat != null) {
-					mAccessibilityQQ.addPacket(chat);
-				}
 				break;
 
 			case CavanMessageActivity.ACTION_BOOT_COMPLETED:
@@ -188,26 +159,22 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 						setAutoOpenAppEnable(true);
 
-						if (checkBox != null && checkBox.isChecked()) {
-							if (text != null) {
-								for (String line : text.split("\n")) {
-									String code = RedPacketCode.filtration(line);
+						RedPacketListenerService listener = RedPacketListenerService.getInstance();
 
-									if (code.length() > 0) {
-										Intent intent = new Intent(CavanMessageActivity.ACTION_CODE_RECEIVED);
-										intent.putExtra("type", "图片识别");
-										intent.putExtra("code", code);
-										intent.putExtra("shared", false);
-										sendBroadcast(intent);
+						if (listener != null) {
+							if (checkBox != null && checkBox.isChecked()) {
+								if (text != null) {
+									for (String line : text.split("\n")) {
+										String code = RedPacketCode.filtration(line);
+
+										if (code.length() > 0) {
+											listener.addRedPacketCode(code, "图片识别", false);
+										}
 									}
 								}
+							} else {
+								listener.addRedPacketContent(null, text, "图片识别", false, 1);
 							}
-						} else {
-							Intent intent = new Intent(CavanMessageActivity.ACTION_CONTENT_RECEIVED);
-							intent.putExtra("desc", "图片识别");
-							intent.putExtra("priority", 1);
-							intent.putExtra("content", text);
-							sendBroadcast(intent);
 						}
 					}
 				});
@@ -590,12 +557,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 
 		IntentFilter filter = new IntentFilter();
-		filter.addAction(CavanMessageActivity.ACTION_CODE_TEST);
-		filter.addAction(CavanMessageActivity.ACTION_CODE_ADD);
-		filter.addAction(CavanMessageActivity.ACTION_CODE_REMOVE);
 		filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
-		filter.addAction(CavanMessageActivity.ACTION_UNPACK_MM);
-		filter.addAction(CavanMessageActivity.ACTION_UNPACK_QQ);
 		filter.addAction(CavanMessageActivity.ACTION_BOOT_COMPLETED);
 
 		registerReceiver(mReceiver, filter);
@@ -606,10 +568,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 		if (sBootComplete) {
 			mHandler.sendEmptyMessage(MSG_BOOT_COMPLETED);
 		}
+
+		sInstance = this;
 	}
 
 	@Override
 	public void onDestroy() {
+		sInstance = null;
+
 		Intent intent = new Intent(CavanMessageActivity.ACTION_SERVICE_EXIT);
 		intent.putExtra("service", getClass().getCanonicalName());
 		sendBroadcast(intent);

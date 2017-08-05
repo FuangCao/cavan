@@ -3,7 +3,6 @@ package com.cavan.cavanmain;
 import java.util.Iterator;
 import java.util.List;
 
-import android.content.Intent;
 import android.os.Message;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
@@ -30,6 +29,12 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 	private static final int REPEAT_COUNT = 5;
 
 	private static final int MSG_COMMIT_TIMEOUT = 1;
+
+	private static CavanAccessibilityAlipay sInstance;
+
+	public static CavanAccessibilityAlipay getInstance() {
+		return sInstance;
+	}
 
 	private int mCodeCount;
 	private RedPacketCode mCode;
@@ -78,6 +83,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 
 	public CavanAccessibilityAlipay(CavanAccessibilityService service) {
 		super(service);
+		sInstance = this;
 	}
 
 	private int getRedPacketCodeCount() {
@@ -471,7 +477,11 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 						return delay;
 					}
 
-					mService.sendBroadcast(new Intent(CavanMessageActivity.ACTION_CODE_COMMIT));
+					CavanInputMethod method = CavanInputMethod.getInstance();
+					if (method != null) {
+						method.sendFinishAction();
+					}
+
 					return POLL_DELAY;
 				} else {
 					msgResId = R.string.commit_too_much_please_manual_commit;
