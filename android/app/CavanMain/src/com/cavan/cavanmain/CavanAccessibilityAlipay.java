@@ -24,7 +24,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 	private static final long POLL_DELAY_XIUXIU = 2000;
 	private static final long UNPACK_OVERTIME = 3000;
 	private static final long COMMIT_OVERTIME = 300000;
-	private static final long REPEAT_OVERTIME = 10000;
+	private static final long REPEAT_OVERTIME = 5000;
 	private static final long POLL_OVERTIME = 60000;
 	private static final long CLEAN_OVERTIME = 120000;
 	private static final int REPEAT_COUNT = 5;
@@ -34,7 +34,6 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 	private int mCodeCount;
 	private RedPacketCode mCode;
 	private String mInputtedCode;
-	private long mDelay;
 	private long mLastAddTime;
 	private boolean mXiuXiu;
 	private boolean mXiuXiuPending;
@@ -52,14 +51,15 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 			AccessibilityNodeInfo root = getRootInActiveWindow();
 			if (root != null && CavanPackageName.ALIPAY.equals(root.getPackageName())) {
 				RedPacketCode node = getNextCode();
-				postRedPacketCode(node, root);
+				long delay = postRedPacketCode(node, root);
 
 				if (node == null && mService.startNextPendingActivity()) {
 					return;
 				}
 
 				if (mCodeCount > 0) {
-					startAutoCommitRedPacketCode(POLL_DELAY);
+					CavanAndroid.dLog("delay = " + delay);
+					startAutoCommitRedPacketCode(delay);
 				} else if (mXiuXiu) {
 					startAutoCommitRedPacketCode(POLL_DELAY_XIUXIU);
 				} else {
@@ -171,7 +171,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 		return false;
 	}
 
-	private boolean postRedPacketCode(RedPacketCode code, AccessibilityNodeInfo root) {
+	private long postRedPacketCode(RedPacketCode code, AccessibilityNodeInfo root) {
 		CavanAndroid.dLog("xiuxiu = " + mXiuXiu + ", pending = " + mXiuXiuPending);
 		CavanAndroid.dLog("count = " + mCodeCount + ", code = " + code);
 
@@ -201,13 +201,12 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 				break;
 			}
 
-			postRedPacketCode(root, code);
-
 			if (!hasMessages(MSG_COMMIT_TIMEOUT, code)) {
 				Message message = obtainMessage(MSG_COMMIT_TIMEOUT, code);
 				sendMessageDelayed(message, COMMIT_OVERTIME);
 			}
-			break;
+
+			return postRedPacketCode(root, code);
 
 		case "com.alipay.mobile.framework.app.ui.DialogHelper$APGenericProgressDialog":
 			if (getWindowTimeConsume() > UNPACK_OVERTIME && isCurrentRedPacketCode(mCode)) {
@@ -325,7 +324,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 			performBackAction(root, true);
 		}
 
-		return false;
+		return POLL_DELAY;
 	}
 
 	private void removeRedPacketCode(RedPacketCode code) {
@@ -430,15 +429,15 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 		return null;
 	}
 
-	private boolean postRedPacketCode(AccessibilityNodeInfo root, RedPacketCode code) {
+	private long postRedPacketCode(AccessibilityNodeInfo root, RedPacketCode code) {
 		AccessibilityNodeInfo node = findRedPacketInputNode(root);
 		if (node == null) {
-			return false;
+			return POLL_DELAY;
 		}
 
 		if (code == null) {
 			CavanAccessibility.setNodeText(mService, node, null);
-			return true;
+			return POLL_DELAY;
 		}
 
 		mInputtedCode = code.getCode();
@@ -461,26 +460,26 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 		} else if (maxCommitCount > 0) {
 			if (CavanInputMethod.isDefaultInputMethod(mService)) {
 				if (code.getCommitCount() < maxCommitCount) {
-					long delay = code.getDelay() / 1000;
+					long delay = code.getDelay();
+
 					if (delay > 0) {
-						if (delay != mDelay) {
-							mDelay = delay;
-							String message = mService.getResources().getString(R.string.auto_commit_after, delay);
-							CavanAndroid.showToast(mService, message);
+						FloatMessageService service = FloatMessageService.getInstance();
+						if (service != null) {
+							service.setCountDownTime(code.getTime());
 						}
 
-						return false;
+						return delay;
 					}
 
 					mService.sendBroadcast(new Intent(CavanMessageActivity.ACTION_CODE_COMMIT));
-					return true;
+					return POLL_DELAY;
 				} else {
 					msgResId = R.string.commit_too_much_please_manual_commit;
 				}
 			} else if (CavanMessageActivity.isAutoSwitchImeEnabled(mService)) {
 				String ime = mService.getResources().getString(R.string.cavan_input_method);
 				mService.setInputMethod(ime, 5);
-				return false;
+				return POLL_DELAY;
 			} else {
 				msgResId = R.string.ime_fault_please_manual_commit;
 			}
@@ -492,7 +491,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 			CavanAndroid.showToastLong(mService, msgResId);
 		}
 
-		return false;
+		return POLL_DELAY;
 	}
 
 	private boolean unpackRedPacket(AccessibilityNodeInfo root) {

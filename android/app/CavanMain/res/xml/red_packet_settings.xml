@@ -141,7 +141,7 @@
 	    android:persistent="true"
 		android:entries="@array/ahead_entries"
 		android:entryValues="@array/ahead_values"
-		android:defaultValue="3"
+		android:defaultValue="0"
 	    android:title="@string/commit_ahead" />
 
 	<ListPreference android:key="auto_commit"

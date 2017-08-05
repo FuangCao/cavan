@@ -81,6 +81,17 @@ public class FloatMessageService extends FloatWidowService {
 	public static final int MSG_SEND_TCP_COMMAND = 2;
 	private static final int MSG_KEEP_ALIVE = 3;
 
+	private static FloatMessageService mInstance;
+
+	public static synchronized FloatMessageService getInstance() {
+		return mInstance;
+	}
+
+	private static synchronized void setInstance(FloatMessageService instance) {
+		mInstance = instance;
+	}
+
+	private long mCountDownTime;
 	private boolean mScreenClosed;
 	private TextView mTextViewTime;
 	private CavanWakeLock mWakeLock = new CavanWakeLock(FloatMessageService.class.getCanonicalName());
@@ -101,17 +112,36 @@ public class FloatMessageService extends FloatWidowService {
 			case MSG_UPDATE_TIME:
 				removeMessages(MSG_UPDATE_TIME);
 
-				if (mScreenClosed || mTextViewTime.getVisibility() != View.VISIBLE) {
-					break;
+				synchronized (mHandler) {
+					if (mScreenClosed || mTextViewTime.getVisibility() != View.VISIBLE) {
+						break;
+					}
+
+					Calendar calendar = Calendar.getInstance();
+
+					if (mCountDownTime > 0) {
+						long time = System.currentTimeMillis();
+
+						if (mCountDownTime > time) {
+							long delay = mCountDownTime - time;
+
+							if (delay > 100) {
+								sendEmptyMessageDelayed(MSG_UPDATE_TIME, 100);
+							} else {
+								sendEmptyMessageDelayed(MSG_UPDATE_TIME, delay);
+							}
+
+							mTextViewTime.setText(getTimeText(calendar) + "-" + delay);
+							break;
+						}
+
+						mCountDownTime = 0;
+					}
+
+					int msecond = calendar.get(Calendar.MILLISECOND);
+					sendEmptyMessageDelayed(MSG_UPDATE_TIME, 1000 - msecond);
+					mTextViewTime.setText(getTimeText(calendar));
 				}
-
-				Calendar calendar = Calendar.getInstance();
-				int msecond = calendar.get(Calendar.MILLISECOND);
-
-				sendEmptyMessageDelayed(MSG_UPDATE_TIME, 1000 - msecond);
-
-				int second = calendar.get(Calendar.SECOND);
-				mTextViewTime.setText(getTimeText(calendar, second));
 				break;
 
 			case MSG_TCP_SERVICE_STATE_CHANGED:
@@ -189,14 +219,16 @@ public class FloatMessageService extends FloatWidowService {
 			case MSG_CHECK_KEYGUARD:
 				removeMessages(MSG_CHECK_KEYGUARD);
 
-				if (mScreenClosed) {
-					break;
-				}
+				synchronized (mHandler) {
+					if (mScreenClosed) {
+						break;
+					}
 
-				if (CavanAndroid.inKeyguardRestrictedInputMode(FloatMessageService.this)) {
-					sendEmptyMessageDelayed(MSG_CHECK_KEYGUARD, 2000);
-				} else {
-					mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_bg);
+					if (CavanAndroid.inKeyguardRestrictedInputMode(FloatMessageService.this)) {
+						sendEmptyMessageDelayed(MSG_CHECK_KEYGUARD, 2000);
+					} else {
+						mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_bg);
+					}
 				}
 				break;
 
@@ -234,13 +266,17 @@ public class FloatMessageService extends FloatWidowService {
 				}
 
 				setLockScreenEnable(true);
-				mScreenClosed = true;
+
+				synchronized (mHandler) {
+					mScreenClosed = true;
+				}
 				break;
 
 			case Intent.ACTION_SCREEN_ON:
-				mScreenClosed = false;
-				mHandler.sendEmptyMessage(MSG_UPDATE_TIME);
-
+				synchronized (mHandler) {
+					mScreenClosed = false;
+					mHandler.sendEmptyMessage(MSG_UPDATE_TIME);
+				}
 
 				if (getTextCount() > 0 || CavanMessageActivity.isAutoUnlockEnabled(getApplicationContext())) {
 					setLockScreenEnable(false);
@@ -463,6 +499,13 @@ public class FloatMessageService extends FloatWidowService {
 		return intent;
 	}
 
+	public void setCountDownTime(long time) {
+		synchronized (mHandler) {
+			mCountDownTime = time;
+			mHandler.sendEmptyMessage(MSG_UPDATE_TIME);
+		}
+	}
+
 	private boolean checkServiceState() {
 		if (!CavanAccessibilityService.checkAndOpenSettingsActivity(this)) {
 			return false;
@@ -497,15 +540,12 @@ public class FloatMessageService extends FloatWidowService {
 		return true;
 	}
 
-	public String getTimeText(Calendar calendar, int second) {
+	public String getTimeText(Calendar calendar) {
 		int hour = calendar.get(Calendar.HOUR_OF_DAY);
 		int minute = calendar.get(Calendar.MINUTE);
+		int second = calendar.get(Calendar.SECOND);
 
 		return String.format("%02d:%02d:%02d", hour, minute, second);
-	}
-
-	public String getTimeText(Calendar calendar) {
-		return getTimeText(calendar, calendar.get(Calendar.SECOND));
 	}
 
 	public String getTimeText() {
@@ -631,10 +671,14 @@ public class FloatMessageService extends FloatWidowService {
 		setSuspendDisable(CavanMessageActivity.isDisableSuspendEnabled(this));
 
 		mHandler.sendEmptyMessage(MSG_CHECK_SERVICE_STATE);
+
+		setInstance(this);
 	}
 
 	@Override
 	public void onDestroy() {
+		setInstance(null);
+
 		if (mTcpDaemon != null) {
 			mTcpDaemon.setActive(false);
 		}

@@ -230,13 +230,13 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 
 		try {
 			if (text != null) {
-				return Integer.parseInt(text) * 1000;
+				return Integer.parseInt(text);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-		return 5000;
+		return 0;
 	}
 
 	public static int getNotifySetting(Context context) {
