@@ -17,11 +17,14 @@ import com.cavan.java.RedPacketFinder;
 public abstract class CavanAccessibilityBase<E> extends Handler implements Runnable {
 
 	private static final long POLL_DELAY = 200;
+	private static final long STABLE_DELAY = 200;
 
 	private static final String[] EXCLUDE_MESSAGES = {
 		"发送", "完成", "单选", "多选"
 	};
 
+	private long mStableTime;
+	private int mStableTimes;
 	private boolean mForceUnpack;
 	private boolean mGotoIdleEnable;
 
@@ -44,6 +47,23 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 		protected void onRunableFire() {
 			if (!isLocked()) {
 				performGlobalBack();
+			}
+		}
+	};
+
+	private Runnable mRunnableContentStable = new Runnable() {
+
+		@Override
+		public void run() {
+			long time = System.currentTimeMillis();
+			if (mStableTime > time) {
+				postDelayed(this, mStableTime - time);
+			} else if (getWindowTimeConsume() > 500) {
+				CavanAndroid.dLog("mStableTimes = " + mStableTimes);
+
+				if (onWindowContentStable(++mStableTimes) && mStableTimes < 3) {
+					postDelayed(this, POLL_DELAY);
+				}
 			}
 		}
 	};
@@ -110,7 +130,21 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 		}
 	}
 
-	protected void onWindowContentChanged(AccessibilityEvent event) {}
+	protected void onWindowContentChanged(AccessibilityEvent event) {
+		long time = System.currentTimeMillis();
+
+		if (mStableTime < time) {
+			postDelayed(mRunnableContentStable, STABLE_DELAY);
+		}
+
+		mStableTimes = 0;
+		mStableTime = time + STABLE_DELAY;
+	}
+
+	protected boolean onWindowContentStable(int times) {
+		return false;
+	}
+
 	protected void onViewClicked(AccessibilityEvent event) {}
 	protected void onViewTextChanged(AccessibilityEvent event) {}
 

@@ -8,6 +8,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 
 import com.cavan.android.CavanAccessibility;
 import com.cavan.android.CavanAndroid;
@@ -30,6 +31,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	}
 
 	private long mUnpackTime;
+	private boolean mUnpackPending;
 	private List<Integer> mFinishNodes = new ArrayList<Integer>();
 
 	public CavanAccessibilityMM(CavanAccessibilityService service) {
@@ -46,13 +48,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		return node.isMultiLine() && CavanAccessibility.isTextView(node);
 	}
 
-	@Override
-	public String getPackageName() {
-		return CavanPackageName.MM;
-	}
-
-	@Override
-	public boolean addPacket(String packet) {
+	private boolean updateUnpackTime() {
 		int delay = CavanMessageActivity.getAutoUnpackMM(mService);
 		if (delay < 0) {
 			return false;
@@ -65,7 +61,17 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			}
 		}
 
-		if (super.addPacket(packet)) {
+		return true;
+	}
+
+	@Override
+	public String getPackageName() {
+		return CavanPackageName.MM;
+	}
+
+	@Override
+	public boolean addPacket(String packet) {
+		if (updateUnpackTime() && super.addPacket(packet)) {
 			mFinishNodes.clear();
 			return true;
 		}
@@ -207,6 +213,53 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		return success;
 	}
 
+	private AccessibilityNodeInfo findMessageListViewNode() {
+		if ("com.tencent.mm.ui.LauncherUI".equals(mClassName) || "com.tencent.mm.ui.chatting.ChattingUI".equals(mClassName)) {
+			AccessibilityNodeInfo root = getRootInActiveWindow();
+			if (root == null) {
+				return null;
+			}
+
+			AccessibilityNodeInfo child0 = null;
+			AccessibilityNodeInfo child1 = null;
+
+			try {
+				AccessibilityNodeInfo node = CavanAccessibility.findNodeByViewId(root, "com.tencent.mm:id/a4l");
+				if (node != null) {
+					if (ListView.class.getName().equals(node.getClassName())) {
+						return node;
+					}
+
+					node.recycle();
+				}
+
+				child0 = root.getChild(0);
+				child1 = child0.getChild(0);
+				node = child1.getChild(4);
+
+				if (ListView.class.getName().equals(node.getClassName())) {
+					return node;
+				}
+
+				node.recycle();
+			} catch (Exception e) {
+				return null;
+			} finally {
+				if (child1 != null) {
+					child1.recycle();
+				}
+
+				if (child0 != null) {
+					child0.recycle();
+				}
+
+				root.recycle();
+			}
+		}
+
+		return null;
+	}
+
 	@Override
 	protected long onPollEventFire(AccessibilityNodeInfo root) {
 		switch (mClassName) {
@@ -225,9 +278,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI":
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI":
-			if (getPacketCount() > 0) {
+			if (mUnpackPending || getPacketCount() > 0) {
 				AccessibilityNodeInfo backNode = findDetailUiBackNode(root);
 				if (backNode != null) {
+					mUnpackPending = false;
 					setLockEnable(POLL_DELAY, false);
 					CavanAccessibility.performClickAndRecycle(backNode);
 				}
@@ -286,5 +340,46 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 				setLockEnable(POLL_DELAY, false);
 			}
 		}
+	}
+
+	@Override
+	protected boolean onWindowContentStable(int times) {
+		AccessibilityNodeInfo listView = findMessageListViewNode();
+		if (listView == null) {
+			return false;
+		}
+
+		AccessibilityNodeInfo child = null;
+		AccessibilityNodeInfo node = null;
+
+		try {
+			child = listView.getChild(listView.getChildCount() - 1);
+			node = child.getChild(1);
+
+			String type = CavanAccessibility.getChildText(node, 2);
+			if (type == null) {
+				return true;
+			}
+
+			if ("微信红包".equals(type) && isValidMessage(node) && updateUnpackTime()) {
+				setLockEnable(POLL_DELAY_UNPACK, false);
+				CavanAccessibility.performClick(node);
+				mUnpackPending = true;
+			}
+		} catch (Exception e) {
+			return true;
+		} finally {
+			if (node != null) {
+				node.recycle();
+			}
+
+			if (child != null) {
+				child.recycle();
+			}
+
+			listView.recycle();
+		}
+
+		return false;
 	}
 }
