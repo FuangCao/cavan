@@ -81,7 +81,6 @@ public class FloatMessageService extends FloatWidowService {
 	public static final int MSG_SEND_TCP_COMMAND = 2;
 	private static final int MSG_KEEP_ALIVE = 3;
 
-	private int mLastSecond;
 	private boolean mScreenClosed;
 	private TextView mTextViewTime;
 	private CavanWakeLock mWakeLock = new CavanWakeLock(FloatMessageService.class.getCanonicalName());
@@ -107,14 +106,12 @@ public class FloatMessageService extends FloatWidowService {
 				}
 
 				Calendar calendar = Calendar.getInstance();
+				int msecond = calendar.get(Calendar.MILLISECOND);
+
+				sendEmptyMessageDelayed(MSG_UPDATE_TIME, 1000 - msecond);
+
 				int second = calendar.get(Calendar.SECOND);
-				if (second == mLastSecond) {
-					sendEmptyMessageDelayed(MSG_UPDATE_TIME, 100);
-				} else {
-					mLastSecond = second;
-					sendEmptyMessageDelayed(MSG_UPDATE_TIME, 1000);
-					mTextViewTime.setText(getTimeText(calendar, second));
-				}
+				mTextViewTime.setText(getTimeText(calendar, second));
 				break;
 
 			case MSG_TCP_SERVICE_STATE_CHANGED:
@@ -521,7 +518,6 @@ public class FloatMessageService extends FloatWidowService {
 		}
 
 		if (enable) {
-			mLastSecond = -1;
 			mTextViewTime.setVisibility(View.VISIBLE);
 			mHandler.sendEmptyMessage(MSG_UPDATE_TIME);
 		} else {
