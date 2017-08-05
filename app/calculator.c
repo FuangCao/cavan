@@ -161,11 +161,12 @@ int main(int argc, char *argv[])
 
 		if (show_bitmask) {
 			u64 value64 = result;
+			int i = 0;
 
 			value2bitlist(value64, buff, sizeof(buff), " | ");
 			println("%s", buff);
 
-			for (int i = 31; i >= 0; i--) {
+			for (i = 31; i >= 0; i--) {
 				u32 mask = 1ULL << i;
 
 				if (value64 & mask) {
