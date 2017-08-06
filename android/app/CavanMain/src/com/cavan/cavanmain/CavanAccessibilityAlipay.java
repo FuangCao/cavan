@@ -592,6 +592,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 		}
 
 		mPackets.add(code);
+		startAlipayActivity();
 
 		return true;
 	}

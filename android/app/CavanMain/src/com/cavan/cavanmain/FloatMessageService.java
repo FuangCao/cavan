@@ -365,8 +365,12 @@ public class FloatMessageService extends FloatWidowService {
 						}
 
 						if (node.isSendEnabled()) {
-							long delay = node.getTime() - System.currentTimeMillis();
-							mNetworkSendHandler.sendCode(code, delay);
+							if (node.isRepeatable()) {
+								mNetworkSendHandler.sendCode(code, 0);
+							} else {
+								long delay = node.getTime() - System.currentTimeMillis();
+								mNetworkSendHandler.sendCode(code, delay);
+							}
 						}
 					}
 				}

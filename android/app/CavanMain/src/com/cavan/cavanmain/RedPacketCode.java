@@ -25,7 +25,7 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 	private static long LAST_CODE_OVERTIME = 1800000;
 	private static long CODE_OVERTIME = 28800000;
 	private static long REPEAT_TIME_ALIGN = 60000;
-	private static long TIME_MISTAKE = 10000;
+	private static long TIME_MISTAKE = 5000;
 
 	private static final Pattern sRedPacketCodePattern = Pattern.compile("[\\w￥]+");
 	private static final SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -152,7 +152,7 @@ public class RedPacketCode implements Comparable<RedPacketCode> {
 
 			if (!ignore) {
 				long timeNow = System.currentTimeMillis();
-				long timeAlarm = time - 20000;
+				long timeAlarm = time - 40000;
 
 				if (timeAlarm > timeNow) {
 					CavanAndroid.dLog("timeAlarm = " + sDateFormat.format(new Date(timeAlarm)));
