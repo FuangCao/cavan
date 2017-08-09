@@ -5,5 +5,9 @@
     <string name="hello_world">Hello world!</string>
     <string name="stop">停止</string>
     <string name="start">开始</string>
+    <string name="bluetooth_phone">蓝牙电话</string>
+    <string name="bluetooth_interphone">蓝牙对讲机</string>
+    <string name="disconn">断开</string>
+    <string name="conn">连接</string>
 
 </resources>

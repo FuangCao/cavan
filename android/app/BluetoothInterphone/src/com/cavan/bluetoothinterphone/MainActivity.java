@@ -3,8 +3,6 @@ package com.cavan.bluetoothinterphone;
 import android.app.Activity;
 import android.media.AudioManager;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
