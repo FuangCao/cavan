@@ -26,6 +26,7 @@ public class InterphoneService extends Service {
 	private InputStream mInputStream;
 	private OutputStream mOutputStream;
 	private BluetoothServerSocket mServerSocket;
+	private InterphoneAudioDevice mAudioDevice = new InterphoneAudioDevice();
 
 	public synchronized InputStream getInputStream() {
 		return mInputStream;
@@ -42,7 +43,17 @@ public class InterphoneService extends Service {
 	private CavanDaemonThread mDaemonThread = new CavanDaemonThread() {
 
 		@Override
-		public synchronized void onDaemonStop() {
+		protected boolean doSendData() {
+			OutputStream stream = mOutputStream;
+			if (stream != null) {
+				mAudioDevice.record(this, stream);
+			}
+
+			return true;
+		}
+
+		@Override
+		public synchronized void doDisconnect() {
 			if (mServerSocket != null) {
 				try {
 					mServerSocket.close();
@@ -95,16 +106,9 @@ public class InterphoneService extends Service {
 					mOutputStream = ostream;
 				}
 
-				while (true) {
-					byte[] bytes = new byte[4096];
-					int length = istream.read(bytes);
+				startSendThread();
 
-					if (length < 0) {
-						break;
-					}
-
-					ostream.write(bytes, 0, length);
-				}
+				mAudioDevice.play(this, istream);
 			} catch (IOException e) {
 				e.printStackTrace();
 			} finally {

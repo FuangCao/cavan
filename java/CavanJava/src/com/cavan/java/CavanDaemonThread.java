@@ -1,10 +1,11 @@
 package com.cavan.java;
 
+
 public abstract class CavanDaemonThread extends Thread {
 
 	private boolean mSuspended;
 
-	private Thread mStopThread = new Thread() {
+	private Thread mSendThread = new Thread() {
 
 		@Override
 		public synchronized void start() {
@@ -18,9 +19,22 @@ public abstract class CavanDaemonThread extends Thread {
 		@Override
 		public void run() {
 			while (true) {
-				synchronized (CavanDaemonThread.this) {
-					if (mSuspended) {
-						onDaemonStop();
+				while (true) {
+					synchronized (CavanDaemonThread.this) {
+						if (mSuspended) {
+							doDisconnect();
+							break;
+						}
+					}
+
+					if (doSendData()) {
+						synchronized (CavanDaemonThread.this) {
+							if (mSuspended) {
+								doDisconnect();
+							}
+						}
+
+						break;
 					}
 				}
 
@@ -39,9 +53,13 @@ public abstract class CavanDaemonThread extends Thread {
 		return mSuspended;
 	}
 
+	public void startSendThread() {
+		mSendThread.start();
+	}
+
 	public synchronized void stopDaemon() {
 		mSuspended = true;
-		mStopThread.start();
+		mSendThread.start();
 	}
 
 	public synchronized void startDaemon() {
@@ -75,6 +93,10 @@ public abstract class CavanDaemonThread extends Thread {
 		}
 	}
 
-	protected abstract void onDaemonStop();
+	protected boolean doSendData() {
+		return true;
+	}
+
+	protected abstract void doDisconnect();
 	protected abstract boolean runDaemon();
 }

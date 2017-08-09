@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Set;
 
+import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -109,6 +110,7 @@ public class InterphoneActivity extends Activity implements OnClickListener {
 	private BluetoothSocket mSocket;
 	private InputStream mInputStream;
 	private OutputStream mOutputStream;
+	private InterphoneAudioDevice mAudioDevice = new InterphoneAudioDevice();
 
 	private CavanDaemonThread mConnThread = new CavanDaemonThread() {
 
@@ -121,7 +123,17 @@ public class InterphoneActivity extends Activity implements OnClickListener {
 		}
 
 		@Override
-		protected void onDaemonStop() {
+		protected boolean doSendData() {
+			OutputStream stream = mOutputStream;
+			if (stream != null) {
+				mAudioDevice.record(this, stream);
+			}
+
+			return true;
+		}
+
+		@Override
+		protected void doDisconnect() {
 			if (mSocket != null) {
 				try {
 					mSocket.close();
@@ -168,29 +180,8 @@ public class InterphoneActivity extends Activity implements OnClickListener {
 					mOutputStream = ostream;
 				}
 
-				try {
-					double total = 0;
-					long time = System.currentTimeMillis();
-
-					while (true) {
-						byte[] bytes = new byte[1024];
-
-						ostream.write(bytes);
-
-						int length = istream.read(bytes);
-						if (length < 0) {
-							break;
-						}
-
-						total += length;
-
-						double speed = ((total * 1000 / (System.currentTimeMillis() - time)) / 1024);
-						CavanAndroid.dLog("speed = " + speed + " KB/S");
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-
+				mConnThread.startSendThread();
+				mAudioDevice.play(this, istream);
 				mConnTimes = 0;
 			} catch (IOException e) {
 				if (isSuspended()) {
@@ -284,6 +275,8 @@ public class InterphoneActivity extends Activity implements OnClickListener {
 		Intent service = new Intent(this, InterphoneService.class);
 		startService(service);
 		bindService(service, mServiceConnection, 0);
+
+		CavanAndroid.checkAndRequestPermissions(this, Manifest.permission.RECORD_AUDIO);
 	}
 
 	@Override
