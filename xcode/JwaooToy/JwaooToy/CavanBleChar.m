@@ -36,6 +36,26 @@
     return self;
 }
 
+- (BOOL)canRead {
+    return (mChar.properties & CBCharacteristicPropertyRead) != 0;
+}
+
+- (BOOL)canWriteWithoutResponse {
+    return (mChar.properties & CBCharacteristicPropertyWriteWithoutResponse) != 0;
+}
+
+- (BOOL)canWrite {
+    return (mChar.properties & CBCharacteristicPropertyWrite) != 0;
+}
+
+- (BOOL)canNotify {
+    return (mChar.properties & CBCharacteristicPropertyNotify) != 0;
+}
+
+- (BOOL)canIndicate {
+    return (mChar.properties & CBCharacteristicPropertyIndicate) != 0;
+}
+
 - (void)enableNotifyWithSelector:(SEL)selector
                withTarget:(NSObject *)target {
     mNotifySelector = selector;
@@ -90,6 +110,17 @@
     }
 
     return value;
+}
+
+- (BOOL)writeDataNoRsp:(NSData *)data {
+    @synchronized (self) {
+        if (mGatt.isReady) {
+            [mPeripheral writeValue:data forCharacteristic:mChar type:CBCharacteristicWriteWithoutResponse];
+            return true;
+        }
+    }
+
+    return false;
 }
 
 - (BOOL)writeFrame:(NSData *)data {

@@ -63,7 +63,7 @@
 @synthesize deviceId = mDeviceId;
 
 - (JwaooBleToy *)initWithDelegate:(id<JwaooBleToyDelegate>)delegate {
-    if (self = [super initWithNames:@[@"JwaooToy", @"SenseTube", @"SenseBand"] uuid:JWAOO_TOY_UUID_SERVICE]) {
+    if (self = [super initWithNames:@[@"JwaooToy", @"SenseTube", @"SenseBand", @"Sensevibe warm"] uuid:JWAOO_TOY_UUID_SERVICE]) {
         mDelegate = delegate;
     }
 
@@ -71,6 +71,10 @@
 }
 
 - (void)onEventReceived:(NSData *)event {
+    if (mCharEvent.canWriteWithoutResponse) {
+        [mCharEvent writeDataNoRsp:[NSData dataWithBytes:nil length:0]];
+    }
+
     NSUInteger length = event.length;
 
     if (length > 0) {
@@ -234,18 +238,36 @@
 
     NSLog(@"identify = %@", identify);
 
+    mFlags = 0;
+
     if ([identify isEqualToString:JWAOO_TOY_NAME_DEFAULT]) {
         mDeviceId = JWAOO_TOY_DEVICE_ID_COMMON;
         mSensor = [JwaooToySensorDefault new];
+        mFlags = JWAOO_TOY_HAS_SENSOR | JWAOO_TOY_HAS_MOTO;
     } else if ([identify isEqualToString:JWAOO_TOY_NAME_K100]) {
         mDeviceId = JWAOO_TOY_DEVICE_ID_COMMON;
         mSensor = [JwaooToySensorDefault new];
+        mFlags = JWAOO_TOY_HAS_SENSOR | JWAOO_TOY_HAS_MOTO;
     } else if ([identify isEqualToString:JWAOO_TOY_NAME_MODEL06]) {
         mDeviceId = JWAOO_TOY_DEVICE_ID_MODEL06;
         mSensor = [JwaooToySensorModel6 new];
+        mFlags = (JWAOO_TOY_HAS_SENSOR | JWAOO_TOY_HAS_MOTO);
     } else if ([identify isEqualToString:JWAOO_TOY_NAME_MODEL10]) {
         mDeviceId = JWAOO_TOY_DEVICE_ID_MODEL10;
         mSensor = [JwaooToySensorModel10 new];
+        mFlags = JWAOO_TOY_HAS_SENSOR;
+    } else if ([identify isEqualToString:JWAOO_TOY_NAME_MODEL01]) {
+        mDeviceId = JWAOO_TOY_DEVICE_ID_MODEL01;
+        mSensor = [JwaooToySensorDefault new];
+        mFlags = JWAOO_TOY_HAS_MOTO;
+    } else if ([identify isEqualToString:JWAOO_TOY_NAME_MODEL11]) {
+        mDeviceId = JWAOO_TOY_DEVICE_ID_MODEL11;
+        mSensor = [JwaooToySensorDefault new];
+        mFlags = JWAOO_TOY_HAS_SENSOR;
+    } else if ([identify isEqualToString:JWAOO_TOY_NAME_MODEL03]) {
+        mDeviceId = JWAOO_TOY_DEVICE_ID_MODEL03;
+        mSensor = [JwaooToySensorDefault new];
+        mFlags = JWAOO_TOY_HAS_MOTO;
     } else {
         NSLog(@"Invalid identify");
         return false;
@@ -273,11 +295,19 @@
 }
 
 - (BOOL)setSensorEnable:(BOOL)enable {
+    if ((mFlags & JWAOO_TOY_HAS_SENSOR) == 0) {
+        return true;
+    }
+
     return [mCommand readBoolWithType:JWAOO_TOY_CMD_SENSOR_ENABLE withBool:enable];
 }
 
 - (BOOL)setSensorEnable:(BOOL)enable
               withDelay:(uint32_t)delay {
+    if ((mFlags & JWAOO_TOY_HAS_SENSOR) == 0) {
+        return true;
+    }
+
     return [mCommand readBoolWithType:JWAOO_TOY_CMD_SENSOR_ENABLE withBool:enable withDelay32:delay];
 }
 
@@ -533,10 +563,18 @@
 }
 
 - (BOOL)setMotoEventEnable:(BOOL)enable {
+    if ((mFlags & JWAOO_TOY_HAS_MOTO) == 0) {
+        return true;
+    }
+
     return [mCommand readBoolWithType:JWAOO_TOY_CMD_MOTO_EVENT_ENABLE withBool:enable];
 }
 
 - (JwaooToyMotoMode *)getMotoMode {
+    if ((mFlags & JWAOO_TOY_HAS_MOTO) == 0) {
+        return nil;
+    }
+
     NSData *response = [mCommand readDataWithType:JWAOO_TOY_CMD_MOTO_GET_MODE];
     if (response == nil || response.length != 2) {
         return nil;

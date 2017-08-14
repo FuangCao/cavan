@@ -54,6 +54,8 @@
         return false;
     }
 
+    [bleToy setKeyReportEnable:0xFF];
+
     JwaooToyBattInfo *info = [bleToy readBattInfo];
     if (info == nil) {
         NSLog(@"Failed to readBattInfo");
@@ -247,6 +249,10 @@
 
 - (IBAction)buttonBattInfoClick:(NSButton *)sender {
     [mBleToy setBattEventEnable:sender.state];
+}
+
+- (IBAction)buttonMotoCtrlClick:(NSButton *)sender {
+    [mBleToy setMotoMode:_mTextFieldMotoMode.intValue withSpeed:_mTextFieldMotoLevel.intValue];
 }
 
 @end

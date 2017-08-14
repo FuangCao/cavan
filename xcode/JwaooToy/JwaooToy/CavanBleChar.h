@@ -33,11 +33,17 @@
 
 - (nullable CavanBleChar *)initWithCharacteristic:(nonnull CBCharacteristic *)characteristic
                                        gatt:(nonnull CavanBleGatt *)gatt;
+- (BOOL)canRead;
+- (BOOL)canWriteWithoutResponse;
+- (BOOL)canWrite;
+- (BOOL)canNotify;
+- (BOOL)canIndicate;
 - (void)enableNotifyWithSelector:(nonnull SEL)selector
                withTarget:(nullable NSObject *)target;
 - (void)setWriteStatus:(nullable NSError *)error;
 - (void)setReadStatus:(nullable NSError *)error;
 - (nullable NSData *)readData;
+- (BOOL)writeDataNoRsp:(nonnull NSData *)data;
 - (BOOL)writeFrame:(nonnull NSData *)data;
 - (BOOL)writeData:(nonnull const void *)bytes
            length:(NSUInteger)length

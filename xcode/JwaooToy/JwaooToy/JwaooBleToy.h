@@ -19,6 +19,9 @@
 #define JWAOO_TOY_NAME_K100             @"K100"
 #define JWAOO_TOY_NAME_MODEL06          @"MODEL-06"
 #define JWAOO_TOY_NAME_MODEL10          @"MODEL-10"
+#define JWAOO_TOY_NAME_MODEL01          @"MODEL-01"
+#define JWAOO_TOY_NAME_MODEL11          @"MODEL-11"
+#define JWAOO_TOY_NAME_MODEL03          @"MODEL-03"
 
 #define JWAOO_TOY_UUID_SERVICE      [CBUUID UUIDWithString:@"1888"]
 #define JWAOO_TOY_UUID_COMMAND      [CBUUID UUIDWithString:@"1889"]
@@ -39,10 +42,16 @@
 #define JWAOO_TOY_LED_BATT          1
 #define JWAOO_TOY_LED_BT            2
 
+#define JWAOO_TOY_HAS_SENSOR        (1 << 0)
+#define JWAOO_TOY_HAS_MOTO          (1 << 1)
+
 typedef NS_ENUM(NSUInteger, JwaooToyDeviceId) {
     JWAOO_TOY_DEVICE_ID_COMMON,
     JWAOO_TOY_DEVICE_ID_MODEL06,
     JWAOO_TOY_DEVICE_ID_MODEL10,
+    JWAOO_TOY_DEVICE_ID_MODEL01,
+    JWAOO_TOY_DEVICE_ID_MODEL11,
+    JWAOO_TOY_DEVICE_ID_MODEL03,
 };
 
 @class JwaooBleToy;
@@ -104,6 +113,7 @@ typedef NS_ENUM(NSUInteger, JwaooToyDeviceId) {
     CavanBleChar *mCharSensor;
     CavanBleChar *mCharDebug;
     JwaooToyCommand *mCommand;
+    uint32_t mFlags;
 
     CavanAccelSensor *mSensor;
     id<JwaooBleToyDelegate> mDelegate;

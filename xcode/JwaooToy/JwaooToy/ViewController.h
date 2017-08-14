@@ -32,6 +32,8 @@
 @property (weak) IBOutlet NSButton *mButtonWriteBdAddr;
 @property (weak) IBOutlet NSTextField *mLabelSensorData;
 @property (weak) IBOutlet NSButton *mButtonMotoEvent;
+@property (weak) IBOutlet NSTextField *mTextFieldMotoMode;
+@property (weak) IBOutlet NSTextField *mTextFieldMotoLevel;
 
 @end
 
