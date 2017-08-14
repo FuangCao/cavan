@@ -11,6 +11,7 @@
     <string name="test_item_charge">充电测试</string>
     <string name="test_item_battery">电池测试</string>
     <string name="test_item_suspend">待机测试</string>
+    <string name="test_item_heater">加热器测试</string>
 
     <string-array name="keys">
         <item>震动增强键</item>
@@ -63,15 +64,21 @@
     <string name="end_mac_address">结束地址：</string>
     <string name="device_suspend_propmpt">设备已进入待机，请查看待机电流是否正常</string>
     <string name="address_count">地址个数：</string>
-    <string name="start_mac_address">下一次起始地址：</string>
+    <string name="start_mac_address_next">下一次起始地址：</string>
     <string-array name="projects">
         <item >请选择项目</item>
         <item >MODEL-06</item>
         <item >MODEL-10</item>
+        <item >MODEL-01</item>
+        <item >MODEL-11</item>
+        <item >MODEL-03</item>
     </string-array>
         <string name="copy">复制</string>
         <string name="prompt_copied_to_clipboard">文字已复制到剪切板</string>
         <string name="project_name">项目名称：</string>
         <string name="build_date">编译时间：<xliff:g>%1$s</xliff:g></string>
+        <string name="led_state">状态灯开关</string>
+        <string name="switch_heater">加热器开关</string>
+        <string name="temperature">温度：</string>
 
 </resources>

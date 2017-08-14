@@ -3,23 +3,28 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <CheckBox
+    <com.cavan.jwaootoyfactorytest.LedCheckBox
         android:id="@+id/checkBoxLedBluetooth"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/checkBoxLedBattery"
-        android:layout_below="@+id/checkBoxLedBattery"
-        android:layout_marginTop="50dp"
-        android:checked="true"
+        android:layout_alignLeft="@+id/checkBoxLed"
+        android:layout_below="@+id/checkBoxLed"
         android:text="@string/led_bluetooth_state" />
 
-    <CheckBox
+    <com.cavan.jwaootoyfactorytest.LedCheckBox
+        android:id="@+id/checkBoxLed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:text="@string/led_state" />
+
+    <com.cavan.jwaootoyfactorytest.LedCheckBox
         android:id="@+id/checkBoxLedBattery"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="100dp"
+        android:layout_above="@+id/checkBoxLed"
+        android:layout_alignLeft="@+id/checkBoxLed"
         android:text="@string/led_battery_state" />
 
 </RelativeLayout>

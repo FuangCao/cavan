@@ -128,6 +128,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_BATT_EVENT_ENABLE = 61;
 	public static final byte JWAOO_TOY_CMD_BATT_SHUTDOWN_VOLTAGE = 62;
 	public static final byte JWAOO_TOY_CMD_SENSOR_ENABLE = 70;
+	public static final byte JWAOO_TOY_CMD_HEATER_ENABLE = 71;
 	public static final byte JWAOO_TOY_CMD_MOTO_SET_MODE = 80;
 	public static final byte JWAOO_TOY_CMD_MOTO_GET_MODE = 81;
 	public static final byte JWAOO_TOY_CMD_MOTO_EVENT_ENABLE = 82;
@@ -244,6 +245,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	private int mDeviceId;
 	private String mDeviceName;
 	private double mVoltageRatio;
+	private int mStateLed;
 
 	protected CavanBleChar mCharCommand;
 	protected CavanBleChar mCharEvent;
@@ -314,6 +316,14 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 	}
 
+	public int getStateLed() {
+		return mStateLed;
+	}
+
+	public void setStateLed(int index) {
+		mStateLed = index;
+	}
+
 	@Override
 	protected boolean onInitialize() throws Exception {
 		return mEventListener.onInitialize();
@@ -365,7 +375,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		if (event.length > 0) {
 			switch (event[0]) {
 			case JWAOO_TOY_EVT_BATT_INFO:
-				if (event.length == 5) {
+				if (event.length >= 5) {
 					onBatteryStateChanged(new JwaooToyBatteryInfo(event, 1));
 				}
 				break;
@@ -907,6 +917,26 @@ public class JwaooBleToy extends CavanBleGatt {
 		return mCommand.readBool(command);
 	}
 
+	public boolean setBtLedEnable(boolean enable) throws Exception {
+		return setLedEnable(LED_BT, enable);
+	}
+
+	public boolean setBattLedEnable(boolean enable) throws Exception {
+		return setLedEnable(LED_BATT, enable);
+	}
+
+	public boolean setStateLedEnable(boolean enable) throws Exception {
+		return setLedEnable(mStateLed, enable);
+	}
+
+	public boolean setHeaterEnable(boolean enable) throws Exception {
+		return mCommand.readBool(JWAOO_TOY_CMD_HEATER_ENABLE, enable);
+	}
+
+	public boolean isHeaterEnabled() throws Exception {
+		return mCommand.readBool(JWAOO_TOY_CMD_HEATER_ENABLE);
+	}
+
 	public JwaooToyTestResult readTestResult() throws Exception {
 		JwaooToyResponse response = mCommand.send(JWAOO_TOY_CMD_READ_TEST_RESULT);
 		if (response == null) {
@@ -1089,6 +1119,8 @@ public class JwaooBleToy extends CavanBleGatt {
 
 		CavanAndroid.dLog("identify = " + identify);
 
+		mStateLed = LED_BT;
+
 		if (identify.equals(DEVICE_NAME_COMMON) || identify.equals(DEVICE_NAME_K100)) {
 			mSensor = new JwaooToySensorK100();
 			mDeviceName = DEVICE_NAME_K100;
@@ -1114,6 +1146,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			mSensor = new JwaooToySensorModel10();
 			mDeviceName = DEVICE_NAME_MODEL01;
 			mDeviceId = DEVICE_ID_MODEL01;
+			mStateLed = LED_BATT;
 		} else if (identify.equals(DEVICE_NAME_MODEL03)) {
 			mSensor = new JwaooToySensorModel10();
 			mDeviceName = DEVICE_NAME_MODEL03;
@@ -1133,6 +1166,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		private int mState;
 		private int mLevel;
 		private double mVoltage;
+		private double mVoltageNtc;
 
 		private JwaooToyBatteryInfo(byte[] bytes, int offset) {
 			CavanByteCache cache = new CavanByteCache(bytes);
@@ -1141,6 +1175,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			mState = cache.readValue8();
 			mLevel = cache.readValue8();
 			mVoltage = ((double) cache.readValue16()) / 1000;
+			mVoltageNtc = ((double) cache.readValue16()) / 1000;
 		}
 
 		public int getState() {
@@ -1151,8 +1186,16 @@ public class JwaooBleToy extends CavanBleGatt {
 			return mVoltage;
 		}
 
+		public double getVoltageNtc() {
+			return mVoltageNtc;
+		}
+
 		public int getLevel() {
 			return mLevel;
+		}
+
+		public double getTemp() {
+			return mVoltageNtc;
 		}
 
 		public int getLevelByVoltage(double voltage) {
@@ -1210,6 +1253,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			StringBuilder builder = new StringBuilder();
 
 			builder.append("voltage:").append(mVoltage);
+			builder.append(", ntc:").append(mVoltageNtc);
 			builder.append(", level:").append(getLevel());
 			builder.append(", state:").append(getStateString());
 

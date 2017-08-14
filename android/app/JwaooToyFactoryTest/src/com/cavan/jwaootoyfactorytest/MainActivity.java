@@ -47,6 +47,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 	private static final int TEST_ITEM_LED = 3;
 	private static final int TEST_ITEM_MOTO = 4;
 	private static final int TEST_ITEM_CHARGE = 5;
+	private static final int TEST_ITEM_HEATER = 6;
 	private static final int TEST_ITEM_SUSPEND = 7;
 
 	private TestItemFragment[] mTestItemFragmanetsEmpty = new TestItemFragment[0];
@@ -66,6 +67,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		new LedTestFragment(),
 		new MotoTestFragment(),
 		new ChargeTestFragment(),
+		new HeaterTestFragment(),
 		new SuspendTestFragment(),
 		// new DepthSensorTestFragment(),
 	};
@@ -327,6 +329,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 	@Override
 	public void onBatteryStateChanged(JwaooToyBatteryInfo info) {
+		CavanAndroid.dLog("onBatteryStateChanged: " + info);
 		mHandler.obtainMessage(MSG_BATTERY_STATE, info).sendToTarget();
 	}
 
@@ -901,10 +904,9 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 	public class LedTestFragment extends TestItemFragment implements OnCheckedChangeListener {
 
-		private int mLedCountBt;
-		private int mLedCountBatt;
-		private CheckBox mCheckBoxLedBt;
-		private CheckBox mCheckBoxLedBatt;
+		private LedCheckBox mCheckBoxLed;
+		private LedCheckBox mCheckBoxLedBt;
+		private LedCheckBox mCheckBoxLedBatt;
 
 		public LedTestFragment() {
 			super(TEST_ITEM_LED);
@@ -922,63 +924,46 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		@Override
 		protected boolean doInitialize() {
-			mCheckBoxLedBatt = (CheckBox) findViewById(R.id.checkBoxLedBattery);
+			mCheckBoxLedBatt = (LedCheckBox) findViewById(R.id.checkBoxLedBattery);
+			mCheckBoxLedBt = (LedCheckBox) findViewById(R.id.checkBoxLedBluetooth);
+			mCheckBoxLed = (LedCheckBox) findViewById(R.id.checkBoxLed);
 
-			if (mBleToy.getDeviveId() == JwaooBleToy.DEVICE_ID_MODEL10) {
+			mCheckBoxLedBatt.init(mBleToy, JwaooBleToy.LED_BATT);
+			mCheckBoxLedBt.init(mBleToy, JwaooBleToy.LED_BT);
+			mCheckBoxLed.init(mBleToy, mBleToy.getStateLed());
+
+			switch (mBleToy.getDeviveId()) {
+			case JwaooBleToy.DEVICE_ID_MODEL10:
+			case JwaooBleToy.DEVICE_ID_MODEL01:
 				mCheckBoxLedBatt.setVisibility(View.INVISIBLE);
-			} else {
+				mCheckBoxLedBt.setVisibility(View.INVISIBLE);
+
+				mCheckBoxLed.setVisibility(View.VISIBLE);
+				mCheckBoxLed.setChecked(true);
+				mCheckBoxLed.setOnCheckedChangeListener(this);
+				break;
+
+			default:
+				mCheckBoxLedBatt.setVisibility(View.VISIBLE);
 				mCheckBoxLedBatt.setChecked(false);
 				mCheckBoxLedBatt.setOnCheckedChangeListener(this);
-			}
 
-			mCheckBoxLedBt = (CheckBox) findViewById(R.id.checkBoxLedBluetooth);
-
-			if (mBleToy.getDeviveId() == JwaooBleToy.DEVICE_ID_MODEL01) {
-				mCheckBoxLedBt.setVisibility(View.INVISIBLE);
-			} else {
+				mCheckBoxLedBt.setVisibility(View.VISIBLE);
 				mCheckBoxLedBt.setChecked(true);
 				mCheckBoxLedBt.setOnCheckedChangeListener(this);
+
+				mCheckBoxLed.setVisibility(View.INVISIBLE);
 			}
 
 			return true;
 		}
 
 		@Override
-		public void onStart() {
-			mLedCountBt = 0;
-			mLedCountBatt = 0;
-			super.onStart();
-		}
-
-		@Override
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-			switch (buttonView.getId()) {
-			case R.id.checkBoxLedBattery:
-				try {
-					if (mBleToy.setLedEnable(JwaooBleToy.LED_BATT, isChecked)) {
-						mLedCountBatt++;
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				break;
+			LedCheckBox view = (LedCheckBox) buttonView;
+			view.setLedEnable(isChecked);
 
-			case R.id.checkBoxLedBluetooth:
-				try {
-					if (mBleToy.setLedEnable(JwaooBleToy.LED_BT, isChecked)) {
-						mLedCountBt++;
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				break;
-			}
-
-			if (mCheckBoxLedBatt.getVisibility() == View.VISIBLE) {
-				if (mLedCountBatt > 1 && mLedCountBt > 1) {
-					setPassEnable();
-				}
-			} else if (mLedCountBt > 1) {
+			if (mCheckBoxLed.isPassable() && mCheckBoxLedBatt.isPassable() && mCheckBoxLedBt.isPassable()) {
 				setPassEnable();
 			}
 		}
@@ -986,8 +971,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		@Override
 		public void onStop() {
 			try {
-				mBleToy.setLedEnable(JwaooBleToy.LED_BATT, false);
-				mBleToy.setLedEnable(JwaooBleToy.LED_BT, true);
+				if (mCheckBoxLed.getVisibility() == View.INVISIBLE) {
+					mBleToy.setLedEnable(JwaooBleToy.LED_BATT, false);
+					mBleToy.setLedEnable(JwaooBleToy.LED_BT, true);
+				} else {
+					mCheckBoxLed.setLedEnable(true);
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -1069,6 +1058,65 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 			}
 
 			super.onStop();
+		}
+	}
+
+	public class HeaterTestFragment extends TestItemFragment implements OnCheckedChangeListener {
+
+		private int mCheckCount;
+		private TextView mTextViewTemp;
+		private CheckBox mCheckBoxHeater;
+
+		public HeaterTestFragment() {
+			super(TEST_ITEM_HEATER);
+		}
+
+		@Override
+		protected int getNameResource() {
+			return R.string.test_item_heater;
+		}
+
+		@Override
+		protected int getLayoutResource() {
+			return R.layout.heater_test;
+		}
+
+		@Override
+		protected boolean doInitialize() {
+			mTextViewTemp = (TextView) findViewById(R.id.textViewTemp);
+
+			mCheckBoxHeater = (CheckBox) findViewById(R.id.checkBoxHeater);
+			mCheckBoxHeater.setOnCheckedChangeListener(this);
+			mCheckCount = 0;
+
+			try {
+				return mBleToy.setBatteryEventEnable(true);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			return false;
+		}
+
+		@Override
+		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+			try {
+				if (mBleToy.setHeaterEnable(isChecked)) {
+					if (++mCheckCount > 1) {
+						setPassEnable();
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		@Override
+		protected void handleMessage(Message msg) {
+			if (msg.what == MSG_BATTERY_STATE) {
+				JwaooToyBatteryInfo info = (JwaooToyBatteryInfo) msg.obj;
+				mTextViewTemp.setText(info.getTemp() + " (℃)");
+			}
 		}
 	}
 
