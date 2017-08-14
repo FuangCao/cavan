@@ -63,6 +63,26 @@ public class CavanBleChar {
 		return mBleChar;
 	}
 
+	public boolean canRead() {
+		return (mBleChar.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0;
+	}
+
+	public boolean canWriteNoResponse() {
+		return (mBleChar.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) != 0;
+	}
+
+	public boolean canWrite() {
+		return (mBleChar.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
+	}
+
+	public boolean canNotify() {
+		return (mBleChar.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0;
+	}
+
+	public boolean canIndicate() {
+		return (mBleChar.getProperties() & BluetoothGattCharacteristic.PROPERTY_INDICATE) != 0;
+	}
+
 	synchronized private boolean writeFrame(byte[] data, boolean sync) throws TimeoutException, GattInvalidStateException {
 		if (!mBleChar.setValue(data)) {
 			CavanAndroid.eLog("Failed to setValue");

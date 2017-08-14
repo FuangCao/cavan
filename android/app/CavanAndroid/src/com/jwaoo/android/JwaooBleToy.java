@@ -264,8 +264,18 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	private CavanBleDataListener mEventDataListener = new CavanBleDataListener() {
 
+		private final byte[] sResponseData = new byte[0];
+
 		@Override
 		public void onDataReceived(byte[] data) {
+			if (mCharEvent.canWriteNoResponse()) {
+				try {
+					mCharEvent.writeData(sResponseData, false);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+
 			onEventReceived(data);
 		}
 	};
