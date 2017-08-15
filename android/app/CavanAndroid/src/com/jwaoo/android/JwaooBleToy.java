@@ -1195,7 +1195,7 @@ public class JwaooBleToy extends CavanBleGatt {
 		}
 
 		public double getTemp() {
-			return mVoltageNtc;
+			return 84.296 - (mVoltageNtc * 9.497);
 		}
 
 		public int getLevelByVoltage(double voltage) {

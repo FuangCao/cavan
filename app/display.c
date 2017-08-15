@@ -657,15 +657,18 @@ static int cavan_display_wave_text_main(int argc, char *argv[])
 	println("xrang = %lf, xratio = %lf", xrang, xratio);
 	println("yrang = %lf, yratio = %lf", yrang, yratio);
 
-	color_line = display->build_color(display, 1.0, 0.0, 0.0, 1.0);
-	color_point = display->build_color(display, 1.0, 1.0, 0.0, 1.0);
-
 	font = cavan_font_get(CAVAN_FONT_10X18);
 	if (font != NULL) {
 		cavan_display_set_font(display, font);
 	} else {
 		font = display->font;
 	}
+
+	color_line = display->build_color(display, 1.0, 1.0, 1.0, 1.0);
+	display->draw_line(display, 0, 0, width - 1, height - 1, color_line);
+
+	color_line = display->build_color(display, 1.0, 0.0, 0.0, 1.0);
+	color_point = display->build_color(display, 1.0, 1.0, 0.0, 1.0);
 
 	for (i = 0; i < count; i++) {
 		int y = height - (points[i][1] - ymin) * yratio;

@@ -149,6 +149,11 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		mButtonPass.setEnabled(true);
 	}
 
+	public void setPassDisable() {
+		mButtonPass.setVisibility(View.INVISIBLE);
+		mButtonPass.setEnabled(false);
+	}
+
 	public void setFailEnable() {
 		mButtonFail.setVisibility(View.VISIBLE);
 		mButtonFail.setEnabled(true);
@@ -1102,9 +1107,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 			try {
 				if (mBleToy.setHeaterEnable(isChecked)) {
-					if (++mCheckCount > 1) {
-						setPassEnable();
-					}
+					mCheckCount++;
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -1115,7 +1118,21 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		protected void handleMessage(Message msg) {
 			if (msg.what == MSG_BATTERY_STATE) {
 				JwaooToyBatteryInfo info = (JwaooToyBatteryInfo) msg.obj;
-				mTextViewTemp.setText(info.getTemp() + " (℃)");
+				double temp = info.getTemp();
+
+				String text = String.format("%1.2f (℃)", temp);
+				mTextViewTemp.setText(text);
+
+				if (temp > 10 && temp < 60) {
+					mTextViewTemp.setTextColor(Color.BLACK);
+
+					if (mCheckCount > 1) {
+						setPassEnable();
+					}
+				} else {
+					mTextViewTemp.setTextColor(Color.RED);
+					setPassDisable();
+				}
 			}
 		}
 	}
