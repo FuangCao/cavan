@@ -2,4 +2,5 @@ com.android.ide.eclipse.adt.autoPickTarget=false
 com.android.ide.eclipse.adt.customDebugKeyStore=/cavan/build/core/android.keystore
 com.android.ide.eclipse.adt.fixLegacyEditors=1
 com.android.ide.eclipse.adt.sdk=/mnt/sda5/ubuntu/tools/android/sdk
+com.android.ide.eclipse.adt.xmlEditor=true
 eclipse.preferences.version=1

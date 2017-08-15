@@ -559,6 +559,158 @@ out_close_fd:
 	return ret;
 }
 
+static int cavan_display_wave_text_main(int argc, char *argv[])
+{
+	int fd;
+	int ret;
+	int x_old, y_old;
+	int width, height;
+	const char *filename;
+	cavan_display_color_t color_line;
+	cavan_display_color_t color_point;
+	struct cavan_display_device *display;
+	double xmin, xmax, xrang, xratio;
+	double ymin, ymax, yrang, yratio;
+	struct cavan_font *font;
+	struct cavan_fifo fifo;
+	double points[4096][2];
+	int count = 0;
+	int i;
+
+	if (argc < 2) {
+		println("Usage: %s <filename>", argv[0]);
+		return -EINVAL;
+	}
+
+	filename = argv[1];
+	fd = open(filename, O_RDONLY);
+	if (fd < 0) {
+		pr_error_info("open file %s", filename);
+		return fd;
+	}
+
+	ret = cavan_fifo_init(&fifo, 4096, &fd);
+	if (ret < 0) {
+		pr_red_info("cavan_fifo_init");
+		goto out_close_fd;
+	}
+
+	fifo.read = file_fifo_read;
+
+	while (1) {
+		char line[1024];
+		double x, y;
+
+		if (cavan_fifo_read_line(&fifo, line, sizeof(line)) == NULL) {
+			break;
+		}
+
+		if (sscanf(line, "%lf %lf", &x, &y) < 2) {
+			y = x;
+			x = count;
+		}
+
+		if (count > 0) {
+			if (x < xmin) {
+				xmin = x;
+			} else if (x > xmax) {
+				xmax = x;
+			}
+
+			if (y < ymin) {
+				ymin = y;
+			} else if (y > ymax) {
+				ymax = y;
+			}
+		} else {
+			xmin = xmax = x;
+			ymin = ymax = y;
+		}
+
+		points[count][0] = x;
+		points[count][1] = y;
+		count++;
+	}
+
+	println("xmin = %lf, xmax = %lf", xmin, xmax);
+	println("ymin = %lf, ymax = %lf", ymin, ymax);
+
+	display = cavan_fb_display_start();
+	if (display == NULL) {
+		pr_red_info("cavan_fb_display_start");
+
+		ret = -EFAULT;
+		goto out_cavan_fifo_deinit;
+	}
+
+	x_old = 0;
+	y_old = 0;
+	width = display->xres;
+	height = display->yres;
+
+	xrang = xmax - xmin;
+	xratio = ((double) width - 1) / xrang;
+
+	yrang = ymax - ymin;
+	yratio = ((double) height - 1) / yrang;
+
+	println("xrang = %lf, xratio = %lf", xrang, xratio);
+	println("yrang = %lf, yratio = %lf", yrang, yratio);
+
+	color_line = display->build_color(display, 1.0, 0.0, 0.0, 1.0);
+	color_point = display->build_color(display, 1.0, 1.0, 0.0, 1.0);
+
+	font = cavan_font_get(CAVAN_FONT_10X18);
+	if (font != NULL) {
+		cavan_display_set_font(display, font);
+	} else {
+		font = display->font;
+	}
+
+	for (i = 0; i < count; i++) {
+		int y = height - (points[i][1] - ymin) * yratio;
+		int x = (points[i][0] - xmin) * xratio;
+		char buff[1024];
+		int length;
+
+		display->fill_rect(display, x, y, 2, 2, color_point);
+
+		if (i > 0) {
+			display->draw_line(display, x_old, y_old, x, y, color_line);
+		}
+
+		x_old = x;
+		y_old = y;
+
+		length = sprintf(buff, "(%.2lf,%0.2lf)", points[i][0], points[i][1]);
+
+		if ((x + font->cwidth * length) > width) {
+			x = width - font->cwidth * length;
+		}
+
+		if ((y + font->cheight) > height) {
+			y = height - font->cheight;
+		}
+
+		display->draw_text(display, x, y, buff, color_point);
+	}
+
+	cavan_display_refresh_sync(display);
+
+	while (1) {
+		msleep(5000);
+	}
+
+	cavan_display_stop(display);
+	display->destroy(display);
+
+out_cavan_fifo_deinit:
+	cavan_fifo_deinit(&fifo);
+out_close_fd:
+	close(fd);
+	return ret;
+}
+
 static int cavan_display_blank_main(int argc, char *argv[])
 {
 	bool blank;
@@ -583,6 +735,7 @@ CAVAN_COMMAND_MAP_START {
 	{ "wave", cavan_display_wave_main },
 	{ "wave_line", cavan_display_wave_main },
 	{ "wave_point", cavan_display_wave_main },
+	{ "wave_text", cavan_display_wave_text_main },
 	{ "test", cavan_display_test_main },
 	{ "blank", cavan_display_blank_main },
 } CAVAN_COMMAND_MAP_END;
