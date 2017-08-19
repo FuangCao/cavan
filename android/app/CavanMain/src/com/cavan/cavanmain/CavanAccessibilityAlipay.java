@@ -230,6 +230,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 			break;
 
 		case "com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity":
+		case "com.alipay.android.phone.discovery.envelope.get.SnsCouponDetailActivity":
 			if (setRedPacketCodeValid() && mCode.isSendPending()) {
 				mService.sendRedPacketCode(mCode);
 			}
@@ -407,20 +408,35 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 
 	private boolean gotoRedPacketActivity(AccessibilityNodeInfo root) {
 		AccessibilityNodeInfo node = CavanAccessibility.findNodeByText(root, "红包");
+		if (node != null) {
+			AccessibilityNodeInfo parent = node.getParent();
+			if (parent == null) {
+				node.recycle();
+				return false;
+			}
+
+			node.performAction(AccessibilityNodeInfo.ACTION_SELECT);
+			parent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+
+			parent.recycle();
+			node.recycle();
+
+			return true;
+		}
+
+		node = CavanAccessibility.findNodeByViewId(root, "com.alipay.android.phone.openplatform:id/tab_description");
 		if (node == null) {
-			return false;
+			node = CavanAccessibility.findNodeByText(root, "首页");
+			if (node == null) {
+				return false;
+			}
 		}
 
 		AccessibilityNodeInfo parent = node.getParent();
-		if (parent == null) {
-			node.recycle();
-			return false;
+		if (parent != null) {
+			CavanAccessibility.performClickAndRecycle(parent);
 		}
 
-		node.performAction(AccessibilityNodeInfo.ACTION_SELECT);
-		parent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-
-		parent.recycle();
 		node.recycle();
 
 		return true;

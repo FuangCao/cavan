@@ -597,6 +597,9 @@ static int cavan_display_wave_text_main(int argc, char *argv[])
 
 	fifo.read = file_fifo_read;
 
+	xmin = xmax = 0;
+	ymin = ymax = 0;
+
 	while (1) {
 		char line[1024];
 		double x, y;
