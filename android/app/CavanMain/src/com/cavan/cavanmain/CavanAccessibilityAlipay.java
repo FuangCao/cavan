@@ -242,6 +242,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 			break;
 
 		case "com.alipay.android.phone.discovery.envelope.crowd.CrowdHostActivity":
+		case "com.alipay.android.phone.discovery.envelope.received.ReceivedDetailActivity":
 			if (isUnpakComplete(root)) {
 				setRedPacketCodeComplete();
 			} else if (setRedPacketCodeValid()) {
@@ -672,7 +673,9 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 				break;
 
 			case "com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity":
+			case "com.alipay.android.phone.discovery.envelope.get.SnsCouponDetailActivity":
 			case "com.alipay.android.phone.discovery.envelope.crowd.CrowdHostActivity":
+			case "com.alipay.android.phone.discovery.envelope.received.ReceivedDetailActivity":
 			case "com.alipay.mobile.nebulacore.ui.H5Activity":
 				mCode.setValid();
 				break;
