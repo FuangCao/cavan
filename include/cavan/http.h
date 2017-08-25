@@ -74,6 +74,12 @@ struct cavan_http_stream {
 	size_t used;
 };
 
+extern const char *http_mime_type_bin;
+extern const char *http_mime_type_txt;
+extern const char *http_mime_type_html;
+extern const char *http_mime_type_js;
+extern const char *http_mime_type_apk;
+
 void cavan_http_dump_prop(const struct cavan_http_prop *prop);
 void cavan_http_dump_props(const struct cavan_http_prop *props, size_t size);
 void cavan_http_dump_request(struct cavan_http_request *req);
@@ -99,6 +105,7 @@ char *cavan_http_get_boundary(struct cavan_http_prop *props, size_t size);
 int cavan_http_send_reply(struct network_client *client, int code, const char *format, ...);
 int cavan_http_open_html_file(const char *title, char *pathname);
 int cavan_http_flush_html_file(int fd);
+const char *cavan_http_get_mime_type(const char *pathname);
 int cavan_http_send_file_header(struct network_client *client, const char *filetype, struct tm *time, size_t start, size_t length, size_t size);
 int cavan_http_send_file(struct network_client *client, int fd, const char *filetype, size_t start, size_t length);
 int cavan_http_send_file2(struct network_client *client, const char *pathname, const char *filetype, size_t start, size_t length);
@@ -122,7 +129,7 @@ ssize_t http_client_send_request(const char *url, const char *post, const char *
 
 static inline int cavan_http_send_html(struct network_client *client, int fd)
 {
-	return cavan_http_send_file(client, fd, "text/html", 0, 0);
+	return cavan_http_send_file(client, fd, http_mime_type_html, 0, 0);
 }
 
 static inline const struct cavan_http_prop *cavan_http_request_find_prop(struct cavan_http_request *req, const char *key)

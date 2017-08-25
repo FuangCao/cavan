@@ -3387,3 +3387,21 @@ int cavan_rename_part(const char *pathname, const char *start, const char *end)
 
 	return rename(pathname, buff);
 }
+
+const char *cavan_file_get_extension(const char *pathname)
+{
+	const char *ext = NULL;
+
+	while (1) {
+		switch (*pathname) {
+		case 0:
+			return ext;
+
+		case '.':
+			ext = pathname + 1;
+			break;
+		}
+
+		pathname++;
+	}
+}

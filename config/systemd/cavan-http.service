@@ -1,0 +1,11 @@
+[Unit]
+Description=cavan http daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/cavan/out/host/debug/cavan-http_service -p 8802
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target

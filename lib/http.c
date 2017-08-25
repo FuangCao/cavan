@@ -25,6 +25,12 @@
 
 #define CAVAN_HTTP_DEBUG	0
 
+const char *http_mime_type_bin = "application/octet-stream";
+const char *http_mime_type_txt = "text/plain";
+const char *http_mime_type_html = "text/html";
+const char *http_mime_type_js = "application/x-javascript";
+const char *http_mime_type_apk = "application/vnd.android.package-archive";
+
 void cavan_http_dump_prop(const struct cavan_http_prop *prop)
 {
 	pd_info("key = %s, value = %s", prop->key, prop->value);
@@ -604,7 +610,7 @@ int cavan_http_open_html_file(const char *title, char *pathname)
 #endif
 
 	ffile_puts(fd, "<!-- This file is automatic generate by Fuang.Cao -->\r\n\r\n");
-	ffile_puts(fd, "<html>\r\n\t<head>\r\n\t\t<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\r\n");
+	ffile_printf(fd, "<html>\r\n\t<head>\r\n\t\t<meta http-equiv=\"content-type\" content=\"%s;charset=utf-8\">\r\n", http_mime_type_html);
 	ffile_printf(fd, "\t\t<title>%s</title>\r\n\t</head>\r\n\t<body>\r\n", title);
 
 	return fd;
@@ -634,8 +640,10 @@ int cavan_http_send_file_header(struct network_client *client, const char *filet
 		"X-Cache: MISS from server\r\n", p_end - p);
 
 	if (filetype == NULL) {
-		filetype = "application/octet-stream";
+		filetype = http_mime_type_bin;
 	}
+
+	println("filetype = %s", filetype);
 
 	p += snprintf(p, p_end - p, "Content-Length: %" PRINT_FORMAT_SIZE "\r\n", length);
 	p += snprintf(p, p_end - p, "Content-Type: %s\r\n", filetype);
@@ -686,6 +694,31 @@ int cavan_http_send_file(struct network_client *client, int fd, const char *file
 	return network_client_send_file(client, fd, 0, length);
 }
 
+const char *cavan_http_get_mime_type(const char *pathname)
+{
+	const char *ext = cavan_file_get_extension(pathname);
+
+	if (ext != NULL) {
+		if (strcasecmp(ext, "html") == 0 || strcasecmp(ext, "xhtml") == 0) {
+			return http_mime_type_html;
+		}
+
+		if (strcasecmp(ext, "txt") == 0) {
+			return http_mime_type_txt;
+		}
+
+		if (strcasecmp(ext, "js") == 0) {
+			return http_mime_type_js;
+		}
+
+		if (strcasecmp(ext, "apk") == 0) {
+			return http_mime_type_apk;
+		}
+	}
+
+	return http_mime_type_bin;
+}
+
 int cavan_http_send_file2(struct network_client *client, const char *pathname, const char *filetype, size_t start, size_t length)
 {
 	int fd;
@@ -695,6 +728,10 @@ int cavan_http_send_file2(struct network_client *client, const char *pathname, c
 	if (fd < 0) {
 		pr_err_info("open: %s", pathname);
 		return fd;
+	}
+
+	if (filetype == NULL) {
+		filetype = cavan_http_get_mime_type(pathname);
 	}
 
 	ret = cavan_http_send_file(client, fd, filetype, start, length);
@@ -1176,7 +1213,7 @@ ssize_t cavan_http_receive_file(struct cavan_fifo *fifo, struct cavan_http_reque
 	pd_info("pathname = %s", pathname);
 
 #ifdef CONFIG_ANDROID
-	if (mime_type != NULL && strcmp(mime_type, "application/vnd.android.package-archive") == 0) {
+	if (mime_type != NULL && strcmp(mime_type, http_mime_type_apk) == 0) {
 		android_install_application_async(pathname, 0);
 	}
 #endif
