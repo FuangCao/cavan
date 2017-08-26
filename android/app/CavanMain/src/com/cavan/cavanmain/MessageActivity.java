@@ -119,7 +119,7 @@ public class MessageActivity extends Activity {
 					RedPacketListenerService.postRedPacketCode(this, paths.get(1));
 					RedPacketListenerService.startAlipayActivity(this);
 
-					CavanAndroid.showToastLong(this, "支付宝口令: " + code);
+					FloatMessageService.showToast("支付宝口令: " + code);
 				} else if (CavanMessageView.ACTION_OPEN.equals(action)) {
 					CavanAndroid.startActivity(this, uri.getHost());
 				}

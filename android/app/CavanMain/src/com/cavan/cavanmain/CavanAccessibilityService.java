@@ -497,7 +497,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 					}
 				}
 
-				return true;
+				// return true;
 			}
 		}
 

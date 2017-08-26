@@ -499,7 +499,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 
 			if (id.equals("com.tencent.mobileqq:id/chat_item_content_layout") ||
 					id.equals("com.tencent.mobileqq:id/name")) {
-				postMessageNode(source);
+				postClickEventMessage(event);
 			}
 		}
 	}

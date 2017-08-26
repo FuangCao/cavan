@@ -515,7 +515,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 		}
 
 		if (changed || getWindowTimeConsume() < 500) {
-			CavanAndroid.showToastLong(mService, msgResId);
+			FloatMessageService.showToast(msgResId);
 		}
 
 		return POLL_DELAY;

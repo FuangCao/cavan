@@ -10,6 +10,15 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true" />
 
+    <TextView
+        android:id="@+id/textViewToast"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toLeftOf="@+id/textViewTime"
+        android:background="@drawable/desktop_timer_unlock_bg"
+        android:textColor="#ffff00"
+        android:visibility="gone" />
+
     <LinearLayout
         android:id="@+id/layoutMessage"
         android:layout_width="match_parent"

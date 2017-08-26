@@ -1,6 +1,7 @@
 package com.cavan.cavanmain;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import android.os.Handler;
 import android.view.KeyEvent;
@@ -61,7 +62,7 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 			} else if (getWindowTimeConsume() > 500) {
 				CavanAndroid.dLog("mStableTimes = " + mStableTimes);
 
-				if (onWindowContentStable(++mStableTimes) && mStableTimes < 3) {
+				if (onWindowContentStable(++mStableTimes) && mStableTimes < 2) {
 					postDelayed(this, POLL_DELAY);
 				}
 			}
@@ -207,8 +208,13 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 		return isRootActivity(getRootInActiveWindow());
 	}
 
-	public void postMessageNode(AccessibilityNodeInfo node) {
-		String text = CavanString.fromCharSequence(node.getText());
+	public void postClickEventMessage(AccessibilityEvent event) {
+		List<CharSequence> texts = event.getText();
+		if (texts == null || texts.size() != 1) {
+			return;
+		}
+
+		String text = CavanString.fromCharSequence(texts.get(0));
 		if (CavanArray.contains(EXCLUDE_MESSAGES, text)) {
 			CavanAndroid.dLog("Exclude message: " + text);
 			return;
@@ -221,7 +227,7 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 
 		RedPacketListenerService listener = RedPacketListenerService.getInstance();
 		if (listener != null) {
-			listener.addRedPacketContent(node.getPackageName(), text, "用户点击", false, 0);
+			listener.addRedPacketContent(event.getPackageName(), text, "用户点击", false, 0);
 		}
 	}
 

@@ -3,6 +3,7 @@ package com.cavan.cavanmain;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Button;
@@ -40,12 +41,28 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	}
 
 	private boolean isMessageItemNode(AccessibilityNodeInfo node) {
+		if (node.isFocusable() || node.isCheckable() || node.isScrollable() || node.isPassword()) {
+			return false;
+		}
+
+		if (!node.isLongClickable()) {
+			return false;
+		}
+
 		String id = node.getViewIdResourceName();
 		if (id != null) {
 			return CavanArray.contains(MESSAGE_ITEM_IDS, id);
 		}
 
-		return node.isMultiLine() && CavanAccessibility.isTextView(node);
+		if (CavanAccessibility.isTextView(node)) {
+			return node.isMultiLine();
+		}
+
+		if (View.class.getName().equals(node.getClassName())) {
+			return (node.getChildCount() == 0);
+		}
+
+		return false;
 	}
 
 	private boolean updateUnpackTime() {
@@ -83,7 +100,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	protected void onViewClicked(AccessibilityEvent event) {
 		AccessibilityNodeInfo source = event.getSource();
 		if (source != null && isMessageItemNode(source)) {
-			postMessageNode(source);
+			postClickEventMessage(event);
 		}
 	}
 

@@ -66,8 +66,9 @@ public class FloatMessageService extends FloatWidowService {
 
 	private static final int MSG_UPDATE_TIME = 0;
 	private static final int MSG_SHOW_TOAST = 1;
-	private static final int MSG_TCP_SERVICE_STATE_CHANGED = 2;
-	private static final int MSG_TCP_SERVICE_UPDATED = 3;
+	private static final int MSG_HIDDEN_TOAST = 2;
+	private static final int MSG_TCP_SERVICE_STATE_CHANGED = 3;
+	private static final int MSG_TCP_SERVICE_UPDATED = 4;
 	private static final int MSG_TCP_BRIDGE_STATE_CHANGED = 5;
 	private static final int MSG_TCP_BRIDGE_UPDATED = 6;
 	private static final int MSG_START_OCR = 7;
@@ -89,6 +90,7 @@ public class FloatMessageService extends FloatWidowService {
 	private long mCountDownTime;
 	private boolean mScreenClosed;
 	private TextView mTextViewTime;
+	private TextView mTextViewToast;
 	private CavanWakeLock mWakeLock = new CavanWakeLock(FloatMessageService.class.getCanonicalName());
 	private HashMap<CharSequence, RedPacketCode> mMessageCodeMap = new HashMap<CharSequence, RedPacketCode>();
 
@@ -154,7 +156,7 @@ public class FloatMessageService extends FloatWidowService {
 							mTcpDaemon.setConnDelay(0);
 						}
 
-						CavanAndroid.showToast(getApplicationContext(), mWanState);
+						sendShowToast(mWanState);
 					}
 				}
 				break;
@@ -198,11 +200,29 @@ public class FloatMessageService extends FloatWidowService {
 				break;
 
 			case MSG_SHOW_TOAST:
-				if (msg.obj instanceof String) {
-					CavanAndroid.showToast(getApplicationContext(), (String) msg.obj);
+				CavanAndroid.dLog("MSG_SHOW_TOAST");
+
+				removeMessages(MSG_SHOW_TOAST);
+				removeMessages(MSG_HIDDEN_TOAST);
+
+				CharSequence message;
+
+				if (msg.obj instanceof CharSequence) {
+					message = (CharSequence) msg.obj;
 				} else {
-					CavanAndroid.showToast(getApplicationContext(), (int) msg.obj);
+					message = getResources().getString((int) msg.obj);
 				}
+
+				CavanAndroid.dLog("message = " + message);
+
+				mTextViewToast.setText(message);
+				mTextViewToast.setVisibility(View.VISIBLE);
+				sendEmptyMessageDelayed(MSG_HIDDEN_TOAST, 8000);
+				break;
+
+			case MSG_HIDDEN_TOAST:
+				CavanAndroid.dLog("MSG_HIDDEN_TOAST");
+				mTextViewToast.setVisibility(View.GONE);
 				break;
 
 			case MSG_START_OCR:
@@ -212,7 +232,7 @@ public class FloatMessageService extends FloatWidowService {
 			case MSG_CLIPBOARD_RECEIVED:
 				String code = (String) msg.obj;
 				String text = getResources().getString(R.string.clipboard_updated, code);
-				CavanAndroid.showToast(getApplicationContext(), text);
+				sendShowToast(text);
 				CavanAndroid.postClipboardTextTemp(getApplicationContext(), code);
 				break;
 
@@ -235,7 +255,7 @@ public class FloatMessageService extends FloatWidowService {
 			case MSG_RED_PACKET_UPDATED:
 				RedPacketCode node = (RedPacketCode) msg.obj;
 				text = getResources().getString(R.string.red_packet_code_updated, node.getCode());
-				CavanAndroid.showToast(getApplicationContext(), text);
+				sendShowToast(text);
 				break;
 
 			case MSG_CHECK_SERVICE_STATE:
@@ -350,13 +370,13 @@ public class FloatMessageService extends FloatWidowService {
 					if (node.isTestOnly()) {
 						CavanAccessibilityService service = CavanAccessibilityService.getInstance();
 						if (service != null) {
-							CavanAndroid.showToast(getApplicationContext(), R.string.test_sucess);
+							sendShowToast(R.string.test_sucess);
 						}
 					} else {
 						mMessageCodeMap.put(message, node);
 
 						if (node.isCompleted()) {
-							CavanAndroid.showToast(getApplicationContext(), R.string.ignore_completed_code, code);
+							sendShowToast(R.string.ignore_completed_code, code);
 						} else {
 							CavanAccessibilityAlipay alipay = CavanAccessibilityAlipay.getInstance();
 							if (alipay != null) {
@@ -508,6 +528,28 @@ public class FloatMessageService extends FloatWidowService {
 		}
 	}
 
+	public void sendShowToast(Object messsage) {
+		Message message = mHandler.obtainMessage(MSG_SHOW_TOAST, messsage);
+		message.sendToTarget();
+	}
+
+	public void sendShowToast(int id, Object... formatArgs) {
+		String message = getResources().getString(id, formatArgs);
+		sendShowToast(message);
+	}
+
+	public static boolean showToast(Object messsage) {
+		FloatMessageService instance = sInstance;
+
+		if (instance == null) {
+			return false;
+		}
+
+		instance.sendShowToast(messsage);
+
+		return true;
+	}
+
 	private boolean checkServiceState() {
 		if (!CavanAccessibilityService.checkAndOpenSettingsActivity(this)) {
 			return false;
@@ -569,13 +611,16 @@ public class FloatMessageService extends FloatWidowService {
 		return true;
 	}
 
-	public void initTextView(TextView view, CharSequence text) {
+	public void initTextView(TextView view, float size, int color, CharSequence text) {
 		if (text != null) {
 			view.setText(text);
 		}
 
 		view.setMaxLines(1);
+		view.setTextSize(size);
+		view.setTextColor(color);
 		view.setPadding(TEXT_PADDING, 0, TEXT_PADDING, 0);
+		view.setBackgroundResource(R.drawable.desktop_timer_unlock_bg);
 	}
 
 	private void onNetworkCommandReceived(String type, String command) {
@@ -707,11 +752,7 @@ public class FloatMessageService extends FloatWidowService {
 	protected View createView(CharSequence text) {
 		TextView view = new TextView(getApplicationContext());
 
-		initTextView(view, text);
-		view.setBackgroundResource(R.drawable.desktop_timer_unlock_bg);
-
-		view.setTextSize(TEXT_SIZE_MESSAGE);
-		view.setTextColor(TEXT_COLOR_MESSAGE);
+		initTextView(view, TEXT_SIZE_MESSAGE, TEXT_COLOR_MESSAGE, text);
 		view.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
 
 		return view;
@@ -731,11 +772,10 @@ public class FloatMessageService extends FloatWidowService {
 	@Override
 	protected boolean doInitialize() {
 		mTextViewTime = (TextView) findViewById(R.id.textViewTime);
+		mTextViewToast = (TextView) findViewById(R.id.textViewToast);
 
-		initTextView(mTextViewTime, getTimeText());
-		mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_bg);
-		mTextViewTime.setTextSize(TEXT_SIZE_TIME);
-		mTextViewTime.setTextColor(TEXT_COLOR_TIME);
+		initTextView(mTextViewTime, TEXT_SIZE_TIME, TEXT_COLOR_TIME, getTimeText());
+		initTextView(mTextViewToast, TEXT_SIZE_TIME, TEXT_COLOR_MESSAGE, null);
 
 		if (CavanMessageActivity.isFloatTimerEnabled(this)) {
 			setTimerEnable(true);
