@@ -14,9 +14,8 @@
         android:id="@+id/textViewToast"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toLeftOf="@+id/textViewTime"
-        android:background="@drawable/desktop_timer_unlock_bg"
-        android:textColor="#ffff00"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/textViewTime"
         android:visibility="gone" />
 
     <LinearLayout
@@ -24,7 +23,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/textViewTime"
+        android:layout_below="@+id/textViewToast"
         android:orientation="vertical" >
 
     </LinearLayout>
