@@ -224,7 +224,7 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 			} else {
 				RedPacketListenerService listener = RedPacketListenerService.getInstance();
 				if (listener != null) {
-					listener.addRedPacketContent(null, text, "手动输入", false, 1);;
+					listener.addRedPacketContent(null, text, "手动输入", false, true, 1);
 				}
 			}
 

@@ -473,7 +473,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 			if (!CavanAndroid.inKeyguardRestrictedInputMode(mService)) {
 				RedPacketListenerService listener = RedPacketListenerService.getInstance();
 				if (listener != null) {
-					listener.addRedPacketContent(source.getPackageName(), text, "QQ消息盒子", true, 0);
+					listener.addRedPacketContent(source.getPackageName(), text, "QQ消息盒子", true, false, 0);
 				}
 			}
 		}

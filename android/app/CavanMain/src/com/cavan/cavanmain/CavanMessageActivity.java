@@ -556,7 +556,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 			if (text != null) {
 				RedPacketListenerService listener = RedPacketListenerService.getInstance();
 				if (listener != null) {
-					listener.addRedPacketContent(null, CavanString.fromCharSequence(text), "手动输入", false, 0);
+					listener.addRedPacketContent(null, CavanString.fromCharSequence(text), "手动输入", false, true, 0);
 				}
 			}
 		} else if (preference == mPreferenceRedPacketCodeSplit) {

@@ -173,7 +173,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 									}
 								}
 							} else {
-								listener.addRedPacketContent(null, text, "图片识别", false, 1);
+								listener.addRedPacketContent(null, text, "图片识别", false, true, 1);
 							}
 						}
 					}

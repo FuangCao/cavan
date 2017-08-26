@@ -66,7 +66,6 @@ public class FloatMessageService extends FloatWidowService {
 
 	private static final int MSG_UPDATE_TIME = 0;
 	private static final int MSG_SHOW_TOAST = 1;
-	private static final int MSG_HIDDEN_TOAST = 2;
 	private static final int MSG_TCP_SERVICE_STATE_CHANGED = 3;
 	private static final int MSG_TCP_SERVICE_UPDATED = 4;
 	private static final int MSG_TCP_BRIDGE_STATE_CHANGED = 5;
@@ -203,26 +202,24 @@ public class FloatMessageService extends FloatWidowService {
 				CavanAndroid.dLog("MSG_SHOW_TOAST");
 
 				removeMessages(MSG_SHOW_TOAST);
-				removeMessages(MSG_HIDDEN_TOAST);
 
-				CharSequence message;
-
-				if (msg.obj instanceof CharSequence) {
-					message = (CharSequence) msg.obj;
+				if (msg.obj == null) {
+					mTextViewToast.setVisibility(View.GONE);
 				} else {
-					message = getResources().getString((int) msg.obj);
+					CharSequence message;
+
+					if (msg.obj instanceof CharSequence) {
+						message = (CharSequence) msg.obj;
+					} else {
+						message = getResources().getString((int) msg.obj);
+					}
+
+					CavanAndroid.dLog("message = " + message);
+
+					mTextViewToast.setText(message);
+					mTextViewToast.setVisibility(View.VISIBLE);
+					sendEmptyMessageDelayed(MSG_SHOW_TOAST, 8000);
 				}
-
-				CavanAndroid.dLog("message = " + message);
-
-				mTextViewToast.setText(message);
-				mTextViewToast.setVisibility(View.VISIBLE);
-				sendEmptyMessageDelayed(MSG_HIDDEN_TOAST, 8000);
-				break;
-
-			case MSG_HIDDEN_TOAST:
-				CavanAndroid.dLog("MSG_HIDDEN_TOAST");
-				mTextViewToast.setVisibility(View.GONE);
 				break;
 
 			case MSG_START_OCR:

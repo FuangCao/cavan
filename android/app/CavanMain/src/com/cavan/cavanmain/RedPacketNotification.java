@@ -56,6 +56,7 @@ public class RedPacketNotification extends CavanNotification {
 	private int mPriority;
 	private boolean mIsCode;
 	private boolean mNetShared;
+	private boolean mCodeOnly;
 	private boolean mIsTimedCode;
 	private String mDescription;
 	private RedPacketListenerService mService;
@@ -79,10 +80,9 @@ public class RedPacketNotification extends CavanNotification {
 		}
 	}
 
-	public RedPacketNotification(RedPacketListenerService service, String user, String content, boolean isCode, boolean shared) {
+	public RedPacketNotification(RedPacketListenerService service, String user, String content, boolean isCode) {
 		super(service.getPackageName(), user, null, null, content);
 
-		mNetShared = shared;
 		mService = service;
 		mIsCode = isCode;
 
@@ -105,8 +105,12 @@ public class RedPacketNotification extends CavanNotification {
 		mPriority = priority;
 	}
 
-	public void setNetShared() {
-		mNetShared = true;
+	public void setNetShared(boolean shared) {
+		mNetShared = shared;
+	}
+
+	public void setCodeOnly(boolean only) {
+		mCodeOnly = only;
 	}
 
 	public Notification getNotification() {
@@ -398,6 +402,10 @@ public class RedPacketNotification extends CavanNotification {
 	}
 
 	public boolean sendRedPacketNotifyNormal() {
+		if (mCodeOnly) {
+			return false;
+		}
+
 		String code = getRedPacketCodeNormal();
 		if (code == null) {
 			return false;

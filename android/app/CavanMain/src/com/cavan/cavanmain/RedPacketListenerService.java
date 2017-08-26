@@ -130,7 +130,8 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	public void addRedPacketCode(String code, String type, boolean shared) {
 		CavanAndroid.dLog("code = " + code);
 
-		RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, type, code, true, shared);
+		RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, type, code, true);
+		notification.setNetShared(shared);
 		notification.setPriority(1);
 		mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
 	}
@@ -141,12 +142,13 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		}
 	}
 
-	public void addRedPacketContent(CharSequence packageName, String content, String desc, boolean hasPrefix, int priority) {
+	public void addRedPacketContent(CharSequence packageName, String content, String desc, boolean hasPrefix, boolean codeOnly, int priority) {
 		if (packageName == null) {
 			packageName = getPackageName();
 		}
 
 		RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, packageName.toString(), content, desc, hasPrefix);
+		notification.setCodeOnly(codeOnly);
 		notification.setPriority(priority);
 		mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
 	}
@@ -339,7 +341,8 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 			CavanAndroid.dLog("clip = " + text);
 
-			RedPacketNotification notification = new RedPacketNotification(this, "剪切板", text.toString(), false, false);
+			RedPacketNotification notification = new RedPacketNotification(this, "剪切板", text.toString(), false);
+			notification.setCodeOnly(true);
 			mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
 		}
 	}

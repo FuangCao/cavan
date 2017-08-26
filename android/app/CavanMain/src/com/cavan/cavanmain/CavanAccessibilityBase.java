@@ -227,7 +227,7 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 
 		RedPacketListenerService listener = RedPacketListenerService.getInstance();
 		if (listener != null) {
-			listener.addRedPacketContent(event.getPackageName(), text, "用户点击", false, 0);
+			listener.addRedPacketContent(event.getPackageName(), text, "用户点击", false, true, 0);
 		}
 	}
 
