@@ -25,10 +25,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		"com.tencent.mm:id/ib", "com.tencent.mm:id/if", "com.tencent.mm:id/im"
 	};
 
-	private static final String[] EXCLUDE_PACKETS = {
-		"微信游戏",
-	};
-
 	private static CavanAccessibilityMM sInstance;
 
 	public static CavanAccessibilityMM getInstance() {
@@ -92,11 +88,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 	@Override
 	public boolean addPacket(String packet) {
-		if (CavanArray.contains(EXCLUDE_PACKETS, packet)) {
-			CavanAndroid.dLog("Exclude packet: " + packet);
-			return false;
-		}
-
 		if (updateUnpackTime() && super.addPacket(packet)) {
 			mFinishNodes.clear();
 			return true;

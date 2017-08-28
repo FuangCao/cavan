@@ -29,6 +29,14 @@ public class RedPacketNotification extends CavanNotification {
 	private static final long CODE_OVERTIME = 3600000;
 	private static final long REPEAT_CODE_OVERTIME = 20000;
 
+	private static final String[] QQ_EXCLUDE_CODES = {
+		"QQ钱包",
+	};
+
+	private static final String[] MM_EXCLUDE_CODES = {
+		"微信游戏",
+	};
+
 	private static String[] sSoundExtensions = {
 		"m4a", "ogg", "wav", "mp3", "ac3", "wma"
 	};
@@ -411,19 +419,31 @@ public class RedPacketNotification extends CavanNotification {
 			return false;
 		}
 
+		boolean send = true;
+
 		if ("QQ".equals(code)) {
 			CavanAccessibilityQQ qq = CavanAccessibilityQQ.getInstance();
 			if (qq != null) {
 				qq.addPacket(getUserDescription().toString());
+			}
+
+			if (CavanArray.contains(QQ_EXCLUDE_CODES, code)) {
+				CavanAndroid.dLog("Exclude code: " + code);
+				send = false;
 			}
 		} else if ("微信".equals(code)) {
 			CavanAccessibilityMM mm = CavanAccessibilityMM.getInstance();
 			if (mm != null) {
 				mm.addPacket(getUserDescription().toString());
 			}
+
+			if (CavanArray.contains(MM_EXCLUDE_CODES, code)) {
+				CavanAndroid.dLog("Exclude code: " + code);
+				send = false;
+			}
 		}
 
-		return sendRedPacketNotifyNormal(code + "红包", code + "@" + getUserDescription(), true);
+		return sendRedPacketNotifyNormal(code + "红包", code + "@" + getUserDescription(), send);
 	}
 
 	public boolean sendRedPacketNotifyAuto() {
