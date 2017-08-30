@@ -507,11 +507,16 @@ public class CavanAndroid {
 		}
 	}
 
-	public static CharSequence getApplicationLabel(Context context, String packageName) {
+	public static String getApplicationLabel(Context context, String packageName) {
 		PackageManager manager = context.getPackageManager();
 
 		try {
-			return manager.getApplicationLabel(manager.getApplicationInfo(packageName, 0));
+			CharSequence label = manager.getApplicationLabel(manager.getApplicationInfo(packageName, 0));
+			if (label == null) {
+				return null;
+			}
+
+			return label.toString();
 		} catch (NameNotFoundException e) {
 			return null;
 		}

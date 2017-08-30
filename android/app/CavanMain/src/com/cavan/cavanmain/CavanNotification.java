@@ -127,7 +127,7 @@ public class CavanNotification {
 					if (index < 0) {
 						mContent = content;
 					} else {
-						mUserName = content.substring(0, index);
+						mUserName = content.substring(0, index).trim();
 						mContent = content.substring(index + 1);
 					}
 				} else {
@@ -146,10 +146,10 @@ public class CavanNotification {
 					}
 
 					if (group < 0) {
-						mUserName = content.substring(0, index);
+						mUserName = content.substring(0, index).trim();
 					} else {
-						mUserName = content.substring(0, group);
-						mGroupName = content.substring(group + 1, index);
+						mUserName = content.substring(0, group).trim();
+						mGroupName = content.substring(group + 1, index).trim();
 					}
 
 					mContent = content.substring(index + 2);
@@ -159,7 +159,7 @@ public class CavanNotification {
 				if (index < 0) {
 					mContent = content;
 				} else {
-					mUserName = content.substring(0, index);
+					mUserName = content.substring(0, index).trim();
 					mContent = content.substring(index + 1);
 				}
 

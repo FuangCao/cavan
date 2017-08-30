@@ -151,7 +151,7 @@ public class RedPacketNotification extends CavanNotification {
 		return mNotification.getPackageName();
 	}
 
-	public CharSequence getApplicationName() {
+	public String getApplicationName() {
 		String packageName = getPackageName();
 		if (packageName == null) {
 			return null;
@@ -160,7 +160,7 @@ public class RedPacketNotification extends CavanNotification {
 		return CavanAndroid.getApplicationLabel(mService, packageName);
 	}
 
-	public CharSequence getUserDescription() {
+	public String getUserDescription() {
 		if (mGroupName != null) {
 			return mGroupName;
 		}
@@ -173,7 +173,7 @@ public class RedPacketNotification extends CavanNotification {
 			return mDescription;
 		}
 
-		CharSequence name = getApplicationName();
+		String name = getApplicationName();
 		if (name != null) {
 			return name;
 		}
@@ -418,27 +418,27 @@ public class RedPacketNotification extends CavanNotification {
 		}
 
 		boolean send = true;
-		CharSequence user = getUserDescription();
+		String user = getUserDescription();
 
 		if ("QQ".equals(code)) {
-			CavanAccessibilityQQ qq = CavanAccessibilityQQ.getInstance();
-			if (qq != null) {
-				qq.addPacket(getUserDescription().toString());
-			}
-
 			if (sExcludeUsersQQ.contains(user)) {
 				CavanAndroid.dLog("Exclude user: " + user);
 				send = false;
+			} else {
+				CavanAccessibilityQQ qq = CavanAccessibilityQQ.getInstance();
+				if (qq != null) {
+					qq.addPacket(user);
+				}
 			}
 		} else if ("微信".equals(code)) {
-			CavanAccessibilityMM mm = CavanAccessibilityMM.getInstance();
-			if (mm != null) {
-				mm.addPacket(getUserDescription().toString());
-			}
-
 			if (sExcludeUsersMM.contains(user)) {
 				CavanAndroid.dLog("Exclude user: " + user);
 				send = false;
+			} else {
+				CavanAccessibilityMM mm = CavanAccessibilityMM.getInstance();
+				if (mm != null) {
+					mm.addPacket(user);
+				}
 			}
 		}
 
