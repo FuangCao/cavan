@@ -1,5 +1,6 @@
 package com.cavan.cavanmain;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -11,7 +12,6 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import com.cavan.android.CavanAccessibility;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.DelayedRunnable;
-import com.cavan.java.CavanArray;
 import com.cavan.java.CavanString;
 import com.cavan.java.RedPacketFinder;
 
@@ -20,8 +20,13 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 	private static final long POLL_DELAY = 200;
 	private static final long STABLE_DELAY = 200;
 
-	private static final String[] EXCLUDE_MESSAGES = {
-		"发送", "完成", "单选", "多选"
+	private static final HashSet<CharSequence> sExcludeMessages = new HashSet<CharSequence>();
+
+	static {
+		sExcludeMessages.add("发送");
+		sExcludeMessages.add("完成");
+		sExcludeMessages.add("单选");
+		sExcludeMessages.add("多选");
 	};
 
 	private long mStableTime;
@@ -215,7 +220,7 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 		}
 
 		String text = CavanString.fromCharSequence(texts.get(0));
-		if (CavanArray.contains(EXCLUDE_MESSAGES, text)) {
+		if (sExcludeMessages.contains(text)) {
 			CavanAndroid.dLog("Exclude message: " + text);
 			return;
 		}

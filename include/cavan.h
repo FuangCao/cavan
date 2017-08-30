@@ -141,6 +141,10 @@ extern int pipe2(int *, int);
 #define __read_mostly			__section(".data..read_mostly")
 #endif
 
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET			(-1)
+#endif
+
 __BEGIN_DECLS
 
 extern int main(int argc, char *argv[]);

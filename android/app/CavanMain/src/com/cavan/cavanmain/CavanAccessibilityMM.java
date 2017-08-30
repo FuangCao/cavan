@@ -1,6 +1,7 @@
 package com.cavan.cavanmain;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import android.view.View;
@@ -14,15 +15,18 @@ import android.widget.ListView;
 import com.cavan.android.CavanAccessibility;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
-import com.cavan.java.CavanArray;
 
 public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 	private static final int POLL_DELAY = 500;
 	private static final int POLL_DELAY_UNPACK = 2000;
 
-	private static final String[] MESSAGE_ITEM_IDS = {
-		"com.tencent.mm:id/ib", "com.tencent.mm:id/if", "com.tencent.mm:id/im"
+	private static final HashSet<CharSequence> sMessageItemIds = new HashSet<CharSequence>();
+
+	static {
+		sMessageItemIds.add("com.tencent.mm:id/ib");
+		sMessageItemIds.add("com.tencent.mm:id/if");
+		sMessageItemIds.add("com.tencent.mm:id/im");
 	};
 
 	private static CavanAccessibilityMM sInstance;
@@ -51,7 +55,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 		String id = node.getViewIdResourceName();
 		if (id != null) {
-			return CavanArray.contains(MESSAGE_ITEM_IDS, id);
+			return sMessageItemIds.contains(id);
 		}
 
 		if (CavanAccessibility.isTextView(node)) {

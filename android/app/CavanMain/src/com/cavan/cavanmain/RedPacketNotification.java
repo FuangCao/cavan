@@ -3,6 +3,7 @@ package com.cavan.cavanmain;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import android.app.Notification;
@@ -21,7 +22,6 @@ import android.service.notification.StatusBarNotification;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
-import com.cavan.java.CavanArray;
 import com.cavan.java.RedPacketFinder;
 
 public class RedPacketNotification extends CavanNotification {
@@ -29,29 +29,27 @@ public class RedPacketNotification extends CavanNotification {
 	private static final long CODE_OVERTIME = 3600000;
 	private static final long REPEAT_CODE_OVERTIME = 20000;
 
-	private static final String[] QQ_EXCLUDE_CODES = {
-		"QQ钱包",
-	};
+	private static final HashSet<CharSequence> sExcludeUsersQQ = new HashSet<CharSequence>();
+	private static final HashSet<CharSequence> sExcludeUsersMM = new HashSet<CharSequence>();
+	private static final HashSet<CharSequence> sTimerPackages = new HashSet<CharSequence>();
+	private static final HashSet<CharSequence> sSavePackages = new HashSet<CharSequence>();
 
-	private static final String[] MM_EXCLUDE_CODES = {
-		"微信游戏",
-	};
+	static {
+		sExcludeUsersQQ.add("QQ钱包");
+		sExcludeUsersMM.add("微信游戏");
+
+		sTimerPackages.add(CavanPackageName.CALENDAR);
+		sTimerPackages.add(CavanPackageName.DESKCLOCK);
+
+		sSavePackages.add(CavanPackageName.QQ);
+		sSavePackages.add(CavanPackageName.MM);
+		sSavePackages.add(CavanPackageName.TMALL);
+		sSavePackages.add(CavanPackageName.TAOBAO);
+		sSavePackages.add(CavanPackageName.ALIPAY);
+	}
 
 	private static String[] sSoundExtensions = {
 		"m4a", "ogg", "wav", "mp3", "ac3", "wma"
-	};
-
-	private static final String[] sTimerPackages = {
-		CavanPackageName.CALENDAR,
-		CavanPackageName.DESKCLOCK,
-	};
-
-	private static final String[] sSavePackages = {
-		CavanPackageName.QQ,
-		CavanPackageName.MM,
-		CavanPackageName.TMALL,
-		CavanPackageName.TAOBAO,
-		CavanPackageName.ALIPAY,
 	};
 
 	public static HashMap<CharSequence, Long> sCodeTimeMap = new HashMap<CharSequence, Long>();
@@ -76,13 +74,13 @@ public class RedPacketNotification extends CavanNotification {
 		mTestOnly = test;
 		mService = service;
 		mNotification = sbn;
-		mIsTimedCode = CavanArray.contains(sTimerPackages, mPackageName);
+		mIsTimedCode = sTimerPackages.contains(mPackageName);
 
 		if (mTitle != null && mIsTimedCode) {
 			mFinder.addLine(mTitle);
 		}
 
-		mNeedSave = CavanArray.contains(sSavePackages, mPackageName);
+		mNeedSave = sSavePackages.contains(mPackageName);
 		if (mNeedSave || mIsTimedCode || mService.getPackageName().equals(getPackageName())) {
 			mFinder.split(mContent);
 		}
@@ -420,6 +418,7 @@ public class RedPacketNotification extends CavanNotification {
 		}
 
 		boolean send = true;
+		CharSequence user = getUserDescription();
 
 		if ("QQ".equals(code)) {
 			CavanAccessibilityQQ qq = CavanAccessibilityQQ.getInstance();
@@ -427,8 +426,8 @@ public class RedPacketNotification extends CavanNotification {
 				qq.addPacket(getUserDescription().toString());
 			}
 
-			if (CavanArray.contains(QQ_EXCLUDE_CODES, code)) {
-				CavanAndroid.dLog("Exclude code: " + code);
+			if (sExcludeUsersQQ.contains(user)) {
+				CavanAndroid.dLog("Exclude user: " + user);
 				send = false;
 			}
 		} else if ("微信".equals(code)) {
@@ -437,13 +436,13 @@ public class RedPacketNotification extends CavanNotification {
 				mm.addPacket(getUserDescription().toString());
 			}
 
-			if (CavanArray.contains(MM_EXCLUDE_CODES, code)) {
-				CavanAndroid.dLog("Exclude code: " + code);
+			if (sExcludeUsersMM.contains(user)) {
+				CavanAndroid.dLog("Exclude user: " + user);
 				send = false;
 			}
 		}
 
-		return sendRedPacketNotifyNormal(code + "红包", code + "@" + getUserDescription(), send);
+		return sendRedPacketNotifyNormal(code + "红包", code + "@" + user, send);
 	}
 
 	public boolean sendRedPacketNotifyAuto() {
