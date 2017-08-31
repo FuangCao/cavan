@@ -13,6 +13,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import android.content.BroadcastReceiver;
@@ -1071,7 +1072,7 @@ public class FloatMessageService extends FloatWidowService {
 			while (isRunEnabled()) {
 				mReload = false;
 
-				List<String> lines = CavanMessageActivity.getWanShareServer(getApplicationContext());
+				HashSet<String> lines = CavanMessageActivity.getWanShareServer(getApplicationContext());
 				if (lines == null || lines.isEmpty()) {
 					break;
 				}

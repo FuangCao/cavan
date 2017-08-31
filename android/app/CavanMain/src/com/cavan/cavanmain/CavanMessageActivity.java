@@ -1,7 +1,7 @@
 package com.cavan.cavanmain;
 
 
-import java.util.List;
+import java.util.HashSet;
 
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
@@ -151,7 +151,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		return CavanAndroid.isPreferenceEnabled(context, KEY_WAN_RECEIVE);
 	}
 
-	public static List<String> getWanShareServer(Context context) {
+	public static HashSet<String> getWanShareServer(Context context) {
 		return EditableMultiSelectListPreference.load(context, KEY_WAN_SERVER);
 	}
 

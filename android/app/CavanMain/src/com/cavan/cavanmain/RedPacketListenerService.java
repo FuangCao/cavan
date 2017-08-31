@@ -1,6 +1,6 @@
 package com.cavan.cavanmain;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -48,7 +48,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	private CharSequence mClipText;
 	private ClipboardManager mClipboardManager;
 	private NotificationManager mNotificationManager;
-	private ArrayList<String> mKeywords = new ArrayList<String>();
+	private HashSet<String> mKeywords = new HashSet<String>();
 	private CavanIndexGenerator mGeneratorRequestCode = new CavanIndexGenerator();
 	private CavanIndexGenerator mGeneratorNotificationId = new CavanIndexGenerator();
 	private Handler mHandler = new Handler() {
@@ -250,12 +250,15 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	}
 
 	private void loadKeywords(SharedPreferences preferences) {
-		ArrayList<String> keywords = EditableMultiSelectListPreference.load(preferences, CavanMessageActivity.KEY_KEYWORD_NOTIFY);
+		HashSet<String> keywords = EditableMultiSelectListPreference.load(preferences, CavanMessageActivity.KEY_KEYWORD_NOTIFY);
 		if (keywords != null) {
 			mKeywords = keywords;
 		} else {
 			mKeywords.clear();
 		}
+
+		mKeywords.add("你收到一个红包");
+		mKeywords.add("零钱入账");
 
 		CavanAndroid.dLog("mKeywords = " + mKeywords);
 	}

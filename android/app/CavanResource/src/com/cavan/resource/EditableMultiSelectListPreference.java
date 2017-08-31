@@ -1,6 +1,7 @@
 package com.cavan.resource;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import android.app.AlertDialog.Builder;
@@ -164,24 +165,24 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 		return null;
 	}
 
-	public static ArrayList<String> load(SharedPreferences preferences, String key) {
+	public static HashSet<String> load(SharedPreferences preferences, String key) {
 		String[] lines = loadPrivate(preferences, key);
 		if (lines == null) {
 			return null;
 		}
 
-		ArrayList<String> list = new ArrayList<String>();
+		HashSet<String> set = new HashSet<String>();
 
 		for (String line : lines) {
 			if (line.length() > 0 && line.charAt(0) != '!') {
-				list.add(line);
+				set.add(line);
 			}
 		}
 
-		return list;
+		return set;
 	}
 
-	public static ArrayList<String> load(Context context, String key) {
+	public static HashSet<String> load(Context context, String key) {
 		return load(PreferenceManager.getDefaultSharedPreferences(context), key);
 	}
 
