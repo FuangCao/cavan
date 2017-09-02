@@ -1,7 +1,6 @@
 package com.cavan.cavanmain;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import android.view.View;
@@ -21,14 +20,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	private static final int POLL_DELAY = 500;
 	private static final int POLL_DELAY_UNPACK = 2000;
 
-	private static final HashSet<CharSequence> sMessageItemIds = new HashSet<CharSequence>();
-
-	static {
-		sMessageItemIds.add("com.tencent.mm:id/ib");
-		sMessageItemIds.add("com.tencent.mm:id/if");
-		sMessageItemIds.add("com.tencent.mm:id/im");
-	};
-
 	private static CavanAccessibilityMM sInstance;
 
 	public static CavanAccessibilityMM getInstance() {
@@ -36,6 +27,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	}
 
 	private long mUnpackTime;
+	private boolean mIsLauncherUi;
 	private boolean mUnpackPending;
 	private List<Integer> mFinishNodes = new ArrayList<Integer>();
 
@@ -51,11 +43,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 		if (!node.isLongClickable()) {
 			return false;
-		}
-
-		String id = node.getViewIdResourceName();
-		if (id != null) {
-			return sMessageItemIds.contains(id);
 		}
 
 		if (CavanAccessibility.isTextView(node)) {
@@ -102,9 +89,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 	@Override
 	protected void onViewClicked(AccessibilityEvent event) {
-		AccessibilityNodeInfo source = event.getSource();
-		if (source != null && isMessageItemNode(source)) {
-			postClickEventMessage(event);
+		if (mIsLauncherUi) {
+			AccessibilityNodeInfo source = event.getSource();
+			if (source != null && isMessageItemNode(source)) {
+				postClickEventMessage(event);
+			}
 		}
 	}
 
@@ -235,47 +224,45 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	}
 
 	private AccessibilityNodeInfo findMessageListViewNode() {
-		if ("com.tencent.mm.ui.LauncherUI".equals(mClassName) || "com.tencent.mm.ui.chatting.ChattingUI".equals(mClassName)) {
-			AccessibilityNodeInfo root = getRootInActiveWindow();
-			if (root == null) {
-				return null;
-			}
+		AccessibilityNodeInfo root = getRootInActiveWindow();
+		if (root == null) {
+			return null;
+		}
 
-			AccessibilityNodeInfo child0 = null;
-			AccessibilityNodeInfo child1 = null;
+		AccessibilityNodeInfo child0 = null;
+		AccessibilityNodeInfo child1 = null;
 
-			try {
-				AccessibilityNodeInfo node = CavanAccessibility.findNodeByViewId(root, "com.tencent.mm:id/a4l");
-				if (node != null) {
-					if (ListView.class.getName().equals(node.getClassName())) {
-						return node;
-					}
-
-					node.recycle();
-				}
-
-				child0 = root.getChild(0);
-				child1 = child0.getChild(0);
-				node = child1.getChild(4);
-
+		try {
+			AccessibilityNodeInfo node = CavanAccessibility.findNodeByViewId(root, "com.tencent.mm:id/a4l");
+			if (node != null) {
 				if (ListView.class.getName().equals(node.getClassName())) {
 					return node;
 				}
 
 				node.recycle();
-			} catch (Exception e) {
-				return null;
-			} finally {
-				if (child1 != null) {
-					child1.recycle();
-				}
-
-				if (child0 != null) {
-					child0.recycle();
-				}
-
-				root.recycle();
 			}
+
+			child0 = root.getChild(0);
+			child1 = child0.getChild(0);
+			node = child1.getChild(4);
+
+			if (ListView.class.getName().equals(node.getClassName())) {
+				return node;
+			}
+
+			node.recycle();
+		} catch (Exception e) {
+			return null;
+		} finally {
+			if (child1 != null) {
+				child1.recycle();
+			}
+
+			if (child0 != null) {
+				child0.recycle();
+			}
+
+			root.recycle();
 		}
 
 		return null;
@@ -326,6 +313,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 	@Override
 	public void onWindowStateChanged(AccessibilityEvent event) {
+		mIsLauncherUi = false;
+
 		switch (mClassName) {
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiReceiveUI":
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI":
@@ -341,6 +330,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 		case "com.tencent.mm.ui.LauncherUI":
 		case "com.tencent.mm.ui.chatting.ChattingUI":
+			mIsLauncherUi = true;
 			setForceUnpackEnable(false);
 
 			if (getPacketCount() > 0) {
@@ -365,6 +355,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 	@Override
 	protected boolean onWindowContentStable(int times) {
+		if (!mIsLauncherUi) {
+			return true;
+		}
+
 		AccessibilityNodeInfo listView = findMessageListViewNode();
 		if (listView == null) {
 			return false;
@@ -379,7 +373,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 			String type = CavanAccessibility.getChildText(node, 2);
 			if (type == null) {
-				return true;
+				return false;
 			}
 
 			if ("微信红包".equals(type) && isValidMessage(node) && updateUnpackTime()) {
@@ -388,7 +382,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 				mUnpackPending = true;
 			}
 		} catch (Exception e) {
-			return true;
+			return false;
 		} finally {
 			if (node != null) {
 				node.recycle();
@@ -401,6 +395,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			listView.recycle();
 		}
 
-		return false;
+		return true;
 	}
 }
