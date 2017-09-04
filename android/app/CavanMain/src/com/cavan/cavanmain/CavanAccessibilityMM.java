@@ -347,6 +347,13 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 				if (getPacketCount() > 0) {
 					setLockEnable(POLL_DELAY, true);
 				}
+			} else if (mClassName.startsWith("com.tencent.mm.ui.chatting.En_")) {
+				mIsLauncherUi = true;
+				setForceUnpackEnable(false);
+
+				if (getPacketCount() > 0) {
+					setLockEnable(POLL_DELAY, true);
+				}
 			} else if (getPacketCount() > 0) {
 				setLockEnable(POLL_DELAY, false);
 			}

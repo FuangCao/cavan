@@ -1,5 +1,6 @@
 package com.cavan.cavanmain;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 
 import android.app.Notification;
@@ -250,11 +251,13 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	}
 
 	private void loadKeywords(SharedPreferences preferences) {
-		HashSet<String> keywords = EditableMultiSelectListPreference.load(preferences, CavanMessageActivity.KEY_KEYWORD_NOTIFY);
+		mKeywords.clear();
+
+		ArrayList<String> keywords = EditableMultiSelectListPreference.load(preferences, CavanMessageActivity.KEY_KEYWORD_NOTIFY);
 		if (keywords != null) {
-			mKeywords = keywords;
-		} else {
-			mKeywords.clear();
+			for (String keyword : keywords) {
+				mKeywords.add(keyword);
+			}
 		}
 
 		mKeywords.add("你收到一个红包");
