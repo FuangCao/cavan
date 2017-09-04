@@ -89,6 +89,7 @@ ssize_t web_proxy_read_request(struct network_client *client, char *buff, size_t
 		switch (*p) {
 		case '\n':
 			if (count > 0) {
+				p++;
 				goto out_complete;
 			}
 			count++;
