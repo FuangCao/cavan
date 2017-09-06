@@ -273,6 +273,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		switch (mClassName) {
 		case "com.tencent.mm.ui.LauncherUI":
 		case "com.tencent.mm.ui.chatting.ChattingUI":
+		case "com.tencent.mm.ui.conversation.BizConversationUI":
 			if (doFindAndUnpack(root)) {
 				break;
 			}
@@ -330,6 +331,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 		case "com.tencent.mm.ui.LauncherUI":
 		case "com.tencent.mm.ui.chatting.ChattingUI":
+		case "com.tencent.mm.ui.conversation.BizConversationUI":
 			mIsLauncherUi = true;
 			setForceUnpackEnable(false);
 

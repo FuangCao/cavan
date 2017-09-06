@@ -3341,19 +3341,33 @@ static SSL_CTX *network_ssl_context_get(boolean server)
 	return context_client;
 }
 
-static SSL *network_ssl_open(int fd, boolean server)
+static SSL *network_ssl_new(boolean server)
 {
-	int ret;
-	SSL *ssl;
+	static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 	SSL_CTX *ctx;
+	SSL *ssl;
+
+	pthread_mutex_lock(&lock);
 
 	ctx = network_ssl_context_get(server);
 	if (ctx == NULL) {
 		pr_red_info("network_ssl_context_get");
-		return NULL;
+		ssl = NULL;
+	} else {
+		ssl = SSL_new(ctx);
 	}
 
-	ssl = SSL_new(ctx);
+	pthread_mutex_unlock(&lock);
+
+	return ssl;
+}
+
+static SSL *network_ssl_open(int fd, boolean server)
+{
+	int ret;
+	SSL *ssl;
+
+	ssl = network_ssl_new(server);
 	if (ssl == NULL) {
 		pr_red_info("SSL_new");
 		return NULL;
