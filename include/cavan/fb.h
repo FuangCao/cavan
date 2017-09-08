@@ -115,10 +115,20 @@ static inline cavan_display_color_t cavan_fb_build_color(struct cavan_fb_device 
 {
 	cavan_display_color_t color;
 
+#if 1
 	color.value = ((red & dev->red.mask) << dev->red.offset) | \
 		((green & dev->green.mask) << dev->green.offset) | \
 		((blue & dev->blue.mask) << dev->blue.offset) | \
 		((transp & dev->transp.mask) << dev->transp.offset);
+#elif 0
+	color.red = color.green = color.blue = cavan_display_cal_brightness((red & dev->red.mask), (green & dev->green.mask), (blue & dev->blue.mask));
+#else
+	if (cavan_display_cal_brightness((red & dev->red.mask), (green & dev->green.mask), (blue & dev->blue.mask)) > 200) {
+		color.value = 0xFFFFFFFF;
+	} else {
+		color.value = 0;
+	}
+#endif
 
 	return color;
 }
