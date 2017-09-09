@@ -98,6 +98,8 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 	}
 
 	public boolean addPacket(E packet) {
+		removeCallbacks(mRunnableContentStable);
+
 		if (mPackets.contains(packet)) {
 			return false;
 		}
@@ -137,14 +139,16 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 	}
 
 	protected void onWindowContentChanged(AccessibilityEvent event) {
-		long time = System.currentTimeMillis();
+		if (mPackets.isEmpty()) {
+			long time = System.currentTimeMillis();
 
-		if (mStableTime < time) {
-			postDelayed(mRunnableContentStable, STABLE_DELAY);
+			if (mStableTime < time) {
+				postDelayed(mRunnableContentStable, STABLE_DELAY);
+			}
+
+			mStableTimes = 0;
+			mStableTime = time + STABLE_DELAY;
 		}
-
-		mStableTimes = 0;
-		mStableTime = time + STABLE_DELAY;
 	}
 
 	protected boolean onWindowContentStable(int times) {
