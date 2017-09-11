@@ -540,6 +540,13 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 			return true;
 		}
 
+		nodes = root.findAccessibilityNodeInfosByViewId("com.alipay.android.phone.discovery.envelope:id/coupon_chai_close");
+		if (nodes != null && nodes.size() > 0) {
+			setRedPacketCodeComplete();
+			CavanAccessibility.performClickAndRecycle(nodes.get(0));
+			return true;
+		}
+
 		return false;
 	}
 
