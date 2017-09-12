@@ -2,11 +2,14 @@ package com.cavan.cavanmain;
 
 import java.net.InetAddress;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 
+import com.cavan.android.CavanAndroid;
+import com.cavan.cavanjni.CavanService;
 import com.cavan.cavanjni.CavanServicePreference;
 import com.cavan.cavanmain.R;
 import com.cavan.java.CavanJava;
@@ -14,6 +17,7 @@ import com.cavan.java.CavanJava;
 public class CavanServiceActivity extends PreferenceActivity {
 
 	public static final String KEY_IP_ADDRESS = "ip_address";
+	public static final String KEY_SHARE_APP = "share_app";
 	public static final String KEY_FTP = "ftp";
 	public static final String KEY_HTTP = "http";
 	public static final String KEY_TCP_DD = "tcp_dd";
@@ -21,6 +25,7 @@ public class CavanServiceActivity extends PreferenceActivity {
 	public static final String KEY_TCP_REPEATER = "tcp_repeater";
 
 	private Preference mPreferenceIpAddress;
+	private Preference mPreferenceShareApp;
 	private CavanServicePreference mPreferenceTcpDd;
 	private CavanServicePreference mPreferenceFtp;
 	private CavanServicePreference mPreferenceHttp;
@@ -34,6 +39,7 @@ public class CavanServiceActivity extends PreferenceActivity {
 		addPreferencesFromResource(R.xml.service_manager);
 
 		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
+		mPreferenceShareApp = findPreference(KEY_SHARE_APP);
 		mPreferenceFtp = (CavanServicePreference) findPreference(KEY_FTP);
 		mPreferenceHttp = (CavanServicePreference) findPreference(KEY_HTTP);
 		mPreferenceTcpDd = (CavanServicePreference) findPreference(KEY_TCP_DD);
@@ -68,6 +74,24 @@ public class CavanServiceActivity extends PreferenceActivity {
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
 		if (preference == mPreferenceIpAddress) {
 			updateIpAddressStatus();
+		} else if (preference == mPreferenceShareApp) {
+			if (mPreferenceHttp.getServiceState() != CavanService.STATE_RUNNING) {
+				CavanAndroid.showToast(this, R.string.open_http_server_prompt);
+			} else {
+				InetAddress address = CavanJava.getIpAddress();
+				String host;
+
+				if (address != null) {
+					host = address.getHostAddress();
+				} else {
+					host = "127.0.0.1";
+				}
+
+				String url = "http://" + host + ":" + mPreferenceHttp.getPort();
+				Intent intent = new Intent(this, CavanShareAppActivity.class);
+				intent.putExtra("url", url);
+				startActivity(intent);
+			}
 		}
 
 		return super.onPreferenceTreeClick(preferenceScreen, preference);

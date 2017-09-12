@@ -346,5 +346,9 @@
 	<string name="my_application">我的应用</string>
 	<string name="my_message">我的消息</string>
 	<string name="show_wifi_password">WiFi密码查看</string>
+	<string name="share_app">应用分享</string>
+	<string name="open_http_server_prompt">请打开 HTTP 服务器</string>
+	<string name="show_sys_app">显示系统应用</string>
+	<string name="show_game_only">仅显示游戏</string>
 
 </resources>

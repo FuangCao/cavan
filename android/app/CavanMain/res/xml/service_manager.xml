@@ -4,6 +4,9 @@
     xmlns:settings="http://schemas.android.com/apk/res/com.android.settings"
     android:key="parent">
 
+	<Preference android:key="share_app"
+	    android:title="@string/share_app" />
+
 	<Preference android:key="ip_address"
 	    android:title="@string/local_ip_address"
 	    android:summary="@string/unknown" />

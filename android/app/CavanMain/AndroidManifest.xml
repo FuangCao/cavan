@@ -253,6 +253,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <activity android:launchMode="singleTask" android:label="@string/share_app" android:name="CavanShareAppActivity"></activity>
     </application>
 
 </manifest>

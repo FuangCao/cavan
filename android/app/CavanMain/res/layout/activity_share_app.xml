@@ -1,0 +1,58 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.cavan.cavanapkbackup.MainActivity" >
+
+    <CheckBox
+        android:id="@+id/checkBoxGameOnly"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/checkBoxShowSysApp"
+        android:layout_alignParentRight="true"
+        android:text="@string/show_game_only" />
+
+    <CheckBox
+        android:id="@+id/checkBoxShowSysApp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:text="@string/show_sys_app" />
+
+    <ListView
+        android:id="@+id/listViewApps"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/checkBoxShowSysApp"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/editTextFilter"
+        android:listSelector="@drawable/list_selector" />
+
+    <ImageView
+        android:id="@+id/imageViewQrCode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewUrl"
+        android:layout_centerHorizontal="true"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/textViewUrl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:autoLink="web" />
+
+    <EditText
+        android:id="@+id/editTextFilter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/imageViewQrCode"
+        android:ems="10" />
+
+</RelativeLayout>
