@@ -543,7 +543,11 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 		nodes = root.findAccessibilityNodeInfosByViewId("com.alipay.android.phone.discovery.envelope:id/coupon_chai_close");
 		if (nodes != null && nodes.size() > 0) {
 			setRedPacketCodeComplete();
-			CavanAccessibility.performClickAndRecycle(nodes.get(0));
+
+			if (mCodeCount > 0) {
+				CavanAccessibility.performClickAndRecycle(nodes.get(0));
+			}
+
 			return true;
 		}
 
