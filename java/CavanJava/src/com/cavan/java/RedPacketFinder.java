@@ -545,7 +545,7 @@ public class RedPacketFinder {
 				return null;
 			}
 
-			if (line.contains("[" + code + "红包]")) {
+			if (line.startsWith("[" + code + "红包]")) {
 				return code;
 			}
 
