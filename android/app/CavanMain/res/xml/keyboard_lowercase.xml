@@ -105,9 +105,9 @@
 
 	<Row android:keyWidth="12%p">
 	    <Key
-            android:keyWidth="20%p"
-            android:codes="8"
-            android:keyLabel="输入法" />
+	        android:keyWidth="20%p"
+            android:codes="15"
+            android:keyLabel="键盘" />
 	    <Key
             android:codes="4"
             android:keyLabel="选择" />
@@ -130,9 +130,9 @@
 
     <Row android:keyWidth="12%p">
         <Key
-	        android:keyWidth="20%p"
-            android:codes="15"
-            android:keyLabel="键盘" />
+            android:keyWidth="20%p"
+            android:codes="8"
+            android:keyLabel="输入法" />
         <Key
             android:codes="6"
             android:isRepeatable="true"

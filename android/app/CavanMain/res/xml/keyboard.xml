@@ -63,8 +63,8 @@
 	<Row>
 	    <Key
             android:keyWidth="20%p"
-            android:codes="8"
-            android:keyLabel="输入法" />
+            android:codes="15"
+            android:keyLabel="键盘" />
 	    <Key
             android:keyOutputText="0"
             android:keyLabel="0" />
@@ -83,8 +83,8 @@
     <Row android:keyWidth="15%p">
         <Key
             android:keyWidth="20%p"
-            android:codes="15"
-            android:keyLabel="键盘" />
+            android:codes="8"
+            android:keyLabel="输入法" />
         <Key
             android:codes="4"
             android:keyLabel="选择" />
