@@ -46,6 +46,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	public static final int KEYCODE_ENTER = 12;
 	public static final int KEYCODE_SPACE = 13;
 	public static final int KEYCODE_OCR = 14;
+	public static final int KEYCODE_KEYBOARD = 15;
 
 	private static CavanInputMethod sInstance;
 
@@ -57,7 +58,8 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	private RedPacketCode[] mUiCodes;
 	private RedPacketViewAdapter mAdapter = new RedPacketViewAdapter();
 
-	private Keyboard mKeyboard;
+	private int mKeyboard;
+	private Keyboard[] mKeyboards;
 	private KeyboardView mKeyboardView;
 	private InputMethodManager mManager;
 
@@ -129,6 +131,11 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 	public boolean sendKeyDownUp(int code) {
 		return sendKeyEvent(code, 1) && sendKeyEvent(code, 0);
+	}
+
+	public void setNextKeyboard() {
+		mKeyboard = (mKeyboard + 1) % mKeyboards.length;
+		mKeyboardView.setKeyboard(mKeyboards[mKeyboard]);
 	}
 
 	@Override
@@ -211,8 +218,16 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		mAdapter.updateInputView();
 
 		mKeyboardView = (KeyboardView) view.findViewById(R.id.keyboardView);
-		mKeyboard = new Keyboard(this, R.xml.keyboard);
-		mKeyboardView.setKeyboard(mKeyboard);
+
+		int[] ids = new int[] { R.xml.keyboard, R.xml.keyboard_lowercase, R.xml.keyboard_uppercase };
+		mKeyboards = new Keyboard[ids.length];
+		mKeyboard = 0;
+
+		for (int i = 0; i < ids.length; i++) {
+			mKeyboards[i] = new Keyboard(this, ids[i]);
+		}
+
+		mKeyboardView.setKeyboard(mKeyboards[0]);
 		mKeyboardView.setEnabled(true);
 		mKeyboardView.setPreviewEnabled(false);
 		mKeyboardView.setOnKeyboardActionListener(this);
@@ -277,6 +292,10 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 		case KEYCODE_INPUT_METHOD:
 			mManager.showInputMethodPicker();
+			break;
+
+		case KEYCODE_KEYBOARD:
+			setNextKeyboard();
 			break;
 
 		case KEYCODE_SELECT:
