@@ -350,7 +350,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 					AccessibilityNodeInfo parent = chats.get(mChatIndex++).getParent();
 					if (parent != null) {
 						if (parent.hashCode() != listNode.hashCode()) {
-							if (mRetryCount == 0 || CavanAccessibility.getNodeCountByViewId(parent, "com.tencent.mobileqq:id/unreadmsg") > 0) {
+							if (mRetryCount == 0 || CavanAccessibility.getNodeCountByViewIds(parent, "com.tencent.mobileqq:id/unreadmsg") > 0) {
 								mRunnableClick.post(POLL_DELAY_JUMP, false);
 								CavanAccessibility.performClickAndRecycle(parent);
 								break;
@@ -428,7 +428,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 					break;
 				}
 
-				if (CavanAccessibility.containsTextWhole(root, "群公告")) {
+				if (CavanAccessibility.containsTextsWhole(root, "群公告")) {
 					AccessibilityNodeInfo node = CavanAccessibility.findNodeByText(root, "我知道了");
 					if (node != null) {
 						CavanAccessibility.performClickAndRecycle(node);

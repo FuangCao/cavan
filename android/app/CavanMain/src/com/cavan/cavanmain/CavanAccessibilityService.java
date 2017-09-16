@@ -410,7 +410,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				}
 
 				return false;
-			} else if (CavanAccessibility.getNodeCountByText(root, "选择输入法") > 0) {
+			} else if (CavanAccessibility.getNodeCountByTexts(root, "选择输入法") > 0) {
 				return false;
 			}
 		}
