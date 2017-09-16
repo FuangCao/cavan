@@ -19,7 +19,7 @@
             android:codes="20"
             android:keyLabel="选择" />
         <Key
-            android:codes="11"
+            android:codes="2"
             android:keyLabel="粘贴" />
     </Row>
     <Row>
