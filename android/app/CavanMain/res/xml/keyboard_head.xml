@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+    android:horizontalGap="0px"
+    android:keyHeight="8%p"
+    android:keyWidth="20%p"
+    android:verticalGap="0px" >
+
+    <Row>
+        <Key
+            android:codes="17"
+            android:keyLabel="数字" />
+        <Key
+            android:codes="18"
+            android:keyLabel="字母" />
+        <Key
+            android:codes="19"
+            android:keyLabel="符号" />
+        <Key
+            android:codes="20"
+            android:keyLabel="选择" />
+        <Key
+            android:codes="11"
+            android:keyLabel="粘贴" />
+    </Row>
+    <Row>
+        <Key
+            android:codes="1"
+            android:keyLabel="复制" />
+        <Key
+            android:codes="3"
+            android:keyLabel="剪切" />
+        <Key
+            android:codes="10"
+            android:keyLabel="清空" />
+        <Key
+            android:codes="9"
+            android:isRepeatable="true"
+            android:keyIcon="@drawable/key_del" />
+        <Key
+            android:codes="11"
+            android:keyLabel="前往" />
+    </Row>
+
+</Keyboard>

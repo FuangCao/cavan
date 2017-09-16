@@ -259,10 +259,12 @@ public class CavanAccessibility {
 
 	public static String getChildText(AccessibilityNodeInfo parent, int index) {
 		try {
-			AccessibilityNodeInfo child = parent.getChild(index);
-			String text = getNodeText(child);
-			child.recycle();
-			return text;
+			if (parent.getChildCount() < index) {
+				AccessibilityNodeInfo child = parent.getChild(index);
+				String text = getNodeText(child);
+				child.recycle();
+				return text;
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

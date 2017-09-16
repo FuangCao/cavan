@@ -350,5 +350,9 @@
 	<string name="open_http_server_prompt">请打开 HTTP 服务器</string>
 	<string name="show_sys_app">显示系统应用</string>
 	<string name="show_game_only">仅显示游戏</string>
+	<string name="number">数字</string>
+	<string name="letter">字母</string>
+	<string name="symbol">符号</string>
+	<string name="select">选择</string>
 
 </resources>

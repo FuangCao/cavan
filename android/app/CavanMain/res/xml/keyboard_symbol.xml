@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+    android:horizontalGap="0px"
+    android:keyHeight="8%p"
+    android:keyWidth="10%p"
+    android:verticalGap="0px" >
+
+    <Row>
+        <Key
+            android:keyLabel="`"
+            android:keyOutputText="`" />
+        <Key
+            android:keyLabel="~"
+            android:keyOutputText="~" />
+        <Key
+            android:keyLabel="!"
+            android:keyOutputText="!" />
+        <Key
+            android:keyLabel="#"
+            android:keyOutputText="#" />
+        <Key
+            android:keyLabel="$"
+            android:keyOutputText="$" />
+        <Key
+            android:keyLabel="%"
+            android:keyOutputText="%" />
+        <Key
+            android:keyLabel="^"
+            android:keyOutputText="^" />
+        <Key
+            android:keyLabel="&amp;"
+            android:keyOutputText="&amp;" />
+        <Key
+            android:keyLabel="*"
+            android:keyOutputText="*" />
+        <Key
+            android:keyLabel="-"
+            android:keyOutputText="-" />
+    </Row>
+    <Row>
+        <Key
+            android:keyLabel="("
+            android:keyOutputText="(" />
+        <Key
+            android:keyLabel=")"
+            android:keyOutputText=")" />
+        <Key
+            android:keyLabel="["
+            android:keyOutputText="[" />
+        <Key
+            android:keyLabel="]"
+            android:keyOutputText="]" />
+        <Key
+            android:keyLabel="{"
+            android:keyOutputText="{" />
+        <Key
+            android:keyLabel="}"
+            android:keyOutputText="}" />
+        <Key
+            android:keyLabel="&lt;"
+            android:keyOutputText="&lt;" />
+        <Key
+            android:keyLabel=">"
+            android:keyOutputText=">" />
+        <Key
+            android:keyLabel="="
+            android:keyOutputText="=" />
+        <Key
+            android:keyLabel="+"
+            android:keyOutputText="+" />
+    </Row>
+    <Row>
+        <Key
+            android:codes="8"
+            android:keyLabel="输入法"
+            android:keyWidth="20%p" />
+        <Key
+            android:keyLabel="/"
+            android:keyOutputText="/" />
+        <Key
+            android:keyLabel="|"
+            android:keyOutputText="|" />
+        <Key
+            android:keyLabel="\\"
+            android:keyOutputText="\\" />
+        <Key
+            android:keyLabel=":"
+            android:keyOutputText=":" />
+        <Key
+            android:keyLabel=";"
+            android:keyOutputText=";" />
+        <Key
+            android:keyLabel=","
+            android:keyOutputText="," />
+        <Key
+            android:keyLabel="&apos;"
+            android:keyOutputText="&apos;" />
+        <Key
+            android:keyLabel="&quot;"
+            android:keyOutputText="&quot;" />
+    </Row>
+
+</Keyboard>

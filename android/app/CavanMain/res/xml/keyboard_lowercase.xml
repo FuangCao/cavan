@@ -1,160 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
-	android:keyHeight="8%p"
-	android:keyWidth="10%p"
-	android:horizontalGap="0px"
-	android:verticalGap="0px" >
+    android:horizontalGap="0px"
+    android:keyHeight="8%p"
+    android:keyWidth="10%p"
+    android:verticalGap="0px" >
 
     <Row>
         <Key
-            android:keyOutputText="q"
-            android:keyLabel="q" />
+            android:keyLabel="q"
+            android:keyOutputText="q" />
         <Key
-            android:keyOutputText="w"
-            android:keyLabel="w" />
+            android:keyLabel="w"
+            android:keyOutputText="w" />
         <Key
-            android:keyOutputText="e"
-            android:keyLabel="e" />
+            android:keyLabel="e"
+            android:keyOutputText="e" />
         <Key
-            android:keyOutputText="r"
-            android:keyLabel="r" />
+            android:keyLabel="r"
+            android:keyOutputText="r" />
         <Key
-            android:keyOutputText="t"
-            android:keyLabel="t" />
+            android:keyLabel="t"
+            android:keyOutputText="t" />
         <Key
-            android:keyOutputText="y"
-            android:keyLabel="y" />
+            android:keyLabel="y"
+            android:keyOutputText="y" />
         <Key
-            android:keyOutputText="u"
-            android:keyLabel="u" />
+            android:keyLabel="u"
+            android:keyOutputText="u" />
         <Key
-            android:keyOutputText="i"
-            android:keyLabel="i" />
+            android:keyLabel="i"
+            android:keyOutputText="i" />
         <Key
-            android:keyOutputText="o"
-            android:keyLabel="o" />
+            android:keyLabel="o"
+            android:keyOutputText="o" />
         <Key
-            android:keyOutputText="p"
-            android:keyLabel="p" />
-	</Row>
-
-	<Row>
-        <Key
-            android:keyOutputText="a"
-            android:keyLabel="a" />
-        <Key
-            android:keyOutputText="s"
-            android:keyLabel="s" />
-        <Key
-            android:keyOutputText="d"
-            android:keyLabel="d" />
-        <Key
-            android:keyOutputText="f"
-            android:keyLabel="f" />
-        <Key
-            android:keyOutputText="g"
-            android:keyLabel="g" />
-        <Key
-            android:keyOutputText="h"
-            android:keyLabel="h" />
-        <Key
-            android:keyOutputText="j"
-            android:keyLabel="j" />
-        <Key
-            android:keyOutputText="k"
-            android:keyLabel="k" />
-        <Key
-            android:keyOutputText="l"
-            android:keyLabel="l" />
-        <Key
-            android:keyOutputText=":"
-            android:keyLabel=":" />
-	</Row>
-
-	<Row>
-        <Key
-            android:keyOutputText="z"
-            android:keyLabel="z" />
-        <Key
-            android:keyOutputText="x"
-            android:keyLabel="x" />
-        <Key
-            android:keyOutputText="c"
-            android:keyLabel="c" />
-        <Key
-            android:keyOutputText="v"
-            android:keyLabel="v" />
-        <Key
-            android:keyOutputText="b"
-            android:keyLabel="b" />
-        <Key
-            android:keyOutputText="n"
-            android:keyLabel="n" />
-        <Key
-            android:keyOutputText="m"
-            android:keyLabel="m" />
-        <Key
-            android:keyOutputText="."
-            android:keyLabel="." />
-        <Key
-            android:keyWidth="20%p"
-            android:codes="9"
-            android:keyIcon="@drawable/key_del"
-            android:isRepeatable="true" />
+            android:keyLabel="p"
+            android:keyOutputText="p" />
     </Row>
-
-	<Row android:keyWidth="12%p">
-	    <Key
-	        android:keyWidth="20%p"
+    <Row>
+        <Key
             android:codes="15"
-            android:keyLabel="键盘" />
-	    <Key
-            android:codes="4"
-            android:keyLabel="选择" />
+            android:keyLabel="大" />
         <Key
-            android:codes="5"
-            android:keyLabel="全选" />
+            android:keyLabel="a"
+            android:keyOutputText="a" />
         <Key
-            android:codes="10"
-            android:keyLabel="清空" />
+            android:keyLabel="s"
+            android:keyOutputText="s" />
         <Key
-            android:codes="3"
-            android:keyLabel="剪切" />
+            android:keyLabel="d"
+            android:keyOutputText="d" />
         <Key
-            android:codes="1"
-            android:keyLabel="复制" />
-        <Key android:keyWidth="20%p"
-            android:codes="2"
-            android:keyLabel="粘贴" />
+            android:keyLabel="f"
+            android:keyOutputText="f" />
+        <Key
+            android:keyLabel="g"
+            android:keyOutputText="g" />
+        <Key
+            android:keyLabel="h"
+            android:keyOutputText="h" />
+        <Key
+            android:keyLabel="j"
+            android:keyOutputText="j" />
+        <Key
+            android:keyLabel="k"
+            android:keyOutputText="k" />
+        <Key
+            android:keyLabel="l"
+            android:keyOutputText="l" />
+    </Row>
+    <Row>
+        <Key
+            android:codes="8"
+            android:keyLabel="输入法"
+            android:keyWidth="20%p" />
+        <Key
+            android:keyLabel="z"
+            android:keyOutputText="z" />
+        <Key
+            android:keyLabel="x"
+            android:keyOutputText="x" />
+        <Key
+            android:keyLabel="c"
+            android:keyOutputText="c" />
+        <Key
+            android:keyLabel="v"
+            android:keyOutputText="v" />
+        <Key
+            android:keyLabel="b"
+            android:keyOutputText="b" />
+        <Key
+            android:keyLabel="n"
+            android:keyOutputText="n" />
+        <Key
+            android:keyLabel="m"
+            android:keyOutputText="m" />
+        <Key
+            android:keyLabel="\@"
+            android:keyOutputText="\@" />
     </Row>
 
-    <Row android:keyWidth="12%p">
-        <Key
-            android:keyWidth="20%p"
-            android:codes="8"
-            android:keyLabel="输入法" />
-        <Key
-            android:codes="6"
-            android:isRepeatable="true"
-            android:keyIcon="@drawable/key_qwerty_left" />
-        <Key
-            android:codes="7"
-            android:isRepeatable="true"
-            android:keyIcon="@drawable/key_qwerty_right" />
-        <Key
-            android:keyOutputText="\@"
-            android:keyLabel="\@" />
-        <Key
-            android:codes="13"
-            android:keyOutputText=" "
-            android:keyIcon="@drawable/key_space" />
-        <Key
-	        android:codes="12"
-            android:keyOutputText="\n"
-            android:keyIcon="@drawable/key_enter" />
-        <Key
-            android:keyWidth="20%p"
-            android:codes="11"
-            android:keyLabel="前往" />
-	</Row>
 </Keyboard>

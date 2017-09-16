@@ -46,7 +46,12 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	public static final int KEYCODE_ENTER = 12;
 	public static final int KEYCODE_SPACE = 13;
 	public static final int KEYCODE_OCR = 14;
-	public static final int KEYCODE_KEYBOARD = 15;
+	public static final int KEYCODE_UPPERCASE = 15;
+	public static final int KEYCODE_LOWERCASE = 16;
+	public static final int KEYCODE_KEYBORD_NUMBER = 17;
+	public static final int KEYCODE_KEYBORD_LETTER = 18;
+	public static final int KEYCODE_KEYBORD_SYMBOL = 19;
+	public static final int KEYCODE_KEYBORD_SELECT = 20;
 
 	private static CavanInputMethod sInstance;
 
@@ -54,13 +59,18 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		return sInstance;
 	}
 
-	private GridView mCodeGridView;
+	private GridView mGridViewCodes;
 	private RedPacketCode[] mUiCodes;
 	private RedPacketViewAdapter mAdapter = new RedPacketViewAdapter();
 
-	private int mKeyboard;
-	private Keyboard[] mKeyboards;
-	private KeyboardView mKeyboardView;
+	private Keyboard mKeyboardHead;
+	private Keyboard mKeyboardNumber;
+	private Keyboard mKeyboardSymbol;
+	private Keyboard mKeyboardSelect;
+	private Keyboard mKeyboardLetterLower;
+	private Keyboard mKeyboardLetterUpper;
+	private KeyboardView mKeyboardViewHead;
+	private KeyboardView mKeyboardViewBody;
 	private InputMethodManager mManager;
 
 	private boolean mIsAlipay;
@@ -133,11 +143,6 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		return sendKeyEvent(code, 1) && sendKeyEvent(code, 0);
 	}
 
-	public void setNextKeyboard() {
-		mKeyboard = (mKeyboard + 1) % mKeyboards.length;
-		mKeyboardView.setKeyboard(mKeyboards[mKeyboard]);
-	}
-
 	@Override
 	public void onCreate() {
 		super.onCreate();
@@ -200,6 +205,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	@Override
 	public void onStartInputView(EditorInfo info, boolean restarting) {
 		mAdapter.updateInputView();
+		// mKeyboardViewBody.setKeyboard(mKeyboardNumber);
 		super.onStartInputView(info, restarting);
 	}
 
@@ -211,26 +217,30 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 	@Override
 	public View onCreateInputView() {
+		mKeyboardHead = new Keyboard(this, R.xml.keyboard_head);
+		mKeyboardNumber = new Keyboard(this, R.xml.keyboard_number);
+		mKeyboardSymbol = new Keyboard(this, R.xml.keyboard_symbol);
+		mKeyboardSelect = new Keyboard(this, R.xml.keyboard_select);
+		mKeyboardLetterLower = new Keyboard(this, R.xml.keyboard_lowercase);
+		mKeyboardLetterUpper = new Keyboard(this, R.xml.keyboard_uppercase);
+
 		View view = View.inflate(this, R.layout.keyboard, null);
 
-		mCodeGridView = (GridView) view.findViewById(R.id.gridViewCodes);
-		mCodeGridView.setAdapter(mAdapter);
+		mGridViewCodes = (GridView) view.findViewById(R.id.gridViewCodes);
+		mGridViewCodes.setAdapter(mAdapter);
 		mAdapter.updateInputView();
 
-		mKeyboardView = (KeyboardView) view.findViewById(R.id.keyboardView);
+		mKeyboardViewHead = (KeyboardView) view.findViewById(R.id.keyboardViewHead);
+		mKeyboardViewHead.setKeyboard(mKeyboardHead);
+		mKeyboardViewHead.setEnabled(true);
+		mKeyboardViewHead.setPreviewEnabled(false);
+		mKeyboardViewHead.setOnKeyboardActionListener(this);
 
-		int[] ids = new int[] { R.xml.keyboard, R.xml.keyboard_lowercase, R.xml.keyboard_uppercase };
-		mKeyboards = new Keyboard[ids.length];
-		mKeyboard = 0;
-
-		for (int i = 0; i < ids.length; i++) {
-			mKeyboards[i] = new Keyboard(this, ids[i]);
-		}
-
-		mKeyboardView.setKeyboard(mKeyboards[0]);
-		mKeyboardView.setEnabled(true);
-		mKeyboardView.setPreviewEnabled(false);
-		mKeyboardView.setOnKeyboardActionListener(this);
+		mKeyboardViewBody = (KeyboardView) view.findViewById(R.id.keyboardViewBody);
+		mKeyboardViewBody.setKeyboard(mKeyboardNumber);
+		mKeyboardViewBody.setEnabled(true);
+		mKeyboardViewBody.setPreviewEnabled(false);
+		mKeyboardViewBody.setOnKeyboardActionListener(this);
 
 		return view;
 	}
@@ -294,10 +304,6 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			mManager.showInputMethodPicker();
 			break;
 
-		case KEYCODE_KEYBOARD:
-			setNextKeyboard();
-			break;
-
 		case KEYCODE_SELECT:
 			if (mSelectioActive) {
 				mSelectioActive = false;
@@ -335,6 +341,27 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 		case KEYCODE_OCR:
 			CavanMessageActivity.startSogouOcrActivity(getApplicationContext());
+			break;
+
+		case KEYCODE_UPPERCASE:
+			mKeyboardViewBody.setKeyboard(mKeyboardLetterUpper);
+			break;
+
+		case KEYCODE_LOWERCASE:
+		case KEYCODE_KEYBORD_LETTER:
+			mKeyboardViewBody.setKeyboard(mKeyboardLetterLower);
+			break;
+
+		case KEYCODE_KEYBORD_NUMBER:
+			mKeyboardViewBody.setKeyboard(mKeyboardNumber);
+			break;
+
+		case KEYCODE_KEYBORD_SYMBOL:
+			mKeyboardViewBody.setKeyboard(mKeyboardSymbol);
+			break;
+
+		case KEYCODE_KEYBORD_SELECT:
+			mKeyboardViewBody.setKeyboard(mKeyboardSelect);
 			break;
 		}
 	}
@@ -429,19 +456,19 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 				int height;
 
 				if (lines > 0) {
-					View view = mCodeGridView.getChildAt(0);
+					View view = mGridViewCodes.getChildAt(0);
 					if (view != null) {
 						height = view.getHeight() * lines;
 					} else {
 						height = LayoutParams.WRAP_CONTENT;
 					}
 
-					mCodeGridView.setNumColumns(columns);
+					mGridViewCodes.setNumColumns(columns);
 				} else {
 					height = LayoutParams.WRAP_CONTENT;
 				}
 
-				mCodeGridView.getLayoutParams().height = height;
+				mGridViewCodes.getLayoutParams().height = height;
 
 				mUiCodes = new RedPacketCode[size];
 				codes.toArray(mUiCodes);
