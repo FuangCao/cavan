@@ -52,6 +52,12 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	public static final int KEYCODE_KEYBORD_LETTER = 18;
 	public static final int KEYCODE_KEYBORD_SYMBOL = 19;
 	public static final int KEYCODE_KEYBORD_SELECT = 20;
+	public static final int KEYCODE_CLIP_BOARD = 21;
+	public static final int KEYCODE_ALIPAY = 22;
+	public static final int KEYCODE_TAOBAO = 23;
+	public static final int KEYCODE_TMALL = 24;
+	public static final int KEYCODE_QQ = 25;
+	public static final int KEYCODE_MM = 26;
 
 	private static CavanInputMethod sInstance;
 
@@ -362,6 +368,26 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 		case KEYCODE_KEYBORD_SELECT:
 			mKeyboardViewBody.setKeyboard(mKeyboardSelect);
+			break;
+
+		case KEYCODE_ALIPAY:
+			CavanAndroid.startActivity(this, CavanPackageName.ALIPAY);
+			break;
+
+		case KEYCODE_TAOBAO:
+			CavanAndroid.startActivity(this, CavanPackageName.TAOBAO);
+			break;
+
+		case KEYCODE_TMALL:
+			CavanAndroid.startActivity(this, CavanPackageName.TMALL);
+			break;
+
+		case KEYCODE_QQ:
+			CavanAndroid.startActivity(this, CavanPackageName.QQ);
+			break;
+
+		case KEYCODE_MM:
+			CavanAndroid.startActivity(this, CavanPackageName.MM);
 			break;
 		}
 	}

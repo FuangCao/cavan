@@ -7,23 +7,6 @@
 
     <Row>
         <Key
-            android:codes="17"
-            android:keyLabel="数字" />
-        <Key
-            android:codes="18"
-            android:keyLabel="字母" />
-        <Key
-            android:codes="19"
-            android:keyLabel="符号" />
-        <Key
-            android:codes="20"
-            android:keyLabel="选择" />
-        <Key
-            android:codes="2"
-            android:keyLabel="粘贴" />
-    </Row>
-    <Row>
-        <Key
             android:codes="1"
             android:keyLabel="复制" />
         <Key
@@ -36,6 +19,23 @@
             android:codes="9"
             android:isRepeatable="true"
             android:keyIcon="@drawable/key_del" />
+        <Key
+            android:codes="2"
+            android:keyLabel="粘贴" />
+    </Row>
+    <Row>
+        <Key
+            android:codes="17"
+            android:keyLabel="数字" />
+        <Key
+            android:codes="18"
+            android:keyLabel="字母" />
+        <Key
+            android:codes="19"
+            android:keyLabel="符号" />
+        <Key
+            android:codes="20"
+            android:keyLabel="选择" />
         <Key
             android:codes="11"
             android:keyLabel="前往" />
