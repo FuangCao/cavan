@@ -45,7 +45,7 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 
 	public static FloatEditorDialog getInstance(Context context, CharSequence text, boolean checked, boolean copy) {
 		if (mInstance == null) {
-			mInstance = new FloatEditorDialog(context);
+			mInstance = new FloatEditorDialog(context.getApplicationContext());
 		}
 
 		mInstance.updateContent(text, checked, copy);

@@ -252,7 +252,9 @@
     <string name="keyguard_disabled">已禁止锁屏</string>
     <string name="disable_keyguard">禁止锁屏</string>
     <string name="qq_auto_unpack">QQ自动抢</string>
+    <string name="qq_filter">QQ过滤</string>
     <string name="mm_auto_unpack">微信自动抢</string>
+    <string name="mm_filter">微信过滤</string>
     <string name="auto_switch_ime">自动切换输入法</string>
     <string name="keyword_notify">关键字提醒</string>
     <string name="auto_back_desktop">自动返回桌面</string>

@@ -130,12 +130,22 @@
 		android:defaultValue="0"
 	    android:title="@string/qq_auto_unpack" />
 
+	<CheckBoxPreference android:key="qq_filter"
+	    android:persistent="true"
+	    android:defaultValue="false"
+	    android:title="@string/qq_filter" />
+
 	<ListPreference android:key="mm_auto_unpack"
 	    android:persistent="true"
 		android:entries="@array/delay_entries"
 		android:entryValues="@array/delay_values"
 		android:defaultValue="0"
 	    android:title="@string/mm_auto_unpack" />
+
+	<CheckBoxPreference android:key="mm_filter"
+	    android:persistent="true"
+	    android:defaultValue="false"
+	    android:title="@string/mm_filter" />
 
 	<ListPreference android:key="commit_ahead"
 	    android:persistent="true"

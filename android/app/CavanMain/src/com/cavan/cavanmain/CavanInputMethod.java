@@ -2,6 +2,8 @@ package com.cavan.cavanmain;
 
 import java.util.List;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.graphics.Color;
 import android.inputmethodservice.InputMethodService;
@@ -58,6 +60,8 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	public static final int KEYCODE_TMALL = 24;
 	public static final int KEYCODE_QQ = 25;
 	public static final int KEYCODE_MM = 26;
+	public static final int KEYCODE_MESSAGE = 27;
+	public static final int KEYCODE_SERVICE = 28;
 
 	private static CavanInputMethod sInstance;
 
@@ -388,6 +392,27 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 		case KEYCODE_MM:
 			CavanAndroid.startActivity(this, CavanPackageName.MM);
+			break;
+
+		case KEYCODE_CLIP_BOARD:
+			ClipboardManager manager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+			ClipData clip = manager.getPrimaryClip();
+
+			if (clip != null && clip.getItemCount() > 0) {
+				text = clip.getItemAt(0).coerceToText(this);
+				if (text != null) {
+					FloatEditorDialog dialog = FloatEditorDialog.getInstance(this, text, false, false);
+					dialog.show(20000);
+				}
+			}
+			break;
+
+		case KEYCODE_MESSAGE:
+			CavanAndroid.startActivity(this, CavanMessageActivity.class);
+			break;
+
+		case KEYCODE_SERVICE:
+			CavanAndroid.startActivity(this, CavanServiceActivity.class);
 			break;
 		}
 	}

@@ -421,7 +421,7 @@ public class RedPacketNotification extends CavanNotification {
 		String user = getUserDescription();
 
 		if ("QQ".equals(code)) {
-			if (sExcludeUsersQQ.contains(user)) {
+			if (CavanMessageActivity.isQqFilterEnabled(mService) && sExcludeUsersQQ.contains(user)) {
 				CavanAndroid.dLog("Exclude user: " + user);
 				send = false;
 			} else {
@@ -431,7 +431,7 @@ public class RedPacketNotification extends CavanNotification {
 				}
 			}
 		} else if ("微信".equals(code)) {
-			if (sExcludeUsersMM.contains(user)) {
+			if (CavanMessageActivity.isMmFilterEnabled(mService) && sExcludeUsersMM.contains(user)) {
 				CavanAndroid.dLog("Exclude user: " + user);
 				send = false;
 			} else {

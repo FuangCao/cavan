@@ -66,6 +66,8 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	public static final String KEY_DISABLE_KEYGUARD = "disable_keyguard";
 	public static final String KEY_QQ_AUTO_UNPACK = "qq_auto_unpack";
 	public static final String KEY_MM_AUTO_UNPACK = "mm_auto_unpack";
+	public static final String KEY_QQ_FILTER = "qq_filter";
+	public static final String KEY_MM_FILTER = "mm_filter";
 	public static final String KEY_KEYWORD_NOTIFY = "keyword_notify";
 	public static final String KEY_AUTO_BACK_DESKTOP = "auto_back_desktop";
 	public static final String KEY_FU_DAI_NOTIFY = "fu_dai_notify";
@@ -202,6 +204,10 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		return -1;
 	}
 
+	public static boolean isQqFilterEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_QQ_FILTER);
+	}
+
 	public static int getAutoUnpackMM(Context context) {
 		String text = CavanAndroid.getPreference(context, KEY_MM_AUTO_UNPACK, null);
 
@@ -214,6 +220,10 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		}
 
 		return -1;
+	}
+
+	public static boolean isMmFilterEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_MM_FILTER);
 	}
 
 	public static int getCommitAhead(Context context) {

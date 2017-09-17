@@ -2,10 +2,13 @@
 <Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
     android:horizontalGap="0px"
     android:keyHeight="8%p"
-    android:keyWidth="25%p"
+    android:keyWidth="20%p"
     android:verticalGap="0px" >
 
     <Row>
+        <Key
+            android:codes="22"
+            android:keyLabel="支付宝" />
         <Key
             android:codes="24"
             android:keyLabel="天猫" />
@@ -21,11 +24,14 @@
     </Row>
     <Row>
         <Key
-            android:codes="22"
-            android:keyLabel="支付宝" />
+            android:codes="21"
+            android:keyLabel="剪切板" />
         <Key
-            android:codes="4"
-            android:keyLabel="选择" />
+            android:codes="27"
+            android:keyLabel="消息" />
+        <Key
+            android:codes="28"
+            android:keyLabel="服务" />
         <Key
             android:codes="25"
             android:keyLabel="QQ" />
@@ -37,6 +43,9 @@
         <Key
             android:codes="8"
             android:keyLabel="输入法" />
+        <Key
+            android:codes="4"
+            android:keyLabel="选择" />
         <Key
             android:codes="5"
             android:keyLabel="全选" />
