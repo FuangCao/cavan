@@ -62,6 +62,8 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	public static final int KEYCODE_MM = 26;
 	public static final int KEYCODE_MESSAGE = 27;
 	public static final int KEYCODE_SERVICE = 28;
+	public static final int KEYCODE_NAME = 29;
+	public static final int KEYCODE_PHONE = 30;
 
 	private static CavanInputMethod sInstance;
 
@@ -413,6 +415,20 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 		case KEYCODE_SERVICE:
 			CavanAndroid.startActivity(this, CavanServiceActivity.class);
+			break;
+
+		case KEYCODE_NAME:
+			text = CavanMessageActivity.getName(this);
+			if (text != null) {
+				getCurrentInputConnection().commitText(text, 1);
+			}
+			break;
+
+		case KEYCODE_PHONE:
+			text = CavanMessageActivity.getPhone(this);
+			if (text != null) {
+				getCurrentInputConnection().commitText(text, 1);
+			}
 			break;
 		}
 	}

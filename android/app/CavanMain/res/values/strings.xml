@@ -356,5 +356,7 @@
 	<string name="letter">字母</string>
 	<string name="symbol">符号</string>
 	<string name="select">选择</string>
+	<string name="name">姓名</string>
+	<string name="phone">电话</string>
 
 </resources>

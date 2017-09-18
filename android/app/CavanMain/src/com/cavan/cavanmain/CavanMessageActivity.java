@@ -74,6 +74,8 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	public static final String KEY_CLIPBOARD_SHARE = "clipboard_share";
 	public static final String KEY_DISABLE_SUSPEND = "disable_suspend";
 	public static final String KEY_RED_PACKET_EDIT = "red_packet_edit";
+	public static final String KEY_NAME = "name";
+	public static final String KEY_PHONE = "phone";
 
 	private static CavanMessageActivity sInstance;
 
@@ -226,6 +228,14 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		return CavanAndroid.isPreferenceEnabled(context, KEY_MM_FILTER);
 	}
 
+	public static String getName(Context context) {
+		return CavanAndroid.getPreference(context, KEY_NAME, null);
+	}
+
+	public static String getPhone(Context context) {
+		return CavanAndroid.getPreference(context, KEY_PHONE, null);
+	}
+
 	public static int getCommitAhead(Context context) {
 		String text = CavanAndroid.getPreference(context, KEY_COMMIT_AHEAD, null);
 
@@ -276,6 +286,8 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	private EditTextPreference mPreferenceRedPacketCodeRecognize;
 	private EditTextPreference mPreferenceRedPacketCodeSplit;
 	private EditTextPreference mPreferenceRedPacketNotifyTest;
+	private EditTextPreference mPreferenceName;
+	private EditTextPreference mPreferencePhone;
 	private RingtonePreference mPreferenceRedPacketNotifyRingtone;
 	private CheckBoxPreference mPreferenceWanShare;
 	private CheckBoxPreference mPreferenceWanReceive;
@@ -401,6 +413,14 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		mPreferenceRedPacketNotifyTest = (EditTextPreference) findPreference(KEY_RED_PACKET_NOTIFY_TEST);
 		mPreferenceRedPacketNotifyTest.setPositiveButtonText(R.string.test);
 		mPreferenceRedPacketNotifyTest.setOnPreferenceChangeListener(this);
+
+		mPreferenceName = (EditTextPreference) findPreference(KEY_NAME);
+		mPreferenceName.setSummary(mPreferenceName.getText());
+		mPreferenceName.setOnPreferenceChangeListener(this);
+
+		mPreferencePhone = (EditTextPreference) findPreference(KEY_PHONE);
+		mPreferencePhone.setSummary(mPreferencePhone.getText());
+		mPreferencePhone.setOnPreferenceChangeListener(this);
 
 		mPreferenceRedPacketCodeSend = (EditTextPreference) findPreference(KEY_RED_PACKET_CODE_SEND);
 		mPreferenceRedPacketCodeSend.setPositiveButtonText(R.string.send);
@@ -646,6 +666,8 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 					e.printStackTrace();
 				}
 			}
+		} else if (preference == mPreferenceName || preference == mPreferencePhone) {
+			preference.setSummary((CharSequence) object);
 		}
 
 		return true;
