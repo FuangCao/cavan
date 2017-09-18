@@ -27,11 +27,11 @@
             android:codes="21"
             android:keyLabel="剪切板" />
         <Key
-            android:codes="29"
-            android:keyLabel="姓名" />
+            android:codes="1"
+            android:keyLabel="复制" />
         <Key
-            android:codes="30"
-            android:keyLabel="电话" />
+            android:codes="3"
+            android:keyLabel="剪切" />
         <Key
             android:codes="25"
             android:keyLabel="QQ" />

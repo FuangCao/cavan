@@ -7,11 +7,11 @@
 
     <Row>
         <Key
-            android:codes="1"
-            android:keyLabel="复制" />
+            android:codes="29"
+            android:keyLabel="姓名" />
         <Key
-            android:codes="3"
-            android:keyLabel="剪切" />
+            android:codes="30"
+            android:keyLabel="电话" />
         <Key
             android:codes="10"
             android:keyLabel="清空" />
