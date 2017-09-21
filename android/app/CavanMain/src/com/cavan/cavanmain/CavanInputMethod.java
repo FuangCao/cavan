@@ -117,6 +117,27 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		return sendFinishAction(conn);
 	}
 
+	public boolean commitText(String text, boolean go) {
+		InputConnection conn = getCurrentInputConnection();
+		if (conn == null) {
+			return false;
+		}
+
+		if (!conn.performContextMenuAction(android.R.id.selectAll)) {
+			return false;
+		}
+
+		if (!conn.commitText(text, 1)) {
+			return false;
+		}
+
+		if (go) {
+			return sendFinishAction(conn);
+		}
+
+		return true;
+	}
+
 	public boolean sendRedPacketCode(CharSequence code, boolean execute) {
 		InputConnection conn = getCurrentInputConnection();
 		if (conn == null) {
