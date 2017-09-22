@@ -448,6 +448,12 @@ namespace JwaooOtpProgrammer {
             } else {
                 // MessageBox.Show("OTP中的MAC地址不为空，可能已经写过了");
                 appendLog("已经写过MAC地址了，直接跳过");
+
+                if (isMemeoryMatch(bytes, 0x7FD4, mMacAddress.getBytes(), 0, 6))
+                {
+                    mMacAddress.increaseAndSave();
+                    appendLog("上次烧录MAC地址异常，自动修复");
+                }
             }
 
             if (isMemoryEmpty(bytes, 0x7F00, 8)) {
