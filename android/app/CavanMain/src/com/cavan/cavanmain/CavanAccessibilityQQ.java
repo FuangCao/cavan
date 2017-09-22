@@ -159,7 +159,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 				break;
 			}
 
-			if (!CavanAccessibility.setChildText(mService, inputBar, 0, message)) {
+			if (CavanAccessibility.setChildText(mService, inputBar, 0, message) == null) {
 				inputBar.recycle();
 				break;
 			}

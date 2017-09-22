@@ -241,7 +241,7 @@ public class CavanAccessibility {
 			return text.toString();
 		}
 
-		return null;
+		return CavanString.EMPTY_STRING;
 	}
 
 	public static String getNodeViewId(AccessibilityNodeInfo node) {
@@ -570,16 +570,16 @@ public class CavanAccessibility {
 		}, texts);
 	}
 
-	public static boolean setNodeText(Context context, AccessibilityNodeInfo node, String text) {
+	public static String setNodeText(Context context, AccessibilityNodeInfo node, String text) {
 		if (text == null) {
 			text = CavanString.EMPTY_STRING;
 		}
 
 		performFocus(node);
 
-		String oldText = getNodeText(node);
-		if (text.equals(oldText)) {
-			return false;
+		String old = getNodeText(node);
+		if (text.equals(old)) {
+			return old;
 		}
 
 		if (CavanAndroid.SDK_VERSION >= 21) {
@@ -587,27 +587,29 @@ public class CavanAccessibility {
 			arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text);
 
 			if (node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)) {
-				return true;
+				return old;
 			}
 		}
 
-		if (context == null) {
-			return false;
+		if (context != null) {
+			performSelection(node, 0, old.length());
+			CavanAndroid.postClipboardText(context, CavanAndroid.CLIP_LABEL_TEMP, text);
+
+			if (node.performAction(AccessibilityNodeInfo.ACTION_PASTE)) {
+				return old;
+			}
 		}
 
-		performSelection(node, 0, oldText.length());
-		CavanAndroid.postClipboardText(context, CavanAndroid.CLIP_LABEL_TEMP, text);
-
-		return node.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+		return null;
 	}
 
-	public static boolean setNodeTextAndRecycle(Context context, AccessibilityNodeInfo node, String text) {
-		boolean success = setNodeText(context, node, text);
+	public static String setNodeTextAndRecycle(Context context, AccessibilityNodeInfo node, String text) {
+		String old = setNodeText(context, node, text);
 		node.recycle();
-		return success;
+		return old;
 	}
 
-	public static boolean setChildText(Context context, AccessibilityNodeInfo parent, int index, String text) {
+	public static String setChildText(Context context, AccessibilityNodeInfo parent, int index, String text) {
 		try {
 			AccessibilityNodeInfo child = parent.getChild(index);
 			return setNodeTextAndRecycle(context, child, text);
@@ -615,7 +617,7 @@ public class CavanAccessibility {
 			e.printStackTrace();
 		}
 
-		return false;
+		return null;
 	}
 
 	public static int setNodeTextByViewId(final Context context, AccessibilityNodeInfo root, String viewId, final String text) {

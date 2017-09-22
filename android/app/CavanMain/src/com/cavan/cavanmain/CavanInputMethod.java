@@ -12,6 +12,7 @@ import android.inputmethodservice.KeyboardView;
 import android.inputmethodservice.KeyboardView.OnKeyboardActionListener;
 import android.os.Handler;
 import android.os.Message;
+import android.view.Gravity;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.View;
@@ -97,7 +98,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		return "com.cavan.cavanmain/.CavanInputMethod".equals(CavanAndroid.getDefaultInputMethod(context));
 	}
 
-	public boolean sendFinishAction(InputConnection conn) {
+	public boolean sendGoAction(InputConnection conn) {
 		int action = EditorInfo.IME_ACTION_GO;
 		EditorInfo info = getCurrentInputEditorInfo();
 
@@ -108,13 +109,13 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		return conn.performEditorAction(action);
 	}
 
-	public boolean sendFinishAction() {
+	public boolean sendGoAction() {
 		InputConnection conn = getCurrentInputConnection();
 		if (conn == null) {
 			return false;
 		}
 
-		return sendFinishAction(conn);
+		return sendGoAction(conn);
 	}
 
 	public boolean commitText(String text, boolean go) {
@@ -132,7 +133,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		}
 
 		if (go) {
-			return sendFinishAction(conn);
+			return sendGoAction(conn);
 		}
 
 		return true;
@@ -153,7 +154,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		conn.commitText(code, 0);
 
 		if (mIsAlipay && execute) {
-			sendFinishAction(conn);
+			sendGoAction(conn);
 		}
 
 		return true;
@@ -204,7 +205,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 					if (text != null && CavanJava.isDigit(text)) {
 						text = conn.getTextAfterCursor(1, 0);
 						if (text == null || text.length() <= 0) {
-							sendFinishAction(conn);
+							sendGoAction(conn);
 						}
 					}
 				}
@@ -311,7 +312,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			break;
 
 		case KEYCODE_DONE:
-			sendFinishAction(conn);
+			sendGoAction(conn);
 			break;
 
 		case KEYCODE_COPY:
@@ -487,7 +488,10 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 		public RedPacketView(Context context) {
 			super(context);
+
 			setSingleLine();
+			setGravity(Gravity.CENTER);
+			setBackgroundColor(Color.WHITE);
 			setOnClickListener(this);
 		}
 
@@ -576,7 +580,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			if (convertView != null) {
 				view = (RedPacketView) convertView;
 			} else {
-				view = new RedPacketView(CavanInputMethod.this);
+				view = new RedPacketView(getApplicationContext());
 			}
 
 			view.setRedPacketCode(mUiCodes[position]);

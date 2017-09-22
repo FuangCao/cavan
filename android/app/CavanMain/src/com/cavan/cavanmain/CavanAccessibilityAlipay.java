@@ -461,7 +461,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 
 		mInputtedCode = code.getCode();
 
-		boolean changed = CavanAccessibility.setNodeText(mService, node, code.getCode());
+		String old = CavanAccessibility.setNodeText(mService, node, code.getCode());
 
 		if (mCode != null) {
 			mCode.setPostPending(false);
@@ -492,7 +492,11 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 
 					CavanInputMethod method = CavanInputMethod.getInstance();
 					if (method != null) {
-						method.sendFinishAction();
+						if (old == null) {
+							method.commitText(code.getCode(), true);
+						} else {
+							method.sendGoAction();
+						}
 					}
 
 					return POLL_DELAY;
@@ -510,7 +514,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 			msgResId = R.string.auto_commit_not_enable_please_manual_commit;
 		}
 
-		if (changed || getWindowTimeConsume() < 500) {
+		if (!code.getCode().equals(old) || getWindowTimeConsume() < 500) {
 			FloatMessageService.showToast(msgResId);
 		}
 
