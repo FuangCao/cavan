@@ -10,7 +10,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#00000000"
-        android:scrollbars="vertical" />
+        android:horizontalSpacing="1dp"
+        android:scrollbars="vertical"
+        android:verticalSpacing="1dp" />
 
 	<android.inputmethodservice.KeyboardView
 	        android:id="@+id/keyboardViewHead"
