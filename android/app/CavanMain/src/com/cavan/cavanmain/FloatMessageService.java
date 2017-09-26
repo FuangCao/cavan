@@ -1155,8 +1155,8 @@ public class FloatMessageService extends FloatWidowService {
 					}
 				}
 
-				mHandler.removeMessages(MSG_TCP_SERVICE_STATE_CHANGED);
-				mHandler.obtainMessage(MSG_TCP_SERVICE_STATE_CHANGED, R.string.wan_disconnected, 0).sendToTarget();
+				mWanState = R.string.wan_disconnected;
+				mHandler.sendEmptyMessage(MSG_TCP_SERVICE_STATE_CHANGED);
 
 				if (mActive) {
 					synchronized (this) {
