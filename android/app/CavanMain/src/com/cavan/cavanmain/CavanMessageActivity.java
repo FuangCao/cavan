@@ -34,6 +34,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	public static final String ACTION_BOOT_COMPLETED = "com.cavan.ACTION_BOOT_COMPLETED";
 	public static final String ACTION_SERVICE_EXIT = "com.cavan.ACTION_SERVICE_EXIT";
 	public static final String ACTION_CODE_RECEIVED = "com.cavan.ACTION_CODE_RECEIVED";
+	public static final String ACTION_ON_TIME_NOTIFY = "com.cavan.ACTION_ON_TIME_NOTIFY";
 
 	public static final String KEY_AUTO_UNLOCK = "auto_unlock";
 	public static final String KEY_AUTO_COMMIT = "auto_commit";
@@ -41,6 +42,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	public static final String KEY_LISTEN_CLIP = "listen_clip";
 	public static final String KEY_LISTEN_CLICK = "listen_click";
 	public static final String KEY_FLOAT_TIMER = "float_timer";
+	public static final String KEY_ON_TIME_NOTIFY = "on_time_notify";
 	public static final String KEY_LAN_SHARE = "lan_share";
 	public static final String KEY_LAN_TEST = "lan_test";
 	public static final String KEY_WAN_SHARE = "wan_share";
@@ -92,6 +94,10 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 
 	public static boolean isFloatTimerEnabled(Context context) {
 		return CavanAndroid.isPreferenceEnabled(context, KEY_FLOAT_TIMER);
+	}
+
+	public static boolean isOnTimeNotifyEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_ON_TIME_NOTIFY);
 	}
 
 	public static int getAutoCommitCount(Context context) {
@@ -282,6 +288,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	private Preference mPreferenceRedPacketEdit;
 	private CheckBoxPreference mPreferenceAutoOpenApp;
 	private CheckBoxPreference mPreferenceAutoOpenAlipay;
+	private CheckBoxPreference mPreferenceOnTimeNotify;
 	private EditTextPreference mPreferenceRedPacketCodeSend;
 	private EditTextPreference mPreferenceRedPacketCodeRecognize;
 	private EditTextPreference mPreferenceRedPacketCodeSplit;
@@ -449,6 +456,13 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		mPreferenceTcpBridgeSetting = (EditTextPreference) findPreference(KEY_TCP_BRIDGE_SETTING);
 		mPreferenceTcpBridgeSetting.setSummary(mPreferenceTcpBridgeSetting.getText());
 		mPreferenceTcpBridgeSetting.setOnPreferenceChangeListener(this);
+
+		mPreferenceOnTimeNotify = (CheckBoxPreference) findPreference(KEY_ON_TIME_NOTIFY);
+		mPreferenceOnTimeNotify.setOnPreferenceChangeListener(this);
+
+		if (mPreferenceOnTimeNotify.isChecked()) {
+			CavanBroadcastReceiver.setOnTimeNotifyAlarm(this);
+		}
 
 		findListPreference(KEY_AUTO_COMMIT);
 		findListPreference(KEY_COMMIT_AHEAD);
@@ -668,6 +682,10 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 			}
 		} else if (preference == mPreferenceName || preference == mPreferencePhone) {
 			preference.setSummary((CharSequence) object);
+		} else if (preference == mPreferenceOnTimeNotify) {
+			if (mPreferenceOnTimeNotify.isChecked()) {
+				CavanBroadcastReceiver.setOnTimeNotifyAlarm(this);
+			}
 		}
 
 		return true;

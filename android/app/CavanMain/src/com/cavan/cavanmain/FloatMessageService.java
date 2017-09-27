@@ -525,6 +525,18 @@ public class FloatMessageService extends FloatWidowService {
 		}
 	}
 
+	public void showOnTimeNotify() {
+		if (CavanMessageActivity.isOnTimeNotifyEnabled(this)) {
+			Calendar calendar = Calendar.getInstance();
+
+			if (calendar.get(Calendar.HOUR_OF_DAY) > 9) {
+				CavanAndroid.setLockScreenEnable(this, false);
+				CavanAndroid.acquireWakeLock(this, 20000);
+				showToast(R.string.on_time_notify);
+			}
+		}
+	}
+
 	public void sendShowToast(Object messsage) {
 		Message message = mHandler.obtainMessage(MSG_SHOW_TOAST, messsage);
 		message.sendToTarget();
@@ -711,6 +723,10 @@ public class FloatMessageService extends FloatWidowService {
 
 		updateNetworkConnState();
 		setSuspendDisable(CavanMessageActivity.isDisableSuspendEnabled(this));
+
+		if (CavanMessageActivity.isOnTimeNotifyEnabled(this)) {
+			CavanBroadcastReceiver.setOnTimeNotifyAlarm(this);
+		}
 
 		mHandler.sendEmptyMessage(MSG_CHECK_SERVICE_STATE);
 

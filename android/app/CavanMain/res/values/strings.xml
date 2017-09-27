@@ -498,5 +498,6 @@
 	<string name="select">选择</string>
 	<string name="name">姓名</string>
 	<string name="phone">电话</string>
+	<string name="on_time_notify">整点提醒</string>
 
 </resources>

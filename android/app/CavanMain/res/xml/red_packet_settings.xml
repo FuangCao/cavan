@@ -193,6 +193,11 @@
 	    android:defaultValue="true"
 	    android:title="@string/desktop_float_timer" />
 
+	<CheckBoxPreference android:key="on_time_notify"
+	    android:persistent="true"
+	    android:defaultValue="false"
+	    android:title="@string/on_time_notify" />
+
 	<CheckBoxPreference android:key="tcp_bridge"
 	    android:persistent="true"
 	    android:title="@string/tcp_bridge" />

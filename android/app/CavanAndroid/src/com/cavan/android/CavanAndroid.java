@@ -12,9 +12,11 @@ import java.util.List;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
+import android.app.AlarmManager;
 import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.ClipboardManager;
@@ -935,5 +937,13 @@ public class CavanAndroid {
 
 	public static boolean checkAndRequestPermissions(Activity activity, String... permissions) {
 		return checkAndRequestPermissions(activity, 0, permissions);
+	}
+
+	public static void setAlarm(AlarmManager manager, long time, PendingIntent operation) {
+		if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
+			manager.setExact(AlarmManager.RTC_WAKEUP, time, operation);
+		} else {
+			manager.set(AlarmManager.RTC_WAKEUP, time, operation);
+		}
 	}
 }
