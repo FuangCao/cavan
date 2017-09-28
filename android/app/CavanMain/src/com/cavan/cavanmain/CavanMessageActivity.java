@@ -460,10 +460,6 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		mPreferenceOnTimeNotify = (CheckBoxPreference) findPreference(KEY_ON_TIME_NOTIFY);
 		mPreferenceOnTimeNotify.setOnPreferenceChangeListener(this);
 
-		if (mPreferenceOnTimeNotify.isChecked()) {
-			CavanBroadcastReceiver.setOnTimeNotifyAlarm(this);
-		}
-
 		findListPreference(KEY_AUTO_COMMIT);
 		findListPreference(KEY_COMMIT_AHEAD);
 		findListPreference(KEY_RED_PACKET_NOTIFY_SETTING);
@@ -683,7 +679,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		} else if (preference == mPreferenceName || preference == mPreferencePhone) {
 			preference.setSummary((CharSequence) object);
 		} else if (preference == mPreferenceOnTimeNotify) {
-			if (mPreferenceOnTimeNotify.isChecked()) {
+			if ((boolean) object) {
 				CavanBroadcastReceiver.setOnTimeNotifyAlarm(this);
 			}
 		}
