@@ -67,6 +67,9 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final int MOTO_MODE_SQUARE = 4;
 	public static final int MOTO_MODE_SQUARE_FAST = 5;
 	public static final int MOTO_MODE_RAND = 6;
+	public static final int MOTO_MODE_LINE_MAIN = 7;
+	public static final int MOTO_MODE_LINE_AUX = 8;
+	public static final int MOTO_MODE_USER = 9;
 
 	public static final String DEVICE_NAME_COMMON = "JwaooToy";
 	public static final String DEVICE_NAME_K100 = "K100";
@@ -754,6 +757,11 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public boolean setMotoMode(int mode, int level) throws Exception {
 		byte[] command = { JWAOO_TOY_CMD_MOTO_SET_MODE, (byte) mode, (byte) level };
+		return mCommand.readBool(command);
+	}
+
+	public boolean setMotoMode(int min, int max, int step, int add_delay, int sub_delay) throws Exception {
+		byte[] command = { JWAOO_TOY_CMD_MOTO_SET_MODE, MOTO_MODE_USER, (byte) max, (byte) step, (byte) min, (byte) add_delay, (byte) sub_delay};
 		return mCommand.readBool(command);
 	}
 
