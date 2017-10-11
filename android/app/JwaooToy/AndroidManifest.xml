@@ -36,6 +36,15 @@
             </intent-filter>
         </activity>
         <activity
+            android:name="MotoActivity"
+            android:launchMode="singleTask" android:label="@string/moto_test">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name="com.cavan.resource.CavanBleScanActivity"
             android:launchMode="singleTask" >
         </activity>

@@ -37,7 +37,16 @@
         <item>强弱交替（快速）</item>
         <item>间歇交替（慢速）</item>
         <item>间歇交替（快速）</item>
-        <item>无序</item>
+        <item>无序震动</item>
+        <item>持续震动（主马达）</item>
+        <item>持续震动（副马达）</item>
+    </string-array>
+
+    <string-array name="moto_user_modes">
+        <item>停止震动</item>
+        <item>全部打开</item>
+        <item>只开主马达</item>
+        <item>只开副马达</item>
     </string-array>
 
     <string name="shutdown">关机</string>
@@ -66,6 +75,12 @@
         <item>PIN8</item>
         <item>PIN9</item>
     </string-array>
-        <string name="calibration">校准</string>
+	<string name="calibration">校准</string>
+	<string name="moto_test">马达测试</string>
+	<string name="step">步进：</string>
+	<string name="max_speed">最大速度：</string>
+	<string name="min_speed">最小速度：</string>
+	<string name="add_delay">加延迟：</string>
+	<string name="sub_delay">减延迟：</string>
 
 </resources>

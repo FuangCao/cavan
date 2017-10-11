@@ -1,0 +1,106 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginLeft="20dp"
+    android:layout_marginRight="20dp"
+    tools:context="${relativePackage}.${activityClass}" >
+
+    <TextView
+        android:id="@+id/textViewStep"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/spinnerMotoMode"
+        android:layout_marginTop="20dp"
+        android:text="@string/step" />
+
+    <Spinner
+        android:id="@+id/spinnerMotoMode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:entries="@array/moto_user_modes" />
+
+    <TextView
+        android:id="@+id/textViewAddDelay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/seekBarStep"
+        android:layout_marginTop="20dp"
+        android:text="@string/add_delay" />
+
+    <SeekBar
+        android:id="@+id/seekBarAddDelay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/textViewAddDelay"
+        android:max="254" />
+
+    <TextView
+        android:id="@+id/textViewSubDelay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/seekBarAddDelay"
+        android:layout_marginTop="20dp"
+        android:text="@string/sub_delay" />
+
+    <SeekBar
+        android:id="@+id/seekBarSubDelay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/textViewSubDelay"
+        android:max="254" />
+
+    <TextView
+        android:id="@+id/textViewMaxSpeed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/seekBarSubDelay"
+        android:layout_marginTop="20dp"
+        android:text="@string/max_speed" />
+
+    <SeekBar
+        android:id="@+id/seekBarMaxSpeed"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/textViewMaxSpeed"
+        android:max="18" />
+
+    <SeekBar
+        android:id="@+id/seekBarMinSpeed"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/textViewMinSpeed"
+        android:max="18" />
+
+    <TextView
+        android:id="@+id/textViewMinSpeed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/seekBarMaxSpeed"
+        android:layout_marginTop="20dp"
+        android:text="@string/min_speed" />
+
+    <SeekBar
+        android:id="@+id/seekBarStep"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewStep"
+        android:max="17" />
+
+</RelativeLayout>
