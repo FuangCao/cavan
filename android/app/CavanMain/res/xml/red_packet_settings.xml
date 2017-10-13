@@ -155,10 +155,6 @@
 	    android:persistent="true"
 	    android:title="@string/phone" />
 
-	<EditTextPreference android:key="tcp_bridge_setting"
-	    android:persistent="true"
-	    android:title="@string/tcp_bridge_setting" />
-
 	<ListPreference android:key="commit_ahead"
 	    android:persistent="true"
 		android:entries="@array/ahead_entries"
