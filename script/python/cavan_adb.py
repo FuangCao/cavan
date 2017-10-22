@@ -118,8 +118,8 @@ class AdbManager(CavanCommandBase):
 		return True
 
 	def doRemount(self, listDir = None):
-		if not self.mHost:
-			self.mHost = "localhost"
+		# if not self.mHost:
+			# self.mHost = "localhost"
 
 		if not listDir:
 			listDir = [ "/system" ]

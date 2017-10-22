@@ -143,7 +143,11 @@ function cavan-set-jdk-version()
 		[ -d "${fn}" ] && JDK_VERSION="$(basename ${fn})"
 	done
 
-	[ -d "/tools/${JDK_VERSION}" ] || return 1
+	[ -d "/tools/${JDK_VERSION}" ] ||
+	{
+		[ -d "/tools" ] && return 1
+		return 0
+	}
 
 	echo "JDK_VERSION = ${JDK_VERSION}"
 
