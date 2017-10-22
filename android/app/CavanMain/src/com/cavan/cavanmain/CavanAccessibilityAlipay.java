@@ -663,7 +663,14 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 		if (mPackets.size() > 0 && isCurrentRedPacketCode(mCode)) {
 			switch (mClassName) {
 			case "com.alipay.mobile.framework.app.ui.DialogHelper$APGenericProgressDialog":
-				mCode.setPostComplete();
+				switch (mClassNamePrev) {
+				case "com.alipay.android.phone.discovery.envelope.crowd.CrowdHostActivity":
+					mClassName = mClassNamePrev;
+					break;
+
+				default:
+					mCode.setPostComplete();
+				}
 				break;
 
 			case "com.alipay.android.phone.discovery.envelope.get.GetRedEnvelopeActivity":

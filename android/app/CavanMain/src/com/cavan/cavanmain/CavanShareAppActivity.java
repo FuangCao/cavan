@@ -160,7 +160,7 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 
 		if (dir.mkdirSafe()) {
 			String path = dir.getAbsolutePath() + File.separatorChar + name;
-			CavanJni.symlink(path, info.applicationInfo.sourceDir);
+			CavanJni.symlink(info.applicationInfo.sourceDir, path);
 		}
 
 		try {

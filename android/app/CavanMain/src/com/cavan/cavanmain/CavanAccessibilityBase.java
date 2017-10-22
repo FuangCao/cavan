@@ -37,6 +37,7 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 	protected CavanAccessibilityService mService;
 	protected LinkedList<E> mPackets = new LinkedList<E>();
 	protected String mClassName = CavanString.EMPTY_STRING;
+	protected String mClassNamePrev = CavanString.EMPTY_STRING;
 	protected String mPackageName = CavanString.EMPTY_STRING;
 
 	private DelayedRunnable mRunnableUnlock = new DelayedRunnable(this) {
@@ -180,6 +181,7 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 
 	public void performWindowStateChanged(AccessibilityEvent event, String packageName, String className) {
 		mPackageName = packageName;
+		mClassNamePrev = mClassName;
 		mClassName = className;
 		onWindowStateChanged(event);
 	}
