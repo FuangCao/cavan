@@ -43,7 +43,64 @@ function cavan-android-lunch()
 {
 	local android_root="$(cavan-android-get-root)"
 
-	[ -d "${android_root}" ] && source "${android_root}/build/envsetup.sh" && lunch $1
+	[ -d "${android_root}" ] && source "${android_root}/build/envsetup.sh" &&
+	{
+		if [ -n "$2" ]
+		then
+			local lines=()
+
+			for ((i = 0; i < ${#LUNCH_MENU_CHOICES[@]}; i++))
+			do
+				local line=${LUNCH_MENU_CHOICES[$i]}
+				[[ $line == *$1-$2 ]] || continue
+
+				local index=${#lines[@]}
+				echo "$index. $line"
+				lines[index]=$line
+			done
+
+			local choice=${lines[0]}
+
+			[ ${#lines[@]} -gt 1 ] &&
+			{
+				local answer
+
+				echo -n "Which would you like? [${lines[0]}] "
+				read answer
+
+				[ "$answer" ] &&
+				{
+					choice=${lines[$answer]}
+
+					[ "$choice" ] ||
+					{
+						echo "Your choice is invalid!"
+						return 1
+					}
+				}
+			}
+
+			echo "Lunch combo: $choice"
+			lunch "$choice"
+		else
+			lunch "$1"
+		fi
+	}
+}
+
+function cavan-lunch-eng()
+{
+	cavan-android-lunch "$1" "eng"
+}
+
+function cavan-lunch-user()
+{
+	cavan-android-lunch "$1" "user"
+}
+
+function cavan-lunch-userdebug()
+{
+	cavan-android-lunch "$1" "userdebug"
 }
 
 alias cavan-lunch-rk3288="cavan-set-jdk-version 1.7 && cavan-android-lunch rk3288-userdebug"
