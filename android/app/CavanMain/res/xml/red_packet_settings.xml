@@ -123,6 +123,13 @@
 	    android:defaultValue="false"
 	    android:title="@string/auto_back_desktop" />
 
+	<ListPreference android:key="thanks_notify"
+	    android:persistent="true"
+		android:entries="@array/thanks_entries"
+		android:entryValues="@array/thanks_values"
+		android:defaultValue="3"
+	    android:title="@string/thanks_notify" />
+
 	<ListPreference android:key="qq_auto_unpack"
 	    android:persistent="true"
 		android:entries="@array/delay_entries"

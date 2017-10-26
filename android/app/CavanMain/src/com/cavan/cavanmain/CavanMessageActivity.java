@@ -78,6 +78,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	public static final String KEY_RED_PACKET_EDIT = "red_packet_edit";
 	public static final String KEY_NAME = "name";
 	public static final String KEY_PHONE = "phone";
+	public static final String KEY_THANKS_NOTIFY = "thanks_notify";
 
 	private static CavanMessageActivity sInstance;
 
@@ -101,13 +102,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	}
 
 	public static int getAutoCommitCount(Context context) {
-		String text = CavanAndroid.getPreference(context, KEY_AUTO_COMMIT, "1");
-
-		try {
-			return Integer.parseInt(text);
-		} catch (Exception e) {
-			return 1;
-		}
+		return CavanAndroid.getPreferenceInt(context, KEY_AUTO_COMMIT, 1);
 	}
 
 	public static boolean isDisableKeyguardEnabled(Context context) {
@@ -198,18 +193,12 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		return sAutoOpenAppEnable && CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_OPEN_ALIPAY);
 	}
 
+	public static int getThanksNotify(Context context) {
+		return CavanAndroid.getPreferenceInt(context, KEY_THANKS_NOTIFY, -1);
+	}
+
 	public static int getAutoUnpackQQ(Context context) {
-		String text = CavanAndroid.getPreference(context, KEY_QQ_AUTO_UNPACK, null);
-
-		try {
-			if (text != null) {
-				return Integer.parseInt(text);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return -1;
+		return CavanAndroid.getPreferenceInt(context, KEY_QQ_AUTO_UNPACK, -1);
 	}
 
 	public static boolean isQqFilterEnabled(Context context) {
@@ -217,17 +206,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	}
 
 	public static int getAutoUnpackMM(Context context) {
-		String text = CavanAndroid.getPreference(context, KEY_MM_AUTO_UNPACK, null);
-
-		try {
-			if (text != null) {
-				return Integer.parseInt(text);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return -1;
+		return CavanAndroid.getPreferenceInt(context, KEY_MM_AUTO_UNPACK, -1);
 	}
 
 	public static boolean isMmFilterEnabled(Context context) {
@@ -243,31 +222,11 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	}
 
 	public static int getCommitAhead(Context context) {
-		String text = CavanAndroid.getPreference(context, KEY_COMMIT_AHEAD, null);
-
-		try {
-			if (text != null) {
-				return Integer.parseInt(text);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return 0;
+		return CavanAndroid.getPreferenceInt(context, KEY_COMMIT_AHEAD, 0);
 	}
 
 	public static int getNotifySetting(Context context) {
-		String text = CavanAndroid.getPreference(context, KEY_RED_PACKET_NOTIFY_SETTING, null);
-
-		try {
-			if (text != null) {
-				return Integer.parseInt(text);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return 3;
+		return CavanAndroid.getPreferenceInt(context, KEY_RED_PACKET_NOTIFY_SETTING, 3);
 	}
 
 	public static boolean startSogouOcrActivity(Context context) {
@@ -460,6 +419,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		mPreferenceOnTimeNotify = (CheckBoxPreference) findPreference(KEY_ON_TIME_NOTIFY);
 		mPreferenceOnTimeNotify.setOnPreferenceChangeListener(this);
 
+		findListPreference(KEY_THANKS_NOTIFY);
 		findListPreference(KEY_AUTO_COMMIT);
 		findListPreference(KEY_COMMIT_AHEAD);
 		findListPreference(KEY_RED_PACKET_NOTIFY_SETTING);

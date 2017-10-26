@@ -542,6 +542,21 @@ public class CavanAndroid {
 		return preferences.getString(key, defValue);
 	}
 
+	public static int getPreferenceInt(Context context, String key, int defValue)
+	{
+		String value = getPreference(context, key, null);
+
+		if (value != null) {
+			try {
+				return Integer.parseInt(value);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		return defValue;
+	}
+
 	public static boolean putPreference(Context context, String key, String value) {
 		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
 		if (preferences == null) {

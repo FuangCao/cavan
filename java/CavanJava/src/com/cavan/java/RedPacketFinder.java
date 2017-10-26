@@ -26,6 +26,7 @@ public class RedPacketFinder {
 
 	private static final Pattern PATTERN_URL = Pattern.compile("[a-z]+://\\S+", Pattern.CASE_INSENSITIVE);
 	private static final Pattern PATTERN_FU_DAI = Pattern.compile("\\[链接\\].*福袋");
+	private static final Pattern PATTERN_THANKS = Pattern.compile("^@.+谢谢(.+)$");
 
 	private static final Pattern[] sNormalPatterns = {
 		Pattern.compile("^\\[" + NORMAL_PATTERN + "\\]"),
@@ -557,6 +558,20 @@ public class RedPacketFinder {
 			if (matcher.find()) {
 				return matcher.group(1);
 			}
+		}
+
+		return null;
+	}
+
+	public String getThanks()
+	{
+		if (mLines.size() != 1) {
+			return null;
+		}
+
+		Matcher matcher = PATTERN_THANKS.matcher(mLines.get(0));
+		if (matcher.find()) {
+			return matcher.group(1).trim();
 		}
 
 		return null;

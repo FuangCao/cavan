@@ -1,7 +1,9 @@
 package com.cavan.cavanmain;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -36,6 +38,8 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	public static final String EXTRA_CODE = "cavan.code";
 	public static final String EXTRA_MESSAGE = "cavan.message";
 
+	private static final long THANKS_OVERTIME = 600000;
+
 	private static final int MSG_POST_NOTIFICATION = 1;
 	private static final int MSG_REMOVE_NOTIFICATION = 2;
 	private static final int MSG_RED_PACKET_NOTIFICATION = 3;
@@ -50,8 +54,10 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	private ClipboardManager mClipboardManager;
 	private NotificationManager mNotificationManager;
 	private HashSet<String> mKeywords = new HashSet<String>();
+	private HashMap<String, ThanksNode> mThanks = new HashMap<String, ThanksNode>();
 	private CavanIndexGenerator mGeneratorRequestCode = new CavanIndexGenerator();
 	private CavanIndexGenerator mGeneratorNotificationId = new CavanIndexGenerator();
+
 	private Handler mHandler = new Handler() {
 
 		@Override
@@ -271,6 +277,35 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			if (finder.contains(keyword)) {
 				return keyword;
 			}
+		}
+
+		int times = CavanMessageActivity.getThanksNotify(this);
+		if (times > 0) {
+			Iterator<ThanksNode> iterator = mThanks.values().iterator();
+			long time = System.currentTimeMillis();
+
+			while (iterator.hasNext()) {
+				ThanksNode node = iterator.next();
+
+				if (time - node.getTime() > THANKS_OVERTIME) {
+					iterator.remove();
+				}
+			}
+
+			String thanks = finder.getThanks();
+			if (thanks != null) {
+				ThanksNode node = mThanks.get(thanks);
+				if (node == null) {
+					node = new ThanksNode();
+					mThanks.put(thanks, node);
+				}
+
+				if (node.increase(time) == times) {
+					return thanks + ", 大水快去";
+				}
+			}
+		} else {
+			mThanks.clear();
 		}
 
 		return null;

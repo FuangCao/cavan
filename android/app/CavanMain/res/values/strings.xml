@@ -388,6 +388,30 @@
         <item>19</item>
         <item>20</item>
     </string-array>
+    <string-array name="thanks_entries">
+        <item>不提醒</item>
+        <item>满1个谢谢提醒</item>
+        <item>满2个谢谢提醒</item>
+        <item>满3个谢谢提醒</item>
+        <item>满4个谢谢提醒</item>
+        <item>满5个谢谢提醒</item>
+        <item>满6个谢谢提醒</item>
+        <item>满7个谢谢提醒</item>
+        <item>满8个谢谢提醒</item>
+        <item>满9个谢谢提醒</item>
+	</string-array>
+	<string-array name="thanks_values">
+	    <item>0</item>
+	    <item>1</item>
+	    <item>2</item>
+	    <item>3</item>
+	    <item>4</item>
+	    <item>5</item>
+	    <item>6</item>
+	    <item>7</item>
+	    <item>8</item>
+	    <item>9</item>
+	</string-array>
     <string name="clean_message_confirm">确定要清除所有消息吗？</string>
     <string name="keyguard_disabled">已禁止锁屏</string>
     <string name="disable_keyguard">禁止锁屏</string>
@@ -499,5 +523,6 @@
 	<string name="name">姓名</string>
 	<string name="phone">电话</string>
 	<string name="on_time_notify">整点提醒</string>
+	<string name="thanks_notify">大水提醒</string>
 
 </resources>
