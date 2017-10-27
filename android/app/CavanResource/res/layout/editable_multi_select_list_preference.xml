@@ -17,14 +17,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
 
-        <com.cavan.android.CavanCheckBox
-            android:id="@+id/checkBoxSelectAll"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignRight="@+id/editTextKeyword"
-            android:text="@string/select_all" />
-
         <Button
             android:id="@+id/buttonAdd"
             android:layout_width="wrap_content"
@@ -45,12 +37,19 @@
             android:id="@+id/editTextKeyword"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignBaseline="@+id/buttonAdd"
             android:layout_alignBottom="@+id/buttonAdd"
             android:layout_alignParentLeft="true"
             android:layout_toLeftOf="@+id/buttonAdd"
             android:ems="10"
             android:inputType="text" />
+
+        <com.cavan.android.CavanCheckBox
+            android:id="@+id/checkBoxSelectAll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/buttonAdd"
+            android:layout_alignParentLeft="true"
+            android:text="@string/select_all" />
 
     </RelativeLayout>
 

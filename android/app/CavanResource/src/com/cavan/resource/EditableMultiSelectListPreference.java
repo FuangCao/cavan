@@ -2,6 +2,7 @@ package com.cavan.resource;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 import android.app.AlertDialog.Builder;
 import android.content.Context;
@@ -12,6 +13,7 @@ import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -20,13 +22,17 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.PopupMenu;
+import android.widget.PopupMenu.OnMenuItemClickListener;
 
+import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanCheckBox;
 
 public class EditableMultiSelectListPreference extends DialogPreference implements OnClickListener, OnCheckedChangeListener {
 
-	public class Entry implements OnCheckedChangeListener {
+	public class Entry implements OnCheckedChangeListener, OnClickListener, OnMenuItemClickListener {
 
 		private String mKeyword;
 		private boolean mEnabled;
@@ -91,6 +97,34 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 
 			mCheckBoxSelectAll.setCheckedSilent(isChecked);
 		}
+
+		@Override
+		public void onClick(View v) {
+			PopupMenu menu = new PopupMenu(v.getContext(), v);
+			menu.inflate(R.menu.editable_checkbox);
+			menu.setOnMenuItemClickListener(this);
+			menu.show();
+		}
+
+		@Override
+		public boolean onMenuItemClick(MenuItem item) {
+			int id = item.getItemId();
+
+			if (id == R.id.action_edit) {
+				CavanAndroid.dLog("action_edit");
+			} else if (id == R.id.action_move_up) {
+				CavanAndroid.dLog("action_move_up");
+			} else if (id == R.id.action_move_down) {
+				CavanAndroid.dLog("action_move_down");
+			} else if (id == R.id.action_remove) {
+				mEntries.remove(this);
+				mAdapter.notifyDataSetChanged();
+			} else {
+				return false;
+			}
+
+			return true;
+		}
 	}
 
 	private Button mButtonAdd;
@@ -99,23 +133,36 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 	private ListView mListViewKeywords;
 	private CavanCheckBox mCheckBoxSelectAll;
 
-	private ArrayList<Entry> mEntries = new ArrayList<Entry>();
+	private LinkedList<Entry> mEntries = new LinkedList<Entry>();
 	private BaseAdapter mAdapter = new BaseAdapter() {
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
-			CavanCheckBox view;
+			View view;
 
 			if (convertView != null) {
-				view = (CavanCheckBox) convertView;
+				view = convertView;
 			} else {
-				view = new CavanCheckBox(getContext());
+				view = View.inflate(getContext(), R.layout.editable_checkbox, null);
 			}
 
 			Entry entry = mEntries.get(position);
-			view.setText(entry.getKeyword());
-			view.setCheckedSilent(entry.isEnabled());
-			view.setOnCheckedChangeListener(entry);
+			CavanCheckBox checkbox = (CavanCheckBox) view.findViewById(R.id.checkBoxValue);
+
+			checkbox.setText(entry.getKeyword());
+			checkbox.setCheckedSilent(entry.isEnabled());
+			checkbox.setOnCheckedChangeListener(entry);
+
+			ImageView more = (ImageView) view.findViewById(R.id.imageViewMore);
+
+			if (CavanAndroid.SDK_VERSION < 11) {
+				more.setVisibility(View.GONE);
+			} else {
+				more.setOnClickListener(entry);
+			}
+
+			more.setOnClickListener(entry);
+
 			return view;
 		}
 
@@ -267,7 +314,12 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 		mButtonAdd.setOnClickListener(this);
 
 		mButtonRemove = (Button) view.findViewById(R.id.buttonRemove);
-		mButtonRemove.setOnClickListener(this);
+
+		if (CavanAndroid.SDK_VERSION < 11) {
+			mButtonRemove.setOnClickListener(this);
+		} else {
+			mButtonRemove.setVisibility(View.INVISIBLE);
+		}
 
 		mEditTextKeyword = (EditText) view.findViewById(R.id.editTextKeyword);
 		mListViewKeywords = (ListView) view.findViewById(R.id.listViewKeywords);
