@@ -38,7 +38,8 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	public static final String EXTRA_CODE = "cavan.code";
 	public static final String EXTRA_MESSAGE = "cavan.message";
 
-	private static final long THANKS_OVERTIME = 600000;
+	private static final long THANKS_LONG_OVERTIME = 3600000;
+	private static final long THANKS_SHORT_OVERTIME = 300000;
 
 	private static final int MSG_POST_NOTIFICATION = 1;
 	private static final int MSG_REMOVE_NOTIFICATION = 2;
@@ -286,9 +287,12 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 			while (iterator.hasNext()) {
 				ThanksNode node = iterator.next();
+				long interval = time - node.getTime();
 
-				if (time - node.getTime() > THANKS_OVERTIME) {
-					iterator.remove();
+				if (interval > THANKS_SHORT_OVERTIME) {
+					if (interval > THANKS_LONG_OVERTIME || node.getCount() < times) {
+						iterator.remove();
+					}
 				}
 			}
 
@@ -301,7 +305,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				}
 
 				if (node.increase(time) == times) {
-					return thanks + ", 大水快去";
+					return thanks + " 大水快去";
 				}
 			}
 		} else {
