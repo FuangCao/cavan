@@ -2,7 +2,6 @@ package com.cavan.resource;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 
 import android.app.AlertDialog.Builder;
 import android.content.Context;
@@ -29,6 +28,7 @@ import android.widget.PopupMenu.OnMenuItemClickListener;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanCheckBox;
+import com.cavan.java.CavanLinkedList;
 
 public class EditableMultiSelectListPreference extends DialogPreference implements OnClickListener, OnCheckedChangeListener {
 
@@ -111,11 +111,19 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 			int id = item.getItemId();
 
 			if (id == R.id.action_edit) {
-				CavanAndroid.dLog("action_edit");
+				mEditTextKeyword.setText(mKeyword);
 			} else if (id == R.id.action_move_up) {
-				CavanAndroid.dLog("action_move_up");
+				CavanLinkedList<Entry>.LinkNode node = mEntries.findNode(this);
+				if (node != null && node.isNotFirstNode()) {
+					node.shiftLeft();
+					mAdapter.notifyDataSetChanged();
+				}
 			} else if (id == R.id.action_move_down) {
-				CavanAndroid.dLog("action_move_down");
+				CavanLinkedList<Entry>.LinkNode node = mEntries.findNode(this);
+				if (node != null && node.isNotLastNode()) {
+					node.shiftRight();
+					mAdapter.notifyDataSetChanged();
+				}
 			} else if (id == R.id.action_remove) {
 				mEntries.remove(this);
 				mAdapter.notifyDataSetChanged();
@@ -133,8 +141,10 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 	private ListView mListViewKeywords;
 	private CavanCheckBox mCheckBoxSelectAll;
 
-	private LinkedList<Entry> mEntries = new LinkedList<Entry>();
+	private CavanLinkedList<Entry> mEntries = new CavanLinkedList<Entry>();
 	private BaseAdapter mAdapter = new BaseAdapter() {
+
+		private Entry[] mEntryArray = new Entry[0];
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
@@ -146,7 +156,7 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 				view = View.inflate(getContext(), R.layout.editable_checkbox, null);
 			}
 
-			Entry entry = mEntries.get(position);
+			Entry entry = mEntryArray[position];
 			CavanCheckBox checkbox = (CavanCheckBox) view.findViewById(R.id.checkBoxValue);
 
 			checkbox.setText(entry.getKeyword());
@@ -173,12 +183,18 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 
 		@Override
 		public Object getItem(int position) {
-			return mEntries.get(position);
+			return mEntryArray[position];
 		}
 
 		@Override
 		public int getCount() {
-			return mEntries.size();
+			return mEntryArray.length;
+		}
+
+		@Override
+		public void notifyDataSetChanged() {
+			mEntryArray = mEntries.toArray(mEntryArray);
+			super.notifyDataSetChanged();
 		}
 	};
 
@@ -232,6 +248,32 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 		return load(PreferenceManager.getDefaultSharedPreferences(context), key);
 	}
 
+	private boolean addEntry(String keyword, boolean enabled) {
+		int length = keyword.length();
+		if (length > 0) {
+			if (keyword.charAt(0) == '!') {
+				if (length > 1) {
+					keyword = keyword.substring(1);
+					enabled = false;
+				} else {
+					return false;
+				}
+			}
+		} else {
+			return false;
+		}
+
+		for (Entry entry : mEntries) {
+			if (entry.getKeyword().equals(keyword)) {
+				return false;
+			}
+		}
+
+		mEntries.add(new Entry(keyword, enabled));
+
+		return true;
+	}
+
 	private boolean load() {
 		String key = getKey();
 		if (key == null || key.isEmpty()) {
@@ -243,10 +285,15 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 			return false;
 		}
 
+		mEntries.clear();
+
 		for (String line : lines) {
-			Entry entry = new Entry(line);
-			mEntries.add(entry);
+			if (line.length() > 0) {
+				addEntry(line, line.charAt(0) != '!');
+			}
 		}
+
+		mAdapter.notifyDataSetChanged();
 
 		return true;
 	}
@@ -267,8 +314,7 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 
 	private boolean add() {
 		Editable text = mEditTextKeyword.getText();
-		if (text != null && text.length() > 0) {
-			mEntries.add(new Entry(text.toString(), true));
+		if (text != null && text.length() > 0 && addEntry(text.toString(), true)) {
 			mAdapter.notifyDataSetChanged();
 			text.clear();
 			return true;
@@ -340,6 +386,8 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 			if (callChangeListener(mEntries)) {
 				save();
 			}
+		} else {
+			load();
 		}
 	}
 
@@ -350,11 +398,12 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 
 	@Override
 	protected void onSetInitialValue(boolean restorePersistedValue, Object defaultValue) {
+		CavanAndroid.dLog("onSetInitialValue: " + restorePersistedValue);
 		if (restorePersistedValue) {
 			load();
 		} else {
 			for (String text : ((String) defaultValue).split("\\s*,\\s*")) {
-				mEntries.add(new Entry(text));
+				addEntry(text, true);
 			}
 		}
 	}

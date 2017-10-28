@@ -1,6 +1,7 @@
 package com.cavan.java;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.util.AbstractSequentialList;
 import java.util.Collection;
 import java.util.Deque;
@@ -89,6 +90,33 @@ public class CavanLinkedList<E> extends AbstractSequentialList<E> implements Lis
 		}
 
 		public void shiftRight() {
+			prev.next = next;
+			next.prev = prev;
+			prev = next;
+			next = next.next;
+			next.prev = this;
+			prev.next = this;
+		}
+
+		public boolean isFirstNode() {
+			return prev == mHead;
+		}
+
+		public boolean isNotFirstNode() {
+			return prev != mHead;
+		}
+
+		public boolean isLastNode() {
+			return next == mHead;
+		}
+
+		public boolean isNotLastNode() {
+			return next != mHead;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			return value.equals(obj);
 		}
 	}
 
@@ -212,6 +240,16 @@ public class CavanLinkedList<E> extends AbstractSequentialList<E> implements Lis
 		}
 
 		return null;
+	}
+
+	public boolean addUniq(E e) {
+		if (contains(e)) {
+			return false;
+		}
+
+		addLast(e);
+
+		return true;
 	}
 
 	@Override
@@ -499,6 +537,11 @@ public class CavanLinkedList<E> extends AbstractSequentialList<E> implements Lis
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T[] toArray(T[] array) {
+		if (array.length != mSize) {
+			Class<?> type = array.getClass().getComponentType();
+			array = (T[]) Array.newInstance(type, mSize);
+		}
+
 		int index = 0;
 
 		for (LinkNode node = mHead.next; node != mHead && index < array.length; node = node.next) {
