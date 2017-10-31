@@ -446,6 +446,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		mKeySettings = mBleToy.readKeySettings();
 		CavanAndroid.dLog("JwaooToyKeySettings = " + mKeySettings);
 		CavanAndroid.dLog("JwaooToyBatteryInfo = " + mBleToy.getBatteryInfo());
+		CavanAndroid.dLog("BdAddr = " + mBleToy.readBdAddressString());
 
 		mBleToy.setKeyReportEnable(0x0f);
 

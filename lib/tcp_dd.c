@@ -1955,9 +1955,13 @@ label_repo_key:
 			goto out_client_close;
 		}
 
+#if 0
 		if (flags & TCP_KEYPADF_EXIT_ACK) {
 			cavan_set_exit_ask();
 		}
+#else
+		signal(SIGINT, SIG_IGN);
+#endif
 
 #if 0
 		cavan_event_service_join(&service);
