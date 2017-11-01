@@ -42,7 +42,7 @@
     <Row>
         <Key
             android:codes="8"
-            android:keyLabel="输入法" />
+            android:keyIcon="@drawable/key_mode_panel_kbd" />
         <Key
             android:codes="4"
             android:keyLabel="选择" />

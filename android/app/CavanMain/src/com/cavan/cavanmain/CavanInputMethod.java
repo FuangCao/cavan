@@ -35,6 +35,13 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 	private static final int CODE_MAX_COLUMNS = 3;
 
+	public static final int KEYCODE_SHIFT = -1;
+    public static final int KEYCODE_MODE_CHANGE = -2;
+    public static final int KEYCODE_CANCEL = -3;
+    public static final int KEYCODE_DONE = -4;
+    public static final int KEYCODE_DELETE = -5;
+    public static final int KEYCODE_ALT = -6;
+
 	public static final int KEYCODE_COPY = 1;
 	public static final int KEYCODE_PASTE = 2;
 	public static final int KEYCODE_CUT = 3;
@@ -43,14 +50,10 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	public static final int KEYCODE_LEFT = 6;
 	public static final int KEYCODE_RIGHT = 7;
 	public static final int KEYCODE_INPUT_METHOD = 8;
-	public static final int KEYCODE_DELETE = 9;
 	public static final int KEYCODE_CLEAR = 10;
-	public static final int KEYCODE_DONE = 11;
 	public static final int KEYCODE_ENTER = 12;
 	public static final int KEYCODE_SPACE = 13;
 	public static final int KEYCODE_OCR = 14;
-	public static final int KEYCODE_UPPERCASE = 15;
-	public static final int KEYCODE_LOWERCASE = 16;
 	public static final int KEYCODE_KEYBORD_NUMBER = 17;
 	public static final int KEYCODE_KEYBORD_LETTER = 18;
 	public static final int KEYCODE_KEYBORD_SYMBOL = 19;
@@ -82,6 +85,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	private Keyboard mKeyboardSelect;
 	private Keyboard mKeyboardLetterLower;
 	private Keyboard mKeyboardLetterUpper;
+	private Keyboard mKeyboardLetterUpperLocked;
 	private KeyboardView mKeyboardViewHead;
 	private KeyboardView mKeyboardViewBody;
 	private InputMethodManager mManager;
@@ -257,6 +261,10 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		mKeyboardSelect = new Keyboard(this, R.xml.keyboard_select);
 		mKeyboardLetterLower = new Keyboard(this, R.xml.keyboard_lowercase);
 		mKeyboardLetterUpper = new Keyboard(this, R.xml.keyboard_uppercase);
+		mKeyboardLetterUpperLocked = new Keyboard(this, R.xml.keyboard_uppercase_locked);
+
+		mKeyboardLetterUpper.setShifted(true);
+		mKeyboardLetterUpperLocked.setShifted(true);
 
 		View view = View.inflate(this, R.layout.keyboard, null);
 
@@ -377,11 +385,17 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			CavanMessageActivity.startSogouOcrActivity(getApplicationContext());
 			break;
 
-		case KEYCODE_UPPERCASE:
-			mKeyboardViewBody.setKeyboard(mKeyboardLetterUpper);
-			break;
+		case KEYCODE_SHIFT:
+			Keyboard keyboard = mKeyboardViewBody.getKeyboard();
+			if (keyboard == mKeyboardLetterLower) {
+				mKeyboardViewBody.setKeyboard(mKeyboardLetterUpper);
+				break;
+			}
 
-		case KEYCODE_LOWERCASE:
+			if (keyboard == mKeyboardLetterUpper) {
+				mKeyboardViewBody.setKeyboard(mKeyboardLetterUpperLocked);
+				break;
+			}
 		case KEYCODE_KEYBORD_LETTER:
 			mKeyboardViewBody.setKeyboard(mKeyboardLetterLower);
 			break;
@@ -464,6 +478,10 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		}
 
 		getCurrentInputConnection().commitText(text, 1);
+
+		if (mKeyboardViewBody.getKeyboard() == mKeyboardLetterUpper) {
+			mKeyboardViewBody.setKeyboard(mKeyboardLetterLower);
+		}
 	}
 
 	@Override

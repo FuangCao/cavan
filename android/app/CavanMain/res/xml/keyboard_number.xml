@@ -43,7 +43,7 @@
     <Row>
         <Key
             android:codes="8"
-            android:keyLabel="输入法" />
+            android:keyIcon="@drawable/key_mode_panel_kbd" />
         <Key
             android:keyLabel="7"
             android:keyOutputText="7" />

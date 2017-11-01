@@ -72,7 +72,7 @@
     <Row>
         <Key
             android:codes="8"
-            android:keyLabel="输入法"
+            android:keyIcon="@drawable/key_mode_panel_kbd"
             android:keyWidth="20%p" />
         <Key
             android:keyLabel="/"

@@ -16,7 +16,7 @@
             android:codes="10"
             android:keyLabel="清空" />
         <Key
-            android:codes="9"
+            android:codes="-5"
             android:isRepeatable="true"
             android:keyIcon="@drawable/key_del" />
         <Key
@@ -37,7 +37,7 @@
             android:codes="20"
             android:keyLabel="选择" />
         <Key
-            android:codes="11"
+            android:codes="-4"
             android:keyLabel="前往" />
     </Row>
 

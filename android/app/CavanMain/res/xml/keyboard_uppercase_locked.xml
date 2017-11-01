@@ -40,7 +40,7 @@
     <Row>
         <Key
             android:codes="-1"
-            android:keyIcon="@drawable/key_qwerty_shift"  />
+            android:keyIcon="@drawable/key_qwerty_shift_locked" />
         <Key
             android:keyLabel="A"
             android:keyOutputText="A" />

@@ -39,8 +39,8 @@
     </Row>
     <Row>
         <Key
-            android:codes="15"
-            android:keyLabel="大" />
+            android:codes="-1"
+            android:keyIcon="@drawable/key_qwerty_shift"  />
         <Key
             android:keyLabel="a"
             android:keyOutputText="a" />
@@ -72,7 +72,7 @@
     <Row>
         <Key
             android:codes="8"
-            android:keyLabel="输入法"
+            android:keyIcon="@drawable/key_mode_panel_kbd"
             android:keyWidth="20%p" />
         <Key
             android:keyLabel="z"
