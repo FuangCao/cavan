@@ -51,10 +51,10 @@
             android:keyLabel="全选" />
         <Key
             android:codes="6"
-            android:keyIcon="@drawable/key_qwerty_left" />
+            android:keyIcon="@drawable/left" />
         <Key
             android:codes="7"
-            android:keyIcon="@drawable/key_qwerty_right" />
+            android:keyIcon="@drawable/right" />
     </Row>
 
 </Keyboard>

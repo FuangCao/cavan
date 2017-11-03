@@ -68,6 +68,8 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	public static final int KEYCODE_SERVICE = 28;
 	public static final int KEYCODE_NAME = 29;
 	public static final int KEYCODE_PHONE = 30;
+	public static final int KEYCODE_HIDDEN = 31;
+	public static final int KEYCODE_SPLIT = 32;
 
 	private static CavanInputMethod sInstance;
 
@@ -77,7 +79,77 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 	private GridView mGridViewCodes;
 	private RedPacketCode[] mUiCodes;
-	private RedPacketViewAdapter mAdapter = new RedPacketViewAdapter();
+	private RedPacketViewAdapter mAdapterCodes = new RedPacketViewAdapter();
+
+	private GridView mGridViewLines;
+	private BaseAdapter mAdapterLines = new BaseAdapter() {
+
+		private String[] mLines = new String[0];
+		private OnClickListener mOnClickListener = new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				Button button = (Button) v;
+				getCurrentInputConnection().commitText(button.getText(), 1);
+			}
+		};
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			Button button;
+
+			if (convertView != null) {
+				button = (Button) convertView;
+			} else {
+				button = new Button(CavanInputMethod.this);
+				button.setOnClickListener(mOnClickListener);
+				button.setBackgroundColor(Color.BLACK);
+				button.setTextColor(Color.WHITE);
+			}
+
+			button.setText(mLines[position].trim());
+			button.setAllCaps(false);
+
+			return button;
+		}
+
+		@Override
+		public long getItemId(int position) {
+			return position;
+		}
+
+		@Override
+		public Object getItem(int position) {
+			return mLines[position];
+		}
+
+		@Override
+		public int getCount() {
+			return mLines.length;
+		}
+
+		@Override
+		public void notifyDataSetChanged() {
+			String text = CavanAndroid.getClipboardText(getApplicationContext());
+			String[] lines = text.split("\\s*\\n\\s*");
+
+			if (lines.length > 1 || lines[0].length() > 0) {
+				int height;
+
+				mLines = lines;
+
+				if (lines.length < 3) {
+					height = LayoutParams.WRAP_CONTENT;
+				} else {
+					height = 500;
+				}
+
+				mGridViewLines.getLayoutParams().height = height;
+
+				super.notifyDataSetChanged();
+			}
+		}
+	};
 
 	private Keyboard mKeyboardHead;
 	private Keyboard mKeyboardNumber;
@@ -181,6 +253,18 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		return sendKeyEvent(code, 1) && sendKeyEvent(code, 0);
 	}
 
+	private void setKeyboard(Keyboard keyboard) {
+		if (keyboard != null) {
+			mGridViewLines.setVisibility(View.GONE);
+			mKeyboardViewBody.setKeyboard(keyboard);
+			mKeyboardViewBody.setVisibility(View.VISIBLE);
+		} else {
+			mKeyboardViewBody.setVisibility(View.GONE);
+			mAdapterLines.notifyDataSetChanged();
+			mGridViewLines.setVisibility(View.VISIBLE);
+		}
+	}
+
 	@Override
 	public void onCreate() {
 		super.onCreate();
@@ -242,8 +326,8 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 	@Override
 	public void onStartInputView(EditorInfo info, boolean restarting) {
-		mAdapter.updateInputView();
-		// mKeyboardViewBody.setKeyboard(mKeyboardNumber);
+		mAdapterCodes.updateInputView();
+		// setKeyboard(mKeyboardNumber);
 		super.onStartInputView(info, restarting);
 	}
 
@@ -269,8 +353,11 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		View view = View.inflate(this, R.layout.keyboard, null);
 
 		mGridViewCodes = (GridView) view.findViewById(R.id.gridViewCodes);
-		mGridViewCodes.setAdapter(mAdapter);
-		mAdapter.updateInputView();
+		mGridViewCodes.setAdapter(mAdapterCodes);
+		mAdapterCodes.updateInputView();
+
+		mGridViewLines = (GridView) view.findViewById(R.id.gridViewLines);
+		mGridViewLines.setAdapter(mAdapterLines);
 
 		mKeyboardViewHead = (KeyboardView) view.findViewById(R.id.keyboardViewHead);
 		mKeyboardViewHead.setKeyboard(mKeyboardHead);
@@ -279,7 +366,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		mKeyboardViewHead.setOnKeyboardActionListener(this);
 
 		mKeyboardViewBody = (KeyboardView) view.findViewById(R.id.keyboardViewBody);
-		mKeyboardViewBody.setKeyboard(mKeyboardNumber);
+		setKeyboard(mKeyboardNumber);
 		mKeyboardViewBody.setEnabled(true);
 		mKeyboardViewBody.setPreviewEnabled(false);
 		mKeyboardViewBody.setOnKeyboardActionListener(this);
@@ -388,28 +475,28 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		case KEYCODE_SHIFT:
 			Keyboard keyboard = mKeyboardViewBody.getKeyboard();
 			if (keyboard == mKeyboardLetterLower) {
-				mKeyboardViewBody.setKeyboard(mKeyboardLetterUpper);
+				setKeyboard(mKeyboardLetterUpper);
 				break;
 			}
 
 			if (keyboard == mKeyboardLetterUpper) {
-				mKeyboardViewBody.setKeyboard(mKeyboardLetterUpperLocked);
+				setKeyboard(mKeyboardLetterUpperLocked);
 				break;
 			}
 		case KEYCODE_KEYBORD_LETTER:
-			mKeyboardViewBody.setKeyboard(mKeyboardLetterLower);
+			setKeyboard(mKeyboardLetterLower);
 			break;
 
 		case KEYCODE_KEYBORD_NUMBER:
-			mKeyboardViewBody.setKeyboard(mKeyboardNumber);
+			setKeyboard(mKeyboardNumber);
 			break;
 
 		case KEYCODE_KEYBORD_SYMBOL:
-			mKeyboardViewBody.setKeyboard(mKeyboardSymbol);
+			setKeyboard(mKeyboardSymbol);
 			break;
 
 		case KEYCODE_KEYBORD_SELECT:
-			mKeyboardViewBody.setKeyboard(mKeyboardSelect);
+			setKeyboard(mKeyboardSelect);
 			break;
 
 		case KEYCODE_ALIPAY:
@@ -466,6 +553,14 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 				getCurrentInputConnection().commitText(text, 1);
 			}
 			break;
+
+		case KEYCODE_HIDDEN:
+			hideWindow();
+			break;
+
+		case KEYCODE_SPLIT:
+			setKeyboard(null);
+			break;
 		}
 	}
 
@@ -480,7 +575,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		getCurrentInputConnection().commitText(text, 1);
 
 		if (mKeyboardViewBody.getKeyboard() == mKeyboardLetterUpper) {
-			mKeyboardViewBody.setKeyboard(mKeyboardLetterLower);
+			setKeyboard(mKeyboardLetterLower);
 		}
 	}
 
