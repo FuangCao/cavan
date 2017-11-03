@@ -28,6 +28,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanQrCode;
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.java.CavanFile;
@@ -165,6 +166,7 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 
 		try {
 			String url = mUrl + dir.getAbsolutePath() + File.separatorChar + URLEncoder.encode(name, "UTF-8");
+			CavanAndroid.postClipboardText(this, url);
 			mTextViewUrl.setText(url);
 
 			Point point = new Point();

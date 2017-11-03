@@ -64,6 +64,7 @@ BUILD_OTHERS = ${BUILD_OTHERS}
 CFLAGS =
 LDFLAGS = ${LDFLAGS}
 Q = @
+CONFIG_CAVAN_SSL = true
 
 include build/core/main3.mk
 EOF
