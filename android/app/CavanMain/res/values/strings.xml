@@ -93,8 +93,8 @@
     <string name="secret_order">密令</string>
     <string name="secret_order_received">收到密令：<xliff:g>%1$s</xliff:g></string>
     <string name="extract">提取</string>
-    <string name="clipboard_updated">剪切板已更新：<xliff:g>%1$s</xliff:g></string>
-    <string name="red_packet_code_updated">口令已更新：<xliff:g>%1$s</xliff:g></string>
+    <string name="clipboard_updated">剪切板更新：<xliff:g>%1$s</xliff:g></string>
+    <string name="red_packet_code_updated">口令更新：<xliff:g>%1$s</xliff:g></string>
     <string name="auto_open_alipay">自动打开支付宝</string>
     <string name="red_packet_notify_setting">红包提醒设置</string>
 

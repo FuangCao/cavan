@@ -128,15 +128,25 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			return mLines.length;
 		}
 
+		private String[] getClipboardLines() {
+			String text = CavanAndroid.getClipboardText(getApplicationContext());
+			if (text == null) {
+				return null;
+			}
+
+			String[] lines = text.split("\\s*\\n\\s*");
+			if (lines.length > 1 || lines[0].length() > 0) {
+				return lines;
+			}
+
+			return null;
+		}
+
 		@Override
 		public void notifyDataSetChanged() {
-			String text = CavanAndroid.getClipboardText(getApplicationContext());
-			String[] lines = text.split("\\s*\\n\\s*");
-
-			if (lines.length > 1 || lines[0].length() > 0) {
+			String[] lines = getClipboardLines();
+			if (lines != null) {
 				int height;
-
-				mLines = lines;
 
 				if (lines.length < 3) {
 					height = LayoutParams.WRAP_CONTENT;
@@ -145,6 +155,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 				}
 
 				mGridViewLines.getLayoutParams().height = height;
+				mLines = lines;
 
 				super.notifyDataSetChanged();
 			}
