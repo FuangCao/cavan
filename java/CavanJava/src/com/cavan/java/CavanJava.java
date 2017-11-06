@@ -103,15 +103,15 @@ public class CavanJava {
 	}
 
 	public static void pLog() {
-		eLog(buildPosMessage());
+		dLog(buildPosMessage());
 	}
 
 	public static void pLog(String message) {
-		eLog(buildPosMessage(message));
+		dLog(buildPosMessage(message));
 	}
 
 	public static void pfLog(String format, Object... args) {
-		eLog(buildPosMessage(format, args));
+		dLog(buildPosMessage(format, args));
 	}
 
 	public static void dumpstack(Throwable throwable) {

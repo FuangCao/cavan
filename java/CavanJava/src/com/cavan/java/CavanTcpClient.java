@@ -149,13 +149,15 @@ public class CavanTcpClient implements Runnable {
 		return false;
 	}
 
-	public boolean send(byte[] bytes) {
+	public boolean send(byte[] bytes, int offset, int length) {
 		OutputStream stream = getOutputStream();
 
 		if (stream != null) {
 			try {
-				stream.write(bytes);
-				return true;
+				synchronized (stream) {
+					stream.write(bytes, offset, length);
+					return true;
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -164,12 +166,26 @@ public class CavanTcpClient implements Runnable {
 		return false;
 	}
 
-	public int read(byte[] bytes) {
+	public boolean send(byte[] bytes, int length) {
+		return send(bytes, 0, length);
+	}
+
+	public boolean send(byte[] bytes) {
+		return send(bytes, 0, bytes.length);
+	}
+
+	public boolean send(String text) {
+		return send(text.getBytes());
+	}
+
+	public int read(byte[] bytes, int offset, int length) {
 		InputStream stream = getInputStream();
 
 		if (stream != null) {
 			try {
-				return stream.read(bytes);
+				synchronized (stream) {
+					return stream.read(bytes, offset, length);
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -178,11 +194,21 @@ public class CavanTcpClient implements Runnable {
 		return -1;
 	}
 
+	public int read(byte[] bytes, int length) {
+		return read(bytes, 0, length);
+	}
+
+	public int read(byte[] bytes) {
+		return read(bytes, 0, bytes.length);
+	}
+
 	public boolean fill(byte[] bytes, int offset, int length) {
 		InputStream stream = getInputStream();
 
 		if (stream != null) {
-			return CavanArray.fill(stream, bytes, offset, length);
+			synchronized (stream) {
+				return CavanArray.fill(stream, bytes, offset, length);
+			}
 		}
 
 		return false;
