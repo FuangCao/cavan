@@ -140,7 +140,6 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 	public static CavanMessageView getInstance(Activity activity) {
 		CavanMessageView view = (CavanMessageView) inflate(activity, R.layout.message_item, null);
 		view.setActivity(activity);
-
 		return view;
 	}
 

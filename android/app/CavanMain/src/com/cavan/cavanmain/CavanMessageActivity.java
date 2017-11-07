@@ -3,6 +3,7 @@ package com.cavan.cavanmain;
 
 import java.util.ArrayList;
 
+import android.Manifest;
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
 import android.content.ComponentName;
@@ -435,6 +436,8 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 
 		updateWanState();
 		updateBridgeState();
+
+		CavanAndroid.checkAndRequestPermissions(this, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION);
 	}
 
 	@Override

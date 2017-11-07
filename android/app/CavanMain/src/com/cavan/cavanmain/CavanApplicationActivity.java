@@ -24,6 +24,8 @@ public class CavanApplicationActivity extends PreferenceActivity {
 		sHashMapKeyActivity.put("resistor_decoder", com.cavan.resistordecoder.MainActivity.class);
 		sHashMapKeyActivity.put("wifi_detector", com.cavan.wifi.WifiDetectorActivity.class);
 		sHashMapKeyActivity.put("wifi_password", com.cavan.wifi.WifiPasswordActivity.class);
+		sHashMapKeyActivity.put("show_location", com.cavan.location.ShowLocationActivity.class);
+		sHashMapKeyActivity.put("mock_location", com.cavan.location.MockLocationActivity.class);
 	};
 
 	@Override

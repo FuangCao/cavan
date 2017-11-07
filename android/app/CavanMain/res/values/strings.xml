@@ -524,5 +524,7 @@
 	<string name="phone">电话</string>
 	<string name="on_time_notify">整点提醒</string>
 	<string name="thanks_notify">大水提醒</string>
+	<string name="show_location">位置查看</string>
+	<string name="mock_location">位置模拟</string>
 
 </resources>

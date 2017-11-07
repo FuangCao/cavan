@@ -22,16 +22,12 @@ public class CavanTcpPacketService extends CavanTcpService {
 
 		while (isEnabled() && CavanArray.fill(stream, header, 0, 2)) {
 			int length = CavanJava.buildValueU16(header, 0);
-			byte[] bytes;
+			byte[] bytes = client.getBytes(length);
 
 			if (length > 0) {
-				bytes = client.getBytes(length);
-
 				if (!CavanArray.fill(stream, bytes, 0, length)) {
 					break;
 				}
-			} else {
-				bytes = null;
 			}
 
 			if (!onPacketReceived(client, bytes, length)) {

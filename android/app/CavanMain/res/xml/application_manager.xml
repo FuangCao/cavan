@@ -20,5 +20,8 @@
 	    android:title="@string/wifi_detector"/>
 	<Preference android:key="wifi_password"
 	    android:title="@string/show_wifi_password"/>
-
+	<Preference android:key="show_location"
+	    android:title="@string/show_location"/>
+	<Preference android:key="mock_location"
+	    android:title="@string/mock_location"/>
 </PreferenceScreen>

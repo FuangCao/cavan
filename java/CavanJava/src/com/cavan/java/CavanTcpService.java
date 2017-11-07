@@ -50,6 +50,10 @@ public class CavanTcpService extends Thread {
 		return mClients;
 	}
 
+	public synchronized int getClientCount() {
+		return mClients.size();
+	}
+
 	public synchronized void open() {
 		mEnabled = true;
 
@@ -132,10 +136,6 @@ public class CavanTcpService extends Thread {
 				if (client == null) {
 					conn.close();
 					break;
-				}
-
-				synchronized (mClients) {
-					mClients.add(client);
 				}
 
 				client.start();
@@ -296,7 +296,17 @@ public class CavanTcpService extends Thread {
 				mOutputStream = ostream;
 
 				onClientConnected(this);
+
+				synchronized (mClients) {
+					mClients.add(this);
+				}
+
 				doClientMainLoop(this, istream);
+
+				synchronized (mClients) {
+					mClients.remove(this);
+				}
+
 				onClientDisconnected(this);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -318,10 +328,6 @@ public class CavanTcpService extends Thread {
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
-				}
-
-				synchronized (mClients) {
-					mClients.remove(this);
 				}
 			}
 		}

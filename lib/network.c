@@ -1457,6 +1457,10 @@ char *network_url_parse(struct network_url *url, const char *text)
 				url->protocol = p;
 			}
 
+			if (url->hostname[0] == 0 || strcmp(url->hostname, "localhost") == 0) {
+				url->hostname = LOCAL_HOST_IP;
+			}
+
 			url->pathname = text;
 
 			return (char *) text;
