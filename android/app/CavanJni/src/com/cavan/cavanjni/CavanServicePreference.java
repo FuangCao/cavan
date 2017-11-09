@@ -64,7 +64,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 
 			mService = null;
 
-			updateSummary(CavanService.STATE_STOPPED);
+			updateSummary(CavanNativeService.STATE_STOPPED);
 			setEnabled(false);
 
 			mHandler.sendEmptyMessageDelayed(EVENT_START_SERVICE, 500);
@@ -104,7 +104,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 	public CavanServicePreference(Context context, AttributeSet attrs) {
 		super(context, attrs);
 
-		updateSummary(CavanService.STATE_STOPPED);
+		updateSummary(CavanNativeService.STATE_STOPPED);
 		startService(context);
 	}
 
@@ -153,7 +153,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 			}
 		}
 
-		return CavanService.STATE_STOPPED;
+		return CavanNativeService.STATE_STOPPED;
 	}
 
 	public boolean isServiceEnabled() {
@@ -178,16 +178,14 @@ public abstract class CavanServicePreference extends EditTextPreference {
 		}
 	}
 
-	public boolean stop() {
+	public void stop() {
 		if (mService != null) {
 			try {
-				return mService.stop();
+				mService.stop();
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
 		}
-
-		return false;
 	}
 
 	public int getPort() {
@@ -216,15 +214,15 @@ public abstract class CavanServicePreference extends EditTextPreference {
 				int resId;
 
 				switch (state) {
-				case CavanService.STATE_PREPARE:
+				case CavanNativeService.STATE_PREPARE:
 					resId = R.string.prepare;
 					break;
 
-				case CavanService.STATE_RUNNING:
+				case CavanNativeService.STATE_RUNNING:
 					resId = R.string.running;
 					break;
 
-				case CavanService.STATE_WAITING:
+				case CavanNativeService.STATE_WAITING:
 					resId = R.string.waiting;
 					break;
 
@@ -244,7 +242,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 	}
 
 	public void updateSummary(Context context, Intent intent) {
-		int state = intent.getIntExtra("state", CavanService.STATE_STOPPED);
+		int state = intent.getIntExtra("state", CavanNativeService.STATE_STOPPED);
 		updateSummary(state);
 	}
 

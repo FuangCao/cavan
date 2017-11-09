@@ -31,4 +31,8 @@
 	    android:persistent="true"
 	    android:title="@string/web_proxy_service" />
 
+	<com.cavan.cavanjni.MockLocationServicePreference android:key="mock_location"
+	    android:persistent="true"
+	    android:title="@string/mock_location_service" />
+
 </PreferenceScreen>

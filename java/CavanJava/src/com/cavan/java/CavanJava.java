@@ -454,4 +454,44 @@ public class CavanJava {
 	public static byte[] AesDecrypt(byte[] bytes, byte[] password) {
 		return AesCrypt(bytes, password, Cipher.DECRYPT_MODE);
 	}
+
+	public static int parseInt(String text) {
+		try {
+			return Integer.parseInt(text);
+		} catch (NumberFormatException e) {
+			return 0;
+		}
+	}
+
+	public static short parseShort(String text) {
+		try {
+			return Short.parseShort(text);
+		} catch (NumberFormatException e) {
+			return 0;
+		}
+	}
+
+	public static long parseLong(String text) {
+		try {
+			return Long.parseLong(text);
+		} catch (NumberFormatException e) {
+			return 0;
+		}
+	}
+
+	public static float parseFloat(String text) {
+		try {
+			return Float.parseFloat(text);
+		} catch (NumberFormatException e) {
+			return 0;
+		}
+	}
+
+	public static double parseDouble(String text) {
+		try {
+			return Double.parseDouble(text);
+		} catch (NumberFormatException e) {
+			return 0;
+		}
+	}
 }

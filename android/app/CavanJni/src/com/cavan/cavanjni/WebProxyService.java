@@ -1,6 +1,6 @@
 package com.cavan.cavanjni;
 
-public class WebProxyService extends CavanService {
+public class WebProxyService extends CavanNativeService {
 
 	public static final String NAME = "WEB_PROXY";
 

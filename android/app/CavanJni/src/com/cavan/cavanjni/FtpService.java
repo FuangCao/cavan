@@ -1,6 +1,6 @@
 package com.cavan.cavanjni;
 
-public class FtpService extends CavanService {
+public class FtpService extends CavanNativeService {
 
 	public static final String NAME = "FTP";
 

@@ -1,8 +1,129 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical" >
-    
+    android:layout_height="match_parent" >
 
-</LinearLayout>
+    <EditText
+        android:id="@+id/editTextLongitudeStep"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonLongitudeSub"
+        android:layout_alignBottom="@+id/buttonLongitudeSub"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@+id/buttonLongitudeSub"
+        android:ems="10"
+        android:text="0.01" />
+
+    <EditText
+        android:id="@+id/editTextLatitude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonLatitudeAdd"
+        android:layout_alignBottom="@+id/buttonLatitudeAdd"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@+id/buttonLatitudeAdd"
+        android:ems="10"
+        android:text="31" />
+
+    <EditText
+        android:id="@+id/editTextLatitudeStep"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonLatitudeSub"
+        android:layout_alignBottom="@+id/buttonLatitudeSub"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@+id/buttonLatitudeSub"
+        android:ems="10"
+        android:text="0.01" />
+
+    <TextView
+        android:id="@+id/textViewLongitude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/buttonLatitudeSub"
+        android:layout_marginTop="20dp"
+        android:text="@string/longitude" />
+
+    <Button
+        android:id="@+id/buttonConn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:text="@string/connect" />
+
+    <TextView
+        android:id="@+id/textViewLatitude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/buttonConn"
+        android:layout_marginTop="20dp"
+        android:text="@string/latitude" />
+
+    <Button
+        android:id="@+id/buttonLongitudeSub"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/buttonLongitudeAdd"
+        android:text="-" />
+
+    <Button
+        android:id="@+id/buttonLatitudeAdd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/textViewLatitude"
+        android:text="+" />
+
+    <Button
+        android:id="@+id/buttonLatitudeSub"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/editTextLatitude"
+        android:text="-" />
+
+    <Button
+        android:id="@+id/buttonLongitudeAdd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/textViewLongitude"
+        android:text="+" />
+
+    <EditText
+        android:id="@+id/editTextLongitude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonLongitudeAdd"
+        android:layout_alignBottom="@+id/buttonLongitudeAdd"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@+id/buttonLongitudeAdd"
+        android:ems="10"
+        android:text="121" />
+
+    <EditText
+        android:id="@+id/editTextPort"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonConn"
+        android:layout_alignBottom="@+id/buttonConn"
+        android:layout_toLeftOf="@+id/buttonConn"
+        android:inputType="number"
+        android:text="9099" >
+    </EditText>
+
+    <EditText
+        android:id="@+id/editTextHost"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/editTextPort"
+        android:layout_alignBottom="@+id/editTextPort"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@+id/editTextPort"
+        android:text="127.0.0.1" />
+
+</RelativeLayout>

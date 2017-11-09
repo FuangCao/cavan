@@ -7,7 +7,7 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanAndroidFile;
 
 
-public class TcpDdService extends CavanService {
+public class TcpDdService extends CavanNativeService {
 
 	public static final String NAME = "TCP_DD";
 	private static final HashMap<String, Integer> mResourceMap = new HashMap<String, Integer>();

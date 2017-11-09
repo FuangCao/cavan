@@ -23,6 +23,7 @@ public class CavanServiceActivity extends PreferenceActivity {
 	public static final String KEY_TCP_DD = "tcp_dd";
 	public static final String KEY_WEB_PROXY = "web_proxy";
 	public static final String KEY_TCP_REPEATER = "tcp_repeater";
+	public static final String KEY_MOCK_LOCATION = "mock_location";
 
 	private Preference mPreferenceIpAddress;
 	private Preference mPreferenceShareApp;
@@ -31,6 +32,7 @@ public class CavanServiceActivity extends PreferenceActivity {
 	private CavanServicePreference mPreferenceHttp;
 	private CavanServicePreference mPreferenceWebProxy;
 	private CavanServicePreference mPreferenceTcpRepeater;
+	private CavanServicePreference mPreferenceMockLocation;
 
 	@SuppressWarnings("deprecation")
 	@Override
@@ -45,6 +47,7 @@ public class CavanServiceActivity extends PreferenceActivity {
 		mPreferenceTcpDd = (CavanServicePreference) findPreference(KEY_TCP_DD);
 		mPreferenceWebProxy = (CavanServicePreference) findPreference(KEY_WEB_PROXY);
 		mPreferenceTcpRepeater = (CavanServicePreference) findPreference(KEY_TCP_REPEATER);
+		mPreferenceMockLocation = (CavanServicePreference) findPreference(KEY_MOCK_LOCATION);
 
 		updateIpAddressStatus();
 	}
@@ -56,6 +59,7 @@ public class CavanServiceActivity extends PreferenceActivity {
 		mPreferenceTcpDd.unbindService(this);
 		mPreferenceWebProxy.unbindService(this);
 		mPreferenceTcpRepeater.unbindService(this);
+		mPreferenceMockLocation.unbindService(this);
 
 		super.onDestroy();
 	}

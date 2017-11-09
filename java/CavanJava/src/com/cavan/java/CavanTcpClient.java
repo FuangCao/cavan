@@ -14,7 +14,7 @@ public class CavanTcpClient implements Runnable {
 	private InetSocketAddress mAddress;
 
 	private Thread mConnThread = new Thread(this);
-	private boolean mConnDisabled;
+	private boolean mConnDisabled = true;
 	private boolean mConnected;
 
 	public synchronized Socket getSocket() {
@@ -47,6 +47,10 @@ public class CavanTcpClient implements Runnable {
 
 	public synchronized void setConnected(boolean connected) {
 		mConnected = connected;
+	}
+
+	public synchronized boolean isConnDisabled() {
+		return mConnDisabled;
 	}
 
 	public synchronized InetSocketAddress getAddress() {

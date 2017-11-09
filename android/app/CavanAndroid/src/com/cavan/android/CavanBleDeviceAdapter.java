@@ -56,6 +56,7 @@ public abstract class CavanBleDeviceAdapter extends BaseAdapter {
 			view = (Button) convertView;
 		} else {
 			view = new Button(getContext());
+			view.setAllCaps(false);
 		}
 
 		view.setText(device.toString());

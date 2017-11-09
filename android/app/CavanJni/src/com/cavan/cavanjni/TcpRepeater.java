@@ -1,6 +1,6 @@
 package com.cavan.cavanjni;
 
-public class TcpRepeater extends CavanService {
+public class TcpRepeater extends CavanNativeService {
 
 	public static final String NAME = "TCP_REPEATER";
 

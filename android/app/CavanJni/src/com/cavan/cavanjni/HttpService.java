@@ -6,7 +6,7 @@ import android.os.storage.StorageManager;
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanFile;
 
-public class HttpService extends CavanService {
+public class HttpService extends CavanNativeService {
 
 	public static final String NAME = "HTTP";
 

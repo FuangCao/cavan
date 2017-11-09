@@ -284,6 +284,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <service android:name="com.cavan.cavanjni.MockLocationService"></service>
     </application>
 
 </manifest>
