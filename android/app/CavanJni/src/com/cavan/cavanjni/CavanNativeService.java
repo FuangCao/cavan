@@ -53,7 +53,7 @@ public abstract class CavanNativeService extends CavanService {
 	@Override
 	public void start(int port) {
 		mEnabled = true;
-		
+
 		if (mState != STATE_STOPPED) {
 			sendStateBroadcast(mState);
 		} else {

@@ -27,13 +27,11 @@ public abstract class CavanService extends Service {
 		protected void handleMessage(CavanMessage message) {
 			switch (message.what) {
 			case MSG_START:
-				setServiceState(STATE_PREPARE);
 				CavanService.this.start(message.getInt(0));
 				break;
 
 			case MSG_STOP:
 				CavanService.this.stop();
-				setServiceState(STATE_STOPPED);
 				break;
 			}
 		}

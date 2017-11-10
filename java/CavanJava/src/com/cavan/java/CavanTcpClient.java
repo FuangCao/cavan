@@ -45,12 +45,16 @@ public class CavanTcpClient implements Runnable {
 		return mConnected;
 	}
 
-	public synchronized void setConnected(boolean connected) {
-		mConnected = connected;
-	}
-
 	public synchronized boolean isConnDisabled() {
 		return mConnDisabled;
+	}
+
+	public synchronized boolean isConnEnabled() {
+		return !mConnDisabled;
+	}
+
+	private synchronized void setConnDisabled(boolean disabled) {
+		mConnDisabled = disabled;
 	}
 
 	public synchronized InetSocketAddress getAddress() {
@@ -290,12 +294,16 @@ public class CavanTcpClient implements Runnable {
 	@Override
 	public void run() {
 		while (true) {
-			int times = 0;
+			int times;
+
+			if (isConnEnabled()) {
+				onTcpClientRunning();
+			}
+
+			times = 0;
 
 			while (true) {
 				InetSocketAddress address;
-
-				prDbgInfo("mConnDisabled = " + mConnDisabled);
 
 				synchronized (this) {
 					if (mConnDisabled) {
@@ -304,6 +312,8 @@ public class CavanTcpClient implements Runnable {
 
 					address = mAddress;
 				}
+
+				prDbgInfo("address = " + address);
 
 				if (address == null) {
 					break;
@@ -326,10 +336,8 @@ public class CavanTcpClient implements Runnable {
 						}
 					}
 				} else {
-					synchronized (this) {
-						if (mConnDisabled) {
-							break;
-						}
+					if (isConnDisabled()) {
+						break;
 					}
 
 					if (onTcpConnFailed(++times)) {
@@ -350,11 +358,15 @@ public class CavanTcpClient implements Runnable {
 								e.printStackTrace();
 							}
 						}
+
 					} else {
 						break;
 					}
 				}
 			}
+
+			setConnDisabled(true);
+			onTcpClientStopped();
 
 			synchronized (mConnThread) {
 				try {
@@ -365,6 +377,10 @@ public class CavanTcpClient implements Runnable {
 			}
 		}
 	}
+
+	protected void onTcpClientRunning() {}
+
+	protected void onTcpClientStopped() {}
 
 	protected boolean onTcpConnected(Socket socket) {
 		return true;

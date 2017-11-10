@@ -15,6 +15,7 @@ import com.cavan.java.CavanTcpPacketService;
 public class MockLocationService extends CavanService {
 
 	private static final String NAME = "MOCK_LOCATION";
+	private static final long UPDATE_LOCATION_DELAY = 1000;
 	private static final String PROVIDER = LocationManager.GPS_PROVIDER;
 
 	private LocationManager mLocationManager;
@@ -71,7 +72,7 @@ public class MockLocationService extends CavanService {
 					mLocation.setLatitude(Double.parseDouble(args[1]));
 					mLocation.setLongitude(Double.parseDouble(args[2]));
 					setEnable(true);
-					mMessageQueue.postRunnableDelayedReplace(mRunnableUpdataLocation);
+					mMessageQueue.postReplace(mRunnableUpdataLocation);
 				}
 			}
 
@@ -140,7 +141,7 @@ public class MockLocationService extends CavanService {
 	}
 
 	public synchronized boolean updateLocation() {
-		CavanAndroid.dLog("setLocation: " + mLocation);
+		CavanAndroid.dLog("setLocation: Latitude = " + mLocation.getLatitude() + ", Longitude = " + mLocation.getLongitude());
 
 		if (!mMockEnabled) {
 			return false;
@@ -162,7 +163,7 @@ public class MockLocationService extends CavanService {
 
 			mLocationManager.setTestProviderLocation(PROVIDER, mLocation);
 
-			mMessageQueue.postRunnableDelayedUniq(mRunnableUpdataLocation, 2000);
+			mMessageQueue.postUniqDelayed(mRunnableUpdataLocation, UPDATE_LOCATION_DELAY);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -184,6 +185,7 @@ public class MockLocationService extends CavanService {
 
 	@Override
 	public void start(int port) {
+		setServiceState(STATE_PREPARE);
 		mTcpPacketService.open();
 	}
 
@@ -195,6 +197,7 @@ public class MockLocationService extends CavanService {
 	@Override
 	public void stop() {
 		mTcpPacketService.close();
+		setServiceState(STATE_STOPPED);
 	}
 
 	@Override

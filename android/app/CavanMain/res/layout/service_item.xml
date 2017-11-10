@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.cavan.location.LocationServiceView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" >
+
+    <Button
+        android:id="@+id/buttonConn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:text="@string/connect" />
+
+    <EditText
+        android:id="@+id/editTextPort"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonDel"
+        android:layout_alignBottom="@+id/buttonDel"
+        android:layout_toLeftOf="@+id/buttonDel"
+        android:inputType="number"
+        android:text="9099" >
+
+        <requestFocus />
+    </EditText>
+
+    <EditText
+        android:id="@+id/editTextHost"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/editTextPort"
+        android:layout_alignBottom="@+id/editTextPort"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@+id/editTextPort"
+        android:text="192.168.1.1" />
+
+    <Button
+        android:id="@+id/buttonDel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@+id/buttonConn"
+        android:text="@string/delete" />
+
+</com.cavan.location.LocationServiceView>

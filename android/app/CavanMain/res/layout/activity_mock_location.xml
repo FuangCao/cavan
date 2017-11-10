@@ -12,7 +12,7 @@
         android:layout_alignParentLeft="true"
         android:layout_toLeftOf="@+id/buttonLongitudeSub"
         android:ems="10"
-        android:text="0.01" />
+        android:text="0.0001" />
 
     <EditText
         android:id="@+id/editTextLatitude"
@@ -23,7 +23,7 @@
         android:layout_alignParentLeft="true"
         android:layout_toLeftOf="@+id/buttonLatitudeAdd"
         android:ems="10"
-        android:text="31" />
+        android:text="31.131808" />
 
     <EditText
         android:id="@+id/editTextLatitudeStep"
@@ -34,7 +34,7 @@
         android:layout_alignParentLeft="true"
         android:layout_toLeftOf="@+id/buttonLatitudeSub"
         android:ems="10"
-        android:text="0.01" />
+        android:text="0.0001" />
 
     <TextView
         android:id="@+id/textViewLongitude"
@@ -45,20 +45,12 @@
         android:layout_marginTop="20dp"
         android:text="@string/longitude" />
 
-    <Button
-        android:id="@+id/buttonConn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:text="@string/connect" />
-
     <TextView
         android:id="@+id/textViewLatitude"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/buttonConn"
+        android:layout_below="@+id/listViewServers"
         android:layout_marginTop="20dp"
         android:text="@string/latitude" />
 
@@ -103,27 +95,30 @@
         android:layout_alignParentLeft="true"
         android:layout_toLeftOf="@+id/buttonLongitudeAdd"
         android:ems="10"
-        android:text="121" />
+        android:text="121.40078" />
 
-    <EditText
-        android:id="@+id/editTextPort"
+    <Button
+        android:id="@+id/buttonAdd"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/buttonConn"
-        android:layout_alignBottom="@+id/buttonConn"
-        android:layout_toLeftOf="@+id/buttonConn"
-        android:inputType="number"
-        android:text="9099" >
-    </EditText>
-
-    <EditText
-        android:id="@+id/editTextHost"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/editTextPort"
-        android:layout_alignBottom="@+id/editTextPort"
+        android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
-        android:layout_toLeftOf="@+id/editTextPort"
-        android:text="127.0.0.1" />
+        android:text="@string/add" />
+
+    <Button
+        android:id="@+id/buttonDisconn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:text="@string/disconnect" />
+
+    <ListView
+        android:id="@+id/listViewServers"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true" >
+    </ListView>
 
 </RelativeLayout>

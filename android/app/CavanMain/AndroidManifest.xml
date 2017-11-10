@@ -267,7 +267,7 @@
         <activity
             android:name="com.cavan.location.MockLocationActivity"
             android:label="@string/mock_location"
-            android:launchMode="singleTask" >
+            android:launchMode="singleTask" android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

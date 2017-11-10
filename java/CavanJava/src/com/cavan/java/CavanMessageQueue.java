@@ -84,6 +84,30 @@ public class CavanMessageQueue extends Thread {
 			return runnable == this;
 		}
 
+		public void sendDelayed(long delay) {
+			sendMessageDelayed(this, delay);
+		}
+
+		public void send() {
+			sendMessage(this);
+		}
+
+		public void sendUniqDelayed(long delay) {
+			sendMessageUniqDelayed(this, delay);
+		}
+
+		public void sendUniq() {
+			sendMessageUniq(this);
+		}
+
+		public void sendReplaceDelayed(long delay) {
+			sendMessageReplaceDelayed(this, delay);
+		}
+
+		public void sendReplace() {
+			sendMessageReplace(this);
+		}
+
 		@Override
 		public void run() {
 			handleMessage(this);
@@ -254,20 +278,20 @@ public class CavanMessageQueue extends Thread {
 		sendMessageDelayed(message, 0);
 	}
 
-	public void sendMessageDelayedUniq(CavanMessage message, long delay) {
+	public void sendMessageUniqDelayed(CavanMessage message, long delay) {
 		sendMessageDelayedUniq(sMessageMatcherWhat, message, delay);
 	}
 
-	public void sendMessageDelayedUniq(CavanMessage message) {
-		sendMessageDelayedUniq(message, 0);
+	public void sendMessageUniq(CavanMessage message) {
+		sendMessageUniqDelayed(message, 0);
 	}
 
-	public void sendMessageDelayedReplace(CavanMessage message, long delay) {
+	public void sendMessageReplaceDelayed(CavanMessage message, long delay) {
 		sendMessageDelayedReplace(sMessageMatcherWhat, message, delay);
 	}
 
-	public void sendMessageDelayedReplace(CavanMessage message) {
-		sendMessageDelayedReplace(message, 0);
+	public void sendMessageReplace(CavanMessage message) {
+		sendMessageReplaceDelayed(message, 0);
 	}
 
 	public void sendEmptyMessageDelayed(int what, long delay) {
@@ -281,7 +305,7 @@ public class CavanMessageQueue extends Thread {
 
 	public void sendEmptyMessageDelayedUniq(int what, long delay) {
 		CavanMessage message = obtainMessage(what);
-		sendMessageDelayedUniq(message, delay);
+		sendMessageUniqDelayed(message, delay);
 	}
 
 	public void sendEmptyMessageUniq(int what) {
@@ -290,7 +314,7 @@ public class CavanMessageQueue extends Thread {
 
 	public void sendEmptyMessageDelayedReplace(int what, long delay) {
 		CavanMessage message = obtainMessage(what);
-		sendMessageDelayedReplace(message, delay);
+		sendMessageReplaceDelayed(message, delay);
 	}
 
 	public void sendEmptyMessageReplace(int what) {
@@ -401,64 +425,39 @@ public class CavanMessageQueue extends Thread {
 		return setDelay(sMessageMatcherWhat, what, null, delay);
 	}
 
-	public void postRunnableDelayed(Runnable runnable, long delay) {
+	public void postDelayed(Runnable runnable, long delay) {
 		CavanMessage message = obtainMessage(runnable);
 		sendMessageDelayed(message, delay);
 	}
 
-	public void postRunnable(Runnable runnable) {
-		postRunnableDelayed(runnable, 0);
+	public void post(Runnable runnable) {
+		postDelayed(runnable, 0);
 	}
 
-	public void postRunnableDelayedUniq(Runnable runnable, long delay) {
+	public void postUniqDelayed(Runnable runnable, long delay) {
 		CavanMessage message = obtainMessage(runnable);
 		sendMessageDelayedUniq(sMessageMatcherRunnable, message, delay);
 	}
 
-	public void postRunnableDelayedUniq(Runnable runnable) {
-		postRunnableDelayedUniq(runnable, 0);
+	public void postUniq(Runnable runnable) {
+		postUniqDelayed(runnable, 0);
 	}
 
-	public void postRunnableDelayedReplace(Runnable runnable, long delay) {
+	public void postReplaceDelayed(Runnable runnable, long delay) {
 		CavanMessage message = obtainMessage(runnable);
 		sendMessageDelayedReplace(sMessageMatcherRunnable, message, delay);
 	}
 
-	public void postRunnableDelayedReplace(Runnable runnable) {
-		postRunnableDelayedReplace(runnable, 0);
-	}
-
-	public synchronized void cancelRunable(Runnable runnable) {
-		CavanMessage message = mHead;
-		CavanMessage prev = null;
-
-		while (message != null) {
-			CavanMessage next = message.next;
-
-			if (message.runnable == message) {
-				if (message == mHead) {
-					mHead = next;
-				} else {
-					prev.next = next;
-				}
-			} else {
-				prev = message;
-			}
-
-			message = next;
-		}
+	public void postReplace(Runnable runnable) {
+		postReplaceDelayed(runnable, 0);
 	}
 
 	public boolean hasRunnable(Runnable runnable) {
 		return hasMessage(sMessageMatcherRunnable, RUNNABLE_MSG_ID, runnable);
 	}
 
-	public int cancelRunnable(Runnable runnable) {
+	public int cancel(Runnable runnable) {
 		return removeMessage(sMessageMatcherRunnable, RUNNABLE_MSG_ID, runnable);
-	}
-
-	public int setRunnableDelay(Runnable runnable, long delay) {
-		return setDelay(sMessageMatcherRunnable, RUNNABLE_MSG_ID, runnable, delay);
 	}
 
 	@Override
@@ -557,11 +556,11 @@ public class CavanMessageQueue extends Thread {
 			}
 		};
 
-		queue.postRunnableDelayed(runnable1, 2000);
-		queue.postRunnableDelayedUniq(runnable1);
+		queue.postDelayed(runnable1, 2000);
+		queue.postUniq(runnable1);
 
-		queue.postRunnableDelayed(runnable2, 3000);
-		queue.postRunnableDelayedReplace(runnable2);
+		queue.postDelayed(runnable2, 3000);
+		queue.postReplace(runnable2);
 
 		try {
 			queue.join();

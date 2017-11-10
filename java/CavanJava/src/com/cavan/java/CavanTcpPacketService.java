@@ -81,6 +81,16 @@ public class CavanTcpPacketService extends CavanTcpService {
 				CavanJava.dLog("CavanTcpPacketService::onPacketReceived: " + text);
 				return client.send(bytes, length);
 			}
+
+			@Override
+			protected void onClientDisconnected(Client client) {
+				CavanJava.pLog();
+			}
+
+			@Override
+			protected void onClientConnected(Client client) {
+				CavanJava.pLog();
+			}
 		};
 
 		service.open();
@@ -98,6 +108,11 @@ public class CavanTcpPacketService extends CavanTcpService {
 			protected boolean onTcpConnected(Socket socket) {
 				CavanJava.pLog();
 				return send("ABCDEF");
+			}
+
+			@Override
+			protected void onTcpDisconnected() {
+				CavanJava.pLog();
 			}
 		};
 
