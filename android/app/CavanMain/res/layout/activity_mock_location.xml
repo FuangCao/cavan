@@ -50,8 +50,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/listViewServers"
-        android:layout_marginTop="20dp"
+        android:layout_alignParentTop="true"
         android:text="@string/latitude" />
 
     <Button
@@ -117,8 +116,34 @@
         android:id="@+id/listViewServers"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonAdd"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true" >
+        android:layout_below="@+id/buttonLongitudeSub" >
+
     </ListView>
+
+    <Button
+        android:id="@+id/buttonEdit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/buttonAdd"
+        android:text="@string/edit" />
+
+    <Button
+        android:id="@+id/buttonCollect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/buttonEdit"
+        android:text="@string/collect" />
+
+    <Button
+        android:id="@+id/buttonOpen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/buttonCollect"
+        android:text="@string/open" />
 
 </RelativeLayout>

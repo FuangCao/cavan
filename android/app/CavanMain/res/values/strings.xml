@@ -529,5 +529,7 @@
 	<string name="mock_location_service">虚拟定位服务</string>
 	<string name="latitude">纬度</string>
 	<string name="longitude">经度</string>
+	<string name="edit">编辑</string>
+	<string name="collect">收藏</string>
 
 </resources>

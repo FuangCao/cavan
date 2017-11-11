@@ -40,6 +40,9 @@ public class MockLocationActivity extends Activity implements OnClickListener {
 	private EditText mEditTextLongitudeStep;
 
 	private Button mButtonAdd;
+	private Button mButtonEdit;
+	private Button mButtonCollect;
+	private Button mButtonOpen;
 	private Button mButtonDisconn;
 	private Button mButtonLatitudeAdd;
 	private Button mButtonLatitudeSub;
@@ -181,6 +184,9 @@ public class MockLocationActivity extends Activity implements OnClickListener {
 		mEditTextLongitudeStep = (EditText) findViewById(R.id.editTextLongitudeStep);
 
 		mButtonAdd = (Button) findViewById(R.id.buttonAdd);
+		mButtonEdit = (Button) findViewById(R.id.buttonEdit);
+		mButtonCollect = (Button) findViewById(R.id.buttonCollect);
+		mButtonOpen = (Button) findViewById(R.id.buttonOpen);
 		mButtonDisconn = (Button) findViewById(R.id.buttonDisconn);
 		mButtonLatitudeAdd = (Button) findViewById(R.id.buttonLatitudeAdd);
 		mButtonLatitudeSub = (Button) findViewById(R.id.buttonLatitudeSub);
@@ -206,23 +212,6 @@ public class MockLocationActivity extends Activity implements OnClickListener {
 		mLatitudeStep = CavanJava.parseDouble(mEditTextLatitudeStep.getText().toString());
 		mLongitudeStep = CavanJava.parseDouble(mEditTextLongitudeStep.getText().toString());
 
-		mEditTextLatitude.addTextChangedListener(new TextWatcher() {
-
-			@Override
-			public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
-			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-			@Override
-			public void afterTextChanged(Editable s) {
-				if (mBusyLock.acquire(mEditTextLatitude)) {
-					mLatitude = CavanJava.parseDouble(s.toString());
-					sendLocation();
-				}
-			}
-		});
-
 		mEditTextLatitudeStep.addTextChangedListener(new TextWatcher() {
 
 			@Override
@@ -234,23 +223,6 @@ public class MockLocationActivity extends Activity implements OnClickListener {
 			@Override
 			public void afterTextChanged(Editable s) {
 				mLatitudeStep = CavanJava.parseDouble(s.toString());
-			}
-		});
-
-		mEditTextLongitude.addTextChangedListener(new TextWatcher() {
-
-			@Override
-			public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
-			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-			@Override
-			public void afterTextChanged(Editable s) {
-				if (mBusyLock.acquire(mEditTextLongitude)) {
-					mLongitude = CavanJava.parseDouble(s.toString());
-					sendLocation();
-				}
 			}
 		});
 
@@ -269,6 +241,9 @@ public class MockLocationActivity extends Activity implements OnClickListener {
 		});
 
 		mButtonAdd.setOnClickListener(this);
+		mButtonEdit.setOnClickListener(this);
+		mButtonCollect.setOnClickListener(this);
+		mButtonOpen.setOnClickListener(this);
 		mButtonDisconn.setOnClickListener(this);
 		mButtonLatitudeAdd.setOnClickListener(this);
 		mButtonLatitudeSub.setOnClickListener(this);
@@ -367,22 +342,41 @@ public class MockLocationActivity extends Activity implements OnClickListener {
 			mLatitude += mLatitudeStep;
 			sendLocation();
 			mBusyLock.acquire(v);
+			mEditTextLatitude.setEnabled(false);
 			mEditTextLatitude.setText(Double.toString(mLatitude));
 		} else if (v == mButtonLatitudeSub) {
 			mLatitude -= mLatitudeStep;
 			sendLocation();
 			mBusyLock.acquire(v);
+			mEditTextLatitude.setEnabled(false);
 			mEditTextLatitude.setText(Double.toString(mLatitude));
 		} else if (v == mButtonLongitudeAdd) {
 			mLongitude += mLongitudeStep;
 			sendLocation();
 			mBusyLock.acquire(v);
+			mEditTextLongitude.setEnabled(false);
 			mEditTextLongitude.setText(Double.toString(mLongitude));
 		} else if (v == mButtonLongitudeSub) {
 			mLongitude -= mLongitudeStep;
 			sendLocation();
 			mBusyLock.acquire(v);
+			mEditTextLongitude.setEnabled(false);
 			mEditTextLongitude.setText(Double.toString(mLongitude));
+		} else if (v == mButtonEdit) {
+			if (mEditTextLatitude.isEnabled() || mEditTextLongitude.isEnabled()) {
+				mEditTextLatitude.setEnabled(false);
+				mEditTextLongitude.setEnabled(false);
+				mLatitude = CavanJava.parseDouble(mEditTextLatitude.getText().toString());
+				mLongitude = CavanJava.parseDouble(mEditTextLongitude.getText().toString());
+				sendLocation();
+			} else {
+				mEditTextLatitude.setEnabled(true);
+				mEditTextLongitude.setEnabled(true);
+			}
+		} else if (v == mButtonCollect) {
+
+		} else if (v == mButtonOpen) {
+
 		}
 	}
 
