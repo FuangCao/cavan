@@ -355,7 +355,7 @@ public class ApkRename {
 
 		Matcher matcher = sPatternSmaliGetIdentifier.matcher(line);
 		if (matcher.find()) {
-			CavanJava.pLog(line);
+			CavanJava.pfLog(line);
 			line = matcher.group(1) + "const-string/jumbo " + matcher.group(2) + ", \"" + mDestPackage + "\"\n" + line;
 		}
 
@@ -405,7 +405,7 @@ public class ApkRename {
 
 	public boolean doCopySmaliDir(CavanFile dirSource, CavanFile dirDest) {
 		if (!dirDest.mkdirs()) {
-			CavanJava.pLog("Failed to mkdirs: " + dirDest.getPath());
+			CavanJava.pfLog("Failed to mkdirs: " + dirDest.getPath());
 			return false;
 		}
 
@@ -635,12 +635,12 @@ public class ApkRename {
 		CavanJava.dLog("rename: " + mInFile.getPath() + " => " + mOutFile.getPath());
 
 		if (!CavanFile.deleteAll(mWorkFile)) {
-			CavanJava.pLog("Failed to deleteAll: " + mWorkFile.getPath());
+			CavanJava.pfLog("Failed to deleteAll: " + mWorkFile.getPath());
 			return false;
 		}
 
 		if (!doApkDecode(mInFile.getPath(), mWorkFile.getPath())) {
-			CavanJava.pLog("Failed to doApkDecode: " + mWorkFile.getPath());
+			CavanJava.pfLog("Failed to doApkDecode: " + mWorkFile.getPath());
 			return false;
 		}
 

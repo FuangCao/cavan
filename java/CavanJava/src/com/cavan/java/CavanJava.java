@@ -1,5 +1,7 @@
 package com.cavan.java;
 
+import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
@@ -14,6 +16,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class CavanJava {
 
+	public static CavanLogger sLogger = new CavanLogger();
+
 	public interface Closure {
 		Object call(Object... args);
 	}
@@ -22,51 +26,72 @@ public class CavanJava {
 		void call(Object... args);
 	}
 
+	public static void setLogger(CavanLogger logger) {
+		sLogger = logger;
+	}
+
 	public static void eLog(String message) {
-		System.err.println(message);
+		sLogger.eLog(message);
 	}
 
 	public static void eLog(Throwable throwable) {
-		throwable.printStackTrace();
+		sLogger.eLog(throwable);
 	}
 
 	public static void eLog(Throwable throwable, String message) {
-		eLog(message);
-		eLog(throwable);
+		sLogger.eLog(throwable, message);
+	}
+
+	public static void wLog(String message) {
+		sLogger.wLog(message);
+	}
+
+	public static void wLog(Throwable throwable) {
+		sLogger.wLog(throwable);
+	}
+
+	public static void wLog(Throwable throwable, String message) {
+		sLogger.wLog(throwable, message);
 	}
 
 	public static void dLog(String message) {
-		System.out.println(message);
+		sLogger.dLog(message);
 	}
 
 	public static void efLog(String format, Object... args) {
-		eLog(String.format(format, args));
+		sLogger.efLog(format, args);
 	}
 
 	public static void dfLog(String format, Object... args) {
-		dLog(String.format(format, args));
+		sLogger.dfLog(format, args);
 	}
 
-	protected static String buildPrintSep() {
-		int columns = getEnvColumns();
-		if (columns > 0) {
-			char[] chars = new char[columns];
-			for (int i = 0; i < columns; i++) {
-				chars[i] = '=';
-			}
+	public static void pLog() {
+		sLogger.pLog(5);
+	}
 
-			return new String(chars);
-		} else {
-			return "============================================================";
-		}
+	public static void pfLog(String format, Object... args) {
+		sLogger.pfLog(5, format, args);
+	}
+
+	public static void sepLog(int length) {
+		sLogger.sepLog(length);
 	}
 
 	public static void sepLog() {
-		dLog(buildPrintSep());
+		sLogger.sepLog();
 	}
 
-	public static String buildPosMessage() {
-		StackTraceElement trace = getCurrentStackTrace(4);
+	public static void dumpstack(Throwable throwable) {
+		sLogger.dumpstack(throwable);
+	}
+
+	public static void dumpstack() {
+		sLogger.dumpstack();
+	}
+
+	public static String buildPosMessage(int index) {
+		StackTraceElement trace = getCurrentStackTrace(index);
 		if (trace == null) {
 			return "unknown";
 		}
@@ -85,8 +110,12 @@ public class CavanJava {
 		return builder.toString();
 	}
 
-	public static String buildPosMessage(String format, Object... args) {
-		StackTraceElement trace = getCurrentStackTrace(4);
+	public static String buildPosMessage() {
+		return buildPosMessage(5);
+	}
+
+	public static String buildPosMessage(int index, String format, Object... args) {
+		StackTraceElement trace = getCurrentStackTrace(index);
 		if (trace == null) {
 			return "unknown";
 		}
@@ -102,24 +131,43 @@ public class CavanJava {
 		return builder.toString();
 	}
 
-	public static void pLog() {
-		dLog(buildPosMessage());
+	public static String buildPosMessage(String format, Object... args) {
+		return buildPosMessage(5, format, args);
 	}
 
-	public static void pLog(String message) {
-		dLog(buildPosMessage(message));
+	public static String buildThrowableMessage(Throwable throwable, String message) {
+		CavanMemOutputStream stream = new CavanMemOutputStream();
+		PrintStream pstream = new PrintStream(stream);
+
+		try {
+			if (message != null) {
+				pstream.println(message);
+			}
+
+			throwable.printStackTrace(pstream);
+
+			stream.flush();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return stream.toString();
 	}
 
-	public static void pfLog(String format, Object... args) {
-		dLog(buildPosMessage(format, args));
-	}
+	public static String buildSepMessage(int length) {
+		if (length <= 0) {
+			length = getEnvColumns();
+			if (length <= 0) {
+				length = 30;
+			}
+		}
 
-	public static void dumpstack(Throwable throwable) {
-		eLog(throwable);
-	}
+		char[] chars = new char[length];
+		for (int i = 0; i < length; i++) {
+			chars[i] = '=';
+		}
 
-	public static void dumpstack() {
-		eLog(new Throwable());
+		return new String(chars);
 	}
 
 	public static String getEnv(String name) {

@@ -14,5 +14,5 @@ logcat.view.colsize.Level=22
 logcat.view.colsize.PID=54
 logcat.view.colsize.TID=54
 logcat.view.colsize.Tag=125
-logcat.view.colsize.Text=685
+logcat.view.colsize.Text=736
 logcat.view.colsize.Time=156
