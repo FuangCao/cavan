@@ -52,4 +52,17 @@ public class CavanMemOutputStream extends OutputStream {
 		byte[] bytes = expand(1);
 		bytes[mLength++] = (byte) b;
 	}
+
+	public void write(byte[] bytes) throws IOException {
+		write(bytes, 0, bytes.length);
+	}
+
+	public void write(String text) throws IOException {
+		write(text.getBytes());
+	}
+
+	@Override
+	public String toString() {
+		return new String(mBytes, 0, mLength);
+	}
 }
