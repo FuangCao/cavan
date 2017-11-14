@@ -257,7 +257,7 @@
         <activity
             android:name="CavanShareAppActivity"
             android:label="@string/share_app"
-            android:launchMode="singleTask" >
+            android:launchMode="singleTask" android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

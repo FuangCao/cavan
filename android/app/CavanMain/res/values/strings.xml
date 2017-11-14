@@ -531,5 +531,6 @@
 	<string name="longitude">经度</string>
 	<string name="edit">编辑</string>
 	<string name="collect">收藏</string>
+	<string name="http_server_not_running">HTTP服务器没有打开</string>
 
 </resources>

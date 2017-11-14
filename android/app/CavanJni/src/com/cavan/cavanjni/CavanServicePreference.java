@@ -108,7 +108,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 		startService(context);
 	}
 
-	public void unbindService(Context context) {
+	public synchronized void unbindService(Context context) {
 		context.unbindService(mConnection);
 
 		if (mReceiverRegisted) {
@@ -121,30 +121,30 @@ public abstract class CavanServicePreference extends EditTextPreference {
 		}
 	}
 
-	public void startService(Context context) {
+	public synchronized void startService(Context context) {
 		Intent service = getServiceIntent(context);
 		context.startService(service);
 		context.bindService(service, mConnection, 0);
 	}
 
-	public void startService() {
+	public synchronized void startService() {
 		startService(getContext());
 	}
 
-	public void stopService(Context context) {
+	public synchronized void stopService(Context context) {
 		context.stopService(getServiceIntent(context));
 	}
 
-	public void stopService() {
+	public synchronized void stopService() {
 		stopService(getContext());
 	}
 
-	public void restartService() {
+	public synchronized void restartService() {
 		stopService();
 		mHandler.sendEmptyMessageDelayed(EVENT_START_SERVICE, 500);
 	}
 
-	public int getServiceState() {
+	public synchronized int getServiceState() {
 		if (mService != null) {
 			try {
 				return mService.getState();
@@ -156,7 +156,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 		return CavanNativeService.STATE_STOPPED;
 	}
 
-	public boolean isServiceEnabled() {
+	public synchronized boolean isServiceEnabled() {
 		if (mService != null) {
 			try {
 				return mService.isEnabled();
@@ -168,17 +168,41 @@ public abstract class CavanServicePreference extends EditTextPreference {
 		return false;
 	}
 
-	public void start(int port) {
+	public synchronized boolean start(int port) {
 		if (mService != null) {
 			try {
 				mService.start(port);
+				return true;
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
 		}
+
+		return false;
 	}
 
-	public void stop() {
+	public synchronized boolean start() {
+		String text = getText();
+		if (text.length() > 0) {
+			try {
+				return start(Integer.parseInt(text));
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return false;
+	}
+
+	public synchronized boolean checkAndStart() {
+		if (isServiceEnabled()) {
+			return true;
+		}
+
+		return start();
+	}
+
+	public synchronized void stop() {
 		if (mService != null) {
 			try {
 				mService.stop();
@@ -188,7 +212,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 		}
 	}
 
-	public int getPort() {
+	public synchronized int getPort() {
 		if (mService != null) {
 			try {
 				return mService.getPort();
@@ -200,7 +224,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 		return 0;
 	}
 
-	public void updateSummary(int state) {
+	public synchronized void updateSummary(int state) {
 
 		if (mService == null) {
 			setSummary(R.string.service_disconnected);
@@ -241,7 +265,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 		}
 	}
 
-	public void updateSummary(Context context, Intent intent) {
+	public synchronized void updateSummary(Context context, Intent intent) {
 		int state = intent.getIntExtra("state", CavanNativeService.STATE_STOPPED);
 		updateSummary(state);
 	}
@@ -254,7 +278,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 			if (mNeedStop) {
 				stop();
 			} else {
-				start(Integer.parseInt(getText()));
+				start();
 			}
 		}
 	}

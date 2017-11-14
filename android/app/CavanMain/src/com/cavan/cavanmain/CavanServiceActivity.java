@@ -9,9 +9,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 
 import com.cavan.android.CavanAndroid;
-import com.cavan.cavanjni.CavanService;
 import com.cavan.cavanjni.CavanServicePreference;
-import com.cavan.cavanmain.R;
 import com.cavan.java.CavanJava;
 
 public class CavanServiceActivity extends PreferenceActivity {
@@ -79,9 +77,7 @@ public class CavanServiceActivity extends PreferenceActivity {
 		if (preference == mPreferenceIpAddress) {
 			updateIpAddressStatus();
 		} else if (preference == mPreferenceShareApp) {
-			if (mPreferenceHttp.getServiceState() != CavanService.STATE_RUNNING) {
-				CavanAndroid.showToast(this, R.string.open_http_server_prompt);
-			} else {
+			if (mPreferenceHttp.checkAndStart()) {
 				InetAddress address = CavanJava.getIpAddress();
 				String host;
 
@@ -95,6 +91,8 @@ public class CavanServiceActivity extends PreferenceActivity {
 				Intent intent = new Intent(this, CavanShareAppActivity.class);
 				intent.putExtra("url", url);
 				startActivity(intent);
+			} else {
+				CavanAndroid.showToast(this, R.string.http_server_not_running);
 			}
 		}
 
