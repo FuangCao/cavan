@@ -896,6 +896,11 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 		ret |= ffile_printf(fd, " [<a href=\"%s/\">App</a>]", env);
 	}
 
+	env = cavan_getenv("SHARED_PATH", NULL);
+	if (env != NULL) {
+		ret |= ffile_printf(fd, " [<a href=\"%s/\">Shared</a>]", env);
+	}
+
 	if (ret < 0) {
 		pr_red_info("ffile_printf");
 		return ret;

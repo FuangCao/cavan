@@ -31,6 +31,7 @@ import android.widget.TextView;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanQrCode;
 import com.cavan.cavanjni.CavanJni;
+import com.cavan.cavanjni.HttpService;
 import com.cavan.java.CavanFile;
 
 public class CavanShareAppActivity extends Activity implements OnItemClickListener, OnCheckedChangeListener {
@@ -155,17 +156,11 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-		PackageInfo info = mPackageInfos.get(position);
-		String name = CavanFile.replaceInvalidFilenameChar(getAppName(info), '_') + ".apk";
-		CavanFile dir = new CavanFile(getCacheDir(), "apk");
-
-		if (dir.mkdirSafe()) {
-			String path = dir.getAbsolutePath() + File.separatorChar + name;
-			CavanJni.symlink(info.applicationInfo.sourceDir, path);
-		}
+		CavanFile dir = HttpService.getSharedDir(this);
+		CavanFile file = CavanJni.symlinkApk(getPackageManager(), dir, mPackageInfos.get(position).applicationInfo);
 
 		try {
-			String url = mUrl + dir.getAbsolutePath() + File.separatorChar + URLEncoder.encode(name, "UTF-8");
+			String url = mUrl + dir.getAbsolutePath() + File.separatorChar + URLEncoder.encode(file.getName(), "UTF-8");
 			CavanAndroid.postClipboardText(this, url);
 			mTextViewUrl.setText(url);
 

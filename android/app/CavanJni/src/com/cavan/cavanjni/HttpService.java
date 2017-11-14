@@ -30,10 +30,18 @@ public class HttpService extends CavanNativeService {
 		return CavanJni.kill("http_service");
 	}
 
+	public static CavanFile getSharedDir(Context context) {
+		return new CavanFile(context.getCacheDir(), "shared");
+	}
+
+	public static CavanFile getAppDir(Context context) {
+		return new CavanFile(context.getCacheDir(), "apk");
+	}
+
 	@Override
 	protected void onServiceStateChanged(int state) {
 		if (state == STATE_PREPARE) {
-			CavanFile apk = new CavanFile(getCacheDir(), "apk");
+			CavanFile apk = getAppDir(this);
 			if (CavanJni.symlinkApks(getPackageManager(), apk)) {
 				CavanJni.setEnv("APP_PATH", apk.getPath());
 			}
@@ -46,6 +54,12 @@ public class HttpService extends CavanNativeService {
 						CavanJni.setEnv("SDCARD" + i + "_PATH", volumes[i]);
 					}
 				}
+			}
+
+			CavanFile shared = getSharedDir(this);
+			if (shared.mkdirSafe()) {
+				shared.clear();
+				CavanJni.setEnv("SHARED_PATH", shared.getPath());
 			}
 		}
 

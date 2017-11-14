@@ -65,6 +65,24 @@ public class CavanJni extends CavanNative {
 		return -1;
 	}
 
+	public static CavanFile symlinkApk(PackageManager manager, CavanFile dir, ApplicationInfo info) {
+		String filename;
+
+		CharSequence label = manager.getApplicationLabel(info);
+		if (label != null) {
+			filename = CavanFile.replaceInvalidFilenameChar(label.toString(), '_');
+		} else {
+			filename = info.packageName;
+		}
+
+		CavanFile file = new CavanFile(dir, filename + ".apk");
+		if (symlink(info.sourceDir, file.getPath())) {
+			return file;
+		}
+
+		return null;
+	}
+
 	public static boolean symlinkApks(PackageManager manager, CavanFile target) {
 		if (!target.mkdirsSafe()) {
 			CavanAndroid.eLog("Failed to mkdirsSafe: " + target.getPath());
@@ -76,16 +94,7 @@ public class CavanJni extends CavanNative {
 		boolean success = true;
 
 		for (ApplicationInfo info : manager.getInstalledApplications(0)) {
-			String filename;
-
-			CharSequence label = manager.getApplicationLabel(info);
-			if (label != null) {
-				filename = CavanFile.replaceInvalidFilenameChar(label.toString(), '_');
-			} else {
-				filename = info.packageName;
-			}
-
-			if (!symlink(info.sourceDir, new File(target, filename + ".apk").getPath())) {
+			if (symlinkApk(manager, target, info) == null) {
 				success = false;
 			}
 		}
