@@ -59,6 +59,8 @@ public class CavanAndroid {
 	public static boolean ELOG_ENABLE = true;
 	public static boolean PLOG_ENABLE = true;
 
+	public static CavanAndroidLogger sLogger = new CavanAndroidLogger();
+
 	public static final int SDK_VERSION = Build.VERSION.SDK_INT;
 	public static final int SDK_VERSION_10  = Build.VERSION_CODES.BASE;
 	public static final int SDK_VERSION_11  = Build.VERSION_CODES.BASE_1_1;
@@ -105,6 +107,14 @@ public class CavanAndroid {
 	private static CavanWakeLock sWakeupLock = new CavanWakeLock(true);
 	private static CavanKeyguardLock sKeyguardLock = new CavanKeyguardLock();
 	private static CavanMulticastLock sMulticastLock = new CavanMulticastLock();
+
+	static {
+		updateJavaLogger();
+	}
+
+	public static void updateJavaLogger() {
+		CavanJava.sLogger = sLogger;
+	}
 
 	public static void eLog(String message) {
 		if (ELOG_ENABLE) {

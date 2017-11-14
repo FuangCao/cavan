@@ -1,7 +1,7 @@
 package com.cavan.java;
 
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
@@ -136,22 +136,20 @@ public class CavanJava {
 	}
 
 	public static String buildThrowableMessage(Throwable throwable, String message) {
-		CavanMemOutputStream stream = new CavanMemOutputStream();
-		PrintStream pstream = new PrintStream(stream);
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
 
-		try {
-			if (message != null) {
-				pstream.println(message);
-			}
-
-			throwable.printStackTrace(pstream);
-
-			stream.flush();
-		} catch (IOException e) {
-			e.printStackTrace();
+		if (message != null) {
+			pw.println(message);
 		}
 
-		return stream.toString();
+		if (throwable != null) {
+			throwable.printStackTrace(pw);
+		}
+
+		pw.flush();
+
+		return sw.toString();
 	}
 
 	public static String buildSepMessage(int length) {
