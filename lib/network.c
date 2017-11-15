@@ -1901,6 +1901,55 @@ static ssize_t network_client_recvfrom_dummy(struct network_client *client, void
 	return recvfrom(client->sockfd, buff, size, 0, addr, &client->addrlen);
 }
 
+static ssize_t network_client_send_masked_base(struct network_client *client, const u8 *buff, u8 *buff_rw, size_t size)
+{
+	const u8 *p, *p_end;
+	u8 *q;
+
+	for (p = buff, p_end = p + size, q = buff_rw; p < p_end; p++, q++) {
+		*q = (*p) ^ CAVAN_NET_MASK;
+	}
+
+	return inet_send(client->sockfd, (char *) buff_rw, size);
+}
+
+static ssize_t network_client_send_masked(struct network_client *client, const void *buff, size_t size)
+{
+	if (size > 1024) {
+		void *buff_rw;
+		ssize_t wrlen;
+
+		buff_rw = malloc(size);
+		if (buff_rw == NULL) {
+			pr_err_info("malloc");
+			return -ENOMEM;
+		}
+
+		wrlen = network_client_send_masked_base(client, buff, buff_rw, size);
+		free(buff_rw);
+
+		return wrlen;
+	} else {
+		u8 buff_rw[size];
+		return network_client_send_masked_base(client, buff, buff_rw, size);
+	}
+}
+
+static ssize_t network_client_recv_masked(struct network_client *client, void *buff, size_t size)
+{
+	ssize_t rdlen = inet_recv(client->sockfd, buff, size);
+
+	if (rdlen > 0) {
+		u8 *p, *p_end;
+
+		for (p = buff, p_end = p + rdlen; p < p_end; p++) {
+			*p ^= CAVAN_NET_MASK;
+		}
+	}
+
+	return rdlen;
+}
+
 static int network_protocol_open_client(const struct network_protocol_desc *desc, struct network_client *client, const struct network_url *url, int flags)
 {
 	client->type = desc->type;
@@ -2413,6 +2462,21 @@ static int network_client_tcp_open(struct network_client *client, const struct n
 	client->sockfd = sockfd;
 	client->addrlen = sizeof(struct sockaddr_in);
 	client->close = network_client_tcp_close;
+
+	return 0;
+}
+
+static int network_client_tcp_mask_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
+{
+	int ret = network_client_tcp_open(client, url, port, flags);
+
+	if (ret < 0) {
+		pr_red_info("network_client_tcp_open");
+		return ret;
+	}
+
+	client->send = network_client_send_masked;
+	client->recv = network_client_recv_masked;
 
 	return 0;
 }
@@ -3217,6 +3281,35 @@ static int network_service_tcp_open(struct network_service *service, const struc
 	return 0;
 }
 
+static int network_service_accept_tcp_masked(struct network_service *service, struct network_client *conn)
+{
+	int ret = network_service_accept_dummy(service, conn);
+
+	if (ret < 0) {
+		pr_red_info("network_service_accept_dummy");
+		return ret;
+	}
+
+	conn->send = network_client_send_masked;
+	conn->recv = network_client_recv_masked;
+
+	return 0;
+}
+
+static int network_service_tcp_mask_open(struct network_service *service, const struct network_url *url, u16 port, int flags)
+{
+	int ret = network_service_tcp_open(service, url, port, flags);
+
+	if (ret < 0) {
+		pr_red_info("network_service_tcp_open");
+		return ret;
+	}
+
+	service->accept = network_service_accept_tcp_masked;
+
+	return 0;
+}
+
 static int network_service_unix_tcp_open(struct network_service *service, const struct network_url *url, u16 port, int flags)
 {
 	service->sockfd = unix_create_tcp_service(url->pathname);
@@ -3562,6 +3655,12 @@ static const struct network_protocol_desc protocol_descs[] = {
 		.open_service = network_service_tcp_open,
 		.open_client = network_client_tcp_open,
 	},
+	[NETWORK_PROTOCOL_TCP_MASK] = {
+		.name = "tcp-mask",
+		.type = NETWORK_PROTOCOL_TCP,
+		.open_service = network_service_tcp_mask_open,
+		.open_client = network_client_tcp_mask_open,
+	},
 	[NETWORK_PROTOCOL_UDP] = {
 		.name = "udp",
 		.type = NETWORK_PROTOCOL_UDP,
@@ -3650,6 +3749,8 @@ network_protocol_t network_protocol_parse(const char *name)
 	case 't':
 		if (text_cmp(name + 1, "cp") == 0) {
 			return NETWORK_PROTOCOL_TCP;
+		} else if (text_cmp(name + 1, "cp-mask") == 0) {
+			return NETWORK_PROTOCOL_TCP_MASK;
 		}
 		break;
 

@@ -42,8 +42,8 @@ public class WifiDetectorActivity extends Activity {
 		public String SSID;
 		public String BSSID;
 		public int RSSI;
+		public int MAX;
 		public int COUNT;
-		public boolean LIGHT;
 
 		public CavanAccessPoint(String ssid) {
 			SSID = ssid;
@@ -57,8 +57,8 @@ public class WifiDetectorActivity extends Activity {
 				builder.append(BSSID.toUpperCase());
 			}
 
-			builder.append('@').append(COUNT).append(" - ");
-			builder.append(SSID).append(' ').append(RSSI);
+			builder.append('@').append(COUNT).append(" - ").append(SSID);
+			builder.append(' ').append(MAX).append(' ').append(RSSI);
 
 			return builder.toString();
 		}
@@ -103,6 +103,13 @@ public class WifiDetectorActivity extends Activity {
 					CavanAccessPoint point = getAccessPoint(result.SSID);
 					point.BSSID = result.BSSID;
 					point.RSSI = result.level;
+
+					if (point.COUNT == 0) {
+						point.MAX = point.RSSI;
+					} else if (point.RSSI > point.MAX) {
+						point.MAX = point.RSSI;
+					}
+
 					point.COUNT++;
 				}
 			}
@@ -128,14 +135,7 @@ public class WifiDetectorActivity extends Activity {
 
 			if (point == mAccessPoint) {
 				view.setTextColor(Color.WHITE);
-
-				if (point.LIGHT) {
-					view.setBackgroundColor(Color.BLACK);
-					point.LIGHT = false;
-				} else {
-					view.setBackgroundColor(Color.BLUE);
-					point.LIGHT = true;
-				}
+				view.setBackgroundColor(Color.BLUE);
 			} else {
 				view.setTextColor(Color.BLACK);
 				view.setBackgroundColor(Color.WHITE);
