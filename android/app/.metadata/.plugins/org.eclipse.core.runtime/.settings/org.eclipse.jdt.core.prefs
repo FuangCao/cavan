@@ -16,4 +16,5 @@ org.eclipse.jdt.core.compiler.compliance=1.7
 org.eclipse.jdt.core.compiler.problem.assertIdentifier=error
 org.eclipse.jdt.core.compiler.problem.enumIdentifier=error
 org.eclipse.jdt.core.compiler.source=1.7
+org.eclipse.jdt.core.userLibrary.amap=<?xml version\="1.0" encoding\="UTF-8"?>\n<userlibrary systemlibrary\="false" version\="2">\n\t<archive path\="/tmp/map/AMap2DMap_5.2.0_AMapSearch_5.5.0_20171107.jar"/>\n</userlibrary>\n
 org.eclipse.jdt.core.userLibrary.protobuf-jar=<?xml version\="1.0" encoding\="UTF-8"?>\n<userlibrary systemlibrary\="false" version\="2">\n\t<archive path\="/mnt/sda5/ubuntu/project/jwaoo-im/java/protobuf-jar/protobuf-java-3.3.1.jar"/>\n</userlibrary>\n

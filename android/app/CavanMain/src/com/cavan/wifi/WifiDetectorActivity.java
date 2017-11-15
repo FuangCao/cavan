@@ -34,11 +34,16 @@ public class WifiDetectorActivity extends Activity {
 		Manifest.permission.ACCESS_COARSE_LOCATION,
 	};
 
+	private CavanAccessPoint mAccessPoint;
+	private CavanAccessPoint[] mAccessPoints = new CavanAccessPoint[0];
+
 	public class CavanAccessPoint implements Comparable<CavanAccessPoint> {
 
 		public String SSID;
 		public String BSSID;
 		public int RSSI;
+		public int COUNT;
+		public boolean LIGHT;
 
 		public CavanAccessPoint(String ssid) {
 			SSID = ssid;
@@ -49,9 +54,10 @@ public class WifiDetectorActivity extends Activity {
 			StringBuilder builder = new StringBuilder();
 
 			if (BSSID != null && BSSID.length() > 0) {
-				builder.append(BSSID.toUpperCase()).append(" - ");
+				builder.append(BSSID.toUpperCase());
 			}
 
+			builder.append('@').append(COUNT).append(" - ");
 			builder.append(SSID).append(' ').append(RSSI);
 
 			return builder.toString();
@@ -59,14 +65,19 @@ public class WifiDetectorActivity extends Activity {
 
 		@Override
 		public int compareTo(CavanAccessPoint another) {
+			if (this == mAccessPoint) {
+				return -1;
+			}
+
+			if (another == mAccessPoint) {
+				return 1;
+			}
+
 			return another.RSSI - RSSI;
 		}
 	}
 
 	public class CavanAccessPointAdapter extends BaseAdapter implements OnItemClickListener {
-
-		private CavanAccessPoint mAccessPoint;
-		private CavanAccessPoint[] mAccessPoints = new CavanAccessPoint[0];
 
 		public CavanAccessPoint getAccessPoint(String ssid) {
 			for (CavanAccessPoint point : mAccessPoints) {
@@ -92,6 +103,7 @@ public class WifiDetectorActivity extends Activity {
 					CavanAccessPoint point = getAccessPoint(result.SSID);
 					point.BSSID = result.BSSID;
 					point.RSSI = result.level;
+					point.COUNT++;
 				}
 			}
 
@@ -116,7 +128,14 @@ public class WifiDetectorActivity extends Activity {
 
 			if (point == mAccessPoint) {
 				view.setTextColor(Color.WHITE);
-				view.setBackgroundColor(Color.BLUE);
+
+				if (point.LIGHT) {
+					view.setBackgroundColor(Color.BLACK);
+					point.LIGHT = false;
+				} else {
+					view.setBackgroundColor(Color.BLUE);
+					point.LIGHT = true;
+				}
 			} else {
 				view.setTextColor(Color.BLACK);
 				view.setBackgroundColor(Color.WHITE);
@@ -143,7 +162,7 @@ public class WifiDetectorActivity extends Activity {
 		@Override
 		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 			mAccessPoint = mAccessPoints[position];
-			super.notifyDataSetChanged();
+			notifyDataSetChanged();
 		}
 	};
 
