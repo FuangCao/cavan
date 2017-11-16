@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -550,6 +551,15 @@ public class CavanAndroid {
 		}
 
 		return preferences.getString(key, defValue);
+	}
+
+	public static Set<String> getPreferenceSet(Context context, String key, Set<String> defValue) {
+		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+		if (preferences == null) {
+			return defValue;
+		}
+
+		return preferences.getStringSet(key, defValue);
 	}
 
 	public static int getPreferenceInt(Context context, String key, int defValue)

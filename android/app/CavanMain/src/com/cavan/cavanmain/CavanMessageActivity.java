@@ -2,6 +2,7 @@ package com.cavan.cavanmain;
 
 
 import java.util.ArrayList;
+import java.util.Set;
 
 import android.Manifest;
 import android.app.Notification.Builder;
@@ -44,6 +45,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	public static final String KEY_LISTEN_CLICK = "listen_click";
 	public static final String KEY_FLOAT_TIMER = "float_timer";
 	public static final String KEY_ON_TIME_NOTIFY = "on_time_notify";
+	public static final String KEY_ON_TIME_SETTING = "on_time_setting";
 	public static final String KEY_LAN_SHARE = "lan_share";
 	public static final String KEY_LAN_TEST = "lan_test";
 	public static final String KEY_WAN_SHARE = "wan_share";
@@ -100,6 +102,22 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 
 	public static boolean isOnTimeNotifyEnabled(Context context) {
 		return CavanAndroid.isPreferenceEnabled(context, KEY_ON_TIME_NOTIFY);
+	}
+
+	public static boolean isOnTimeNotifyEnabledNow(Context context) {
+		if (!isOnTimeNotifyEnabled(context)) {
+			return false;
+		}
+
+		Set<String> times = CavanAndroid.getPreferenceSet(context, KEY_ON_TIME_SETTING, null);
+		if (times == null) {
+			return false;
+		}
+
+		long time = (System.currentTimeMillis() + 28800000 + 300000) / 1800000 % 48 * 30;
+		CavanAndroid.dLog("isOnTimeNotifyEnabledNow: time = " + time);
+
+		return times.contains(Long.toString(time));
 	}
 
 	public static int getAutoCommitCount(Context context) {

@@ -7,7 +7,7 @@ public class SystemProperties {
 
 	public static String TARGET_CLASS_NAME = "android.os.SystemProperties";
 
-	public static Object invokeMethodTyped(String name, Class<?>[] types, Object[] values) {
+	public static Object invokeMethodTyped(String name, Class<?>[] types, Object... values) {
 		return CavanJava.invokeStaticMethodTyped(TARGET_CLASS_NAME, name, types, values);
 	}
 

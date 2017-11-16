@@ -554,7 +554,7 @@ public class FloatMessageService extends FloatWidowService {
 	}
 
 	public void showOnTimeNotify() {
-		if (CavanMessageActivity.isOnTimeNotifyEnabled(this)) {
+		if (CavanMessageActivity.isOnTimeNotifyEnabledNow(this)) {
 			Calendar calendar = Calendar.getInstance();
 
 			if (calendar.get(Calendar.HOUR_OF_DAY) > 9) {

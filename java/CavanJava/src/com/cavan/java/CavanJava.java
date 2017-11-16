@@ -195,10 +195,18 @@ public class CavanJava {
 		return getEnvInt("COLUMNS", 0);
 	}
 
-	public static Object invokeMethodTyped(Class<?> cls, Object object, String name, Class<?>[] types, Object[] values) {
+	public static Method getMethod(Class<?> cls, String name, Class<?>... parameters) throws NoSuchMethodException {
 		try {
-			Method method = cls.getMethod(name, types);
-			return method.invoke(object, values);
+			return cls.getDeclaredMethod(name, parameters);
+		} catch (NoSuchMethodException e) {
+			return cls.getMethod(name, parameters);
+		}
+	}
+
+	public static Object invokeMethodTyped(Class<?> cls, Object object, String name, Class<?>[] types, Object... parameters) {
+		try {
+			Method method = getMethod(cls, name, types);
+			return method.invoke(object, parameters);
 		} catch (NoSuchMethodException e) {
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
@@ -212,10 +220,10 @@ public class CavanJava {
 		return null;
 	}
 
-	public static Object invokeMethodTyped(String className, Object object, String name, Class<?>[] types, Object[] values) {
+	public static Object invokeMethodTyped(String className, Object object, String name, Class<?>[] types, Object... parameters) {
 		try {
 			Class<?> cls = Class.forName(className);
-			return invokeMethodTyped(cls, object, name, types, values);
+			return invokeMethodTyped(cls, object, name, types, parameters);
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -223,12 +231,16 @@ public class CavanJava {
 		return null;
 	}
 
-	public static Object invokeStaticMethodTyped(Class<?> cls, String name, Class<?>[] types, Object[] values) {
-		return invokeMethodTyped(cls, null, name, types, values);
+	public static Object invokeMethodTyped(Object object, String name, Class<?>[] types, Object... parameters) {
+		return invokeMethodTyped(object.getClass(), object, name, types, parameters);
 	}
 
-	public static Object invokeStaticMethodTyped(String className, String name, Class<?>[] types, Object[] values) {
-		return invokeMethodTyped(className, null, name, types, values);
+	public static Object invokeStaticMethodTyped(Class<?> cls, String name, Class<?>[] types, Object... parameters) {
+		return invokeMethodTyped(cls, null, name, types, parameters);
+	}
+
+	public static Object invokeStaticMethodTyped(String className, String name, Class<?>[] types, Object... parameters) {
+		return invokeMethodTyped(className, null, name, types, parameters);
 	}
 
 	public static Class<?>[] buildTypeArray(Object[] values) {

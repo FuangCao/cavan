@@ -2,10 +2,12 @@ package com.cavan.resource;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Set;
 
 import android.app.AlertDialog.Builder;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.res.TypedArray;
 import android.preference.DialogPreference;
 import android.preference.PreferenceManager;
@@ -66,16 +68,6 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 
 		public void setEnable(boolean enable) {
 			mEnabled = enable;
-		}
-
-		public StringBuilder append(StringBuilder builder) {
-			if (!mEnabled) {
-				builder.append('!');
-			}
-
-			builder.append(mKeyword);
-
-			return builder;
 		}
 
 		@Override
@@ -216,9 +208,26 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 
 	private static String[] loadPrivate(SharedPreferences preferences, String key) {
 		try {
-			String lines = preferences.getString(key, null);
-			if (lines != null) {
-				return lines.split("\\s*\\n\\s*");
+			String value = preferences.getString(key, null);
+			CavanAndroid.dLog("value = " + value);
+			if (value != null) {
+				String[] lines = value.split("\\s*\\n\\s*");
+				if (lines.length != 1) {
+					return lines;
+				}
+
+				return lines[0].split("\\s*\\|\\s*");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		try {
+			Set<String> values = preferences.getStringSet(key, null);
+			if (values != null) {
+				String[] lines = new String[values.size()];
+				values.toArray(lines);
+				return lines;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -298,18 +307,32 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 		return true;
 	}
 
+	private boolean save(String value) {
+		Editor editor = getEditor();
+
+		editor.putString(getKey(), value);
+
+		try {
+			editor.apply();
+		} catch (Exception e) {
+			editor.commit();
+		}
+
+		return true;
+	}
+
 	private boolean save() {
 		StringBuilder builder = new StringBuilder();
 
 		for (Entry entry : mEntries) {
 			if (builder.length() > 0) {
-				builder.append('\n');
+				builder.append('|');
 			}
 
-			entry.append(builder);
+			builder.append(entry.toString());
 		}
 
-		return persistString(builder.toString());
+		return save(builder.toString());
 	}
 
 	private boolean add() {
@@ -399,11 +422,22 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 	@Override
 	protected void onSetInitialValue(boolean restorePersistedValue, Object defaultValue) {
 		CavanAndroid.dLog("onSetInitialValue: " + restorePersistedValue);
+
 		if (restorePersistedValue) {
 			load();
 		} else {
-			for (String text : ((String) defaultValue).split("\\s*,\\s*")) {
-				addEntry(text, true);
+			CavanAndroid.dLog("defaultValue = " + defaultValue);
+
+			if (defaultValue != null) {
+				String value = (String) defaultValue;
+
+				save(value);
+
+				for (String text : value.split("\\s*\\|\\s*")) {
+					addEntry(text, true);
+				}
+
+				mAdapter.notifyDataSetChanged();
 			}
 		}
 	}
