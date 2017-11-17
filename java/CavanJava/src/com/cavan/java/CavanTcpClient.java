@@ -13,6 +13,7 @@ public class CavanTcpClient implements Runnable {
 	private Socket mSocket;
 	private InputStream mInputStream;
 	private OutputStream mOutputStream;
+	private InetSocketAddress mAddress;
 	private List<InetSocketAddress> mAddresses = new ArrayList<InetSocketAddress>();
 
 	private Thread mConnThread = new Thread(this);
@@ -67,15 +68,22 @@ public class CavanTcpClient implements Runnable {
 		return mAddresses.get(0);
 	}
 
+	public synchronized List<InetSocketAddress> getAddresses() {
+		return mAddresses;
+	}
+
+	public synchronized InetSocketAddress getCurrentAddress() {
+		return mAddress;
+	}
+
 	public synchronized boolean addAddresses(InetSocketAddress address) {
 		if (mAddresses.contains(address)) {
 			return false;
 		}
 
 		mAddresses.add(address);
-		closeSocket();
 
-		return startConnThread();
+		return reconnect();
 	}
 
 	public synchronized boolean setAddress(InetSocketAddress address) {
@@ -90,6 +98,16 @@ public class CavanTcpClient implements Runnable {
 
 	public synchronized boolean setAddress(String host, int port) {
 		return setAddress(new InetSocketAddress(host, port));
+	}
+
+	public synchronized boolean setAddresses(InetSocketAddress... addresses) {
+		mAddresses.clear();
+
+		for (InetSocketAddress address : addresses) {
+			mAddresses.add(address);
+		}
+
+		return reconnect();
 	}
 
 	public void prErrInfo(String message) {
@@ -127,6 +145,16 @@ public class CavanTcpClient implements Runnable {
 
 	public synchronized boolean connect() {
 		mConnDisabled = false;
+		return startConnThread();
+	}
+
+	public synchronized boolean reconnect() {
+		closeSocket();
+
+		if (mConnDisabled) {
+			return true;
+		}
+
 		return startConnThread();
 	}
 
@@ -262,6 +290,7 @@ public class CavanTcpClient implements Runnable {
 				mOutputStream = socket.getOutputStream();
 				mInputStream = socket.getInputStream();
 
+				mAddress = address;
 				mConnected = true;
 
 				if (onTcpConnected(socket)) {
@@ -357,6 +386,7 @@ public class CavanTcpClient implements Runnable {
 					times = 0;
 
 					synchronized (this) {
+						mAddress = null;
 						mConnected = false;
 						onTcpDisconnected();
 
