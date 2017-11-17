@@ -5,13 +5,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CavanTcpClient implements Runnable {
 
 	private Socket mSocket;
 	private InputStream mInputStream;
 	private OutputStream mOutputStream;
-	private InetSocketAddress mAddress;
+	private List<InetSocketAddress> mAddresses = new ArrayList<InetSocketAddress>();
 
 	private Thread mConnThread = new Thread(this);
 	private boolean mConnDisabled = true;
@@ -58,19 +60,32 @@ public class CavanTcpClient implements Runnable {
 	}
 
 	public synchronized InetSocketAddress getAddress() {
-		return mAddress;
+		if (mAddresses.isEmpty()) {
+			return null;
+		}
+
+		return mAddresses.get(0);
 	}
 
-	public synchronized boolean setAddress(InetSocketAddress address) {
-		if (mAddress != null && mAddress.equals(address)) {
+	public synchronized boolean addAddresses(InetSocketAddress address) {
+		if (mAddresses.contains(address)) {
 			return false;
 		}
 
-		mAddress = address;
-
+		mAddresses.add(address);
 		closeSocket();
 
-		return true;
+		return startConnThread();
+	}
+
+	public synchronized boolean setAddress(InetSocketAddress address) {
+		if (mAddresses.size() == 1 && mAddresses.get(0).equals(address)) {
+			return false;
+		}
+
+		mAddresses.clear();
+
+		return addAddresses(address);
 	}
 
 	public synchronized boolean setAddress(String host, int port) {
@@ -93,9 +108,7 @@ public class CavanTcpClient implements Runnable {
 		return new Socket();
 	}
 
-	public synchronized boolean connect() {
-		mConnDisabled = false;
-
+	public synchronized boolean startConnThread() {
 		try {
 			synchronized (mConnThread) {
 				if (mConnThread.isAlive()) {
@@ -110,6 +123,11 @@ public class CavanTcpClient implements Runnable {
 			e.printStackTrace();
 			return false;
 		}
+	}
+
+	public synchronized boolean connect() {
+		mConnDisabled = false;
+		return startConnThread();
 	}
 
 	public synchronized boolean connect(InetSocketAddress address) {
@@ -223,6 +241,8 @@ public class CavanTcpClient implements Runnable {
 	}
 
 	public boolean openSocket(InetSocketAddress address) {
+		CavanJava.dLog("openSocket: " + address);
+
 		closeSocket();
 
 		Socket socket = createSocket();
@@ -303,23 +323,32 @@ public class CavanTcpClient implements Runnable {
 			times = 0;
 
 			while (true) {
-				InetSocketAddress address;
+				InetSocketAddress[] addresses;
 
 				synchronized (this) {
 					if (mConnDisabled) {
 						break;
 					}
 
-					address = mAddress;
+					int count = mAddresses.size();
+					if (count <= 0) {
+						break;
+					}
+
+					addresses = new InetSocketAddress[count];
+					mAddresses.toArray(addresses);
 				}
 
-				prDbgInfo("address = " + address);
+				boolean success = false;
 
-				if (address == null) {
-					break;
+				for (int i = 0; i < addresses.length; i++) {
+					success = openSocket(addresses[i]);
+					if (success) {
+						break;
+					}
 				}
 
-				if (openSocket(address)) {
+				if (success) {
 					InputStream stream = getInputStream();
 					if (stream != null) {
 						mainLoop(stream);

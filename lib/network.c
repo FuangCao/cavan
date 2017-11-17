@@ -1950,6 +1950,35 @@ static ssize_t network_client_recv_masked(struct network_client *client, void *b
 	return rdlen;
 }
 
+static ssize_t network_client_send_packed(struct network_client *client, const void *buff, size_t size)
+{
+	ssize_t wrlen;
+
+	wrlen = inet_send(client->sockfd, (void *) &size, 2);
+	if (wrlen != 2) {
+		return -EIO;
+	}
+
+	return inet_send(client->sockfd, buff, size);
+}
+
+static ssize_t network_client_recv_packed(struct network_client *client, void *buff, size_t size)
+{
+	ssize_t rdlen;
+	u16 length;
+
+	rdlen = inet_recv(client->sockfd, (void *) &length, 2);
+	if (rdlen != 2) {
+		return -EIO;
+	}
+
+	if (size < length) {
+		return -ENOMEM;
+	}
+
+	return inet_recv(client->sockfd, buff, length);
+}
+
 static int network_protocol_open_client(const struct network_protocol_desc *desc, struct network_client *client, const struct network_url *url, int flags)
 {
 	client->type = desc->type;
@@ -2477,6 +2506,21 @@ static int network_client_tcp_mask_open(struct network_client *client, const str
 
 	client->send = network_client_send_masked;
 	client->recv = network_client_recv_masked;
+
+	return 0;
+}
+
+static int network_client_tcp_pack_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
+{
+	int ret = network_client_tcp_open(client, url, port, flags);
+
+	if (ret < 0) {
+		pr_red_info("network_client_tcp_open");
+		return ret;
+	}
+
+	client->send = network_client_send_packed;
+	client->recv = network_client_recv_packed;
 
 	return 0;
 }
@@ -3296,6 +3340,21 @@ static int network_service_accept_tcp_masked(struct network_service *service, st
 	return 0;
 }
 
+static int network_service_accept_tcp_packed(struct network_service *service, struct network_client *conn)
+{
+	int ret = network_service_accept_dummy(service, conn);
+
+	if (ret < 0) {
+		pr_red_info("network_service_accept_dummy");
+		return ret;
+	}
+
+	conn->send = network_client_send_packed;
+	conn->recv = network_client_recv_packed;
+
+	return 0;
+}
+
 static int network_service_tcp_mask_open(struct network_service *service, const struct network_url *url, u16 port, int flags)
 {
 	int ret = network_service_tcp_open(service, url, port, flags);
@@ -3306,6 +3365,20 @@ static int network_service_tcp_mask_open(struct network_service *service, const 
 	}
 
 	service->accept = network_service_accept_tcp_masked;
+
+	return 0;
+}
+
+static int network_service_tcp_pack_open(struct network_service *service, const struct network_url *url, u16 port, int flags)
+{
+	int ret = network_service_tcp_open(service, url, port, flags);
+
+	if (ret < 0) {
+		pr_red_info("network_service_tcp_open");
+		return ret;
+	}
+
+	service->accept = network_service_accept_tcp_packed;
 
 	return 0;
 }
@@ -3661,6 +3734,12 @@ static const struct network_protocol_desc protocol_descs[] = {
 		.open_service = network_service_tcp_mask_open,
 		.open_client = network_client_tcp_mask_open,
 	},
+	[NETWORK_PROTOCOL_TCP_PACK] = {
+		.name = "tcp-pack",
+		.type = NETWORK_PROTOCOL_TCP,
+		.open_service = network_service_tcp_pack_open,
+		.open_client = network_client_tcp_pack_open,
+	},
 	[NETWORK_PROTOCOL_UDP] = {
 		.name = "udp",
 		.type = NETWORK_PROTOCOL_UDP,
@@ -3747,10 +3826,19 @@ network_protocol_t network_protocol_parse(const char *name)
 
 	switch (name[0]) {
 	case 't':
-		if (text_cmp(name + 1, "cp") == 0) {
-			return NETWORK_PROTOCOL_TCP;
-		} else if (text_cmp(name + 1, "cp-mask") == 0) {
-			return NETWORK_PROTOCOL_TCP_MASK;
+		if (text_lhcmp("cp", name + 1) == 0) {
+			if (name[3] != '-') {
+				if (name[3] == 0) {
+					return NETWORK_PROTOCOL_TCP;
+				}
+				break;
+			}
+
+			if (text_cmp(name + 4, "mask") == 0) {
+				return NETWORK_PROTOCOL_TCP_MASK;
+			} else if (strcmp(name + 4, "pack") == 0) {
+				return NETWORK_PROTOCOL_TCP_PACK;
+			}
 		}
 		break;
 
