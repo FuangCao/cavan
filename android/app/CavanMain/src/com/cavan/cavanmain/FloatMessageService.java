@@ -555,13 +555,9 @@ public class FloatMessageService extends FloatWidowService {
 
 	public void showOnTimeNotify() {
 		if (CavanMessageActivity.isOnTimeNotifyEnabledNow(this)) {
-			Calendar calendar = Calendar.getInstance();
-
-			if (calendar.get(Calendar.HOUR_OF_DAY) > 9) {
-				setLockScreenEnable(false);
-				CavanAndroid.acquireWakeupLock(getApplicationContext(), 20000);
-				showToast(MSG_SHOW_NOTIFY, R.string.on_time_notify);
-			}
+			setLockScreenEnable(false);
+			CavanAndroid.acquireWakeupLock(getApplicationContext(), 20000);
+			showToast(MSG_SHOW_NOTIFY, R.string.on_time_notify);
 		}
 	}
 

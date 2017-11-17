@@ -13,11 +13,11 @@ public class CavanBroadcastReceiver extends BroadcastReceiver {
 	public static void setOnTimeNotifyAlarm(Context context) {
 		AlarmManager manager = (AlarmManager) CavanAndroid.getSystemServiceCached(context, Context.ALARM_SERVICE);
 		if (manager != null) {
-			long timeNow = System.currentTimeMillis();
-			long timeAlarm = timeNow / 3600000 * 3600000 + 3480000;
+			final long timeNow = System.currentTimeMillis();
+			long timeAlarm = timeNow / 1800000 * 1800000 + 1680000;
 
-			if (timeAlarm <= timeNow) {
-				timeAlarm += 3600000;
+			if (timeAlarm < timeNow) {
+				timeAlarm += 1800000;
 			}
 
 			Intent intent = new Intent(context, CavanBroadcastReceiver.class).setAction(CavanMessageActivity.ACTION_ON_TIME_NOTIFY);

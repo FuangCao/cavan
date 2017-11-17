@@ -2,6 +2,7 @@ package com.cavan.cavanmain;
 
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Set;
 
 import android.Manifest;
@@ -109,15 +110,18 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 			return false;
 		}
 
+		Calendar calendar = Calendar.getInstance();
+		int hour = calendar.get(Calendar.HOUR_OF_DAY);
+
 		Set<String> times = CavanAndroid.getPreferenceSet(context, KEY_ON_TIME_SETTING, null);
-		if (times == null) {
-			return false;
+		if (times == null || times.isEmpty()) {
+			return hour > 8;
 		}
 
-		long time = (System.currentTimeMillis() + 28800000 + 300000) / 1800000 % 48 * 30;
-		CavanAndroid.dLog("isOnTimeNotifyEnabledNow: time = " + time);
+		int min = (hour * 60 + calendar.get(Calendar.MINUTE) + 10) / 30 * 30;
+		CavanAndroid.dLog("isOnTimeNotifyEnabledNow: " + min);
 
-		return times.contains(Long.toString(time));
+		return times.contains(Integer.toString(min));
 	}
 
 	public static int getAutoCommitCount(Context context) {
