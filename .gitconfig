@@ -6,9 +6,6 @@
 [remote "local"]
 	url = file:///git/cavan.git
 	fetch = +refs/heads/*:refs/remotes/local/*
-[remote "github"]
-	url = https://github.com/fuangcao/cavan.git
-	fetch = +refs/heads/*:refs/remotes/github/*
 [remote "csdn"]
 	url = https://code.csdn.net/fuangcao/cavan.git
 	fetch = +refs/heads/*:refs/remotes/csdn/*
@@ -21,3 +18,6 @@
 [branch "master"]
 	remote = oschina
 	merge = refs/heads/master
+[remote "github"]
+	url = https://github.com/fuangcao/cavan.git
+	fetch = +refs/heads/*:refs/remotes/github/*

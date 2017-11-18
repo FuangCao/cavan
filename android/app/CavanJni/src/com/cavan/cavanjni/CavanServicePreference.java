@@ -183,7 +183,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 
 	public synchronized boolean start() {
 		String text = getText();
-		if (text.length() > 0) {
+		if (text != null && text.length() > 0) {
 			try {
 				return start(Integer.parseInt(text));
 			} catch (NumberFormatException e) {
