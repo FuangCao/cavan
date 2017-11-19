@@ -27,6 +27,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	}
 
 	private long mUnpackTime;
+	private boolean mIsWebViewUi;
 	private boolean mIsLauncherUi;
 	private boolean mUnpackPending;
 	private List<Integer> mFinishNodes = new ArrayList<Integer>();
@@ -34,6 +35,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	public CavanAccessibilityMM(CavanAccessibilityService service) {
 		super(service);
 		sInstance = this;
+	}
+
+	public boolean isWebViewUi() {
+		return mIsWebViewUi;
 	}
 
 	private boolean isMessageItemNode(AccessibilityNodeInfo node) {
@@ -315,6 +320,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	@Override
 	public void onWindowStateChanged(AccessibilityEvent event) {
 		mIsLauncherUi = false;
+		mIsWebViewUi = false;
 
 		switch (mClassName) {
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiReceiveUI":
@@ -338,6 +344,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			if (getPacketCount() > 0) {
 				setLockEnable(POLL_DELAY, true);
 			}
+			break;
+
+		case "com.tencent.mm.plugin.webview.ui.tools.WebViewUI":
+			mIsWebViewUi = true;
 			break;
 
 		default:

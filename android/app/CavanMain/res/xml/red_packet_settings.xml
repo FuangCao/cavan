@@ -139,7 +139,7 @@
 
 	<CheckBoxPreference android:key="qq_filter"
 	    android:persistent="true"
-	    android:defaultValue="false"
+	    android:defaultValue="true"
 	    android:title="@string/qq_filter" />
 
 	<ListPreference android:key="mm_auto_unpack"
@@ -151,7 +151,7 @@
 
 	<CheckBoxPreference android:key="mm_filter"
 	    android:persistent="true"
-	    android:defaultValue="false"
+	    android:defaultValue="true"
 	    android:title="@string/mm_filter" />
 
 	<EditTextPreference android:key="name"

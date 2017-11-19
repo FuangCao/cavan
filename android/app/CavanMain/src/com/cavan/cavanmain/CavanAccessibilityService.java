@@ -243,6 +243,22 @@ public class CavanAccessibilityService extends AccessibilityService {
 		mAccessibilityMap.put(CavanPackageName.SOGOU_OCR, mAccessibilitySogou);
 	}
 
+	public CavanAccessibilityQQ getAccessibilityQQ() {
+		return mAccessibilityQQ;
+	}
+
+	public CavanAccessibilityMM getAccessibilityMM() {
+		return mAccessibilityMM;
+	}
+
+	public CavanAccessibilitySogou getAccessibilitySogou() {
+		return mAccessibilitySogou;
+	}
+
+	public CavanAccessibilityAlipay getAccessibilityAlipay() {
+		return mAccessibilityAlipay;
+	}
+
 	public void setAutoOpenAppEnable(boolean enable) {
 		if (enable) {
 			mHandler.removeMessages(MSG_CHECK_AUTO_OPEN_APP);

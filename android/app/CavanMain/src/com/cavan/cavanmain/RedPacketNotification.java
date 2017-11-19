@@ -407,6 +407,15 @@ public class RedPacketNotification extends CavanNotification {
 		return mFinder.getNormalCode(getPackageName(), CavanMessageActivity.isFuDaiNotifyEnabled(mService));
 	}
 
+	private boolean isMmFilterEnabled(String user) {
+		CavanAccessibilityService service = CavanAccessibilityService.getInstance();
+		if (service != null && service.getAccessibilityMM().isWebViewUi()) {
+			return true;
+		}
+
+		return CavanMessageActivity.isMmFilterEnabled(mService) && sExcludeUsersMM.contains(user);
+	}
+
 	public boolean sendRedPacketNotifyNormal() {
 		if (mCodeOnly) {
 			return false;
@@ -431,7 +440,7 @@ public class RedPacketNotification extends CavanNotification {
 				}
 			}
 		} else if ("微信".equals(code)) {
-			if (CavanMessageActivity.isMmFilterEnabled(mService) && sExcludeUsersMM.contains(user)) {
+			if (isMmFilterEnabled(user)) {
 				CavanAndroid.dLog("Exclude user: " + user);
 				send = false;
 			} else {
