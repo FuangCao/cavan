@@ -1,5 +1,6 @@
 package com.cavan.resource;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
@@ -30,6 +31,7 @@ import android.widget.PopupMenu.OnMenuItemClickListener;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanCheckBox;
+import com.cavan.java.CavanJava;
 import com.cavan.java.CavanLinkedList;
 
 public class EditableMultiSelectListPreference extends DialogPreference implements OnClickListener, OnCheckedChangeListener {
@@ -237,16 +239,14 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 	}
 
 	public static ArrayList<String> load(SharedPreferences preferences, String key) {
-		String[] lines = loadPrivate(preferences, key);
-		if (lines == null) {
-			return null;
-		}
-
 		ArrayList<String> list = new ArrayList<String>();
+		String[] lines = loadPrivate(preferences, key);
 
-		for (String line : lines) {
-			if (line.length() > 0 && line.charAt(0) != '!') {
-				list.add(line);
+		if (lines != null) {
+			for (String line : lines) {
+				if (line.length() > 0 && line.charAt(0) != '!') {
+					list.add(line);
+				}
 			}
 		}
 
@@ -255,6 +255,29 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 
 	public static ArrayList<String> load(Context context, String key) {
 		return load(PreferenceManager.getDefaultSharedPreferences(context), key);
+	}
+
+	public static InetSocketAddress[] loadInetSocketAddresses(Context context, String key, int defPort) {
+		ArrayList<String> lines = load(context, key);
+		InetSocketAddress[] addresses = new InetSocketAddress[lines.size()];
+
+		int i = 0;
+
+		for (String line : lines) {
+			int port;
+			String[] args = line.split("\\s*:\\s*", 2);
+
+			if (args.length > 1) {
+				port = CavanJava.parseInt(args[1]);
+			} else {
+				port = defPort;
+			}
+
+			InetSocketAddress address = new InetSocketAddress(args[0], port);
+			addresses[i++] = address;
+		}
+
+		return addresses;
 	}
 
 	private boolean addEntry(String keyword, boolean enabled) {

@@ -76,6 +76,15 @@ public class CavanTcpClient implements Runnable {
 		return mAddress;
 	}
 
+	public synchronized String getCurrentAddressString() {
+		InetSocketAddress address = mAddress;
+		if (address == null) {
+			return null;
+		}
+
+		return address.getHostString() + ':' + address.getPort();
+	}
+
 	public synchronized boolean addAddresses(InetSocketAddress address) {
 		if (mAddresses.contains(address)) {
 			return false;
@@ -101,6 +110,16 @@ public class CavanTcpClient implements Runnable {
 	}
 
 	public synchronized boolean setAddresses(InetSocketAddress... addresses) {
+		mAddresses.clear();
+
+		for (InetSocketAddress address : addresses) {
+			mAddresses.add(address);
+		}
+
+		return reconnect();
+	}
+
+	public synchronized boolean setAddresses(List<InetSocketAddress> addresses) {
 		mAddresses.clear();
 
 		for (InetSocketAddress address : addresses) {
@@ -281,7 +300,10 @@ public class CavanTcpClient implements Runnable {
 
 		synchronized (this) {
 			mSocket = socket;
+			mAddress = address;
 		}
+
+		onTcpConnecting(address);
 
 		try {
 			socket.connect(address, 10000);
@@ -290,7 +312,6 @@ public class CavanTcpClient implements Runnable {
 				mOutputStream = socket.getOutputStream();
 				mInputStream = socket.getInputStream();
 
-				mAddress = address;
 				mConnected = true;
 
 				if (onTcpConnected(socket)) {
@@ -386,7 +407,6 @@ public class CavanTcpClient implements Runnable {
 					times = 0;
 
 					synchronized (this) {
-						mAddress = null;
 						mConnected = false;
 						onTcpDisconnected();
 
@@ -395,6 +415,8 @@ public class CavanTcpClient implements Runnable {
 						}
 					}
 				} else {
+					mAddress = null;
+
 					if (isConnDisabled()) {
 						break;
 					}
@@ -440,6 +462,8 @@ public class CavanTcpClient implements Runnable {
 	protected void onTcpClientRunning() {}
 
 	protected void onTcpClientStopped() {}
+
+	protected void onTcpConnecting(InetSocketAddress address) {}
 
 	protected boolean onTcpConnected(Socket socket) {
 		return true;

@@ -634,5 +634,8 @@
 	<string name="edit">编辑</string>
 	<string name="collect">收藏</string>
 	<string name="http_server_not_running">HTTP服务器没有打开</string>
+	<string name="network_ime">网络输入法</string>
+	<string name="connecting_to">正在连接：<xliff:g>%1$s</xliff:g></string>
+	<string name="connected_to">已连接：<xliff:g>%1$s</xliff:g></string>
 
 </resources>

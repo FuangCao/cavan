@@ -1,6 +1,7 @@
 package com.cavan.cavanmain;
 
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Set;
@@ -30,6 +31,7 @@ import android.preference.RingtonePreference;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanString;
+import com.cavan.java.CavanTcpPacketClient;
 import com.cavan.resource.EditableMultiSelectListPreference;
 
 public class CavanMessageActivity extends PreferenceActivity implements OnPreferenceChangeListener {
@@ -83,6 +85,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	public static final String KEY_NAME = "name";
 	public static final String KEY_PHONE = "phone";
 	public static final String KEY_THANKS_NOTIFY = "thanks_notify";
+	public static final String KEY_NETWORK_IME = "network_ime";
 
 	private static CavanMessageActivity sInstance;
 
@@ -252,6 +255,10 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		return CavanAndroid.getPreferenceInt(context, KEY_RED_PACKET_NOTIFY_SETTING, 3);
 	}
 
+	public static InetSocketAddress[] getNetworkImeAddresses(Context context) {
+		return EditableMultiSelectListPreference.loadInetSocketAddresses(context, KEY_NETWORK_IME, 8865);
+	}
+
 	public static boolean startSogouOcrActivity(Context context) {
 		try {
 			return CavanAndroid.startActivity(context, CavanPackageName.SOGOU_OCR, "com.sogou.ocrplugin.CameraActivity");
@@ -286,6 +293,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	private Preference mPreferenceWanTest;
 	private CheckBoxPreference mPreferenceTcpBridge;
 	private EditTextPreference mPreferenceTcpBridgeSetting;
+	private EditableMultiSelectListPreference mPreferenceNetworkIme;
 
 	private IFloatMessageService mFloatMessageService;
 	private ServiceConnection mFloatMessageConnection = new ServiceConnection() {
@@ -349,6 +357,32 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 
 		if (service != null) {
 			updateBridgeState(service.getBridgeState());
+		}
+	}
+
+	public void updateNetworkImeState() {
+		CavanInputMethod ime = CavanInputMethod.getInstance();
+		if (ime != null) {
+			CavanTcpPacketClient client = ime.getTcpClient();
+			if (client.isConnDisabled()) {
+				mPreferenceNetworkIme.setSummary(R.string.stopped);
+			} else {
+				String address = client.getCurrentAddressString();
+
+				if (client.isConnected()) {
+					if (address == null) {
+						address = "unknown";
+					}
+
+					mPreferenceNetworkIme.setSummary(getResources().getString(R.string.connected_to, address));
+				} else if (address != null) {
+					mPreferenceNetworkIme.setSummary(getResources().getString(R.string.connecting_to, address));
+				} else {
+					mPreferenceNetworkIme.setSummary(R.string.waiting);
+				}
+			}
+		} else {
+			mPreferenceNetworkIme.setSummary(R.string.stopped);
 		}
 	}
 
@@ -442,6 +476,9 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		mPreferenceOnTimeNotify = (CheckBoxPreference) findPreference(KEY_ON_TIME_NOTIFY);
 		mPreferenceOnTimeNotify.setOnPreferenceChangeListener(this);
 
+		mPreferenceNetworkIme = (EditableMultiSelectListPreference) findPreference(KEY_NETWORK_IME);
+		mPreferenceNetworkIme.setOnPreferenceChangeListener(this);
+
 		findListPreference(KEY_THANKS_NOTIFY);
 		findListPreference(KEY_AUTO_COMMIT);
 		findListPreference(KEY_COMMIT_AHEAD);
@@ -458,6 +495,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 
 		updateWanState();
 		updateBridgeState();
+		updateNetworkImeState();
 
 		CavanAndroid.checkAndRequestPermissions(this, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION);
 	}
@@ -642,6 +680,11 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}
+			}
+		} else if (preference == mPreferenceNetworkIme) {
+			CavanInputMethod ime = CavanInputMethod.getInstance();
+			if (ime != null) {
+				ime.updateTcpClient();
 			}
 		} else if (preference instanceof ListPreference) {
 			ListPreference listPreference = (ListPreference) preference;

@@ -207,6 +207,11 @@
 		android:entryValues="@array/on_time_values"
 	    android:title="@string/on_time_notify_setting" />
 
+	<com.cavan.resource.EditableMultiSelectListPreference
+	    android:key="network_ime"
+	    android:persistent="true"
+	    android:title="@string/network_ime" />
+
 	<CheckBoxPreference android:key="tcp_bridge"
 	    android:persistent="true"
 	    android:title="@string/tcp_bridge" />
