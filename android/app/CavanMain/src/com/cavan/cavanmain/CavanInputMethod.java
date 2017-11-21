@@ -78,6 +78,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	private static final int MSG_UPDATE_TCP_CLIENT = 1;
 	private static final int MSG_TCP_CLIENT_UPDATED = 2;
 	private static final int MSG_TCP_PACKET_RECEIVED = 3;
+	private static final int MSG_SEND_TEXT = 4;
 
 	private static CavanInputMethod sInstance;
 
@@ -109,6 +110,13 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 			case MSG_TCP_PACKET_RECEIVED:
 				onTcpPacketReceived((String) msg.obj);
+				break;
+
+			case MSG_SEND_TEXT:
+				CavanAccessibilityService accessibility = CavanAccessibilityService.getInstance();
+				if (accessibility != null) {
+					accessibility.commitText(CavanInputMethod.this);
+				}
 				break;
 			}
 		}
@@ -844,10 +852,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 				conn.commitText(args[1], 0);
 
 				if (send) {
-					CavanAccessibilityService accessibility = CavanAccessibilityService.getInstance();
-					if (accessibility != null) {
-						accessibility.commitText(this);
-					}
+					mHandler.sendEmptyMessageDelayed(MSG_SEND_TEXT, 100);
 				}
 			} else {
 				conn.commitText(CavanString.EMPTY_STRING, 0);

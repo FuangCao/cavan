@@ -419,7 +419,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 	@Override
 	public boolean commitText(AccessibilityNodeInfo root, CavanInputMethod ime) {
-		if ("com.tencent.mm.ui.LauncherUI".equals(mClassName)) {
+		if (mIsLauncherUi) {
 			List<AccessibilityNodeInfo> nodes = CavanAccessibility.findNodesByText(root, "发送");
 			int count = 0;
 
