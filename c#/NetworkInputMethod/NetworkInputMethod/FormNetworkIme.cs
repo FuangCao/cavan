@@ -57,6 +57,11 @@ namespace NetworkInputMethod
             return sendCommand(bytes);
         }
 
+        public int sendKey(int code)
+        {
+            return sendCommand("KEY " + code);
+        }
+
         private void buttonStart_Click(object sender, EventArgs e)
         {
             mService.start();
@@ -120,6 +125,81 @@ namespace NetworkInputMethod
         {
             textBoxContent.Clear();
             sendCommand("REPLACE");
+        }
+
+        private void buttonUp_Click(object sender, EventArgs e)
+        {
+            sendKey(19);
+        }
+
+        private void buttonDown_Click(object sender, EventArgs e)
+        {
+            sendKey(20);
+        }
+
+        private void buttonLeft_Click(object sender, EventArgs e)
+        {
+            sendKey(21);
+        }
+
+        private void buttonRight_Click(object sender, EventArgs e)
+        {
+            sendKey(22);
+        }
+
+        private void buttonEnter_Click(object sender, EventArgs e)
+        {
+            sendKey(66);
+        }
+
+        private void buttonVolumeDown_Click(object sender, EventArgs e)
+        {
+            sendKey(25);
+        }
+
+        private void buttonVolumeUp_Click(object sender, EventArgs e)
+        {
+            sendKey(24);
+        }
+
+        private void buttonBack_Click(object sender, EventArgs e)
+        {
+            sendKey(4);
+        }
+
+        private void radioButtonSend_CheckedChanged(object sender, EventArgs e)
+        {
+            checkBoxClear.Checked = false;
+        }
+
+        private void radioButtonReplace_CheckedChanged(object sender, EventArgs e)
+        {
+            checkBoxClear.Checked = false;
+        }
+
+        private void radioButtonInsert_CheckedChanged(object sender, EventArgs e)
+        {
+            checkBoxClear.Checked = true;
+        }
+
+        internal void onTcpServiceRunning(object sender, EventArgs e)
+        {
+            labelStatus.Text = "服务器正在运行";
+        }
+
+        internal void onTcpServiceStarted(object sender, EventArgs e)
+        {
+            labelStatus.Text = "服务器已启动";
+        }
+
+        internal void onTcpServiceStopped(object sender, EventArgs e)
+        {
+            labelStatus.Text = "服务器已停止";
+        }
+
+        internal void onTcpServiceWaiting(object sender, EventArgs e)
+        {
+            labelStatus.Text = "服务器正在等待";
         }
     }
 
@@ -189,6 +269,30 @@ namespace NetworkInputMethod
             {
                 return mForm;
             }
+        }
+
+        protected override void onTcpServiceRunning()
+        {
+            EventHandler handler = new EventHandler(mForm.onTcpServiceRunning);
+            mForm.Invoke(handler, this);
+        }
+
+        protected override void onTcpServiceStarted()
+        {
+            EventHandler handler = new EventHandler(mForm.onTcpServiceStarted);
+            mForm.Invoke(handler, this);
+        }
+
+        protected override void onTcpServiceStopped()
+        {
+            EventHandler handler = new EventHandler(mForm.onTcpServiceStopped);
+            mForm.Invoke(handler, this);
+        }
+
+        protected override void onTcpServiceWaiting()
+        {
+            EventHandler handler = new EventHandler(mForm.onTcpServiceWaiting);
+            mForm.Invoke(handler, this);
         }
 
         protected override CavanTcpClient onTcpClientAccepted(TcpClient conn)

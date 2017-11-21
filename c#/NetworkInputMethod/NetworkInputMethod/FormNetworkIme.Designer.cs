@@ -37,10 +37,19 @@
             this.buttonSend = new System.Windows.Forms.Button();
             this.buttonClear = new System.Windows.Forms.Button();
             this.groupBoxMode = new System.Windows.Forms.GroupBox();
-            this.radioButtonSend = new System.Windows.Forms.RadioButton();
             this.radioButtonReplace = new System.Windows.Forms.RadioButton();
             this.radioButtonInsert = new System.Windows.Forms.RadioButton();
+            this.radioButtonSend = new System.Windows.Forms.RadioButton();
             this.checkBoxClear = new System.Windows.Forms.CheckBox();
+            this.buttonBack = new System.Windows.Forms.Button();
+            this.buttonUp = new System.Windows.Forms.Button();
+            this.buttonDown = new System.Windows.Forms.Button();
+            this.buttonLeft = new System.Windows.Forms.Button();
+            this.buttonRight = new System.Windows.Forms.Button();
+            this.buttonVolumeDown = new System.Windows.Forms.Button();
+            this.buttonVolumeUp = new System.Windows.Forms.Button();
+            this.buttonEnter = new System.Windows.Forms.Button();
+            this.labelStatus = new System.Windows.Forms.Label();
             this.groupBoxMode.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -63,7 +72,7 @@
             // 
             // buttonStart
             // 
-            this.buttonStart.Location = new System.Drawing.Point(14, 456);
+            this.buttonStart.Location = new System.Drawing.Point(12, 478);
             this.buttonStart.Name = "buttonStart";
             this.buttonStart.Size = new System.Drawing.Size(75, 23);
             this.buttonStart.TabIndex = 2;
@@ -73,7 +82,7 @@
             // 
             // buttonStop
             // 
-            this.buttonStop.Location = new System.Drawing.Point(95, 456);
+            this.buttonStop.Location = new System.Drawing.Point(93, 478);
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(75, 23);
             this.buttonStop.TabIndex = 3;
@@ -95,12 +104,12 @@
             this.textBoxContent.Location = new System.Drawing.Point(14, 177);
             this.textBoxContent.Multiline = true;
             this.textBoxContent.Name = "textBoxContent";
-            this.textBoxContent.Size = new System.Drawing.Size(442, 219);
+            this.textBoxContent.Size = new System.Drawing.Size(442, 175);
             this.textBoxContent.TabIndex = 5;
             // 
             // buttonSend
             // 
-            this.buttonSend.Location = new System.Drawing.Point(381, 456);
+            this.buttonSend.Location = new System.Drawing.Point(381, 478);
             this.buttonSend.Name = "buttonSend";
             this.buttonSend.Size = new System.Drawing.Size(75, 23);
             this.buttonSend.TabIndex = 6;
@@ -110,7 +119,7 @@
             // 
             // buttonClear
             // 
-            this.buttonClear.Location = new System.Drawing.Point(176, 456);
+            this.buttonClear.Location = new System.Drawing.Point(300, 478);
             this.buttonClear.Name = "buttonClear";
             this.buttonClear.Size = new System.Drawing.Size(75, 23);
             this.buttonClear.TabIndex = 7;
@@ -123,59 +132,160 @@
             this.groupBoxMode.Controls.Add(this.radioButtonReplace);
             this.groupBoxMode.Controls.Add(this.radioButtonInsert);
             this.groupBoxMode.Controls.Add(this.radioButtonSend);
-            this.groupBoxMode.Location = new System.Drawing.Point(257, 402);
+            this.groupBoxMode.Location = new System.Drawing.Point(381, 380);
             this.groupBoxMode.Name = "groupBoxMode";
-            this.groupBoxMode.Size = new System.Drawing.Size(199, 48);
+            this.groupBoxMode.Size = new System.Drawing.Size(75, 94);
             this.groupBoxMode.TabIndex = 8;
             this.groupBoxMode.TabStop = false;
+            // 
+            // radioButtonReplace
+            // 
+            this.radioButtonReplace.AutoSize = true;
+            this.radioButtonReplace.Location = new System.Drawing.Point(13, 42);
+            this.radioButtonReplace.Name = "radioButtonReplace";
+            this.radioButtonReplace.Size = new System.Drawing.Size(47, 16);
+            this.radioButtonReplace.TabIndex = 1;
+            this.radioButtonReplace.Text = "替换";
+            this.radioButtonReplace.UseVisualStyleBackColor = true;
+            this.radioButtonReplace.CheckedChanged += new System.EventHandler(this.radioButtonReplace_CheckedChanged);
+            // 
+            // radioButtonInsert
+            // 
+            this.radioButtonInsert.AutoSize = true;
+            this.radioButtonInsert.Location = new System.Drawing.Point(13, 64);
+            this.radioButtonInsert.Name = "radioButtonInsert";
+            this.radioButtonInsert.Size = new System.Drawing.Size(47, 16);
+            this.radioButtonInsert.TabIndex = 0;
+            this.radioButtonInsert.Text = "插入";
+            this.radioButtonInsert.UseVisualStyleBackColor = true;
+            this.radioButtonInsert.CheckedChanged += new System.EventHandler(this.radioButtonInsert_CheckedChanged);
             // 
             // radioButtonSend
             // 
             this.radioButtonSend.AutoSize = true;
             this.radioButtonSend.Checked = true;
-            this.radioButtonSend.Location = new System.Drawing.Point(146, 20);
+            this.radioButtonSend.Location = new System.Drawing.Point(13, 20);
             this.radioButtonSend.Name = "radioButtonSend";
             this.radioButtonSend.Size = new System.Drawing.Size(47, 16);
             this.radioButtonSend.TabIndex = 2;
             this.radioButtonSend.TabStop = true;
             this.radioButtonSend.Text = "发送";
             this.radioButtonSend.UseVisualStyleBackColor = true;
-            // 
-            // radioButtonReplace
-            // 
-            this.radioButtonReplace.AutoSize = true;
-            this.radioButtonReplace.Location = new System.Drawing.Point(73, 20);
-            this.radioButtonReplace.Name = "radioButtonReplace";
-            this.radioButtonReplace.Size = new System.Drawing.Size(47, 16);
-            this.radioButtonReplace.TabIndex = 1;
-            this.radioButtonReplace.Text = "替换";
-            this.radioButtonReplace.UseVisualStyleBackColor = true;
-            // 
-            // radioButtonInsert
-            // 
-            this.radioButtonInsert.AutoSize = true;
-            this.radioButtonInsert.Location = new System.Drawing.Point(6, 20);
-            this.radioButtonInsert.Name = "radioButtonInsert";
-            this.radioButtonInsert.Size = new System.Drawing.Size(47, 16);
-            this.radioButtonInsert.TabIndex = 0;
-            this.radioButtonInsert.Text = "插入";
-            this.radioButtonInsert.UseVisualStyleBackColor = true;
+            this.radioButtonSend.CheckedChanged += new System.EventHandler(this.radioButtonSend_CheckedChanged);
             // 
             // checkBoxClear
             // 
             this.checkBoxClear.AutoSize = true;
-            this.checkBoxClear.Location = new System.Drawing.Point(14, 402);
+            this.checkBoxClear.Location = new System.Drawing.Point(372, 358);
             this.checkBoxClear.Name = "checkBoxClear";
             this.checkBoxClear.Size = new System.Drawing.Size(84, 16);
             this.checkBoxClear.TabIndex = 9;
             this.checkBoxClear.Text = "发送后清除";
             this.checkBoxClear.UseVisualStyleBackColor = true;
             // 
+            // buttonBack
+            // 
+            this.buttonBack.Location = new System.Drawing.Point(174, 478);
+            this.buttonBack.Name = "buttonBack";
+            this.buttonBack.Size = new System.Drawing.Size(75, 23);
+            this.buttonBack.TabIndex = 10;
+            this.buttonBack.Text = "返回";
+            this.buttonBack.UseVisualStyleBackColor = true;
+            this.buttonBack.Click += new System.EventHandler(this.buttonBack_Click);
+            // 
+            // buttonUp
+            // 
+            this.buttonUp.Location = new System.Drawing.Point(93, 393);
+            this.buttonUp.Name = "buttonUp";
+            this.buttonUp.Size = new System.Drawing.Size(75, 23);
+            this.buttonUp.TabIndex = 13;
+            this.buttonUp.Text = "上移";
+            this.buttonUp.UseVisualStyleBackColor = true;
+            this.buttonUp.Click += new System.EventHandler(this.buttonUp_Click);
+            // 
+            // buttonDown
+            // 
+            this.buttonDown.Location = new System.Drawing.Point(93, 449);
+            this.buttonDown.Name = "buttonDown";
+            this.buttonDown.Size = new System.Drawing.Size(75, 23);
+            this.buttonDown.TabIndex = 14;
+            this.buttonDown.Text = "下移";
+            this.buttonDown.UseVisualStyleBackColor = true;
+            this.buttonDown.Click += new System.EventHandler(this.buttonDown_Click);
+            // 
+            // buttonLeft
+            // 
+            this.buttonLeft.Location = new System.Drawing.Point(12, 421);
+            this.buttonLeft.Name = "buttonLeft";
+            this.buttonLeft.Size = new System.Drawing.Size(75, 23);
+            this.buttonLeft.TabIndex = 15;
+            this.buttonLeft.Text = "左移";
+            this.buttonLeft.UseVisualStyleBackColor = true;
+            this.buttonLeft.Click += new System.EventHandler(this.buttonLeft_Click);
+            // 
+            // buttonRight
+            // 
+            this.buttonRight.Location = new System.Drawing.Point(174, 421);
+            this.buttonRight.Name = "buttonRight";
+            this.buttonRight.Size = new System.Drawing.Size(75, 23);
+            this.buttonRight.TabIndex = 16;
+            this.buttonRight.Text = "右移";
+            this.buttonRight.UseVisualStyleBackColor = true;
+            this.buttonRight.Click += new System.EventHandler(this.buttonRight_Click);
+            // 
+            // buttonVolumeDown
+            // 
+            this.buttonVolumeDown.Location = new System.Drawing.Point(300, 421);
+            this.buttonVolumeDown.Name = "buttonVolumeDown";
+            this.buttonVolumeDown.Size = new System.Drawing.Size(75, 23);
+            this.buttonVolumeDown.TabIndex = 17;
+            this.buttonVolumeDown.Text = "音量-";
+            this.buttonVolumeDown.UseVisualStyleBackColor = true;
+            this.buttonVolumeDown.Click += new System.EventHandler(this.buttonVolumeDown_Click);
+            // 
+            // buttonVolumeUp
+            // 
+            this.buttonVolumeUp.Location = new System.Drawing.Point(300, 393);
+            this.buttonVolumeUp.Name = "buttonVolumeUp";
+            this.buttonVolumeUp.Size = new System.Drawing.Size(75, 23);
+            this.buttonVolumeUp.TabIndex = 18;
+            this.buttonVolumeUp.Text = "音量+";
+            this.buttonVolumeUp.UseVisualStyleBackColor = true;
+            this.buttonVolumeUp.Click += new System.EventHandler(this.buttonVolumeUp_Click);
+            // 
+            // buttonEnter
+            // 
+            this.buttonEnter.Location = new System.Drawing.Point(93, 421);
+            this.buttonEnter.Name = "buttonEnter";
+            this.buttonEnter.Size = new System.Drawing.Size(75, 23);
+            this.buttonEnter.TabIndex = 19;
+            this.buttonEnter.Text = "确定";
+            this.buttonEnter.UseVisualStyleBackColor = true;
+            this.buttonEnter.Click += new System.EventHandler(this.buttonEnter_Click);
+            // 
+            // labelStatus
+            // 
+            this.labelStatus.AutoSize = true;
+            this.labelStatus.Location = new System.Drawing.Point(12, 359);
+            this.labelStatus.Name = "labelStatus";
+            this.labelStatus.Size = new System.Drawing.Size(77, 12);
+            this.labelStatus.TabIndex = 20;
+            this.labelStatus.Text = "服务器未启动";
+            // 
             // FormNetworkIme
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(468, 491);
+            this.ClientSize = new System.Drawing.Size(468, 513);
+            this.Controls.Add(this.labelStatus);
+            this.Controls.Add(this.buttonEnter);
+            this.Controls.Add(this.buttonVolumeUp);
+            this.Controls.Add(this.buttonVolumeDown);
+            this.Controls.Add(this.buttonRight);
+            this.Controls.Add(this.buttonLeft);
+            this.Controls.Add(this.buttonDown);
+            this.Controls.Add(this.buttonUp);
+            this.Controls.Add(this.buttonBack);
             this.Controls.Add(this.checkBoxClear);
             this.Controls.Add(this.groupBoxMode);
             this.Controls.Add(this.buttonClear);
@@ -210,6 +320,15 @@
         private System.Windows.Forms.RadioButton radioButtonInsert;
         private System.Windows.Forms.RadioButton radioButtonSend;
         private System.Windows.Forms.CheckBox checkBoxClear;
+        private System.Windows.Forms.Button buttonBack;
+        private System.Windows.Forms.Button buttonUp;
+        private System.Windows.Forms.Button buttonDown;
+        private System.Windows.Forms.Button buttonLeft;
+        private System.Windows.Forms.Button buttonRight;
+        private System.Windows.Forms.Button buttonVolumeDown;
+        private System.Windows.Forms.Button buttonVolumeUp;
+        private System.Windows.Forms.Button buttonEnter;
+        private System.Windows.Forms.Label labelStatus;
     }
 }
 

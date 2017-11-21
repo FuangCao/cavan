@@ -104,6 +104,16 @@ namespace NetworkInputMethod
                             listener.Stop();
                         }
 
+                        if (mEnabled)
+                        {
+                            onTcpServiceWaiting();
+
+                            lock (mThread)
+                            {
+                                Monitor.Wait(mThread, 2000);
+                            }
+                        }
+
                         continue;
                     }
 
@@ -151,14 +161,6 @@ namespace NetworkInputMethod
                             client.disconnect();
                         }
                     }
-
-                    if (mEnabled)
-                    {
-                        lock (mThread)
-                        {
-                            Monitor.Wait(mThread, 2000);
-                        }
-                    }
                 }
 
                 onTcpServiceStopped();
@@ -183,6 +185,11 @@ namespace NetworkInputMethod
         protected virtual void onTcpServiceRunning()
         {
             Console.WriteLine("onTcpServiceRunning");
+        }
+
+        protected virtual void onTcpServiceWaiting()
+        {
+            Console.WriteLine("onTcpServiceWaiting");
         }
 
         private void runTcpClientThread(object obj)
