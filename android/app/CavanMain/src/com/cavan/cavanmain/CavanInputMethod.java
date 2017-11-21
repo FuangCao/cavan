@@ -207,11 +207,25 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		}
 	};
 
-	private static NetworkImeTcpClient sTcpClient;
-	public class NetworkImeTcpClient extends CavanTcpPacketClient {
+	private static NetworkImeTcpClient sTcpClient = new NetworkImeTcpClient();
+	public static class NetworkImeTcpClient extends CavanTcpPacketClient {
 
-		private void updateMessageActivity() {
-			mHandler.sendEmptyMessageDelayed(MSG_TCP_CLIENT_UPDATED, 500);
+		private CavanInputMethod mInputMethod;
+
+		public synchronized void setInputMethod(CavanInputMethod ime) {
+			mInputMethod = ime;
+
+			if (ime == null) {
+				disconnect();
+			} else {
+				ime.updateTcpClient();
+			}
+		}
+
+		private synchronized void updateMessageActivity() {
+			if (mInputMethod != null) {
+				mInputMethod.getHandler().sendEmptyMessageDelayed(MSG_TCP_CLIENT_UPDATED, 500);
+			}
 		}
 
 		@Override
@@ -243,10 +257,14 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		}
 
 		@Override
-		protected boolean onPacketReceived(byte[] bytes, int length) {
-			Message message = mHandler.obtainMessage(MSG_TCP_PACKET_RECEIVED, new String(bytes, 0, length));
-			message.sendToTarget();
-			return true;
+		protected synchronized boolean onPacketReceived(byte[] bytes, int length) {
+			if (mInputMethod != null) {
+				Message message = mInputMethod.getHandler().obtainMessage(MSG_TCP_PACKET_RECEIVED, new String(bytes, 0, length));
+				message.sendToTarget();
+				return true;
+			}
+
+			return false;
 		}
 	};
 
@@ -273,12 +291,8 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		return "com.cavan.cavanmain/.CavanInputMethod".equals(CavanAndroid.getDefaultInputMethod(context));
 	}
 
-	public CavanInputMethod() {
-		super();
-
-		if (sTcpClient == null) {
-			sTcpClient = new NetworkImeTcpClient();
-		}
+	public Handler getHandler() {
+		return mHandler;
 	}
 
 	public boolean sendGoAction(InputConnection conn) {
@@ -377,12 +391,13 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		super.onCreate();
 
 		mManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-		updateTcpClient();
+		sTcpClient.setInputMethod(this);
 		sInstance = this;
 	}
 
 	@Override
 	public void onDestroy() {
+		sTcpClient.setInputMethod(null);
 		sInstance = null;
 		super.onDestroy();
 	}
