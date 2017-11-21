@@ -273,6 +273,10 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 		return false;
 	}
 
+	public boolean commitText(AccessibilityNodeInfo root, CavanInputMethod ime) {
+		return false;
+	}
+
 	@Override
 	public void run() {
 		removeCallbacks(this);

@@ -68,6 +68,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private String mClassName = CavanString.EMPTY_STRING;
 	private String mPackageName = CavanString.EMPTY_STRING;
 
+	private CavanAccessibilityBase<?> mAccessibility;
 	private CavanAccessibilityQQ mAccessibilityQQ = new CavanAccessibilityQQ(this);
 	private CavanAccessibilityMM mAccessibilityMM = new CavanAccessibilityMM(this);
 	private CavanAccessibilitySogou mAccessibilitySogou = new CavanAccessibilitySogou(this);
@@ -442,6 +443,24 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return false;
 	}
 
+	public boolean commitText(CavanInputMethod ime) {
+		CavanAccessibilityBase<?> accessibility = mAccessibility;
+		if (accessibility == null) {
+			return false;
+		}
+
+		AccessibilityNodeInfo root = getRootInActiveWindow();
+		if (root == null) {
+			return false;
+		}
+
+		if (accessibility.getPackageName().equals(root.getPackageName())) {
+			return accessibility.commitText(root, ime);
+		}
+
+		return false;
+	}
+
 	@Override
 	public void onAccessibilityEvent(AccessibilityEvent event) {
 		boolean dump = CavanAccessibility.dumpEvent(event, "debug.cavan.dump.event");
@@ -455,6 +474,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 		if (accessibility == null) {
 			return;
 		}
+
+		mAccessibility = accessibility;
 
 		switch (event.getEventType()) {
 		case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:

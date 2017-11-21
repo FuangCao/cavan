@@ -30,6 +30,7 @@ import android.widget.GridView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
+import com.cavan.android.SystemProperties;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
 import com.cavan.java.CavanTcpPacketClient;
@@ -93,9 +94,9 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			switch (msg.what) {
 			case MSG_UPDATE_TCP_CLIENT:
 				InetSocketAddress[] addresses = CavanMessageActivity.getNetworkImeAddresses(getApplicationContext());
-				mTcpClient.setAddresses(addresses);
+				sTcpClient.setAddresses(addresses);
 				if (addresses.length > 0) {
-					mTcpClient.connect();
+					sTcpClient.connect();
 				}
 				break;
 
@@ -198,7 +199,8 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		}
 	};
 
-	private CavanTcpPacketClient mTcpClient = new CavanTcpPacketClient() {
+	private static NetworkImeTcpClient sTcpClient;
+	public class NetworkImeTcpClient extends CavanTcpPacketClient {
 
 		private void updateMessageActivity() {
 			mHandler.sendEmptyMessageDelayed(MSG_TCP_CLIENT_UPDATED, 500);
@@ -216,7 +218,13 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 		@Override
 		protected boolean onTcpConnected(Socket socket) {
+			String hostname = SystemProperties.get("net.hostname");
+			if (hostname != null) {
+				send("USER " + hostname);
+			}
+
 			updateMessageActivity();
+
 			return true;
 		}
 
@@ -255,6 +263,14 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 	public static boolean isDefaultInputMethod(Context context) {
 		return "com.cavan.cavanmain/.CavanInputMethod".equals(CavanAndroid.getDefaultInputMethod(context));
+	}
+
+	public CavanInputMethod() {
+		super();
+
+		if (sTcpClient == null) {
+			sTcpClient = new NetworkImeTcpClient();
+		}
 	}
 
 	public boolean sendGoAction(InputConnection conn) {
@@ -814,9 +830,11 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			return;
 		}
 
+		boolean send = false;
+
 		switch (args[0]) {
-		case "CLEAR":
-			args[1] = CavanString.EMPTY_STRING;
+		case "SEND":
+			send = true;
 		case "REPLACE":
 			if (!conn.performContextMenuAction(android.R.id.selectAll)) {
 				break;
@@ -824,6 +842,13 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		case "INSERT":
 			if (args.length > 1) {
 				conn.commitText(args[1], 0);
+
+				if (send) {
+					CavanAccessibilityService accessibility = CavanAccessibilityService.getInstance();
+					if (accessibility != null) {
+						accessibility.commitText(this);
+					}
+				}
 			} else {
 				conn.commitText(CavanString.EMPTY_STRING, 0);
 			}
@@ -878,7 +903,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	}
 
 	public CavanTcpPacketClient getTcpClient() {
-		return mTcpClient;
+		return sTcpClient;
 	}
 
 	public void updateTcpClient() {
