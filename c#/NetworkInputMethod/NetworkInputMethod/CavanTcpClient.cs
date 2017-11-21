@@ -33,7 +33,15 @@ namespace NetworkInputMethod
         {
             get
             {
-                return mTcpClient.GetStream();
+                lock (this)
+                {
+                    if (mTcpClient != null)
+                    {
+                        return mTcpClient.GetStream();
+                    }
+                }
+
+                return null;
             }
         }
 
@@ -61,25 +69,75 @@ namespace NetworkInputMethod
 
         public override string ToString()
         {
-            if (mTcpClient == null)
+            lock (this)
             {
-                return null;
+                try
+                {
+                    if (mTcpClient != null)
+                    {
+                        return mTcpClient.Client.RemoteEndPoint.ToString();
+                    }
+                }
+                catch (Exception)
+                {
+                }
             }
 
-            return mTcpClient.Client.RemoteEndPoint.ToString();
+            return "disconnected";
         }
 
         public void disconnect()
         {
             try
             {
-                mTcpClient.Close();
-                mTcpClient = null;
+                if (mTcpClient != null)
+                {
+                    mTcpClient.Close();
+                    mTcpClient = null;
+                }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
             }
+        }
+
+        public virtual bool send(byte[] bytes, int offset, int length)
+        {
+            lock (this)
+            {
+                if (mTcpClient == null)
+                {
+                    return false;
+                }
+
+                try
+                {
+                    mTcpClient.GetStream().Write(bytes, offset, length);
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public bool send(byte[] bytes, int length)
+        {
+            return send(bytes, 0, length);
+        }
+
+        public bool send(byte[] bytes)
+        {
+            return send(bytes, 0, bytes.Length);
+        }
+
+        public bool send(string text)
+        {
+            byte[] bytes = UTF8Encoding.UTF8.GetBytes(text);
+            return send(bytes);
         }
     }
 }

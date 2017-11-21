@@ -38,6 +38,7 @@ namespace NetworkInputMethod
                     if (mListener != null)
                     {
                         mListener.Stop();
+                        mListener = null;
                     }
                 }
             }
@@ -45,31 +46,37 @@ namespace NetworkInputMethod
 
         public void start()
         {
-            mEnabled = true;
-
-            Monitor.Enter(mThread);
-
-            if (mThread.IsAlive)
+            lock (this)
             {
+                mEnabled = true;
 
-                Monitor.Pulse(mThread);
+                lock (mThread)
+                {
+                    if (mThread.IsAlive)
+                    {
 
+                        Monitor.Pulse(mThread);
+
+                    }
+                    else
+                    {
+                        mThread.Start();
+                    }
+                }
             }
-            else
-            {
-                mThread.Start();
-            }
-
-            Monitor.Exit(mThread);
         }
 
         public void stop()
         {
-            mEnabled = false;
-
-            if (mListener != null)
+            lock (this)
             {
-                mListener.Stop();
+                mEnabled = false;
+
+                if (mListener != null)
+                {
+                    mListener.Stop();
+                    mListener = null;
+                }
             }
         }
 
@@ -81,24 +88,33 @@ namespace NetworkInputMethod
 
                 while (mEnabled)
                 {
+                    TcpListener listener = null;
+
                     try
                     {
-                        mListener = new TcpListener(IPAddress.Any, mPort);
-                        mListener.Start();
+                        listener = new TcpListener(IPAddress.Any, mPort);
+                        listener.Start();
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
+
+                        if (listener != null)
+                        {
+                            listener.Stop();
+                        }
+
                         continue;
                     }
 
+                    mListener = listener;
                     onTcpServiceRunning();
 
                     while (mEnabled)
                     {
                         try
                         {
-                            TcpClient conn = mListener.AcceptTcpClient();
+                            TcpClient conn = listener.AcceptTcpClient();
                             if (conn == null)
                             {
                                 break;
@@ -119,7 +135,7 @@ namespace NetworkInputMethod
 
                     try
                     {
-                        mListener.Stop();
+                        listener.Stop();
                     }
                     catch (Exception e)
                     {
@@ -138,17 +154,19 @@ namespace NetworkInputMethod
 
                     if (mEnabled)
                     {
-                        Monitor.Enter(mThread);
-                        Monitor.Wait(mThread, 2000);
-                        Monitor.Exit(mThread);
+                        lock (mThread)
+                        {
+                            Monitor.Wait(mThread, 2000);
+                        }
                     }
                 }
 
                 onTcpServiceStopped();
 
-                Monitor.Enter(mThread);
-                Monitor.Wait(mThread);
-                Monitor.Exit(mThread);
+                lock (mThread)
+                {
+                    Monitor.Wait(mThread);
+                }
             }
         }
 

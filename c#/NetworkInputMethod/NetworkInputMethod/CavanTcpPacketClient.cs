@@ -43,5 +43,31 @@ namespace NetworkInputMethod
         {
             throw new NotImplementedException();
         }
+
+        public override bool send(byte[] bytes, int offset, int length)
+        {
+            lock (this)
+            {
+                if (mTcpClient == null)
+                {
+                    return false;
+                }
+
+                byte[] header = { (byte)(length & 0xFF), (byte)(length >> 8) };
+
+                try
+                {
+                    NetworkStream stream = mTcpClient.GetStream();
+                    stream.Write(header, 0, 2);
+                    stream.Write(bytes, offset, length);
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 }
