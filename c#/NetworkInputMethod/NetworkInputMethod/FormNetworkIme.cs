@@ -8,11 +8,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace NetworkInputMethod
 {
     public partial class FormNetworkIme : Form
     {
+        private byte[] mRepeatSendBytes;
         private NetworkImeService mService;
 
         delegate void SimpleDelegate(Object obj);
@@ -28,8 +30,20 @@ namespace NetworkInputMethod
             switch (keyData)
             {
                 case Keys.Control | Keys.Enter:
+                    if (checkBoxEnterSend.Checked)
+                    {
+                        break;
+                    }
                     buttonSend.PerformClick();
                     return true;
+
+                case Keys.Enter:
+                    if (checkBoxEnterSend.Checked)
+                    {
+                        buttonSend.PerformClick();
+                        return true;
+                    }
+                    break;
             }
 
             return base.ProcessCmdKey(ref msg, keyData);
@@ -69,7 +83,7 @@ namespace NetworkInputMethod
 
         private void buttonStop_Click(object sender, EventArgs e)
         {
-            mService.stop();
+            mService.stop(false);
         }
 
         public void onTcpClientConnected(object sender, EventArgs e)
@@ -170,16 +184,19 @@ namespace NetworkInputMethod
         private void radioButtonSend_CheckedChanged(object sender, EventArgs e)
         {
             checkBoxClear.Checked = false;
+            checkBoxEnterSend.Checked = true;
         }
 
         private void radioButtonReplace_CheckedChanged(object sender, EventArgs e)
         {
             checkBoxClear.Checked = false;
+            checkBoxEnterSend.Checked = false;
         }
 
         private void radioButtonInsert_CheckedChanged(object sender, EventArgs e)
         {
             checkBoxClear.Checked = true;
+            checkBoxEnterSend.Checked = false;
         }
 
         internal void onTcpServiceRunning(object sender, EventArgs e)
@@ -200,6 +217,59 @@ namespace NetworkInputMethod
         internal void onTcpServiceWaiting(object sender, EventArgs e)
         {
             labelStatus.Text = "服务器正在等待";
+        }
+
+        private void checkBoxRepeat_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxRepeat.Checked)
+            {
+                string text = textBoxContent.Text;
+                if (text != null && text.Length > 0)
+                {
+                    mRepeatSendBytes = UTF8Encoding.UTF8.GetBytes("SEND " + text);
+
+                    if (!backgroundWorkerRepeater.IsBusy)
+                    {
+                        backgroundWorkerRepeater.RunWorkerAsync();
+                    }
+                }
+            }
+            else
+            {
+                mRepeatSendBytes = null;
+                backgroundWorkerRepeater.CancelAsync();
+            }
+        }
+
+        private void FormNetworkIme_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            mService.stop(true);
+        }
+
+        private void backgroundWorkerRepeater_DoWork(object sender, DoWorkEventArgs e)
+        {
+            while (true)
+            {
+                if (backgroundWorkerRepeater.CancellationPending)
+                {
+                    break;
+                }
+
+                byte[] bytes = mRepeatSendBytes;
+                if (bytes == null)
+                {
+                    break;
+                }
+
+                sendCommand(bytes);
+                Thread.Sleep(500);
+            }
+        }
+
+        private void backgroundWorkerRepeater_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            mRepeatSendBytes = null;
+            checkBoxRepeat.Checked = false;
         }
     }
 
@@ -271,28 +341,40 @@ namespace NetworkInputMethod
             }
         }
 
+        private object Invoke(Delegate method, params object[] args)
+        {
+            try
+            {
+                return mForm.Invoke(method, args);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
         protected override void onTcpServiceRunning()
         {
             EventHandler handler = new EventHandler(mForm.onTcpServiceRunning);
-            mForm.Invoke(handler, this);
+            Invoke(handler, this);
         }
 
         protected override void onTcpServiceStarted()
         {
             EventHandler handler = new EventHandler(mForm.onTcpServiceStarted);
-            mForm.Invoke(handler, this);
+            Invoke(handler, this);
         }
 
         protected override void onTcpServiceStopped()
         {
             EventHandler handler = new EventHandler(mForm.onTcpServiceStopped);
-            mForm.Invoke(handler, this);
+            Invoke(handler, this);
         }
 
         protected override void onTcpServiceWaiting()
         {
             EventHandler handler = new EventHandler(mForm.onTcpServiceWaiting);
-            mForm.Invoke(handler, this);
+            Invoke(handler, this);
         }
 
         protected override CavanTcpClient onTcpClientAccepted(TcpClient conn)
@@ -303,13 +385,13 @@ namespace NetworkInputMethod
         protected override void onTcpClientConnected(CavanTcpClient client)
         {
             EventHandler handler = new EventHandler(mForm.onTcpClientConnected);
-            mForm.Invoke(handler, client, null);
+            Invoke(handler, client, null);
         }
 
         protected override void onTcpClientDisconnected(CavanTcpClient client)
         {
             EventHandler handler = new EventHandler(mForm.onTcpClientDisconnected);
-            mForm.Invoke(handler, client, null);
+            Invoke(handler, client, null);
         }
     }
 }

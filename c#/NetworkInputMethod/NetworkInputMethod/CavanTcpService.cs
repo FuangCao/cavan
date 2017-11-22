@@ -13,6 +13,7 @@ namespace NetworkInputMethod
     {
         private int mPort = 8865;
         private bool mEnabled;
+        private bool mNeedExit;
         private TcpListener mListener;
         private Thread mThread;
         private List<CavanTcpClient> mClients = new List<CavanTcpClient>();
@@ -66,16 +67,24 @@ namespace NetworkInputMethod
             }
         }
 
-        public void stop()
+        public void stop(bool exit)
         {
             lock (this)
             {
+                mNeedExit = exit;
                 mEnabled = false;
 
                 if (mListener != null)
                 {
                     mListener.Stop();
                     mListener = null;
+                }
+                else
+                {
+                    lock (mThread)
+                    {
+                        Monitor.Pulse(mThread);
+                    }
                 }
             }
         }
@@ -84,6 +93,11 @@ namespace NetworkInputMethod
         {
             while (true)
             {
+                if (mNeedExit)
+                {
+                    break;
+                }
+
                 onTcpServiceStarted();
 
                 while (mEnabled)
@@ -164,6 +178,11 @@ namespace NetworkInputMethod
                 }
 
                 onTcpServiceStopped();
+
+                if (mNeedExit)
+                {
+                    break;
+                }
 
                 lock (mThread)
                 {

@@ -50,6 +50,9 @@
             this.buttonVolumeUp = new System.Windows.Forms.Button();
             this.buttonEnter = new System.Windows.Forms.Button();
             this.labelStatus = new System.Windows.Forms.Label();
+            this.checkBoxRepeat = new System.Windows.Forms.CheckBox();
+            this.checkBoxEnterSend = new System.Windows.Forms.CheckBox();
+            this.backgroundWorkerRepeater = new System.ComponentModel.BackgroundWorker();
             this.groupBoxMode.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -272,11 +275,42 @@
             this.labelStatus.TabIndex = 20;
             this.labelStatus.Text = "服务器未启动";
             // 
+            // checkBoxRepeat
+            // 
+            this.checkBoxRepeat.AutoSize = true;
+            this.checkBoxRepeat.Location = new System.Drawing.Point(216, 358);
+            this.checkBoxRepeat.Name = "checkBoxRepeat";
+            this.checkBoxRepeat.Size = new System.Drawing.Size(72, 16);
+            this.checkBoxRepeat.TabIndex = 21;
+            this.checkBoxRepeat.Text = "重复发送";
+            this.checkBoxRepeat.UseVisualStyleBackColor = true;
+            this.checkBoxRepeat.CheckedChanged += new System.EventHandler(this.checkBoxRepeat_CheckedChanged);
+            // 
+            // checkBoxEnterSend
+            // 
+            this.checkBoxEnterSend.AutoSize = true;
+            this.checkBoxEnterSend.Checked = true;
+            this.checkBoxEnterSend.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxEnterSend.Location = new System.Drawing.Point(294, 358);
+            this.checkBoxEnterSend.Name = "checkBoxEnterSend";
+            this.checkBoxEnterSend.Size = new System.Drawing.Size(72, 16);
+            this.checkBoxEnterSend.TabIndex = 22;
+            this.checkBoxEnterSend.Text = "回车发送";
+            this.checkBoxEnterSend.UseVisualStyleBackColor = true;
+            // 
+            // backgroundWorkerRepeater
+            // 
+            this.backgroundWorkerRepeater.WorkerSupportsCancellation = true;
+            this.backgroundWorkerRepeater.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorkerRepeater_DoWork);
+            this.backgroundWorkerRepeater.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorkerRepeater_RunWorkerCompleted);
+            // 
             // FormNetworkIme
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(468, 513);
+            this.Controls.Add(this.checkBoxEnterSend);
+            this.Controls.Add(this.checkBoxRepeat);
             this.Controls.Add(this.labelStatus);
             this.Controls.Add(this.buttonEnter);
             this.Controls.Add(this.buttonVolumeUp);
@@ -298,6 +332,7 @@
             this.Controls.Add(this.labelPort);
             this.Name = "FormNetworkIme";
             this.Text = "网络输入法";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormNetworkIme_FormClosing);
             this.groupBoxMode.ResumeLayout(false);
             this.groupBoxMode.PerformLayout();
             this.ResumeLayout(false);
@@ -329,6 +364,9 @@
         private System.Windows.Forms.Button buttonVolumeUp;
         private System.Windows.Forms.Button buttonEnter;
         private System.Windows.Forms.Label labelStatus;
+        private System.Windows.Forms.CheckBox checkBoxRepeat;
+        private System.Windows.Forms.CheckBox checkBoxEnterSend;
+        private System.ComponentModel.BackgroundWorker backgroundWorkerRepeater;
     }
 }
 
