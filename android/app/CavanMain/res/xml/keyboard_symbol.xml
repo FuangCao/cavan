@@ -7,14 +7,14 @@
 
     <Row>
         <Key
-            android:keyLabel="`"
-            android:keyOutputText="`" />
-        <Key
             android:keyLabel="~"
             android:keyOutputText="~" />
         <Key
             android:keyLabel="!"
             android:keyOutputText="!" />
+        <Key
+            android:keyLabel="\@"
+            android:keyOutputText="\@" />
         <Key
             android:keyLabel="#"
             android:keyOutputText="#" />

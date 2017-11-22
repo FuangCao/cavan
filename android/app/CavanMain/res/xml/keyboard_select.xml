@@ -10,34 +10,34 @@
             android:codes="22"
             android:keyLabel="支付宝" />
         <Key
-            android:codes="24"
-            android:keyLabel="天猫" />
-        <Key
-            android:codes="23"
-            android:keyLabel="淘宝" />
+            android:keyLabel="微信红包"
+            android:keyOutputText="[微信红包]" />
         <Key
             android:codes="26"
             android:keyLabel="微信" />
         <Key
-            android:keyLabel="微信红包"
-            android:keyOutputText="[微信红包]" />
+            android:codes="24"
+            android:keyLabel="天猫" />
+        <Key
+            android:codes="33"
+            android:keyLabel="自动" />
     </Row>
     <Row>
         <Key
             android:codes="21"
             android:keyLabel="剪切板" />
         <Key
+            android:keyLabel="QQ红包"
+            android:keyOutputText="[QQ红包]" />
+        <Key
+            android:codes="25"
+            android:keyLabel="QQ" />
+        <Key
             android:codes="1"
             android:keyLabel="复制" />
         <Key
             android:codes="3"
             android:keyLabel="剪切" />
-        <Key
-            android:codes="25"
-            android:keyLabel="QQ" />
-        <Key
-            android:keyLabel="QQ红包"
-            android:keyOutputText="[QQ红包]" />
     </Row>
     <Row>
         <Key

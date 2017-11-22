@@ -96,8 +96,8 @@
             android:keyLabel="m"
             android:keyOutputText="m" />
         <Key
-            android:keyLabel="\@"
-            android:keyOutputText="\@" />
+            android:keyLabel="_"
+            android:keyOutputText="_" />
     </Row>
 
 </Keyboard>
