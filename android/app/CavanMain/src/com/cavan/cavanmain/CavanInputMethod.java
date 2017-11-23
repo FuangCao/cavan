@@ -140,12 +140,10 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 				break;
 
 			case MSG_SEND_TEXT:
-				CavanAndroid.dLog("MSG_SEND_TEXT");
 				CavanAccessibilityService accessibility = CavanAccessibilityService.getInstance();
 				if (accessibility != null && accessibility.commitText(CavanInputMethod.this)) {
 					if (mAutoSendText != null) {
 						int delay = CavanMessageActivity.getRepeatDelay(CavanInputMethod.this);
-						CavanAndroid.dLog("delay = " + delay);
 						sendEmptyMessageDelayed(MSG_AUTO_SEND, delay);
 					}
 				}
