@@ -493,6 +493,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 					CavanInputMethod method = CavanInputMethod.getInstance();
 					if (method != null) {
 						if (old == null) {
+							method.sendKeyDownUp(KeyEvent.KEYCODE_DPAD_DOWN);
 							method.commitText(code.getCode(), true);
 						} else {
 							method.sendGoAction();

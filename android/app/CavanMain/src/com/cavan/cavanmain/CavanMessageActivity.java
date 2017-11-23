@@ -86,6 +86,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	public static final String KEY_PHONE = "phone";
 	public static final String KEY_THANKS_NOTIFY = "thanks_notify";
 	public static final String KEY_NETWORK_IME = "network_ime";
+	public static final String KEY_REPEAT_DELAY = "repeat_delay";
 
 	private static CavanMessageActivity sInstance;
 
@@ -257,6 +258,10 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 
 	public static InetSocketAddress[] getNetworkImeAddresses(Context context) {
 		return EditableMultiSelectListPreference.loadInetSocketAddresses(context, KEY_NETWORK_IME, 8865);
+	}
+
+	public static int getRepeatDelay(Context context) {
+		return CavanAndroid.getPreferenceInt(context, KEY_REPEAT_DELAY, 300);
 	}
 
 	public static boolean startSogouOcrActivity(Context context) {
@@ -485,6 +490,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		findListPreference(KEY_RED_PACKET_NOTIFY_SETTING);
 		findListPreference(KEY_QQ_AUTO_UNPACK);
 		findListPreference(KEY_MM_AUTO_UNPACK);
+		findListPreference(KEY_REPEAT_DELAY);
 
 		Intent service = FloatMessageService.buildIntent(this);
 

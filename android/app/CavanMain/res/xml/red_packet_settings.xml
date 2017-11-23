@@ -162,6 +162,13 @@
 	    android:persistent="true"
 	    android:title="@string/phone" />
 
+	<ListPreference android:key="repeat_delay"
+	    android:persistent="true"
+		android:entries="@array/repeat_delay_entries"
+		android:entryValues="@array/repeat_delay_values"
+		android:defaultValue="300"
+	    android:title="@string/repeat_send_delay" />
+
 	<ListPreference android:key="commit_ahead"
 	    android:persistent="true"
 		android:entries="@array/ahead_entries"

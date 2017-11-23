@@ -38,7 +38,6 @@ import com.cavan.java.CavanTcpPacketClient;
 public class CavanInputMethod extends InputMethodService implements OnKeyboardActionListener {
 
 	private static final int CODE_MAX_COLUMNS = 3;
-	private static final int AUTO_SEND_DELAY = 300;
 	private static final int AUTO_COMMIT_DELAY = 100;
 
 	public static final int KEYCODE_SHIFT = -1;
@@ -141,10 +140,13 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 				break;
 
 			case MSG_SEND_TEXT:
+				CavanAndroid.dLog("MSG_SEND_TEXT");
 				CavanAccessibilityService accessibility = CavanAccessibilityService.getInstance();
 				if (accessibility != null && accessibility.commitText(CavanInputMethod.this)) {
 					if (mAutoSendText != null) {
-						sendEmptyMessageDelayed(MSG_AUTO_SEND, AUTO_SEND_DELAY);
+						int delay = CavanMessageActivity.getRepeatDelay(CavanInputMethod.this);
+						CavanAndroid.dLog("delay = " + delay);
+						sendEmptyMessageDelayed(MSG_AUTO_SEND, delay);
 					}
 				}
 				break;
@@ -445,14 +447,13 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			text = mAutoSendText;
 			mAutoSendText = null;
 
-			if (text != null) {
-				mAutoSendTextPrev = text;
-			}
-
 			mHandler.removeMessages(MSG_AUTO_SEND);
 
-			Message message = mHandler.obtainMessage(MSG_REPLACE_TEXT, null);
-			mHandler.sendMessageDelayed(message, 200);
+			if (text != null) {
+				Message message = mHandler.obtainMessage(MSG_REPLACE_TEXT, null);
+				mHandler.sendMessageDelayed(message, 200);
+				mAutoSendTextPrev = text;
+			}
 		} else {
 			mAutoSendText = text;
 			mHandler.sendEmptyMessageDelayed(MSG_SEND_TEXT, AUTO_COMMIT_DELAY);
@@ -766,6 +767,13 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 				text = conn.getSelectedText(0);
 				if (text == null || text.length() <= 0) {
 					text = mAutoSendTextPrev;
+					if (text == null) {
+						text = CavanAndroid.getClipboardText(CavanInputMethod.this);
+						if (text != null && text.length() <= 0) {
+							text = null;
+						}
+					}
+
 					if (text != null) {
 						conn.commitText(text, 0);
 					}
