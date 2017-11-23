@@ -38,6 +38,8 @@ import com.cavan.java.CavanTcpPacketClient;
 public class CavanInputMethod extends InputMethodService implements OnKeyboardActionListener {
 
 	private static final int CODE_MAX_COLUMNS = 3;
+	private static final int AUTO_SEND_DELAY = 300;
+	private static final int AUTO_COMMIT_DELAY = 100;
 
 	public static final int KEYCODE_SHIFT = -1;
     public static final int KEYCODE_MODE_CHANGE = -2;
@@ -119,14 +121,22 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			case MSG_REPLACE_TEXT:
 				InputConnection conn = getCurrentInputConnection();
 				if (conn != null && conn.performContextMenuAction(android.R.id.selectAll)) {
-					conn.commitText((CharSequence) msg.obj, 0);
+					CharSequence text = (CharSequence) msg.obj;
+					if (text == null) {
+						text = CavanString.EMPTY_STRING;
+					}
+
+					conn.commitText(text, 0);
 				}
 				break;
 
 			case MSG_INSERT_TEXT:
 				conn = getCurrentInputConnection();
 				if (conn != null) {
-					conn.commitText((CharSequence) msg.obj, 0);
+					CharSequence text = (CharSequence) msg.obj;
+					if (text != null) {
+						conn.commitText(text, 0);
+					}
 				}
 				break;
 
@@ -134,7 +144,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 				CavanAccessibilityService accessibility = CavanAccessibilityService.getInstance();
 				if (accessibility != null && accessibility.commitText(CavanInputMethod.this)) {
 					if (mAutoSendText != null) {
-						sendEmptyMessageDelayed(MSG_AUTO_SEND, 500);
+						sendEmptyMessageDelayed(MSG_AUTO_SEND, AUTO_SEND_DELAY);
 					}
 				}
 				break;
@@ -151,7 +161,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 				}
 
 				if (conn.performContextMenuAction(android.R.id.selectAll) && conn.commitText(text, 0)) {
-					sendEmptyMessageDelayed(MSG_SEND_TEXT, 100);
+					sendEmptyMessageDelayed(MSG_SEND_TEXT, AUTO_COMMIT_DELAY);
 				}
 				break;
 			}
@@ -327,6 +337,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	private int mSelectionEnd;
 
 	private CharSequence mAutoSendText;
+	private CharSequence mAutoSendTextPrev;
 
 	public static boolean isDefaultInputMethod(Context context) {
 		return "com.cavan.cavanmain/.CavanInputMethod".equals(CavanAndroid.getDefaultInputMethod(context));
@@ -428,18 +439,23 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	}
 
 	private void setAutoSendText(CharSequence text) {
+		CavanAndroid.dLog("setAutoSendText: " + text);
+
 		if (text == null) {
 			text = mAutoSendText;
 			mAutoSendText = null;
-			mHandler.removeMessages(MSG_AUTO_SEND);
 
 			if (text != null) {
-				Message message = mHandler.obtainMessage(MSG_REPLACE_TEXT, text);
-				mHandler.sendMessageDelayed(message, 200);
+				mAutoSendTextPrev = text;
 			}
+
+			mHandler.removeMessages(MSG_AUTO_SEND);
+
+			Message message = mHandler.obtainMessage(MSG_REPLACE_TEXT, null);
+			mHandler.sendMessageDelayed(message, 200);
 		} else {
 			mAutoSendText = text;
-			mHandler.sendEmptyMessage(MSG_SEND_TEXT);
+			mHandler.sendEmptyMessageDelayed(MSG_SEND_TEXT, AUTO_COMMIT_DELAY);
 		}
 	}
 
@@ -748,9 +764,14 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 				setAutoSendText(null);
 			} else if (conn.performContextMenuAction(android.R.id.selectAll)) {
 				text = conn.getSelectedText(0);
-				if (text != null && text.length() > 0) {
-					setAutoSendText(text);
+				if (text == null || text.length() <= 0) {
+					text = mAutoSendTextPrev;
+					if (text != null) {
+						conn.commitText(text, 0);
+					}
 				}
+
+				setAutoSendText(text);
 			}
 			break;
 		}
@@ -939,7 +960,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 				conn.commitText(args[1], 0);
 
 				if (send) {
-					mHandler.sendEmptyMessageDelayed(MSG_SEND_TEXT, 100);
+					mHandler.sendEmptyMessageDelayed(MSG_SEND_TEXT, AUTO_COMMIT_DELAY);
 				}
 			} else {
 				conn.commitText(CavanString.EMPTY_STRING, 0);
