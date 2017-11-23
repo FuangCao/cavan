@@ -273,6 +273,11 @@ function config_nfs()
 function config_samba()
 {
 	cat >> ${FILE_SAMBA_CONFIG} << EOF
+[global]
+   follow symlinks = true
+   wide links = true
+   unix extensions = no
+
 [rootfs]
    comment = ${DISTRIB_ID}-${DISTRIB_RELEASE}
    browseable = yes
