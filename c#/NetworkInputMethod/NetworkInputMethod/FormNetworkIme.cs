@@ -1,21 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Net.Sockets;
 using System.Threading;
+using System.Runtime.InteropServices;
+using System.Collections;
 
 namespace NetworkInputMethod
 {
     public partial class FormNetworkIme : Form
     {
+        private const int WM_DRAWCLIPBOARD = 0x308;
+        private const int WM_CHANGECBCHAIN = 0x30D;
+
+        //API declarations...
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        static public extern IntPtr SetClipboardViewer(IntPtr hWndNewViewer);
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        static public extern bool ChangeClipboardChain(IntPtr HWnd, IntPtr HWndNext);
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern int SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
         private byte[] mRepeatSendBytes;
         private NetworkImeService mService;
+        private IntPtr mNextClipboardViewer;
+        private CavanBusyLock mBusyLock = new CavanBusyLock();
 
         delegate void SimpleDelegate(Object obj);
 
@@ -23,6 +33,7 @@ namespace NetworkInputMethod
         {
             InitializeComponent();
             mService = new NetworkImeService(this);
+            mNextClipboardViewer = SetClipboardViewer(Handle);
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -49,11 +60,59 @@ namespace NetworkInputMethod
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
-        public int sendCommand(byte[] bytes)
+        protected override void WndProc(ref Message m)
+        {
+            switch (m.Msg)
+            {
+                case WM_DRAWCLIPBOARD:
+                    onClipboardChanged();
+                    SendMessage(mNextClipboardViewer, m.Msg, m.WParam, m.LParam);
+                    break;
+
+                case WM_CHANGECBCHAIN:
+                    if (m.WParam == mNextClipboardViewer)
+                    {
+                        mNextClipboardViewer = m.LParam;
+                    }
+                    else
+                    {
+                        SendMessage(mNextClipboardViewer, m.Msg, m.WParam, m.LParam);
+                    }
+                    break;
+
+                default:
+                    base.WndProc(ref m);
+                    break;
+            }
+        }
+
+        private void onClipboardChanged()
+        {
+            string text = Clipboard.GetText();
+            Console.WriteLine("onClipboardChanged: " + text);
+
+            if (checkBoxShareClipboard.Checked && text != null && text.Length > 0)
+            {
+                string command = "CLIPBOARD " + text;
+                sendCommand(command, true);
+            }
+        }
+
+        public int sendCommand(byte[] bytes, bool all)
         {
             int count = 0;
+            ICollection coll;
 
-            foreach (Object item in checkedListBoxClients.CheckedItems)
+            if (all)
+            {
+                coll = checkedListBoxClients.Items;
+            }
+            else
+            {
+                coll = checkedListBoxClients.CheckedItems;
+            }
+
+            foreach (Object item in coll)
             {
                 NetworkImeClient client = item as NetworkImeClient;
                 if (!client.send(bytes))
@@ -65,31 +124,40 @@ namespace NetworkInputMethod
             return count;
         }
 
-        public int sendCommand(string command)
+        public int sendCommand(string command, bool all)
         {
             byte[] bytes = UTF8Encoding.UTF8.GetBytes(command);
-            return sendCommand(bytes);
+            return sendCommand(bytes, all);
         }
 
         public int sendKey(int code)
         {
-            return sendCommand("KEY " + code);
+            return sendCommand("KEY " + code, false);
+        }
+
+        public int sendOpenApp(string pkgName)
+        {
+            return sendCommand("OPEN " + pkgName, false);
         }
 
         private void buttonStart_Click(object sender, EventArgs e)
         {
-            mService.start();
-        }
-
-        private void buttonStop_Click(object sender, EventArgs e)
-        {
-            mService.stop(false);
+            if (mService.Enabled)
+            {
+                mService.stop(false);
+                buttonStart.Text = "启动";
+            }
+            else
+            {
+                mService.start();
+                buttonStart.Text = "停止";
+            }
         }
 
         public void onTcpClientConnected(object sender, EventArgs e)
         {
             Console.WriteLine("onTcpClientConnected: sender = " + sender);
-            checkedListBoxClients.Items.Add(sender);
+            checkedListBoxClients.Items.Add(sender, true);
         }
 
         public void onTcpClientDisconnected(object sender, EventArgs e)
@@ -127,7 +195,7 @@ namespace NetworkInputMethod
                 command += " " + text;
             }
 
-            sendCommand(command);
+            sendCommand(command, false);
 
             if (checkBoxClear.Checked)
             {
@@ -138,7 +206,7 @@ namespace NetworkInputMethod
         private void buttonClear_Click(object sender, EventArgs e)
         {
             textBoxContent.Clear();
-            sendCommand("REPLACE");
+            sendCommand("REPLACE", false);
         }
 
         private void buttonUp_Click(object sender, EventArgs e)
@@ -261,7 +329,7 @@ namespace NetworkInputMethod
                     break;
                 }
 
-                sendCommand(bytes);
+                sendCommand(bytes, false);
                 Thread.Sleep(500);
             }
         }
@@ -270,6 +338,84 @@ namespace NetworkInputMethod
         {
             mRepeatSendBytes = null;
             checkBoxRepeat.Checked = false;
+        }
+
+        private void checkBoxSelectAll_CheckedChanged(object sender, EventArgs e)
+        {
+            if (mBusyLock.acquire(checkBoxSelectAll))
+            {
+                int index = checkedListBoxClients.Items.Count;
+                bool value = checkBoxSelectAll.Checked;
+
+                while (index > 0)
+                {
+                    checkedListBoxClients.SetItemChecked(--index, value);
+                }
+            }
+        }
+
+        private void checkedListBoxClients_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            if (!mBusyLock.acquire(checkedListBoxClients))
+            {
+                return;
+            }
+
+            if (e.NewValue == CheckState.Checked)
+            {
+                int index = checkedListBoxClients.Items.Count;
+                bool checkedAll = true;
+
+                while (index > 0)
+                {
+                    if (checkedListBoxClients.GetItemCheckState(--index) != CheckState.Checked && index != e.Index)
+                    {
+                        checkedAll = false;
+                        break;
+                    }
+                }
+
+                checkBoxSelectAll.Checked = checkedAll;
+            }
+            else
+            {
+                checkBoxSelectAll.Checked = false;
+            }
+        }
+
+        private void buttonDelete_Click(object sender, EventArgs e)
+        {
+            sendKey(67);
+        }
+
+        private void buttonAlipay_Click(object sender, EventArgs e)
+        {
+            sendOpenApp("com.eg.android.AlipayGphone");
+        }
+
+        private void buttonMm_Click(object sender, EventArgs e)
+        {
+            sendOpenApp("com.tencent.mm");
+        }
+
+        private void buttonCopy_Click(object sender, EventArgs e)
+        {
+            sendCommand("COPY", false);
+        }
+
+        private void buttonPaste_Click(object sender, EventArgs e)
+        {
+            sendCommand("PASTE", false);
+        }
+
+        private void buttonSelectAll_Click(object sender, EventArgs e)
+        {
+            sendCommand("SELECT_ALL", false);
+        }
+
+        private void buttonComplete_Click(object sender, EventArgs e)
+        {
+            sendCommand("COMMIT", false);
         }
     }
 

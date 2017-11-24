@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -21,6 +18,17 @@ namespace NetworkInputMethod
         public CavanTcpService()
         {
             mThread = new Thread(new ThreadStart(runServiceThread));
+        }
+
+        public bool Enabled
+        {
+            get
+            {
+                lock (this)
+                {
+                    return mEnabled;
+                }
+            }
         }
 
         public int Port

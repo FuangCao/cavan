@@ -31,7 +31,6 @@
             this.labelPort = new System.Windows.Forms.Label();
             this.textBoxPort = new System.Windows.Forms.TextBox();
             this.buttonStart = new System.Windows.Forms.Button();
-            this.buttonStop = new System.Windows.Forms.Button();
             this.checkedListBoxClients = new System.Windows.Forms.CheckedListBox();
             this.textBoxContent = new System.Windows.Forms.TextBox();
             this.buttonSend = new System.Windows.Forms.Button();
@@ -46,20 +45,26 @@
             this.buttonDown = new System.Windows.Forms.Button();
             this.buttonLeft = new System.Windows.Forms.Button();
             this.buttonRight = new System.Windows.Forms.Button();
-            this.buttonVolumeDown = new System.Windows.Forms.Button();
-            this.buttonVolumeUp = new System.Windows.Forms.Button();
             this.buttonEnter = new System.Windows.Forms.Button();
             this.labelStatus = new System.Windows.Forms.Label();
             this.checkBoxRepeat = new System.Windows.Forms.CheckBox();
             this.checkBoxEnterSend = new System.Windows.Forms.CheckBox();
             this.backgroundWorkerRepeater = new System.ComponentModel.BackgroundWorker();
+            this.checkBoxShareClipboard = new System.Windows.Forms.CheckBox();
+            this.checkBoxSelectAll = new System.Windows.Forms.CheckBox();
+            this.buttonDelete = new System.Windows.Forms.Button();
+            this.buttonMm = new System.Windows.Forms.Button();
+            this.buttonSelectAll = new System.Windows.Forms.Button();
+            this.buttonCopy = new System.Windows.Forms.Button();
+            this.buttonPaste = new System.Windows.Forms.Button();
+            this.buttonComplete = new System.Windows.Forms.Button();
             this.groupBoxMode.SuspendLayout();
             this.SuspendLayout();
             // 
             // labelPort
             // 
             this.labelPort.AutoSize = true;
-            this.labelPort.Location = new System.Drawing.Point(12, 15);
+            this.labelPort.Location = new System.Drawing.Point(12, 16);
             this.labelPort.Name = "labelPort";
             this.labelPort.Size = new System.Drawing.Size(53, 12);
             this.labelPort.TabIndex = 0;
@@ -69,29 +74,19 @@
             // 
             this.textBoxPort.Location = new System.Drawing.Point(71, 12);
             this.textBoxPort.Name = "textBoxPort";
-            this.textBoxPort.Size = new System.Drawing.Size(385, 21);
+            this.textBoxPort.Size = new System.Drawing.Size(304, 21);
             this.textBoxPort.TabIndex = 1;
             this.textBoxPort.Text = "8865";
             // 
             // buttonStart
             // 
-            this.buttonStart.Location = new System.Drawing.Point(12, 478);
+            this.buttonStart.Location = new System.Drawing.Point(381, 10);
             this.buttonStart.Name = "buttonStart";
             this.buttonStart.Size = new System.Drawing.Size(75, 23);
             this.buttonStart.TabIndex = 2;
             this.buttonStart.Text = "启动";
             this.buttonStart.UseVisualStyleBackColor = true;
             this.buttonStart.Click += new System.EventHandler(this.buttonStart_Click);
-            // 
-            // buttonStop
-            // 
-            this.buttonStop.Location = new System.Drawing.Point(93, 478);
-            this.buttonStop.Name = "buttonStop";
-            this.buttonStop.Size = new System.Drawing.Size(75, 23);
-            this.buttonStop.TabIndex = 3;
-            this.buttonStop.Text = "停止";
-            this.buttonStop.UseVisualStyleBackColor = true;
-            this.buttonStop.Click += new System.EventHandler(this.buttonStop_Click);
             // 
             // checkedListBoxClients
             // 
@@ -101,13 +96,14 @@
             this.checkedListBoxClients.Name = "checkedListBoxClients";
             this.checkedListBoxClients.Size = new System.Drawing.Size(442, 132);
             this.checkedListBoxClients.TabIndex = 4;
+            this.checkedListBoxClients.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedListBoxClients_ItemCheck);
             // 
             // textBoxContent
             // 
-            this.textBoxContent.Location = new System.Drawing.Point(14, 177);
+            this.textBoxContent.Location = new System.Drawing.Point(14, 199);
             this.textBoxContent.Multiline = true;
             this.textBoxContent.Name = "textBoxContent";
-            this.textBoxContent.Size = new System.Drawing.Size(442, 175);
+            this.textBoxContent.Size = new System.Drawing.Size(442, 153);
             this.textBoxContent.TabIndex = 5;
             // 
             // buttonSend
@@ -179,7 +175,7 @@
             // checkBoxClear
             // 
             this.checkBoxClear.AutoSize = true;
-            this.checkBoxClear.Location = new System.Drawing.Point(372, 358);
+            this.checkBoxClear.Location = new System.Drawing.Point(291, 358);
             this.checkBoxClear.Name = "checkBoxClear";
             this.checkBoxClear.Size = new System.Drawing.Size(84, 16);
             this.checkBoxClear.TabIndex = 9;
@@ -188,7 +184,7 @@
             // 
             // buttonBack
             // 
-            this.buttonBack.Location = new System.Drawing.Point(174, 478);
+            this.buttonBack.Location = new System.Drawing.Point(95, 478);
             this.buttonBack.Name = "buttonBack";
             this.buttonBack.Size = new System.Drawing.Size(75, 23);
             this.buttonBack.TabIndex = 10;
@@ -236,26 +232,6 @@
             this.buttonRight.UseVisualStyleBackColor = true;
             this.buttonRight.Click += new System.EventHandler(this.buttonRight_Click);
             // 
-            // buttonVolumeDown
-            // 
-            this.buttonVolumeDown.Location = new System.Drawing.Point(300, 421);
-            this.buttonVolumeDown.Name = "buttonVolumeDown";
-            this.buttonVolumeDown.Size = new System.Drawing.Size(75, 23);
-            this.buttonVolumeDown.TabIndex = 17;
-            this.buttonVolumeDown.Text = "音量-";
-            this.buttonVolumeDown.UseVisualStyleBackColor = true;
-            this.buttonVolumeDown.Click += new System.EventHandler(this.buttonVolumeDown_Click);
-            // 
-            // buttonVolumeUp
-            // 
-            this.buttonVolumeUp.Location = new System.Drawing.Point(300, 393);
-            this.buttonVolumeUp.Name = "buttonVolumeUp";
-            this.buttonVolumeUp.Size = new System.Drawing.Size(75, 23);
-            this.buttonVolumeUp.TabIndex = 18;
-            this.buttonVolumeUp.Text = "音量+";
-            this.buttonVolumeUp.UseVisualStyleBackColor = true;
-            this.buttonVolumeUp.Click += new System.EventHandler(this.buttonVolumeUp_Click);
-            // 
             // buttonEnter
             // 
             this.buttonEnter.Location = new System.Drawing.Point(93, 421);
@@ -269,7 +245,7 @@
             // labelStatus
             // 
             this.labelStatus.AutoSize = true;
-            this.labelStatus.Location = new System.Drawing.Point(12, 359);
+            this.labelStatus.Location = new System.Drawing.Point(12, 360);
             this.labelStatus.Name = "labelStatus";
             this.labelStatus.Size = new System.Drawing.Size(77, 12);
             this.labelStatus.TabIndex = 20;
@@ -278,7 +254,7 @@
             // checkBoxRepeat
             // 
             this.checkBoxRepeat.AutoSize = true;
-            this.checkBoxRepeat.Location = new System.Drawing.Point(216, 358);
+            this.checkBoxRepeat.Location = new System.Drawing.Point(384, 177);
             this.checkBoxRepeat.Name = "checkBoxRepeat";
             this.checkBoxRepeat.Size = new System.Drawing.Size(72, 16);
             this.checkBoxRepeat.TabIndex = 21;
@@ -291,7 +267,7 @@
             this.checkBoxEnterSend.AutoSize = true;
             this.checkBoxEnterSend.Checked = true;
             this.checkBoxEnterSend.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxEnterSend.Location = new System.Drawing.Point(294, 358);
+            this.checkBoxEnterSend.Location = new System.Drawing.Point(384, 358);
             this.checkBoxEnterSend.Name = "checkBoxEnterSend";
             this.checkBoxEnterSend.Size = new System.Drawing.Size(72, 16);
             this.checkBoxEnterSend.TabIndex = 22;
@@ -304,17 +280,106 @@
             this.backgroundWorkerRepeater.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorkerRepeater_DoWork);
             this.backgroundWorkerRepeater.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorkerRepeater_RunWorkerCompleted);
             // 
+            // checkBoxShareClipboard
+            // 
+            this.checkBoxShareClipboard.AutoSize = true;
+            this.checkBoxShareClipboard.Checked = true;
+            this.checkBoxShareClipboard.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxShareClipboard.Location = new System.Drawing.Point(294, 177);
+            this.checkBoxShareClipboard.Name = "checkBoxShareClipboard";
+            this.checkBoxShareClipboard.Size = new System.Drawing.Size(84, 16);
+            this.checkBoxShareClipboard.TabIndex = 23;
+            this.checkBoxShareClipboard.Text = "剪切板分享";
+            this.checkBoxShareClipboard.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxSelectAll
+            // 
+            this.checkBoxSelectAll.AutoSize = true;
+            this.checkBoxSelectAll.Location = new System.Drawing.Point(14, 177);
+            this.checkBoxSelectAll.Name = "checkBoxSelectAll";
+            this.checkBoxSelectAll.Size = new System.Drawing.Size(48, 16);
+            this.checkBoxSelectAll.TabIndex = 24;
+            this.checkBoxSelectAll.Text = "全选";
+            this.checkBoxSelectAll.UseVisualStyleBackColor = true;
+            this.checkBoxSelectAll.CheckedChanged += new System.EventHandler(this.checkBoxSelectAll_CheckedChanged);
+            // 
+            // buttonDelete
+            // 
+            this.buttonDelete.Location = new System.Drawing.Point(219, 478);
+            this.buttonDelete.Name = "buttonDelete";
+            this.buttonDelete.Size = new System.Drawing.Size(75, 23);
+            this.buttonDelete.TabIndex = 25;
+            this.buttonDelete.Text = "删除";
+            this.buttonDelete.UseVisualStyleBackColor = true;
+            this.buttonDelete.Click += new System.EventHandler(this.buttonDelete_Click);
+            // 
+            // buttonMm
+            // 
+            this.buttonMm.Location = new System.Drawing.Point(12, 478);
+            this.buttonMm.Name = "buttonMm";
+            this.buttonMm.Size = new System.Drawing.Size(75, 23);
+            this.buttonMm.TabIndex = 26;
+            this.buttonMm.Text = "微信";
+            this.buttonMm.UseVisualStyleBackColor = true;
+            this.buttonMm.Click += new System.EventHandler(this.buttonMm_Click);
+            // 
+            // buttonSelectAll
+            // 
+            this.buttonSelectAll.Location = new System.Drawing.Point(300, 449);
+            this.buttonSelectAll.Name = "buttonSelectAll";
+            this.buttonSelectAll.Size = new System.Drawing.Size(75, 23);
+            this.buttonSelectAll.TabIndex = 27;
+            this.buttonSelectAll.Text = "全选";
+            this.buttonSelectAll.UseVisualStyleBackColor = true;
+            this.buttonSelectAll.Click += new System.EventHandler(this.buttonSelectAll_Click);
+            // 
+            // buttonCopy
+            // 
+            this.buttonCopy.Location = new System.Drawing.Point(300, 393);
+            this.buttonCopy.Name = "buttonCopy";
+            this.buttonCopy.Size = new System.Drawing.Size(75, 23);
+            this.buttonCopy.TabIndex = 28;
+            this.buttonCopy.Text = "复制";
+            this.buttonCopy.UseVisualStyleBackColor = true;
+            this.buttonCopy.Click += new System.EventHandler(this.buttonCopy_Click);
+            // 
+            // buttonPaste
+            // 
+            this.buttonPaste.Location = new System.Drawing.Point(300, 422);
+            this.buttonPaste.Name = "buttonPaste";
+            this.buttonPaste.Size = new System.Drawing.Size(75, 23);
+            this.buttonPaste.TabIndex = 29;
+            this.buttonPaste.Text = "粘贴";
+            this.buttonPaste.UseVisualStyleBackColor = true;
+            this.buttonPaste.Click += new System.EventHandler(this.buttonPaste_Click);
+            // 
+            // buttonComplete
+            // 
+            this.buttonComplete.Location = new System.Drawing.Point(219, 449);
+            this.buttonComplete.Name = "buttonComplete";
+            this.buttonComplete.Size = new System.Drawing.Size(75, 23);
+            this.buttonComplete.TabIndex = 30;
+            this.buttonComplete.Text = "完成";
+            this.buttonComplete.UseVisualStyleBackColor = true;
+            this.buttonComplete.Click += new System.EventHandler(this.buttonComplete_Click);
+            // 
             // FormNetworkIme
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(468, 513);
+            this.Controls.Add(this.buttonComplete);
+            this.Controls.Add(this.buttonPaste);
+            this.Controls.Add(this.buttonCopy);
+            this.Controls.Add(this.buttonSelectAll);
+            this.Controls.Add(this.buttonMm);
+            this.Controls.Add(this.buttonDelete);
+            this.Controls.Add(this.checkBoxSelectAll);
+            this.Controls.Add(this.checkBoxShareClipboard);
             this.Controls.Add(this.checkBoxEnterSend);
             this.Controls.Add(this.checkBoxRepeat);
             this.Controls.Add(this.labelStatus);
             this.Controls.Add(this.buttonEnter);
-            this.Controls.Add(this.buttonVolumeUp);
-            this.Controls.Add(this.buttonVolumeDown);
             this.Controls.Add(this.buttonRight);
             this.Controls.Add(this.buttonLeft);
             this.Controls.Add(this.buttonDown);
@@ -326,7 +391,6 @@
             this.Controls.Add(this.buttonSend);
             this.Controls.Add(this.textBoxContent);
             this.Controls.Add(this.checkedListBoxClients);
-            this.Controls.Add(this.buttonStop);
             this.Controls.Add(this.buttonStart);
             this.Controls.Add(this.textBoxPort);
             this.Controls.Add(this.labelPort);
@@ -345,7 +409,6 @@
         private System.Windows.Forms.Label labelPort;
         private System.Windows.Forms.TextBox textBoxPort;
         private System.Windows.Forms.Button buttonStart;
-        private System.Windows.Forms.Button buttonStop;
         private System.Windows.Forms.CheckedListBox checkedListBoxClients;
         private System.Windows.Forms.TextBox textBoxContent;
         private System.Windows.Forms.Button buttonSend;
@@ -360,13 +423,19 @@
         private System.Windows.Forms.Button buttonDown;
         private System.Windows.Forms.Button buttonLeft;
         private System.Windows.Forms.Button buttonRight;
-        private System.Windows.Forms.Button buttonVolumeDown;
-        private System.Windows.Forms.Button buttonVolumeUp;
         private System.Windows.Forms.Button buttonEnter;
         private System.Windows.Forms.Label labelStatus;
         private System.Windows.Forms.CheckBox checkBoxRepeat;
         private System.Windows.Forms.CheckBox checkBoxEnterSend;
         private System.ComponentModel.BackgroundWorker backgroundWorkerRepeater;
+        private System.Windows.Forms.CheckBox checkBoxShareClipboard;
+        private System.Windows.Forms.CheckBox checkBoxSelectAll;
+        private System.Windows.Forms.Button buttonDelete;
+        private System.Windows.Forms.Button buttonMm;
+        private System.Windows.Forms.Button buttonSelectAll;
+        private System.Windows.Forms.Button buttonCopy;
+        private System.Windows.Forms.Button buttonPaste;
+        private System.Windows.Forms.Button buttonComplete;
     }
 }
 
