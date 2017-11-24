@@ -130,6 +130,11 @@
 		android:defaultValue="3"
 	    android:title="@string/thanks_notify" />
 
+	<CheckBoxPreference android:key="thanks_share"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/thanks_share" />
+
 	<ListPreference android:key="qq_auto_unpack"
 	    android:persistent="true"
 		android:entries="@array/delay_entries"

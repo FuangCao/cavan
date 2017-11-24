@@ -626,6 +626,7 @@
 	<string name="on_time_notify">整点提醒</string>
 	<string name="on_time_notify_setting">整点提醒设置</string>
 	<string name="thanks_notify">大水提醒</string>
+	<string name="thanks_share">大水分享</string>
 	<string name="show_location">位置查看</string>
 	<string name="mock_location">位置模拟</string>
 	<string name="mock_location_service">虚拟定位服务</string>

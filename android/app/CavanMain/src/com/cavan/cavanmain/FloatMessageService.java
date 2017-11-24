@@ -61,6 +61,7 @@ public class FloatMessageService extends FloatWidowService {
 	public static final String NET_CMD_KEEP_ALIVE = "CavanKeepAlive";
 	public static final String NET_CMD_TM_CODE = "SecretOrder: ";
 	public static final String NET_CMD_CLIPBOARD = "Clipboard: ";
+	public static final String NET_CMD_NOTIFY = "Notify: ";
 
 	public static final String PATH_QQ_IMAGES = Environment.getExternalStorageDirectory().getPath() + "/Tencent/QQ_Images";
 
@@ -716,6 +717,10 @@ public class FloatMessageService extends FloatWidowService {
 		} else if (command.startsWith(NET_CMD_CLIPBOARD)) {
 			String code = command.substring(NET_CMD_CLIPBOARD.length());
 			mHandler.obtainMessage(MSG_CLIPBOARD_RECEIVED, code).sendToTarget();
+		} else if (command.startsWith(NET_CMD_NOTIFY) && CavanMessageActivity.isThanksShareEnabled(this)) {
+			setLockScreenEnable(false);
+			CavanAndroid.acquireWakeupLock(getApplicationContext(), 20000);
+			showToast(MSG_SHOW_NOTIFY, command.substring(NET_CMD_NOTIFY.length()));
 		}
 	}
 

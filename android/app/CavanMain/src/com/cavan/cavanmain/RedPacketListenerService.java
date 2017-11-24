@@ -305,7 +305,17 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				}
 
 				if (node.increase(time) == times) {
-					return thanks + " 大水快去";
+					String message = thanks + " 大水快去";
+
+					if (CavanMessageActivity.isThanksShareEnabled(this)) {
+						try {
+							mFloatMessageService.sendTcpCommand(FloatMessageService.NET_CMD_NOTIFY + message);
+						} catch (RemoteException e) {
+							e.printStackTrace();
+						}
+					}
+
+					return message;
 				}
 			}
 		} else {

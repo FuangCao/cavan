@@ -85,6 +85,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	public static final String KEY_NAME = "name";
 	public static final String KEY_PHONE = "phone";
 	public static final String KEY_THANKS_NOTIFY = "thanks_notify";
+	public static final String KEY_THANKS_SHARE = "thanks_share";
 	public static final String KEY_NETWORK_IME = "network_ime";
 	public static final String KEY_REPEAT_DELAY = "repeat_delay";
 
@@ -222,6 +223,10 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 
 	public static int getThanksNotify(Context context) {
 		return CavanAndroid.getPreferenceInt(context, KEY_THANKS_NOTIFY, -1);
+	}
+
+	public static boolean isThanksShareEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_THANKS_SHARE);
 	}
 
 	public static int getAutoUnpackQQ(Context context) {
