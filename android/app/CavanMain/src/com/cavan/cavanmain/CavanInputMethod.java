@@ -982,6 +982,11 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			}
 			break;
 
+		case "COMMIT":
+			CavanAccessibilityService accessibility = CavanAccessibilityService.getInstance();
+			if (accessibility != null && accessibility.commitText(CavanInputMethod.this)) {
+				break;
+			}
 		case "DONE":
 			sendGoAction(conn);
 			break;
@@ -989,8 +994,16 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		case "KEY":
 			if (args.length > 1) {
 				try {
-					int code = Integer.parseInt(args[1].trim());
-					sendKeyDownUp(code);
+					args = args[1].split("\\s+");
+
+					int code = Integer.parseInt(args[0].trim());
+
+					if (args.length > 1) {
+						int value = Integer.parseInt(args[1].trim());
+						sendKeyEvent(code, value);
+					} else {
+						sendKeyDownUp(code);
+					}
 				} catch (NumberFormatException e) {
 					e.printStackTrace();
 				}
@@ -1017,6 +1030,30 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 					e.printStackTrace();
 				}
 			}
+			break;
+
+		case "OPEN":
+			if (args.length > 0) {
+				CavanAndroid.startActivity(CavanInputMethod.this, args[1]);
+			}
+			break;
+
+		case "CLIPBOARD":
+			if (args.length > 0) {
+				CavanAndroid.postClipboardText(CavanInputMethod.this, args[1]);
+			}
+			break;
+
+		case "COPY":
+			conn.performContextMenuAction(android.R.id.copy);
+			break;
+
+		case "PASTE":
+			conn.performContextMenuAction(android.R.id.paste);
+			break;
+
+		case "SELECT_ALL":
+			conn.performContextMenuAction(android.R.id.selectAll);
 			break;
 		}
 	}
