@@ -1,5 +1,17 @@
 #!/bin/bash
 
+[ -d "${CAVAN_HOME}" ] ||
+{
+	for fn in ${HOME}/cavan ${HOME}/work/cavan /cavan /work/cavan
+	do
+		[ -d "$fn" ] &&
+		{
+			CAVAN_HOME="$fn"
+			break
+		}
+	done
+}
+
 export CAVAN_OS_NAME=$(uname -s)
 
 case "${CAVAN_OS_NAME}" in
@@ -93,5 +105,10 @@ done
 do
 	[ -f "${fn}" ] && source "${fn}"
 done
+
+for pem in ${HOME}/.ssh/*.pem
+do
+	[ -f "${pem}" ] && ssh-add "${pem}"
+done 2>/dev/null > /dev/null
 
 unset JAVA_TOOL_OPTIONS
