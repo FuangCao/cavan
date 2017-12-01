@@ -43,6 +43,22 @@ alias cavan-ps-aux="ps -aux"
 alias cavan-ps="cavan-ps-ef"
 alias cavan-timestamp="date +%s"
 
+for svr in ${SSH_SERVERS}
+do
+	args=($(echo ${svr} | tr '@' ' '))
+
+	if [ "${#args[@]}" -lt 2 ]
+	then
+		user="root"
+		host="${args[0]}"
+	else
+		user="${args[0]}"
+		host="${args[1]}"
+	fi
+
+	alias cavan-ssh-${host}="ssh ${user}@${host}"
+done
+
 CMD_TCP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tcp_dd_server"
 CMD_TFTP_DD_SERVER="${CAVAN_OUT_DEBUG}/cavan-tftp_dd_server"
 
