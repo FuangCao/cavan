@@ -287,3 +287,15 @@ function vi-then-source()
 {
 	vi $@ && source $@
 }
+
+function cavan-set-proxy-env()
+{
+	if [ -n "$1" ]
+	then
+		export HTTP_PROXY="http://$1"
+		export HTTPS_PROXY="http://$1"
+	else
+		unset HTTP_PROXY
+		unset HTTPS_PROXY
+	fi
+}
