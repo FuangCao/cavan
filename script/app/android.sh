@@ -563,5 +563,19 @@ function cavan-android-keystore-show()
 {
 	[ "$1" ] || return 1
 
-	keytool -v -list -storepass android -keystore "$1"
+	local storepass line
+
+	if [ -n "$2" ]
+	then
+		storepass="$2"
+	else
+		storepass="android"
+
+		echo -n "Please input storepass (${storepass}): "
+		read line
+
+		[ -n "${line}" ] && storepass="${line}"
+	fi
+
+	keytool -v -list -storepass "${storepass}" -keystore "$1"
 }
