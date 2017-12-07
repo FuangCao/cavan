@@ -54,9 +54,7 @@ public abstract class CavanNativeService extends CavanService {
 	public void start(int port) {
 		mEnabled = true;
 
-		if (mState != STATE_STOPPED) {
-			sendStateBroadcast(mState);
-		} else {
+		if (mState == STATE_STOPPED) {
 			mPort = port;
 			new MyThread().start();
 		}

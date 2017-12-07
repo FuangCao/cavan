@@ -2,11 +2,9 @@ package com.cavan.cavanjni;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog.Builder;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -28,13 +26,12 @@ public abstract class CavanServicePreference extends EditTextPreference {
 	private static final int EVENT_START_SERVICE = 1;
 	private static final int EVENT_STOP_SERVICE = 2;
 	private static final int EVENT_RESTART_SERVICE = 3;
+	private static final int EVENT_STATE_CHANGED = 4;
 
 	private Handler mHandler = new Handler() {
 
 		@Override
 		public void handleMessage(Message msg) {
-			CavanAndroid.dLog("message = " + msg);
-
 			switch (msg.what) {
 			case EVENT_START_SERVICE:
 				startService();
@@ -47,15 +44,27 @@ public abstract class CavanServicePreference extends EditTextPreference {
 			case EVENT_RESTART_SERVICE:
 				restartService();
 				break;
-			}
 
-			super.handleMessage(msg);
+			case EVENT_STATE_CHANGED:
+				updateSummary(msg.arg1);
+				break;
+			}
 		}
 	};
 
 	private boolean mNeedStop;
 	private ICavanService mService;
-	private boolean mReceiverRegisted;
+
+	private ICavanServiceCallback mCallback = new ICavanServiceCallback.Stub() {
+
+		@Override
+		public void onServiceStateChanged(int state) throws RemoteException {
+			Message message = mHandler.obtainMessage(EVENT_STATE_CHANGED);
+			message.arg1 = state;
+			message.sendToTarget();
+		}
+	};
+
 	private ServiceConnection mConnection = new ServiceConnection() {
 
 		@Override
@@ -76,26 +85,13 @@ public abstract class CavanServicePreference extends EditTextPreference {
 
 			mService = ICavanService.Stub.asInterface(arg1);
 
-			if (!mReceiverRegisted) {
-				try {
-					IntentFilter filter = new IntentFilter(mService.getAction());
-					getContext().registerReceiver(mReceiver, filter);
-					mReceiverRegisted = true;
-				} catch (RemoteException e) {
-					e.printStackTrace();
-				}
+			try {
+				mService.addCallback(mCallback);
+			} catch (RemoteException e) {
+				e.printStackTrace();
 			}
 
-			updateSummary(getServiceState());
 			setEnabled(true);
-		}
-	};
-
-	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
-
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			updateSummary(context, intent);
 		}
 	};
 
@@ -109,16 +105,15 @@ public abstract class CavanServicePreference extends EditTextPreference {
 	}
 
 	public synchronized void unbindService(Context context) {
-		context.unbindService(mConnection);
-
-		if (mReceiverRegisted) {
+		if (mService != null) {
 			try {
-				context.unregisterReceiver(mReceiver);
-				mReceiverRegisted = false;
-			} catch (Exception e) {
+				mService.removeCallback(mCallback);
+			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
 		}
+
+		context.unbindService(mConnection);
 	}
 
 	public synchronized void startService(Context context) {
@@ -263,11 +258,6 @@ public abstract class CavanServicePreference extends EditTextPreference {
 				setSummary(builder.toString());
 			}
 		}
-	}
-
-	public synchronized void updateSummary(Context context, Intent intent) {
-		int state = intent.getIntExtra("state", CavanNativeService.STATE_STOPPED);
-		updateSummary(state);
 	}
 
 	@Override

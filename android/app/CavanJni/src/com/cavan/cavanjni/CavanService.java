@@ -1,5 +1,7 @@
 package com.cavan.cavanjni;
 
+import java.util.HashSet;
+
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
@@ -20,6 +22,7 @@ public abstract class CavanService extends Service {
 	private static final int MSG_STOP = 2;
 
 	protected int mState = STATE_STOPPED;
+	private HashSet<ICavanServiceCallback> mCallbacks = new HashSet<ICavanServiceCallback>();
 
 	protected CavanMessageQueue mMessageQueue = new CavanMessageQueue() {
 
@@ -56,11 +59,6 @@ public abstract class CavanService extends Service {
 		}
 
 		@Override
-		public String getAction() throws RemoteException {
-			return CavanService.this.getAction();
-		}
-
-		@Override
 		public void stop() throws RemoteException {
 			mMessageQueue.sendEmptyMessage(MSG_STOP);
 		}
@@ -68,6 +66,44 @@ public abstract class CavanService extends Service {
 		@Override
 		public boolean isEnabled() throws RemoteException {
 			return CavanService.this.isEnabled();
+		}
+
+		@Override
+		public boolean addCallback(final ICavanServiceCallback callback) throws RemoteException {
+			CavanAndroid.dLog("addCallback: " + callback);
+
+			boolean added;
+
+			synchronized (mCallbacks) {
+				added = mCallbacks.add(callback);
+			}
+
+			if (added) {
+				callback.asBinder().linkToDeath(new DeathRecipient() {
+
+					@Override
+					public void binderDied() {
+						try {
+							removeCallback(callback);
+						} catch (RemoteException e) {
+							e.printStackTrace();
+						}
+					}
+				}, 0);
+			}
+
+			callback.onServiceStateChanged(mState);
+
+			return added;
+		}
+
+		@Override
+		public boolean removeCallback(ICavanServiceCallback callback) throws RemoteException {
+			CavanAndroid.dLog("removeCallback: " + callback);
+
+			synchronized (mCallbacks) {
+				return mCallbacks.remove(callback);
+			}
 		}
 	};
 
@@ -77,16 +113,22 @@ public abstract class CavanService extends Service {
 	public abstract boolean isEnabled();
 	public abstract String getServiceName();
 
-	protected void sendStateBroadcast(int state) {
-		Intent intent = new Intent(getAction());
-		intent.putExtra("state", state);
-		sendBroadcast(intent);
+	protected void performServiceStateChanged(int state) {
+		synchronized (mCallbacks) {
+			for (ICavanServiceCallback callback : mCallbacks) {
+				try {
+					callback.onServiceStateChanged(state);
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 
 	protected void setServiceState(int state) {
 		if (mState != state) {
 			mState = state;
-			sendStateBroadcast(state);
+			performServiceStateChanged(state);
 			onServiceStateChanged(state);
 		}
 	}
@@ -95,12 +137,14 @@ public abstract class CavanService extends Service {
 		CavanAndroid.dLog("onServiceStateChanged: " + getServiceName() + " = " + state);
 	}
 
-	public String getAction() {
-		return "com.cavan.intent." + getServiceName();
-	}
-
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBind;
+	}
+
+	@Override
+	public void onDestroy() {
+		mCallbacks.clear();
+		super.onDestroy();
 	}
 }
