@@ -798,7 +798,7 @@ int cavan_http_write_path_href2(int fd, const char *pathname, const char *name)
 	return cavan_http_write_path_href(fd, pathname, strlen(pathname), name, strlen(name));
 }
 
-int cavan_http_write_path_hrefs(int fd, const char *pathname)
+int cavan_http_write_path_hrefs(struct network_client *client, int fd, const char *pathname)
 {
 	int ret = 0;
 	const char *p = pathname;
@@ -817,7 +817,19 @@ int cavan_http_write_path_hrefs(int fd, const char *pathname)
 				ret |= cavan_http_write_path_href(fd, pathname, p - pathname + 1, filename, p - filename);
 				ret |= ffile_putchar(fd, '/');
 			} else if (p == pathname) {
-				ret |= cavan_http_write_path_href2(fd, "/", "ROOT");
+				struct sockaddr_in addr;
+				char buff[32];
+				int length;
+
+				if (network_client_get_remote_addr(client, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+					filename = "ROOT";
+					length = 4;
+				} else {
+					length = snprintf(buff, sizeof(buff), "%s:%d", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+					filename = buff;
+				}
+
+				ret |= cavan_http_write_path_href(fd, "/", 1, filename, length);
 				ret |= ffile_putchar(fd, '/');
 			}
 
@@ -873,7 +885,7 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 
 	filename = cavan_path_copy(pathname, sizeof(pathname), dirname, true);
 
-	ret = cavan_http_write_path_hrefs(fd, pathname);
+	ret = cavan_http_write_path_hrefs(client, fd, pathname);
 	if (ret < 0) {
 		pr_red_info("cavan_http_write_path_html: %d", ret);
 		return ret;

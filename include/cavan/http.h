@@ -112,7 +112,7 @@ int cavan_http_send_file2(struct network_client *client, const char *pathname, c
 int cavan_http_send_file3(struct network_client *client, const char *pathname, const struct cavan_http_prop *props, size_t size);
 int cavan_http_write_path_href(int fd, const char *pathname, size_t psize, const char *name, size_t nsize);
 int cavan_http_write_path_href2(int fd, const char *pathname, const char *name);
-int cavan_http_write_path_hrefs(int fd, const char *pathname);
+int cavan_http_write_path_hrefs(struct network_client *client, int fd, const char *pathname);
 int cavan_http_list_directory(struct network_client *client, const char *dirname, const char *filter);
 int cavan_http_read_multiform_header(struct cavan_fifo *fifo, struct cavan_http_request *header, const char *boundary);
 ssize_t cavan_http_receive_file(struct cavan_fifo *fifo, struct cavan_http_request *header, const char *dirname, const char *boundary);
