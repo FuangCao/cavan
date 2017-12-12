@@ -79,20 +79,34 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 			return mPackageInfos.size();
 		}
 
+		public boolean isGameApp(ApplicationInfo info) {
+			if ((info.flags & ApplicationInfo.FLAG_IS_GAME) != 0) {
+				return true;
+			}
+
+			if (info.packageName.startsWith("com.tencent.tmgp.")) {
+				return true;
+			}
+
+			return false;
+		}
+
 		@Override
 		public void notifyDataSetChanged() {
 			String filter = mEditTextFilter.getText().toString().trim();
 			ArrayList<PackageInfo> list = new ArrayList<PackageInfo>();
 
 			for (PackageInfo info : getPackageManager().getInstalledPackages(0)) {
-				int flags = info.applicationInfo.flags;
+				ApplicationInfo ainfo = info.applicationInfo;
 
-				if (!mCheckBoxShowSysApp.isChecked() && (flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
-					continue;
-				}
-
-				if (mCheckBoxGameOnly.isChecked() && (flags & ApplicationInfo.FLAG_IS_GAME) == 0) {
-					continue;
+				if ((ainfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
+					if (!mCheckBoxShowSysApp.isChecked()) {
+						continue;
+					}
+				} else if (mCheckBoxGameOnly.isChecked()) {
+					if (!isGameApp(ainfo)) {
+						continue;
+					}
 				}
 
 				if (filter.isEmpty() || getAppName(info).contains(filter)) {
