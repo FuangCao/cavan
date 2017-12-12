@@ -1,15 +1,5 @@
 <resources>
 
     <string name="app_name">CavanJni</string>
-    <string name="port_setting">端口号设置</string>
-    <string name="port">端口号</string>
-    <string name="prepare">正在准备</string>
-    <string name="running">正在运行</string>
-    <string name="waiting">正在等待</string>
-    <string name="stopped">已停止运行</string>
-    <string name="service_connected">已连接到服务</string>
-    <string name="service_disconnected">已断开服务</string>
-    <string name="start">启动</string>
-    <string name="stop">停止</string>
 
 </resources>

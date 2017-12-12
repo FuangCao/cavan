@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.AttributeSet;
 
+import com.cavan.resource.CavanServicePreference;
+
 public class FtpServicePreference extends CavanServicePreference {
 
 	public FtpServicePreference(Context context, AttributeSet attrs) {

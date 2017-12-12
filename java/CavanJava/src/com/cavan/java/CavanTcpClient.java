@@ -10,10 +10,21 @@ import java.util.List;
 
 public class CavanTcpClient implements Runnable {
 
+	public interface CavanTcpClientListener {
+		void onTcpClientRunning();
+		void onTcpClientStopped();
+		void onTcpConnecting(InetSocketAddress address);
+		boolean onTcpConnected(Socket socket);
+		void onTcpDisconnected();
+		boolean onTcpConnFailed(int times);
+		boolean onDataReceived(byte[] bytes, int length);
+	}
+
 	private Socket mSocket;
 	private InputStream mInputStream;
 	private OutputStream mOutputStream;
 	private InetSocketAddress mAddress;
+	private CavanTcpClientListener mTcpClientListener;
 	private List<InetSocketAddress> mAddresses = new ArrayList<InetSocketAddress>();
 
 	private Thread mConnThread = new Thread(this);
@@ -127,6 +138,14 @@ public class CavanTcpClient implements Runnable {
 		}
 
 		return reconnect();
+	}
+
+	public synchronized CavanTcpClientListener getTcpClientListener() {
+		return mTcpClientListener;
+	}
+
+	public synchronized void setTcpClientListener(CavanTcpClientListener listener) {
+		mTcpClientListener = listener;
 	}
 
 	public void prErrInfo(String message) {
@@ -459,24 +478,59 @@ public class CavanTcpClient implements Runnable {
 		}
 	}
 
-	protected void onTcpClientRunning() {}
+	protected void onTcpClientRunning() {
+		CavanTcpClientListener listener = getTcpClientListener();
+		if (listener != null) {
+			listener.onTcpClientRunning();
+		}
+	}
 
-	protected void onTcpClientStopped() {}
+	protected void onTcpClientStopped() {
+		CavanTcpClientListener listener = getTcpClientListener();
+		if (listener != null) {
+			listener.onTcpClientStopped();
+		}
+	}
 
-	protected void onTcpConnecting(InetSocketAddress address) {}
+	protected void onTcpConnecting(InetSocketAddress address) {
+		CavanTcpClientListener listener = getTcpClientListener();
+		if (listener != null) {
+			listener.onTcpConnecting(address);
+		}
+	}
 
 	protected boolean onTcpConnected(Socket socket) {
+		CavanTcpClientListener listener = getTcpClientListener();
+		if (listener != null) {
+			return listener.onTcpConnected(socket);
+		}
+
 		return true;
 	}
 
 	protected void onTcpDisconnected() {
+		CavanTcpClientListener listener = getTcpClientListener();
+		if (listener != null) {
+			listener.onTcpDisconnected();
+		}
 	}
 
 	protected boolean onTcpConnFailed(int times) {
+		CavanTcpClientListener listener = getTcpClientListener();
+		if (listener != null) {
+			return listener.onTcpConnFailed(times);
+		}
+
 		return true;
 	}
 
-	protected void onDataReceived(byte[] bytes, int length) {
+	protected boolean onDataReceived(byte[] bytes, int length) {
+		CavanTcpClientListener listener = getTcpClientListener();
+		if (listener != null) {
+			return listener.onDataReceived(bytes, length);
+		}
+
+		return true;
 	}
 
 	protected void mainLoop(InputStream stream) {

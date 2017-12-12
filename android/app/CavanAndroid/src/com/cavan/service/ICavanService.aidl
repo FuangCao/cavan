@@ -1,6 +1,6 @@
-package com.cavan.cavanjni;
+package com.cavan.service;
 
-import com.cavan.cavanjni.ICavanServiceCallback;
+import com.cavan.service.ICavanServiceCallback;
 
 interface ICavanService {
 	void start(int port);

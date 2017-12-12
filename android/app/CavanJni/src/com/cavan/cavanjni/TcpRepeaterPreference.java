@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.AttributeSet;
 
+import com.cavan.resource.CavanServicePreference;
+
 public class TcpRepeaterPreference extends CavanServicePreference {
 
 	public TcpRepeaterPreference(Context context, AttributeSet attrs) {

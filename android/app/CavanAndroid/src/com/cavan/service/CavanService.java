@@ -1,4 +1,4 @@
-package com.cavan.cavanjni;
+package com.cavan.service;
 
 import java.util.HashSet;
 

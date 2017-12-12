@@ -9,7 +9,21 @@ import java.net.Socket;
 
 public class CavanTcpPacketClient extends CavanTcpClient {
 
+	public interface CavanTcpPacketClientListener extends CavanTcpClientListener {
+		boolean onPacketReceived(byte[] bytes, int length);
+	}
+
 	private byte[] mBytes = new byte[0];
+	private CavanTcpPacketClientListener mTcpPacketClientListener;
+
+	public synchronized CavanTcpPacketClientListener getTcpPacketClientListener() {
+		return mTcpPacketClientListener;
+	}
+
+	public synchronized void setTcpPacketClientListener(CavanTcpPacketClientListener listener) {
+		mTcpPacketClientListener = listener;
+		setTcpClientListener(listener);
+	}
 
 	@Override
 	public boolean send(byte[] bytes, int offset, int length) {
@@ -60,7 +74,12 @@ public class CavanTcpPacketClient extends CavanTcpClient {
 	}
 
 	protected boolean onPacketReceived(byte[] bytes, int length) {
-		return false;
+		CavanTcpPacketClientListener listener = getTcpPacketClientListener();
+		if (listener != null) {
+			return listener.onPacketReceived(bytes, length);
+		}
+
+		return true;
 	}
 
 	public static void main(String[] args) {

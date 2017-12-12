@@ -1,8 +1,10 @@
-package com.cavan.cavanjni;
+package com.cavan.resource;
 
 import android.content.Context;
 import android.content.Intent;
 import android.util.AttributeSet;
+
+import com.cavan.service.MockLocationService;
 
 public class MockLocationServicePreference extends CavanServicePreference {
 

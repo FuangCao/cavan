@@ -9,8 +9,8 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 
 import com.cavan.android.CavanAndroid;
-import com.cavan.cavanjni.CavanServicePreference;
 import com.cavan.java.CavanJava;
+import com.cavan.resource.CavanServicePreference;
 
 public class CavanServiceActivity extends PreferenceActivity {
 

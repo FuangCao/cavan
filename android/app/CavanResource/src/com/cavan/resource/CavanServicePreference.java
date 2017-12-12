@@ -1,4 +1,4 @@
-package com.cavan.cavanjni;
+package com.cavan.resource;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog.Builder;
@@ -19,6 +19,9 @@ import android.view.View;
 import android.widget.EditText;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.service.CavanService;
+import com.cavan.service.ICavanService;
+import com.cavan.service.ICavanServiceCallback;
 
 @SuppressLint("HandlerLeak")
 public abstract class CavanServicePreference extends EditTextPreference {
@@ -73,7 +76,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 
 			mService = null;
 
-			updateSummary(CavanNativeService.STATE_STOPPED);
+			updateSummary(CavanService.STATE_STOPPED);
 			setEnabled(false);
 
 			mHandler.sendEmptyMessageDelayed(EVENT_START_SERVICE, 500);
@@ -100,7 +103,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 	public CavanServicePreference(Context context, AttributeSet attrs) {
 		super(context, attrs);
 
-		updateSummary(CavanNativeService.STATE_STOPPED);
+		updateSummary(CavanService.STATE_STOPPED);
 		startService(context);
 	}
 
@@ -148,7 +151,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 			}
 		}
 
-		return CavanNativeService.STATE_STOPPED;
+		return CavanService.STATE_STOPPED;
 	}
 
 	public synchronized boolean isServiceEnabled() {
@@ -233,15 +236,15 @@ public abstract class CavanServicePreference extends EditTextPreference {
 				int resId;
 
 				switch (state) {
-				case CavanNativeService.STATE_PREPARE:
+				case CavanService.STATE_PREPARE:
 					resId = R.string.prepare;
 					break;
 
-				case CavanNativeService.STATE_RUNNING:
+				case CavanService.STATE_RUNNING:
 					resId = R.string.running;
 					break;
 
-				case CavanNativeService.STATE_WAITING:
+				case CavanService.STATE_WAITING:
 					resId = R.string.waiting;
 					break;
 

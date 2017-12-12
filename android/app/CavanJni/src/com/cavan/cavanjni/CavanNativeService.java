@@ -1,5 +1,7 @@
 package com.cavan.cavanjni;
 
+import com.cavan.service.CavanService;
+
 
 public abstract class CavanNativeService extends CavanService {
 
