@@ -1,7 +1,5 @@
 package com.cavan.cavanmain;
 
-import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.util.List;
 
 import android.content.ClipData;
@@ -30,10 +28,8 @@ import android.widget.GridView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
-import com.cavan.android.SystemProperties;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
-import com.cavan.java.CavanTcpPacketClient;
 
 public class CavanInputMethod extends InputMethodService implements OnKeyboardActionListener {
 
@@ -77,9 +73,6 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	public static final int KEYCODE_SPLIT = 32;
 	public static final int KEYCODE_AUTO = 33;
 
-	private static final int MSG_UPDATE_TCP_CLIENT = 1;
-	private static final int MSG_TCP_CLIENT_UPDATED = 2;
-	private static final int MSG_TCP_PACKET_RECEIVED = 3;
 	private static final int MSG_REPLACE_TEXT = 4;
 	private static final int MSG_INSERT_TEXT = 5;
 	private static final int MSG_SEND_TEXT = 6;
@@ -98,25 +91,6 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			removeMessages(msg.what);
 
 			switch (msg.what) {
-			case MSG_UPDATE_TCP_CLIENT:
-				InetSocketAddress[] addresses = CavanMessageActivity.getNetworkImeAddresses(getApplicationContext());
-				sTcpClient.setAddresses(addresses);
-				if (addresses.length > 0) {
-					sTcpClient.connect();
-				}
-				break;
-
-			case MSG_TCP_CLIENT_UPDATED:
-				CavanMessageActivity activity = CavanMessageActivity.getInstance();
-				if (activity != null) {
-					activity.updateNetworkImeState();
-				}
-				break;
-
-			case MSG_TCP_PACKET_RECEIVED:
-				onTcpPacketReceived((String) msg.obj);
-				break;
-
 			case MSG_REPLACE_TEXT:
 				InputConnection conn = getCurrentInputConnection();
 				if (conn != null && conn.performContextMenuAction(android.R.id.selectAll)) {
@@ -253,67 +227,6 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 				super.notifyDataSetChanged();
 			}
-		}
-	};
-
-	private static NetworkImeTcpClient sTcpClient = new NetworkImeTcpClient();
-	public static class NetworkImeTcpClient extends CavanTcpPacketClient {
-
-		private CavanInputMethod mInputMethod;
-
-		public synchronized void setInputMethod(CavanInputMethod ime) {
-			mInputMethod = ime;
-
-			if (ime == null) {
-				disconnect();
-			} else {
-				ime.updateTcpClient();
-			}
-		}
-
-		private synchronized void updateMessageActivity() {
-			if (mInputMethod != null) {
-				mInputMethod.getHandler().sendEmptyMessageDelayed(MSG_TCP_CLIENT_UPDATED, 500);
-			}
-		}
-
-		@Override
-		protected void onTcpClientStopped() {
-			updateMessageActivity();
-		}
-
-		@Override
-		protected void onTcpConnecting(InetSocketAddress address) {
-			updateMessageActivity();
-		}
-
-		@Override
-		protected boolean onTcpConnected(Socket socket) {
-			String hostname = SystemProperties.get("net.hostname");
-			if (hostname != null) {
-				send("USER " + hostname);
-			}
-
-			updateMessageActivity();
-
-			return true;
-		}
-
-		@Override
-		protected boolean onTcpConnFailed(int times) {
-			updateMessageActivity();
-			return true;
-		}
-
-		@Override
-		protected synchronized boolean onPacketReceived(byte[] bytes, int length) {
-			if (mInputMethod != null) {
-				Message message = mInputMethod.getHandler().obtainMessage(MSG_TCP_PACKET_RECEIVED, new String(bytes, 0, length));
-				message.sendToTarget();
-				return true;
-			}
-
-			return false;
 		}
 	};
 
@@ -463,13 +376,12 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		super.onCreate();
 
 		mManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-		sTcpClient.setInputMethod(this);
+		startService(CavanNetworkImeConnService.getIntent(this));
 		sInstance = this;
 	}
 
 	@Override
 	public void onDestroy() {
-		sTcpClient.setInputMethod(null);
 		sInstance = null;
 		super.onDestroy();
 	}
@@ -943,126 +855,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		}
 	}
 
-	protected void onTcpPacketReceived(String command) {
-		CavanAndroid.dLog("onTcpPacketReceived: " + command);
-
-		String[] args = command.split(" ", 2);
-		InputConnection conn = getCurrentInputConnection();
-		if (conn == null) {
-			return;
-		}
-
-		boolean send = false;
-
-		switch (args[0]) {
-		case "SEND":
-			send = true;
-		case "REPLACE":
-			if (!conn.performContextMenuAction(android.R.id.selectAll)) {
-				break;
-			}
-		case "INSERT":
-			if (args.length > 1) {
-				conn.commitText(args[1], 0);
-
-				if (send) {
-					mHandler.sendEmptyMessageDelayed(MSG_SEND_TEXT, AUTO_COMMIT_DELAY);
-				}
-			} else {
-				conn.commitText(CavanString.EMPTY_STRING, 0);
-			}
-			break;
-
-		case "DELETE":
-			CharSequence text = conn.getSelectedText(0);
-			if (text != null && text.length() > 0) {
-				conn.commitText(CavanString.EMPTY_STRING, 1);
-			} else {
-				conn.deleteSurroundingText(1, 0);
-			}
-			break;
-
-		case "COMMIT":
-			CavanAccessibilityService accessibility = CavanAccessibilityService.getInstance();
-			if (accessibility != null && accessibility.commitText(CavanInputMethod.this)) {
-				break;
-			}
-		case "DONE":
-			sendGoAction(conn);
-			break;
-
-		case "KEY":
-			if (args.length > 1) {
-				try {
-					args = args[1].split("\\s+");
-
-					int code = Integer.parseInt(args[0].trim());
-
-					if (args.length > 1) {
-						int value = Integer.parseInt(args[1].trim());
-						sendKeyEvent(code, value);
-					} else {
-						sendKeyDownUp(code);
-					}
-				} catch (NumberFormatException e) {
-					e.printStackTrace();
-				}
-			}
-			break;
-
-		case "ACTION":
-			if (args.length > 0) {
-				try {
-					int action = Integer.parseInt(args[1].trim());
-					conn.performEditorAction(action);
-				} catch (NumberFormatException e) {
-					e.printStackTrace();
-				}
-			}
-			break;
-
-		case "MENU_ACTION":
-			if (args.length > 0) {
-				try {
-					int action = Integer.parseInt(args[1].trim());
-					conn.performContextMenuAction(action);
-				} catch (NumberFormatException e) {
-					e.printStackTrace();
-				}
-			}
-			break;
-
-		case "OPEN":
-			if (args.length > 0) {
-				CavanAndroid.startActivity(CavanInputMethod.this, args[1]);
-			}
-			break;
-
-		case "CLIPBOARD":
-			if (args.length > 0) {
-				CavanAndroid.postClipboardText(CavanInputMethod.this, args[1]);
-			}
-			break;
-
-		case "COPY":
-			conn.performContextMenuAction(android.R.id.copy);
-			break;
-
-		case "PASTE":
-			conn.performContextMenuAction(android.R.id.paste);
-			break;
-
-		case "SELECT_ALL":
-			conn.performContextMenuAction(android.R.id.selectAll);
-			break;
-		}
-	}
-
-	public CavanTcpPacketClient getTcpClient() {
-		return sTcpClient;
-	}
-
-	public void updateTcpClient() {
-		mHandler.sendEmptyMessageDelayed(MSG_UPDATE_TCP_CLIENT, 200);
+	public void postAutoCommit() {
+		mHandler.sendEmptyMessageDelayed(MSG_SEND_TEXT, AUTO_COMMIT_DELAY);
 	}
 }

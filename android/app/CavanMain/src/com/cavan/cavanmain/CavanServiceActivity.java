@@ -11,6 +11,7 @@ import android.preference.PreferenceScreen;
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanJava;
 import com.cavan.resource.CavanServicePreference;
+import com.cavan.resource.CavanTcpClientPreference;
 
 public class CavanServiceActivity extends PreferenceActivity {
 
@@ -22,6 +23,7 @@ public class CavanServiceActivity extends PreferenceActivity {
 	public static final String KEY_WEB_PROXY = "web_proxy";
 	public static final String KEY_TCP_REPEATER = "tcp_repeater";
 	public static final String KEY_MOCK_LOCATION = "mock_location";
+	public static final String KEY_NETWORK_IME = "network_ime";
 
 	private Preference mPreferenceIpAddress;
 	private Preference mPreferenceShareApp;
@@ -31,6 +33,7 @@ public class CavanServiceActivity extends PreferenceActivity {
 	private CavanServicePreference mPreferenceWebProxy;
 	private CavanServicePreference mPreferenceTcpRepeater;
 	private CavanServicePreference mPreferenceMockLocation;
+	private CavanTcpClientPreference mPreferenceNewworkIme;
 
 	@SuppressWarnings("deprecation")
 	@Override
@@ -46,6 +49,7 @@ public class CavanServiceActivity extends PreferenceActivity {
 		mPreferenceWebProxy = (CavanServicePreference) findPreference(KEY_WEB_PROXY);
 		mPreferenceTcpRepeater = (CavanServicePreference) findPreference(KEY_TCP_REPEATER);
 		mPreferenceMockLocation = (CavanServicePreference) findPreference(KEY_MOCK_LOCATION);
+		mPreferenceNewworkIme = (CavanTcpClientPreference) findPreference(KEY_NETWORK_IME);
 
 		updateIpAddressStatus();
 	}
@@ -58,6 +62,7 @@ public class CavanServiceActivity extends PreferenceActivity {
 		mPreferenceWebProxy.unbindService(this);
 		mPreferenceTcpRepeater.unbindService(this);
 		mPreferenceMockLocation.unbindService(this);
+		mPreferenceNewworkIme.unbindService(this);
 
 		super.onDestroy();
 	}

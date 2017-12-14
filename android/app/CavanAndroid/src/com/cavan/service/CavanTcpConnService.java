@@ -3,18 +3,19 @@ package com.cavan.service;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.HashSet;
+import java.util.List;
 
 import android.app.Service;
 import android.content.Intent;
-import android.os.Binder;
 import android.os.IBinder;
 import android.os.RemoteException;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.java.CavanJava;
 import com.cavan.java.CavanTcpClient;
 import com.cavan.java.CavanTcpClient.CavanTcpClientListener;
 
-public class CavanTcpConnService extends Service implements CavanTcpClientListener {
+public abstract class CavanTcpConnService extends Service implements CavanTcpClientListener {
 
 	public static final int STATE_STOPPED = 0;
 	public static final int STATE_RUNNING = 1;
@@ -24,9 +25,9 @@ public class CavanTcpConnService extends Service implements CavanTcpClientListen
 
 	private int mState;
 	private CavanTcpClient mTcpClient;
-	private HashSet<ICavanTcpConnCallback> mCallbacks;
+	private HashSet<ICavanTcpConnCallback> mCallbacks = new HashSet<ICavanTcpConnCallback>();
 
-	private Binder mBinder = new ICavanTcpConnService.Stub() {
+	protected ICavanTcpConnService.Stub mBinder = new ICavanTcpConnService.Stub() {
 
 		@Override
 		public boolean addCallback(final ICavanTcpConnCallback callback) throws RemoteException {
@@ -62,12 +63,63 @@ public class CavanTcpConnService extends Service implements CavanTcpClientListen
 				mCallbacks.remove(callback);
 			}
 		}
+
+		@Override
+		public void setAddresses(List<String> lines) throws RemoteException {
+			InetSocketAddress[] addresses = new InetSocketAddress[lines.size()];
+			int i = 0;
+
+			for (String line : lines) {
+				String[] args = line.split("\\s*:\\s*", 2);
+				int port;
+
+				if (args.length < 2) {
+					port = getDefaultPort();
+				} else {
+					port = CavanJava.parseInt(args[1]);
+				}
+
+				addresses[i++] = new InetSocketAddress(args[0], port);
+			}
+
+			mTcpClient.setAddresses(addresses);
+			if (addresses.length > 0) {
+				mTcpClient.connect();
+			}
+		}
+
+		@Override
+		public int getState() throws RemoteException {
+			return mState;
+		}
+
+		@Override
+		public String getCurrentAddress() throws RemoteException {
+			InetSocketAddress address = mTcpClient.getAddress();
+			if (address == null) {
+				return null;
+			}
+
+			return address.getHostString() + ":" + address.getPort();
+		}
 	};
+
+	@Override
+	public void onCreate() {
+		mTcpClient = doCreateTcpClient();
+	}
+
+	@Override
+	public void onDestroy() {
+		mTcpClient.disconnect();
+	}
 
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBinder;
 	}
+
+	protected abstract int getDefaultPort();
 
 	protected CavanTcpClient doCreateTcpClient() {
 		CavanTcpClient client = new CavanTcpClient();

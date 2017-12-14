@@ -4,7 +4,7 @@ import com.cavan.java.CavanTcpClient;
 import com.cavan.java.CavanTcpPacketClient;
 import com.cavan.java.CavanTcpPacketClient.CavanTcpPacketClientListener;
 
-public class CavanTcpPacketConnService extends CavanTcpConnService implements CavanTcpPacketClientListener {
+public abstract class CavanTcpPacketConnService extends CavanTcpConnService implements CavanTcpPacketClientListener {
 
 	@Override
 	protected CavanTcpClient doCreateTcpClient() {

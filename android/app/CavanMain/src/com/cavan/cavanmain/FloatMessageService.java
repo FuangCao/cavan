@@ -572,13 +572,13 @@ public class FloatMessageService extends FloatWidowService {
 		message.sendToTarget();
 	}
 
-	public void sendShowToast(int what, int id, Object... formatArgs) {
+	public void sendShowToastWithArgs(int what, int id, Object... formatArgs) {
 		String message = getResources().getString(id, formatArgs);
 		sendShowToast(what, message);
 	}
 
-	public void sendShowToast(int id, Object... formatArgs) {
-		sendShowToast(MSG_SHOW_TOAST, id, formatArgs);
+	public void sendShowToastWithArgs(int id, Object... formatArgs) {
+		sendShowToastWithArgs(MSG_SHOW_TOAST, id, formatArgs);
 	}
 
 	public static boolean showToast(int what, Object messsage) {
