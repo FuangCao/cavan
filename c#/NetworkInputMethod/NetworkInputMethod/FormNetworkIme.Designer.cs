@@ -53,11 +53,11 @@
             this.checkBoxShareClipboard = new System.Windows.Forms.CheckBox();
             this.checkBoxSelectAll = new System.Windows.Forms.CheckBox();
             this.buttonDelete = new System.Windows.Forms.Button();
-            this.buttonMm = new System.Windows.Forms.Button();
             this.buttonSelectAll = new System.Windows.Forms.Button();
             this.buttonCopy = new System.Windows.Forms.Button();
             this.buttonPaste = new System.Windows.Forms.Button();
             this.buttonComplete = new System.Windows.Forms.Button();
+            this.buttonOpen = new System.Windows.Forms.Button();
             this.groupBoxMode.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -313,16 +313,6 @@
             this.buttonDelete.UseVisualStyleBackColor = true;
             this.buttonDelete.Click += new System.EventHandler(this.buttonDelete_Click);
             // 
-            // buttonMm
-            // 
-            this.buttonMm.Location = new System.Drawing.Point(12, 478);
-            this.buttonMm.Name = "buttonMm";
-            this.buttonMm.Size = new System.Drawing.Size(75, 23);
-            this.buttonMm.TabIndex = 26;
-            this.buttonMm.Text = "微信";
-            this.buttonMm.UseVisualStyleBackColor = true;
-            this.buttonMm.Click += new System.EventHandler(this.buttonMm_Click);
-            // 
             // buttonSelectAll
             // 
             this.buttonSelectAll.Location = new System.Drawing.Point(300, 449);
@@ -363,16 +353,26 @@
             this.buttonComplete.UseVisualStyleBackColor = true;
             this.buttonComplete.Click += new System.EventHandler(this.buttonComplete_Click);
             // 
+            // buttonOpen
+            // 
+            this.buttonOpen.Location = new System.Drawing.Point(12, 478);
+            this.buttonOpen.Name = "buttonOpen";
+            this.buttonOpen.Size = new System.Drawing.Size(75, 23);
+            this.buttonOpen.TabIndex = 31;
+            this.buttonOpen.Text = "打开";
+            this.buttonOpen.UseVisualStyleBackColor = true;
+            this.buttonOpen.Click += new System.EventHandler(this.buttonOpen_Click);
+            // 
             // FormNetworkIme
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(468, 513);
+            this.Controls.Add(this.buttonOpen);
             this.Controls.Add(this.buttonComplete);
             this.Controls.Add(this.buttonPaste);
             this.Controls.Add(this.buttonCopy);
             this.Controls.Add(this.buttonSelectAll);
-            this.Controls.Add(this.buttonMm);
             this.Controls.Add(this.buttonDelete);
             this.Controls.Add(this.checkBoxSelectAll);
             this.Controls.Add(this.checkBoxShareClipboard);
@@ -431,11 +431,11 @@
         private System.Windows.Forms.CheckBox checkBoxShareClipboard;
         private System.Windows.Forms.CheckBox checkBoxSelectAll;
         private System.Windows.Forms.Button buttonDelete;
-        private System.Windows.Forms.Button buttonMm;
         private System.Windows.Forms.Button buttonSelectAll;
         private System.Windows.Forms.Button buttonCopy;
         private System.Windows.Forms.Button buttonPaste;
         private System.Windows.Forms.Button buttonComplete;
+        private System.Windows.Forms.Button buttonOpen;
     }
 }
 

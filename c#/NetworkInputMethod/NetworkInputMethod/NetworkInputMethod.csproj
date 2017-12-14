@@ -59,11 +59,20 @@
     <Compile Include="FormNetworkIme.Designer.cs">
       <DependentUpon>FormNetworkIme.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormOpenApp.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormOpenApp.Designer.cs">
+      <DependentUpon>FormOpenApp.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CavanTcpService.cs" />
     <EmbeddedResource Include="FormNetworkIme.resx">
       <DependentUpon>FormNetworkIme.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormOpenApp.resx">
+      <DependentUpon>FormOpenApp.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
