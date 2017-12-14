@@ -88,6 +88,10 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 				return true;
 			}
 
+			if (info.packageName.contains("game")) {
+				return true;
+			}
+
 			return false;
 		}
 
