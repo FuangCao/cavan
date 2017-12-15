@@ -3,8 +3,10 @@ package com.cavan.cavanmain;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import android.accessibilityservice.AccessibilityService;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
@@ -12,6 +14,7 @@ import android.view.inputmethod.InputConnection;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.SystemProperties;
+import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
 import com.cavan.java.CavanTcpClient;
 import com.cavan.java.CavanTcpPacketClient;
@@ -60,6 +63,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 	protected void onTcpPacketReceived(String command) {
 		CavanAndroid.dLog("onTcpPacketReceived: " + command);
 
+		CavanAccessibilityService accessibility = CavanAccessibilityService.getInstance();
 		String[] args = command.split(" ", 2);
 		boolean send = false;
 
@@ -78,6 +82,45 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 				if (fms != null) {
 					fms.sendShowToastWithArgs(R.string.clipboard_updated, text);
 				}
+			}
+			break;
+
+		case "HOME":
+			if (accessibility != null) {
+				accessibility.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
+			}
+			break;
+
+		case "BACK":
+			if (accessibility != null) {
+				accessibility.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+			}
+			break;
+
+		case "VOLUME":
+			AudioManager audioManager = (AudioManager) CavanAndroid.getSystemServiceCached(this, AUDIO_SERVICE);
+			if (args.length > 1) {
+				char action = args[1].charAt(0);
+				int direction;
+
+				if (action == '+') {
+					direction = AudioManager.ADJUST_RAISE;
+				} else if (action == '-') {
+					direction = AudioManager.ADJUST_LOWER;
+				} else if (action == 'x') {
+					direction = AudioManager.ADJUST_MUTE;
+				} else if (action == 'o') {
+					direction = AudioManager.ADJUST_UNMUTE;
+				} else {
+					if (action == '=') {
+						int volume = CavanJava.parseInt(args[1].substring(1));
+						audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0);
+					}
+
+					break;
+				}
+
+				audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, direction, 0);
 			}
 			break;
 
@@ -123,7 +166,6 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 				break;
 
 			case "COMMIT":
-				CavanAccessibilityService accessibility = CavanAccessibilityService.getInstance();
 				if (accessibility != null && accessibility.commitText(ime)) {
 					break;
 				}
