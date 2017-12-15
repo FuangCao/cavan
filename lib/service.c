@@ -359,18 +359,25 @@ static int cavan_dynamic_service_keepalive_handler(struct cavan_thread *thread, 
 
 	pd_bold_info("service %s keepalive ready", service->name);
 
+	cavan_dynamic_service_lock(service);
 
 	while (service->state == CAVAN_SERVICE_STATE_RUNNING) {
-		int delay = service->keepalive(service);
+		int delay;
 
+		cavan_dynamic_service_unlock(service);
+
+		delay = service->keepalive(service);
 		if (likely(delay > 0)) {
-			cavan_dynamic_service_unlock(service);
 			cavan_thread_msleep(thread, delay);
-			cavan_dynamic_service_lock(service);
 		} else if (delay < 0) {
+			cavan_dynamic_service_lock(service);
 			break;
 		}
+
+		cavan_dynamic_service_lock(service);
 	}
+
+	cavan_dynamic_service_unlock(service);
 
 	pd_bold_info("service %s keepalive exit", service->name);
 

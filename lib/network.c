@@ -4107,6 +4107,35 @@ int network_client_get_remote_ip(struct network_client *client, struct in_addr *
 	return 0;
 }
 
+ssize_t network_client_send_packet(struct network_client *client, const void *buff, size_t size)
+{
+	ssize_t wrlen;
+
+	wrlen = client->send(client, (void *) &size, 2);
+	if (wrlen != 2) {
+		return -EIO;
+	}
+
+	return client->send(client, buff, size);
+}
+
+ssize_t network_client_recv_packet(struct network_client *client, void *buff, size_t size)
+{
+	ssize_t rdlen;
+	u16 length;
+
+	rdlen = client->recv(client, (void *) &length, 2);
+	if (rdlen != 2) {
+		return -EIO;
+	}
+
+	if (size < length) {
+		return -ENOMEM;
+	}
+
+	return client->recv(client, buff, length);
+}
+
 int network_service_accept_timed(struct network_service *service, struct network_client *client, u32 msec)
 {
 	if (!file_poll_input(service->sockfd, msec)) {
