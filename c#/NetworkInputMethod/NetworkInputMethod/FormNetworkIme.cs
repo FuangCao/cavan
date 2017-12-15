@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Runtime.InteropServices;
 using System.Collections;
+using System.Diagnostics;
 
 namespace NetworkInputMethod
 {
@@ -13,6 +14,9 @@ namespace NetworkInputMethod
     {
         private const int WM_DRAWCLIPBOARD = 0x308;
         private const int WM_CHANGECBCHAIN = 0x30D;
+
+        private FormOpenApp mFormOpenApp;
+        private FormSelect mFormSelect;
 
         //API declarations...
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -32,8 +36,11 @@ namespace NetworkInputMethod
         public FormNetworkIme()
         {
             InitializeComponent();
+
             mService = new NetworkImeService(this);
             mNextClipboardViewer = SetClipboardViewer(Handle);
+
+            buttonStart_Click(buttonStart, null);
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -209,44 +216,19 @@ namespace NetworkInputMethod
             sendCommand("REPLACE", false);
         }
 
-        private void buttonUp_Click(object sender, EventArgs e)
-        {
-            sendKey(19);
-        }
-
-        private void buttonDown_Click(object sender, EventArgs e)
-        {
-            sendKey(20);
-        }
-
-        private void buttonLeft_Click(object sender, EventArgs e)
-        {
-            sendKey(21);
-        }
-
-        private void buttonRight_Click(object sender, EventArgs e)
-        {
-            sendKey(22);
-        }
-
-        private void buttonEnter_Click(object sender, EventArgs e)
-        {
-            sendKey(66);
-        }
-
         private void buttonVolumeDown_Click(object sender, EventArgs e)
         {
-            sendKey(25);
+            sendCommand("VOLUME -", false);
         }
 
         private void buttonVolumeUp_Click(object sender, EventArgs e)
         {
-            sendKey(24);
+            sendCommand("VOLUME +", false);
         }
 
-        private void buttonBack_Click(object sender, EventArgs e)
+        private void buttonMute_Click(object sender, EventArgs e)
         {
-            sendKey(4);
+            sendCommand("VOLUME x", false);
         }
 
         private void radioButtonSend_CheckedChanged(object sender, EventArgs e)
@@ -403,20 +385,32 @@ namespace NetworkInputMethod
             sendCommand("PASTE", false);
         }
 
-        private void buttonSelectAll_Click(object sender, EventArgs e)
-        {
-            sendCommand("SELECT_ALL", false);
-        }
-
         private void buttonComplete_Click(object sender, EventArgs e)
         {
             sendCommand("COMMIT", false);
         }
 
+        private void buttonBack_Click(object sender, EventArgs e)
+        {
+            sendCommand("BACK", false);
+        }
+
         private void buttonOpen_Click(object sender, EventArgs e)
         {
-            FormOpenApp form = new FormOpenApp(this);
-            form.Show();
+            if (mFormOpenApp == null || mFormOpenApp.IsDisposed)
+            {
+                mFormOpenApp = new FormOpenApp(this);
+                mFormOpenApp.Show();
+            }
+        }
+
+        private void buttonSelect_Click(object sender, EventArgs e)
+        {
+            if (mFormSelect == null || mFormSelect.IsDisposed)
+            {
+                mFormSelect = new FormSelect(this);
+                mFormSelect.Show();
+            }
         }
     }
 

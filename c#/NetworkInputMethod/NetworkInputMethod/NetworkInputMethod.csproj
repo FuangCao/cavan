@@ -53,6 +53,12 @@
     <Compile Include="CavanBusyLock.cs" />
     <Compile Include="CavanTcpClient.cs" />
     <Compile Include="CavanTcpPacketClient.cs" />
+    <Compile Include="FormMmMulti.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormMmMulti.Designer.cs">
+      <DependentUpon>FormMmMulti.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormNetworkIme.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -65,14 +71,26 @@
     <Compile Include="FormOpenApp.Designer.cs">
       <DependentUpon>FormOpenApp.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormSelect.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSelect.Designer.cs">
+      <DependentUpon>FormSelect.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CavanTcpService.cs" />
+    <EmbeddedResource Include="FormMmMulti.resx">
+      <DependentUpon>FormMmMulti.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormNetworkIme.resx">
       <DependentUpon>FormNetworkIme.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormOpenApp.resx">
       <DependentUpon>FormOpenApp.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSelect.resx">
+      <DependentUpon>FormSelect.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

@@ -42,6 +42,7 @@
             this.buttonDdtank = new System.Windows.Forms.Button();
             this.buttonXymobile = new System.Windows.Forms.Button();
             this.buttonSupercellClashroyale = new System.Windows.Forms.Button();
+            this.buttonMmMulti = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // buttonMm
@@ -184,11 +185,23 @@
             this.buttonSupercellClashroyale.UseVisualStyleBackColor = true;
             this.buttonSupercellClashroyale.Click += new System.EventHandler(this.buttonSupercellClashroyale_Click);
             // 
+            // buttonMmMulti
+            // 
+            this.buttonMmMulti.Location = new System.Drawing.Point(93, 264);
+            this.buttonMmMulti.Name = "buttonMmMulti";
+            this.buttonMmMulti.Size = new System.Drawing.Size(75, 57);
+            this.buttonMmMulti.TabIndex = 14;
+            this.buttonMmMulti.Text = "微信多开";
+            this.buttonMmMulti.UseVisualStyleBackColor = true;
+            this.buttonMmMulti.Click += new System.EventHandler(this.buttonMmMulti_Click);
+            // 
             // FormOpenApp
             // 
+            this.AcceptButton = this.buttonMm;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(260, 333);
+            this.Controls.Add(this.buttonMmMulti);
             this.Controls.Add(this.buttonSupercellClashroyale);
             this.Controls.Add(this.buttonXymobile);
             this.Controls.Add(this.buttonDdtank);
@@ -204,6 +217,7 @@
             this.Controls.Add(this.buttonNba);
             this.Controls.Add(this.buttonMm);
             this.Name = "FormOpenApp";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "打开应用";
             this.ResumeLayout(false);
 
@@ -225,5 +239,6 @@
         private System.Windows.Forms.Button buttonDdtank;
         private System.Windows.Forms.Button buttonXymobile;
         private System.Windows.Forms.Button buttonSupercellClashroyale;
+        private System.Windows.Forms.Button buttonMmMulti;
     }
 }

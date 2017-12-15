@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace NetworkInputMethod
 {
@@ -87,6 +88,20 @@ namespace NetworkInputMethod
         private void buttonMm_Click(object sender, EventArgs e)
         {
             mNetworkIme.sendOpenApp("com.tencent.mm");
+        }
+
+        private void buttonMmMulti_Click(object sender, EventArgs e)
+        {
+            FormMmMulti form = new FormMmMulti();
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+                for (int i = form.Count; i > 0; i--)
+                {
+                    Process process = new Process();
+                    process.StartInfo.FileName = "C:\\Program Files (x86)\\Tencent\\WeChat\\WeChat.exe";
+                    process.Start();
+                }
+            }
         }
     }
 }
