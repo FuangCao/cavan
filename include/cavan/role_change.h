@@ -20,3 +20,19 @@
  */
 
 #include <cavan.h>
+#include <cavan/network.h>
+
+struct role_change_client {
+	struct network_client client;
+	struct network_url url;
+	struct network_url url_proxy;
+};
+
+struct role_change_service {
+	struct network_service service;
+	struct network_service proxy;
+	struct network_url url;
+	struct network_url url_proxy;
+};
+
+int role_change_service_run(struct cavan_dynamic_service *service);
