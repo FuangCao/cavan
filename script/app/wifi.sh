@@ -82,12 +82,19 @@ function cavan-wifi-minidwep-gtk()
 
 function cavan-wifi-reaver()
 {
-	reaver -i $3 -b $1 -c $2 -a -l 1 -vv
+	local args="-i $1 -b $2 -a -l 1 -vv -S"
+
+	[ "$3" ] && args="$args -c $3"
+	[ "$4" ] && args="$args -p $4 -d 30"
+
+	echo "args = $args"
+
+	reaver $args
 }
 
 function cavan-wifi-reaver-daemon()
 {
-	local pathname="${CAVAN_WIFI_PATH}/reaver-$(echo $1 | tr ':' '-').txt"
+	local pathname="${CAVAN_WIFI_PATH}/reaver-$(echo $2 | tr ':' '-').txt"
 
 	echo "pathname = $pathname"
 
