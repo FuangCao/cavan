@@ -1,5 +1,7 @@
 #!/bin/bash
 
+CAVAN_WIFI_PATH="/temp/cavan-wifi"
+
 function cavan-wifi-mon-start()
 {
 	sudo airmon-ng start $1
@@ -17,8 +19,7 @@ function cavan-wifi-mon-scan()
 
 function cavan-wifi-mon-capture()
 {
-	local savedir="/temp/cavan-wifi"
-	local pathname="${savedir}/$(echo $1 | tr ':' '-')"
+	local pathname="${CAVAN_WIFI_PATH}/$(echo $1 | tr ':' '-')"
 
 	echo "bssid = $1"
 	echo "channel = $2"
@@ -28,7 +29,7 @@ function cavan-wifi-mon-capture()
 	echo "Press enter to start"
 	read
 
-	sudo mkdir -pv "${savedir}"
+	sudo mkdir -pv "${CAVAN_WIFI_PATH}"
 	sudo airodump-ng -c $2 -w "${pathname}" --bssid $1 $3
 }
 
@@ -77,4 +78,19 @@ function cavan-wifi-mon-deauth()
 function cavan-wifi-minidwep-gtk()
 {
 	sudo bash /usr/local/bin/minileafdwep/minidwep-gtk.sh
+}
+
+function cavan-wifi-reaver()
+{
+	reaver -i $3 -b $1 -c $2 -a -l 1 -vv
+}
+
+function cavan-wifi-reaver-daemon()
+{
+	local pathname="${CAVAN_WIFI_PATH}/reaver-$(echo $1 | tr ':' '-').txt"
+
+	echo "pathname = $pathname"
+
+	mkdir -pv "${CAVAN_WIFI_PATH}"
+	cavan-service --start -l "$pathname" --exec "source ${CAVAN_HOME}/script/app/wifi.sh && cavan-wifi-reaver $*"
 }

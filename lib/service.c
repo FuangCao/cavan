@@ -233,8 +233,14 @@ int cavan_daemon_run(struct cavan_daemon_description *desc)
 		desc->verbose = 1;
 	}
 
+	ret = cavan_stdio_redirect3("/dev/null", desc->verbose ? 0x01 : 0x07);
+	if (ret < 0) {
+		pr_red_info("cavan_redirect_stdio");
+		return ret;
+	}
+
 	if (desc->as_daemon) {
-		ret = daemon(1, desc->verbose);
+		ret = daemon(1, 1);
 		if (ret < 0) {
 			pr_error_info("daemon");
 			return ret;
