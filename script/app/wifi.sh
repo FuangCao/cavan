@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CAVAN_WIFI_PATH="/temp/cavan-wifi"
+CAVAN_WIFI_PATH="${HOME}/cavan-wifi"
 
 function cavan-wifi-mon-start()
 {
@@ -82,19 +82,22 @@ function cavan-wifi-minidwep-gtk()
 
 function cavan-wifi-reaver()
 {
-	local args="-i $1 -b $2 -a -l 1 -vv -S"
+	local pathname="${CAVAN_WIFI_PATH}/reaver-${2//:}.wps"
+	local args="-i $1 -b $2 -s ${pathname} -a -l 1 -vv -S"
 
 	[ "$3" ] && args="$args -c $3"
-	[ "$4" ] && args="$args -p $4 -d 30"
+	[ "$4" ] && args="$args -p $4"
+	[ "$5" ] && args="$args -d $5"
 
 	echo "args = $args"
 
+	mkdir -pv "${CAVAN_WIFI_PATH}"
 	reaver $args
 }
 
 function cavan-wifi-reaver-daemon()
 {
-	local pathname="${CAVAN_WIFI_PATH}/reaver-$(echo $2 | tr ':' '-').txt"
+	local pathname="${CAVAN_WIFI_PATH}/reaver-${2//:}.log"
 
 	echo "pathname = $pathname"
 
