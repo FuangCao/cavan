@@ -49,11 +49,16 @@ struct role_change_service {
 struct role_change_client_conn {
 	struct role_change_conn conn;
 	struct network_client client;
+	int keepalive;
+	struct role_change_client_conn *prev;
+	struct role_change_client_conn *next;
 };
 
 struct role_change_client {
 	struct network_url url;
 	char name[1024];
+	struct role_change_client_conn *head;
+	pthread_mutex_t lock;
 };
 
 struct role_change_proxy {
@@ -76,4 +81,14 @@ static inline void role_change_service_lock(struct role_change_service *service)
 static inline void role_change_service_unlock(struct role_change_service *service)
 {
 	pthread_mutex_unlock(&service->lock);
+}
+
+static inline void role_change_client_lock(struct role_change_client *client)
+{
+	pthread_mutex_lock(&client->lock);
+}
+
+static inline void role_change_client_unlock(struct role_change_client *client)
+{
+	pthread_mutex_unlock(&client->lock);
 }
