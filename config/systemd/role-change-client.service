@@ -1,0 +1,11 @@
+[Unit]
+Description=cavan role change client
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/cavan/out/host/debug/cavan-role_change client --name localhost tcp::8868
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target
