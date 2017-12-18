@@ -394,18 +394,8 @@ static void *cavan_dynamic_service_handler(void *data)
 {
 	int ret;
 	u32 index;
-	void *conn;
+	void *conn = NULL;
 	struct cavan_dynamic_service *service = data;
-
-	while (1) {
-		conn = malloc(service->conn_size);
-		if (conn) {
-			break;
-		}
-
-		pr_error_info("malloc");
-		msleep(100);
-	}
 
 	pthread_mutex_lock(&service->lock);
 
@@ -416,6 +406,20 @@ static void *cavan_dynamic_service_handler(void *data)
 		pd_bold_info("service %s daemon %d ready (%d/%d)", service->name, index, service->used, service->count);
 
 		pthread_mutex_unlock(&service->lock);
+
+		while (conn == NULL) {
+			conn = malloc(service->conn_size);
+			if (conn) {
+				if (service->init_connect) {
+					service->init_connect(service, conn);
+				}
+				break;
+			}
+
+			pr_error_info("malloc");
+			msleep(100);
+		}
+
 		ret = service->open_connect(service, conn);
 		pthread_mutex_lock(&service->lock);
 		if (ret < 0) {
@@ -446,7 +450,10 @@ static void *cavan_dynamic_service_handler(void *data)
 
 		pthread_mutex_unlock(&service->lock);
 		ret = service->run(service, conn);
-		service->close_connect(service, conn);
+		if (service->close_connect(service, conn)) {
+			conn = NULL;
+		}
+
 		if (ret < 0) {
 			pd_red_info("service %s daemon %d fault", service->name, index);
 		} else {
@@ -478,7 +485,9 @@ static void *cavan_dynamic_service_handler(void *data)
 
 	pthread_mutex_unlock(&service->lock);
 
-	free(conn);
+	if (conn) {
+		free(conn);
+	}
 
 	return NULL;
 }

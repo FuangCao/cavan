@@ -1954,6 +1954,10 @@ static ssize_t network_client_send_packed(struct network_client *client, const v
 {
 	ssize_t wrlen;
 
+	if (size == 0) {
+		return 0;
+	}
+
 	wrlen = inet_send(client->sockfd, (void *) &size, 2);
 	if (wrlen != 2) {
 		return -EIO;
@@ -1974,6 +1978,10 @@ static ssize_t network_client_recv_packed(struct network_client *client, void *b
 
 	if (size < length) {
 		return -ENOMEM;
+	}
+
+	if (length == 0) {
+		return 0;
 	}
 
 	return inet_recv(client->sockfd, buff, length);
@@ -4111,6 +4119,10 @@ ssize_t network_client_send_packet(struct network_client *client, const void *bu
 {
 	ssize_t wrlen;
 
+	if (size == 0) {
+		return 0;
+	}
+
 	wrlen = client->send(client, (void *) &size, 2);
 	if (wrlen != 2) {
 		return -EIO;
@@ -4131,6 +4143,10 @@ ssize_t network_client_recv_packet(struct network_client *client, void *buff, si
 
 	if (size < length) {
 		return -ENOMEM;
+	}
+
+	if (length == 0) {
+		return 0;
 	}
 
 	return client->recv(client, buff, length);

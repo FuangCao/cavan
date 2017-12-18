@@ -31,9 +31,10 @@ static int test_open_connect(struct cavan_dynamic_service *service, void *conn)
 	return 0;
 }
 
-static void test_close_connect(struct cavan_dynamic_service *service, void *conn)
+static bool test_close_connect(struct cavan_dynamic_service *service, void *conn)
 {
 	pr_pos_info();
+	return false;
 }
 
 static int test_service_start(struct cavan_dynamic_service *service)

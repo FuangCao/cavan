@@ -23,16 +23,43 @@
 #include <cavan/network.h>
 
 struct role_change_client {
+	struct network_service service;
+	struct network_url url_local;
+	struct network_url url_remote;
+	const char *proxy_name;
+	const char *proxy_url;
+	char name[1024];
+};
+
+struct role_change_conn {
 	struct network_client client;
-	struct network_url url;
-	struct network_url url_proxy;
+	struct in_addr addr;
+	char *name;
+	char command[4096];
+	char *argv[20];
+	int argc;
+	struct role_change_conn *up;
+	struct role_change_conn *down;
+	struct role_change_conn *left;
+	struct role_change_conn *right;
 };
 
 struct role_change_service {
 	struct network_service service;
-	struct network_service proxy;
 	struct network_url url;
-	struct network_url url_proxy;
+	struct role_change_conn *head;
+	pthread_mutex_t lock;
 };
 
 int role_change_service_run(struct cavan_dynamic_service *service);
+int role_change_client_run(struct cavan_dynamic_service *service);
+
+static inline void role_change_service_lock(struct role_change_service *service)
+{
+	pthread_mutex_lock(&service->lock);
+}
+
+static inline void role_change_service_unlock(struct role_change_service *service)
+{
+	pthread_mutex_unlock(&service->lock);
+}

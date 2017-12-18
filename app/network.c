@@ -124,9 +124,10 @@ static int app_network_open_connect(struct cavan_dynamic_service *service, void 
 	return network_service_accept(&app_service->service, conn);
 }
 
-static void app_network_close_connect(struct cavan_dynamic_service *service, void *conn)
+static bool app_network_close_connect(struct cavan_dynamic_service *service, void *conn)
 {
 	network_client_close(conn);
+	return false;
 }
 
 static int app_network_run_handler(struct cavan_dynamic_service *service, void *conn_data)

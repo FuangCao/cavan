@@ -623,9 +623,10 @@ static int ftp_service_open_connect(struct cavan_dynamic_service *service, void 
 	return network_service_accept(&ftp->service, conn);
 }
 
-static void ftp_service_close_connect(struct cavan_dynamic_service *service, void *conn)
+static bool ftp_service_close_connect(struct cavan_dynamic_service *service, void *conn)
 {
 	network_client_close(conn);
+	return false;
 }
 
 static int ftp_service_start_handler(struct cavan_dynamic_service *service)

@@ -41,9 +41,10 @@ static int tcp_repeater_open_connect(struct cavan_dynamic_service *service, void
 	return network_service_accept(&repeater->service, conn);
 }
 
-static void tcp_repeater_close_connect(struct cavan_dynamic_service *service, void *conn)
+static bool tcp_repeater_close_connect(struct cavan_dynamic_service *service, void *conn)
 {
 	network_client_close(conn);
+	return false;
 }
 
 static int tcp_repeater_keepalive_handler(struct cavan_dynamic_service *service)

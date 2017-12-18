@@ -58,8 +58,9 @@ struct cavan_dynamic_service {
 	struct cavan_thread keepalive_thread;
 	bool stopping;
 
+	void (*init_connect)(struct cavan_dynamic_service *service, void *conn_data);
 	int (*open_connect)(struct cavan_dynamic_service *service, void *conn_data);
-	void (*close_connect)(struct cavan_dynamic_service *service, void *conn_data);
+	bool (*close_connect)(struct cavan_dynamic_service *service, void *conn_data);
 	int (*start)(struct cavan_dynamic_service *service);
 	void (*stop)(struct cavan_dynamic_service *service);
 	int (*keepalive)(struct cavan_dynamic_service *service);

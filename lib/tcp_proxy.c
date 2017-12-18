@@ -72,9 +72,10 @@ static int tcp_proxy_open_connect(struct cavan_dynamic_service *service, void *c
 	return network_service_accept(&proxy->service, conn);
 }
 
-static void tcp_proxy_close_connect(struct cavan_dynamic_service *service, void *conn)
+static bool tcp_proxy_close_connect(struct cavan_dynamic_service *service, void *conn)
 {
 	network_client_close(conn);
+	return false;
 }
 
 static int tcp_proxy_service_run_handler(struct cavan_dynamic_service *service, void *conn)

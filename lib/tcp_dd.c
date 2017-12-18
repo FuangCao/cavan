@@ -1334,9 +1334,10 @@ static int tcp_dd_service_open_connect(struct cavan_dynamic_service *service, vo
 	return dd_service->service.accept(&dd_service->service, conn);
 }
 
-static void tcp_dd_service_close_connect(struct cavan_dynamic_service *service, void *conn)
+static bool tcp_dd_service_close_connect(struct cavan_dynamic_service *service, void *conn)
 {
 	network_client_close(conn);
+	return false;
 }
 
 static int tcp_dd_service_start_handler(struct cavan_dynamic_service *service)
