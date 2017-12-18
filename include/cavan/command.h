@@ -281,6 +281,7 @@ extern const char *cavan_help_message_user;
 extern const char *cavan_help_message_group;
 extern const char *cavan_help_message_discovery;
 extern const char *cavan_help_message_discovery_delay;
+extern const char *cavan_help_message_service_name;
 
 // ============================================================
 
