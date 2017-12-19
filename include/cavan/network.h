@@ -52,6 +52,10 @@
 #define CAVAN_NET_FLAG_SYNC			(1 << 1)
 #define CAVAN_NET_FLAG_WAIT			(1 << 2)
 
+#ifndef SO_REUSEPORT
+#define SO_REUSEPORT				15
+#endif
+
 #define CAVAN_BUILD_IP_ADDR(a, b, c, d) \
 	((uint32_t) ((a) << 24 | (b) << 16 | (c) << 8 | (d)))
 
@@ -755,11 +759,7 @@ static inline int socket_set_reuse_addr(int sockfd)
 
 static inline int socket_set_reuse_port(int sockfd)
 {
-#ifdef SO_REUSEPORT
 	int reuse = 1;
 
 	return setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, (void *) &reuse, sizeof(reuse));
-#else
-	return -1;
-#endif
 }

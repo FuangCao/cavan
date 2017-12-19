@@ -499,6 +499,13 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doRle(JNIEnv *env, jclass cla
 	return CavanMainExecute(env, args, "rle", do_cavan_rle);
 }
 
+extern int do_cavan_role_change(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doRoleChange(JNIEnv *env, jclass clazz, jobjectArray args)
+{
+	return CavanMainExecute(env, args, "role_change", do_cavan_role_change);
+}
+
 extern int do_cavan_screen_mirror(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doScreenMirror(JNIEnv *env, jclass clazz, jobjectArray args)

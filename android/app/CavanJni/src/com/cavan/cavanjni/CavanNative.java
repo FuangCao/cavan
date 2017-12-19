@@ -505,6 +505,13 @@ class CavanCommandRle implements ICavanCommand {
 	}
 }
 
+class CavanCommandRoleChange implements ICavanCommand {
+	@Override
+	public int main(String... args) {
+		return CavanNative.doRoleChange(args);
+	}
+}
+
 class CavanCommandScreenMirror implements ICavanCommand {
 	@Override
 	public int main(String... args) {
@@ -968,6 +975,7 @@ public class CavanNative {
 		sHashMap.put("remove", new CavanCommandRemove());
 		sHashMap.put("resize", new CavanCommandResize());
 		sHashMap.put("rle", new CavanCommandRle());
+		sHashMap.put("role_change", new CavanCommandRoleChange());
 		sHashMap.put("screen_mirror", new CavanCommandScreenMirror());
 		sHashMap.put("service", new CavanCommandService());
 		sHashMap.put("service_manager", new CavanCommandServiceManager());
@@ -1096,6 +1104,7 @@ public class CavanNative {
 	public static native int doRemove(String... args);
 	public static native int doResize(String... args);
 	public static native int doRle(String... args);
+	public static native int doRoleChange(String... args);
 	public static native int doScreenMirror(String... args);
 	public static native int doService(String... args);
 	public static native int doServiceManager(String... args);

@@ -120,17 +120,19 @@ am__objects_1 = abspath.$(OBJEXT) alarm.$(OBJEXT) \
 	fdisk.$(OBJEXT) file_crc32.$(OBJEXT) file_join.$(OBJEXT) \
 	file_loop.$(OBJEXT) file_split.$(OBJEXT) ftp.$(OBJEXT) \
 	ftp_server.$(OBJEXT) git_daemon.$(OBJEXT) heart_rate.$(OBJEXT) \
-	i2c.$(OBJEXT) image_dd.$(OBJEXT) inotify.$(OBJEXT) \
-	input.$(OBJEXT) jw650_lcd.$(OBJEXT) jwp_udp.$(OBJEXT) \
-	lm49350_clock.$(OBJEXT) loop_run.$(OBJEXT) md5sum.$(OBJEXT) \
-	mkdir.$(OBJEXT) mknp.$(OBJEXT) mksdcard.$(OBJEXT) \
-	modem_upgrade.$(OBJEXT) mount.$(OBJEXT) move.$(OBJEXT) \
-	mtd.$(OBJEXT) net_discovery.$(OBJEXT) net_monitor.$(OBJEXT) \
-	part_probe.$(OBJEXT) part_show.$(OBJEXT) part_table.$(OBJEXT) \
-	ping.$(OBJEXT) poll_event.$(OBJEXT) poll_input.$(OBJEXT) \
-	ramdisk.$(OBJEXT) remove.$(OBJEXT) resize.$(OBJEXT) \
-	rle.$(OBJEXT) screen_mirror.$(OBJEXT) service.$(OBJEXT) \
-	service_manager.$(OBJEXT) sha1sum.$(OBJEXT) \
+	http_client.$(OBJEXT) http_service.$(OBJEXT) i2c.$(OBJEXT) \
+	image_dd.$(OBJEXT) inotify.$(OBJEXT) input.$(OBJEXT) \
+	jw650_lcd.$(OBJEXT) jwp_udp.$(OBJEXT) lm49350_clock.$(OBJEXT) \
+	loop_run.$(OBJEXT) md5sum.$(OBJEXT) mkdir.$(OBJEXT) \
+	mknp.$(OBJEXT) mksdcard.$(OBJEXT) modem_upgrade.$(OBJEXT) \
+	mount.$(OBJEXT) move.$(OBJEXT) mtd.$(OBJEXT) \
+	net_discovery.$(OBJEXT) net_monitor.$(OBJEXT) \
+	network.$(OBJEXT) p2p.$(OBJEXT) part_probe.$(OBJEXT) \
+	part_show.$(OBJEXT) part_table.$(OBJEXT) ping.$(OBJEXT) \
+	poll_event.$(OBJEXT) poll_input.$(OBJEXT) ramdisk.$(OBJEXT) \
+	redpacket.$(OBJEXT) remove.$(OBJEXT) resize.$(OBJEXT) \
+	rle.$(OBJEXT) role_change.$(OBJEXT) screen_mirror.$(OBJEXT) \
+	service.$(OBJEXT) service_manager.$(OBJEXT) sha1sum.$(OBJEXT) \
 	show_file.$(OBJEXT) shrink.$(OBJEXT) sprd_at.$(OBJEXT) \
 	sprd_write_imei.$(OBJEXT) ssh.$(OBJEXT) ssh_copy.$(OBJEXT) \
 	sshd.$(OBJEXT) ssh_dd.$(OBJEXT) su.$(OBJEXT) sudo.$(OBJEXT) \
@@ -139,9 +141,10 @@ am__objects_1 = abspath.$(OBJEXT) alarm.$(OBJEXT) \
 	swan_mac.$(OBJEXT) swan_md5.$(OBJEXT) swan_mkfs.$(OBJEXT) \
 	swan_sfdisk.$(OBJEXT) swan_ts.$(OBJEXT) swan_upgrade.$(OBJEXT) \
 	swan_vk.$(OBJEXT) swan_vn.$(OBJEXT) system_init.$(OBJEXT) \
-	tcp_copy.$(OBJEXT) tcp_dd.$(OBJEXT) tcp_dd_server.$(OBJEXT) \
-	tcp_exec.$(OBJEXT) tcp_install.$(OBJEXT) tcp_keypad.$(OBJEXT) \
-	tcp_proxy.$(OBJEXT) tee.$(OBJEXT) textlen.$(OBJEXT) \
+	tcp_bridge.$(OBJEXT) tcp_copy.$(OBJEXT) tcp_dd.$(OBJEXT) \
+	tcp_dd_server.$(OBJEXT) tcp_exec.$(OBJEXT) \
+	tcp_install.$(OBJEXT) tcp_keypad.$(OBJEXT) tcp_proxy.$(OBJEXT) \
+	tcp_repeater.$(OBJEXT) tee.$(OBJEXT) textlen.$(OBJEXT) \
 	tftp_auto_dd.$(OBJEXT) tftp_command.$(OBJEXT) \
 	tftp_copy.$(OBJEXT) tftp_dd.$(OBJEXT) tftp_dd_server.$(OBJEXT) \
 	touch.$(OBJEXT) tty_mode.$(OBJEXT) umount.$(OBJEXT) \
@@ -367,22 +370,23 @@ APP_SRC_FILES = abspath.c alarm.c alc5671_clock.c auto_dd.c \
 	eavoo_sell_statistic.c ecc.c event_repeater.c ext2.c \
 	fb_capture.c fdisk.c file_crc32.c file_join.c file_loop.c \
 	file_split.c ftp.c ftp_server.c git_daemon.c heart_rate.c \
-	i2c.c image_dd.c inotify.c input.c jw650_lcd.c jwp_udp.c \
-	lm49350_clock.c loop_run.c md5sum.c mkdir.c mknp.c mksdcard.c \
-	modem_upgrade.c mount.c move.c mtd.c net_discovery.c \
-	net_monitor.c part_probe.c part_show.c part_table.c ping.c \
-	poll_event.c poll_input.c ramdisk.c remove.c resize.c rle.c \
-	screen_mirror.c service.c service_manager.c sha1sum.c \
-	show_file.c shrink.c sprd_at.c sprd_write_imei.c ssh.c \
-	ssh_copy.c sshd.c ssh_dd.c su.c sudo.c super_upgrade.c \
+	http_client.c http_service.c i2c.c image_dd.c inotify.c \
+	input.c jw650_lcd.c jwp_udp.c lm49350_clock.c loop_run.c \
+	md5sum.c mkdir.c mknp.c mksdcard.c modem_upgrade.c mount.c \
+	move.c mtd.c net_discovery.c net_monitor.c network.c p2p.c \
+	part_probe.c part_show.c part_table.c ping.c poll_event.c \
+	poll_input.c ramdisk.c redpacket.c remove.c resize.c rle.c \
+	role_change.c screen_mirror.c service.c service_manager.c \
+	sha1sum.c show_file.c shrink.c sprd_at.c sprd_write_imei.c \
+	ssh.c ssh_copy.c sshd.c ssh_dd.c su.c sudo.c super_upgrade.c \
 	swan_check.c swan_emmc.c swan_fac.c swan_ipu.c swan_mac.c \
 	swan_md5.c swan_mkfs.c swan_sfdisk.c swan_ts.c swan_upgrade.c \
-	swan_vk.c swan_vn.c system_init.c tcp_copy.c tcp_dd.c \
-	tcp_dd_server.c tcp_exec.c tcp_install.c tcp_keypad.c \
-	tcp_proxy.c tee.c textlen.c tftp_auto_dd.c tftp_command.c \
-	tftp_copy.c tftp_dd.c tftp_dd_server.c touch.c tty_mode.c \
-	umount.c usb.c usb_copy.c usb_dd.c usb_dd_server.c vfat.c \
-	web_proxy.c
+	swan_vk.c swan_vn.c system_init.c tcp_bridge.c tcp_copy.c \
+	tcp_dd.c tcp_dd_server.c tcp_exec.c tcp_install.c tcp_keypad.c \
+	tcp_proxy.c tcp_repeater.c tee.c textlen.c tftp_auto_dd.c \
+	tftp_command.c tftp_copy.c tftp_dd.c tftp_dd_server.c touch.c \
+	tty_mode.c umount.c usb.c usb_copy.c usb_dd.c usb_dd_server.c \
+	vfat.c web_proxy.c
 APP_CORE_SRC_FILES = core/cavan_main.c
 LIB_OBJ_FILES = $(wildcard @top_builddir@/lib/*.o) $(wildcard @top_builddir@/cpp/*.o)
 APP_CORE_DEPDIR = core/@DEPDIR@
@@ -535,6 +539,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ftp_server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/git_daemon.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/heart_rate.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/http_client.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/http_service.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i2c.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/image_dd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/inotify.Po@am__quote@
@@ -553,6 +559,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mtd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/net_discovery.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/net_monitor.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/network.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/p2p.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/part_probe.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/part_show.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/part_table.Po@am__quote@
@@ -560,9 +568,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/poll_event.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/poll_input.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ramdisk.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/redpacket.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/remove.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/resize.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rle.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/role_change.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/screen_mirror.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/service.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/service_manager.Po@am__quote@
@@ -591,6 +601,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swan_vk.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swan_vn.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/system_init.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_bridge.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_copy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_dd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_dd_server.Po@am__quote@
@@ -598,6 +609,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_install.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_keypad.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_proxy.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp_repeater.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tee.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/textlen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tftp_auto_dd.Po@am__quote@
