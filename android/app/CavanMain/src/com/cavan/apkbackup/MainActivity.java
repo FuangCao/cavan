@@ -11,9 +11,9 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.os.storage.StorageManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -27,6 +27,7 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
@@ -36,8 +37,6 @@ import com.cavan.java.CavanFile;
 
 public class MainActivity extends Activity implements OnClickListener, OnCheckedChangeListener, TextWatcher {
 
-	private static final CavanFile sOutDir = new CavanFile(Environment.getExternalStorageDirectory(), "cavan-apk-backup");
-
 	private static final int MSG_BACKUP_START = 1;
 	private static final int MSG_BACKUP_END = 2;
 	private static final int MSG_COPY_START = 3;
@@ -45,9 +44,11 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 	private static final int MSG_CLEAR = 5;
 
 	private static final String[] PERMISSIONS = {
+		Manifest.permission.READ_EXTERNAL_STORAGE,
 		Manifest.permission.WRITE_EXTERNAL_STORAGE,
 	};
 
+	private Spinner mSpinnerStorages;
 	private ProgressBar mProgressBar;
 	private TextView mTextViewState;
 	private Button mButtonStart;
@@ -59,9 +60,59 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 	private CavanCheckBox mCheckBoxSelectAll;
 
 	private PackageManager mPackageManager;
+	private StorageManager mStorageManager;
 	private BackupThread mThread;
 	private LocalAdapter mAdapter = new LocalAdapter();
 	private List<LocalPackageInfo> mPackageInfos = new ArrayList<LocalPackageInfo>();
+
+	private BaseAdapter mAdapterStorages = new BaseAdapter() {
+
+		private String[] mVolumePaths = new String[0];
+
+		@Override
+		public void notifyDataSetChanged() {
+			String[] paths = CavanAndroid.getVolumePaths(mStorageManager);
+
+			for (int i = 0; i < paths.length; i++) {
+				paths[i] += File.separatorChar + "cavan-apk-backup";
+			}
+
+			mVolumePaths = paths;
+
+			super.notifyDataSetChanged();
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			TextView view;
+
+			if (convertView != null) {
+				view = (TextView) convertView;
+			} else {
+				view = new TextView(MainActivity.this);
+				view.setPadding(0, 20, 0, 20);
+			}
+
+			view.setText(mVolumePaths[position]);
+
+			return view;
+		}
+
+		@Override
+		public long getItemId(int position) {
+			return position;
+		}
+
+		@Override
+		public Object getItem(int position) {
+			return mVolumePaths[position];
+		}
+
+		@Override
+		public int getCount() {
+			return mVolumePaths.length;
+		}
+	};
 
 	class BackupThread extends Thread {
 
@@ -81,15 +132,27 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 			return outFile.copyFrom(inFile);
 		}
 
+		private CavanFile getBackupDir() {
+			String path = (String) mSpinnerStorages.getSelectedItem();
+			if (path == null) {
+				return null;
+			}
+
+			CavanAndroid.dLog("path = " + path);
+
+			return new CavanFile(path);
+		}
+
 		@Override
 		public void run() {
-			if (sOutDir.mkdirSafe()) {
+			CavanFile dir = getBackupDir();
+			if (dir != null && dir.mkdirsSafe()) {
 				mHandler.sendEmptyMessage(MSG_BACKUP_START);
 
 				if (mCheckBoxClearBeforeBackup.isChecked()) {
-					Message message = mHandler.obtainMessage(MSG_CLEAR, sOutDir.getPath());
+					Message message = mHandler.obtainMessage(MSG_CLEAR, dir.getPath());
 					message.sendToTarget();
-					sOutDir.clear();
+					dir.clear();
 				}
 
 				int progress = 0;
@@ -100,7 +163,7 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 					}
 
 					if (info.isEnabled()) {
-						CavanFile outFile = new CavanFile(sOutDir, info.getBackupName());
+						CavanFile outFile = new CavanFile(dir, info.getBackupName());
 
 						Message message = mHandler.obtainMessage(MSG_COPY_START, outFile.getPath());
 						message.sendToTarget();
@@ -115,6 +178,8 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 				}
 
 				mHandler.sendEmptyMessage(MSG_BACKUP_END);
+			} else {
+				CavanAndroid.dLog("Failed to mkdir");
 			}
 
 			mThread = null;
@@ -364,7 +429,9 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 		setContentView(R.layout.activity_apk_backup);
 
 		mPackageManager = getPackageManager();
+		mStorageManager = (StorageManager) getSystemService(STORAGE_SERVICE);
 
+		mSpinnerStorages = (Spinner) findViewById(R.id.spinnerStorages);
 		mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
 		mTextViewState = (TextView) findViewById(R.id.textViewState);
 
@@ -391,6 +458,9 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 
 		mAdapter.updateData();
 		setBackupEnable(true);
+
+		mSpinnerStorages.setAdapter(mAdapterStorages);
+		mAdapterStorages.notifyDataSetChanged();
 
 		CavanAndroid.checkAndRequestPermissions(this, PERMISSIONS);
 	}

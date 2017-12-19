@@ -743,5 +743,6 @@
 		<item >4900</item>
 		<item >5000</item>
 	</string-array>
+	<string name="media_volume_changed">音量更改：<xliff:g>%1$d</xliff:g></string>
 
 </resources>

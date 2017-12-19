@@ -4,6 +4,11 @@
     android:layout_height="match_parent"
     tools:context="com.cavan.cavanapkbackup.MainActivity" >
 
+    <Spinner
+        android:id="@+id/spinnerStorages"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
     <ProgressBar
         android:id="@+id/progressBar"
         style="?android:attr/progressBarStyleHorizontal"
@@ -57,9 +62,9 @@
         android:id="@+id/listViewApps"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_above="@+id/progressBar"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_above="@+id/progressBar" >
+        android:layout_below="@+id/spinnerStorages" >
 
     </ListView>
 

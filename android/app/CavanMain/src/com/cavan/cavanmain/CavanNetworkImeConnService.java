@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
 import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.SystemProperties;
@@ -23,6 +24,7 @@ import com.cavan.service.CavanTcpConnService;
 public class CavanNetworkImeConnService extends CavanTcpConnService {
 
 	private static final int MSG_TCP_PACKET_RECEIVED = 1;
+	private static final int MSG_SHOW_MEDIA_VOLUME = 2;
 
 	private Handler mHandler = new Handler() {
 
@@ -32,9 +34,20 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 			case MSG_TCP_PACKET_RECEIVED:
 				onTcpPacketReceived((String) msg.obj);
 				break;
+
+			case MSG_SHOW_MEDIA_VOLUME:
+				FloatMessageService service = FloatMessageService.getInstance();
+				if (service != null) {
+					int volume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+					service.sendShowToastWithArgs(R.string.media_volume_changed, volume);
+				}
+				break;
 			}
 		}
 	};
+
+	private AudioManager mAudioManager;
+	private InputMethodManager mInputMethodManager;
 
 	private CavanTcpPacketClient mTcpPacketClient = new CavanTcpPacketClient() {
 
@@ -101,8 +114,11 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 			}
 			break;
 
+		case "IME":
+			mInputMethodManager.showInputMethodPicker();
+			break;
+
 		case "VOLUME":
-			AudioManager audioManager = (AudioManager) CavanAndroid.getSystemServiceCached(this, AUDIO_SERVICE);
 			if (args.length > 1) {
 				char action = args[1].charAt(0);
 				int direction;
@@ -118,13 +134,15 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 				} else {
 					if (action == '=') {
 						int volume = CavanJava.parseInt(args[1].substring(1));
-						audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0);
+						mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0);
+						mHandler.sendEmptyMessage(MSG_SHOW_MEDIA_VOLUME);
 					}
 
 					break;
 				}
 
-				audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, direction, 0);
+				mAudioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, direction, 0);
+				mHandler.sendEmptyMessage(MSG_SHOW_MEDIA_VOLUME);
 			}
 			break;
 
@@ -242,6 +260,9 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 	@Override
 	public void onCreate() {
 		super.onCreate();
+
+		mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+		mInputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
 
 		try {
 			ArrayList<String> addresses = CavanNetworkImeClientPreference.load(this, CavanServiceActivity.KEY_NETWORK_IME);

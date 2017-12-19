@@ -83,6 +83,10 @@ public class CavanStorageVolume {
 		return (int) invokeMethod("getDescriptionId", 0);
 	}
 
+	public String getDescription() {
+		return (String) invokeMethod("getDescription", null);
+	}
+
 	public boolean isPrimary() {
 		return (boolean) invokeMethod("isPrimary", false);
 	}
@@ -108,11 +112,11 @@ public class CavanStorageVolume {
 	}
 
 	public long getMaxFileSize() {
-		return (long) invokeMethod("getDescriptionId", 0);
+		return (long) invokeMethod("getMaxFileSize", 0);
 	}
 
 	public UserHandle getOwner() {
-		return (UserHandle) invokeMethod("getDescriptionId");
+		return (UserHandle) invokeMethod("getOwner");
 	}
 
 	public int getFatVolumeId() {
