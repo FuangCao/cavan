@@ -43,11 +43,14 @@
             this.buttonXymobile = new System.Windows.Forms.Button();
             this.buttonSupercellClashroyale = new System.Windows.Forms.Button();
             this.buttonMmMulti = new System.Windows.Forms.Button();
+            this.buttonBack = new System.Windows.Forms.Button();
+            this.buttonHome = new System.Windows.Forms.Button();
+            this.buttonTstl = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // buttonMm
             // 
-            this.buttonMm.Location = new System.Drawing.Point(12, 12);
+            this.buttonMm.Location = new System.Drawing.Point(93, 327);
             this.buttonMm.Name = "buttonMm";
             this.buttonMm.Size = new System.Drawing.Size(75, 57);
             this.buttonMm.TabIndex = 0;
@@ -67,7 +70,7 @@
             // 
             // buttonSgame
             // 
-            this.buttonSgame.Location = new System.Drawing.Point(93, 201);
+            this.buttonSgame.Location = new System.Drawing.Point(93, 75);
             this.buttonSgame.Name = "buttonSgame";
             this.buttonSgame.Size = new System.Drawing.Size(75, 57);
             this.buttonSgame.TabIndex = 2;
@@ -77,7 +80,7 @@
             // 
             // buttonXxsy
             // 
-            this.buttonXxsy.Location = new System.Drawing.Point(174, 12);
+            this.buttonXxsy.Location = new System.Drawing.Point(12, 264);
             this.buttonXxsy.Name = "buttonXxsy";
             this.buttonXxsy.Size = new System.Drawing.Size(75, 57);
             this.buttonXxsy.TabIndex = 3;
@@ -87,7 +90,7 @@
             // 
             // buttonJxqy
             // 
-            this.buttonJxqy.Location = new System.Drawing.Point(93, 12);
+            this.buttonJxqy.Location = new System.Drawing.Point(93, 264);
             this.buttonJxqy.Name = "buttonJxqy";
             this.buttonJxqy.Size = new System.Drawing.Size(75, 57);
             this.buttonJxqy.TabIndex = 4;
@@ -97,7 +100,7 @@
             // 
             // buttonDragonnest
             // 
-            this.buttonDragonnest.Location = new System.Drawing.Point(174, 75);
+            this.buttonDragonnest.Location = new System.Drawing.Point(174, 264);
             this.buttonDragonnest.Name = "buttonDragonnest";
             this.buttonDragonnest.Size = new System.Drawing.Size(75, 57);
             this.buttonDragonnest.TabIndex = 5;
@@ -107,7 +110,7 @@
             // 
             // buttonBayechuanqi
             // 
-            this.buttonBayechuanqi.Location = new System.Drawing.Point(174, 201);
+            this.buttonBayechuanqi.Location = new System.Drawing.Point(12, 138);
             this.buttonBayechuanqi.Name = "buttonBayechuanqi";
             this.buttonBayechuanqi.Size = new System.Drawing.Size(75, 57);
             this.buttonBayechuanqi.TabIndex = 6;
@@ -117,7 +120,7 @@
             // 
             // buttonWec
             // 
-            this.buttonWec.Location = new System.Drawing.Point(12, 75);
+            this.buttonWec.Location = new System.Drawing.Point(93, 138);
             this.buttonWec.Name = "buttonWec";
             this.buttonWec.Size = new System.Drawing.Size(75, 57);
             this.buttonWec.TabIndex = 7;
@@ -127,7 +130,7 @@
             // 
             // buttonCf
             // 
-            this.buttonCf.Location = new System.Drawing.Point(12, 201);
+            this.buttonCf.Location = new System.Drawing.Point(12, 75);
             this.buttonCf.Name = "buttonCf";
             this.buttonCf.Size = new System.Drawing.Size(75, 57);
             this.buttonCf.TabIndex = 8;
@@ -137,7 +140,7 @@
             // 
             // buttonSupercellClashofclans
             // 
-            this.buttonSupercellClashofclans.Location = new System.Drawing.Point(174, 264);
+            this.buttonSupercellClashofclans.Location = new System.Drawing.Point(174, 12);
             this.buttonSupercellClashofclans.Name = "buttonSupercellClashofclans";
             this.buttonSupercellClashofclans.Size = new System.Drawing.Size(75, 57);
             this.buttonSupercellClashofclans.TabIndex = 9;
@@ -147,7 +150,7 @@
             // 
             // buttonCldts
             // 
-            this.buttonCldts.Location = new System.Drawing.Point(93, 75);
+            this.buttonCldts.Location = new System.Drawing.Point(174, 75);
             this.buttonCldts.Name = "buttonCldts";
             this.buttonCldts.Size = new System.Drawing.Size(75, 57);
             this.buttonCldts.TabIndex = 10;
@@ -157,7 +160,7 @@
             // 
             // buttonDdtank
             // 
-            this.buttonDdtank.Location = new System.Drawing.Point(12, 138);
+            this.buttonDdtank.Location = new System.Drawing.Point(12, 201);
             this.buttonDdtank.Name = "buttonDdtank";
             this.buttonDdtank.Size = new System.Drawing.Size(75, 57);
             this.buttonDdtank.TabIndex = 11;
@@ -167,7 +170,7 @@
             // 
             // buttonXymobile
             // 
-            this.buttonXymobile.Location = new System.Drawing.Point(93, 138);
+            this.buttonXymobile.Location = new System.Drawing.Point(93, 201);
             this.buttonXymobile.Name = "buttonXymobile";
             this.buttonXymobile.Size = new System.Drawing.Size(75, 57);
             this.buttonXymobile.TabIndex = 12;
@@ -177,7 +180,7 @@
             // 
             // buttonSupercellClashroyale
             // 
-            this.buttonSupercellClashroyale.Location = new System.Drawing.Point(12, 264);
+            this.buttonSupercellClashroyale.Location = new System.Drawing.Point(12, 12);
             this.buttonSupercellClashroyale.Name = "buttonSupercellClashroyale";
             this.buttonSupercellClashroyale.Size = new System.Drawing.Size(75, 57);
             this.buttonSupercellClashroyale.TabIndex = 13;
@@ -187,7 +190,7 @@
             // 
             // buttonMmMulti
             // 
-            this.buttonMmMulti.Location = new System.Drawing.Point(93, 264);
+            this.buttonMmMulti.Location = new System.Drawing.Point(93, 12);
             this.buttonMmMulti.Name = "buttonMmMulti";
             this.buttonMmMulti.Size = new System.Drawing.Size(75, 57);
             this.buttonMmMulti.TabIndex = 14;
@@ -195,12 +198,45 @@
             this.buttonMmMulti.UseVisualStyleBackColor = true;
             this.buttonMmMulti.Click += new System.EventHandler(this.buttonMmMulti_Click);
             // 
+            // buttonBack
+            // 
+            this.buttonBack.Location = new System.Drawing.Point(12, 327);
+            this.buttonBack.Name = "buttonBack";
+            this.buttonBack.Size = new System.Drawing.Size(75, 57);
+            this.buttonBack.TabIndex = 15;
+            this.buttonBack.Text = "返回";
+            this.buttonBack.UseVisualStyleBackColor = true;
+            this.buttonBack.Click += new System.EventHandler(this.buttonBack_Click);
+            // 
+            // buttonHome
+            // 
+            this.buttonHome.Location = new System.Drawing.Point(174, 327);
+            this.buttonHome.Name = "buttonHome";
+            this.buttonHome.Size = new System.Drawing.Size(75, 57);
+            this.buttonHome.TabIndex = 16;
+            this.buttonHome.Text = "主页";
+            this.buttonHome.UseVisualStyleBackColor = true;
+            this.buttonHome.Click += new System.EventHandler(this.buttonHome_Click);
+            // 
+            // buttonTstl
+            // 
+            this.buttonTstl.Location = new System.Drawing.Point(173, 201);
+            this.buttonTstl.Name = "buttonTstl";
+            this.buttonTstl.Size = new System.Drawing.Size(75, 57);
+            this.buttonTstl.TabIndex = 17;
+            this.buttonTstl.Text = "天龙八部";
+            this.buttonTstl.UseVisualStyleBackColor = true;
+            this.buttonTstl.Click += new System.EventHandler(this.buttonTstl_Click);
+            // 
             // FormOpenApp
             // 
             this.AcceptButton = this.buttonMm;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(260, 333);
+            this.ClientSize = new System.Drawing.Size(260, 392);
+            this.Controls.Add(this.buttonTstl);
+            this.Controls.Add(this.buttonHome);
+            this.Controls.Add(this.buttonBack);
             this.Controls.Add(this.buttonMmMulti);
             this.Controls.Add(this.buttonSupercellClashroyale);
             this.Controls.Add(this.buttonXymobile);
@@ -240,5 +276,8 @@
         private System.Windows.Forms.Button buttonXymobile;
         private System.Windows.Forms.Button buttonSupercellClashroyale;
         private System.Windows.Forms.Button buttonMmMulti;
+        private System.Windows.Forms.Button buttonBack;
+        private System.Windows.Forms.Button buttonHome;
+        private System.Windows.Forms.Button buttonTstl;
     }
 }

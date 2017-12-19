@@ -103,5 +103,20 @@ namespace NetworkInputMethod
                 }
             }
         }
+
+        private void buttonBack_Click(object sender, EventArgs e)
+        {
+            mNetworkIme.sendCommand("BACK", false);
+        }
+
+        private void buttonHome_Click(object sender, EventArgs e)
+        {
+            mNetworkIme.sendCommand("HOME", false);
+        }
+
+        private void buttonTstl_Click(object sender, EventArgs e)
+        {
+            mNetworkIme.sendOpenApp("com.tencent.tmgp.tstl");
+        }
     }
 }

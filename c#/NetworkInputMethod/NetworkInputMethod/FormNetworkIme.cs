@@ -370,11 +370,6 @@ namespace NetworkInputMethod
             sendKey(67);
         }
 
-        private void buttonAlipay_Click(object sender, EventArgs e)
-        {
-            sendOpenApp("com.eg.android.AlipayGphone");
-        }
-
         private void buttonCopy_Click(object sender, EventArgs e)
         {
             sendCommand("COPY", false);
@@ -411,6 +406,21 @@ namespace NetworkInputMethod
                 mFormSelect = new FormSelect(this);
                 mFormSelect.Show();
             }
+        }
+
+        private void buttonIme_Click(object sender, EventArgs e)
+        {
+            sendCommand("IME", false);
+        }
+
+        private void buttonMm_Click(object sender, EventArgs e)
+        {
+            sendOpenApp("com.tencent.mm");
+        }
+
+        private void buttonHome_Click(object sender, EventArgs e)
+        {
+            sendCommand("HOME", false);
         }
     }
 
