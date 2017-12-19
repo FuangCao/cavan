@@ -28,5 +28,8 @@ public class CavanMainApplication extends Application {
 
 		IntentFilter filter = new IntentFilter(Intent.ACTION_TIME_TICK);
 		registerReceiver(mBroadcastReceiver, filter );
+
+		FloatMessageService.startService(this);
+		CavanNetworkImeConnService.startService(this);
 	}
 }

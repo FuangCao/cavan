@@ -60,6 +60,10 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 		return new Intent(context, CavanNetworkImeConnService.class);
 	}
 
+	public static void startService(Context context) {
+		context.startService(getIntent(context));
+	}
+
 	protected void onTcpPacketReceived(String command) {
 		CavanAndroid.dLog("onTcpPacketReceived: " + command);
 
@@ -249,7 +253,6 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 
 	@Override
 	protected int getDefaultPort() {
-		CavanAndroid.pLog();
 		return 8865;
 	}
 }
