@@ -552,4 +552,64 @@ public class CavanJava {
 			return 0;
 		}
 	}
+
+	public static int getShortBit(short value, int index, int base) {
+		while (index > 0) {
+			value /= base;
+			index--;
+		}
+
+		return value % base;
+	}
+
+	public static int getIntBit(int value, int index, int base) {
+		while (index > 0) {
+			value /= base;
+			index--;
+		}
+
+		return value % base;
+	}
+
+	public static int getLongBit(long value, int index, int base) {
+		while (index > 0) {
+			value /= base;
+			index--;
+		}
+
+		return (int) (value % base);
+	}
+
+	public static byte[] getShortBits(short value, int base) {
+		byte[] bytes = new byte[16];
+
+		for (int i = 0; i < bytes.length; i++) {
+			bytes[i] = (byte) (value % base);
+			value /= base;
+		}
+
+		return bytes;
+	}
+
+	public static byte[] getIntBits(int value, int base) {
+		byte[] bytes = new byte[32];
+
+		for (int i = 0; i < bytes.length; i++) {
+			bytes[i] = (byte) (value % base);
+			value /= base;
+		}
+
+		return bytes;
+	}
+
+	public static byte[] getLongBits(long value, int base) {
+		byte[] bytes = new byte[64];
+
+		for (int i = 0; i < bytes.length; i++) {
+			bytes[i] = (byte) (value % base);
+			value /= base;
+		}
+
+		return bytes;
+	}
 }
