@@ -35,8 +35,8 @@ struct role_change_service_conn {
 	char *name;
 	struct role_change_service_conn *up;
 	struct role_change_service_conn *down;
-	struct role_change_service_conn *left;
-	struct role_change_service_conn *right;
+	struct role_change_service_conn *prev;
+	struct role_change_service_conn *next;
 };
 
 struct role_change_service {
