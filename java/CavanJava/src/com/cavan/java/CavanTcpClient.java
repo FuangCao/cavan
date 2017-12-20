@@ -71,16 +71,16 @@ public class CavanTcpClient implements Runnable {
 		mConnDisabled = disabled;
 	}
 
-	public synchronized InetSocketAddress getAddress() {
+	public synchronized List<InetSocketAddress> getAddresses() {
+		return mAddresses;
+	}
+
+	public synchronized InetSocketAddress getFirstAddress() {
 		if (mAddresses.isEmpty()) {
 			return null;
 		}
 
 		return mAddresses.get(0);
-	}
-
-	public synchronized List<InetSocketAddress> getAddresses() {
-		return mAddresses;
 	}
 
 	public synchronized InetSocketAddress getCurrentAddress() {

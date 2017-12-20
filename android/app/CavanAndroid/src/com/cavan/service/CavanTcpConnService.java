@@ -95,7 +95,7 @@ public abstract class CavanTcpConnService extends Service implements CavanTcpCli
 
 		@Override
 		public String getCurrentAddress() throws RemoteException {
-			InetSocketAddress address = mTcpClient.getAddress();
+			InetSocketAddress address = mTcpClient.getCurrentAddress();
 			if (address == null) {
 				return null;
 			}

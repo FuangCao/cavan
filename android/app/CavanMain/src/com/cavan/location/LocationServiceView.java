@@ -62,7 +62,7 @@ public class LocationServiceView extends RelativeLayout implements OnClickListen
 		if (mLocationClient != client) {
 			mLocationClient = client;
 
-			InetSocketAddress address = client.getAddress();
+			InetSocketAddress address = client.getFirstAddress();
 			if (address != null) {
 				mEditTextHost.setText(address.getHostString());
 				mEditTextPort.setText(Integer.toString(address.getPort()));

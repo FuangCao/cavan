@@ -288,7 +288,7 @@ public class MockLocationActivity extends Activity implements OnClickListener {
 
 			synchronized (mClients) {
 				for (LocationClient client : mClients) {
-					InetSocketAddress address = client.getAddress();
+					InetSocketAddress address = client.getFirstAddress();
 					if (address == null) {
 						continue;
 					}
