@@ -394,6 +394,7 @@ struct cavan_inet_route {
 
 const char *network_get_socket_pathname(void);
 char *network_get_hostname(char *buff, size_t size);
+int cavan_inet_aton(const char *text, struct in_addr *addr);
 bool inet_addr_is_broadcast(struct sockaddr_in *addr);
 const char *inet_get_special_address(const char *hostname);
 const char *inet_check_hostname(const char *hostname, char *buff, size_t size);

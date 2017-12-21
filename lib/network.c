@@ -56,6 +56,42 @@ char *network_get_hostname(char *buff, size_t size)
 	return buff;
 }
 
+int cavan_inet_aton(const char *text, struct in_addr *addr)
+{
+	u32 value = 0;
+	int count = 0;
+
+	while (1) {
+		char c = *text++;
+
+		switch (c) {
+		case '0' ... '9':
+			value = value * 10 + (c - '0');
+			break;
+
+		case '.':
+		case 0:
+			if (value > 255) {
+				return -EINVAL;
+			}
+
+			addr->s_addr = addr->s_addr >> 8 | value << 24;
+
+			if (c == '.') {
+				value = 0;
+				count++;
+				break;
+			}
+
+			if (count == 3) {
+				return 0;
+			}
+		default:
+			return -EINVAL;
+		}
+	}
+}
+
 const char *inet_get_special_address(const char *hostname)
 {
 	if (hostname == NULL || hostname[0] == 0) {

@@ -41,9 +41,11 @@ static ssize_t role_change_send_command(struct network_client *client, const cha
 	return network_client_send_packet(client, command, length);
 }
 
-static void role_change_parse_cmdline(struct role_change_conn *conn, size_t length)
+static void role_change_parse_cmdline(struct role_change_conn *conn, int length)
 {
 	char *p = conn->command, *p_end;
+
+	pd_info("recv_command[%d] = %s", length, p);
 
 	conn->argv[0] = p;
 	conn->argc = 0;
@@ -67,32 +69,20 @@ static void role_change_parse_cmdline(struct role_change_conn *conn, size_t leng
 	}
 
 	if (p > conn->argv[conn->argc]) {
-		if (p < conn->command + sizeof(conn->command)) {
-			*p = 0;
-		}
-
 		conn->argc++;
 	}
-
-#if ROLE_CHANGE_SERVICE_DEBUG || ROLE_CHANGE_CLIENT_DEBUG
-	{
-		int i;
-
-		for (i = 0; i < conn->argc; i++) {
-			println("argv[%d] = %s", i, conn->argv[i]);
-		}
-	}
-#endif
 }
 
 static int role_change_read_command(struct role_change_conn *conn)
 {
-	ssize_t rdlen = network_client_recv_packet(&conn->client, conn->command, sizeof(conn->command));
-	if (rdlen > 0) {
-		role_change_parse_cmdline(conn, rdlen);
+	int length = network_client_recv_packet(&conn->client, conn->command, sizeof(conn->command) - 1);
+
+	if (length > 0) {
+		conn->command[length] = 0;
+		role_change_parse_cmdline(conn, length);
 	}
 
-	return rdlen;
+	return length;
 }
 
 // ================================================================================
@@ -146,6 +136,8 @@ static int role_change_service_add_client(struct role_change_service *service, s
 	pd_info("addr = %s, name = %s", inet_ntoa(conn->addr), conn->name);
 #endif
 
+	conn->time = time(NULL);
+
 	role_change_service_lock(service);
 
 	for (node = service->head; node; node = node->down) {
@@ -188,11 +180,6 @@ static void role_change_service_remove_client_locked(struct role_change_service 
 	prev = conn->prev;
 	next = conn->next;
 
-#if ROLE_CHANGE_SERVICE_DEBUG
-	println("prev = %p", prev);
-	println("next = %p", next);
-#endif
-
 	if (prev) {
 		conn->prev = NULL;
 		prev->next = next;
@@ -206,11 +193,6 @@ static void role_change_service_remove_client_locked(struct role_change_service 
 	} else {
 		struct role_change_service_conn *up = conn->up;
 		struct role_change_service_conn *down = conn->down;
-
-#if ROLE_CHANGE_SERVICE_DEBUG
-		println("up = %p", up);
-		println("down = %p", down);
-#endif
 
 		if (next) {
 			conn->next = NULL;
@@ -277,7 +259,12 @@ static char *role_change_service_list_clients(struct role_change_service *servic
 
 	for (conn = service->head; conn; conn = conn->down) {
 		int count = role_change_service_get_client_count(conn);
-		buff += snprintf(buff, buff_end - buff, "%s %s %d\n", inet_ntoa(conn->addr), conn->name, count);
+		struct tm time;
+
+		localtime_r(&conn->time, &time);
+
+		buff += snprintf(buff, buff_end - buff, "%04d-%02d-%02d %02d:%02d:%02d %s %s %d\n",
+			time.tm_year + 1900, time.tm_mon + 1, time.tm_mday, time.tm_hour, time.tm_min, time.tm_sec, inet_ntoa(conn->addr), conn->name, count);
 	}
 
 	role_change_service_unlock(service);
@@ -285,29 +272,51 @@ static char *role_change_service_list_clients(struct role_change_service *servic
 	return buff;
 }
 
-static struct role_change_service_conn *role_change_service_find_client(struct role_change_service *service, const char *name, const char *url)
+static struct role_change_service_conn *role_change_service_find_client(struct role_change_service *service, const char *name, const char *url, int retry)
 {
 	struct role_change_service_conn *conn;
+	struct in_addr addr;
 
-#if ROLE_CHANGE_SERVICE_DEBUG
-	println("name = %s", name);
-	println("url = %s", url);
-#endif
+	if (cavan_inet_aton(name, &addr) < 0) {
+		addr.s_addr = 0;
+	}
+
+	pd_info("addr = %s", inet_ntoa(addr));
 
 	role_change_service_lock(service);
 
-	for (conn = service->head; conn; conn = conn->down) {
-		if (strcmp(conn->name, name) == 0) {
+	while (1) {
+		for (conn = service->head; conn; conn = conn->down) {
+			if (addr.s_addr != 0) {
+				if (conn->addr.s_addr != addr.s_addr) {
+					continue;
+				}
+			} else if (strcmp(conn->name, name) != 0) {
+				continue;
+			}
+
 			role_change_service_remove_client_locked(service, conn);
 
 			if (role_change_send_command(&conn->conn.client, "link %s", url) < 0) {
 				role_change_service_free_client(conn);
 			} else {
-				break;
+				goto out_role_change_service_unlock;
 			}
 		}
+
+		if (--retry < 0) {
+			break;
+		}
+
+		role_change_service_unlock(service);
+
+		pd_warn_info("wait client %d", retry);
+		msleep(1000);
+
+		role_change_service_lock(service);
 	}
 
+out_role_change_service_unlock:
 	role_change_service_unlock(service);
 
 	return conn;
@@ -317,10 +326,6 @@ static int role_change_service_process_command(struct role_change_service *servi
 {
 	const char *command = conn->conn.argv[0];
 	int ret;
-
-#if ROLE_CHANGE_SERVICE_DEBUG
-	pd_info("command = %s", command);
-#endif
 
 	if (strcmp(command, "list") == 0) {
 		char buff[4096], *text;
@@ -343,7 +348,7 @@ static int role_change_service_process_command(struct role_change_service *servi
 		if (conn->conn.argc > 2) {
 			struct role_change_service_conn *remote;
 
-			remote = role_change_service_find_client(service, conn->conn.argv[1], conn->conn.argv[2]);
+			remote = role_change_service_find_client(service, conn->conn.argv[1], conn->conn.argv[2], 10);
 			if (remote == NULL) {
 				pr_red_info("role_change_service_find_client");
 				return -EINVAL;
@@ -351,6 +356,18 @@ static int role_change_service_process_command(struct role_change_service *servi
 
 			tcp_proxy_main_loop(&conn->conn.client, &remote->conn.client);
 			role_change_service_free_client(remote);
+			return 1;
+		} else if (conn->conn.argc > 1) {
+			struct network_client client;
+
+			ret = network_client_open2(&client, conn->conn.argv[1], 0);
+			if (ret < 0) {
+				pr_red_info("network_client_open2");
+				return -EINVAL;
+			}
+
+			tcp_proxy_main_loop(&conn->conn.client, &client);
+			network_client_close(&client);
 			return 1;
 		} else {
 			pr_red_info("too a few args");
@@ -480,10 +497,6 @@ static void role_change_client_stop_handler(struct cavan_dynamic_service *servic
 static int role_change_client_process_command(struct role_change_client *proxy, struct role_change_client_conn *conn)
 {
 	const char *command = conn->conn.argv[0];
-
-#if ROLE_CHANGE_CLIENT_DEBUG
-	println("command = %s", command);
-#endif
 
 	if (strcmp(command, "keepalive") == 0) {
 		return 0;
@@ -695,7 +708,12 @@ static int role_change_proxy_run_handler(struct cavan_dynamic_service *service, 
 		return ret;
 	}
 
-	ret = role_change_send_command(&client_proxy, "link %s %s", proxy->name, proxy->url);
+	if (proxy->name) {
+		ret = role_change_send_command(&client_proxy, "link %s %s", proxy->name, proxy->url);
+	} else {
+		ret = role_change_send_command(&client_proxy, "link %s", proxy->url);
+	}
+
 	if (ret < 0) {
 		pr_red_info("role_change_send_command");
 		goto out_network_client_close;
@@ -714,6 +732,8 @@ int role_change_proxy_run(struct cavan_dynamic_service *service)
 
 	pd_bold_info("LOCAL_URL = %s", network_url_tostring(&proxy->url_local, NULL, 0, NULL));
 	pd_bold_info("REMOTE_URL = %s", network_url_tostring(&proxy->url_remote, NULL, 0, NULL));
+	pd_bold_info("NAME = %s", proxy->name);
+	pd_bold_info("URL = %s", proxy->url);
 
 	service->name = "ROLE_CHANGE_PROXY";
 	service->conn_size = sizeof(struct network_client);

@@ -131,7 +131,7 @@ static int role_change_service_main(int argc, char *argv[])
 		}
 	}
 
-	assert(argc - optind >= 1);
+	assert(optind < argc);
 
 	if (network_url_parse(&role->url, argv[optind++]) == NULL) {
 		pr_red_info("network_url_parse");
@@ -148,8 +148,8 @@ out_cavan_dynamic_service_destroy:
 
 static void role_change_client_show_usage(const char *command)
 {
-	println("Usage: URL");
-	println("%s [option] URL", command);
+	println("Usage:");
+	println("%s [option] URL [NAME]", command);
 	println("-H, -h, --help\t\t\t%s", cavan_help_message_help);
 	println("-V, -v, --verbose\t\t%s", cavan_help_message_verbose);
 	println("-D, -d, --daemon\t\t%s", cavan_help_message_daemon);
@@ -269,7 +269,7 @@ static int role_change_client_main(int argc, char *argv[])
 		}
 	}
 
-	assert(argc - optind >= 1);
+	assert(optind < argc);
 
 	if (network_url_parse(&role->url, argv[optind++]) == NULL) {
 		pr_red_info("network_url_parse");
@@ -279,6 +279,8 @@ static int role_change_client_main(int argc, char *argv[])
 
 	if (name != NULL) {
 		strcpy(role->name, name);
+	} else if (optind < argc) {
+		strcpy(role->name, argv[optind++]);
 	} else {
 		ret = gethostname(role->name, sizeof(role->name));
 		if (ret < 0) {
@@ -297,7 +299,7 @@ out_cavan_dynamic_service_destroy:
 static void role_change_proxy_show_usage(const char *command)
 {
 	println("Usage:");
-	println("%s [option] URL_LOCAL URL_REMOTE NAME_PROXY URL_PROXY", command);
+	println("%s [option] URL_LOCAL URL_REMOTE URL [NAME]", command);
 	println("-H, -h, --help\t\t\t%s", cavan_help_message_help);
 	println("-V, -v, --verbose\t\t%s", cavan_help_message_verbose);
 	println("-D, -d, --daemon\t\t%s", cavan_help_message_daemon);
@@ -404,7 +406,7 @@ static int role_change_proxy_main(int argc, char *argv[])
 		}
 	}
 
-	assert(argc - optind >= 4);
+	assert(optind + 2 < argc);
 
 	if (network_url_parse(&proxy->url_local, argv[optind++]) == NULL) {
 		pr_red_info("network_url_parse");
@@ -418,8 +420,13 @@ static int role_change_proxy_main(int argc, char *argv[])
 		goto out_cavan_dynamic_service_destroy;
 	}
 
-	proxy->name = argv[optind++];
 	proxy->url = argv[optind++];
+
+	if (optind < argc) {
+		proxy->name = argv[optind++];
+	} else {
+		proxy->name = NULL;
+	}
 
 	ret = role_change_proxy_run(service);
 
