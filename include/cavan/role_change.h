@@ -22,6 +22,12 @@
 #include <cavan.h>
 #include <cavan/network.h>
 
+enum role_change_mode {
+	ROLE_CHANGE_MODE_NONE,
+	ROLE_CHANGE_MODE_LINK,
+	ROLE_CHANGE_MODE_BURROW,
+};
+
 struct role_change_conn {
 	struct network_client client;
 	char command[4096];
@@ -51,6 +57,7 @@ struct role_change_client_conn {
 	struct role_change_conn conn;
 	struct network_client client;
 	int keepalive;
+	int mode;
 	struct role_change_client_conn *prev;
 	struct role_change_client_conn *next;
 };

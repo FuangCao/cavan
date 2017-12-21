@@ -272,7 +272,7 @@ static char *role_change_service_list_clients(struct role_change_service *servic
 	return buff;
 }
 
-static struct role_change_service_conn *role_change_service_find_client(struct role_change_service *service, const char *name, const char *url, int retry)
+static struct role_change_service_conn *role_change_service_find_client(struct role_change_service *service, const char *command, const char *name, const char *url, int retry)
 {
 	struct role_change_service_conn *conn;
 	struct in_addr addr;
@@ -297,7 +297,7 @@ static struct role_change_service_conn *role_change_service_find_client(struct r
 
 			role_change_service_remove_client_locked(service, conn);
 
-			if (role_change_send_command(&conn->conn.client, "link %s", url) < 0) {
+			if (role_change_send_command(&conn->conn.client, "%s %s", command, url) < 0) {
 				role_change_service_free_client(conn);
 			} else {
 				goto out_role_change_service_unlock;
@@ -348,7 +348,7 @@ static int role_change_service_process_command(struct role_change_service *servi
 		if (conn->conn.argc > 2) {
 			struct role_change_service_conn *remote;
 
-			remote = role_change_service_find_client(service, conn->conn.argv[1], conn->conn.argv[2], 10);
+			remote = role_change_service_find_client(service, command, conn->conn.argv[1], conn->conn.argv[2], 10);
 			if (remote == NULL) {
 				pr_red_info("role_change_service_find_client");
 				return -EINVAL;
@@ -373,6 +373,32 @@ static int role_change_service_process_command(struct role_change_service *servi
 			pr_red_info("too a few args");
 			return -EINVAL;
 		}
+	} else if (strcmp(command, "burrow") == 0) {
+		struct role_change_service_conn *remote;
+		struct sockaddr_in addr;
+
+		remote = role_change_service_find_client(service, command, conn->conn.argv[1], conn->conn.argv[2], 10);
+		if (remote == NULL) {
+			pr_red_info("role_change_service_find_client");
+			return -EINVAL;
+		}
+
+		ret = network_client_get_remote_addr(&remote->conn.client, (struct sockaddr *) &addr, sizeof(addr));
+		if (ret < 0) {
+			pr_red_info("role_change_service_find_client");
+			return ret;
+		}
+
+		ret = role_change_send_command(&conn->conn.client, "burrow %s:%d", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+		if (ret < 0) {
+			pr_red_info("role_change_send_command");
+		} else {
+			msleep(20000);
+		}
+
+		role_change_service_free_client(remote);
+
+		return ret;
 	} else if (strcmp(command, "login") == 0) {
 		if (conn->conn.argc > 1) {
 			char *name = conn->conn.argv[1];
@@ -503,20 +529,26 @@ static int role_change_client_process_command(struct role_change_client *proxy, 
 	}
 
 	if (strcmp(command, "link") == 0) {
-		if (conn->conn.argc > 1) {
-			const char *url = conn->conn.argv[1];
-			int ret;
+		conn->mode = ROLE_CHANGE_MODE_LINK;
+	} else if (strcmp(command, "burrow") == 0) {
+		conn->mode = ROLE_CHANGE_MODE_BURROW;
+	} else {
+		return -EINVAL;
+	}
 
-			println("url = %s", url);
+	if (conn->conn.argc > 1) {
+		const char *url = conn->conn.argv[1];
+		int ret;
 
-			ret = network_client_open2(&conn->client, url, 0);
-			if (ret < 0) {
-				pr_red_info("network_client_open2");
-				return ret;
-			}
+		println("url = %s", url);
 
-			return 1;
+		ret = network_client_open2(&conn->client, url, 0);
+		if (ret < 0) {
+			pr_red_info("network_client_open2");
+			return ret;
 		}
+
+		return 1;
 	}
 
 	return -EINVAL;
@@ -618,10 +650,69 @@ static bool role_change_client_close_connect(struct cavan_dynamic_service *servi
 	return false;
 }
 
+static int role_change_client_burrow(struct network_client *conn, struct network_client *client)
+{
+	struct network_service service;
+	struct network_url url;
+	int port;
+	int ret;
+
+	port = network_client_get_local_port(conn);
+	if (port < 0) {
+		pr_red_info("network_client_get_local_port");
+		return port;
+	}
+
+	ret = socket_set_reuse_addr(conn->sockfd);
+	if (ret < 0) {
+		pr_red_info("socket_set_reuse_addr");
+		return ret;
+	}
+
+	ret = socket_set_reuse_port(conn->sockfd);
+	if (ret < 0) {
+		pr_red_info("socket_set_reuse_port");
+		return ret;
+	}
+
+	network_url_init(&url, "tcp", "any", ntohs(port), NULL);
+
+	ret = network_service_open(&service, &url, 0);
+	if (ret < 0) {
+		pr_red_info("network_service_open");
+		return ret;
+	}
+
+	ret = network_service_accept_timed(&service, client, 60000);
+	if (ret < 0) {
+		pr_red_info("network_service_accept_timed");
+	}
+
+	network_service_close(&service);
+
+	return ret;
+}
+
 static int role_change_client_run_handler(struct cavan_dynamic_service *service, void *conn_data)
 {
 	struct role_change_client_conn *conn = conn_data;
-	tcp_proxy_main_loop(&conn->client, &conn->conn.client);
+
+	if (conn->mode == ROLE_CHANGE_MODE_BURROW) {
+		struct network_client client;
+		int ret;
+
+		ret = role_change_client_burrow(&conn->conn.client, &client);
+		if (ret < 0) {
+			pr_red_info("role_change_client_burrow");
+			return ret;
+		}
+
+		tcp_proxy_main_loop(&client, &conn->client);
+		network_client_close(&client);
+	} else {
+		tcp_proxy_main_loop(&conn->client, &conn->conn.client);
+	}
+
 	return 0;
 }
 
