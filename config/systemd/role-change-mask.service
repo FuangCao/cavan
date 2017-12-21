@@ -1,10 +1,10 @@
 [Unit]
-Description=cavan role change client
+Description=cavan role change mask service
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=/cavan/out/host/debug/cavan-role_change client --name localhost tcp::8868
+ExecStart=/cavan/out/host/debug/cavan-role_change service tcp-mask::8869
 ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]
