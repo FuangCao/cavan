@@ -214,7 +214,7 @@ static int role_change_client_main(int argc, char *argv[])
 		return -ENOMEM;
 	}
 
-	service->min = 20;
+	service->min = 2;
 	service->max = 1000;
 
 	role = cavan_dynamic_service_get_data(service);
