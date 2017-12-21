@@ -19,18 +19,18 @@ function cavan-wifi-mon-scan()
 
 function cavan-wifi-mon-capture()
 {
-	local pathname="${CAVAN_WIFI_PATH}/$(echo $1 | tr ':' '-')"
+	local pathname="${CAVAN_WIFI_PATH}/${2//:}"
 
-	echo "bssid = $1"
-	echo "channel = $2"
-	echo "interface = $3"
+	echo "bssid = $2"
+	echo "channel = $3"
+	echo "interface = $1"
 	echo "pathname = ${pathname}"
 
 	echo "Press enter to start"
 	read
 
 	sudo mkdir -pv "${CAVAN_WIFI_PATH}"
-	sudo airodump-ng -c $2 -w "${pathname}" --bssid $1 $3
+	sudo airodump-ng -c $3 -w "${pathname}" --bssid $2 $1
 }
 
 function cavan-wifi-mon-crack()
@@ -63,15 +63,25 @@ function cavan-wifi-mon-crack()
 	fi
 }
 
+function cavan-wifi-mon-crack-daemon()
+{
+	local pathname="${CAVAN_WIFI_PATH}/crack-$(basename $2).log"
+
+	echo "pathname = $pathname"
+
+	mkdir -pv "${CAVAN_WIFI_PATH}"
+	cavan-service --start -l "$pathname" --exec "source ${CAVAN_HOME}/script/app/wifi.sh && cavan-wifi-mon-crack $*"
+}
+
 function cavan-wifi-mon-deauth()
 {
-	echo "ap_mac = $1"
-	echo "client_mac = $2"
-	echo "interface = $3"
+	echo "ap_mac = $2"
+	echo "client_mac = $3"
+	echo "interface = $1"
 
 	while :;
 	do
-		sudo aireplay-ng --ignore-negative-one -0 10 -a $1 -c $2 $3
+		sudo aireplay-ng --ignore-negative-one -0 10 -a $2 -c $3 $1
 	done
 }
 
