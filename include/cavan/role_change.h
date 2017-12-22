@@ -75,6 +75,7 @@ struct role_change_proxy {
 	struct network_url url_remote;
 	const char *name;
 	const char *url;
+	bool burrow;
 };
 
 int role_change_service_run(struct cavan_dynamic_service *service);

@@ -94,7 +94,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 		case "CLIPBOARD":
 			if (args.length > 0) {
 				String text = args[1];
-				CavanAndroid.postClipboardText(getApplicationContext(), text);
+				CavanAndroid.postClipboardTextTemp(getApplicationContext(), text);
 				FloatMessageService fms = FloatMessageService.getInstance();
 				if (fms != null) {
 					fms.sendShowToastWithArgs(R.string.clipboard_updated, text);

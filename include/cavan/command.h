@@ -65,6 +65,7 @@ typedef enum {
 	CAVAN_COMMAND_OPTION_BASE,
 	CAVAN_COMMAND_OPTION_BOARD,
 	CAVAN_COMMAND_OPTION_BT_MAC,
+	CAVAN_COMMAND_OPTION_BURROW,
 	CAVAN_COMMAND_OPTION_COMMAND,
 	CAVAN_COMMAND_OPTION_CONTEXT,
 	CAVAN_COMMAND_OPTION_COUNT,
@@ -282,6 +283,7 @@ extern const char *cavan_help_message_group;
 extern const char *cavan_help_message_discovery;
 extern const char *cavan_help_message_discovery_delay;
 extern const char *cavan_help_message_service_name;
+extern const char *cavan_help_message_burrow;
 
 // ============================================================
 

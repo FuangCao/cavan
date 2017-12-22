@@ -1490,7 +1490,7 @@ char *network_url_parse(struct network_url *url, const char *text)
 			url->port = port ? text2value_unsigned(port, NULL, 10) : NETWORK_PORT_INVALID;
 
 			if (url->protocol == NULL) {
-				url->protocol = p;
+				url->protocol = "tcp";
 			}
 
 			if (url->hostname[0] == 0 || strcmp(url->hostname, "localhost") == 0) {

@@ -306,6 +306,7 @@ static void role_change_proxy_show_usage(const char *command)
 	println("-m, -c, --min\t\t\t%s", cavan_help_message_daemon_min);
 	println("-M, -C, --max\t\t\t%s", cavan_help_message_daemon_max);
 	println("-L, -l, --log\t\t\t%s", cavan_help_message_logfile);
+	println("-B, -b, --burrow\t\t\t%s", cavan_help_message_burrow);
 }
 
 static int role_change_proxy_main(int argc, char *argv[])
@@ -347,6 +348,11 @@ static int role_change_proxy_main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_LOGFILE,
 		}, {
+			.name = "burrow",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_BURROW,
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -362,7 +368,7 @@ static int role_change_proxy_main(int argc, char *argv[])
 
 	proxy = cavan_dynamic_service_get_data(service);
 
-	while ((c = getopt_long(argc, argv, "vVhHm:c:M:C:dDl:L:", long_option, &option_index)) != EOF) {
+	while ((c = getopt_long(argc, argv, "vVhHm:c:M:C:dDl:L:Bb", long_option, &option_index)) != EOF) {
 		switch (c) {
 		case 'v':
 		case 'V':
@@ -400,6 +406,12 @@ static int role_change_proxy_main(int argc, char *argv[])
 			service->max = text2value_unsigned(optarg, NULL, 10);
 			break;
 
+		case 'b':
+		case 'B':
+		case CAVAN_COMMAND_OPTION_BURROW:
+			proxy->burrow = true;
+			break;
+
 		default:
 			role_change_proxy_show_usage(argv[0]);
 			return -EINVAL;
@@ -425,6 +437,7 @@ static int role_change_proxy_main(int argc, char *argv[])
 	if (optind < argc) {
 		proxy->name = argv[optind++];
 	} else {
+		proxy->burrow = false;
 		proxy->name = NULL;
 	}
 
