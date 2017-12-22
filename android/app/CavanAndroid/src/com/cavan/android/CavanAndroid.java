@@ -24,6 +24,7 @@ import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
@@ -980,5 +981,10 @@ public class CavanAndroid {
 		} else {
 			manager.set(AlarmManager.RTC_WAKEUP, time, operation);
 		}
+	}
+
+	public static boolean startAndBindService(Context context, Intent service, ServiceConnection conn) {
+		context.startService(service);
+		return context.bindService(service, conn, 0);
 	}
 }

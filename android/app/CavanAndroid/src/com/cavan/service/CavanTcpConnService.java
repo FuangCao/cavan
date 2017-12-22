@@ -102,6 +102,16 @@ public abstract class CavanTcpConnService extends Service implements CavanTcpCli
 
 			return address.getHostString() + ":" + address.getPort();
 		}
+
+		@Override
+		public boolean connect() throws RemoteException {
+			return mTcpClient.connect();
+		}
+
+		@Override
+		public void disconnect() throws RemoteException {
+			mTcpClient.disconnect();
+		}
 	};
 
 	@Override

@@ -30,6 +30,7 @@ public class CavanTcpClient implements Runnable {
 	private Thread mConnThread = new Thread(this);
 	private boolean mConnDisabled = true;
 	private boolean mConnected;
+	private int mConnTimes;
 
 	public synchronized Socket getSocket() {
 		return mSocket;
@@ -183,6 +184,7 @@ public class CavanTcpClient implements Runnable {
 
 	public synchronized boolean connect() {
 		mConnDisabled = false;
+		mConnTimes = 0;
 		return startConnThread();
 	}
 
@@ -383,13 +385,11 @@ public class CavanTcpClient implements Runnable {
 	@Override
 	public void run() {
 		while (true) {
-			int times;
-
 			if (isConnEnabled()) {
 				onTcpClientRunning();
 			}
 
-			times = 0;
+			mConnTimes = 0;
 
 			while (true) {
 				InetSocketAddress[] addresses;
@@ -423,7 +423,7 @@ public class CavanTcpClient implements Runnable {
 						mainLoop(stream);
 					}
 
-					times = 0;
+					mConnTimes = 0;
 
 					synchronized (this) {
 						mConnected = false;
@@ -440,11 +440,11 @@ public class CavanTcpClient implements Runnable {
 						break;
 					}
 
-					if (onTcpConnFailed(++times)) {
+					if (onTcpConnFailed(++mConnTimes)) {
 						int delay;
 
-						if (times < 15) {
-							delay = 1 << times;
+						if (mConnTimes < 15) {
+							delay = 1 << mConnTimes;
 						} else {
 							delay = 1 << 15;
 						}

@@ -4,14 +4,19 @@ import java.util.List;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.inputmethodservice.KeyboardView.OnKeyboardActionListener;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
+import android.os.RemoteException;
 import android.view.Gravity;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
@@ -30,6 +35,7 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
+import com.cavan.service.ICavanTcpConnService;
 
 public class CavanInputMethod extends InputMethodService implements OnKeyboardActionListener {
 
@@ -252,6 +258,20 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	private CharSequence mAutoSendText;
 	private CharSequence mAutoSendTextPrev;
 
+	private ICavanTcpConnService mNetworkIme;
+	private ServiceConnection mServiceConnection = new ServiceConnection() {
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			mNetworkIme = null;
+		}
+
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			mNetworkIme = ICavanTcpConnService.Stub.asInterface(service);
+		}
+	};
+
 	public static boolean isDefaultInputMethod(Context context) {
 		return "com.cavan.cavanmain/.CavanInputMethod".equals(CavanAndroid.getDefaultInputMethod(context));
 	}
@@ -376,13 +396,17 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		super.onCreate();
 
 		mManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-		startService(CavanNetworkImeConnService.getIntent(this));
+
+		Intent service = CavanNetworkImeConnService.getIntent(this);
+		CavanAndroid.startAndBindService(this, service, mServiceConnection);
+
 		sInstance = this;
 	}
 
 	@Override
 	public void onDestroy() {
 		sInstance = null;
+		unbindService(mServiceConnection);
 		super.onDestroy();
 	}
 
@@ -435,6 +459,15 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	public void onStartInputView(EditorInfo info, boolean restarting) {
 		mAdapterCodes.updateInputView();
 		// setKeyboard(mKeyboardNumber);
+
+		if (mNetworkIme != null) {
+			try {
+				mNetworkIme.connect();
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		}
+
 		super.onStartInputView(info, restarting);
 	}
 
