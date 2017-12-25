@@ -70,8 +70,9 @@ int cavan_thread_run(struct cavan_thread *thread, void *data, int flags);
 int cavan_thread_run_self(struct cavan_thread *thread, void *data, int flags);
 void cavan_thread_suspend(struct cavan_thread *thread);
 void cavan_thread_resume(struct cavan_thread *thread);
-int cavan_thread_msleep_until(struct cavan_thread *thread, struct timespec *time);
+int cavan_thread_sleep_until(struct cavan_thread *thread, struct timespec *time);
 int cavan_thread_msleep(struct cavan_thread *thread, u32 msec);
+int cavan_thread_ssleep(struct cavan_thread *thread, u32 sec);
 
 int cavan_thread_epoll_add(struct cavan_thread *thread, int fd, u32 events);
 int cavan_thread_epoll_remove(struct cavan_thread *thread, int fd);

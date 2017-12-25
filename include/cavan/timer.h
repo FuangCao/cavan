@@ -75,9 +75,10 @@ int cavan_timespec_cmp(const struct timespec *t1, const struct timespec *t2);
 s64 cavan_timespec_sub_ms(const struct timespec *t1, const struct timespec *t2);
 s64 cavan_timespec_sub_us(const struct timespec *t1, const struct timespec *t2);
 s64 cavan_timespec_sub_ns(const struct timespec *t1, const struct timespec *t2);
-s64 cavan_real_timespec_diff(const struct timespec *time);
-void cavan_timer_timespec_add(struct timespec *time, long msec);
-int cavan_timer_set_timespec(struct timespec *time, long msec);
+s64 cavan_real_timespec_diff_ms(const struct timespec *time);
+void cavan_timer_timespec_add_ms(struct timespec *time, long msec);
+int cavan_timer_set_timespec_ms(struct timespec *time, long msec);
+int cavan_timer_set_timespec_ss(struct timespec *time, long sec);
 
 int cavan_timer_insert(struct cavan_timer_service *service, struct cavan_timer *node, u32 timeout);
 void cavan_timer_remove(struct cavan_timer_service *service, struct cavan_timer *timer);

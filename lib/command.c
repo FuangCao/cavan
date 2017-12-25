@@ -1961,9 +1961,9 @@ int cavan_async_command_execute(struct cavan_async_command_service *service, voi
 		return -ENOMEM;
 	}
 
-	ret = cavan_timer_set_timespec(&desc->spec, msec);
+	ret = cavan_timer_set_timespec_ms(&desc->spec, msec);
 	if (ret < 0) {
-		pd_err_info("cavan_timer_set_timespec: %d", ret);
+		pd_err_info("cavan_timer_set_timespec_ms: %d", ret);
 		goto out_free;
 	}
 

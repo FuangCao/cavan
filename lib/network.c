@@ -1481,7 +1481,11 @@ char *network_url_parse(struct network_url *url, const char *text)
 		case ' ':
 			*p = 0;
 
-			if (slash == 0 && colon == 1 && url->protocol && p > url->hostname) {
+			if (colon == 0) {
+				port = url->hostname;
+				url->protocol = NULL;
+				url->hostname = LOCAL_HOST_IP;
+			} else if (slash == 0 && colon == 1 && url->protocol && p > url->hostname) {
 				port = url->hostname;
 				url->hostname = url->protocol;
 				url->protocol = NULL;

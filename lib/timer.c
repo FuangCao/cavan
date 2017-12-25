@@ -95,7 +95,7 @@ s64 cavan_timespec_sub_ns(const struct timespec *t1, const struct timespec *t2)
 	return ((s64) (t1->tv_sec - t2->tv_sec)) * 1000000000 + (t1->tv_nsec - t2->tv_nsec);
 }
 
-s64 cavan_real_timespec_diff(const struct timespec *time)
+s64 cavan_real_timespec_diff_ms(const struct timespec *time)
 {
 	struct timespec curr_time;
 
@@ -104,14 +104,14 @@ s64 cavan_real_timespec_diff(const struct timespec *time)
 	return cavan_timespec_sub_ms(time, &curr_time);
 }
 
-void cavan_timer_timespec_add(struct timespec *time, long msec)
+void cavan_timer_timespec_add_ms(struct timespec *time, long msec)
 {
 	msec += time->tv_nsec / 1000000UL;
 	time->tv_sec += msec / 1000UL;
 	time->tv_nsec = (msec % 1000UL) * 1000000UL;
 }
 
-int cavan_timer_set_timespec(struct timespec *time, long msec)
+int cavan_timer_set_timespec_ms(struct timespec *time, long msec)
 {
 	int ret;
 
@@ -120,7 +120,21 @@ int cavan_timer_set_timespec(struct timespec *time, long msec)
 		return ret;
 	}
 
-	cavan_timer_timespec_add(time, msec);
+	cavan_timer_timespec_add_ms(time, msec);
+
+	return 0;
+}
+
+int cavan_timer_set_timespec_ss(struct timespec *time, long sec)
+{
+	int ret;
+
+	ret = clock_gettime_safe(CLOCK_REALTIME, time);
+	if (ret < 0) {
+		return ret;
+	}
+
+	time->tv_sec += sec;
 
 	return 0;
 }
@@ -135,7 +149,7 @@ static bool cavan_timer_match_later(struct double_link *link, struct double_link
 
 static int cavan_timer_insert_base(struct cavan_timer_service *service, struct cavan_timer *timer, u32 timeout)
 {
-	cavan_timer_set_timespec(&timer->time, timeout);
+	cavan_timer_set_timespec_ms(&timer->time, timeout);
 	double_link_cond_insert_append(&service->link, &timer->node, &timer->time, cavan_timer_match_later);
 	cavan_thread_resume(&service->thread);
 
@@ -183,7 +197,7 @@ static int cavan_timer_service_handler(struct cavan_thread *thread, void *data)
 		int delay;
 		struct cavan_timer *timer = double_link_get_container(link, node);
 
-		delay = cavan_real_timespec_diff(&timer->time);
+		delay = cavan_real_timespec_diff_ms(&timer->time);
 		if (delay > 0) {
 			service->timer_waiting = timer;
 

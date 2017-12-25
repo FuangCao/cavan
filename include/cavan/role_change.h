@@ -38,6 +38,7 @@ struct role_change_conn {
 struct role_change_service_conn {
 	struct role_change_conn conn;
 	struct in_addr addr;
+	int keepalive;
 	time_t time;
 	char *name;
 	struct role_change_service_conn *up;

@@ -42,6 +42,7 @@ struct cavan_daemon_description {
 
 struct cavan_dynamic_service {
 	const char *name;
+	int epollfd;
 	u32 index;
 	u32 min, max;
 	u32 count, used;
@@ -55,7 +56,7 @@ struct cavan_dynamic_service {
 	pthread_mutex_t lock;
 	const char *user, *group;
 	cavan_service_state_t state;
-	struct cavan_thread keepalive_thread;
+	struct cavan_thread epoll_thread;
 	bool stopping;
 
 	void (*init_connect)(struct cavan_dynamic_service *service, void *conn_data);
@@ -64,6 +65,7 @@ struct cavan_dynamic_service {
 	int (*start)(struct cavan_dynamic_service *service);
 	void (*stop)(struct cavan_dynamic_service *service);
 	int (*keepalive)(struct cavan_dynamic_service *service);
+	void (*epoll)(struct cavan_dynamic_service *service, void *conn_data);
 	int (*run)(struct cavan_dynamic_service *service, void *conn_data);
 };
 
@@ -117,6 +119,8 @@ int cavan_dynamic_service_run(struct cavan_dynamic_service *service);
 int cavan_dynamic_service_stop(struct cavan_dynamic_service *service);
 bool cavan_dynamic_service_register(struct cavan_dynamic_service *service);
 bool cavan_dynamic_service_unregister(struct cavan_dynamic_service *service);
+int cavan_dynamic_service_epoll_add(struct cavan_dynamic_service *service, int fd, void *conn);
+void cavan_dynamic_service_epoll_remove(struct cavan_dynamic_service *service, int fd);
 struct cavan_dynamic_service *cavan_dynamic_service_find(const char *name);
 boolean cavan_dynamic_service_stop_by_name(const char *name);
 void cavan_dynamic_service_scan(void *data, void (*handler)(struct cavan_dynamic_service *service, void *data));

@@ -310,6 +310,7 @@ int cavan_dynamic_service_init(struct cavan_dynamic_service *service)
 
 	service->min = 10;
 	service->max = 1000;
+	service->epoll = NULL;
 	service->keepalive = NULL;
 
 	return 0;
@@ -374,10 +375,9 @@ static int cavan_dynamic_service_keepalive_handler(struct cavan_thread *thread, 
 
 		delay = service->keepalive(service);
 		if (likely(delay > 0)) {
-			cavan_thread_msleep(thread, delay);
+			cavan_thread_ssleep(thread, delay);
 		} else if (delay < 0) {
-			cavan_dynamic_service_lock(service);
-			break;
+			goto out_exit;
 		}
 
 		cavan_dynamic_service_lock(service);
@@ -385,7 +385,59 @@ static int cavan_dynamic_service_keepalive_handler(struct cavan_thread *thread, 
 
 	cavan_dynamic_service_unlock(service);
 
+out_exit:
 	pd_bold_info("service %s keepalive exit", service->name);
+
+	return 0;
+}
+
+static int cavan_dynamic_service_epoll_handler(struct cavan_thread *thread, void *data)
+{
+	struct cavan_dynamic_service *service = data;
+	time_t timeAlive = time(NULL);
+	int delay = 0;
+
+	pd_bold_info("service %s epoll ready", service->name);
+
+	cavan_dynamic_service_lock(service);
+
+	while (service->state == CAVAN_SERVICE_STATE_RUNNING) {
+		struct epoll_event events[10];
+		struct epoll_event *p, *p_end;
+		int count;
+
+		cavan_dynamic_service_unlock(service);
+
+		count = epoll_wait(service->epollfd, events, NELEM(events), delay * 1000);
+		if (count < 0) {
+			pr_err_info("epoll_wait");
+			goto out_exit;
+		}
+
+		for (p = events, p_end = p + count; p < p_end; p++) {
+			service->epoll(service, p->data.ptr);
+		}
+
+		if (service->keepalive) {
+			time_t timeNow = time(NULL);
+
+			if (timeAlive > timeNow) {
+				delay = timeAlive - timeNow;
+			} else {
+				delay = service->keepalive(service);
+				timeAlive = timeNow + delay;
+			}
+		} else {
+			delay = -1;
+		}
+
+		cavan_dynamic_service_lock(service);
+	}
+
+	cavan_dynamic_service_unlock(service);
+
+out_exit:
+	pd_bold_info("service %s epoll exit", service->name);
 
 	return 0;
 }
@@ -472,8 +524,12 @@ static void *cavan_dynamic_service_handler(void *data)
 	pd_green_info("service %s daemon %d exit (%d/%d)", service->name, index, service->used, service->count);
 
 	if (service->count == 0) {
-		if (service->keepalive) {
-			cavan_thread_stop(&service->keepalive_thread);
+		if (service->epoll) {
+			cavan_thread_stop(&service->epoll_thread);
+			close(service->epollfd);
+			service->epollfd = -1;
+		} else if (service->keepalive) {
+			cavan_thread_stop(&service->epoll_thread);
 		}
 
 		pd_red_info("service %s stopped", service->name);
@@ -686,8 +742,33 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 
 	pd_bold_info("conn_size = %" PRINT_FORMAT_SIZE, service->conn_size);
 
-	if (service->keepalive) {
-		struct cavan_thread *thread = &service->keepalive_thread;
+	if (service->epoll) {
+		struct cavan_thread *thread;
+		int fd;
+
+		fd = epoll_create(100);
+		if (fd < 0) {
+			ret = fd;
+			pr_err_info("epoll_create");
+			goto out_service_stop;
+		}
+
+		service->epollfd = fd;
+
+		thread = &service->epoll_thread;
+		thread->name = "EPOLL";
+		thread->wake_handker = NULL;
+		thread->handler = cavan_dynamic_service_epoll_handler;
+
+		ret = cavan_thread_run(thread, service, 0);
+		if (ret < 0) {
+			pr_error_info("cavan_thread_run");
+			close(fd);
+			service->epollfd = -1;
+			goto out_service_stop;
+		}
+	} else if (service->keepalive) {
+		struct cavan_thread *thread = &service->epoll_thread;
 
 		thread->name = "KEEP_ALIVE";
 		thread->wake_handker = NULL;
@@ -711,7 +792,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 		ret = cavan_pthread_run(cavan_dynamic_service_handler, service);
 		if (ret < 0) {
 			pr_error_info("cavan_pthread_create");
-			goto out_cavan_thread_stop_keepalive;
+			goto out_cavan_thread_stop_epoll;
 		}
 
 		pthread_mutex_lock(&service->lock);
@@ -735,9 +816,12 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 
 	return 0;
 
-out_cavan_thread_stop_keepalive:
-	if (service->keepalive) {
-		cavan_thread_stop(&service->keepalive_thread);
+out_cavan_thread_stop_epoll:
+	if (service->epoll) {
+		cavan_thread_stop(&service->epoll_thread);
+		close(service->epollfd);
+	} else if (service->keepalive) {
+		cavan_thread_stop(&service->epoll_thread);
 	}
 out_service_stop:
 	service->state = CAVAN_SERVICE_STATE_STOPPING;
@@ -797,7 +881,7 @@ int cavan_dynamic_service_stop(struct cavan_dynamic_service *service)
 		for (i = 0; i < 10 && service->count; i++) {
 			struct timespec abstime;
 
-			cavan_timer_set_timespec(&abstime, 2000);
+			cavan_timer_set_timespec_ms(&abstime, 2000);
 			pthread_cond_timedwait(&service->cond, &service->lock, &abstime);
 
 			if (service->state == CAVAN_SERVICE_STATE_STOPPED) {
@@ -847,6 +931,21 @@ bool cavan_dynamic_service_unregister(struct cavan_dynamic_service *service)
 	}
 
 	return false;
+}
+
+int cavan_dynamic_service_epoll_add(struct cavan_dynamic_service *service, int fd, void *conn)
+{
+	struct epoll_event event = {
+		.events = EPOLLIN | EPOLLERR | EPOLLHUP,
+		.data.ptr = conn,
+	};
+
+	return epoll_ctl(service->epollfd, EPOLL_CTL_ADD, fd, &event);
+}
+
+void cavan_dynamic_service_epoll_remove(struct cavan_dynamic_service *service, int fd)
+{
+	epoll_ctl(service->epollfd, EPOLL_CTL_DEL, fd, NULL);
 }
 
 struct cavan_dynamic_service *cavan_dynamic_service_find(const char *name)

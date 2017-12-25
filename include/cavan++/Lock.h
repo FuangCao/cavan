@@ -155,7 +155,7 @@ public:
 	int wait(u32 ms) {
 		struct timespec abstime;
 
-		cavan_timer_set_timespec(&abstime, ms);
+		cavan_timer_set_timespec_ms(&abstime, ms);
 		return wait(&abstime);
 	}
 };

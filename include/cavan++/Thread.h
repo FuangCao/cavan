@@ -83,7 +83,7 @@ public:
 	}
 
 	int msleepUntil(struct timespec *time) {
-		return cavan_thread_msleep_until(&mThread, time);
+		return cavan_thread_sleep_until(&mThread, time);
 	}
 
 	int msleep(u32 msec) {

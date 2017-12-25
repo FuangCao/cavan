@@ -598,7 +598,7 @@ ssize_t cavan_cache_read(struct cavan_cache *cache, char *buff, size_t size, siz
 			int ret;
 			struct timespec abstime;
 
-			cavan_timer_set_timespec(&abstime, timeout);
+			cavan_timer_set_timespec_ms(&abstime, timeout);
 
 			ret = pthread_cond_timedwait(&cache->rdcond, &cache->lock, &abstime);
 			if (ret != 0) {

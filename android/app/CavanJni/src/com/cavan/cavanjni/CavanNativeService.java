@@ -42,10 +42,6 @@ public abstract class CavanNativeService extends CavanService {
 		mPort = getDefaultPort();
 	}
 
-	public String getServiceAction() {
-		return "cavan.intent.action." + getServiceName();
-	}
-
 	@Override
 	public void onCreate() {
 		CavanJni.setupEnv(this);

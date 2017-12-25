@@ -124,7 +124,7 @@ int cavan_thread_wait_event(struct cavan_thread *thread, u32 msec)
 	return ret;
 }
 
-int cavan_thread_msleep_until(struct cavan_thread *thread, struct timespec *time)
+int cavan_thread_sleep_until(struct cavan_thread *thread, struct timespec *time)
 {
 	int ret;
 
@@ -152,9 +152,18 @@ int cavan_thread_msleep(struct cavan_thread *thread, u32 msec)
 {
 	struct timespec time;
 
-	cavan_timer_set_timespec(&time, msec);
+	cavan_timer_set_timespec_ms(&time, msec);
 
-	return cavan_thread_msleep_until(thread, &time);
+	return cavan_thread_sleep_until(thread, &time);
+}
+
+int cavan_thread_ssleep(struct cavan_thread *thread, u32 sec)
+{
+	struct timespec time;
+
+	cavan_timer_set_timespec_ss(&time, sec);
+
+	return cavan_thread_sleep_until(thread, &time);
 }
 
 int cavan_thread_epoll_add(struct cavan_thread *thread, int fd, u32 events)
