@@ -422,10 +422,24 @@ namespace NetworkInputMethod
         {
             sendCommand("HOME", false);
         }
+
+        private void timerKeepAlive_Tick(object sender, EventArgs e)
+        {
+            foreach (object item in checkedListBoxClients.Items)
+            {
+                NetworkImeClient client = item as NetworkImeClient;
+                if (!client.sendPing())
+                {
+                    Console.WriteLine("disconnect keepalive");
+                    client.disconnect();
+                }
+            }
+        }
     }
 
     public class NetworkImeClient : CavanTcpPacketClient
     {
+        private int mKeepAlive;
         private string mUserName;
         private NetworkImeService mService;
 
@@ -440,9 +454,8 @@ namespace NetworkInputMethod
             string command = new String(chars);
             Console.WriteLine("onDataPacketReceived: " + command);
             string[] args = command.Split(new char[] { ' ' }, 2);
-            Console.WriteLine("command = " + args[0]);
 
-            switch (args[0])
+            switch (args[0].Trim())
             {
                 case "USER":
                     if (args.Length > 1)
@@ -459,7 +472,42 @@ namespace NetworkInputMethod
                         Console.WriteLine("user = " + mUserName);
                     }
                     break;
+
+                case "PING":
+                    if (!sendPong())
+                    {
+                        disconnect();
+                    }
+                    break;
+
+                case "PONG":
+                    mKeepAlive = 0;
+                    break;
             }
+        }
+
+        public bool sendPing()
+        {
+            if (mKeepAlive > 0)
+            {
+                if (mKeepAlive < 3)
+                {
+                    mKeepAlive++;
+                    return true;
+                }
+
+                return false;
+            }
+            else
+            {
+                mKeepAlive = 1;
+                return send("PING");
+            }
+        }
+
+        public bool sendPong()
+        {
+            return send("PONG");
         }
 
         public override string ToString()

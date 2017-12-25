@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.labelPort = new System.Windows.Forms.Label();
             this.textBoxPort = new System.Windows.Forms.TextBox();
             this.buttonStart = new System.Windows.Forms.Button();
@@ -59,6 +60,7 @@
             this.buttonHome = new System.Windows.Forms.Button();
             this.buttonIme = new System.Windows.Forms.Button();
             this.buttonMm = new System.Windows.Forms.Button();
+            this.timerKeepAlive = new System.Windows.Forms.Timer(this.components);
             this.groupBoxMode.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -374,6 +376,12 @@
             this.buttonMm.UseVisualStyleBackColor = true;
             this.buttonMm.Click += new System.EventHandler(this.buttonMm_Click);
             // 
+            // timerKeepAlive
+            // 
+            this.timerKeepAlive.Enabled = true;
+            this.timerKeepAlive.Interval = 60000;
+            this.timerKeepAlive.Tick += new System.EventHandler(this.timerKeepAlive_Tick);
+            // 
             // FormNetworkIme
             // 
             this.AcceptButton = this.buttonStart;
@@ -451,6 +459,7 @@
         private System.Windows.Forms.Button buttonHome;
         private System.Windows.Forms.Button buttonIme;
         private System.Windows.Forms.Button buttonMm;
+        private System.Windows.Forms.Timer timerKeepAlive;
     }
 }
 
