@@ -36,6 +36,7 @@ const char *network_get_socket_pathname(void)
 char *network_get_hostname(char *buff, size_t size)
 {
 	const char *hostname;
+	int length;
 
 	hostname = getenv("HOSTNAME");
 	if (hostname != NULL) {
@@ -43,11 +44,17 @@ char *network_get_hostname(char *buff, size_t size)
 		return buff;
 	}
 
-	if (android_get_hostname(buff, sizeof(buff)) > 0) {
+	if (android_get_hostname(buff, size) > 0) {
 		return buff;
 	}
 
-	if (file_read_text("/proc/sys/kernel/hostname", buff, size) > 0) {
+	if (gethostname(buff, size) == 0) {
+		return buff;
+	}
+
+	length = file_read_text("/proc/sys/kernel/hostname", buff, size);
+	if (length > 0) {
+		buff[length - 1] = 0;
 		return buff;
 	}
 

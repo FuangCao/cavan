@@ -282,11 +282,7 @@ static int role_change_client_main(int argc, char *argv[])
 	} else if (optind < argc) {
 		strcpy(role->name, argv[optind++]);
 	} else {
-		ret = gethostname(role->name, sizeof(role->name));
-		if (ret < 0) {
-			pr_red_info("gethostname");
-			return ret;
-		}
+		network_get_hostname(role->name, sizeof(role->name));
 	}
 
 	ret = role_change_client_run(service);
