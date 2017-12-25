@@ -14,6 +14,7 @@ import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanThreadedHandler;
 import com.cavan.android.SystemProperties;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
@@ -32,7 +33,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case MSG_TCP_PACKET_RECEIVED:
-				onTcpPacketReceived((String) msg.obj);
+				onTcpPacketReceived((String[]) msg.obj);
 				break;
 
 			case MSG_SHOW_MEDIA_VOLUME:
@@ -46,15 +47,69 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 		}
 	};
 
+	private CavanThreadedHandler mThreadedHandler = new CavanThreadedHandler(getClass());
+
 	private AudioManager mAudioManager;
 	private InputMethodManager mInputMethodManager;
 
 	private CavanTcpPacketClient mTcpPacketClient = new CavanTcpPacketClient() {
 
+		private int mKeepAlive;
+		private Runnable mRunnableKeepAlive = new Runnable() {
+
+			@Override
+			public void run() {
+				mHandler.removeCallbacks(this);
+
+				if (sendPing()) {
+					mThreadedHandler.postDelayed(this, 60000);
+				} else {
+					reconnect();
+				}
+			}
+		};
+
+		public boolean sendPing() {
+			if (mKeepAlive > 0) {
+				if (mKeepAlive < 3) {
+					mKeepAlive++;
+					return true;
+				}
+
+				return false;
+			} else {
+				mKeepAlive = 1;
+				return send("PING");
+			}
+		}
+
+		public boolean sendPong() {
+			return send("PONG");
+		}
+
 		@Override
 		protected boolean onPacketReceived(byte[] bytes, int length) {
-			Message message = mHandler.obtainMessage(MSG_TCP_PACKET_RECEIVED, new String(bytes, 0, length));
-			message.sendToTarget();
+			String command = new String(bytes, 0, length);
+			CavanAndroid.dLog("onTcpPacketReceived: " + command);
+
+			String[] args = command.split(" ", 2);
+
+			switch (args[0].trim()) {
+			case "PING":
+				if (!sendPong()) {
+					return false;
+				}
+				break;
+
+			case "PONG":
+				mKeepAlive = 0;
+				break;
+
+			default:
+				Message message = mHandler.obtainMessage(MSG_TCP_PACKET_RECEIVED, args);
+				message.sendToTarget();
+			}
+
 			return super.onPacketReceived(bytes, length);
 		}
 
@@ -65,7 +120,16 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 				send("USER " + hostname);
 			}
 
+			mKeepAlive = 0;
+			mThreadedHandler.post(mRunnableKeepAlive);
+
 			return super.onTcpConnected(socket);
+		}
+
+		@Override
+		protected void onTcpDisconnected() {
+			mThreadedHandler.removeCallbacks(mRunnableKeepAlive);
+			super.onTcpDisconnected();
 		}
 	};
 
@@ -77,11 +141,10 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 		context.startService(getIntent(context));
 	}
 
-	protected void onTcpPacketReceived(String command) {
-		CavanAndroid.dLog("onTcpPacketReceived: " + command);
+	protected void onTcpPacketReceived(String[] args) {
+
 
 		CavanAccessibilityService accessibility = CavanAccessibilityService.getInstance();
-		String[] args = command.split(" ", 2);
 		boolean send = false;
 
 		switch (args[0]) {
