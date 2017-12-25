@@ -306,7 +306,7 @@ static void role_change_proxy_show_usage(const char *command)
 	println("-m, -c, --min\t\t\t%s", cavan_help_message_daemon_min);
 	println("-M, -C, --max\t\t\t%s", cavan_help_message_daemon_max);
 	println("-L, -l, --log\t\t\t%s", cavan_help_message_logfile);
-	println("-B, -b, --burrow\t\t\t%s", cavan_help_message_burrow);
+	println("-B, -b, --burrow\t\t%s", cavan_help_message_burrow);
 }
 
 static int role_change_proxy_main(int argc, char *argv[])
