@@ -375,10 +375,10 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		if (CavanAndroid.SDK_VERSION < CavanAndroid.SDK_VERSION_40) {
-			addPreferencesFromResource(R.xml.simple_red_packet_settings);
-		} else {
-			addPreferencesFromResource(R.xml.red_packet_settings);
+		addPreferencesFromResource(R.xml.red_packet_settings);
+
+		if (CavanAndroid.SDK_VERSION >= CavanAndroid.SDK_VERSION_40) {
+			addPreferencesFromResource(R.xml.red_packet_settings2);
 		}
 
 		mPreferenceInputMethodSelect = findPreference(KEY_INPUT_METHOD_SELECT);

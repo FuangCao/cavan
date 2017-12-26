@@ -19,7 +19,7 @@ import android.view.View;
 import android.widget.EditText;
 
 import com.cavan.android.CavanAndroid;
-import com.cavan.service.CavanService;
+import com.cavan.service.CavanServiceState;
 import com.cavan.service.ICavanService;
 import com.cavan.service.ICavanServiceCallback;
 
@@ -76,7 +76,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 
 			mService = null;
 
-			updateSummary(CavanService.STATE_STOPPED);
+			updateSummary(CavanServiceState.STOPPED);
 			setEnabled(false);
 
 			mHandler.sendEmptyMessageDelayed(EVENT_START_SERVICE, 500);
@@ -103,7 +103,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 	public CavanServicePreference(Context context, AttributeSet attrs) {
 		super(context, attrs);
 
-		updateSummary(CavanService.STATE_STOPPED);
+		updateSummary(CavanServiceState.STOPPED);
 		startService(context);
 	}
 
@@ -151,7 +151,7 @@ public abstract class CavanServicePreference extends EditTextPreference {
 			}
 		}
 
-		return CavanService.STATE_STOPPED;
+		return CavanServiceState.STOPPED;
 	}
 
 	public synchronized boolean isServiceEnabled() {
@@ -236,20 +236,24 @@ public abstract class CavanServicePreference extends EditTextPreference {
 				int resId;
 
 				switch (state) {
-				case CavanService.STATE_PREPARE:
+				case CavanServiceState.PREPARE:
 					resId = R.string.prepare;
 					break;
 
-				case CavanService.STATE_RUNNING:
+				case CavanServiceState.RUNNING:
 					resId = R.string.running;
 					break;
 
-				case CavanService.STATE_WAITING:
+				case CavanServiceState.WAITING:
 					resId = R.string.waiting;
 					break;
 
-				default:
+				case CavanServiceState.STOPPED:
 					resId = R.string.stopped;
+					break;
+
+				default:
+					resId = R.string.unknown;
 				}
 
 				builder.append(resources.getString(resId));

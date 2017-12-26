@@ -39,4 +39,12 @@
 	    android:persistent="true"
 	    android:title="@string/mock_location_service" />
 
+	<com.cavan.cavanjni.RoleChangeClientPreference android:key="role_change"
+	    android:persistent="true"
+	    android:title="@string/role_change_client" />
+
+	<com.cavan.resource.CavanCommandServicePreference android:key="command"
+		android:persistent="true"
+	    android:title="@string/command_service" />
+
 </PreferenceScreen>

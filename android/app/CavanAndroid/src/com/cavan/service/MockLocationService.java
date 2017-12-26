@@ -35,15 +35,15 @@ public class MockLocationService extends CavanService {
 
 		@Override
 		protected void onServerOpened(ServerSocket socket) {
-			setServiceState(STATE_RUNNING);
+			setServiceState(CavanServiceState.RUNNING);
 		}
 
 		@Override
 		protected void onServerClosed() {
 			if (isEnabled()) {
-				setServiceState(STATE_WAITING);
+				setServiceState(CavanServiceState.WAITING);
 			} else {
-				setServiceState(STATE_STOPPED);
+				setServiceState(CavanServiceState.STOPPED);
 			}
 		}
 
@@ -185,7 +185,7 @@ public class MockLocationService extends CavanService {
 
 	@Override
 	public void start(int port) {
-		setServiceState(STATE_PREPARE);
+		setServiceState(CavanServiceState.PREPARE);
 		mTcpPacketService.open();
 	}
 
@@ -197,7 +197,7 @@ public class MockLocationService extends CavanService {
 	@Override
 	public void stop() {
 		mTcpPacketService.close();
-		setServiceState(STATE_STOPPED);
+		setServiceState(CavanServiceState.STOPPED);
 	}
 
 	@Override

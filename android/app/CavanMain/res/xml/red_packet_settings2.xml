@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:settings="http://schemas.android.com/apk/res/com.android.settings"
+    android:key="parent">
+
+	<MultiSelectListPreference android:key="on_time_setting"
+	    android:persistent="true"
+		android:entries="@array/on_time_entries"
+		android:entryValues="@array/on_time_values"
+	    android:title="@string/on_time_notify_setting" />
+
+</PreferenceScreen>

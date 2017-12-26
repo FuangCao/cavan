@@ -1,6 +1,7 @@
 package com.cavan.cavanjni;
 
 import com.cavan.service.CavanService;
+import com.cavan.service.CavanServiceState;
 
 
 public abstract class CavanNativeService extends CavanService {
@@ -12,13 +13,13 @@ public abstract class CavanNativeService extends CavanService {
 
 		@Override
 		public void run() {
-			setServiceState(STATE_PREPARE);
+			setServiceState(CavanServiceState.PREPARE);
 
 			while (mEnabled) {
-				setServiceState(STATE_RUNNING);
+				setServiceState(CavanServiceState.RUNNING);
 				doMainLoop(mPort);
 
-				setServiceState(STATE_WAITING);
+				setServiceState(CavanServiceState.WAITING);
 
 				try {
 					for (int i = 0; i < 10 && mEnabled; i++) {
@@ -29,7 +30,7 @@ public abstract class CavanNativeService extends CavanService {
 				}
 			}
 
-			setServiceState(STATE_STOPPED);
+			setServiceState(CavanServiceState.STOPPED);
 		}
 	}
 
@@ -52,7 +53,7 @@ public abstract class CavanNativeService extends CavanService {
 	public void start(int port) {
 		mEnabled = true;
 
-		if (mState == STATE_STOPPED) {
+		if (mState == CavanServiceState.STOPPED) {
 			mPort = port;
 			new MyThread().start();
 		}

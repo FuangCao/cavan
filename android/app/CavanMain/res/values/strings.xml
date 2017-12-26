@@ -744,5 +744,7 @@
 		<item >5000</item>
 	</string-array>
 	<string name="media_volume_changed">音量更改：<xliff:g>%1$d</xliff:g></string>
+	<string name="command_service">命令服务</string>
+	<string name="role_change_client">内网穿透客户端</string>
 
 </resources>

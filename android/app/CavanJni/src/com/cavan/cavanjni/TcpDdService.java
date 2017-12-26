@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanAndroidFile;
+import com.cavan.service.CavanServiceState;
 
 
 public class TcpDdService extends CavanNativeService {
@@ -50,7 +51,7 @@ public class TcpDdService extends CavanNativeService {
 
 	@Override
 	protected void onServiceStateChanged(int state) {
-		if (state == STATE_PREPARE) {
+		if (state == CavanServiceState.PREPARE) {
 			File dir = getDir("bin", MODE_PRIVATE);
 			if (dir != null) {
 				int id = getResourceByAbi();

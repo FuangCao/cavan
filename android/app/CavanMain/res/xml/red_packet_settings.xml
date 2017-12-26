@@ -213,12 +213,6 @@
 	    android:defaultValue="false"
 	    android:title="@string/on_time_notify" />
 
-	<MultiSelectListPreference android:key="on_time_setting"
-	    android:persistent="true"
-		android:entries="@array/on_time_entries"
-		android:entryValues="@array/on_time_values"
-	    android:title="@string/on_time_notify_setting" />
-
 	<CheckBoxPreference android:key="tcp_bridge"
 	    android:persistent="true"
 	    android:title="@string/tcp_bridge" />

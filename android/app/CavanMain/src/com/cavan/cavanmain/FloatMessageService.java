@@ -9,23 +9,17 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
-import android.location.Criteria;
-import android.location.Location;
-import android.location.LocationManager;
-import android.location.LocationProvider;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Environment;
@@ -34,7 +28,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
-import android.os.SystemClock;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,7 +40,6 @@ import com.cavan.android.CavanWakeLock;
 import com.cavan.android.FloatWidowService;
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.java.CavanString;
-import com.cavan.java.CavanTcpPacketService;
 
 public class FloatMessageService extends FloatWidowService {
 
@@ -86,7 +78,6 @@ public class FloatMessageService extends FloatWidowService {
 	private static final int MSG_CHECK_KEYGUARD = 9;
 	private static final int MSG_RED_PACKET_UPDATED = 10;
 	private static final int MSG_CHECK_SERVICE_STATE = 11;
-	private static final int MSG_UPDATE_LOCATION = 12;
 
 	public static final int MSG_SEND_UDP_COMMAND = 1;
 	public static final int MSG_SEND_TCP_COMMAND = 2;
@@ -116,8 +107,6 @@ public class FloatMessageService extends FloatWidowService {
 	private String mWanSummary;
 	private int mWanState = R.string.wan_disconnected;
 	private int mBridgeState = R.string.tcp_bridge_exit;
-
-	private LocationService mLocationService;
 
 	private Handler mHandler = new Handler() {
 
@@ -286,11 +275,6 @@ public class FloatMessageService extends FloatWidowService {
 				}
 
 				sendEmptyMessageDelayed(MSG_CHECK_SERVICE_STATE, 5000);
-				break;
-
-			case MSG_UPDATE_LOCATION:
-				removeMessages(MSG_UPDATE_LOCATION);
-				mLocationService.updateLocation();
 				break;
 			}
 		}
@@ -755,8 +739,6 @@ public class FloatMessageService extends FloatWidowService {
 		registerReceiver(mReceiver, filter );
 
 		mFileObserverQQ.startWatching();
-		mLocationService = new LocationService(1234);
-		mLocationService.open();
 
 		mUdpDaemon = new UdpDaemonThread();
 		mUdpDaemon.start();
@@ -1297,164 +1279,6 @@ public class FloatMessageService extends FloatWidowService {
 
 			mTcpBridge = null;
 			mHandler.obtainMessage(MSG_TCP_BRIDGE_STATE_CHANGED, R.string.tcp_bridge_stopped, 0).sendToTarget();
-		}
-	}
-
-	public class LocationService extends CavanTcpPacketService {
-
-		private static final String PROVIDER = LocationManager.GPS_PROVIDER;
-
-		private LocationManager mLocationManager;
-		private Location mLocation;
-		private boolean mEnabled;
-		private Random mRandom = new Random();
-
-		public LocationService(int port) {
-			super(port);
-
-			mLocation = new Location(PROVIDER);
-			mLocation.setAccuracy(0.1f);
-
-			mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-		}
-
-		public synchronized boolean setEnable(boolean enabled) {
-			if (enabled == mEnabled) {
-				return true;
-			}
-
-			CavanAndroid.dLog("setEnable: " + enabled);
-
-			try {
-				if (enabled) {
-					LocationProvider provider = mLocationManager.getProvider(PROVIDER);
-
-					boolean requiresNetwork;
-					boolean requiresSatellite;
-					boolean requiresCell;
-					boolean hasMonetaryCost;
-					boolean supportsAltitude;
-					boolean supportsSpeed;
-					boolean supportsBearing;
-					int powerRequirement;
-					int accuracy;
-
-					if (provider != null) {
-						requiresNetwork = provider.requiresNetwork();
-						requiresSatellite = provider.requiresSatellite();
-						requiresCell = provider.requiresCell();
-						hasMonetaryCost = provider.hasMonetaryCost();
-						supportsAltitude = provider.supportsAltitude();
-						supportsSpeed = provider.supportsSpeed();
-						supportsBearing = provider.supportsBearing();
-						powerRequirement = provider.getPowerRequirement();
-						accuracy = provider.getAccuracy();
-					} else {
-						requiresNetwork = false;
-						requiresSatellite = false;
-						requiresCell = false;
-						hasMonetaryCost = false;
-						supportsAltitude = false;
-						supportsSpeed = false;
-						supportsBearing = false;
-						powerRequirement = Criteria.POWER_HIGH;
-						accuracy = Criteria.ACCURACY_FINE;
-					}
-
-					mLocationManager.addTestProvider(PROVIDER, requiresNetwork, requiresSatellite, requiresCell, hasMonetaryCost, supportsAltitude, supportsSpeed, supportsBearing, powerRequirement, accuracy);
-					mLocationManager.setTestProviderStatus(PROVIDER, LocationProvider.AVAILABLE, null, System.currentTimeMillis());
-					mLocationManager.setTestProviderEnabled(PROVIDER, true);
-				} else {
-					mLocationManager.removeTestProvider(PROVIDER);
-				}
-
-				mEnabled = enabled;
-				return true;
-			} catch (Exception e) {
-				e.printStackTrace();
-				mEnabled = false;
-			}
-
-			return false;
-		}
-
-		public synchronized boolean updateLocation() {
-			CavanAndroid.dLog("setLocation: " + mLocation);
-
-			if (!mEnabled) {
-				return false;
-			}
-
-			try {
-				float accuracy = mRandom.nextFloat() * 10;
-				if (accuracy < 3) {
-					mLocation.setAccuracy(3);
-				} else {
-					mLocation.setAccuracy(accuracy);
-				}
-
-				mLocation.setTime(System.currentTimeMillis());
-
-				if (CavanAndroid.SDK_VERSION > 17) {
-					mLocation.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
-				}
-
-				mLocationManager.setTestProviderLocation(PROVIDER, mLocation);
-			} catch (Exception e) {
-				e.printStackTrace();
-				return false;
-			}
-
-			mHandler.sendEmptyMessageDelayed(MSG_UPDATE_LOCATION, UPDATE_LOCATION_DELAY);
-
-			return true;
-		}
-
-		@Override
-		protected void onServerOpened(ServerSocket socket) {
-			CavanAndroid.pLog();
-		}
-
-		@Override
-		protected void onServerClosed() {
-			CavanAndroid.pLog();
-		}
-
-		@Override
-		protected void onClientDisconnected(Client client) {
-			if (getClientCount() <= 0) {
-				setEnable(false);
-			}
-		}
-
-		@Override
-		protected void onClientConnected(Client client) {
-			CavanAndroid.pLog();
-		}
-
-		@Override
-		protected boolean onPacketReceived(Client client, byte[] bytes, int length) {
-			String text = new String(bytes, 0, length);
-			CavanAndroid.dLog("onPacketReceived: " + text);
-			String[] args = text.trim().split("\\s+");
-			return onCommandReceived(args);
-		}
-
-		private synchronized boolean onCommandReceived(String args[]) {
-			String command = args[0];
-
-			if (command.equals("set_enable")) {
-				setEnable(args.length > 1 && Boolean.parseBoolean(args[1]));
-			} else if (command.equals("set_location")) {
-				if (args.length > 2) {
-					mLocation.setLatitude(Double.parseDouble(args[1]));
-					mLocation.setLongitude(Double.parseDouble(args[2]));
-					setEnable(true);
-					updateLocation();
-				}
-			}
-
-			return true;
 		}
 	}
 

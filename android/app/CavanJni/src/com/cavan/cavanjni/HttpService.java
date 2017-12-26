@@ -5,6 +5,7 @@ import android.os.storage.StorageManager;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanFile;
+import com.cavan.service.CavanServiceState;
 
 public class HttpService extends CavanNativeService {
 
@@ -40,7 +41,7 @@ public class HttpService extends CavanNativeService {
 
 	@Override
 	protected void onServiceStateChanged(int state) {
-		if (state == STATE_PREPARE) {
+		if (state == CavanServiceState.PREPARE) {
 			CavanFile apk = getAppDir(this);
 			if (CavanJni.symlinkApks(getPackageManager(), apk)) {
 				CavanJni.setEnv("APP_PATH", apk.getPath());

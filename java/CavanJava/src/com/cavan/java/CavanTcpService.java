@@ -94,6 +94,7 @@ public class CavanTcpService extends Thread {
 					doServerMainLoop(socket);
 					onServerClosed();
 				} catch (IOException e) {
+					CavanJava.eLog("port = " + mPort);
 					e.printStackTrace();
 				} finally {
 					synchronized (this) {

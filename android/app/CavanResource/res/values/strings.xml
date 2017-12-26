@@ -49,5 +49,7 @@
     <string name="connecting">正在连接</string>
     <string name="connected_to">已连接到：<xliff:g>%1$s</xliff:g></string>
     <string name="connecting_to">正在连接：<xliff:g>%1$s</xliff:g></string>
+    <string name="unknown">未知</string>
+    <string name="cmdline">命令行</string>
 
 </resources>

@@ -13,15 +13,10 @@ import com.cavan.java.CavanMessageQueue.CavanMessage;
 
 public abstract class CavanService extends Service {
 
-	public static final int STATE_STOPPED = 0;
-	public static final int STATE_PREPARE = 1;
-	public static final int STATE_RUNNING = 2;
-	public static final int STATE_WAITING = 3;
-
 	private static final int MSG_START = 1;
 	private static final int MSG_STOP = 2;
 
-	protected int mState = STATE_STOPPED;
+	protected int mState = CavanServiceState.STOPPED;
 	private HashSet<ICavanServiceCallback> mCallbacks = new HashSet<ICavanServiceCallback>();
 
 	protected CavanMessageQueue mMessageQueue = new CavanMessageQueue() {
