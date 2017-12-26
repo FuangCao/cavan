@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:settings="http://schemas.android.com/apk/res/com.android.settings"
+    android:key="parent">
+
+	<Preference android:key="message_show"
+	    android:title="@string/message_show" />
+
+	<com.cavan.resource.EditableMultiSelectListPreference
+	    android:key="keyword_notify"
+	    android:persistent="true"
+	    android:title="@string/keyword_notify"/>
+
+	<EditTextPreference android:key="red_packet_notify_test"
+	    android:persistent="true"
+	    android:defaultValue="支付宝红包口令：12345678"
+	    android:title="@string/red_packet_notify_test" />
+
+	<Preference android:key="red_packet_edit"
+	    android:title="@string/red_packet_edit" />
+
+	<EditTextPreference android:key="red_packet_code_send"
+	    android:persistent="true"
+	    android:title="@string/red_packet_code_send" />
+
+	<CheckBoxPreference android:key="wan_share"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/wan_share" />
+
+	<com.cavan.resource.EditableMultiSelectListPreference android:key="wan_server"
+	    android:persistent="true"
+	    android:defaultValue="192.168.88.88"
+	    android:title="@string/wan_server" />
+
+	<CheckBoxPreference android:key="wan_receive"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/wan_receive" />
+
+	<Preference android:key="wan_test"
+	    android:title="@string/wan_test" />
+
+	<CheckBoxPreference android:key="lan_share"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/lan_share" />
+
+	<Preference android:key="lan_test"
+	    android:title="@string/lan_test" />
+
+	<Preference android:key="red_packet_code_clear"
+	    android:title="@string/red_packet_code_clear" />
+
+	<CheckBoxPreference android:key="auto_unlock"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/auto_unlock" />
+
+	<CheckBoxPreference android:key="disable_suspend"
+	    android:persistent="true"
+	    android:defaultValue="false"
+	    android:title="@string/disable_suspend" />
+
+	<CheckBoxPreference android:key="disable_keyguard"
+	    android:persistent="true"
+	    android:defaultValue="false"
+	    android:title="@string/disable_keyguard" />
+
+	<CheckBoxPreference android:key="fu_dai_notify"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/fu_dai_notify" />
+
+	<CheckBoxPreference android:key="clipboard_share"
+	    android:persistent="true"
+	    android:defaultValue="false"
+	    android:title="@string/clipboard_share" />
+
+	<Preference android:key="permission_settings"
+	    android:title="@string/permission_settings" />
+
+	<Preference android:key="input_method_select"
+	    android:title="@string/input_method_select" />
+
+	<CheckBoxPreference android:key="auto_switch_ime"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/auto_switch_ime" />
+
+	<RingtonePreference android:key="red_packet_notify_ringtone"
+	    android:persistent="true"
+	    android:title="@string/red_packet_notify_ringtone" />
+
+	<ListPreference android:key="red_packet_notify_setting"
+	    android:persistent="true"
+		android:entries="@array/notify_entries"
+		android:entryValues="@array/notify_values"
+		android:defaultValue="3"
+	    android:title="@string/red_packet_notify_setting" />
+
+	<EditTextPreference android:key="red_packet_code_recognize"
+	    android:persistent="true"
+	    android:title="@string/red_packet_code_recognize" />
+
+	<EditTextPreference android:key="red_packet_code_split"
+	    android:persistent="true"
+	    android:title="@string/red_packet_code_split" />
+
+	<CheckBoxPreference android:key="auto_open_app"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/auto_open_app" />
+
+	<CheckBoxPreference android:key="auto_open_alipay"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/auto_open_alipay" />
+
+	<CheckBoxPreference android:key="auto_back_desktop"
+	    android:persistent="true"
+	    android:defaultValue="false"
+	    android:title="@string/auto_back_desktop" />
+
+	<ListPreference android:key="thanks_notify"
+	    android:persistent="true"
+		android:entries="@array/thanks_entries"
+		android:entryValues="@array/thanks_values"
+		android:defaultValue="3"
+	    android:title="@string/thanks_notify" />
+
+	<CheckBoxPreference android:key="thanks_share"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/thanks_share" />
+
+	<ListPreference android:key="qq_auto_unpack"
+	    android:persistent="true"
+		android:entries="@array/delay_entries"
+		android:entryValues="@array/delay_values"
+		android:defaultValue="0"
+	    android:title="@string/qq_auto_unpack" />
+
+	<CheckBoxPreference android:key="qq_filter"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/qq_filter" />
+
+	<ListPreference android:key="mm_auto_unpack"
+	    android:persistent="true"
+		android:entries="@array/delay_entries"
+		android:entryValues="@array/delay_values"
+		android:defaultValue="0"
+	    android:title="@string/mm_auto_unpack" />
+
+	<CheckBoxPreference android:key="mm_filter"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/mm_filter" />
+
+	<EditTextPreference android:key="name"
+	    android:persistent="true"
+	    android:title="@string/name" />
+
+	<EditTextPreference android:key="phone"
+	    android:persistent="true"
+	    android:title="@string/phone" />
+
+	<ListPreference android:key="repeat_delay"
+	    android:persistent="true"
+		android:entries="@array/repeat_delay_entries"
+		android:entryValues="@array/repeat_delay_values"
+		android:defaultValue="300"
+	    android:title="@string/repeat_send_delay" />
+
+	<ListPreference android:key="commit_ahead"
+	    android:persistent="true"
+		android:entries="@array/ahead_entries"
+		android:entryValues="@array/ahead_values"
+		android:defaultValue="0"
+	    android:title="@string/commit_ahead" />
+
+	<ListPreference android:key="auto_commit"
+	    android:persistent="true"
+		android:entries="@array/auto_entries"
+		android:entryValues="@array/auto_values"
+		android:defaultValue="1"
+	    android:title="@string/auto_commit" />
+
+	<CheckBoxPreference android:key="auto_unpack"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/auto_unpack" />
+
+	<CheckBoxPreference android:key="listen_click"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/listen_click" />
+
+	<CheckBoxPreference android:key="listen_clip"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/listen_clip" />
+
+	<CheckBoxPreference android:key="float_timer"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/desktop_float_timer" />
+
+	<CheckBoxPreference android:key="on_time_notify"
+	    android:persistent="true"
+	    android:defaultValue="false"
+	    android:title="@string/on_time_notify" />
+
+	<CheckBoxPreference android:key="tcp_bridge"
+	    android:persistent="true"
+	    android:title="@string/tcp_bridge" />
+
+	<EditTextPreference android:key="tcp_bridge_setting"
+	    android:persistent="true"
+	    android:title="@string/tcp_bridge_setting" />
+
+</PreferenceScreen>

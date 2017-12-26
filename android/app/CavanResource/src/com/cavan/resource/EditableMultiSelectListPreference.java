@@ -36,10 +36,10 @@ import com.cavan.java.CavanLinkedList;
 
 public class EditableMultiSelectListPreference extends DialogPreference implements OnClickListener, OnCheckedChangeListener {
 
-	public class Entry implements OnCheckedChangeListener, OnClickListener, OnMenuItemClickListener {
+	public class Entry implements OnCheckedChangeListener {
 
-		private String mKeyword;
-		private boolean mEnabled;
+		protected String mKeyword;
+		protected boolean mEnabled;
 
 		public Entry(String keyword, boolean enable) {
 			mKeyword = keyword;
@@ -90,6 +90,17 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 			}
 
 			mCheckBoxSelectAll.setCheckedSilent(isChecked);
+		}
+	}
+
+	public class MenuEntry extends Entry implements OnClickListener, OnMenuItemClickListener {
+
+		public MenuEntry(String keyword, boolean enable) {
+			super(keyword, enable);
+		}
+
+		public MenuEntry(String text) {
+			super(text);
 		}
 
 		@Override
@@ -159,13 +170,12 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 
 			ImageView more = (ImageView) view.findViewById(R.id.imageViewMore);
 
-			if (CavanAndroid.SDK_VERSION < 11) {
+			if (CavanAndroid.SDK_VERSION < CavanAndroid.SDK_VERSION_40) {
 				more.setVisibility(View.GONE);
 			} else {
-				more.setOnClickListener(entry);
+				more.setOnClickListener((MenuEntry) entry);
+				more.setOnClickListener((MenuEntry) entry);
 			}
-
-			more.setOnClickListener(entry);
 
 			return view;
 		}
@@ -222,6 +232,10 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+
+		if (CavanAndroid.SDK_VERSION < CavanAndroid.SDK_VERSION_40) {
+			return null;
 		}
 
 		try {
@@ -301,7 +315,15 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 			}
 		}
 
-		mEntries.add(new Entry(keyword, enabled));
+		Entry entry;
+
+		if (CavanAndroid.SDK_VERSION < CavanAndroid.SDK_VERSION_40) {
+			entry = new Entry(keyword, enabled);
+		} else {
+			entry = new MenuEntry(keyword, enabled);
+		}
+
+		mEntries.add(entry);
 
 		return true;
 	}

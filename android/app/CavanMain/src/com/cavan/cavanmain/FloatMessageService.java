@@ -980,7 +980,6 @@ public class FloatMessageService extends FloatWidowService {
 
 				try {
 					mSocket = new MulticastSocket(UDP_PORT);
-					mSocket.joinGroup(InetAddress.getByName(UDP_ADDR));
 				} catch (IOException e) {
 					e.printStackTrace();
 
@@ -993,6 +992,12 @@ public class FloatMessageService extends FloatWidowService {
 					}
 
 					continue;
+				}
+
+				try {
+					mSocket.joinGroup(InetAddress.getByName(UDP_ADDR));
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 
 				CavanAndroid.dLog("UdpServiceThread running");

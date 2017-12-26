@@ -39,7 +39,12 @@ public class CavanServiceActivity extends PreferenceActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		addPreferencesFromResource(R.xml.service_manager);
+
+		if (CavanAndroid.SDK_VERSION < CavanAndroid.SDK_VERSION_40) {
+			addPreferencesFromResource(R.xml.simple_service_manager);
+		} else {
+			addPreferencesFromResource(R.xml.service_manager);
+		}
 
 		mPreferenceIpAddress = findPreference(KEY_IP_ADDRESS);
 		mPreferenceShareApp = findPreference(KEY_SHARE_APP);
@@ -62,7 +67,10 @@ public class CavanServiceActivity extends PreferenceActivity {
 		mPreferenceWebProxy.unbindService(this);
 		mPreferenceTcpRepeater.unbindService(this);
 		mPreferenceMockLocation.unbindService(this);
-		mPreferenceNewworkIme.unbindService(this);
+
+		if (mPreferenceNewworkIme != null) {
+			mPreferenceNewworkIme.unbindService(this);
+		}
 
 		super.onDestroy();
 	}
