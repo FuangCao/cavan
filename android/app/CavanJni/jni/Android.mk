@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 LOCAL_PATH := $(call my-dir)/../../../..
 
 CAVAN_RES_PATH := $(call my-dir)/../res
