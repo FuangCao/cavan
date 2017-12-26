@@ -1055,6 +1055,25 @@ ssize_t inet_recv(int sockfd, char *buff, size_t size)
 	return -EFAULT;
 }
 
+bool inet_fill(int sockfd, char *buff, size_t size)
+{
+	while (size > 0) {
+		ssize_t rdlen = inet_recv(sockfd, buff, size);
+		if (likely(rdlen == (ssize_t) size)) {
+			break;
+		}
+
+		if (unlikely(rdlen <= 0 || rdlen > (ssize_t) size)) {
+			return false;
+		}
+
+		buff += rdlen;
+		size -= rdlen;
+	}
+
+	return true;
+}
+
 int inet_tcp_send_file1(int sockfd, int fd)
 {
 	char buff[1024];
@@ -2015,11 +2034,9 @@ static ssize_t network_client_send_packed(struct network_client *client, const v
 
 static ssize_t network_client_recv_packed(struct network_client *client, void *buff, size_t size)
 {
-	ssize_t rdlen;
 	u16 length;
 
-	rdlen = inet_recv(client->sockfd, (void *) &length, 2);
-	if (rdlen != 2) {
+	if (!inet_fill(client->sockfd, (void *) &length, 2)) {
 		return -EIO;
 	}
 
@@ -2031,7 +2048,11 @@ static ssize_t network_client_recv_packed(struct network_client *client, void *b
 		return 0;
 	}
 
-	return inet_recv(client->sockfd, buff, length);
+	if (inet_fill(client->sockfd, buff, length)) {
+		return length;
+	}
+
+	return -EFAULT;
 }
 
 static int network_protocol_open_client(const struct network_protocol_desc *desc, struct network_client *client, const struct network_url *url, int flags)
@@ -4178,13 +4199,30 @@ ssize_t network_client_send_packet(struct network_client *client, const void *bu
 	return client->send(client, buff, size);
 }
 
+bool network_client_fill(struct network_client *client, char *buff, size_t size)
+{
+	while (size > 0) {
+		ssize_t rdlen = client->recv(client, buff, size);
+		if (likely(rdlen == (ssize_t) size)) {
+			break;
+		}
+
+		if (unlikely(rdlen <= 0 || rdlen > (ssize_t) size)) {
+			return false;
+		}
+
+		buff += rdlen;
+		size -= rdlen;
+	}
+
+	return true;
+}
+
 ssize_t network_client_recv_packet(struct network_client *client, void *buff, size_t size)
 {
-	ssize_t rdlen;
 	u16 length;
 
-	rdlen = client->recv(client, (void *) &length, 2);
-	if (rdlen != 2) {
+	if (!network_client_fill(client, (void *) &length, 2)) {
 		return -EIO;
 	}
 
@@ -4192,11 +4230,11 @@ ssize_t network_client_recv_packet(struct network_client *client, void *buff, si
 		return -ENOMEM;
 	}
 
-	if (length == 0) {
-		return 0;
+	if (network_client_fill(client, buff, length)) {
+		return length;
 	}
 
-	return client->recv(client, buff, length);
+	return -EFAULT;
 }
 
 int network_service_accept_timed(struct network_service *service, struct network_client *client, u32 msec)

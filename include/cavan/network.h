@@ -443,6 +443,7 @@ int inet_bind_rand(int sockfd, int retry);
 
 ssize_t inet_send(int sockfd, const char *buff, size_t size);
 ssize_t inet_recv(int sockfd, char *buff, size_t size);
+bool inet_fill(int sockfd, char *buff, size_t size);
 int inet_tcp_send_file1(int sockfd, int fd);
 int inet_tcp_send_file2(int sockfd, const char *filename);
 int inet_tcp_receive_file1(int sockfd, int fd);
@@ -496,6 +497,7 @@ int network_client_get_local_port(struct network_client *client);
 int network_client_get_remote_port(struct network_client *client);
 int network_client_get_local_ip(struct network_client *client, struct in_addr *sin_addr);
 int network_client_get_remote_ip(struct network_client *client, struct in_addr *sin_addr);
+bool network_client_fill(struct network_client *client, char *buff, size_t size);
 ssize_t network_client_send_packet(struct network_client *client, const void *buff, size_t size);
 ssize_t network_client_recv_packet(struct network_client *client, void *buff, size_t size);
 
