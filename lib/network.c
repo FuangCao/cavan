@@ -1520,7 +1520,7 @@ char *network_url_parse(struct network_url *url, const char *text)
 			url->port = port ? text2value_unsigned(port, NULL, 10) : NETWORK_PORT_INVALID;
 
 			if (url->protocol == NULL) {
-				url->protocol = "tcp";
+				url->protocol = p;
 			}
 
 			if (url->hostname[0] == 0 || strcmp(url->hostname, "localhost") == 0) {
@@ -3900,6 +3900,10 @@ network_protocol_t network_protocol_parse(const char *name)
 {
 	const struct network_protocol_desc *p, *p_end;
 
+	if (name == NULL || name[0] == 0) {
+		return NETWORK_PROTOCOL_TCP;
+	}
+
 	switch (name[0]) {
 	case 't':
 		if (text_lhcmp("cp", name + 1) == 0) {
@@ -4097,7 +4101,7 @@ int network_client_open(struct network_client *client, const struct network_url 
 
 	desc = network_get_protocol_by_name(url->protocol);
 	if (desc == NULL) {
-		pr_red_info("network_get_protocol_by_name");
+		pr_red_info("network_get_protocol_by_name: %s", url->protocol);
 		return -EINVAL;
 	}
 
