@@ -111,10 +111,20 @@ public class CavanMacAddress extends CavanLargeValue {
 		return new CavanMacAddress(this);
 	}
 
-	public int getWpsPin() {
+	public String getWpsPin() {
 		int pin = ((mBytes[2] & 0xFF) << 16 | (mBytes[1] & 0xFF) << 8 | (mBytes[0] & 0xFF)) % 10000000;
-		byte[] bits = CavanJava.getIntBits(pin, 10);
-		int bit8 = 30 - 3 * (bits[0] + bits[2] + bits[4] + bits[6]) - bits[1] - bits[3] - bits[5];
+		int value = pin;
+		int bit8 = 30;
+
+		for (int i = 0; i < 7; i++, value /= 10) {
+			int bit = value % 10;
+
+			if ((i & 1) == 0) {
+				bit *= 3;
+			}
+
+			bit8 -= bit;
+		}
 
 		if (bit8 < 0) {
 			bit8 = 10 - (-bit8) % 10;
@@ -122,7 +132,7 @@ public class CavanMacAddress extends CavanLargeValue {
 			bit8 %= 10;
 		}
 
-		return pin * 10 + bit8;
+		return String.format("%08d", pin * 10 + bit8);
 	}
 
 	@Override
