@@ -14,6 +14,7 @@ function cavan-wifi-mon-stop()
 
 function cavan-wifi-mon-scan()
 {
+	clear
 	sudo airodump-ng $1
 }
 
@@ -30,6 +31,8 @@ function cavan-wifi-mon-capture()
 	read
 
 	sudo mkdir -pv "${CAVAN_WIFI_PATH}"
+
+	clear
 	sudo airodump-ng -c $3 -w "${pathname}" --bssid $2 $1
 }
 
@@ -80,13 +83,23 @@ function cavan-wifi-mon-crack-daemon()
 
 function cavan-wifi-mon-deauth()
 {
-	echo "ap_mac = $2"
-	echo "client_mac = $3"
-	echo "interface = $1"
+	local interface="$1"
+	local ap="$2"
+
+	echo "interface = ${interface}"
+	echo "ap = ${ap}"
+
+	shift 2
 
 	while :;
 	do
-		sudo aireplay-ng --ignore-negative-one -0 10 -a $2 -c $3 $1
+		for mac in $*
+		do
+			echo "Try mac: ${mac}"
+			sudo aireplay-ng --ignore-negative-one -0 2 -a ${ap} -c ${mac} ${interface}
+		done
+
+		sleep 2
 	done
 }
 
