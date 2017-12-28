@@ -44,7 +44,17 @@ function cavan-wifi-mon-crack-file()
 	date
 	ls -lh "${words}"
 
-	aircrack-ng -w "${words}" $* | grep "KEY FOUND!" | sed 's/^.*\[ \(.*\) \].*$/\1/g' | uniq
+	for fn in $*
+	do
+		local key=$(aircrack-ng -w "${words}" "${fn}" | grep "KEY FOUND!" | sed 's/^.*\[ \(.*\) \].*$/\1/g' | uniq)
+		[ -n "${key}" ] &&
+		{
+			echo "key = $key, data = $fn"
+			return 0
+		}
+	done
+
+	return 1
 }
 
 function cavan-wifi-mon-crack()
@@ -59,12 +69,7 @@ function cavan-wifi-mon-crack()
 	then
 		for fn in $(find "${words}" -type f -iname "*.txt")
 		do
-			local key=$(cavan-wifi-mon-crack-file "$fn" $*)
-			[ -n "$key" ] &&
-			{
-				echo "key = '$key'"
-				break
-			}
+			cavan-wifi-mon-crack-file "$fn" $* && break
 		done
 	else
 		cavan-wifi-mon-crack-file "${words}" $*
