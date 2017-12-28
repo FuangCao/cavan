@@ -95,7 +95,34 @@ static int dic_generator_phone(int argc, char *argv[])
 	return 0;
 }
 
+static int dic_generator_number(int argc, char *argv[])
+{
+	int length;
+	int max;
+	int i;
+
+	if (argc > 1) {
+		length = text2value_unsigned(argv[1], NULL, 10);
+	} else {
+		length = 8;
+	}
+
+	for (max = 1, i = 0; i < length; i++) {
+		max *= 10;
+	}
+
+	for (i = 0; i < max; i++) {
+		char buff[16];
+
+		value2text_base(i, buff, length, 0, 10);
+		puts(buff);
+	}
+
+	return 0;
+}
+
 CAVAN_COMMAND_MAP_START {
 	{ "rand", dic_generator_rand },
 	{ "phone", dic_generator_phone },
+	{ "number", dic_generator_number },
 } CAVAN_COMMAND_MAP_END;
