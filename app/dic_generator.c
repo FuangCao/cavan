@@ -21,64 +21,17 @@
 #include <cavan/command.h>
 #include <cavan/network.h>
 
-#define FILE_CREATE_DATE "2017-12-27 19:43:21"
-
-static void show_usage(const char *command)
+static int dic_generator_rand(int argc, char *argv[])
 {
-	println("Usage: %s [option]", command);
-	println("-h, -H, --help\t\tshow this help");
-	println("-v, -V, --version\tshow version");
-}
-
-int main(int argc, char *argv[])
-{
-	int c;
 	int count;
 	int range;
 	int max, min;
-	int option_index;
-	struct option long_option[] = {
-		{
-			.name = "help",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_HELP,
-		}, {
-			.name = "version",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = CAVAN_COMMAND_OPTION_VERSION,
-		}, {
-			0, 0, 0, 0
-		},
-	};
 
-	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF) {
-		switch (c) {
-		case 'v':
-		case 'V':
-		case CAVAN_COMMAND_OPTION_VERSION:
-			show_author_info();
-			println(FILE_CREATE_DATE);
-			return 0;
+	assert(argc > 3);
 
-		case 'h':
-		case 'H':
-		case CAVAN_COMMAND_OPTION_HELP:
-			show_usage(argv[0]);
-			return 0;
-
-		default:
-			show_usage(argv[0]);
-			return -EINVAL;
-		}
-	}
-
-	assert(optind + 2 < argc);
-
-	min = text2value_unsigned(argv[optind++], NULL, 10);
-	max = text2value_unsigned(argv[optind++], NULL, 10);
-	count = text2value_unsigned(argv[optind++], NULL, 10);
+	min = text2value_unsigned(argv[1], NULL, 10);
+	max = text2value_unsigned(argv[2], NULL, 10);
+	count = text2value_unsigned(argv[3], NULL, 10);
 
 	println("min = %d", min);
 	println("max = %d", max);
@@ -101,3 +54,47 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
+
+static void dic_dic_generator_phone_one(char *line)
+{
+	int i;
+
+	for (i = 0; i < 10000; i++) {
+		sprintf(line + 7, "%04d", i);
+		puts(line);
+	}
+}
+
+static int dic_generator_phone(int argc, char *argv[])
+{
+	FILE *fp;
+
+	assert(argc > 1);
+
+	fp = fopen(argv[1], "rb");
+	if (fp != NULL) {
+		while (1) {
+			char line[16];
+
+			if (fgets(line, sizeof(line), fp) == NULL) {
+				break;
+			}
+
+			dic_dic_generator_phone_one(line);
+		}
+
+		fclose(fp);
+	} else {
+		char line[16];
+
+		strncpy(line, argv[1], sizeof(line));
+		dic_dic_generator_phone_one(line);
+	}
+
+	return 0;
+}
+
+CAVAN_COMMAND_MAP_START {
+	{ "rand", dic_generator_rand },
+	{ "phone", dic_generator_phone },
+} CAVAN_COMMAND_MAP_END;
