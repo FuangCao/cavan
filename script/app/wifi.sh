@@ -33,10 +33,20 @@ function cavan-wifi-mon-capture()
 	sudo airodump-ng -c $3 -w "${pathname}" --bssid $2 $1
 }
 
+function cavan-wifi-mon-crack-file()
+{
+	local words="$1"
+	shift
+
+	date
+	ls -lh "${words}"
+
+	aircrack-ng -w "${words}" $* | grep "KEY FOUND!" | sed 's/^.*\[ \(.*\) \].*$/\1/g' | uniq
+}
+
 function cavan-wifi-mon-crack()
 {
 	local words="$1"
-
 	shift
 
 	echo "words = ${words}"
@@ -46,10 +56,7 @@ function cavan-wifi-mon-crack()
 	then
 		for fn in $(find "${words}" -type f -iname "*.txt")
 		do
-			date
-			ls -lh "$fn"
-
-			local key=$(aircrack-ng -w "$fn" $* | grep "KEY FOUND!" | sed 's/^.*\[ \(.*\) \].*$/\1/g' | uniq)
+			local key=$(cavan-wifi-mon-crack-file "$fn" $*)
 			[ -n "$key" ] &&
 			{
 				echo "key = '$key'"
@@ -57,9 +64,7 @@ function cavan-wifi-mon-crack()
 			}
 		done
 	else
-		echo "Press enter to start"
-		read
-		aircrack-ng -w "${words}" $*
+		cavan-wifi-mon-crack-file "${words}" $*
 	fi
 }
 
