@@ -42,8 +42,9 @@ static int dic_generator_rand(int argc, char *argv[])
 	while (count > 0) {
 		int length = min + get_rand_value() % range;
 		char buff[length + 1];
+		int i;
 
-		for (int i = 0; i < length; i++) {
+		for (i = 0; i < length; i++) {
 			buff[i] = 33 + get_rand_value() % 94;
 		}
 

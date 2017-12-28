@@ -162,6 +162,13 @@ class CavanCommandDf implements ICavanCommand {
 	}
 }
 
+class CavanCommandDicGenerator implements ICavanCommand {
+	@Override
+	public int main(String... args) {
+		return CavanNative.doDicGenerator(args);
+	}
+}
+
 class CavanCommandDisplay implements ICavanCommand {
 	@Override
 	public int main(String... args) {
@@ -926,6 +933,7 @@ public class CavanNative {
 		sHashMap.put("copy", new CavanCommandCopy());
 		sHashMap.put("dd", new CavanCommandDd());
 		sHashMap.put("df", new CavanCommandDf());
+		sHashMap.put("dic_generator", new CavanCommandDicGenerator());
 		sHashMap.put("display", new CavanCommandDisplay());
 		sHashMap.put("dos2unix", new CavanCommandDos2unix());
 		sHashMap.put("eavoo_sell_statistic", new CavanCommandEavooSellStatistic());
@@ -1055,6 +1063,7 @@ public class CavanNative {
 	public static native int doCopy(String... args);
 	public static native int doDd(String... args);
 	public static native int doDf(String... args);
+	public static native int doDicGenerator(String... args);
 	public static native int doDisplay(String... args);
 	public static native int doDos2unix(String... args);
 	public static native int doEavooSellStatistic(String... args);

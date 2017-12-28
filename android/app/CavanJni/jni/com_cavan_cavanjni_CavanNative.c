@@ -156,6 +156,13 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doDf(JNIEnv *env, jclass claz
 	return CavanMainExecute(env, args, "df", do_cavan_df);
 }
 
+extern int do_cavan_dic_generator(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doDicGenerator(JNIEnv *env, jclass clazz, jobjectArray args)
+{
+	return CavanMainExecute(env, args, "dic_generator", do_cavan_dic_generator);
+}
+
 extern int do_cavan_display(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doDisplay(JNIEnv *env, jclass clazz, jobjectArray args)
