@@ -6,7 +6,6 @@ import java.util.List;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -32,6 +31,7 @@ import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanCheckBox;
+import com.cavan.android.CavanPackageInfo;
 import com.cavan.cavanmain.R;
 import com.cavan.java.CavanFile;
 
@@ -186,30 +186,13 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 		}
 	}
 
-	public class LocalPackageInfo implements OnCheckedChangeListener {
+	public class LocalPackageInfo extends CavanPackageInfo implements OnCheckedChangeListener {
 
-		private String mName;
 		private boolean mEnable;
-		private PackageInfo mPackageInfo;
 
-		public LocalPackageInfo(PackageInfo info) {
-			mPackageInfo = info;
+		public LocalPackageInfo(PackageManager manager, PackageInfo info) {
+			super(manager, info);
 			mEnable = mCheckBoxSelectAll.isChecked();
-
-			CharSequence label = mPackageManager.getApplicationLabel(info.applicationInfo);
-			if (label == null) {
-				mName = info.packageName;
-			} else {
-				mName = label.toString();
-			}
-		}
-
-		public PackageInfo getPackageInfo() {
-			return mPackageInfo;
-		}
-
-		public ApplicationInfo getApplicationInfo() {
-			return mPackageInfo.applicationInfo;
 		}
 
 		public void setEnable(boolean enable) {
@@ -220,47 +203,12 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 			return mEnable;
 		}
 
-		public String getApplicationName() {
-			return mName;
-		}
-
-		public String getPackageName() {
-			return mPackageInfo.packageName;
-		}
-
-		public int getVersionCode() {
-			return mPackageInfo.versionCode;
-		}
-
-		public String getVersionName() {
-			return mPackageInfo.versionName;
-		}
-
 		public String getSourcePath() {
 			return getApplicationInfo().sourceDir;
 		}
 
 		public File getSourceFile() {
 			return new File(getSourcePath());
-		}
-
-		public String getBackupName() {
-			StringBuilder builder = new StringBuilder();
-
-			builder.append(CavanFile.replaceInvalidFilenameChar(mName, '_'));
-			builder.append('-');
-			builder.append(getVersionName());
-			builder.append(".apk");
-
-			return builder.toString();
-		}
-
-		public int getFlags() {
-			return getApplicationInfo().flags;
-		}
-
-		public boolean isSystemApp() {
-			return (getFlags() & ApplicationInfo.FLAG_SYSTEM) != 0;
 		}
 
 		public void setupView(CavanCheckBox view, int position) {
@@ -308,10 +256,10 @@ public class MainActivity extends Activity implements OnClickListener, OnChecked
 			String filter = mEditTextSearch.getText().toString();
 
 			for (PackageInfo info : mPackageManager.getInstalledPackages(0)) {
-				LocalPackageInfo pinfo = new LocalPackageInfo(info);
+				LocalPackageInfo pinfo = new LocalPackageInfo(mPackageManager, info);
 
 				if (pinfo.isNeedBackup(filter)) {
-					mPackageInfos.add(new LocalPackageInfo(info));
+					mPackageInfos.add(pinfo);
 				}
 			}
 

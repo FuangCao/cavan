@@ -8,8 +8,8 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.os.Bundle;
@@ -29,6 +29,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanPackageInfo;
 import com.cavan.android.CavanQrCode;
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.cavanjni.HttpService;
@@ -44,7 +45,7 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 	private CheckBox mCheckBoxGameOnly;
 	private CheckBox mCheckBoxShowSysApp;
 
-	private List<PackageInfo> mPackageInfos = new ArrayList<PackageInfo>();
+	private List<CavanPackageInfo> mPackageInfos = new ArrayList<CavanPackageInfo>();
 
 	private BaseAdapter mAdapterApps = new BaseAdapter() {
 
@@ -58,7 +59,7 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 				view = new TextView(CavanShareAppActivity.this);
 			}
 
-			view.setText(getAppName(mPackageInfos.get(position)));
+			view.setText(mPackageInfos.get(position).getApplicationName());
 			view.setClickable(false);
 
 			return view;
@@ -79,41 +80,27 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 			return mPackageInfos.size();
 		}
 
-		public boolean isGameApp(ApplicationInfo info) {
-			if ((info.flags & ApplicationInfo.FLAG_IS_GAME) != 0) {
-				return true;
-			}
-
-			if (info.packageName.startsWith("com.tencent.tmgp.")) {
-				return true;
-			}
-
-			if (info.packageName.contains("game")) {
-				return true;
-			}
-
-			return false;
-		}
-
 		@Override
 		public void notifyDataSetChanged() {
 			String filter = mEditTextFilter.getText().toString().trim();
-			ArrayList<PackageInfo> list = new ArrayList<PackageInfo>();
+			ArrayList<CavanPackageInfo> list = new ArrayList<CavanPackageInfo>();
 
-			for (PackageInfo info : getPackageManager().getInstalledPackages(0)) {
-				ApplicationInfo ainfo = info.applicationInfo;
+			PackageManager manager = getPackageManager();
 
-				if ((ainfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
+			for (PackageInfo app : manager.getInstalledPackages(0)) {
+				CavanPackageInfo info = new CavanPackageInfo(manager, app);
+
+				if (info.isSystemApp()) {
 					if (!mCheckBoxShowSysApp.isChecked()) {
 						continue;
 					}
 				} else if (mCheckBoxGameOnly.isChecked()) {
-					if (!isGameApp(ainfo)) {
+					if (!info.isGameApp()) {
 						continue;
 					}
 				}
 
-				if (filter.isEmpty() || getAppName(info).contains(filter)) {
+				if (filter.isEmpty() || info.getApplicationName().contains(filter)) {
 					list.add(info);
 				}
 			}
@@ -123,15 +110,6 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 			super.notifyDataSetChanged();
 		}
 	};
-
-	private String getAppName(PackageInfo info) {
-		CharSequence label = getPackageManager().getApplicationLabel(info.applicationInfo);
-		if (label != null) {
-			return label.toString();
-		}
-
-		return info.packageName;
-	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -175,7 +153,7 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 		CavanFile dir = HttpService.getSharedDir(this);
-		CavanFile file = CavanJni.symlinkApk(getPackageManager(), dir, mPackageInfos.get(position).applicationInfo);
+		CavanFile file = CavanJni.symlinkApk(dir, mPackageInfos.get(position));
 
 		try {
 			String url = mUrl + dir.getAbsolutePath() + File.separatorChar + URLEncoder.encode(file.getName(), "UTF-8");

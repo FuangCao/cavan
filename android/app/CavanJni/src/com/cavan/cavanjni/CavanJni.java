@@ -3,10 +3,11 @@ package com.cavan.cavanjni;
 import java.io.File;
 
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanPackageInfo;
 import com.cavan.java.CavanFile;
 
 
@@ -65,18 +66,9 @@ public class CavanJni extends CavanNative {
 		return -1;
 	}
 
-	public static CavanFile symlinkApk(PackageManager manager, CavanFile dir, ApplicationInfo info) {
-		String filename;
-
-		CharSequence label = manager.getApplicationLabel(info);
-		if (label != null) {
-			filename = CavanFile.replaceInvalidFilenameChar(label.toString(), '_');
-		} else {
-			filename = info.packageName;
-		}
-
-		CavanFile file = new CavanFile(dir, filename + ".apk");
-		if (symlink(info.sourceDir, file.getPath())) {
+	public static CavanFile symlinkApk(CavanFile dir, CavanPackageInfo info) {
+		CavanFile file = new CavanFile(dir, info.getBackupName());
+		if (symlink(info.getSourcePath(), file.getPath())) {
 			return file;
 		}
 
@@ -93,8 +85,9 @@ public class CavanJni extends CavanNative {
 
 		boolean success = true;
 
-		for (ApplicationInfo info : manager.getInstalledApplications(0)) {
-			if (symlinkApk(manager, target, info) == null) {
+		for (PackageInfo app : manager.getInstalledPackages(0)) {
+			CavanPackageInfo info = new CavanPackageInfo(manager, app);
+			if (symlinkApk(target, info) == null) {
 				success = false;
 			}
 		}

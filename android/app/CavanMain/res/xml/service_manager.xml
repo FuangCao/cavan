@@ -41,6 +41,7 @@
 
 	<com.cavan.cavanjni.RoleChangeClientPreference android:key="role_change"
 	    android:persistent="true"
+	    android:defaultValue="fuangcao.f3322.net:8868"
 	    android:title="@string/role_change_client" />
 
 	<com.cavan.resource.CavanCommandServicePreference android:key="command"
