@@ -575,8 +575,6 @@ static int role_change_service_keepalive_handler(struct cavan_dynamic_service *s
 				continue;
 			}
 
-			pr_pos_info();
-			println("close sockfd = %d", conn->conn.client.sockfd);
 			role_change_service_remove_client_locked(service, role, conn);
 			role_change_service_free_client(conn);
 		}
@@ -649,11 +647,10 @@ static int role_change_client_process_command(struct role_change_client *proxy, 
 			return ret;
 		}
 
-		return 0;
-	} else if (strcmp(command, ROLE_CHANGE_COMMAND_PONG) == 0) {
 		role_change_client_lock(proxy);
 		conn->keepalive = 0;
 		role_change_client_unlock(proxy);
+
 		return 0;
 	} else if (strcmp(command, "link") == 0) {
 		conn->mode = ROLE_CHANGE_MODE_LINK;
@@ -851,17 +848,11 @@ static int role_change_client_keepalive_handler(struct cavan_dynamic_service *se
 		pd_info("keepalive = %d", conn->keepalive);
 #endif
 
-		if (conn->keepalive > 0) {
-			if (conn->keepalive < ROLE_CHANGE_KEEPALIVE_COUNT) {
-				conn->keepalive++;
-				continue;
-			}
-		} else if (role_change_send_ping(&conn->conn.client) > 0) {
-			conn->keepalive = 1;
-			continue;
+		if (conn->keepalive < ROLE_CHANGE_KEEPALIVE_COUNT) {
+			conn->keepalive++;
+		} else {
+			network_client_close(&conn->conn.client);
 		}
-
-		network_client_close(&conn->conn.client);
 	}
 
 	role_change_client_unlock(client);
