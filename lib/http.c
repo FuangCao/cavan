@@ -855,13 +855,13 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 {
 	int i;
 	int fd;
-	DIR *dp;
+	int count;
 	int ret = 0;
 	struct stat st;
 	const char *env;
 	char *filename;
 	char pathname[1024];
-	struct dirent *entry;
+	struct dirent **entries;
 
 #if CAVAN_HTTP_DEBUG
 	println("filter = %s", filter);
@@ -947,8 +947,8 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 		return ret;
 	}
 
-	dp = opendir(dirname);
-	if (dp == NULL) {
+	count = scandir(dirname, &entries, NULL, alphasort);
+	if (count < 0) {
 		pr_err_info("opendir: %s", dirname);
 		ret |= ffile_printf(fd, "\t\t<h5><font color=\"#FF0000\">Failed to open: %s</font></h5>\r\n", strerror(errno));
 	} else {
@@ -967,13 +967,14 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 
 		if (ret < 0) {
 			pr_red_info("ffile_puts");
-			goto out_closedir;
+			goto out_free_entries;
 		}
 
-		while ((entry = readdir(dp))) {
+		for (i = 0; i < count; i++) {
 			char buff[32];
 			struct tm time;
 			const char *type;
+			struct dirent *entry = entries[i];
 
 			if (cavan_path_is_dot_name(entry->d_name)) {
 				continue;
@@ -1042,7 +1043,7 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 
 			if (ret < 0) {
 				pr_red_info("ffile_printf");
-				goto out_closedir;
+				goto out_free_entries;
 			}
 		}
 
@@ -1051,13 +1052,13 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 
 	if (ret < 0) {
 		pr_red_info("ffile_puts");
-		goto out_closedir;
+		goto out_free_entries;
 	}
 
 	ret = cavan_http_flush_html_file(fd);
 	if (ret < 0) {
 		pr_red_info("cavan_http_flush_html_file: %d", ret);
-		goto out_closedir;
+		goto out_free_entries;
 	}
 
 	ret = cavan_http_send_html(client, fd);
@@ -1067,9 +1068,13 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 
 	close(fd);
 
-out_closedir:
-	if (dp != NULL) {
-		closedir(dp);
+out_free_entries:
+	if (count >= 0) {
+		for (i = 0; i < count; i++) {
+			free(entries[i]);
+		}
+
+		free(entries);
 	}
 
 	return ret;
