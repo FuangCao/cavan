@@ -30,6 +30,8 @@ const char *http_mime_type_txt = "text/plain";
 const char *http_mime_type_html = "text/html";
 const char *http_mime_type_js = "application/x-javascript";
 const char *http_mime_type_apk = "application/vnd.android.package-archive";
+const char *http_mime_type_cer = "application/x-x509-ca-cert";
+
 
 void cavan_http_dump_prop(const struct cavan_http_prop *prop)
 {
@@ -713,6 +715,10 @@ const char *cavan_http_get_mime_type(const char *pathname)
 
 		if (strcasecmp(ext, "apk") == 0) {
 			return http_mime_type_apk;
+		}
+
+		if (strcasecmp(ext, "cer") == 0) {
+			return http_mime_type_cer;
 		}
 	}
 
