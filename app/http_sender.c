@@ -29,15 +29,15 @@ static void *http_sender_thread_handler(void *pathname)
 
 	println("pathname = %s", (char *) pathname);
 
-	text = file_read_all(pathname, 5, &size);
+	text = file_read_all(pathname, 3, &size);
 	if (text != NULL) {
 		char *p, *p_end;
 		char *name = text;
 		char *value = NULL;
 		int namelen = 0;
 
-		strcpy(text + size, "\r\n\r\n");
-		size += 4;
+		strcpy(text + size, "\r\n");
+		size += 2;
 
 		name = text;
 		value = NULL;
@@ -85,28 +85,31 @@ static void *http_sender_thread_handler(void *pathname)
 						ssize_t rdlen;
 						int ret;
 
-						ret = network_client_open(&client, &url, 0);
-						if (ret < 0) {
-							pr_red_info("network_client_open");
-							msleep(1000);
-							continue;
-						}
-
-						network_client_send(&client, text, size);
-
-						while (1) {
-							rdlen = network_client_timed_recv(&client, buff, sizeof(buff), 2000);
-							if (rdlen > 0) {
-								write(1, buff, rdlen);
-								fsync(1);
+						while (true) {
+							ret = network_client_open(&client, &url, 0);
+							if (ret < 0) {
+								pr_red_info("network_client_open");
+								msleep(1000);
 							} else {
 								break;
 							}
 						}
 
-						network_client_close(&client);
+						while (network_client_send(&client, text, size) == (ssize_t) size) {
+							while (1) {
+								rdlen = network_client_timed_recv(&client, buff, sizeof(buff), 500);
+								if (rdlen > 0) {
+									write(1, buff, rdlen);
+									fsync(1);
+								} else {
+									break;
+								}
+							}
 
-						msleep(500);
+							putchar('\n');
+						}
+
+						network_client_close(&client);
 					}
 
 					return NULL;
