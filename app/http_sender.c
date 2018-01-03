@@ -82,7 +82,8 @@ static void *http_sender_thread_handler(void *pathname)
 						ret = network_client_open(&client, &url, 0);
 						if (ret < 0) {
 							pr_red_info("network_client_open");
-							break;
+							msleep(2000);
+							continue;
 						}
 
 						network_client_send(&client, text, size);
