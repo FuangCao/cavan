@@ -27,12 +27,17 @@ static void *http_sender_thread_handler(void *pathname)
 	char *text;
 	size_t size;
 
-	text = file_read_all_text(pathname, &size);
+	println("pathname = %s", (char *) pathname);
+
+	text = file_read_all(pathname, 5, &size);
 	if (text != NULL) {
 		char *p, *p_end;
 		char *name = text;
 		char *value = NULL;
 		int namelen = 0;
+
+		strcpy(text + size, "\r\n\r\n");
+		size += 4;
 
 		name = text;
 		value = NULL;
@@ -72,6 +77,7 @@ static void *http_sender_thread_handler(void *pathname)
 					}
 
 					network_url_init(&url, "ssl", hostname, port, NULL);
+					println("url = %s", network_url_tostring(&url, NULL, 0, NULL));
 
 					while (1) {
 						struct network_client client;
@@ -82,7 +88,7 @@ static void *http_sender_thread_handler(void *pathname)
 						ret = network_client_open(&client, &url, 0);
 						if (ret < 0) {
 							pr_red_info("network_client_open");
-							msleep(2000);
+							msleep(1000);
 							continue;
 						}
 
@@ -100,7 +106,7 @@ static void *http_sender_thread_handler(void *pathname)
 
 						network_client_close(&client);
 
-						msleep(1000);
+						msleep(500);
 					}
 
 					return NULL;
