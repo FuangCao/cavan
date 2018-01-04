@@ -886,7 +886,7 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 
 	if (ret < 0) {
 		pr_red_info("ffile_puts");
-		return ret;
+		goto out_close_fd;
 	}
 
 	filename = cavan_path_copy(pathname, sizeof(pathname), dirname, true);
@@ -894,7 +894,7 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 	ret = cavan_http_write_path_hrefs(client, fd, pathname);
 	if (ret < 0) {
 		pr_red_info("cavan_http_write_path_html: %d", ret);
-		return ret;
+		goto out_close_fd;
 	}
 
 	ret |= ffile_puts(fd, "</h5>\r\n\t\t<h5>[<a href=\"..\">Parent</a>]");
@@ -921,7 +921,7 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 
 	if (ret < 0) {
 		pr_red_info("ffile_printf");
-		return ret;
+		goto out_close_fd;
 	}
 
 	for (i = 0; i < 10; i++) {
@@ -937,14 +937,14 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 		ret = ffile_printf(fd, " [<a href=\"%s/\">SDcard%d</a>]", env, i);
 		if (ret < 0) {
 			pr_red_info("ffile_printf");
-			return ret;
+			goto out_close_fd;
 		}
 	}
 
 	ret |= ffile_puts(fd, "</h5>\r\n");
 	if (ret < 0) {
 		pr_red_info("ffile_puts");
-		return ret;
+		goto out_close_fd;
 	}
 
 	count = scandir(dirname, &entries, NULL, alphasort);
@@ -1066,8 +1066,6 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 		pr_red_info("stat");
 	}
 
-	close(fd);
-
 out_free_entries:
 	if (count >= 0) {
 		for (i = 0; i < count; i++) {
@@ -1077,6 +1075,8 @@ out_free_entries:
 		free(entries);
 	}
 
+out_close_fd:
+	close(fd);
 	return ret;
 }
 
