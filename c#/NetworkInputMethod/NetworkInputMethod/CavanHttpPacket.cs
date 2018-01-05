@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Collections;
 using System.IO;
+using System.Threading;
 
 namespace NetworkInputMethod
 {
@@ -116,6 +117,16 @@ namespace NetworkInputMethod
             return Convert.ToInt32(text);
         }
 
+        public string getConnection()
+        {
+            return getHeader("connection");
+        }
+
+        public string getContentEncoding()
+        {
+            return getHeader("content-encoding");
+        }
+
         public bool writeTo(Stream stream)
         {
             CavanHttpWriter writer = new CavanHttpWriter(stream);
@@ -143,6 +154,29 @@ namespace NetworkInputMethod
 
             return writer.Flush();
         }
+        public bool writeTo(Stream stream, ByteArrayWriter writer)
+        {
+            if (writer == null)
+            {
+                return writeTo(stream);
+            }
+
+            try
+            {
+                stream.Write(writer.getBytes(), 0, writer.getLength());
+                stream.Flush();
+            }
+            catch (ThreadAbortException)
+            {
+                throw;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
+        }
 
         public bool readFrom(Stream stream)
         {
@@ -169,8 +203,7 @@ namespace NetworkInputMethod
             int length = getContentLength();
             if (length > 0)
             {
-                mBody = new byte[length];
-                return reader.ReadBytes(mBody, 0, length);
+                mBody = reader.ReadBytes(getContentEncoding(), length);
             }
             else
             {
@@ -178,6 +211,32 @@ namespace NetworkInputMethod
             }
 
             return true;
+        }
+
+        public ByteArrayWriter buildBytes()
+        {
+            ByteArrayWriter writer = new ByteArrayWriter();
+
+            foreach (string line in mLines)
+            {
+                writer.write(line);
+                writer.write("\r\n");
+            }
+
+            writer.write("\r\n");
+
+            if (mBody != null && mBody.Length > 0)
+            {
+                writer.write(mBody);
+            }
+
+            return writer;
+        }
+
+        public bool isNeedClose()
+        {
+            string conntction = getConnection();
+            return (conntction != null && conntction.Equals("close", StringComparison.CurrentCultureIgnoreCase));
         }
     }
 }

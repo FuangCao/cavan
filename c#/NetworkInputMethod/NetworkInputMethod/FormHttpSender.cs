@@ -15,13 +15,20 @@ namespace NetworkInputMethod
 {
     public partial class FormHttpSender : Form
     {
+        private const long START_AHEAD = 20000;
+
         private List<CavanHttpSender> mSenders = new List<CavanHttpSender>();
         private StringBuilder mLogBuilder = new StringBuilder();
-        private long mStartTime;
+        private long mCommitTime;
 
         public FormHttpSender()
         {
             InitializeComponent();
+
+            if (File.Exists(openFileDialogReq.FileName))
+            {
+                textBoxPath.Text = openFileDialogReq.FileName;
+            }
 
             DateTime tomorrow = DateTime.Now.AddDays(1);
             DateTime time = new DateTime(tomorrow.Year, tomorrow.Month, tomorrow.Day, 0, 0, 0);
@@ -32,7 +39,7 @@ namespace NetworkInputMethod
             comboBoxDelay.SelectedIndex = 30;
         }
 
-        public int getDelay()
+        public int getStartDelay()
         {
             int index = comboBoxDelay.SelectedIndex;
             if (index < 0)
@@ -41,6 +48,35 @@ namespace NetworkInputMethod
             }
 
             return (index - 30) * 100;
+        }
+
+        public long getSendDelay()
+        {
+            long timeNow = DateTime.Now.ToFileTime() / 10000;
+            if (mCommitTime > timeNow)
+            {
+                return mCommitTime - timeNow;
+            }
+
+            return 0;
+        }
+
+        public void waitForSend()
+        {
+            while (true)
+            {
+                long delay = getSendDelay();
+                if (delay > 0)
+                {
+                    WriteLog("等待发送：" + delayToString(delay));
+                    Thread.Sleep((int)delay);
+                }
+                else
+                {
+                    WriteLog("开始发送");
+                    break;
+                }
+            }
         }
 
         public void WriteLog(string log)
@@ -89,20 +125,20 @@ namespace NetworkInputMethod
                 return false;
             }
 
-            CavanHttpReq req = new CavanHttpReq(this, null);
+            CavanHttpSender sender = new CavanHttpSender(this);
 
             foreach (string line in lines)
             {
-                if (req.addLine(line))
+                if (sender.addLine(line))
                 {
-                    mSenders.Add(new CavanHttpSender(this, req));
-                    req = new CavanHttpReq(this, null);
+                    mSenders.Add(sender);
+                    sender = new CavanHttpSender(this);
                 }
             }
 
-            if (req.LineCount > 0)
+            if (sender.LineCount > 0)
             {
-                mSenders.Add(new CavanHttpSender(this, req));
+                mSenders.Add(sender);
             }
 
             if (mSenders.Count == 0)
@@ -116,11 +152,25 @@ namespace NetworkInputMethod
             return true;
         }
 
-        private void startLocked()
+        private void startLocked(long delay)
         {
-            mStartTime = 0;
-            timerWait.Enabled = false;
-            labelStatus.Text = "正在运行";
+            if (delay > 0)
+            {
+                labelStatus.Text = "等待发送：" + delayToString(delay);
+
+                if (delay > 1000)
+                {
+                    delay = 1000;
+                }
+
+                timerWait.Interval = (int)delay;
+            }
+            else
+            {
+                mCommitTime = 0;
+                timerWait.Enabled = false;
+                labelStatus.Text = "正在运行";
+            }
 
             foreach (CavanHttpSender http in mSenders)
             {
@@ -137,11 +187,11 @@ namespace NetworkInputMethod
 
             if (mSenders.Count > 0)
             {
-                startLocked();
+                startLocked(0);
             }
             else if (parseLocked())
             {
-                mStartTime = dateTimePickerStart.Value.ToFileTime() / 10000 + getDelay();
+                mCommitTime = dateTimePickerStart.Value.ToFileTime() / 10000 + getStartDelay();
                 timerWait.Interval = 100;
                 timerWait.Enabled = true;
                 labelStatus.Text = "正在等待";
@@ -160,7 +210,7 @@ namespace NetworkInputMethod
 
             lock (mSenders)
             {
-                mStartTime = 0;
+                mCommitTime = 0;
                 timerWait.Enabled = false;
 
                 foreach (CavanHttpSender http in mSenders)
@@ -226,24 +276,17 @@ namespace NetworkInputMethod
         {
             lock (mSenders)
             {
-                if (mStartTime != 0 && mSenders.Count > 0)
+                if (mCommitTime != 0 && mSenders.Count > 0)
                 {
-                    long timeNow = DateTime.Now.ToFileTime() / 10000;
-                    if (mStartTime > timeNow)
+                    long delay = getSendDelay();
+                    if (delay > START_AHEAD)
                     {
-                        long delay = mStartTime - timeNow;
-                        labelStatus.Text = "正在等待：" + delayToString(delay);
-
-                        if (delay > 1000)
-                        {
-                            delay = 1000;
-                        }
-
-                        timerWait.Interval = (int)delay;
+                        labelStatus.Text = "等待启动：" + delayToString(delay);
+                        timerWait.Interval = 1000;
                     }
                     else
                     {
-                        startLocked();
+                        startLocked(delay);
                     }
                 }
                 else
@@ -251,6 +294,11 @@ namespace NetworkInputMethod
                     timerWait.Enabled = false;
                 }
             }
+        }
+
+        private void buttonNow_Click(object sender, EventArgs e)
+        {
+            dateTimePickerStart.Value = DateTime.Now;
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.IO.Compression;
 
 namespace NetworkInputMethod
 {
@@ -17,7 +18,7 @@ namespace NetworkInputMethod
 
         public string ReadLine()
         {
-            byte[] bytes = new byte[1024];
+            byte[] bytes = new byte[4096];
             int offset = 0;
 
             while (true)
@@ -63,6 +64,59 @@ namespace NetworkInputMethod
             }
 
             return true;
+        }
+
+        public byte[] ReadBytes(int length)
+        {
+            byte[] bytes = new byte[length];
+            if (ReadBytes(bytes, 0, length))
+            {
+                return bytes;
+            }
+
+            return null;
+        }
+
+        public byte[] ReadBytes(string encoding, int length)
+        {
+            byte[] bytes = ReadBytes(length);
+            if (bytes == null)
+            {
+                return null;
+            }
+
+            if (encoding != null)
+            {
+                Console.WriteLine("encoding = " + encoding);
+
+                using (MemoryStream mstream = new MemoryStream(bytes))
+                {
+                    Stream dstream;
+
+                    if (encoding.Equals("gzip", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        dstream = new GZipStream(mstream, CompressionMode.Decompress, true);
+                    }
+                    else if (encoding.Equals("deflate", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        dstream = new DeflateStream(mstream, CompressionMode.Decompress, true);
+                    }
+                    else
+                    {
+                        dstream = null;
+                    }
+
+                    if (dstream != null)
+                    {
+                        ByteArrayWriter writer = new ByteArrayWriter();
+                        writer.write(dstream);
+                        dstream.Close();
+                        bytes = writer.toBytes();
+                    }
+                }
+            }
+
+            return bytes;
         }
     }
 }

@@ -40,11 +40,12 @@
             this.openFileDialogReq = new System.Windows.Forms.OpenFileDialog();
             this.buttonClear = new System.Windows.Forms.Button();
             this.timerWait = new System.Windows.Forms.Timer(this.components);
+            this.buttonNow = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // buttonStart
             // 
-            this.buttonStart.Location = new System.Drawing.Point(404, 416);
+            this.buttonStart.Location = new System.Drawing.Point(404, 419);
             this.buttonStart.Name = "buttonStart";
             this.buttonStart.Size = new System.Drawing.Size(75, 23);
             this.buttonStart.TabIndex = 0;
@@ -54,7 +55,7 @@
             // 
             // buttonStop
             // 
-            this.buttonStop.Location = new System.Drawing.Point(206, 416);
+            this.buttonStop.Location = new System.Drawing.Point(323, 419);
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(75, 23);
             this.buttonStop.TabIndex = 1;
@@ -179,13 +180,14 @@
             // 
             // openFileDialogReq
             // 
+            this.openFileDialogReq.FileName = "C:\\weixin\\game.txt";
             this.openFileDialogReq.Filter = "文本文件|*.txt";
             this.openFileDialogReq.InitialDirectory = "C:\\weixin";
             this.openFileDialogReq.ShowReadOnly = true;
             // 
             // buttonClear
             // 
-            this.buttonClear.Location = new System.Drawing.Point(12, 416);
+            this.buttonClear.Location = new System.Drawing.Point(12, 419);
             this.buttonClear.Name = "buttonClear";
             this.buttonClear.Size = new System.Drawing.Size(75, 23);
             this.buttonClear.TabIndex = 8;
@@ -198,12 +200,23 @@
             this.timerWait.Interval = 1000;
             this.timerWait.Tick += new System.EventHandler(this.timerWait_Tick);
             // 
+            // buttonNow
+            // 
+            this.buttonNow.Location = new System.Drawing.Point(93, 419);
+            this.buttonNow.Name = "buttonNow";
+            this.buttonNow.Size = new System.Drawing.Size(75, 23);
+            this.buttonNow.TabIndex = 9;
+            this.buttonNow.Text = "现在";
+            this.buttonNow.UseVisualStyleBackColor = true;
+            this.buttonNow.Click += new System.EventHandler(this.buttonNow_Click);
+            // 
             // FormHttpSender
             // 
             this.AcceptButton = this.buttonStart;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(491, 451);
+            this.ClientSize = new System.Drawing.Size(491, 454);
+            this.Controls.Add(this.buttonNow);
             this.Controls.Add(this.buttonClear);
             this.Controls.Add(this.textBoxLog);
             this.Controls.Add(this.labelStatus);
@@ -234,5 +247,6 @@
         private System.Windows.Forms.OpenFileDialog openFileDialogReq;
         private System.Windows.Forms.Button buttonClear;
         private System.Windows.Forms.Timer timerWait;
+        private System.Windows.Forms.Button buttonNow;
     }
 }

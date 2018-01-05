@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{D48652EA-1E41-4643-B786-AD89A6E3ACF0}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>NetworkInputMethod</RootNamespace>
     <AssemblyName>NetworkInputMethod</AssemblyName>
@@ -48,10 +48,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ByteArrayWriter.cs" />
     <Compile Include="CavanBusyLock.cs" />
     <Compile Include="CavanHttpPacket.cs" />
     <Compile Include="CavanHttpReader.cs" />
-    <Compile Include="CavanHttpReq.cs" />
     <Compile Include="CavanHttpSender.cs" />
     <Compile Include="CavanHttpWriter.cs" />
     <Compile Include="CavanTcpClient.cs" />
