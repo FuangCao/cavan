@@ -74,7 +74,6 @@ namespace NetworkInputMethod
                 }
                 else
                 {
-                    WriteLog("开始发送");
                     break;
                 }
             }
