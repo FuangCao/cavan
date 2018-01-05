@@ -127,6 +127,11 @@ namespace NetworkInputMethod
             return getHeader("content-encoding");
         }
 
+        public string getContentType()
+        {
+            return getHeader("content-type");
+        }
+
         public bool writeTo(Stream stream)
         {
             CavanHttpWriter writer = new CavanHttpWriter(stream);

@@ -7,6 +7,8 @@ using System.Net.Security;
 using System.Threading;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace NetworkInputMethod
 {
@@ -122,8 +124,7 @@ namespace NetworkInputMethod
                 port = Convert.ToUInt16(args[1]);
             }
 
-            mForm.WriteLog("host = " + host);
-            mForm.WriteLog("port = " + port);
+            mForm.WriteLog(host + ":" + port);
 
             try
             {
@@ -204,10 +205,70 @@ namespace NetworkInputMethod
             return true;
         }
 
+        private bool processBody(byte[] body, int count)
+        {
+            string text = Encoding.UTF8.GetString(body);
+
+            Console.WriteLine(text);
+
+            try
+            {
+                JObject json = JsonConvert.DeserializeObject<JObject>(text);
+                if (json == null)
+                {
+                    return false;
+                }
+
+                JToken data = json["data"];
+                if (data == null)
+                {
+                    return false;
+                }
+
+                JToken code = data["code"];
+                if (code == null)
+                {
+                    return false;
+                }
+
+                if (code.Value<int>() == 0)
+                {
+                    mForm.WriteLog("领取成功");
+                    return true;
+                }
+
+                JToken errdesc = data["errdesc"];
+                if (errdesc == null)
+                {
+                    return false;
+                }
+
+                string message = errdesc.Value<string>();
+
+                mForm.WriteLog(message);
+
+                if (message.Contains("不满足") || message.Contains("领取过") || message.Contains("上限"))
+                {
+                    return true;
+                }
+
+                if (message.Contains("领完") && count > 5)
+                {
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            return false;
+        }
+
         public void mainLoop()
         {
             ByteArrayWriter writer = buildBytes();
-            int delay = 100;
+            int count = 0;
 
             while (true)
             {
@@ -235,9 +296,9 @@ namespace NetworkInputMethod
                         }
 
                         byte[] body = rsp.Body;
-                        if (body != null)
+                        if (body != null && processBody(body, count))
                         {
-                            Console.WriteLine(Encoding.UTF8.GetString(body));
+                            return;
                         }
 
                         if (rsp.isNeedClose())
@@ -245,8 +306,8 @@ namespace NetworkInputMethod
                             break;
                         }
 
-                        Thread.Sleep(delay);
-                        delay += 100;
+                        count++;
+                        Thread.Sleep(count * 100);
                     }
 
                     stream.Close();

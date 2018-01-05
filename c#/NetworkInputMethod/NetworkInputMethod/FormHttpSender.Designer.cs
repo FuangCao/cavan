@@ -41,11 +41,12 @@
             this.buttonClear = new System.Windows.Forms.Button();
             this.timerWait = new System.Windows.Forms.Timer(this.components);
             this.buttonNow = new System.Windows.Forms.Button();
+            this.buttonEdit = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // buttonStart
             // 
-            this.buttonStart.Location = new System.Drawing.Point(404, 419);
+            this.buttonStart.Location = new System.Drawing.Point(404, 425);
             this.buttonStart.Name = "buttonStart";
             this.buttonStart.Size = new System.Drawing.Size(75, 23);
             this.buttonStart.TabIndex = 0;
@@ -55,7 +56,7 @@
             // 
             // buttonStop
             // 
-            this.buttonStop.Location = new System.Drawing.Point(323, 419);
+            this.buttonStop.Location = new System.Drawing.Point(323, 425);
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(75, 23);
             this.buttonStop.TabIndex = 1;
@@ -187,7 +188,7 @@
             // 
             // buttonClear
             // 
-            this.buttonClear.Location = new System.Drawing.Point(12, 419);
+            this.buttonClear.Location = new System.Drawing.Point(12, 425);
             this.buttonClear.Name = "buttonClear";
             this.buttonClear.Size = new System.Drawing.Size(75, 23);
             this.buttonClear.TabIndex = 8;
@@ -202,7 +203,7 @@
             // 
             // buttonNow
             // 
-            this.buttonNow.Location = new System.Drawing.Point(93, 419);
+            this.buttonNow.Location = new System.Drawing.Point(93, 425);
             this.buttonNow.Name = "buttonNow";
             this.buttonNow.Size = new System.Drawing.Size(75, 23);
             this.buttonNow.TabIndex = 9;
@@ -210,12 +211,23 @@
             this.buttonNow.UseVisualStyleBackColor = true;
             this.buttonNow.Click += new System.EventHandler(this.buttonNow_Click);
             // 
+            // buttonEdit
+            // 
+            this.buttonEdit.Location = new System.Drawing.Point(174, 425);
+            this.buttonEdit.Name = "buttonEdit";
+            this.buttonEdit.Size = new System.Drawing.Size(75, 23);
+            this.buttonEdit.TabIndex = 10;
+            this.buttonEdit.Text = "编辑";
+            this.buttonEdit.UseVisualStyleBackColor = true;
+            this.buttonEdit.Click += new System.EventHandler(this.buttonEdit_Click);
+            // 
             // FormHttpSender
             // 
             this.AcceptButton = this.buttonStart;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(491, 454);
+            this.ClientSize = new System.Drawing.Size(491, 460);
+            this.Controls.Add(this.buttonEdit);
             this.Controls.Add(this.buttonNow);
             this.Controls.Add(this.buttonClear);
             this.Controls.Add(this.textBoxLog);
@@ -248,5 +260,6 @@
         private System.Windows.Forms.Button buttonClear;
         private System.Windows.Forms.Timer timerWait;
         private System.Windows.Forms.Button buttonNow;
+        private System.Windows.Forms.Button buttonEdit;
     }
 }

@@ -10,6 +10,7 @@ using System.IO;
 using System.Net.Sockets;
 using System.Net.Security;
 using System.Threading;
+using System.Diagnostics;
 
 namespace NetworkInputMethod
 {
@@ -299,6 +300,11 @@ namespace NetworkInputMethod
         private void buttonNow_Click(object sender, EventArgs e)
         {
             dateTimePickerStart.Value = DateTime.Now;
+        }
+
+        private void buttonEdit_Click(object sender, EventArgs e)
+        {
+            Process.Start("notepad.exe", openFileDialogReq.FileName);
         }
     }
 }
