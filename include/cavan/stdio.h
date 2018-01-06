@@ -630,6 +630,8 @@ int cavan_stdio_redirect1(int ttyfds[3]);
 int cavan_stdio_redirect2(int fd, int flags);
 int cavan_stdio_redirect3(const char *pathname, int flags);
 
+int cavan_stdout_write_line(const char *line, int length);
+
 // ============================================================
 
 static inline int cavan_stdio_fflush(void)

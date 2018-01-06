@@ -77,7 +77,6 @@ typedef enum {
 	CAVAN_COMMAND_OPTION_DAEMON_MAX,
 	CAVAN_COMMAND_OPTION_DAEMON_MIN,
 	CAVAN_COMMAND_OPTION_DATE,
-	CAVAN_COMMAND_OPTION_DELAY,
 	CAVAN_COMMAND_OPTION_DEVICE,
 	CAVAN_COMMAND_OPTION_DRIVER,
 	CAVAN_COMMAND_OPTION_ERASE,
@@ -88,6 +87,8 @@ typedef enum {
 	CAVAN_COMMAND_OPTION_HAL,
 	CAVAN_COMMAND_OPTION_HELP,
 	CAVAN_COMMAND_OPTION_HOST,
+	CAVAN_COMMAND_OPTION_HTTP,
+	CAVAN_COMMAND_OPTION_HTTPS,
 	CAVAN_COMMAND_OPTION_IMAGE,
 	CAVAN_COMMAND_OPTION_IMEI1,
 	CAVAN_COMMAND_OPTION_IMEI2,
@@ -104,6 +105,7 @@ typedef enum {
 	CAVAN_COMMAND_OPTION_MASK,
 	CAVAN_COMMAND_OPTION_MODE,
 	CAVAN_COMMAND_OPTION_NONE,
+	CAVAN_COMMAND_OPTION_NOW,
 	CAVAN_COMMAND_OPTION_PARENTS,
 	CAVAN_COMMAND_OPTION_PIDFILE,
 	CAVAN_COMMAND_OPTION_PIPE,
@@ -138,6 +140,7 @@ typedef enum {
 	CAVAN_COMMAND_OPTION_VERSION,
 	CAVAN_COMMAND_OPTION_WIFI_MAC,
 	CAVAN_COMMAND_OPTION_WRITE,
+	CAVAN_COMMAND_OPTION_DELAY,
 	CAVAN_COMMAND_OPTION_DISCOVERY,
 	CAVAN_COMMAND_OPTION_DISCOVERY_DELAY,
 	CAVAN_COMMAND_OPTION_SYSTEM,
@@ -284,6 +287,11 @@ extern const char *cavan_help_message_discovery;
 extern const char *cavan_help_message_discovery_delay;
 extern const char *cavan_help_message_service_name;
 extern const char *cavan_help_message_burrow;
+extern const char *cavan_help_message_http;
+extern const char *cavan_help_message_https;
+extern const char *cavan_help_message_start_time;
+extern const char *cavan_help_message_delay_time;
+extern const char *cavan_help_message_current_time;
 
 // ============================================================
 

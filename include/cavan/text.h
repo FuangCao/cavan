@@ -261,6 +261,8 @@ char *frequency_tostring(double freq, char *buff, size_t size, char **last);
 u32 frequency_unit2value(const char *text, const char *text_end);
 double text2frequency(const char *text, const char *text_end, const char **last);
 
+char *time2text_msec(u64 msec, char *buff, size_t size);
+
 // ============================================================
 
 static inline int prefix2base2(const char *prefix, const char **last, int base)

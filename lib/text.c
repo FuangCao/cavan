@@ -2994,3 +2994,21 @@ double text2frequency(const char *text, const char *text_end, const char **last)
 
 	return text2double_unsigned(text, text_end, &text, 10) * frequency_unit2value(text, text_end);
 }
+
+char *time2text_msec(u64 msec, char *buff, size_t size)
+{
+	char *buff_end = buff + size;
+
+	if (msec >= 86400000) {
+		buff += snprintf(buff, buff_end - buff, "%dD ", (int) (msec / 86400000));
+		msec %= 86400000;
+	}
+
+	buff += snprintf(buff, buff_end - buff, "%02d:", (int) (msec / 3600000));
+	msec %= 3600000;
+	buff += snprintf(buff, buff_end - buff, "%02d:", (int) (msec / 60000));
+	msec %= 60000;
+	buff += snprintf(buff, buff_end - buff, "%0.2f", ((float) msec) / 1000);
+
+	return buff;
+}

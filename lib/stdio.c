@@ -8,9 +8,11 @@
 
 static int console_fd = -1;
 static struct termios tty_attr;
+static pthread_mutex_t cavan_stdout_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static FILE *cavan_async_stdout;
 static int cavan_async_stdout_pipefd[2];
+
 
 cavan_stdio_function_declarer(tty, "/dev/tty");
 cavan_stdio_function_declarer(kmsg, "/dev/kmsg");
@@ -865,4 +867,16 @@ int cavan_stdio_redirect3(const char *pathname, int flags)
 	}
 
 	return cavan_stdio_redirect2(fd, flags);
+}
+
+int cavan_stdout_write_line(const char *line, int length)
+{
+	int ret = 0;
+
+	pthread_mutex_lock(&cavan_stdout_lock);
+	ret |= write(stdout_fd, line, length);
+	ret |= write(stdout_fd, "\n", 1);
+	pthread_mutex_unlock(&cavan_stdout_lock);
+
+	return ret;
 }
