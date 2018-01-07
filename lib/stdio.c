@@ -166,13 +166,17 @@ int print_ntext(const char *text, size_t size)
 {
 	int ret = 0;
 
+	pthread_mutex_lock(&cavan_stdout_lock);
+
 	if (console_fd >= 0) {
 		ret |= write(console_fd, text, size);
-		fsync(console_fd);
+		ret |= fsync(console_fd);
 	}
 
 	ret |= write(stdout_fd, text, size);
-	fsync(stdout_fd);
+	ret |= fsync(stdout_fd);
+
+	pthread_mutex_unlock(&cavan_stdout_lock);
 
 	return ret;
 }

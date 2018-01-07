@@ -395,6 +395,8 @@ static void *cavan_http_sender_thread_handler(void *data)
 			}
 		}
 
+		println("connect successfull");
+
 		while (1) {
 			time = clock_gettime_real_ms();
 			if (time < g_http_sender.time) {
@@ -490,7 +492,7 @@ int main(int argc, char *argv[])
 		},
 	};
 
-	g_http_sender.time = (clock_gettime_real_ms() / 86400000 + 1) * 86400000 + 57600000;
+	g_http_sender.time = ((clock_gettime_real_ms() + 3600000 - 1) / 3600000) * 3600000;
 
 	while ((c = getopt_long(argc, argv, "vVhHd:D:t:T:nN", long_option, &option_index)) != EOF) {
 		switch (c) {
