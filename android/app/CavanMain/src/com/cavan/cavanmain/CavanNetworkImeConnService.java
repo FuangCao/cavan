@@ -40,7 +40,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 				FloatMessageService service = FloatMessageService.getInstance();
 				if (service != null) {
 					int volume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-					service.sendShowToastWithArgs(R.string.media_volume_changed, volume);
+					service.postShowToastWithArgs(R.string.media_volume_changed, volume);
 				}
 				break;
 			}
@@ -160,7 +160,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 				CavanAndroid.postClipboardTextTemp(getApplicationContext(), text);
 				FloatMessageService fms = FloatMessageService.getInstance();
 				if (fms != null) {
-					fms.sendShowToastWithArgs(R.string.clipboard_updated, text);
+					fms.postShowToastWithArgs(R.string.clipboard_updated, text);
 				}
 			}
 			break;

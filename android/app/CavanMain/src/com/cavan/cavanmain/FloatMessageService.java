@@ -159,7 +159,7 @@ public class FloatMessageService extends FloatWidowService {
 							mTcpDaemon.setConnDelay(0);
 						}
 
-						sendShowToast(mWanState);
+						postShowToast(mWanState);
 					}
 				}
 				break;
@@ -212,6 +212,8 @@ public class FloatMessageService extends FloatWidowService {
 				} else {
 					CavanAndroid.dLog("MSG_SHOW_NOTIFY");
 					view = mTextViewNotify;
+					setLockScreenEnable(false);
+					CavanAndroid.acquireWakeupLock(getApplicationContext(), 20000);
 				}
 
 				removeMessages(msg.what);
@@ -242,7 +244,7 @@ public class FloatMessageService extends FloatWidowService {
 			case MSG_CLIPBOARD_RECEIVED:
 				String code = (String) msg.obj;
 				String text = getResources().getString(R.string.clipboard_updated, code);
-				sendShowToast(text);
+				postShowToast(text);
 				CavanAndroid.postClipboardTextTemp(getApplicationContext(), code);
 				break;
 
@@ -265,7 +267,7 @@ public class FloatMessageService extends FloatWidowService {
 			case MSG_RED_PACKET_UPDATED:
 				RedPacketCode node = (RedPacketCode) msg.obj;
 				text = getResources().getString(R.string.red_packet_code_updated, node.getCode());
-				sendShowToast(text);
+				postShowToast(text);
 				break;
 
 			case MSG_CHECK_SERVICE_STATE:
@@ -380,13 +382,13 @@ public class FloatMessageService extends FloatWidowService {
 					if (node.isTestOnly()) {
 						CavanAccessibilityService service = CavanAccessibilityService.getInstance();
 						if (service != null) {
-							sendShowToast(R.string.test_sucess);
+							postShowToast(R.string.test_sucess);
 						}
 					} else {
 						mMessageCodeMap.put(message, node);
 
 						if (node.isCompleted()) {
-							sendShowToast(R.string.ignore_completed_code, code);
+							postShowToast(R.string.ignore_completed_code, code);
 						} else {
 							CavanAccessibilityAlipay alipay = CavanAccessibilityAlipay.getInstance();
 							if (alipay != null) {
@@ -540,37 +542,37 @@ public class FloatMessageService extends FloatWidowService {
 
 	public void showOnTimeNotify() {
 		if (CavanMessageActivity.isOnTimeNotifyEnabledNow(this)) {
-			setLockScreenEnable(false);
-			CavanAndroid.acquireWakeupLock(getApplicationContext(), 20000);
-			showToast(MSG_SHOW_NOTIFY, R.string.on_time_notify);
+			postShowNotify(R.string.on_time_notify);
 		}
 	}
 
-	public void sendShowToast(int what, Object messsage) {
+	public void postShowToast(int what, Object messsage) {
 		Message message = mHandler.obtainMessage(what, messsage);
 		message.sendToTarget();
 	}
 
-	public void sendShowToast(Object messsage) {
-		Message message = mHandler.obtainMessage(MSG_SHOW_TOAST, messsage);
-		message.sendToTarget();
+	public void postShowToast(Object messsage) {
+		postShowToast(MSG_SHOW_TOAST, messsage);
 	}
 
-	public void sendShowToastWithArgs(int id, Object... formatArgs) {
+	public void postShowNotify(Object messsage) {
+		postShowToast(MSG_SHOW_NOTIFY, messsage);
+
+	}
+
+	public void postShowToastWithArgs(int id, Object... formatArgs) {
 		String message = getResources().getString(id, formatArgs);
-		sendShowToast(MSG_SHOW_TOAST, message);
+		postShowToast(MSG_SHOW_TOAST, message);
 	}
 
 	public static boolean showToast(int what, Object messsage) {
 		FloatMessageService instance = sInstance;
-
-		if (instance == null) {
-			return false;
+		if (instance != null) {
+			instance.postShowToast(what, messsage);
+			return true;
 		}
 
-		instance.sendShowToast(what, messsage);
-
-		return true;
+		return false;
 	}
 
 	public static boolean showToast(Object messsage) {
@@ -659,7 +661,7 @@ public class FloatMessageService extends FloatWidowService {
 
 		if (command.equals(NET_CMD_TEST)) {
 			command = getResources().getString(R.string.network_test_success, type);
-			sendShowToast(command);
+			postShowToast(command);
 		} else if (command.startsWith(NET_CMD_RDPKG)) {
 			String code = CavanString.deleteSpace(command.substring(NET_CMD_RDPKG.length()));
 
@@ -667,7 +669,7 @@ public class FloatMessageService extends FloatWidowService {
 
 			if (code.equals(NET_CMD_TEST)) {
 				command = getResources().getString(R.string.network_test_success, type);
-				sendShowToast(command);
+				postShowToast(command);
 			} else if (CavanMessageActivity.isRedPacketCodeReceiveEnabled()) {
 				RedPacketCode node = RedPacketCode.getInstence(code);
 				if (node == null || node.isRecvEnabled()) {
@@ -702,9 +704,7 @@ public class FloatMessageService extends FloatWidowService {
 			String code = command.substring(NET_CMD_CLIPBOARD.length());
 			mHandler.obtainMessage(MSG_CLIPBOARD_RECEIVED, code).sendToTarget();
 		} else if (command.startsWith(NET_CMD_NOTIFY) && CavanMessageActivity.isThanksShareEnabled(this)) {
-			setLockScreenEnable(false);
-			CavanAndroid.acquireWakeupLock(getApplicationContext(), 20000);
-			showToast(MSG_SHOW_NOTIFY, command.substring(NET_CMD_NOTIFY.length()));
+			postShowNotify(command.substring(NET_CMD_NOTIFY.length()));
 		}
 	}
 
