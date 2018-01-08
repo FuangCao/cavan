@@ -44,6 +44,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	private static final int MSG_POST_NOTIFICATION = 1;
 	private static final int MSG_REMOVE_NOTIFICATION = 2;
 	private static final int MSG_RED_PACKET_NOTIFICATION = 3;
+	private static final int MSG_CANCEL_NOTIFYCATION = 4;
 
 	private static RedPacketListenerService sInstance;
 
@@ -88,8 +89,10 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 			case MSG_REMOVE_NOTIFICATION:
 				sbn = (StatusBarNotification) msg.obj;
-				pkgName = sbn.getPackageName();
 
+				mHandler.removeMessages(MSG_CANCEL_NOTIFYCATION, sbn.getId());
+
+				pkgName = sbn.getPackageName();
 				if (getPackageName().equals(pkgName)) {
 					Bundle extras = sbn.getNotification().extras;
 					CharSequence code = extras.getCharSequence(EXTRA_CODE);
@@ -106,6 +109,12 @@ public class RedPacketListenerService extends NotificationListenerService implem
 							e.printStackTrace();
 						}
 					}
+				}
+				break;
+
+			case MSG_CANCEL_NOTIFYCATION:
+				if (mNotificationManager != null) {
+					mNotificationManager.cancel((int) msg.obj);
 				}
 				break;
 
@@ -207,13 +216,21 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 	public void sendNotification(Notification notification, CharSequence message, String code) {
 		if (mNotificationManager != null) {
+			int id = createNotificationId();
+
 			if (code != null) {
 				notification.extras.putCharSequence(EXTRA_CODE, code);
 			}
 
 			notification.extras.putCharSequence(EXTRA_MESSAGE, message);
 
-			mNotificationManager.notify(createNotificationId(), notification);
+			mNotificationManager.notify(id, notification);
+
+			int delay = CavanMessageActivity.getNotifyAutoClear(this);
+			if (delay > 0) {
+				Message msg = mHandler.obtainMessage(MSG_CANCEL_NOTIFYCATION, id);
+				mHandler.sendMessageDelayed(msg, delay * 60000);
+			}
 		}
 
 		if (mFloatMessageService != null) {

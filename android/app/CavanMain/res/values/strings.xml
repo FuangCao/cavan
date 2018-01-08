@@ -743,8 +743,70 @@
 		<item >4900</item>
 		<item >5000</item>
 	</string-array>
+	<string-array name="auto_clear_entries">
+	    <item >不自动清除</item>
+	    <item >延时1分钟清除</item>
+	    <item >延时2分钟清除</item>
+	    <item >延时3分钟清除</item>
+	    <item >延时4分钟清除</item>
+	    <item >延时5分钟清除</item>
+	    <item >延时6分钟清除</item>
+	    <item >延时7分钟清除</item>
+	    <item >延时8分钟清除</item>
+	    <item >延时9分钟清除</item>
+	    <item >延时10分钟清除</item>
+	    <item >延时15分钟清除</item>
+	    <item >延时20分钟清除</item>
+	    <item >延时25分钟清除</item>
+	    <item >延时30分钟清除</item>
+	    <item >延时35分钟清除</item>
+	    <item >延时40分钟清除</item>
+	    <item >延时45分钟清除</item>
+	    <item >延时50分钟清除</item>
+	    <item >延时55分钟清除</item>
+	    <item >延时1小时清除</item>
+	    <item >延时2小时清除</item>
+	    <item >延时3小时清除</item>
+	    <item >延时4小时清除</item>
+	    <item >延时5小时清除</item>
+	    <item >延时6小时清除</item>
+	    <item >延时7小时清除</item>
+	    <item >延时8小时清除</item>
+	</string-array>
+	<string-array name="auto_clear_values">
+	    <item >0</item>
+	    <item >1</item>
+	    <item >2</item>
+	    <item >3</item>
+	    <item >4</item>
+	    <item >5</item>
+	    <item >6</item>
+	    <item >7</item>
+	    <item >8</item>
+	    <item >9</item>
+	    <item >10</item>
+	    <item >15</item>
+	    <item >20</item>
+	    <item >25</item>
+	    <item >30</item>
+	    <item >35</item>
+	    <item >40</item>
+	    <item >45</item>
+	    <item >50</item>
+	    <item >55</item>
+	    <item >60</item>
+	    <item >120</item>
+	    <item >180</item>
+	    <item >240</item>
+	    <item >300</item>
+	    <item >360</item>
+	    <item >420</item>
+	    <item >480</item>
+	</string-array>
 	<string name="media_volume_changed">音量更改：<xliff:g>%1$d</xliff:g></string>
 	<string name="command_service">命令服务</string>
 	<string name="role_change_client">内网穿透客户端</string>
+	<string name="keyword_notify_only">关键字仅通知</string>
+	<string name="notify_auto_clear">通知自动清除</string>
 
 </resources>

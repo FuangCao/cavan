@@ -282,6 +282,13 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doHttpClient(JNIEnv *env, jcl
 	return CavanMainExecute(env, args, "http_client", do_cavan_http_client);
 }
 
+extern int do_cavan_http_sender(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doHttpSender(JNIEnv *env, jclass clazz, jobjectArray args)
+{
+	return CavanMainExecute(env, args, "http_sender", do_cavan_http_sender);
+}
+
 extern int do_cavan_http_service(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doHttpService(JNIEnv *env, jclass clazz, jobjectArray args)

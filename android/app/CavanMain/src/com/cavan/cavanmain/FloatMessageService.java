@@ -577,6 +577,10 @@ public class FloatMessageService extends FloatWidowService {
 		return showToast(MSG_SHOW_TOAST, messsage);
 	}
 
+	public static boolean showNotify(Object messsage) {
+		return showToast(MSG_SHOW_NOTIFY, messsage);
+	}
+
 	private boolean checkServiceState() {
 		if (!CavanAccessibilityService.checkAndOpenSettingsActivity(this)) {
 			return false;

@@ -397,7 +397,12 @@ public class RedPacketNotification extends CavanNotification {
 	public boolean sendKeyword() {
 		String keyword = mService.getKeyword(mFinder);
 		if (keyword != null) {
-			return sendRedPacketNotifyNormal(keyword, "关键字@" + getUserDescription() + ": " + keyword, false);
+			String message = "关键字@" + getUserDescription() + ": " + keyword;
+			if (CavanMessageActivity.isKeywordNotifyOnly(mService)) {
+				FloatMessageService.showNotify(message);
+			} else {
+				return sendRedPacketNotifyNormal(keyword, message, false);
+			}
 		}
 
 		return false;

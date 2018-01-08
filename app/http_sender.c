@@ -144,6 +144,7 @@ static int cavan_http_packet_add_line(struct cavan_http_packet *packet, const ch
 
 	line_end = line + size;
 	name = line;
+	namelen = 0;
 	value = NULL;
 
 	while (line < line_end) {

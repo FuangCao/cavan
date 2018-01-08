@@ -75,6 +75,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	public static final String KEY_QQ_FILTER = "qq_filter";
 	public static final String KEY_MM_FILTER = "mm_filter";
 	public static final String KEY_KEYWORD_NOTIFY = "keyword_notify";
+	public static final String KEY_KEYWORD_NOTIFY_ONLY = "keyword_notify_only";
 	public static final String KEY_AUTO_BACK_DESKTOP = "auto_back_desktop";
 	public static final String KEY_FU_DAI_NOTIFY = "fu_dai_notify";
 	public static final String KEY_CLIPBOARD_SHARE = "clipboard_share";
@@ -85,6 +86,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	public static final String KEY_THANKS_NOTIFY = "thanks_notify";
 	public static final String KEY_THANKS_SHARE = "thanks_share";
 	public static final String KEY_REPEAT_DELAY = "repeat_delay";
+	public static final String KEY_NOTIFY_AUTO_CLEAR = "notify_auto_clear";
 
 	private static CavanMessageActivity sInstance;
 
@@ -97,6 +99,10 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 
 	static {
 		CavanAndroid.TAG = "CavanMain";
+	}
+
+	public static boolean isKeywordNotifyOnly(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_KEYWORD_NOTIFY_ONLY);
 	}
 
 	public static boolean isFloatTimerEnabled(Context context) {
@@ -260,6 +266,10 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 
 	public static int getRepeatDelay(Context context) {
 		return CavanAndroid.getPreferenceInt(context, KEY_REPEAT_DELAY, 300);
+	}
+
+	public static int getNotifyAutoClear(Context context) {
+		return CavanAndroid.getPreferenceInt(context, KEY_NOTIFY_AUTO_CLEAR, 0);
 	}
 
 	public static boolean startSogouOcrActivity(Context context) {
@@ -464,6 +474,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		findListPreference(KEY_QQ_AUTO_UNPACK);
 		findListPreference(KEY_MM_AUTO_UNPACK);
 		findListPreference(KEY_REPEAT_DELAY);
+		findListPreference(KEY_NOTIFY_AUTO_CLEAR);
 
 		Intent service = FloatMessageService.buildIntent(this);
 

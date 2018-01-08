@@ -12,6 +12,11 @@
 	    android:persistent="true"
 	    android:title="@string/keyword_notify"/>
 
+	<CheckBoxPreference android:key="keyword_notify_only"
+	    android:persistent="true"
+	    android:defaultValue="true"
+	    android:title="@string/keyword_notify_only" />
+
 	<EditTextPreference android:key="red_packet_notify_test"
 	    android:persistent="true"
 	    android:defaultValue="支付宝红包口令：12345678"
@@ -52,6 +57,13 @@
 
 	<Preference android:key="red_packet_code_clear"
 	    android:title="@string/red_packet_code_clear" />
+
+	<ListPreference android:key="notify_auto_clear"
+	    android:persistent="true"
+		android:entries="@array/auto_clear_entries"
+		android:entryValues="@array/auto_clear_values"
+		android:defaultValue="0"
+	    android:title="@string/notify_auto_clear" />
 
 	<CheckBoxPreference android:key="auto_unlock"
 	    android:persistent="true"
