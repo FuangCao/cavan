@@ -40,6 +40,22 @@ typedef enum {
 	HTTP_REQ_PROPFIND,
 } http_request_type_t;
 
+typedef enum {
+	HTTP_HEADER_HOST,
+	HTTP_HEADER_CONTENT_TYPE,
+	HTTP_HEADER_CONTENT_LENGTH,
+	HTTP_HEADER_CONTENT_ENCODING,
+	HTTP_HEADER_TRANSFER_ENCODING,
+	HTTP_HEADER_COUNT,
+} http_header_type_t;
+
+struct cavan_http_packet {
+	char *headers[HTTP_HEADER_COUNT];
+	struct cavan_string header;
+	struct cavan_string body;
+	int lines;
+};
+
 struct cavan_http_service {
 	struct network_service service;
 	struct network_url url;
@@ -124,6 +140,15 @@ int cavan_http_process_propfind(struct cavan_fifo *fifo, struct cavan_http_reque
 int cavan_http_service_run(struct cavan_dynamic_service *service);
 
 ssize_t http_client_send_request(const char *url, const char *post, const char *headers[], size_t header_size, void *rsp, size_t rsp_size);
+
+void cavan_http_packet_init(struct cavan_http_packet *packet);
+void cavan_http_packet_clear(struct cavan_http_packet *packet, bool depth);
+struct cavan_http_packet *cavan_http_packet_alloc(void);
+void cavan_http_packet_free(struct cavan_http_packet *packet);
+void cavan_http_packet_dump(const struct cavan_http_packet *packet);
+int cavan_http_packet_add_header_line_end(struct cavan_http_packet *packet);
+int cavan_http_packet_add_header_line(struct cavan_http_packet *packet, const char *line, int size);
+int cavan_http_parse_file(const char *pathname, struct cavan_http_packet *packets[], int size);
 
 // ================================================================================
 

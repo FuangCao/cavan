@@ -3012,3 +3012,59 @@ char *time2text_msec(u64 msec, char *buff, size_t size)
 
 	return buff;
 }
+
+void cavan_string_init(struct cavan_string *str)
+{
+	str->text = NULL;
+	str->used = 0;
+	str->size = 0;
+}
+
+int cavan_string_append(struct cavan_string *str, const char *text, int size)
+{
+	int used = str->used + size;
+
+	if (used >= str->size) {
+		int total = (used + 1) << 1;
+		char *mem = malloc(total);
+
+		mem = malloc(total);
+		if (mem == NULL) {
+			return -ENOMEM;
+		}
+
+		if (str->text != NULL) {
+			memcpy(mem, str->text, str->used);
+
+			if (str->size > 0) {
+				free(str->text);
+			}
+		}
+
+		str->text = mem;
+		str->size = total;
+	}
+
+	memcpy(str->text + str->used, text, size);
+	str->text[used] = 0;
+	str->used = used;
+
+	return size;
+}
+
+void cavan_string_clear(struct cavan_string *str, bool depth)
+{
+	str->used = 0;
+
+	if (depth) {
+		if (str->text != NULL) {
+			if (str->size > 0) {
+				free(str->text);
+			}
+
+			str->text = NULL;
+		}
+
+		str->size = 0;
+	}
+}
