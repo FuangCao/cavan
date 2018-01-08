@@ -408,6 +408,7 @@ static void *cavan_http_sender_thread_handler(void *data)
 					usleep(1000000);
 				} else {
 					usleep(delay * 1000);
+					break;
 				}
 			} else {
 				break;
