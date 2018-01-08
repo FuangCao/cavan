@@ -17,7 +17,6 @@ namespace NetworkInputMethod
 
         private FormOpenApp mFormOpenApp;
         private FormSelect mFormSelect;
-        private FormHttpSender mFormHttpSender;
 
         //API declarations...
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -439,10 +438,8 @@ namespace NetworkInputMethod
 
         private void buttonRequest_Click(object sender, EventArgs e)
         {
-            if (mFormHttpSender == null || mFormHttpSender.IsDisposed) {
-                mFormHttpSender = new FormHttpSender();
-                mFormHttpSender.Show();
-            }
+            FormHttpSender http = new FormHttpSender();
+            http.Show();
         }
     }
 

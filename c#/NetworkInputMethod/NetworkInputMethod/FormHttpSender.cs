@@ -16,7 +16,7 @@ namespace NetworkInputMethod
 {
     public partial class FormHttpSender : Form
     {
-        private const long START_AHEAD = 20000;
+        private const long START_AHEAD = 15000;
 
         private List<CavanHttpSender> mSenders = new List<CavanHttpSender>();
         private StringBuilder mLogBuilder = new StringBuilder();
@@ -26,14 +26,10 @@ namespace NetworkInputMethod
         {
             InitializeComponent();
 
-            if (File.Exists(openFileDialogReq.FileName))
-            {
-                textBoxPath.Text = openFileDialogReq.FileName;
-            }
+            textBoxPath.Text = openFileDialogReq.FileName;
 
-            DateTime tomorrow = DateTime.Now.AddDays(1);
-            DateTime time = new DateTime(tomorrow.Year, tomorrow.Month, tomorrow.Day, 0, 0, 0);
-            dateTimePickerStart.Value = time;
+            DateTime time = DateTime.Now.AddHours(1);
+            dateTimePickerStart.Value = new DateTime(time.Year, time.Month, time.Day, time.Hour, 0, 0);
             dateTimePickerStart.Format = DateTimePickerFormat.Custom;
             dateTimePickerStart.CustomFormat = "yyyy-MM-dd HH:mm:ss";
 
@@ -89,6 +85,11 @@ namespace NetworkInputMethod
 
             EventHandler handler = new EventHandler(onLogUpdated);
             textBoxLog.Invoke(handler);
+        }
+
+        public bool isDebugEnabled()
+        {
+            return checkBoxDebug.Checked;
         }
 
         private void onLogUpdated(object sender, EventArgs e)

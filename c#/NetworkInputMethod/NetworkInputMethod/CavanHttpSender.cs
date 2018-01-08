@@ -245,7 +245,10 @@ namespace NetworkInputMethod
 
                 string message = errdesc.Value<string>();
 
-                mForm.WriteLog(message);
+                if (mForm.isDebugEnabled())
+                {
+                    mForm.WriteLog(message);
+                }
 
                 if (message.Contains("不满足") || message.Contains("领取过") || message.Contains("上限"))
                 {
@@ -307,7 +310,7 @@ namespace NetworkInputMethod
                         }
 
                         count++;
-                        Thread.Sleep(count * 100);
+                        Thread.Sleep(count * 50);
                     }
 
                     stream.Close();

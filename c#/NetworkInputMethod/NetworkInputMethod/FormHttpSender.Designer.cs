@@ -42,6 +42,7 @@
             this.timerWait = new System.Windows.Forms.Timer(this.components);
             this.buttonNow = new System.Windows.Forms.Button();
             this.buttonEdit = new System.Windows.Forms.Button();
+            this.checkBoxDebug = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // buttonStart
@@ -163,7 +164,7 @@
             // 
             // labelStatus
             // 
-            this.labelStatus.Location = new System.Drawing.Point(12, 395);
+            this.labelStatus.Location = new System.Drawing.Point(10, 399);
             this.labelStatus.Name = "labelStatus";
             this.labelStatus.Size = new System.Drawing.Size(467, 12);
             this.labelStatus.TabIndex = 6;
@@ -221,12 +222,23 @@
             this.buttonEdit.UseVisualStyleBackColor = true;
             this.buttonEdit.Click += new System.EventHandler(this.buttonEdit_Click);
             // 
+            // checkBoxDebug
+            // 
+            this.checkBoxDebug.AutoSize = true;
+            this.checkBoxDebug.Location = new System.Drawing.Point(431, 398);
+            this.checkBoxDebug.Name = "checkBoxDebug";
+            this.checkBoxDebug.Size = new System.Drawing.Size(48, 16);
+            this.checkBoxDebug.TabIndex = 11;
+            this.checkBoxDebug.Text = "调试";
+            this.checkBoxDebug.UseVisualStyleBackColor = true;
+            // 
             // FormHttpSender
             // 
             this.AcceptButton = this.buttonStart;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(491, 460);
+            this.Controls.Add(this.checkBoxDebug);
             this.Controls.Add(this.buttonEdit);
             this.Controls.Add(this.buttonNow);
             this.Controls.Add(this.buttonClear);
@@ -261,5 +273,6 @@
         private System.Windows.Forms.Timer timerWait;
         private System.Windows.Forms.Button buttonNow;
         private System.Windows.Forms.Button buttonEdit;
+        private System.Windows.Forms.CheckBox checkBoxDebug;
     }
 }
