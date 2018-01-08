@@ -23,6 +23,8 @@
 #include <cavan/thread.h>
 #include <cavan/network.h>
 
+#define HTTP_SENDER_AHEAD	15000
+
 struct cavan_http_packet {
 	char *header;
 	char *body;
@@ -555,7 +557,7 @@ int main(int argc, char *argv[])
 	if (count > 0) {
 		while (1) {
 			u64 time = clock_gettime_real_ms();
-			if (time + 10000 < g_http_sender.time) {
+			if (time + HTTP_SENDER_AHEAD < g_http_sender.time) {
 				char buff[1024];
 
 				delay = g_http_sender.time - time;
