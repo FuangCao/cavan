@@ -51,8 +51,8 @@ typedef enum {
 
 struct cavan_http_packet {
 	char *headers[HTTP_HEADER_COUNT];
-	struct cavan_string header;
-	struct cavan_string body;
+	cavan_string_t header;
+	cavan_string_t body;
 	int lines;
 };
 
@@ -146,9 +146,11 @@ void cavan_http_packet_clear(struct cavan_http_packet *packet, bool depth);
 struct cavan_http_packet *cavan_http_packet_alloc(void);
 void cavan_http_packet_free(struct cavan_http_packet *packet);
 void cavan_http_packet_dump(const struct cavan_http_packet *packet);
-int cavan_http_packet_add_header_line_end(struct cavan_http_packet *packet);
-int cavan_http_packet_add_header_line(struct cavan_http_packet *packet, const char *line, int size);
-int cavan_http_parse_file(const char *pathname, struct cavan_http_packet *packets[], int size);
+int cavan_http_packet_add_line_end(struct cavan_http_packet *packet);
+int cavan_http_packet_add_line(struct cavan_http_packet *packet, const char *line, int size);
+int cavan_http_packet_parse_file(const char *pathname, struct cavan_http_packet *packets[], int size);
+int cavan_http_packet_read_body(struct cavan_http_packet *packet, struct cavan_fifo *fifo);
+int cavan_http_packet_read_response(struct cavan_http_packet *packet, struct cavan_fifo *fifo);
 
 // ================================================================================
 
@@ -175,4 +177,9 @@ static inline const struct cavan_http_prop *cavan_http_request_find_param(struct
 static inline const char *cavan_http_request_find_param_simple(struct cavan_http_request *req, const char *key)
 {
 	return cavan_http_find_prop_simple(req->params, req->param_used, key);
+}
+
+static inline const char *cavan_http_packet_get_header(struct cavan_http_packet *packet, int header)
+{
+	return packet->headers[header];
 }

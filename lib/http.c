@@ -32,7 +32,7 @@ const char *http_mime_type_js = "application/x-javascript";
 const char *http_mime_type_apk = "application/vnd.android.package-archive";
 const char *http_mime_type_cer = "application/x-x509-ca-cert";
 
-const struct cavan_string http_header_names[HTTP_HEADER_COUNT] = {
+const cavan_string_t http_header_names[HTTP_HEADER_COUNT] = {
 	CAVAN_STRING_INITIALIZER("Host"),
 	CAVAN_STRING_INITIALIZER("Content-Type"),
 	CAVAN_STRING_INITIALIZER("Content-Length"),
@@ -1681,12 +1681,12 @@ void cavan_http_packet_dump(const struct cavan_http_packet *packet)
 	println("lines = %d", packet->lines);
 }
 
-int cavan_http_packet_add_header_line_end(struct cavan_http_packet *packet)
+int cavan_http_packet_add_line_end(struct cavan_http_packet *packet)
 {
 	return cavan_string_append(&packet->header, "\r\n", 2);
 }
 
-int cavan_http_packet_add_header_line(struct cavan_http_packet *packet, const char *line, int size)
+int cavan_http_packet_add_line(struct cavan_http_packet *packet, const char *line, int size)
 {
 	int ret;
 	int length;
@@ -1699,9 +1699,9 @@ int cavan_http_packet_add_header_line(struct cavan_http_packet *packet, const ch
 		return ret;
 	}
 
-	ret = cavan_http_packet_add_header_line_end(packet);
+	ret = cavan_http_packet_add_line_end(packet);
 	if (ret < 0) {
-		pr_red_info("cavan_http_packet_add_header_line_end");
+		pr_red_info("cavan_http_packet_add_line_end");
 		return ret;
 	}
 
@@ -1735,9 +1735,9 @@ int cavan_http_packet_add_header_line(struct cavan_http_packet *packet, const ch
 				int i;
 
 				for (i = 0; i < HTTP_HEADER_COUNT; i++) {
-					const struct cavan_string *p = http_header_names + i;
+					const cavan_string_t *p = http_header_names + i;
 
-					if (p->used == length && strncasecmp(p->text, name, length) == 0) {
+					if (length == p->length && strncasecmp(p->text, name, length) == 0) {
 						packet->headers[i] = strndup(value, line_end - value);
 						break;
 					}
@@ -1751,9 +1751,8 @@ int cavan_http_packet_add_header_line(struct cavan_http_packet *packet, const ch
 	return 0;
 }
 
-int cavan_http_parse_file(const char *pathname, struct cavan_http_packet *packets[], int size)
+int cavan_http_packet_parse_file(const char *pathname, struct cavan_http_packet *packets[], int size)
 {
-	int i;
 	int ret;
 	int count;
 	size_t length;
@@ -1792,26 +1791,41 @@ int cavan_http_parse_file(const char *pathname, struct cavan_http_packet *packet
 			}
 
 			if (line < line_end) {
-				ret = cavan_http_packet_add_header_line(packet, line, line_end - line);
+				ret = cavan_http_packet_add_line(packet, line, line_end - line);
 				if (ret < 0) {
 					pr_red_info("cavan_string_append");
 					goto out_free_packets;
 				}
 			} else if (packet->lines > 0) {
+				ret = cavan_http_packet_add_line_end(packet);
+				if (ret < 0) {
+					pr_red_info("cavan_http_packet_add_line_end");
+					goto out_free_packets;
+				}
+
+				packets[count++] = packet;
+
 				packet = cavan_http_packet_alloc();
 				if (packet == NULL) {
 					pr_red_info("cavan_http_packet_alloc");
 					ret = -ENOMEM;
 					goto out_free_packets;
 				}
-
-				packets[count++] = packet;
 			}
+
+			line_end = NULL;
+			line = p + 1;
 			break;
 		}
 	}
 
 	if (packet->lines > 0) {
+		ret = cavan_http_packet_add_line_end(packet);
+		if (ret < 0) {
+			pr_red_info("cavan_http_packet_add_line_end");
+			goto out_free_packets;
+		}
+
 		packets[count++] = packet;
 	} else {
 		cavan_http_packet_free(packet);
@@ -1826,10 +1840,70 @@ out_free_packets:
 		cavan_http_packet_free(packet);
 	}
 
-	for (i = 0; i < count; i++) {
-		cavan_http_packet_free(packets[i]);
+	while (count > 0) {
+		cavan_http_packet_free(packets[--count]);
 	}
 out_free_mem:
 	free(mem);
 	return ret;
+}
+
+int cavan_http_packet_read_body(struct cavan_http_packet *packet, struct cavan_fifo *fifo)
+{
+	const char *content_length = packet->headers[HTTP_HEADER_CONTENT_LENGTH];
+
+	if (content_length != NULL) {
+		int length = text2value_unsigned(content_length, NULL, 10);
+		cavan_string_t *body = &packet->body;
+		int ret;
+
+		ret = cavan_string_reinit(body, length);
+		if (ret < 0) {
+			pr_red_info("cavan_string_reinit");
+			return ret;
+		}
+
+		if (length > 0) {
+			ret = cavan_fifo_fill(fifo, body->text, length);
+			if (ret < 0) {
+				pr_red_info("cavan_fifo_fill");
+				return ret;
+			}
+		}
+
+		return length;
+	}
+
+	return 0;
+}
+
+int cavan_http_packet_read_response(struct cavan_http_packet *packet, struct cavan_fifo *fifo)
+{
+	cavan_http_packet_clear(packet, false);
+
+	while (1) {
+		cavan_string_t *line = cavan_fifo_read_line_string(fifo);
+		if (line == NULL) {
+			pr_red_info("cavan_fifo_read_line_string");
+			return -EFAULT;
+		}
+
+		if (line->length > 0) {
+			int ret = cavan_http_packet_add_line(packet, line->text, line->length);
+			if (ret < 0) {
+				pr_red_info("cavan_http_packet_add_line");
+				return ret;
+			}
+		} else {
+			int ret = cavan_http_packet_read_body(packet, fifo);
+			if (ret < 0) {
+				pr_red_info("cavan_http_packet_read_body");
+				return ret;
+			}
+
+			break;
+		}
+	}
+
+	return 0;
 }

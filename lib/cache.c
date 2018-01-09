@@ -730,6 +730,8 @@ int cavan_fifo_init(struct cavan_fifo *fifo, size_t size, void *data)
 		goto out_pthread_mutex_destroy;
 	}
 
+	cavan_string_init(&fifo->line);
+
 	fifo->size = size;
 	fifo->available = 0;
 	fifo->private_data = data;
@@ -749,8 +751,9 @@ out_pthread_mutex_destroy:
 
 void cavan_fifo_deinit(struct cavan_fifo *fifo)
 {
-	pthread_mutex_destroy(&fifo->lock);
 	free(fifo->mem);
+	cavan_string_clear(&fifo->line, true);
+	pthread_mutex_destroy(&fifo->lock);
 }
 
 static ssize_t cavan_fifo_read_cache_locked(struct cavan_fifo *fifo, void *buff, size_t size)
@@ -929,6 +932,53 @@ char *cavan_fifo_read_line_strip(struct cavan_fifo *fifo, char *buff, size_t siz
 	*p = 0;
 
 	return p;
+}
+
+static cavan_string_t *cavan_fifo_read_line_string_locked(struct cavan_fifo *fifo)
+{
+	cavan_string_t *line = &fifo->line;
+
+	cavan_string_clear(line, false);
+
+	while (1) {
+		if (likely(fifo->data < fifo->data_end)) {
+			char c = *fifo->data++;
+			if (c == '\n') {
+				break;
+			}
+
+			if (c != '\r') {
+				int ret = cavan_string_append_char(line, c);
+				if (ret < 0) {
+					pr_red_info("cavan_string_append_char");
+					return NULL;
+				}
+			}
+		} else {
+			ssize_t rdlen = cavan_fifo_read_raw(fifo, fifo->mem, fifo->size);
+			if (rdlen > 0) {
+				fifo->data = fifo->mem;
+				fifo->data_end = fifo->mem + rdlen;
+			} else if (rdlen < 0 || line->length <= 0) {
+				return NULL;
+			} else {
+				break;
+			}
+		}
+	}
+
+	return line;
+}
+
+cavan_string_t *cavan_fifo_read_line_string(struct cavan_fifo *fifo)
+{
+	cavan_string_t *line;
+
+	cavan_fifo_lock(fifo);
+	line = cavan_fifo_read_line_string_locked(fifo);
+	cavan_fifo_unlock(fifo);
+
+	return line;
 }
 
 static ssize_t cavan_fifo_fill_locked(struct cavan_fifo *fifo, char *buff, size_t size)

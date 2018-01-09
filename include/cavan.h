@@ -151,16 +151,16 @@ extern int main(int argc, char *argv[]);
 
 static inline void msleep(useconds_t msec)
 {
-	while (msec--) {
-		usleep(1000);
+	if (msec >= 1000) {
+		sleep(msec / 1000);
 	}
+
+	usleep(msec % 1000 * 1000);
 }
 
 static inline void ssleep(useconds_t sec)
 {
-	while (sec--) {
-		msleep(1000);
-	}
+	sleep(sec);
 }
 
 __END_DECLS

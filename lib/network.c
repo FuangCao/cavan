@@ -3650,9 +3650,11 @@ out_SSL_free:
 
 static void network_client_ssl_close(struct network_client *client)
 {
-	if (client->context) {
-		SSL_free(client->context); // or SSL_shutdown(ssl);
+	SSL *ssl = client->context;
+
+	if (ssl) {
 		client->context = NULL;
+		SSL_free(ssl); // or SSL_shutdown(ssl);
 	}
 
 	network_client_tcp_close(client);
@@ -3660,20 +3662,24 @@ static void network_client_ssl_close(struct network_client *client)
 
 static ssize_t network_client_ssl_send(struct network_client *client, const void *buff, size_t size)
 {
-	if (unlikely(client->context == NULL)) {
+	SSL *ssl = client->context;
+
+	if (unlikely(ssl == NULL)) {
 		return -EINVAL;
 	}
 
-	return SSL_write(client->context, buff, size);
+	return SSL_write(ssl, buff, size);
 }
 
 static ssize_t network_client_ssl_recv(struct network_client *client, void *buff, size_t size)
 {
-	if (unlikely(client->context == NULL)) {
+	SSL *ssl = client->context;
+
+	if (unlikely(ssl == NULL)) {
 		return -EINVAL;
 	}
 
-	return SSL_read(client->context, buff, size);
+	return SSL_read(ssl, buff, size);
 }
 
 int network_client_ssl_attach(struct network_client *client, boolean server)

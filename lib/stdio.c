@@ -13,7 +13,6 @@ static pthread_mutex_t cavan_stdout_lock = PTHREAD_MUTEX_INITIALIZER;
 static FILE *cavan_async_stdout;
 static int cavan_async_stdout_pipefd[2];
 
-
 cavan_stdio_function_declarer(tty, "/dev/tty");
 cavan_stdio_function_declarer(kmsg, "/dev/kmsg");
 

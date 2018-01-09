@@ -3013,20 +3013,44 @@ char *time2text_msec(u64 msec, char *buff, size_t size)
 	return buff;
 }
 
-void cavan_string_init(struct cavan_string *str)
+void cavan_string_init(cavan_string_t *str)
 {
 	str->text = NULL;
-	str->used = 0;
-	str->size = 0;
+	str->length = 0;
+	str->allocated = 0;
 }
 
-int cavan_string_append(struct cavan_string *str, const char *text, int size)
+int cavan_string_reinit(cavan_string_t *str, int size)
 {
-	int used = str->used + size;
+	if (str->allocated <= size) {
+		if (str->allocated > 0) {
+			free(str->text);
+		}
 
-	if (used >= str->size) {
-		int total = (used + 1) << 1;
-		char *mem = malloc(total);
+		str->text = malloc(size + 1);
+		if (str->text == NULL) {
+			pr_err_info("malloc");
+			return -ENOMEM;
+		}
+
+		str->allocated = size;
+	}
+
+	str->text[size] = 0;
+	str->length = size;
+
+	return 0;
+}
+
+int cavan_string_append(cavan_string_t *str, const char *text, int size)
+{
+	int used = str->length + size;
+
+	if (str->allocated <= used) {
+		int total;
+		char *mem;
+
+		for (total = 32; total <= used; total <<= 1);
 
 		mem = malloc(total);
 		if (mem == NULL) {
@@ -3034,37 +3058,31 @@ int cavan_string_append(struct cavan_string *str, const char *text, int size)
 		}
 
 		if (str->text != NULL) {
-			memcpy(mem, str->text, str->used);
+			memcpy(mem, str->text, str->length);
 
-			if (str->size > 0) {
+			if (str->allocated > 0) {
 				free(str->text);
 			}
 		}
 
 		str->text = mem;
-		str->size = total;
+		str->allocated = total;
 	}
 
-	memcpy(str->text + str->used, text, size);
+	memcpy(str->text + str->length, text, size);
 	str->text[used] = 0;
-	str->used = used;
+	str->length = used;
 
 	return size;
 }
 
-void cavan_string_clear(struct cavan_string *str, bool depth)
+void cavan_string_clear(cavan_string_t *str, bool depth)
 {
-	str->used = 0;
+	str->length = 0;
 
-	if (depth) {
-		if (str->text != NULL) {
-			if (str->size > 0) {
-				free(str->text);
-			}
-
-			str->text = NULL;
-		}
-
-		str->size = 0;
+	if (depth && str->allocated > 0) {
+		free(str->text);
+		str->text = NULL;
+		str->allocated = 0;
 	}
 }

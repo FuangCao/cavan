@@ -19,348 +19,80 @@
 
 #include <cavan.h>
 #include <cavan/file.h>
+#include <cavan/http.h>
 #include <cavan/timer.h>
 #include <cavan/thread.h>
 #include <cavan/network.h>
 
-#define HTTP_SENDER_AHEAD	15000
-
-struct cavan_http_packet {
-	char *header;
-	char *body;
-	size_t size;
-	size_t used;
-	size_t length;
-	int lines;
-	char *host;
-	char *content_length;
-};
+#define HTTP_SENDER_AHEAD			15000
 
 struct cavan_http_sender {
-	u64 time;
-	bool http;
+	struct network_client client;
+	pthread_cond_t cond_write;
+	pthread_cond_t cond_read;
+	pthread_cond_t cond_exit;
+	pthread_mutex_t lock;
+	int write_count;
+	int read_count;
+	bool running;
 	bool verbose;
+	bool http;
+	u64 time;
 };
 
-static struct cavan_http_sender g_http_sender;
-
-static struct cavan_http_packet *cavan_http_packet_alloc(void)
+static inline void cavan_http_sender_lock(struct cavan_http_sender *sender)
 {
-	struct cavan_http_packet *packet = malloc(sizeof(struct cavan_http_packet));
-	if (packet != NULL) {
-		memset(packet, 0x00, sizeof(struct cavan_http_packet));
-	}
-
-	return packet;
+	pthread_mutex_lock(&sender->lock);
 }
 
-static void cavan_http_packet_clear(struct cavan_http_packet *packet)
+static inline void cavan_http_sender_unlock(struct cavan_http_sender *sender)
 {
-	if (packet->host) {
-		free(packet->host);
-		packet->host = NULL;
-	}
-
-	if (packet->content_length) {
-		free(packet->content_length);
-		packet->content_length = NULL;
-	}
-
-	if (packet->body) {
-		free(packet->body);
-		packet->body = NULL;
-	}
-
-	if (packet->header) {
-		free(packet->header);
-		packet->header = NULL;
-	}
-
-	packet->used = 0;
-	packet->size = 0;
-	packet->lines = 0;
-	packet->length = 0;
+	pthread_mutex_unlock(&sender->lock);
 }
 
-static void cavan_http_packet_free(struct cavan_http_packet *packet)
+static inline void cavan_http_sender_wait(struct cavan_http_sender *sender, pthread_cond_t *cond)
 {
-	cavan_http_packet_clear(packet);
-	free(packet);
+	pthread_cond_wait(cond, &sender->lock);
 }
 
-static int cavan_http_packet_add_text(struct cavan_http_packet *packet, const char *text, size_t size)
+static inline void cavan_http_sender_post(pthread_cond_t *cond)
 {
-	size_t total = packet->used + size;
-
-	if (total >= packet->size) {
-		size_t new_size = total << 1;
-		char *header = malloc(new_size);
-		if (header == NULL) {
-			return -ENOMEM;
-		}
-
-		if (packet->size && packet->header) {
-			memcpy(header, packet->header, packet->used);
-			free(packet->header);
-		}
-
-		packet->header = header;
-		packet->size = new_size;
-	}
-
-	memcpy(packet->header + packet->used, text, size);
-	packet->used += size;
-
-	return size;
+	pthread_cond_signal(cond);
 }
 
-static int cavan_http_packet_add_line_end(struct cavan_http_packet *packet)
+static bool cavan_http_sender_url_init(struct cavan_http_sender *sender, struct network_url *url, char *host)
 {
-	return cavan_http_packet_add_text(packet, "\r\n", 2);
-}
-
-static int cavan_http_packet_add_line(struct cavan_http_packet *packet, const char *line, size_t size)
-{
-	const char *line_end;
-	const char *name, *value;
-	int namelen;
-	int ret;
-
-	ret = cavan_http_packet_add_text(packet, line, size);
-	if (ret < 0) {
-		pr_red_info("cavan_http_packet_add_text");
-		return ret;
-	}
-
-	ret = cavan_http_packet_add_line_end(packet);
-	if (ret < 0) {
-		pr_red_info("cavan_http_packet_add_line_end");
-		return ret;
-	}
-
-	packet->lines++;
-
-	if (packet->lines == 1) {
-		return 0;
-	}
-
-	line_end = line + size;
-	name = line;
-	namelen = 0;
-	value = NULL;
-
-	while (line < line_end) {
-		switch (*line) {
-		case ':':
-			namelen = line - name;
-			value = line + 1;
-			break;
-
-		case ' ':
-		case '\t':
-			if (name == line) {
-				name++;
-			} else if (value == line) {
-				value++;
-			}
-			break;
-
-		default:
-			if (value != NULL) {
-				goto out_parse_complete;
-			}
-		}
-
-		line++;
-	}
-
-out_parse_complete:
-	if (value != NULL) {
-		if (namelen == 4 && strncasecmp(name, "host", 4) == 0) {
-			packet->host = strndup(value, line_end - value);
-		} else if (namelen == 14 && strncasecmp(name, "content-length", 14) == 0) {
-			packet->content_length = strndup(value, line_end - value);
-		}
-	}
-
-	return 0;
-}
-
-static int cavan_http_packet_read_body(struct cavan_http_packet *packet, struct cavan_fifo *fifo)
-{
-	char *content_length;
-	int length;
-
-	content_length = packet->content_length;
-	if (content_length == NULL) {
-		return 0;
-	}
-
-	length = text2value_unsigned(packet->content_length, NULL, 10);
-	if (length > 0) {
-		packet->body = malloc(length);
-		if (packet->body == NULL) {
-			pr_err_info("malloc");
-			return -ENOMEM;
-		}
-
-		if (cavan_fifo_fill(fifo, packet->body, length) < length) {
-			pr_red_info("cavan_fifo_fill");
-			return -EFAULT;
-		}
-
-		packet->length = length;
-
-		if (g_http_sender.verbose) {
-			cavan_stdout_write_line(packet->body, length);
-		}
-	}
-
-	return 0;
-}
-
-static int cavan_http_packet_read_response(struct cavan_http_packet *packet, struct cavan_fifo *fifo)
-{
-	cavan_http_packet_clear(packet);
-
-	while (1) {
-		char line[4096];
-		char *p;
-		int ret;
-
-		p = cavan_fifo_read_line_strip(fifo, line, sizeof(line));
-		if (p > line) {
-			int ret = cavan_http_packet_add_line(packet, line, p - line);
-			if (ret < 0) {
-				pr_red_info("cavan_http_packet_add_line");
-				return ret;
-			}
-		} else {
-			ret = cavan_http_packet_read_body(packet, fifo);
-			if (ret < 0) {
-				pr_red_info("cavan_http_packet_read_body");
-				return ret;
-			}
-
-			break;
-		}
-	}
-
-	return 0;
-}
-
-static int cavan_http_sender_load_file(const char *pathname, struct cavan_http_packet *packets[])
-{
-	int ret;
-	int count;
-	char *text;
-	size_t size;
-	char *p, *p_end;
-	char *line, *line_end;
-	struct cavan_http_packet *packet;
-
-	text = file_read_all(pathname, 0, &size);
-	if (text == NULL) {
-		pr_red_info("file_read_all");
-		return -EFAULT;
-	}
-
-	packet = cavan_http_packet_alloc();
-	if (packet == NULL) {
-		pr_red_info("cavan_http_packet_alloc");
-		ret = -ENOMEM;
-		goto out_free_text;
-	}
-
-	count = 0;
-	line = text;
-	line_end = NULL;
-
-	for (p = text, p_end = p + size; p < p_end; p++) {
-		switch (*p) {
-		case '\r':
-			if (line_end == NULL) {
-				line_end = p;
-			}
-			break;
-
-		case '\n':
-			if (line_end == NULL) {
-				line_end = p;
-			}
-
-			if (line_end > line) {
-				ret = cavan_http_packet_add_line(packet, line, line_end - line);
-				if (ret < 0) {
-					pr_red_info("cavan_http_packet_add_line");
-					goto out_free_packets;
-				}
-			} else if (packet->lines > 0) {
-				ret = cavan_http_packet_add_line_end(packet);
-				if (ret < 0) {
-					pr_red_info("cavan_http_packet_add_line_end");
-					goto out_free_packets;
-				}
-
-				packets[count++] = packet;
-				packet = cavan_http_packet_alloc();
-				if (packet == NULL) {
-					pr_red_info("cavan_http_packet_alloc");
-					ret = -ENOMEM;
-					goto out_free_packets;
-				}
-			}
-
-			line = p + 1;
-			line_end = NULL;
-			break;
-		}
-	}
-
-	if (packet->lines > 0) {
-		ret = cavan_http_packet_add_line_end(packet);
-		if (ret < 0) {
-			pr_red_info("cavan_http_packet_add_line_end");
-			goto out_free_packets;
-		}
-
-		packets[count++] = packet;
-	} else {
-		cavan_http_packet_free(packet);
-	}
-
-	free(text);
-	return count;
-
-out_free_packets:
-	if (packet != NULL) {
-		cavan_http_packet_free(packet);
-	}
-
-	while (count > 0) {
-		cavan_http_packet_free(packets[--count]);
-	}
-out_free_text:
-	free(text);
-	return ret;
-}
-
-static void *cavan_http_sender_thread_handler(void *data)
-{
-	struct cavan_http_packet *req = data;
-	struct cavan_http_packet *rsp;
-	struct network_client client;
-	struct network_url url;
-	struct cavan_fifo fifo;
-	int count = 0;
+	char buff[1024];
 	u16 port;
 	char *p;
+
+	p = strchr(host, ':');
+	if (p != NULL) {
+		port = text2value_unsigned(p + 1, NULL, 10);
+		*p = 0;
+	} else if (sender->http) {
+		port = 80;
+	} else {
+		port = 443;
+	}
+
+	network_url_init(url, sender->http ? "tcp" : "ssl", host, port, NULL);
+	println("url = %s", network_url_tostring(url, buff, sizeof(buff), NULL));
+
+	return true;
+}
+
+static void *cavan_http_sender_receive_thread(void *data)
+{
+	struct cavan_http_sender *sender = data;
+	struct cavan_http_packet *rsp;
+	struct cavan_fifo fifo;
 	int ret;
 
-	ret = cavan_fifo_init(&fifo, 4096, &client);
+	ret = cavan_fifo_init(&fifo, 4096, &sender->client);
 	if (ret < 0) {
 		pr_red_info("cavan_fifo_init");
-		return NULL;
+		goto out_pthread_cond_signal;
 	}
 
 	fifo.read = network_client_fifo_read;
@@ -368,28 +100,92 @@ static void *cavan_http_sender_thread_handler(void *data)
 	rsp = cavan_http_packet_alloc();
 	if (rsp == NULL) {
 		pr_red_info("cavan_http_packet_alloc");
-		return NULL;
+		goto out_fifo_deinit;
 	}
 
-	p = strchr(req->host, ':');
-	if (p != NULL) {
-		port = text2value_unsigned(p + 1, NULL, 10);
-		*p = 0;
-	} else if (g_http_sender.http) {
-		port = 80;
-	} else {
-		port = 443;
+	cavan_http_sender_lock(sender);
+
+	while (sender->running) {
+		while (sender->running) {
+			if (sender->read_count > 0) {
+				sender->read_count--;
+				break;
+			}
+
+			if (sender->verbose) {
+				println("wait for read");
+			}
+
+			cavan_http_sender_wait(sender, &sender->cond_read);
+		}
+
+		if (!sender->running) {
+			break;
+		}
+
+		cavan_http_sender_unlock(sender);
+		ret = cavan_http_packet_read_response(rsp, &fifo);
+		cavan_http_sender_lock(sender);
+
+		if (ret < 0) {
+			pr_red_info("cavan_http_packet_read_response");
+			break;
+		}
+
+		if (++sender->write_count == 1) {
+			cavan_http_sender_post(&sender->cond_write);
+		}
+
+		if (sender->verbose) {
+			cavan_string_t *body = &rsp->body;
+			cavan_stdout_write_line(body->text, body->length);
+		}
 	}
 
-	network_url_init(&url, g_http_sender.http ? "tcp" : "ssl", req->host, port, NULL);
-	println("url = %s", network_url_tostring(&url, NULL, 0, NULL));
+	cavan_http_sender_unlock(sender);
+
+	cavan_http_packet_free(rsp);
+out_fifo_deinit:
+	cavan_fifo_deinit(&fifo);
+out_pthread_cond_signal:
+	cavan_http_sender_lock(sender);
+	sender->running = false;
+	pthread_cond_signal(&sender->cond_exit);
+	cavan_http_sender_unlock(sender);
+	return NULL;
+}
+
+static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct cavan_http_packet *packets[], int count, char *host)
+{
+	struct network_client *client = &sender->client;
+	struct network_url url;
+
+	if (!cavan_http_sender_url_init(sender, &url, host)) {
+		pr_red_info("cavan_http_sender_url_init");
+		return -EFAULT;
+	}
 
 	while (1) {
-		u64 time;
+		u64 time = clock_gettime_real_ms();
+		if (time + HTTP_SENDER_AHEAD < sender->time) {
+			char buff[1024];
+			int delay;
+
+			delay = sender->time - time;
+			time2text_msec(delay, buff, sizeof(buff));
+			println("delay = %s", buff);
+			msleep(1000);
+		} else {
+			break;
+		}
+	}
+
+	while (1) {
 		int ret;
+		int i;
 
 		while (1) {
-			ret = network_client_open(&client, &url, 0);
+			ret = network_client_open(client, &url, 0);
 			if (ret < 0) {
 				pr_red_info("network_client_open");
 				msleep(200);
@@ -400,10 +196,26 @@ static void *cavan_http_sender_thread_handler(void *data)
 
 		println("connect successfull");
 
+		cavan_http_sender_lock(sender);
+
+		sender->write_count = count;
+		sender->read_count = 0;
+
+		if (!sender->running) {
+			sender->running = true;
+			cavan_pthread_run(cavan_http_sender_receive_thread, sender);
+		}
+
+		cavan_http_sender_unlock(sender);
+
 		while (1) {
-			time = clock_gettime_real_ms();
-			if (time < g_http_sender.time) {
-				int delay = g_http_sender.time - time;
+			u64 time = clock_gettime_real_ms();
+
+			if (time < sender->time) {
+				int delay = sender->time - time;
+
+				println("delay = %d", delay);
+
 				if (delay > 1000) {
 					usleep(1000000);
 				} else {
@@ -415,29 +227,59 @@ static void *cavan_http_sender_thread_handler(void *data)
 			}
 		}
 
-		while (1) {
-			cavan_fifo_reset(&fifo);
+		cavan_http_sender_lock(sender);
 
-			ret = network_client_send(&client, req->header, req->used);
+		i = 0;
+
+		while (sender->running) {
+			cavan_string_t *header;
+
+			while (sender->running) {
+				if (sender->write_count > 0) {
+					sender->write_count--;
+					break;
+				}
+
+				if (sender->verbose) {
+					println("wait for write");
+				}
+
+				cavan_http_sender_wait(sender, &sender->cond_write);
+			}
+
+			if (!sender->running) {
+				break;
+			}
+
+			cavan_http_sender_unlock(sender);
+			header = &packets[i]->header;
+			ret = network_client_send(client, header->text, header->length);
+			cavan_http_sender_lock(sender);
+
 			if (ret < 0) {
 				pr_red_info("network_client_send");
 				break;
 			}
 
-			ret = cavan_http_packet_read_response(rsp, &fifo);
-			if (ret < 0) {
-				pr_red_info("network_client_send");
-				break;
-			}
+			i = (i + 1) % count;
 
-			count++;
-			msleep(count * 50);
+			if (++sender->read_count == 1) {
+				cavan_http_sender_post(&sender->cond_read);
+			}
 		}
 
-		network_client_close(&client);
-	}
+		if (sender->running) {
+			sender->running = false;
+			close(client->sockfd);
+			sender->read_count = 1;
+			cavan_http_sender_post(&sender->cond_read);
+			cavan_http_sender_wait(sender, &sender->cond_exit);
+		}
 
-	return NULL;
+		cavan_http_sender_unlock(sender);
+
+		network_client_close(client);
+	}
 }
 
 static void cavan_http_sender_show_usage(const char *command)
@@ -459,7 +301,8 @@ int main(int argc, char *argv[])
 	int count = 0;
 	int delay = 0;
 	int option_index;
-	struct cavan_http_packet *packets[100];
+	struct cavan_http_packet *packets[200];
+	struct cavan_http_sender sender;
 	struct option long_option[] = {
 		{
 			.name = "help",
@@ -496,14 +339,21 @@ int main(int argc, char *argv[])
 		},
 	};
 
-	g_http_sender.time = ((clock_gettime_real_ms() + 3600000 - 1) / 3600000) * 3600000;
+	memset(&sender, 0x00, sizeof(sender));
+
+	pthread_cond_init(&sender.cond_write, NULL);
+	pthread_cond_init(&sender.cond_read, NULL);
+	pthread_cond_init(&sender.cond_exit, NULL);
+	pthread_mutex_init(&sender.lock, NULL);
+
+	sender.time = ((clock_gettime_real_ms() + 3600000 - 1) / 3600000) * 3600000;
 
 	while ((c = getopt_long(argc, argv, "vVhHd:D:t:T:nN", long_option, &option_index)) != EOF) {
 		switch (c) {
 		case 'v':
 		case 'V':
 		case CAVAN_COMMAND_OPTION_VERSION:
-			g_http_sender.verbose = true;
+			sender.verbose = true;
 			break;
 
 		case 'h':
@@ -526,11 +376,11 @@ int main(int argc, char *argv[])
 		case 'n':
 		case 'N':
 		case CAVAN_COMMAND_OPTION_NOW:
-			g_http_sender.time = clock_gettime_real_ms();
+			sender.time = clock_gettime_real_ms();
 			break;
 
 		case CAVAN_COMMAND_OPTION_HTTP:
-			g_http_sender.http = true;
+			sender.http = true;
 			break;
 
 		default:
@@ -541,10 +391,10 @@ int main(int argc, char *argv[])
 
 	println("delay = %d", delay);
 
-	g_http_sender.time += delay;
+	sender.time += delay;
 
 	for (i = optind; i < argc; i++) {
-		ret = cavan_http_sender_load_file(argv[i], packets + count);
+		ret = cavan_http_packet_parse_file(argv[i], packets + count, NELEM(packets) - count);
 		if (ret < 0) {
 			pr_red_info("cavan_http_sender_load_file");
 			return ret;
@@ -556,36 +406,29 @@ int main(int argc, char *argv[])
 	println("count = %d", count);
 
 	if (count > 0) {
-		while (1) {
-			u64 time = clock_gettime_real_ms();
-			if (time + HTTP_SENDER_AHEAD < g_http_sender.time) {
-				char buff[1024];
-
-				delay = g_http_sender.time - time;
-				time2text_msec(delay, buff, sizeof(buff));
-				println("delay = %s", buff);
-				msleep(1000);
-			} else {
-				break;
-			}
+		char *host = packets[0]->headers[HTTP_HEADER_HOST];
+		if (host == NULL) {
+			pr_red_info("host not found");
+			return -EINVAL;
 		}
+
+		println("host = %s", host);
 
 		for (i = 1; i < count; i++) {
-			struct cavan_http_packet *packet = packets[i];
-			if (packet->host) {
-				cavan_pthread_run(cavan_http_sender_thread_handler, packet);
+			char *p = packets[i]->headers[HTTP_HEADER_HOST];
+			if (p == NULL) {
+				pr_red_info("host[%d] not found", i);
+				return -EINVAL;
+			}
+
+			if (strcmp(host, p) != 0) {
+				pr_red_info("host[%d] not mach: %s", i, p);
+				return -EINVAL;
 			}
 		}
 
-		struct cavan_http_packet *packet = packets[0];
-		if (packet->host) {
-			cavan_http_sender_thread_handler(packet);
-		}
-
-		while (1) {
-			sleep(60);
-		}
+		return cavan_http_sender_main_loop(&sender, packets, count, host);
 	}
 
-	return 0;
+	return -EINVAL;
 }

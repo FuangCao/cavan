@@ -36,11 +36,11 @@ __BEGIN_DECLS;
 #define CAVAN_STRING_INITIALIZER(text) \
 	{ text, sizeof(text) - 1, 0 }
 
-struct cavan_string {
+typedef struct {
 	char *text;
-	int used;
-	int size;
-};
+	int length;
+	int allocated;
+} cavan_string_t;
 
 char *text_tail(const char *text);
 size_t text_len(const char *text);
@@ -272,9 +272,15 @@ double text2frequency(const char *text, const char *text_end, const char **last)
 
 char *time2text_msec(u64 msec, char *buff, size_t size);
 
-void cavan_string_init(struct cavan_string *str);
-int cavan_string_append(struct cavan_string *str, const char *text, int size);
-void cavan_string_clear(struct cavan_string *str, bool depth);
+void cavan_string_init(cavan_string_t *str);
+int cavan_string_reinit(cavan_string_t *str, int size);
+int cavan_string_append(cavan_string_t *str, const char *text, int size);
+void cavan_string_clear(cavan_string_t *str, bool depth);
+
+static inline int cavan_string_append_char(cavan_string_t *str, char c)
+{
+	return cavan_string_append(str, &c, 1);
+}
 
 // ============================================================
 
