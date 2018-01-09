@@ -255,7 +255,7 @@ namespace NetworkInputMethod
                     return true;
                 }
 
-                if (message.Contains("领完") && count > 5)
+                if (message.Contains("领完") && count > 20)
                 {
                     return true;
                 }
@@ -310,7 +310,6 @@ namespace NetworkInputMethod
                         }
 
                         count++;
-                        Thread.Sleep(count * 50);
                     }
 
                     stream.Close();
