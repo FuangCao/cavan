@@ -25,6 +25,7 @@
 #include <cavan/network.h>
 
 #define HTTP_SENDER_AHEAD			15000
+#define HTTP_SENDER_TEST			"game.weixin.qq.com"
 
 struct cavan_http_sender {
 	struct network_client client;
@@ -428,6 +429,63 @@ int main(int argc, char *argv[])
 		}
 
 		return cavan_http_sender_main_loop(&sender, packets, count, host);
+	} else {
+		struct cavan_http_packet req;
+		struct cavan_http_packet rsp;
+		struct network_client client;
+		struct cavan_fifo fifo;
+
+		ret = cavan_fifo_init(&fifo, 4096, &client);
+		if (ret < 0) {
+			pr_red_info("cavan_fifo_init");
+			return ret;
+		}
+
+		fifo.read = network_client_fifo_read;
+
+		cavan_http_packet_init(&req);
+		cavan_http_packet_init(&rsp);
+
+		cavan_http_packet_add_line(&req, "GET / HTTP/1.1", -1);
+		cavan_http_packet_add_line(&req, "Host: " HTTP_SENDER_TEST, -1);
+		cavan_http_packet_add_line(&req, "Connection: keep-alive", -1);
+		cavan_http_packet_add_line_end(&req);
+
+		ret = network_client_open2(&client, "ssl://" HTTP_SENDER_TEST ":443", 0);
+		if (ret < 0) {
+			pr_red_info("network_client_open2");
+			return ret;
+		}
+
+		while (1) {
+			cavan_string_t *header = &req.header;
+			const char *date;
+
+			ret = network_client_send(&client, header->text, header->length);
+			if (ret < 0) {
+				pr_red_info("network_client_send");
+				break;
+			}
+
+			ret = cavan_http_packet_read_response(&rsp, &fifo);
+			if (ret < 0) {
+				pr_red_info("cavan_http_packet_read_response");
+				break;
+			}
+
+			date = rsp.headers[HTTP_HEADER_DATE];
+			if (date != NULL) {
+				time_t now = time(NULL);
+				char buff[1024];
+
+				strftime(buff, sizeof(buff), "%F %T", gmtime(&now));
+
+				println("remote = %s", date);
+				println("local  = %s", buff);
+			}
+
+			msleep(200);
+		}
 	}
 
 	return -EINVAL;

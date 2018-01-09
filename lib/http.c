@@ -34,6 +34,7 @@ const char *http_mime_type_cer = "application/x-x509-ca-cert";
 
 const cavan_string_t http_header_names[HTTP_HEADER_COUNT] = {
 	CAVAN_STRING_INITIALIZER("Host"),
+	CAVAN_STRING_INITIALIZER("Date"),
 	CAVAN_STRING_INITIALIZER("Content-Type"),
 	CAVAN_STRING_INITIALIZER("Content-Length"),
 	CAVAN_STRING_INITIALIZER("Content-Encoding"),
@@ -1692,6 +1693,10 @@ int cavan_http_packet_add_line(struct cavan_http_packet *packet, const char *lin
 	int length;
 	const char *line_end;
 	const char *name, *value;
+
+	if (size < 0) {
+		size = strlen(line);
+	}
 
 	ret = cavan_string_append(&packet->header, line, size);
 	if (ret < 0) {
