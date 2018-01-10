@@ -1771,6 +1771,19 @@ int cavan_http_packet_add_line(struct cavan_http_packet *packet, const char *lin
 	return 0;
 }
 
+int cavan_http_packet_add_linef(struct cavan_http_packet *packet, const char *format, ...)
+{
+	char buff[4096];
+	int length;
+	va_list ap;
+
+	va_start(ap, format);
+	length = vsnprintf(buff, sizeof(buff), format, ap);
+	va_end(ap);
+
+	return cavan_http_packet_add_line(packet, buff, length);
+}
+
 int cavan_http_packet_parse_file(const char *pathname, struct cavan_http_packet *packets[], int size)
 {
 	int ret;

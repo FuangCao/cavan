@@ -479,6 +479,7 @@ const char *network_protocol_tostring(network_protocol_t type);
 
 int network_client_open(struct network_client *client, const struct network_url *url, int flags);
 int network_client_open2(struct network_client *client, const char *url, int flags);
+__printf_format_34__ int network_client_openf(struct network_client *client, int flags, const char *url, ...);
 int network_client_ssl_attach(struct network_client *client, boolean server);
 void network_client_close(struct network_client *client);
 int network_client_vprintf(struct network_client *client, const char *format, va_list ap);
@@ -504,6 +505,7 @@ ssize_t network_client_recv_packet(struct network_client *client, void *buff, si
 int network_service_accept_timed(struct network_service *service, struct network_client *client, u32 msec);
 int network_service_open(struct network_service *service, const struct network_url *url, int flags);
 int network_service_open2(struct network_service *service, const char *url, int flags);
+__printf_format_34__ int network_service_openf(struct network_service *service, int flags, const char *url, ...);
 void network_service_close(struct network_service *service);
 int network_service_get_local_port(struct network_service *service);
 

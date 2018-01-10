@@ -4126,6 +4126,18 @@ int network_client_open2(struct network_client *client, const char *url_text, in
 	return network_client_open(client, &url, flags);
 }
 
+int network_client_openf(struct network_client *client, int flags, const char *url, ...)
+{
+	char buff[4096];
+	va_list ap;
+
+	va_start(ap, url);
+	vsnprintf(buff, sizeof(buff), url, ap);
+	va_end(ap);
+
+	return network_client_open2(client, buff, flags);
+}
+
 void network_client_close(struct network_client *client)
 {
 	if (client->close) {
@@ -4291,6 +4303,18 @@ int network_service_open2(struct network_service *service, const char *url_text,
 	}
 
 	return network_service_open(service, &url, flags);
+}
+
+int network_service_openf(struct network_service *service, int flags, const char *url, ...)
+{
+	char buff[4096];
+	va_list ap;
+
+	va_start(ap, url);
+	vsnprintf(buff, sizeof(buff), url, ap);
+	va_end(ap);
+
+	return network_service_open2(service, buff, flags);
 }
 
 void network_service_close(struct network_service *service)

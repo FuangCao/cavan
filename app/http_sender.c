@@ -289,7 +289,7 @@ static void cavan_http_sender_show_usage(const char *command)
 	println("%s [option] URL", command);
 	println("-H, -h, --help\t\t%s", cavan_help_message_help);
 	println("-V, -v, --verbose\t%s", cavan_help_message_verbose);
-	println("-T, -t, --time\t\t%s", cavan_help_message_start_time);
+	println("-T, -t, --test\t\ttest only");
 	println("-D, -d, --delay\t\t%s", cavan_help_message_delay_time);
 	println("-N, -n, --now\t\t%s", cavan_help_message_current_time);
 }
@@ -299,6 +299,7 @@ int main(int argc, char *argv[])
 	int i;
 	int c;
 	int ret;
+	char *test;
 	int count = 0;
 	int delay = 0;
 	int option_index;
@@ -336,6 +337,11 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_NOW,
 		}, {
+			.name = "test",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_TEST,
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -349,7 +355,7 @@ int main(int argc, char *argv[])
 
 	sender.time = ((clock_gettime_real_ms() + 3600000 - 1) / 3600000) * 3600000;
 
-	while ((c = getopt_long(argc, argv, "vVhHd:D:t:T:nN", long_option, &option_index)) != EOF) {
+	while ((c = getopt_long(argc, argv, "vVhHd:D:tTnN", long_option, &option_index)) != EOF) {
 		switch (c) {
 		case 'v':
 		case 'V':
@@ -369,11 +375,6 @@ int main(int argc, char *argv[])
 			delay = text2value(optarg, NULL, 10);
 			break;
 
-		case 't':
-		case 'T':
-		case CAVAN_COMMAND_OPTION_TIME:
-			break;
-
 		case 'n':
 		case 'N':
 		case CAVAN_COMMAND_OPTION_NOW:
@@ -382,6 +383,15 @@ int main(int argc, char *argv[])
 
 		case CAVAN_COMMAND_OPTION_HTTP:
 			sender.http = true;
+			break;
+
+		case 't':
+		case 'T':
+			test = HTTP_SENDER_HOST;
+			break;
+
+		case CAVAN_COMMAND_OPTION_TEST:
+			test = optarg;
 			break;
 
 		default:
@@ -406,34 +416,14 @@ int main(int argc, char *argv[])
 
 	println("count = %d", count);
 
-	if (count > 0) {
-		char *host = packets[0]->headers[HTTP_HEADER_HOST];
-		if (host == NULL) {
-			pr_red_info("host not found");
-			return -EINVAL;
-		}
-
-		println("host = %s", host);
-
-		for (i = 1; i < count; i++) {
-			char *p = packets[i]->headers[HTTP_HEADER_HOST];
-			if (p == NULL) {
-				pr_red_info("host[%d] not found", i);
-				return -EINVAL;
-			}
-
-			if (strcmp(host, p) != 0) {
-				pr_red_info("host[%d] not mach: %s", i, p);
-				return -EINVAL;
-			}
-		}
-
-		return cavan_http_sender_main_loop(&sender, packets, count, host);
-	} else {
+	if (test != NULL) {
 		struct cavan_http_packet req;
 		struct cavan_http_packet rsp;
 		struct network_client client;
+		struct network_url url;
 		struct cavan_fifo fifo;
+
+		sender.verbose = true;
 
 		ret = cavan_fifo_init(&fifo, 4096, &client);
 		if (ret < 0) {
@@ -447,11 +437,13 @@ int main(int argc, char *argv[])
 		cavan_http_packet_init(&rsp);
 
 		CAVAN_HTTP_PACKET_ADD_LINE(&req, "GET / HTTP/1.1");
-		CAVAN_HTTP_PACKET_ADD_LINE(&req, "Host: " HTTP_SENDER_HOST);
+		cavan_http_packet_add_linef(&req, "Host: %s", test);
 		CAVAN_HTTP_PACKET_ADD_LINE(&req, "Connection: keep-alive");
 		cavan_http_packet_add_line_end(&req);
 
-		ret = network_client_open2(&client, "ssl://" HTTP_SENDER_HOST ":443", 0);
+		cavan_http_sender_url_init(&sender, &url, test);
+
+		ret = network_client_open(&client, &url, 0);
 		if (ret < 0) {
 			pr_red_info("network_client_open2");
 			return ret;
@@ -485,7 +477,30 @@ int main(int argc, char *argv[])
 
 			msleep(100);
 		}
-	}
+	} else if (count > 0) {
+		char *host = packets[0]->headers[HTTP_HEADER_HOST];
+		if (host == NULL) {
+			pr_red_info("host not found");
+			return -EINVAL;
+		}
 
-	return -EINVAL;
+		println("host = %s", host);
+
+		for (i = 1; i < count; i++) {
+			char *p = packets[i]->headers[HTTP_HEADER_HOST];
+			if (p == NULL) {
+				pr_red_info("host[%d] not found", i);
+				return -EINVAL;
+			}
+
+			if (strcmp(host, p) != 0) {
+				pr_red_info("host[%d] not mach: %s", i, p);
+				return -EINVAL;
+			}
+		}
+
+		return cavan_http_sender_main_loop(&sender, packets, count, host);
+	} else {
+		return -EINVAL;
+	}
 }

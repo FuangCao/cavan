@@ -155,6 +155,7 @@ void cavan_http_packet_free(struct cavan_http_packet *packet);
 void cavan_http_packet_dump(const struct cavan_http_packet *packet);
 int cavan_http_packet_add_line_end(struct cavan_http_packet *packet);
 int cavan_http_packet_add_line(struct cavan_http_packet *packet, const char *line, int size);
+__printf_format_23__ int cavan_http_packet_add_linef(struct cavan_http_packet *packet, const char *format, ...);
 int cavan_http_packet_parse_file(const char *pathname, struct cavan_http_packet *packets[], int size);
 int cavan_http_packet_read_body(struct cavan_http_packet *packet, struct cavan_fifo *fifo);
 int cavan_http_packet_read_response(struct cavan_http_packet *packet, struct cavan_fifo *fifo);
