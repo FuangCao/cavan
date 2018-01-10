@@ -43,6 +43,7 @@ static void show_usage(const char *command)
 	println("-U, --purl, --pu URL\t\t%s", cavan_help_message_proxy_url);
 	println("-P, --pt, --protocol PROTOCOL\t%s", cavan_help_message_protocol);
 	println("--ppt, --pprotocol PROTOCOL\t%s", cavan_help_message_proxy_protocol);
+	println("--monitor\t\t\t%s", cavan_help_message_monitor_mode);
 }
 
 int main(int argc, char *argv[])
@@ -147,6 +148,11 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_PROXY_PROTOCOL,
 		}, {
+			.name = "monitor",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_MONITOR,
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -246,6 +252,11 @@ int main(int argc, char *argv[])
 
 		case CAVAN_COMMAND_OPTION_PROXY_PROTOCOL:
 			proxy->url_proxy.protocol = optarg;
+			break;
+
+		case CAVAN_COMMAND_OPTION_MONITOR:
+			service->verbose = true;
+			proxy->monitor = true;
 			break;
 
 		default:

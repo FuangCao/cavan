@@ -877,8 +877,13 @@ int cavan_stdout_write_line(const char *line, int length)
 	int ret = 0;
 
 	pthread_mutex_lock(&cavan_stdout_lock);
-	ret |= write(stdout_fd, line, length);
+
+	if (line != NULL && length > 0) {
+		ret |= write(stdout_fd, line, length);
+	}
+
 	ret |= write(stdout_fd, "\n", 1);
+
 	pthread_mutex_unlock(&cavan_stdout_lock);
 
 	return ret;

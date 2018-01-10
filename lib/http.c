@@ -1914,31 +1914,62 @@ int cavan_http_packet_read_body(struct cavan_http_packet *packet, struct cavan_f
 	return 0;
 }
 
-int cavan_http_packet_read_response(struct cavan_http_packet *packet, struct cavan_fifo *fifo)
+int cavan_http_packet_read(struct cavan_http_packet *packet, struct cavan_fifo *fifo)
 {
 	cavan_http_packet_clear(packet, false);
 
 	while (1) {
 		cavan_string_t *line = cavan_fifo_read_line_string(fifo);
+		int ret;
+
 		if (line == NULL) {
 			pr_red_info("cavan_fifo_read_line_string");
 			return -EFAULT;
 		}
 
 		if (line->length > 0) {
-			int ret = cavan_http_packet_add_line(packet, line->text, line->length);
+			ret = cavan_http_packet_add_line(packet, line->text, line->length);
 			if (ret < 0) {
 				pr_red_info("cavan_http_packet_add_line");
 				return ret;
 			}
 		} else {
-			int ret = cavan_http_packet_read_body(packet, fifo);
+			ret = cavan_http_packet_add_line_end(packet);
+			if (ret < 0) {
+				pr_red_info("cavan_http_packet_add_line_end");
+				return ret;
+			}
+
+			ret = cavan_http_packet_read_body(packet, fifo);
 			if (ret < 0) {
 				pr_red_info("cavan_http_packet_read_body");
 				return ret;
 			}
 
 			break;
+		}
+	}
+
+	return 0;
+}
+
+int cavan_http_packet_write(struct cavan_http_packet *packet, struct network_client *client)
+{
+	cavan_string_t *header = &packet->header;
+	cavan_string_t *body = &packet->body;
+	int ret;
+
+	ret = network_client_send(client, header->text, header->length);
+	if (ret < 0) {
+		pr_red_info("network_client_send");
+		return ret;
+	}
+
+	if (body->length > 0) {
+		ret = network_client_send(client, body->text, body->length);
+		if (ret < 0) {
+			pr_red_info("network_client_send");
+			return ret;
 		}
 	}
 

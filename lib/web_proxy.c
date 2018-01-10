@@ -147,6 +147,65 @@ static int web_proxy_main_loop(struct network_client *client_src, struct network
 	return 0;
 }
 
+static int web_proxy_monitor_loop(struct network_client *local, struct network_client *remote)
+{
+	struct cavan_http_packet packet;
+	struct cavan_fifo fifo_remote;
+	struct cavan_fifo fifo_local;
+	int ret;
+
+	ret = network_client_fifo_init(&fifo_local, 4096, local);
+	if (ret < 0) {
+		pr_red_info("network_client_fifo_init");
+		return ret;
+	}
+
+	ret = network_client_fifo_init(&fifo_remote, 4096, remote);
+	if (ret < 0) {
+		pr_red_info("network_client_fifo_init");
+		goto out_fifo_deinit_local;
+	}
+
+	cavan_http_packet_init(&packet);
+
+	while (1) {
+		ret = cavan_http_packet_read(&packet, &fifo_local);
+		if (ret < 0) {
+			pr_red_info("cavan_http_packet_read");
+			break;
+		}
+
+		cavan_stdout_write_string(&packet.header);
+		// cavan_stdout_write_string(&packet.body);
+
+		ret = cavan_http_packet_write(&packet, remote);
+		if (ret < 0) {
+			pr_red_info("cavan_http_packet_write");
+			break;
+		}
+
+		ret = cavan_http_packet_read(&packet, &fifo_remote);
+		if (ret < 0) {
+			pr_red_info("cavan_http_packet_read");
+			break;
+		}
+
+		cavan_stdout_write_string(&packet.header);
+		// cavan_stdout_write_string(&packet.body);
+
+		ret = cavan_http_packet_write(&packet, local);
+		if (ret < 0) {
+			pr_red_info("cavan_http_packet_write");
+			break;
+		}
+	}
+
+	cavan_fifo_deinit(&fifo_remote);
+out_fifo_deinit_local:
+	cavan_fifo_deinit(&fifo_local);
+	return ret;
+}
+
 static int web_proxy_ftp_read_file(struct network_client *client, struct network_client *client_proxy, const char *filename)
 {
 	int ret;
@@ -538,11 +597,28 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 			case HTTP_REQ_CONNECT:
 				ret = network_client_send_text(client, "HTTP/1.1 200 Connection established\r\n\r\n");
 				if (ret < 0) {
-					pr_error_info("network_client_send_text");
+					pr_red_info("network_client_send_text");
 					goto out_network_client_close_proxy;
 				}
 
-				tcp_proxy_main_loop(client, &client_proxy);
+				if (proxy->monitor) {
+					ret = network_client_ssl_attach(client, true);
+					if (ret < 0) {
+						pr_red_info("network_client_ssl_attach");
+						goto out_network_client_close_proxy;
+					}
+
+					ret = network_client_ssl_attach(&client_proxy, false);
+					if (ret < 0) {
+						pr_red_info("network_client_ssl_attach");
+						goto out_network_client_close_proxy;
+					}
+
+					web_proxy_monitor_loop(client, &client_proxy);
+				} else {
+					tcp_proxy_main_loop(client, &client_proxy);
+				}
+
 				goto out_network_client_close_proxy;
 
 			default:

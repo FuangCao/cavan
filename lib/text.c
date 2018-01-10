@@ -3015,7 +3015,7 @@ char *time2text_msec(u64 msec, char *buff, size_t size)
 
 void cavan_string_init(cavan_string_t *str)
 {
-	str->text = NULL;
+	str->text = "";
 	str->length = 0;
 	str->allocated = 0;
 }
@@ -3023,17 +3023,19 @@ void cavan_string_init(cavan_string_t *str)
 int cavan_string_reinit(cavan_string_t *str, int size)
 {
 	if (str->allocated <= size) {
+		int total = size + 1;
+
 		if (str->allocated > 0) {
 			free(str->text);
 		}
 
-		str->text = malloc(size + 1);
+		str->text = malloc(total);
 		if (str->text == NULL) {
 			pr_err_info("malloc");
 			return -ENOMEM;
 		}
 
-		str->allocated = size;
+		str->allocated = total;
 	}
 
 	str->text[size] = 0;
@@ -3057,12 +3059,12 @@ int cavan_string_append(cavan_string_t *str, const char *text, int size)
 			return -ENOMEM;
 		}
 
-		if (str->text != NULL) {
+		if (str->length > 0) {
 			memcpy(mem, str->text, str->length);
+		}
 
-			if (str->allocated > 0) {
-				free(str->text);
-			}
+		if (str->allocated > 0) {
+			free(str->text);
 		}
 
 		str->text = mem;
@@ -3080,9 +3082,17 @@ void cavan_string_clear(cavan_string_t *str, bool depth)
 {
 	str->length = 0;
 
-	if (depth && str->allocated > 0) {
-		free(str->text);
-		str->text = NULL;
-		str->allocated = 0;
+	if (str->allocated > 0) {
+		char *text = str->text;
+
+		if (depth) {
+			str->allocated = 0;
+			str->text = "";
+			free(text);
+		} else {
+			*text = 0;
+		}
+	} else {
+		str->text = "";
 	}
 }

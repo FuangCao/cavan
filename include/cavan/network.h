@@ -501,6 +501,7 @@ int network_client_get_remote_ip(struct network_client *client, struct in_addr *
 bool network_client_fill(struct network_client *client, char *buff, size_t size);
 ssize_t network_client_send_packet(struct network_client *client, const void *buff, size_t size);
 ssize_t network_client_recv_packet(struct network_client *client, void *buff, size_t size);
+int network_client_fifo_init(struct cavan_fifo *fifo, size_t size, struct network_client *client);
 
 int network_service_accept_timed(struct network_service *service, struct network_client *client, u32 msec);
 int network_service_open(struct network_service *service, const struct network_url *url, int flags);

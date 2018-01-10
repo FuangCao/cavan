@@ -4259,6 +4259,22 @@ ssize_t network_client_recv_packet(struct network_client *client, void *buff, si
 	return -EFAULT;
 }
 
+int network_client_fifo_init(struct cavan_fifo *fifo, size_t size, struct network_client *client)
+{
+	int ret;
+
+	ret = cavan_fifo_init(fifo, size, client);
+	if (ret < 0) {
+		pr_red_info("cavan_fifo_init");
+		return ret;
+	}
+
+	fifo->write = network_client_fifo_write;
+	fifo->read = network_client_fifo_read;
+
+	return 0;
+}
+
 int network_service_accept_timed(struct network_service *service, struct network_client *client, u32 msec)
 {
 	if (!file_poll_input(service->sockfd, msec)) {

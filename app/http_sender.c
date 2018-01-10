@@ -125,11 +125,11 @@ static void *cavan_http_sender_receive_thread(void *data)
 		}
 
 		cavan_http_sender_unlock(sender);
-		ret = cavan_http_packet_read_response(rsp, &fifo);
+		ret = cavan_http_packet_read(rsp, &fifo);
 		cavan_http_sender_lock(sender);
 
 		if (ret < 0) {
-			pr_red_info("cavan_http_packet_read_response");
+			pr_red_info("cavan_http_packet_read");
 			break;
 		}
 
@@ -459,9 +459,9 @@ int main(int argc, char *argv[])
 				break;
 			}
 
-			ret = cavan_http_packet_read_response(&rsp, &fifo);
+			ret = cavan_http_packet_read(&rsp, &fifo);
 			if (ret < 0) {
-				pr_red_info("cavan_http_packet_read_response");
+				pr_red_info("cavan_http_packet_read");
 				break;
 			}
 

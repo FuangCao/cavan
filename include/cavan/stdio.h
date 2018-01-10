@@ -543,6 +543,8 @@ using namespace std;
 		return -EFAULT; \
 	}
 
+#include <cavan/text.h>
+
 __BEGIN_DECLS
 
 FILE *cavan_stdio_tty_open(void);
@@ -693,6 +695,11 @@ static inline void print_size(u64 size)
 static inline int cavan_tty_get_attr(int fd, struct termios *attr)
 {
 	return tcgetattr(fd, attr);
+}
+
+static inline int cavan_stdout_write_string(cavan_string_t *str)
+{
+	return cavan_stdout_write_line(str->text, str->length);
 }
 
 __END_DECLS;

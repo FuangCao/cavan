@@ -104,6 +104,7 @@ typedef enum {
 	CAVAN_COMMAND_OPTION_LOOP,
 	CAVAN_COMMAND_OPTION_MASK,
 	CAVAN_COMMAND_OPTION_MODE,
+	CAVAN_COMMAND_OPTION_MONITOR,
 	CAVAN_COMMAND_OPTION_NONE,
 	CAVAN_COMMAND_OPTION_NOW,
 	CAVAN_COMMAND_OPTION_PARENTS,
@@ -293,6 +294,7 @@ extern const char *cavan_help_message_https;
 extern const char *cavan_help_message_start_time;
 extern const char *cavan_help_message_delay_time;
 extern const char *cavan_help_message_current_time;
+extern const char *cavan_help_message_monitor_mode;
 
 // ============================================================
 

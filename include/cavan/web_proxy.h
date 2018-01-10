@@ -29,6 +29,7 @@ struct web_proxy_service {
 	struct network_url url;
 	struct network_url url_proxy;
 	size_t proxy_hostlen;
+	bool monitor;
 };
 
 char *web_proxy_find_prop(const char *req, const char *req_end, const char *name, size_t namelen);
