@@ -25,7 +25,7 @@
 #include <cavan/network.h>
 
 #define HTTP_SENDER_AHEAD			15000
-#define HTTP_SENDER_TEST			"game.weixin.qq.com"
+#define HTTP_SENDER_HOST			"game.weixin.qq.com"
 
 struct cavan_http_sender {
 	struct network_client client;
@@ -446,12 +446,12 @@ int main(int argc, char *argv[])
 		cavan_http_packet_init(&req);
 		cavan_http_packet_init(&rsp);
 
-		cavan_http_packet_add_line(&req, "GET / HTTP/1.1", -1);
-		cavan_http_packet_add_line(&req, "Host: " HTTP_SENDER_TEST, -1);
-		cavan_http_packet_add_line(&req, "Connection: keep-alive", -1);
+		CAVAN_HTTP_PACKET_ADD_LINE(&req, "GET / HTTP/1.1");
+		CAVAN_HTTP_PACKET_ADD_LINE(&req, "Host: " HTTP_SENDER_HOST);
+		CAVAN_HTTP_PACKET_ADD_LINE(&req, "Connection: keep-alive");
 		cavan_http_packet_add_line_end(&req);
 
-		ret = network_client_open2(&client, "ssl://" HTTP_SENDER_TEST ":443", 0);
+		ret = network_client_open2(&client, "ssl://" HTTP_SENDER_HOST ":443", 0);
 		if (ret < 0) {
 			pr_red_info("network_client_open2");
 			return ret;
@@ -475,16 +475,15 @@ int main(int argc, char *argv[])
 
 			date = rsp.headers[HTTP_HEADER_DATE];
 			if (date != NULL) {
-				time_t now = time(NULL);
 				char buff[1024];
 
-				strftime(buff, sizeof(buff), "%F %T", gmtime(&now));
+				cavan_http_time_tostring3(buff, sizeof(buff));
 
 				println("remote = %s", date);
 				println("local  = %s", buff);
 			}
 
-			msleep(200);
+			msleep(100);
 		}
 	}
 

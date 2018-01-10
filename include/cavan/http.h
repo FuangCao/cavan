@@ -28,6 +28,9 @@
 
 #define CAVAN_HTTP_PORT				80
 
+#define CAVAN_HTTP_PACKET_ADD_LINE(packet, line) \
+	cavan_http_packet_add_line((packet), CAVAN_TEXT_PAIR(line))
+
 typedef enum {
 	HTTP_REQ_CONNECT,
 	HTTP_REQ_DELETE,
@@ -97,6 +100,9 @@ extern const char *http_mime_type_html;
 extern const char *http_mime_type_js;
 extern const char *http_mime_type_apk;
 
+int cavan_http_time_tostring(struct tm *time, char *buff, int size);
+int cavan_http_time_tostring2(const time_t *time, char *buff, int size);
+int cavan_http_time_tostring3(char *buff, int size);
 void cavan_http_dump_prop(const struct cavan_http_prop *prop);
 void cavan_http_dump_props(const struct cavan_http_prop *props, size_t size);
 void cavan_http_dump_request(struct cavan_http_request *req);
@@ -183,4 +189,9 @@ static inline const char *cavan_http_request_find_param_simple(struct cavan_http
 static inline const char *cavan_http_packet_get_header(struct cavan_http_packet *packet, int header)
 {
 	return packet->headers[header];
+}
+
+static inline int cavan_http_packet_add_line2(struct cavan_http_packet *packet, const char *line)
+{
+	return cavan_http_packet_add_line(packet, line, strlen(line));
 }

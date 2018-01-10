@@ -18,6 +18,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/ftp.h>
 #include <cavan/http.h>
 #include <cavan/timer.h>
 #include <cavan/android.h>
@@ -40,6 +41,24 @@ const cavan_string_t http_header_names[HTTP_HEADER_COUNT] = {
 	CAVAN_STRING_INITIALIZER("Content-Encoding"),
 	CAVAN_STRING_INITIALIZER("Transfer-Encoding"),
 };
+
+int cavan_http_time_tostring(struct tm *time, char *buff, int size)
+{
+	return snprintf(buff, size, "%s, %d-%s-%04d %02d:%02d:%02d GMT", week_tostring(time->tm_wday),
+		time->tm_mday, month_tostring(time->tm_mon), CAVAN_TIME_FIXUP_YEAR(time->tm_year),
+		time->tm_hour, time->tm_min, time->tm_sec);
+}
+
+int cavan_http_time_tostring2(const time_t *time, char *buff, int size)
+{
+	return cavan_http_time_tostring(gmtime(time), buff, size);
+}
+
+int cavan_http_time_tostring3(char *buff, int size)
+{
+	time_t now = time(NULL);
+	return cavan_http_time_tostring2(&now, buff, size);
+}
 
 void cavan_http_dump_prop(const struct cavan_http_prop *prop)
 {
@@ -1693,10 +1712,6 @@ int cavan_http_packet_add_line(struct cavan_http_packet *packet, const char *lin
 	int length;
 	const char *line_end;
 	const char *name, *value;
-
-	if (size < 0) {
-		size = strlen(line);
-	}
 
 	ret = cavan_string_append(&packet->header, line, size);
 	if (ret < 0) {

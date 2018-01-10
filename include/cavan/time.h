@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cavan.h>
+#include <time.h>
 
 #define CAVAN_TIME_SECONDS_PER_MIN			60UL
 #define CAVAN_TIME_SECONDS_PER_HOUR			(60 * CAVAN_TIME_SECONDS_PER_MIN)
@@ -8,6 +9,9 @@
 
 #define CAVAN_TIME_BASE_DAYS_1970			719527UL
 #define CAVAN_TIME_BASE_DAYS_2000			730484UL
+
+#define CAVAN_TIME_FIXUP_YEAR(year)			((year) + 1900)
+#define CAVAN_TIME_FIXUP_MON(mon)			((mon) + 1)
 
 #define US_NS(time)							((time) * 1000UL)
 #define MS_US(time)							((time) * 1000UL)
@@ -78,6 +82,7 @@ void cavan_time_parse(ulong timestamp, struct cavan_time *time, u32 base_days);
 void cavan_second2time_simple(ulong second, struct cavan_time_simple *time);
 char *cavan_time2text_simple(struct cavan_time_simple *time, char *buff, size_t size);
 char *cavan_time2text_simple2(ulong second, char *buff, size_t size);
+
 static inline unsigned long cavan_time_build_1970(const struct cavan_time *time)
 {
 	return cavan_time_build(time, CAVAN_TIME_BASE_DAYS_1970);

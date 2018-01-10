@@ -8,8 +8,8 @@
 
 #include <cavan.h>
 #include <cavan/list.h>
+#include <cavan/time.h>
 #include <cavan/thread.h>
-#include <time.h>
 
 __BEGIN_DECLS;
 

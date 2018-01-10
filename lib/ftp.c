@@ -1,5 +1,6 @@
 #include <cavan.h>
 #include <cavan/ftp.h>
+#include <cavan/time.h>
 
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-10-26 16:17:07
 
@@ -540,7 +541,7 @@ static int ftp_service_cmdline(struct cavan_ftp_service *ftp_service, struct cav
 						replen = snprintf(rep_buff, sizeof(rep_buff), "550 get localtime failed: %s.\r\n", strerror(errno));
 					} else {
 						replen = snprintf(rep_buff, sizeof(rep_buff), "213 %04d%02d%02d%02d%02d%02d\r\n", \
-							ti.tm_year + 1900, ti.tm_mon + 1, ti.tm_mday, ti.tm_hour, ti.tm_min, ti.tm_sec);
+							CAVAN_TIME_FIXUP_YEAR(ti.tm_year), CAVAN_TIME_FIXUP_MON(ti.tm_mon), ti.tm_mday, ti.tm_hour, ti.tm_min, ti.tm_sec);
 					}
 				}
 

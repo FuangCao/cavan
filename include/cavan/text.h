@@ -33,8 +33,11 @@ __BEGIN_DECLS;
 		__tmp = __tmp; \
 	})
 
+#define CAVAN_TEXT_PAIR(text) \
+	(text), (sizeof(text) - 1)
+
 #define CAVAN_STRING_INITIALIZER(text) \
-	{ text, sizeof(text) - 1, 0 }
+	{ CAVAN_TEXT_PAIR(text), 0 }
 
 typedef struct {
 	char *text;
