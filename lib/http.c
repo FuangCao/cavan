@@ -1727,6 +1727,10 @@ int cavan_http_packet_add_line(struct cavan_http_packet *packet, const char *lin
 
 	packet->lines++;
 
+	if (packet->lines < 2) {
+		return 0;
+	}
+
 	length = 0;
 	name = line;
 	value = NULL;
