@@ -477,6 +477,8 @@ int main(int argc, char *argv[])
 
 			msleep(100);
 		}
+
+		return 0;
 	} else if (count > 0) {
 		char *host = packets[0]->headers[HTTP_HEADER_HOST];
 		if (host == NULL) {
