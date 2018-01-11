@@ -26,7 +26,12 @@ namespace NetworkInputMethod
                 int value = mStream.ReadByte();
                 if (value < 0)
                 {
-                    break;
+                    if (offset > 0)
+                    {
+                        break;
+                    }
+
+                    return null;
                 }
 
                 if (value == '\n')
@@ -109,7 +114,7 @@ namespace NetworkInputMethod
                     if (dstream != null)
                     {
                         ByteArrayWriter writer = new ByteArrayWriter();
-                        writer.write(dstream);
+                        writer.readFrom(dstream);
                         dstream.Close();
                         bytes = writer.toBytes();
                     }

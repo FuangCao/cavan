@@ -9,46 +9,37 @@ using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Windows.Forms;
 
 namespace NetworkInputMethod
 {
-    public class CavanHttpSender : CavanHttpPacket
+    public class CavanHttpSender
     {
-        private Thread mThread;
         private FormHttpSender mForm;
         private TcpClient mTcpClient;
         private string mHost;
+        private Stream mStream;
         private bool mIsHttps = true;
+        private CavanThread mSendThread;
+        private CavanThread mRecvThread;
+        private HashSet<CavanHttpPacket> mPackets = new HashSet<CavanHttpPacket>();
 
         public CavanHttpSender(FormHttpSender form)
         {
             mForm = form;
+            mSendThread = new CavanThread("Send", new ThreadStart(SendMainLoop));
+            mRecvThread = new CavanThread("Recv", new ThreadStart(RecvMainLoop));
         }
 
-        public void start()
+        public void Start()
         {
-            Monitor.Enter(this);
-
-            if (mThread == null)
-            {
-                mThread = new Thread(new ThreadStart(SendThreadCallback));
-                mThread.Start();
-            }
-
-            Monitor.Exit(this);
+            mSendThread.Start();
         }
 
-        public void stop()
+        public void Stop()
         {
-            Monitor.Enter(this);
-
-            if (mThread != null)
-            {
-                mThread.Abort();
-            }
-
-            Monitor.Exit(this);
-
+            mSendThread.Stop();
+            mRecvThread.Stop();
             closeTcpClient();
         }
 
@@ -58,7 +49,21 @@ namespace NetworkInputMethod
             {
                 if (mHost == null)
                 {
-                    mHost = getHost();
+                    string host = null;
+
+                    foreach (CavanHttpPacket packet in mPackets)
+                    {
+                        if (host == null)
+                        {
+                            host = packet.getHost();
+                        }
+                        else if (!host.Equals(packet.getHost()))
+                        {
+                            return null;
+                        }
+                    }
+
+                    mHost = host;
                 }
 
                 return mHost;
@@ -83,18 +88,87 @@ namespace NetworkInputMethod
             }
         }
 
-        public CavanHttpPacket sendTo(Stream stream, ByteArrayWriter writer)
+        public bool addPacket(CavanHttpPacket packet)
         {
-            if (writeTo(stream, writer))
+            return mPackets.Add(packet);
+        }
+
+        public bool remotePacket(CavanHttpPacket packet)
+        {
+            return mPackets.Remove(packet);
+        }
+
+        public HashSet<CavanHttpPacket> getPakcets()
+        {
+            return mPackets;
+        }
+
+        public int getPacketCount()
+        {
+            return mPackets.Count;
+        }
+
+        private bool parseFileLocked(string pathname)
+        {
+            if (pathname == null || pathname.Length == 0)
             {
-                CavanHttpPacket rsp = new CavanHttpPacket();
-                if (rsp.readFrom(stream))
+                MessageBox.Show("请选择请求文件！");
+                return false;
+            }
+
+            string[] lines;
+
+            try
+            {
+                lines = File.ReadAllLines(pathname);
+            }
+            catch
+            {
+                lines = null;
+            }
+
+            if (lines == null)
+            {
+                MessageBox.Show("无法读取文件: " + pathname);
+                return false;
+            }
+
+            mPackets.Clear();
+
+            CavanHttpPacket packet = new CavanHttpPacket();
+
+            foreach (string line in lines)
+            {
+                if (packet.addLine(line))
                 {
-                    return rsp;
+                    mPackets.Add(packet);
+                    packet = new CavanHttpPacket();
                 }
             }
 
-            return null;
+            if (packet.addLine(null))
+            {
+                mPackets.Add(packet);
+            }
+
+            int count = mPackets.Count;
+            if (count > 0)
+            {
+                mForm.WriteLog("发现 " + count + " 个请求");
+                return true;
+            }
+
+            MessageBox.Show("没有发现HTTP请求！");
+
+            return false;
+        }
+
+        public bool parseFile(string pathname)
+        {
+            lock (this)
+            {
+                return parseFileLocked(pathname);
+            }
         }
 
         public TcpClient openTcpClient(ushort port)
@@ -135,20 +209,30 @@ namespace NetworkInputMethod
             {
                 throw;
             }
-            catch (Exception e)
+            catch
             {
-                Console.WriteLine(e);
                 return null;
             }
         }
 
         public void closeTcpClient()
         {
-            if (mTcpClient != null)
+            Stream stream = mStream;
+            if (stream != null)
             {
-                mTcpClient.Close();
-                mTcpClient = null;
+                mStream = null;
+                stream.Close();
             }
+
+            TcpClient client = mTcpClient;
+            if (client != null)
+            {
+                mTcpClient = null;
+                client.Close();
+            }
+
+            mSendThread.Enqueue(null);
+            mRecvThread.Enqueue(null);
         }
 
         public NetworkStream getTcpStream(ushort port)
@@ -194,8 +278,6 @@ namespace NetworkInputMethod
                     throw e;
                 }
 
-                Console.WriteLine(e);
-
                 return null;
             }
         }
@@ -205,17 +287,27 @@ namespace NetworkInputMethod
             return true;
         }
 
-        private bool processBody(byte[] body, int count)
+        private bool processBody(byte[] body)
         {
             string text = Encoding.UTF8.GetString(body);
 
-            Console.WriteLine(text);
+            if (mForm.isDebugEnabled())
+            {
+                Console.WriteLine(text);
+            }
 
             try
             {
                 JObject json = JsonConvert.DeserializeObject<JObject>(text);
                 if (json == null)
                 {
+                    return false;
+                }
+
+                JToken ret = json["ret"];
+                if (ret == null || ret.Value<int>() != 0)
+                {
+                    mForm.WriteLog("非法的请求");
                     return false;
                 }
 
@@ -234,7 +326,7 @@ namespace NetworkInputMethod
                 if (code.Value<int>() == 0)
                 {
                     mForm.WriteLog("领取成功");
-                    return true;
+                    return false;
                 }
 
                 JToken errdesc = data["errdesc"];
@@ -245,19 +337,15 @@ namespace NetworkInputMethod
 
                 string message = errdesc.Value<string>();
 
+                if (message.Contains("领取过") || message.Contains("上限"))
+                {
+                    mForm.WriteLog("已经领过了");
+                    return false;
+                }
+
                 if (mForm.isDebugEnabled())
                 {
                     mForm.WriteLog(message);
-                }
-
-                if (message.Contains("不满足") || message.Contains("领取过") || message.Contains("上限"))
-                {
-                    return true;
-                }
-
-                if (message.Contains("领完") && count > 20)
-                {
-                    return true;
                 }
             }
             catch (Exception e)
@@ -265,15 +353,12 @@ namespace NetworkInputMethod
                 Console.WriteLine(e);
             }
 
-            return false;
+            return true;
         }
 
-        public void mainLoop()
+        public void SendMainLoop()
         {
-            ByteArrayWriter writer = buildBytes();
-            int count = 0;
-
-            while (true)
+            while (mForm.SendEnabled && mPackets.Count > 0)
             {
                 Stream stream;
 
@@ -288,56 +373,68 @@ namespace NetworkInputMethod
 
                 if (stream != null)
                 {
-                    mForm.waitForSend();
+                    mStream = stream;
 
-                    while (true)
+                    mSendThread.Clear();
+
+                    foreach (CavanHttpPacket packet in mPackets)
                     {
-                        CavanHttpPacket rsp = sendTo(stream, writer);
-                        if (rsp == null)
-                        {
-                            break;
-                        }
-
-                        byte[] body = rsp.Body;
-                        if (body != null && processBody(body, count))
-                        {
-                            return;
-                        }
-
-                        if (rsp.isNeedClose())
-                        {
-                            break;
-                        }
-
-                        count++;
+                        mSendThread.Enqueue(packet);
                     }
 
-                    stream.Close();
+                    mRecvThread.Start();
+
+                    mForm.waitForSend();
+
+                    while (mForm.SendEnabled)
+                    {
+                        CavanHttpPacket packet = mSendThread.Dequeue();
+
+                        if (packet != null && packet.writeTo(stream))
+                        {
+                            mRecvThread.Enqueue(packet);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
                 }
 
                 closeTcpClient();
-
                 Thread.Sleep(100);
             }
         }
 
-        private void SendThreadCallback()
+        public void RecvMainLoop()
         {
-            try
+            CavanHttpPacket response = new CavanHttpPacket();
+
+            while (mForm.SendEnabled)
             {
-                Console.WriteLine("started");
-                mainLoop();
+                Stream stream = mStream;
+                if (stream == null)
+                {
+                    break;
+                }
+
+                CavanHttpPacket packet = mRecvThread.Dequeue();
+
+                if (packet != null && response.readFrom(stream))
+                {
+                    byte[] body = response.Body;
+                    if (body != null && processBody(body))
+                    {
+                        mSendThread.Enqueue(packet);
+                    }
+                }
+                else
+                {
+                    break;
+                }
             }
-            catch (Exception e)
-            {
-                Console.WriteLine("Exception: " + e.GetType());
-            }
-            finally
-            {
-                mThread = null;
-                closeTcpClient();
-                Console.WriteLine("stopped");
-            }
+
+            closeTcpClient();
         }
     }
 }

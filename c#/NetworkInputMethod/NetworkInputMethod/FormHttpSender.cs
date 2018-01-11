@@ -18,13 +18,16 @@ namespace NetworkInputMethod
     {
         private const long START_AHEAD = 15000;
 
-        private List<CavanHttpSender> mSenders = new List<CavanHttpSender>();
         private StringBuilder mLogBuilder = new StringBuilder();
+        private CavanHttpSender mSender;
         private long mCommitTime;
+        private bool mSendEnabled;
 
         public FormHttpSender()
         {
             InitializeComponent();
+
+            mSender = new CavanHttpSender(this);
 
             textBoxPath.Text = openFileDialogReq.FileName;
 
@@ -34,6 +37,17 @@ namespace NetworkInputMethod
             dateTimePickerStart.CustomFormat = "yyyy-MM-dd HH:mm:ss";
 
             comboBoxDelay.SelectedIndex = 30;
+        }
+
+        public bool SendEnabled
+        {
+            get
+            {
+                lock (this)
+                {
+                    return mSendEnabled;
+                }
+            }
         }
 
         public int getStartDelay()
@@ -100,59 +114,6 @@ namespace NetworkInputMethod
             }
         }
 
-        private bool parseLocked()
-        {
-            string filename = openFileDialogReq.FileName;
-            if (filename == null || filename.Length == 0)
-            {
-                MessageBox.Show("请选择请求文件！");
-                return false;
-            }
-
-            string[] lines;
-
-            try
-            {
-                lines = File.ReadAllLines(filename);
-            }
-            catch (Exception)
-            {
-                lines = null;
-            }
-
-            if (lines == null)
-            {
-                MessageBox.Show("无法读取文件: " + filename);
-                return false;
-            }
-
-            CavanHttpSender sender = new CavanHttpSender(this);
-
-            foreach (string line in lines)
-            {
-                if (sender.addLine(line))
-                {
-                    mSenders.Add(sender);
-                    sender = new CavanHttpSender(this);
-                }
-            }
-
-            if (sender.LineCount > 0)
-            {
-                mSenders.Add(sender);
-            }
-
-            if (mSenders.Count == 0)
-            {
-                MessageBox.Show("没有发现HTTP请求！");
-                return false;
-            }
-
-            WriteLog("发现 " + mSenders.Count + " 个请求");
-
-            return true;
-        }
-
         private void startLocked(long delay)
         {
             if (delay > 0)
@@ -173,10 +134,7 @@ namespace NetworkInputMethod
                 labelStatus.Text = "正在运行";
             }
 
-            foreach (CavanHttpSender http in mSenders)
-            {
-                http.start();
-            }
+            mSender.Start();
         }
 
         private void buttonStart_Click(object sender, EventArgs e)
@@ -184,21 +142,25 @@ namespace NetworkInputMethod
             buttonStart.Enabled = false;
             buttonStop.Enabled = false;
 
-            Monitor.Enter(mSenders);
-
-            if (mSenders.Count > 0)
+            lock (this)
             {
-                startLocked(0);
-            }
-            else if (parseLocked())
-            {
-                mCommitTime = dateTimePickerStart.Value.ToFileTime() / 10000 + getStartDelay();
-                timerWait.Interval = 100;
-                timerWait.Enabled = true;
-                labelStatus.Text = "正在等待";
-            }
+                if (mSendEnabled)
+                {
+                    startLocked(0);
+                }
+                else
+                {
+                    mSendEnabled = true;
 
-            Monitor.Exit(mSenders);
+                    if (mSender.parseFile(openFileDialogReq.FileName))
+                    {
+                        mCommitTime = dateTimePickerStart.Value.ToFileTime() / 10000 + getStartDelay();
+                        timerWait.Interval = 100;
+                        timerWait.Enabled = true;
+                        labelStatus.Text = "正在等待";
+                    }
+                }
+            }
 
             buttonStop.Enabled = true;
             buttonStart.Enabled = true;
@@ -209,18 +171,14 @@ namespace NetworkInputMethod
             buttonStart.Enabled = false;
             buttonStop.Enabled = false;
 
-            lock (mSenders)
+            lock (this)
             {
+                mSendEnabled = false;
                 mCommitTime = 0;
                 timerWait.Enabled = false;
-
-                foreach (CavanHttpSender http in mSenders)
-                {
-                    http.stop();
-                }
-
-                mSenders.Clear();
             }
+
+            mSender.Stop();
 
             labelStatus.Text = "已停止运行";
 
@@ -275,25 +233,22 @@ namespace NetworkInputMethod
 
         private void timerWait_Tick(object sender, EventArgs e)
         {
-            lock (mSenders)
+            if (mCommitTime != 0 && mSendEnabled)
             {
-                if (mCommitTime != 0 && mSenders.Count > 0)
+                long delay = getSendDelay();
+                if (delay > START_AHEAD)
                 {
-                    long delay = getSendDelay();
-                    if (delay > START_AHEAD)
-                    {
-                        labelStatus.Text = "等待启动：" + delayToString(delay);
-                        timerWait.Interval = 1000;
-                    }
-                    else
-                    {
-                        startLocked(delay);
-                    }
+                    labelStatus.Text = "等待启动：" + delayToString(delay);
+                    timerWait.Interval = 1000;
                 }
                 else
                 {
-                    timerWait.Enabled = false;
+                    startLocked(delay);
                 }
+            }
+            else
+            {
+                timerWait.Enabled = false;
             }
         }
 

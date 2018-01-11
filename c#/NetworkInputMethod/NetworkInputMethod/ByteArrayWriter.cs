@@ -11,7 +11,7 @@ namespace NetworkInputMethod
     {
         private Encoding mEncoding = Encoding.UTF8;
         private byte[] mBytes = new byte[4096];
-        private int mUsed;
+        private int mLength;
 
         public void setEncoding(Encoding encoding)
         {
@@ -25,17 +25,17 @@ namespace NetworkInputMethod
         {
             Monitor.Enter(this);
 
-            int total = mUsed + length;
+            int total = mLength + length;
 
             if (total > mBytes.Length)
             {
                 byte[] newBytes = new byte[total * 2];
-                Array.Copy(mBytes, newBytes, mUsed);
+                Array.Copy(mBytes, newBytes, mLength);
                 mBytes = newBytes;
             }
 
-            Array.Copy(bytes, offset, mBytes, mUsed, length);
-            mUsed += length;
+            Array.Copy(bytes, offset, mBytes, mLength, length);
+            mLength = total;
 
             Monitor.Exit(this);
         }
@@ -56,17 +56,17 @@ namespace NetworkInputMethod
             write(bytes, 0, bytes.Length);
         }
 
-        public void write(Stream stream)
+        public void readFrom(Stream stream)
         {
             while (true)
             {
-                int remain = mBytes.Length - mUsed;
+                int remain = mBytes.Length - mLength;
                 if (remain > 0)
                 {
-                    int rdlen = stream.Read(mBytes, mUsed, remain);
+                    int rdlen = stream.Read(mBytes, mLength, remain);
                     if (rdlen > 0)
                     {
-                        mUsed += rdlen;
+                        mLength += rdlen;
                     }
                     else
                     {
@@ -76,15 +76,20 @@ namespace NetworkInputMethod
                 else
                 {
                     byte[] bytes = new byte[mBytes.Length * 2];
-                    Array.Copy(mBytes, bytes, mUsed);
+                    Array.Copy(mBytes, bytes, mLength);
                     mBytes = bytes;
                 }
             }
         }
 
+        public void writeTo(Stream stream)
+        {
+            stream.Write(mBytes, 0, mLength);
+        }
+
         public void clear()
         {
-            mUsed = 0;
+            mLength = 0;
         }
 
         public byte[] getBytes()
@@ -99,7 +104,7 @@ namespace NetworkInputMethod
         {
             lock (this)
             {
-                return mUsed;
+                return mLength;
             }
         }
 
@@ -107,15 +112,15 @@ namespace NetworkInputMethod
         {
             lock (this)
             {
-                byte[] bytes = new byte[mUsed];
-                Array.Copy(mBytes, bytes, mUsed);
+                byte[] bytes = new byte[mLength];
+                Array.Copy(mBytes, bytes, mLength);
                 return bytes;
             }
         }
 
         public override string ToString()
         {
-            return mEncoding.GetString(mBytes, 0, mUsed);
+            return mEncoding.GetString(mBytes, 0, mLength);
         }
     }
 }

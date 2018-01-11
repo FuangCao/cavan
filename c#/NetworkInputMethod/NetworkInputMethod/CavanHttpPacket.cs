@@ -12,23 +12,53 @@ namespace NetworkInputMethod
     {
         private static char[] sHeaderSplitChars = new char[] { ':' };
 
-        private List<string> mLines = new List<string>();
+        private ByteArrayWriter mWriter = new ByteArrayWriter();
         private Hashtable mHeaders = new Hashtable();
         private byte[] mBody;
+        int mLines;
+
+        public ByteArrayWriter Writer
+        {
+            get
+            {
+                return mWriter;
+            }
+        }
+
+        public void writeLine()
+        {
+            mWriter.write("\r\n");
+            mLines++;
+        }
+
+        public void writeLine(string line)
+        {
+            mWriter.write(line);
+            writeLine();
+        }
 
         public bool addLine(string line)
         {
             if (line == null || line.Length == 0)
             {
-                return true;
+                if (mLines > 0)
+                {
+                    writeLine();
+                    return true;
+                }
+
+                return false;
             }
 
-            mLines.Add(line);
+            writeLine(line);
 
-            string[] args = line.Split(sHeaderSplitChars, 2);
-            if (args.Length == 2)
+            if (mLines > 1)
             {
-                mHeaders[args[0].Trim().ToLower()] = args[1].TrimStart();
+                string[] args = line.Split(sHeaderSplitChars, 2);
+                if (args.Length == 2)
+                {
+                    mHeaders[args[0].Trim().ToLower()] = args[1].TrimStart();
+                }
             }
 
             return false;
@@ -41,27 +71,8 @@ namespace NetworkInputMethod
 
         public void addHeader(string name, string value)
         {
-            mLines.Add(name + ": " + value);
+            writeLine(name + ": " + value);
             mHeaders[name.ToLower()] = value;
-        }
-
-        public List<string> Lines
-        {
-            get
-            {
-                return mLines;
-            }
-
-            set
-            {
-                mLines.Clear();
-                mHeaders.Clear();
-
-                foreach (string line in value)
-                {
-                    addLine(line);
-                }
-            }
         }
 
         public Hashtable Headers
@@ -72,11 +83,11 @@ namespace NetworkInputMethod
             }
         }
 
-        public int LineCount
+        public int Lines
         {
             get
             {
-                return mLines.Count;
+                return mLines;
             }
         }
 
@@ -134,41 +145,9 @@ namespace NetworkInputMethod
 
         public bool writeTo(Stream stream)
         {
-            CavanHttpWriter writer = new CavanHttpWriter(stream);
-
-            foreach (string line in mLines)
-            {
-                if (!writer.WriteLine(line))
-                {
-                    return false;
-                }
-            }
-
-            if (!writer.WriteLine())
-            {
-                return false;
-            }
-
-            if (mBody != null && mBody.Length > 0)
-            {
-                if (!writer.WriteBytes(mBody, 0, mBody.Length))
-                {
-                    return false;
-                }
-            }
-
-            return writer.Flush();
-        }
-        public bool writeTo(Stream stream, ByteArrayWriter writer)
-        {
-            if (writer == null)
-            {
-                return writeTo(stream);
-            }
-
             try
             {
-                stream.Write(writer.getBytes(), 0, writer.getLength());
+                mWriter.writeTo(stream);
                 stream.Flush();
             }
             catch (ThreadAbortException)
@@ -186,7 +165,7 @@ namespace NetworkInputMethod
         public bool readFrom(Stream stream)
         {
             mBody = null;
-            mLines.Clear();
+            mWriter.clear();
             mHeaders.Clear();
 
             CavanHttpReader reader = new CavanHttpReader(stream);
@@ -196,7 +175,7 @@ namespace NetworkInputMethod
                 string line = reader.ReadLine();
                 if (line == null)
                 {
-                    break;
+                    return false;
                 }
 
                 if (addLine(line))
@@ -216,26 +195,6 @@ namespace NetworkInputMethod
             }
 
             return true;
-        }
-
-        public ByteArrayWriter buildBytes()
-        {
-            ByteArrayWriter writer = new ByteArrayWriter();
-
-            foreach (string line in mLines)
-            {
-                writer.write(line);
-                writer.write("\r\n");
-            }
-
-            writer.write("\r\n");
-
-            if (mBody != null && mBody.Length > 0)
-            {
-                writer.write(mBody);
-            }
-
-            return writer;
         }
 
         public bool isNeedClose()
