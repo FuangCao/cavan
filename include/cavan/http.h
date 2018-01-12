@@ -139,6 +139,7 @@ int cavan_http_write_path_hrefs(struct network_client *client, int fd, const cha
 int cavan_http_list_directory(struct network_client *client, const char *dirname, const char *filter);
 int cavan_http_read_multiform_header(struct cavan_fifo *fifo, struct cavan_http_request *header, const char *boundary);
 ssize_t cavan_http_receive_file(struct cavan_fifo *fifo, struct cavan_http_request *header, const char *dirname, const char *boundary);
+char *cavan_http_basename(const char *pathname);
 
 int cavan_http_process_get(struct network_client *client, struct cavan_http_request *req);
 int cavan_http_process_post(struct cavan_fifo *fifo, struct cavan_http_request *req);

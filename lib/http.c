@@ -1173,6 +1173,23 @@ int cavan_http_read_multiform_header(struct cavan_fifo *fifo, struct cavan_http_
 	return 0;
 }
 
+char *cavan_http_basename(const char *pathname)
+{
+	const char *basename = pathname;
+
+	while (1) {
+		switch (*pathname++) {
+		case '/':
+		case '\\':
+			basename = pathname;
+			break;
+
+		case 0:
+			return (char *) basename;
+		}
+	}
+}
+
 ssize_t cavan_http_receive_file(struct cavan_fifo *fifo, struct cavan_http_request *header, const char *dirname, const char *boundary)
 {
 	int fd;
@@ -1197,8 +1214,14 @@ ssize_t cavan_http_receive_file(struct cavan_fifo *fifo, struct cavan_http_reque
 	println("mime_type = %s", mime_type);
 
 	filename = cavan_http_request_find_param_simple(header, "filename");
-	if (filename == NULL || filename[0] == 0) {
+	if (filename == NULL) {
 		pr_red_info("filename not found");
+		return -EINVAL;
+	}
+
+	filename = cavan_http_basename(filename);
+	if (filename[0] == 0) {
+		pr_red_info("filename is empty");
 		return -EINVAL;
 	}
 
