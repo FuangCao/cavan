@@ -147,7 +147,7 @@ int cavan_mem_queue_init(struct cavan_mem_queue *queue, size_t size)
 		return -ENOMEM;
 	}
 
-	cavan_lock_init(&queue->lock, false);
+	cavan_lock_init(&queue->lock);
 
 	queue->head = queue->tail = queue->mem;
 	queue->last = queue->mem + size;

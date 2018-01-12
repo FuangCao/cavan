@@ -1688,17 +1688,35 @@ void cavan_http_packet_free(struct cavan_http_packet *packet)
 	free(packet);
 }
 
-void cavan_http_packet_dump(const struct cavan_http_packet *packet)
+bool cavan_http_packet_content_printable(const struct cavan_http_packet *packet)
 {
-	int i;
+	const char *content_type = packet->headers[HTTP_HEADER_CONTENT_TYPE];
 
-	for (i = 0; i < HTTP_HEADER_COUNT; i++) {
-		if (packet->headers[i] != NULL) {
-			println("%s = %s", http_header_names[i].text, packet->headers[i]);
-		}
+	if (content_type == NULL) {
+		return false;
 	}
 
-	println("lines = %d", packet->lines);
+	if (text_lhcmp("text/", content_type) == 0) {
+		return true;
+	}
+
+	if (strstr(content_type, "/json;") != NULL) {
+		return true;
+	}
+
+	return false;
+}
+
+void cavan_http_packet_dump(const struct cavan_http_packet *packet)
+{
+	const cavan_string_t *header = &packet->header;
+	const cavan_string_t *body = &packet->body;
+
+	cavan_stdout_write_string(header);
+
+	if (body->length > 0 && cavan_http_packet_content_printable(packet)) {
+		cavan_stdout_write_string(body);
+	}
 }
 
 int cavan_http_packet_add_line_end(struct cavan_http_packet *packet)

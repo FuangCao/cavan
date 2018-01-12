@@ -6,9 +6,10 @@
 
 #define MAX_BUFF_LEN	KB(4)
 
+cavan_lock_t g_stdout_lock = CAVAN_LOCK_INITIALIZER;
+
 static int console_fd = -1;
 static struct termios tty_attr;
-static pthread_mutex_t cavan_stdout_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static FILE *cavan_async_stdout;
 static int cavan_async_stdout_pipefd[2];
@@ -165,7 +166,7 @@ int print_ntext(const char *text, size_t size)
 {
 	int ret = 0;
 
-	pthread_mutex_lock(&cavan_stdout_lock);
+	cavan_lock_acquire(&g_stdout_lock);
 
 	if (console_fd >= 0) {
 		ret |= write(console_fd, text, size);
@@ -175,7 +176,7 @@ int print_ntext(const char *text, size_t size)
 	ret |= write(stdout_fd, text, size);
 	ret |= fsync(stdout_fd);
 
-	pthread_mutex_unlock(&cavan_stdout_lock);
+	cavan_lock_release(&g_stdout_lock);
 
 	return ret;
 }
@@ -876,7 +877,7 @@ int cavan_stdout_write_line(const char *line, int length)
 {
 	int ret = 0;
 
-	pthread_mutex_lock(&cavan_stdout_lock);
+	cavan_lock_acquire(&g_stdout_lock);
 
 	if (line != NULL && length > 0) {
 		ret |= write(stdout_fd, line, length);
@@ -884,7 +885,7 @@ int cavan_stdout_write_line(const char *line, int length)
 
 	ret |= write(stdout_fd, "\n", 1);
 
-	pthread_mutex_unlock(&cavan_stdout_lock);
+	cavan_lock_release(&g_stdout_lock);
 
 	return ret;
 }

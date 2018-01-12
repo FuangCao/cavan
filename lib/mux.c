@@ -97,7 +97,7 @@ int cavan_mux_init(struct cavan_mux *mux, void *data)
 		return -EINVAL;
 	}
 
-	cavan_lock_init(&mux->lock, false);
+	cavan_lock_init(&mux->lock);
 
 	ret = cavan_mem_queue_init(&mux->recv_queue, CAVAN_MUX_MTU);
 	if (ret < 0) {
@@ -451,7 +451,7 @@ void cavan_mux_append_send_package(struct cavan_mux *mux, struct cavan_mux_packa
 
 void cavan_mux_link_init(struct cavan_mux_link *link, struct cavan_mux *mux)
 {
-	cavan_lock_init(&link->lock, false);
+	cavan_lock_init(&link->lock);
 
 	link->mux = mux;
 	link->hole_size = 0;

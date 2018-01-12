@@ -547,6 +547,8 @@ using namespace std;
 
 __BEGIN_DECLS
 
+extern cavan_lock_t g_stdout_lock;
+
 FILE *cavan_stdio_tty_open(void);
 void cavan_stdio_tty_close(void);
 int cavan_stdio_tty_getchar(void);
@@ -697,7 +699,7 @@ static inline int cavan_tty_get_attr(int fd, struct termios *attr)
 	return tcgetattr(fd, attr);
 }
 
-static inline int cavan_stdout_write_string(cavan_string_t *str)
+static inline int cavan_stdout_write_string(const cavan_string_t *str)
 {
 	return cavan_stdout_write_line(str->text, str->length);
 }

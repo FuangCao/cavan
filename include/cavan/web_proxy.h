@@ -35,5 +35,7 @@ struct web_proxy_service {
 char *web_proxy_find_prop(const char *req, const char *req_end, const char *name, size_t namelen);
 char *web_proxy_set_prop(char *req, char *req_end, const char *name, size_t namelen, const char *value, size_t valuelen);
 ssize_t web_proxy_read_request(struct network_client *client, char *buff, size_t size);
-
+int web_proxy_main_loop(struct network_client *reader, struct network_client *writer, int timeout);
+int web_proxy_main_loop_cached(struct cavan_fifo *reader, struct network_client *writer, int timeout);
+int web_proxy_monitor_loop(struct network_client *local, struct network_client *remote);
 int web_proxy_service_run(struct cavan_dynamic_service *service);

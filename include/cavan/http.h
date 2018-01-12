@@ -152,6 +152,7 @@ void cavan_http_packet_init(struct cavan_http_packet *packet);
 void cavan_http_packet_clear(struct cavan_http_packet *packet, bool depth);
 struct cavan_http_packet *cavan_http_packet_alloc(void);
 void cavan_http_packet_free(struct cavan_http_packet *packet);
+bool cavan_http_packet_content_printable(const struct cavan_http_packet *packet);
 void cavan_http_packet_dump(const struct cavan_http_packet *packet);
 int cavan_http_packet_add_line_end(struct cavan_http_packet *packet);
 int cavan_http_packet_add_line(struct cavan_http_packet *packet, const char *line, int size);

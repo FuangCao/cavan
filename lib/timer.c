@@ -424,7 +424,7 @@ int cavan_flasher_run(struct cavan_flasher *flasher)
 {
 	struct cavan_thread *thread = &flasher->thread;
 
-	cavan_lock_init(&flasher->lock, FALSE);
+	cavan_lock_init(&flasher->lock);
 
 	flasher->head = NULL;
 	flasher->delay = 0;

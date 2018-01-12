@@ -167,6 +167,7 @@ __END_DECLS
 
 #include <cavan/debug.h>
 #include <cavan/types.h>
+#include <cavan/lock.h>
 #include <cavan/stdio.h>
 #include <cavan/text.h>
 #include <cavan/path.h>

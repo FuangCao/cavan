@@ -7,6 +7,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/lock.h>
 #include <sys/epoll.h>
 
 #define CAVAN_THREADF_PIPE_WAKEUP		(1 << 0)
@@ -24,7 +25,7 @@ typedef enum cavan_thread_state {
 	CAVAN_THREAD_STATE_STOPPED
 } cavan_thread_state_t;
 
-struct cavan_thread {
+typedef struct cavan_thread {
 	const char *name;
 
 	int flags;
@@ -49,13 +50,7 @@ struct cavan_thread {
 
 	int (*wake_handker)(struct cavan_thread *thread, void *data);
 	int (*handler)(struct cavan_thread *thread, void *data);
-};
-
-struct cavan_lock {
-	int held_count;
-	pthread_t owner;
-	pthread_mutex_t mutex;
-};
+} cavan_thread_t;
 
 int cavan_pthread_create(pthread_t *pthread, void *(*handler)(void *), void *data, bool joinable);
 int cavan_thread_send_event(struct cavan_thread *thread, u32 event);
@@ -79,11 +74,6 @@ int cavan_thread_epoll_remove(struct cavan_thread *thread, int fd);
 int cavan_thread_epoll_modify(struct cavan_thread *thread, int fd, u32 events);
 int cavan_thread_epoll_wait(struct cavan_thread *thread, struct epoll_event *events, int count, int timeout);
 int cavan_thread_epoll_wait_event(struct cavan_thread *thread, int timeout);
-
-void cavan_lock_init(struct cavan_lock *lock, bool acquire);
-void cavan_lock_deinit(struct cavan_lock *lock);
-void cavan_lock_acquire(struct cavan_lock *lock);
-void cavan_lock_release(struct cavan_lock *lock);
 
 static inline int cavan_pthread_run(void *(handler) (void *), void *data)
 {

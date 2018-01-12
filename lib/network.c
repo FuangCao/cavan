@@ -4275,6 +4275,29 @@ int network_client_fifo_init(struct cavan_fifo *fifo, size_t size, struct networ
 	return 0;
 }
 
+int network_client_fifo_read_cache(struct cavan_fifo *fifo, struct network_client *client)
+{
+	int length = 0;
+
+	while (1) {
+		int rdlen;
+		char buff[1024];
+
+		rdlen = cavan_fifo_read_cache(fifo, buff, sizeof(buff));
+		if (rdlen > 0) {
+			if (network_client_send(client, buff, rdlen) < rdlen) {
+				return -EFAULT;
+			}
+
+			length += rdlen;
+		} else {
+			break;
+		}
+	}
+
+	return length;
+}
+
 int network_service_accept_timed(struct network_service *service, struct network_client *client, u32 msec)
 {
 	if (!file_poll_input(service->sockfd, msec)) {
@@ -4304,7 +4327,7 @@ int network_service_open(struct network_service *service, const struct network_u
 		return ret;
 	}
 
-	cavan_lock_init(&service->lock, false);
+	cavan_lock_init(&service->lock);
 
 	return 0;
 }
