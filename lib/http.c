@@ -1707,6 +1707,11 @@ bool cavan_http_packet_content_printable(const struct cavan_http_packet *packet)
 	return false;
 }
 
+int cavan_http_packet_decode(const struct cavan_http_packet *packet, cavan_string_t *str)
+{
+	return 0;
+}
+
 void cavan_http_packet_dump(const struct cavan_http_packet *packet)
 {
 	const cavan_string_t *header = &packet->header;
@@ -1715,6 +1720,8 @@ void cavan_http_packet_dump(const struct cavan_http_packet *packet)
 	cavan_stdout_write_string(header);
 
 	if (body->length > 0 && cavan_http_packet_content_printable(packet)) {
+		const char *content_encoding = packet->headers[HTTP_HEADER_CONTENT_ENCODING];
+		println("content_encoding = %s", content_encoding);
 		cavan_stdout_write_string(body);
 	}
 }

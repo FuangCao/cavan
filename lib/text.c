@@ -3044,31 +3044,44 @@ int cavan_string_reinit(cavan_string_t *str, int size)
 	return 0;
 }
 
+bool cavan_string_extand(cavan_string_t *str, int length)
+{
+	char *mem;
+	int size;
+
+	if (str->allocated > length) {
+		return true;
+	}
+
+	for (size = 32; size <= length; size <<= 1);
+
+	mem = malloc(size);
+	if (mem == NULL) {
+		return false;
+	}
+
+	if (str->length > 0) {
+		memcpy(mem, str->text, str->length);
+	}
+
+	mem[str->length] = 0;
+
+	if (str->allocated > 0) {
+		free(str->text);
+	}
+
+	str->allocated = size;
+	str->text = mem;
+
+	return true;
+}
+
 int cavan_string_append(cavan_string_t *str, const char *text, int size)
 {
 	int used = str->length + size;
 
-	if (str->allocated <= used) {
-		int total;
-		char *mem;
-
-		for (total = 32; total <= used; total <<= 1);
-
-		mem = malloc(total);
-		if (mem == NULL) {
-			return -ENOMEM;
-		}
-
-		if (str->length > 0) {
-			memcpy(mem, str->text, str->length);
-		}
-
-		if (str->allocated > 0) {
-			free(str->text);
-		}
-
-		str->text = mem;
-		str->allocated = total;
+	if (!cavan_string_extand(str, used)) {
+		return -ENOMEM;
 	}
 
 	memcpy(str->text + str->length, text, size);

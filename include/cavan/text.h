@@ -277,6 +277,7 @@ char *time2text_msec(u64 msec, char *buff, size_t size);
 
 void cavan_string_init(cavan_string_t *str);
 int cavan_string_reinit(cavan_string_t *str, int size);
+bool cavan_string_extand(cavan_string_t *str, int length);
 int cavan_string_append(cavan_string_t *str, const char *text, int size);
 void cavan_string_clear(cavan_string_t *str, bool depth);
 
