@@ -299,10 +299,10 @@ int main(int argc, char *argv[])
 	int i;
 	int c;
 	int ret;
-	char *test;
 	int count = 0;
 	int delay = 0;
 	int option_index;
+	char *test = NULL;
 	struct cavan_http_packet *packets[200];
 	struct cavan_http_sender sender;
 	struct option long_option[] = {

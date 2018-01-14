@@ -635,6 +635,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 					goto out_network_client_close_proxy;
 				}
 
+#if CONFIG_CAVAN_SSL
 				if (proxy->monitor) {
 					ret = network_client_ssl_attach(client, true);
 					if (ret < 0) {
@@ -649,7 +650,9 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 					}
 
 					web_proxy_monitor_loop(client, &remote);
-				} else {
+				} else
+#endif
+				{
 					tcp_proxy_main_loop(client, &remote);
 				}
 
