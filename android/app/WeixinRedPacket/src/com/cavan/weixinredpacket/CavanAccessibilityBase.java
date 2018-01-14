@@ -102,6 +102,7 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 	}
 
 	public void clearPackets() {
+		removeCallbacks(this);
 		mForceUnpack = false;
 		mPackets.clear();
 	}
@@ -147,6 +148,7 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 
 	protected void onViewClicked(AccessibilityEvent event) {}
 	protected void onViewTextChanged(AccessibilityEvent event) {}
+	protected void onNotificationStateChanged(Notification notification) {}
 
 	protected boolean isValidPackageName(CharSequence pkgName) {
 		return getPackageName().equals(pkgName);
@@ -277,6 +279,4 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 			}
 		}
 	}
-
-	public void onNotificationStateChanged(Notification notification) {}
 }

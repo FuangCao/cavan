@@ -15,6 +15,14 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	public static final String KEY_ACCESSIBILITY = "accessibility";
 	public static final String KEY_MM_UNPACK = "mm_unpack";
 
+	public static int getAutoUnpackMM(Context context) {
+		return CavanAndroid.getPreferenceInt(context, KEY_MM_UNPACK, 0);
+	}
+
+	public static Intent getAccessibilitySettingsIntent() {
+		return new Intent("android.settings.ACCESSIBILITY_SETTINGS");
+	}
+
 	private Preference mPreferenceAccessibility;
 
 	@SuppressWarnings("deprecation")
@@ -29,20 +37,14 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 		CavanPreferenceHelper.findListPreference(this, KEY_MM_UNPACK, this);
 	}
 
-	public static int getAutoUnpackMM(Context context) {
-		return CavanAndroid.getPreferenceInt(context, KEY_ACCESSIBILITY, 0);
-	}
-
-	public static Intent getAccessibilitySettingsIntent() {
-		return new Intent("android.settings.ACCESSIBILITY_SETTINGS");
-	}
-
 	@Override
 	protected void onResume() {
 		super.onResume();
 
-		if (CavanAndroid.isAccessibilityServiceEnabled(this, CavanAccessibilityService.class)) {
+		if (CavanAccessibilityService.instance != null) {
 			mPreferenceAccessibility.setSummary(R.string.opened);
+		} else if (CavanAndroid.isAccessibilityServiceEnabled(this, CavanAccessibilityService.class)) {
+			mPreferenceAccessibility.setSummary(R.string.please_click_here_reopen);
 		} else {
 			mPreferenceAccessibility.setSummary(R.string.please_click_here_open);
 		}

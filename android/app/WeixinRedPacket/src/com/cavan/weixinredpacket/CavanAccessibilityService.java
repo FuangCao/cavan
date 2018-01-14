@@ -18,6 +18,8 @@ import com.cavan.java.CavanString;
 
 public class CavanAccessibilityService extends AccessibilityService {
 
+	public static CavanAccessibilityService instance;
+
 	private long mWindowStartTime;
 	private String mClassName = CavanString.EMPTY_STRING;
 	private String mPackageName = CavanString.EMPTY_STRING;
@@ -157,7 +159,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 					AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS |
 					AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
 
-			info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED | AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED;
+			info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED |
+					AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED |
+					AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED;
 
 			setServiceInfo(info);
 
@@ -170,5 +174,17 @@ public class CavanAccessibilityService extends AccessibilityService {
 	@Override
 	public void onInterrupt() {
 		CavanAndroid.pLog();
+	}
+
+	@Override
+	public void onCreate() {
+		super.onCreate();
+		instance = this;
+	}
+
+	@Override
+	public void onDestroy() {
+		instance = null;
+		super.onDestroy();
 	}
 }

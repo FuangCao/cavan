@@ -234,39 +234,27 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			return null;
 		}
 
-		AccessibilityNodeInfo child0 = null;
-		AccessibilityNodeInfo child1 = null;
+		List<AccessibilityNodeInfo> nodes = new ArrayList<AccessibilityNodeInfo>();
 
 		try {
-			AccessibilityNodeInfo node = CavanAccessibility.findNodeByViewId(root, "com.tencent.mm:id/a4l");
-			if (node != null) {
-				if (ListView.class.getName().equals(node.getClassName())) {
-					return node;
+			AccessibilityNodeInfo node = root;
+
+			while (node.getChildCount() > 0) {
+				node = node.getChild(0);
+				if (node == null) {
+					break;
 				}
 
-				node.recycle();
+				nodes.add(node);
+
+				if (LinearLayout.class.getName().equals(node.getClassName())) {
+					return CavanAccessibility.findChildByClassName(node, ListView.class.getName());
+				}
 			}
-
-			child0 = root.getChild(0);
-			child1 = child0.getChild(0);
-			node = child1.getChild(4);
-
-			if (ListView.class.getName().equals(node.getClassName())) {
-				return node;
-			}
-
-			node.recycle();
 		} catch (Exception e) {
 			return null;
 		} finally {
-			if (child1 != null) {
-				child1.recycle();
-			}
-
-			if (child0 != null) {
-				child0.recycle();
-			}
-
+			CavanAccessibility.recycleNodes(nodes);
 			root.recycle();
 		}
 
