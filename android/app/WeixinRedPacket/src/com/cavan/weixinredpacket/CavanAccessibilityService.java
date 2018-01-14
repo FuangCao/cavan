@@ -6,6 +6,10 @@ import java.util.Set;
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.Notification;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Parcelable;
 import android.view.KeyEvent;
@@ -20,12 +24,33 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	public static CavanAccessibilityService instance;
 
+	private boolean mScreenOn;
 	private long mWindowStartTime;
 	private String mClassName = CavanString.EMPTY_STRING;
 	private String mPackageName = CavanString.EMPTY_STRING;
 
 	private CavanAccessibilityMM mAccessibilityMM = new CavanAccessibilityMM(this);
 	private HashMap<String, CavanAccessibilityBase<?>> mAccessibilityMap = new HashMap<String, CavanAccessibilityBase<?>>();
+
+	private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String action = intent.getAction();
+			CavanAndroid.dLog("action = " + action);
+
+			switch (action) {
+			case Intent.ACTION_SCREEN_OFF:
+				mScreenOn = false;
+				CavanAndroid.setLockScreenEnable(context, true);
+				break;
+
+			case Intent.ACTION_SCREEN_ON:
+				mScreenOn = true;
+				break;
+			}
+		}
+	};
 
 	public CavanAccessibilityService() {
 		super();
@@ -35,6 +60,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	public CavanAccessibilityMM getAccessibilityMM() {
 		return mAccessibilityMM;
+	}
+
+	public boolean isScreenOn() {
+		return mScreenOn;
 	}
 
 	public long getWindowTimeConsume() {
@@ -179,12 +208,21 @@ public class CavanAccessibilityService extends AccessibilityService {
 	@Override
 	public void onCreate() {
 		super.onCreate();
+
 		instance = this;
+		mScreenOn = true;
+
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(Intent.ACTION_SCREEN_OFF);
+		filter.addAction(Intent.ACTION_SCREEN_ON);
+		registerReceiver(mBroadcastReceiver, filter );
 	}
 
 	@Override
 	public void onDestroy() {
+		unregisterReceiver(mBroadcastReceiver);
 		instance = null;
+
 		super.onDestroy();
 	}
 }

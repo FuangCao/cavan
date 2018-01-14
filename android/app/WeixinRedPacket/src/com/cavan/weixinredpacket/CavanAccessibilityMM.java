@@ -2,20 +2,23 @@ package com.cavan.weixinredpacket;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import android.annotation.SuppressLint;
 import android.app.Notification;
+import android.os.Handler;
+import android.os.Message;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-
 import com.cavan.android.CavanAccessibility;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 
 public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
+
+	private static final int MSG_ADD_PACKET = 1;
 
 	private static final int POLL_DELAY = 500;
 	private static final int POLL_DELAY_UNPACK = 2000;
@@ -26,6 +29,21 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	private boolean mUnpackPending;
 	private CountDownDialog mCountDownDialog;
 	private List<Integer> mFinishNodes = new ArrayList<Integer>();
+
+	@SuppressLint("HandlerLeak")
+	private Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case MSG_ADD_PACKET:
+				CavanNotification cn = (CavanNotification) msg.obj;
+				addPacket(cn.getUserName(), POLL_DELAY);
+				cn.send();
+				break;
+			}
+		}
+	};
 
 	public CavanAccessibilityMM(CavanAccessibilityService service) {
 		super(service);
@@ -79,8 +97,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	}
 
 	@Override
-	public boolean addPacket(String packet) {
-		if (updateUnpackTime() && super.addPacket(packet)) {
+	public boolean addPacket(String packet, long delay) {
+		if (updateUnpackTime() && super.addPacket(packet, delay)) {
 			mFinishNodes.clear();
 			return true;
 		}
@@ -401,11 +419,18 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	@Override
 	public void onNotificationStateChanged(Notification notification) {
 		CavanNotification cn = new CavanNotification(notification);
+
 		if (cn.isRedPacket()) {
+			Message message = mHandler.obtainMessage(MSG_ADD_PACKET, cn);
+
+			if (mService.isScreenOn()) {
+				message.sendToTarget();
+			} else {
+				mHandler.sendMessageDelayed(message, 2000);
+			}
+
 			CavanAndroid.acquireWakeupLock(mService, 20000);
 			CavanAndroid.setLockScreenEnable(mService, false);
-			addPacket(cn.getUserName());
-			cn.send();
 		}
 	}
 }

@@ -87,7 +87,7 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 		return size;
 	}
 
-	public boolean addPacket(E packet) {
+	public boolean addPacket(E packet, long delay) {
 		removeCallbacks(mRunnableContentStable);
 
 		if (mPackets.contains(packet)) {
