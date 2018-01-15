@@ -20,10 +20,11 @@
 #include <cavan.h>
 #include <cavan/lock.h>
 
+static pthread_mutex_t g_cavan_lock_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 void cavan_lock_init(cavan_lock_t *lock)
 {
 	pthread_mutex_init(&lock->mutex, NULL);
-	pthread_mutex_init(&lock->lock, NULL);
 	lock->owner = 0;
 	lock->count = 0;
 }
@@ -31,37 +32,36 @@ void cavan_lock_init(cavan_lock_t *lock)
 void cavan_lock_deinit(cavan_lock_t *lock)
 {
 	pthread_mutex_destroy(&lock->mutex);
-	pthread_mutex_destroy(&lock->lock);
 }
 
 void cavan_lock_acquire(cavan_lock_t *lock)
 {
 	pthread_t owner = pthread_self();
 
-	pthread_mutex_lock(&lock->lock);
+	pthread_mutex_lock(&g_cavan_lock_mutex);
 
 	if (lock->count > 0 && pthread_equal(owner, lock->owner)) {
 		lock->count++;
 	} else {
-		pthread_mutex_unlock(&lock->lock);
+		pthread_mutex_unlock(&g_cavan_lock_mutex);
 		pthread_mutex_lock(&lock->mutex);
-		pthread_mutex_lock(&lock->lock);
+		pthread_mutex_lock(&g_cavan_lock_mutex);
 		lock->owner = owner;
 		lock->count = 1;
 	}
 
-	pthread_mutex_unlock(&lock->lock);
+	pthread_mutex_unlock(&g_cavan_lock_mutex);
 }
 
 void cavan_lock_release(cavan_lock_t *lock)
 {
 	pthread_t owner = pthread_self();
 
-	pthread_mutex_lock(&lock->lock);
+	pthread_mutex_lock(&g_cavan_lock_mutex);
 
 	if (pthread_equal(owner, lock->owner) && --lock->count == 0) {
 		pthread_mutex_unlock(&lock->mutex);
 	}
 
-	pthread_mutex_unlock(&lock->lock);
+	pthread_mutex_unlock(&g_cavan_lock_mutex);
 }

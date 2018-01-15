@@ -22,11 +22,10 @@
 #include <cavan.h>
 
 #define CAVAN_LOCK_INITIALIZER \
-	{ .mutex = PTHREAD_MUTEX_INITIALIZER, .lock = PTHREAD_MUTEX_INITIALIZER, .owner = 0, .count = 0 }
+	{ .mutex = PTHREAD_MUTEX_INITIALIZER, .owner = 0, .count = 0 }
 
 typedef struct cavan_lock {
 	pthread_mutex_t mutex;
-	pthread_mutex_t lock;
 	pthread_t owner;
 	int count;
 } cavan_lock_t;
