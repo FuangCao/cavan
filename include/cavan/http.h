@@ -22,7 +22,7 @@
 #include <cavan.h>
 #include <cavan/network.h>
 #include <cavan/service.h>
-#ifdef CONFIG_CAVAN_CURL
+#if CONFIG_CAVAN_CURL
 #include <curl/curl.h>
 #endif
 

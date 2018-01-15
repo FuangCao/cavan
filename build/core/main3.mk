@@ -74,18 +74,28 @@ CONFIG_CAVAN_SSL_CERT ?= $(ROOT_PATH)/config/ssl/cert.pem
 CONFIG_CAVAN_SSL_KEY ?= $(ROOT_PATH)/config/ssl/key.pem
 
 ifeq ($(CONFIG_CAVAN_SSL),true)
-CFLAGS += -DCONFIG_CAVAN_SSL
+CFLAGS += -DCONFIG_CAVAN_SSL $(shell pkg-config --cflags libssl)
 CFLAGS += -DCONFIG_CAVAN_SSL_CERT=\"$(CONFIG_CAVAN_SSL_CERT)\"
 CFLAGS += -DCONFIG_CAVAN_SSL_KEY=\"$(CONFIG_CAVAN_SSL_KEY)\"
 ifneq ($(CONFIG_CAVAN_SSL_PASSWORD),)
 CFLAGS += -DCONFIG_CAVAN_SSL_PASSWORD=\"$(CONFIG_CAVAN_SSL_PASSWORD)\"
 endif
-LDFLAGS += -lssl
+LDFLAGS += $(shell pkg-config --libs libssl)
 endif
 
 ifeq ($(CONFIG_CAVAN_CURL),true)
-CFLAGS += -DCONFIG_CAVAN_CURL
-LDFLAGS += -lcurl
+CFLAGS += -DCONFIG_CAVAN_CURL $(shell pkg-config --cflags libcurl)
+LDFLAGS += $(shell pkg-config --libs libcurl)
+endif
+
+ifeq ($(CONFIG_CAVAN_ZLIB),true)
+CFLAGS += -DCONFIG_CAVAN_ZLIB $(shell pkg-config --cflags zlib)
+LDFLAGS += $(shell pkg-config --libs zlib)
+endif
+
+ifeq ($(CONFIG_CAVAN_JSON),true)
+CFLAGS += -DCONFIG_CAVAN_JSON $(shell pkg-config --cflags json-c)
+LDFLAGS += $(shell pkg-config --libs json-c)
 endif
 
 ifneq ($(BUILD_ENTRY),cavan)

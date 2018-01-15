@@ -1546,7 +1546,7 @@ int cavan_http_service_run(struct cavan_dynamic_service *service)
 
 // ================================================================================
 
-#ifdef CONFIG_CAVAN_CURL
+#if CONFIG_CAVAN_CURL
 static size_t http_client_write_callback(char *buffer, size_t size, size_t nitems, void *outstream)
 {
 	size_t remain;

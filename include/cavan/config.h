@@ -50,3 +50,15 @@
 #ifndef CONFIG_CAVAN_SSL
 #define CONFIG_CAVAN_SSL			0
 #endif
+
+#ifndef CONFIG_CAVAN_CURL
+#define CONFIG_CAVAN_CURL			0
+#endif
+
+#ifndef CONFIG_CAVAN_ZLIB
+#define CONFIG_CAVAN_ZLIB			0
+#endif
+
+#ifndef CONFIG_CAVAN_JSON
+#define CONFIG_CAVAN_JSON			0
+#endif
