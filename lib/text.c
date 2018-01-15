@@ -3013,10 +3013,16 @@ char *time2text_msec(u64 msec, char *buff, size_t size)
 	return buff;
 }
 
-void cavan_string_init(cavan_string_t *str)
+void cavan_string_init(cavan_string_t *str, const char *text, int length)
 {
-	str->text = "";
-	str->length = 0;
+	if (text == NULL) {
+		str->text = "";
+		str->length = 0;
+	} else {
+		str->text = (char *) text;
+		str->length = length;
+	}
+
 	str->allocated = 0;
 }
 
@@ -3091,6 +3097,37 @@ int cavan_string_append(cavan_string_t *str, const char *text, int size)
 	return size;
 }
 
+int cavan_string_append_line_unix(cavan_string_t *str, const char *line, int size)
+{
+	int ret;
+
+	ret = cavan_string_append(str, line, size);
+	if (ret < 0) {
+		return ret;
+	}
+
+	return cavan_string_append_line_end_unix(str);
+}
+
+int cavan_string_append_line_dos(cavan_string_t *str, const char *line, int size)
+{
+	int ret;
+
+	ret = cavan_string_append(str, line, size);
+	if (ret < 0) {
+		return ret;
+	}
+
+	return cavan_string_append_line_end_dos(str);
+}
+
+int cavan_string_assign(cavan_string_t *str, const char *text, int size)
+{
+	str->length = 0;
+
+	return cavan_string_append(str, text, size);
+}
+
 void cavan_string_clear(cavan_string_t *str, bool depth)
 {
 	str->length = 0;
@@ -3108,4 +3145,108 @@ void cavan_string_clear(cavan_string_t *str, bool depth)
 	} else {
 		str->text = "";
 	}
+}
+
+int cavan_string_cmp(const char *text1, int len1, const char *text2, int len2)
+{
+	if (len1 != len2) {
+		return len1 - len2;
+	}
+
+	return strncmp(text1, text2, len1);
+}
+
+int cavan_string_cmp2(const char *text1, int len1, const char *text2)
+{
+	const char *text1_end = text1 + len1;
+
+	while (text1 < text1_end) {
+		if (*text1 != *text2) {
+			return *text1 - *text2;
+		}
+
+		text1++;
+		text2++;
+	}
+
+	if (*text2 == 0) {
+		return 0;
+	}
+
+	return -1;
+}
+
+int cavan_string_casecmp(const char *text1, int len1, const char *text2, int len2)
+{
+	if (len1 != len2) {
+		return len1 - len2;
+	}
+
+	return strncasecmp(text1, text2, len1);
+}
+
+int cavan_string_casecmp2(const char *text1, int len1, const char *text2)
+{
+	const char *text1_end = text1 + len1;
+
+	while (text1 < text1_end) {
+		if ((*text1 | 0x20) != (*text2 | 0x20)) {
+			return *text1 - *text2;
+		}
+
+		text1++;
+		text2++;
+	}
+
+	if (*text2 == 0) {
+		return 0;
+	}
+
+	return -1;
+}
+
+
+bool cavan_string_startswith(const char *text1, int len1, const char *text2, int len2)
+{
+	const char *text1_end = text1 + len1;
+	const char *text2_end = text2 + len2;
+
+	while (text1 < text1_end) {
+		if (text2 < text2_end) {
+			if (*text1 != *text2) {
+				return false;
+			}
+		} else {
+			return true;
+		}
+
+		text1++;
+		text2++;
+	}
+
+	if (text2 < text2_end) {
+		return false;
+	}
+
+	return true;
+}
+
+bool cavan_string_startswith2(const char *text1, int len1, const char *text2)
+{
+	const char *text1_end = text1 + len1;
+
+	while (text1 < text1_end) {
+		if (*text1 != *text2) {
+			if (*text2 == 0) {
+				return true;
+			}
+
+			return false;
+		}
+
+		text1++;
+		text2++;
+	}
+
+	return (*text2 == 0);
 }

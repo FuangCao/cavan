@@ -1673,8 +1673,8 @@ void cavan_http_packet_init(struct cavan_http_packet *packet)
 		packet->headers[i] = NULL;
 	}
 
-	cavan_string_init(&packet->header);
-	cavan_string_init(&packet->body);
+	cavan_string_init(&packet->header, NULL, 0);
+	cavan_string_init(&packet->body, NULL, 0);
 	packet->lines = 0;
 }
 

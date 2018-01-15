@@ -275,15 +275,104 @@ double text2frequency(const char *text, const char *text_end, const char **last)
 
 char *time2text_msec(u64 msec, char *buff, size_t size);
 
-void cavan_string_init(cavan_string_t *str);
+void cavan_string_init(cavan_string_t *str, const char *text, int length);
 int cavan_string_reinit(cavan_string_t *str, int size);
 bool cavan_string_extand(cavan_string_t *str, int length);
 int cavan_string_append(cavan_string_t *str, const char *text, int size);
+int cavan_string_append_line_unix(cavan_string_t *str, const char *line, int size);
+int cavan_string_append_line_dos(cavan_string_t *str, const char *line, int size);
+int cavan_string_assign(cavan_string_t *str, const char *text, int size);
 void cavan_string_clear(cavan_string_t *str, bool depth);
+int cavan_string_cmp(const char *text1, int len1, const char *text2, int len2);
+int cavan_string_cmp2(const char *text1, int len1, const char *text2);
+int cavan_string_casecmp(const char *text1, int len1, const char *text2, int len2);
+int cavan_string_casecmp2(const char *text1, int len1, const char *text2);
+bool cavan_string_startswith(const char *text1, int len1, const char *text2, int len2);
+bool cavan_string_startswith2(const char *text1, int len1, const char *text2);
 
 static inline int cavan_string_append_char(cavan_string_t *str, char c)
 {
 	return cavan_string_append(str, &c, 1);
+}
+
+static inline int cavan_string_append_line_end_unix(cavan_string_t *str)
+{
+	return cavan_string_append(str, "\n", 1);
+}
+
+static inline int cavan_string_append_line_end_dos(cavan_string_t *str)
+{
+	return cavan_string_append(str, "\r\n", 2);
+}
+
+static inline int cavan_string_cmp3(const cavan_string_t *str, const char *text, int length)
+{
+	return cavan_string_cmp(str->text, str->length, text, length);
+}
+
+static inline int cavan_string_cmp4(const cavan_string_t *str, const char *text)
+{
+	return cavan_string_cmp2(str->text, str->length, text);
+}
+
+static inline int cavan_string_cmp5(const cavan_string_t *str1, const cavan_string_t *str2)
+{
+	return cavan_string_cmp3(str1, str2->text, str2->length);
+}
+
+static inline int cavan_string_casecmp3(const cavan_string_t *str, const char *text, int length)
+{
+	return cavan_string_casecmp(str->text, str->length, text, length);
+}
+
+static inline int cavan_string_casecmp4(const cavan_string_t *str, const char *text)
+{
+	return cavan_string_casecmp2(str->text, str->length, text);
+}
+
+static inline int cavan_string_casecmp5(const cavan_string_t *str1, const cavan_string_t *str2)
+{
+	return cavan_string_casecmp3(str1, str2->text, str2->length);
+}
+
+static inline bool cavan_string_startswith3(const cavan_string_t *str, const char *text, int length)
+{
+	return cavan_string_startswith(str->text, str->length, text, length);
+}
+
+static inline bool cavan_string_startswith4(const cavan_string_t *str, const char *text)
+{
+	return cavan_string_startswith2(str->text, str->length, text);
+}
+
+static inline bool cavan_string_startswith5(const cavan_string_t *str1, const cavan_string_t *str2)
+{
+	return cavan_string_startswith3(str1, str2->text, str2->length);
+}
+
+static inline char *cavan_string_find(const char *text, int len1, const char *sub, int len2)
+{
+	return mem_kmp_find(text, sub, len1, len2);
+}
+
+static inline char *cavan_string_find2(const char *text, int len1, const char *sub)
+{
+	return mem_kmp_find(text, sub, len1, strlen(sub));
+}
+
+static inline char *cavan_string_find3(const cavan_string_t *str, const char *text, int length)
+{
+	return cavan_string_find(str->text, str->length, text, length);
+}
+
+static inline char *cavan_string_find4(const cavan_string_t *str, const char *text)
+{
+	return cavan_string_find2(str->text, str->length, text);
+}
+
+static inline char *cavan_string_find5(const cavan_string_t *str1, const cavan_string_t *str2)
+{
+	return cavan_string_find3(str1, str2->text, str2->length);
 }
 
 // ============================================================

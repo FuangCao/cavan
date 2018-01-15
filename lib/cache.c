@@ -730,7 +730,7 @@ int cavan_fifo_init(struct cavan_fifo *fifo, size_t size, void *data)
 		goto out_pthread_mutex_destroy;
 	}
 
-	cavan_string_init(&fifo->line);
+	cavan_string_init(&fifo->line, NULL, 0);
 
 	fifo->size = size;
 	fifo->available = 0;
