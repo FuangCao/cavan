@@ -9,7 +9,7 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.EditText;
 
-import com.cavan.android.CavanAccessibility;
+import com.cavan.android.CavanAccessibilityHelper;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanString;
@@ -136,7 +136,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 
 		CavanAndroid.dumpstack();
 
-		if (CavanAccessibility.performClickByViewIds(root, BACK_VIEW_IDS) > 0) {
+		if (CavanAccessibilityHelper.performClickByViewIds(root, BACK_VIEW_IDS) > 0) {
 			return true;
 		}
 
@@ -299,15 +299,15 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 			break;
 
 		case "com.alipay.mobile.about.widget.UpdateCommonDialog":
-			AccessibilityNodeInfo node = CavanAccessibility.findNodeByViewId(root, "com.alipay.mobile.accountauthbiz:id/update_cancel_tv");
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByViewId(root, "com.alipay.mobile.accountauthbiz:id/update_cancel_tv");
 			if (node != null) {
-				CavanAccessibility.performClickAndRecycle(node);
+				CavanAccessibilityHelper.performClickAndRecycle(node);
 				break;
 			}
 
-			node = CavanAccessibility.findNodeByText(root, "稍后再说");
+			node = CavanAccessibilityHelper.findNodeByText(root, "稍后再说");
 			if (node != null) {
-				CavanAccessibility.performClickAndRecycle(node);
+				CavanAccessibilityHelper.performClickAndRecycle(node);
 				break;
 			}
 			break;
@@ -404,7 +404,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 	}
 
 	private boolean gotoRedPacketActivity(AccessibilityNodeInfo root) {
-		AccessibilityNodeInfo node = CavanAccessibility.findNodeByText(root, "红包");
+		AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "红包");
 		if (node != null) {
 			AccessibilityNodeInfo parent = node.getParent();
 			if (parent == null) {
@@ -421,9 +421,9 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 			return true;
 		}
 
-		node = CavanAccessibility.findNodeByViewId(root, "com.alipay.android.phone.openplatform:id/tab_description");
+		node = CavanAccessibilityHelper.findNodeByViewId(root, "com.alipay.android.phone.openplatform:id/tab_description");
 		if (node == null) {
-			node = CavanAccessibility.findNodeByText(root, "首页");
+			node = CavanAccessibilityHelper.findNodeByText(root, "首页");
 			if (node == null) {
 				return false;
 			}
@@ -431,7 +431,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 
 		AccessibilityNodeInfo parent = node.getParent();
 		if (parent != null) {
-			CavanAccessibility.performClickAndRecycle(parent);
+			CavanAccessibilityHelper.performClickAndRecycle(parent);
 		}
 
 		node.recycle();
@@ -455,13 +455,13 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 		}
 
 		if (code == null) {
-			CavanAccessibility.setNodeText(mService, node, null);
+			CavanAccessibilityHelper.setNodeText(mService, node, null);
 			return POLL_DELAY;
 		}
 
 		mInputtedCode = code.getCode();
 
-		String old = CavanAccessibility.setNodeText(mService, node, code.getCode());
+		String old = CavanAccessibilityHelper.setNodeText(mService, node, code.getCode());
 
 		if (mCode != null) {
 			mCode.setPostPending(false);
@@ -525,11 +525,11 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 	private boolean unpackRedPacket(AccessibilityNodeInfo root) {
 		CavanAndroid.cancelToast();
 
-		if (CavanAccessibility.performClickByViewIds(root, "com.alipay.android.phone.discovery.envelope:id/action_chai") > 0) {
+		if (CavanAccessibilityHelper.performClickByViewIds(root, "com.alipay.android.phone.discovery.envelope:id/action_chai") > 0) {
 			return true;
 		}
 
-		if (CavanAccessibility.containsViewIds(root, OVER_VIEW_IDS)) {
+		if (CavanAccessibilityHelper.containsViewIds(root, OVER_VIEW_IDS)) {
 			setRedPacketCodeComplete();
 			performBackAction(root, false);
 			return true;

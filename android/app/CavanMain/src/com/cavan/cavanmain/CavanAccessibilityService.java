@@ -32,7 +32,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
-import com.cavan.android.CavanAccessibility;
+import com.cavan.android.CavanAccessibilityHelper;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.android.SystemProperties;
@@ -414,20 +414,20 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	public boolean setInputMethod(String name, int retry) {
 		AccessibilityNodeInfo root = getRootInActiveWindow();
-		CavanAccessibility.dumpNodeSimple(root);
+		CavanAccessibilityHelper.dumpNodeSimple(root);
 		if (root != null && "android".equals(root.getPackageName())) {
-			AccessibilityNodeInfo node = CavanAccessibility.findNodeByText(root, name);
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, name);
 			if (node != null) {
 				AccessibilityNodeInfo parent = node.getParent();
 				node.recycle();
 
 				if (parent != null) {
-					CavanAccessibility.performClickAndRecycle(parent);
+					CavanAccessibilityHelper.performClickAndRecycle(parent);
 					return true;
 				}
 
 				return false;
-			} else if (CavanAccessibility.getNodeCountByTexts(root, "选择输入法") > 0) {
+			} else if (CavanAccessibilityHelper.getNodeCountByTexts(root, "选择输入法") > 0) {
 				return false;
 			}
 		}
@@ -463,7 +463,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	@Override
 	public void onAccessibilityEvent(AccessibilityEvent event) {
-		boolean dump = CavanAccessibility.dumpEvent(event, "debug.cavan.dump.event");
+		boolean dump = CavanAccessibilityHelper.dumpEvent(event, "debug.cavan.dump.event");
 
 		CharSequence sequence = event.getPackageName();
 		if (sequence != null) {
@@ -502,7 +502,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 		case AccessibilityEvent.TYPE_VIEW_CLICKED:
 			if (!dump) {
-				CavanAccessibility.dumpEvent(event, "debug.cavan.dump.click");
+				CavanAccessibilityHelper.dumpEvent(event, "debug.cavan.dump.click");
 			}
 
 			if (CavanMessageActivity.isListenClickEnabled(CavanAccessibilityService.this)) {
@@ -528,9 +528,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 			if (dump > 0) {
 				if (event.getAction() == KeyEvent.ACTION_UP) {
 					if (dump > 1) {
-						CavanAccessibility.dumpNode(root);
+						CavanAccessibilityHelper.dumpNode(root);
 					} else {
-						CavanAccessibility.dumpNodeSimple(root);
+						CavanAccessibilityHelper.dumpNodeSimple(root);
 					}
 				}
 

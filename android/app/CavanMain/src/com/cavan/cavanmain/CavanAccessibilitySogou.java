@@ -6,7 +6,7 @@ import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
-import com.cavan.android.CavanAccessibility;
+import com.cavan.android.CavanAccessibilityHelper;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanString;
 
@@ -54,7 +54,7 @@ public class CavanAccessibilitySogou extends CavanAccessibilityBase<String> {
 				}
 			}
 
-			CavanAccessibility.recycleNodes(nodes);
+			CavanAccessibilityHelper.recycleNodes(nodes);
 		}
 	}
 

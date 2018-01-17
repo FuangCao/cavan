@@ -8,7 +8,7 @@ import android.os.Build;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
-import com.cavan.android.CavanAccessibility;
+import com.cavan.android.CavanAccessibilityHelper;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.android.DelayedRunnable;
@@ -61,7 +61,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 			return false;
 		}
 
-		if (CavanAccessibility.isTextView(node)) {
+		if (CavanAccessibilityHelper.isTextView(node)) {
 			Rect bounds = new Rect();
 
 			node.getBoundsInScreen(bounds);
@@ -81,12 +81,12 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 	}
 
 	private AccessibilityNodeInfo getRedPacketBackNode(AccessibilityNodeInfo root) {
-		AccessibilityNodeInfo backNode = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/ivTitleBtnLeft");
+		AccessibilityNodeInfo backNode = CavanAccessibilityHelper.findNodeByViewId(root, "com.tencent.mobileqq:id/ivTitleBtnLeft");
 		if (backNode != null) {
 			return backNode;
 		}
 
-		for (AccessibilityNodeInfo node : CavanAccessibility.findNodesByClassName(root, CavanAccessibility.CLASS_IMAGE_BUTTON)) {
+		for (AccessibilityNodeInfo node : CavanAccessibilityHelper.findNodesByClassName(root, CavanAccessibilityHelper.CLASS_IMAGE_BUTTON)) {
 			if (backNode == null && "关闭".equals(node.getContentDescription())) {
 				backNode = node;
 			} else {
@@ -110,7 +110,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 			if (backNode != null) {
 				mUnpackTimes = 0;
 				mUnpackPending = false;
-				CavanAccessibility.performClick(backNode);
+				CavanAccessibilityHelper.performClick(backNode);
 			}
 
 			setLockEnable(POLL_DELAY, false);
@@ -127,14 +127,14 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 			return false;
 		}
 
-		String message = CavanAccessibility.getChildText(node, 0);
+		String message = CavanAccessibilityHelper.getChildText(node, 0);
 		CavanAndroid.dLog("message = " + message);
 
 		if (message == null || message.contains("测") || message.contains("挂")) {
 			return false;
 		}
 
-		String state = CavanAccessibility.getChildText(node, 1);
+		String state = CavanAccessibilityHelper.getChildText(node, 1);
 		CavanAndroid.dLog("state = " + state);
 
 		if (state == null) {
@@ -145,27 +145,27 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 		case "点击拆开":
 		case "QQ红包个性版":
 			setUnpackPending(root, true);
-			CavanAccessibility.performClick(node);
+			CavanAccessibilityHelper.performClick(node);
 			return true;
 
 		case "口令红包":
-			if (!CavanAccessibility.performClick(node)) {
+			if (!CavanAccessibilityHelper.performClick(node)) {
 				break;
 			}
 
-			AccessibilityNodeInfo inputBar = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/inputBar");
+			AccessibilityNodeInfo inputBar = CavanAccessibilityHelper.findNodeByViewId(root, "com.tencent.mobileqq:id/inputBar");
 			if (inputBar == null || inputBar.getChildCount() < 2) {
 				inputBar.recycle();
 				break;
 			}
 
-			if (CavanAccessibility.setChildText(mService, inputBar, 0, message) == null) {
+			if (CavanAccessibilityHelper.setChildText(mService, inputBar, 0, message) == null) {
 				inputBar.recycle();
 				break;
 			}
 
 			setUnpackPending(root, true);
-			CavanAccessibility.performChildClick(inputBar, 1);
+			CavanAccessibilityHelper.performChildClick(inputBar, 1);
 			inputBar.recycle();
 			return true;
 		}
@@ -190,7 +190,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 				continue;
 			}
 
-			String type = CavanAccessibility.getNodeText(node);
+			String type = CavanAccessibilityHelper.getNodeText(node);
 			CavanAndroid.dLog("type = " + type);
 
 			if (type.startsWith(RED_PACKET_NAME)) {
@@ -206,21 +206,21 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 			}
 		}
 
-		CavanAccessibility.recycleNodes(nodes);
+		CavanAccessibilityHelper.recycleNodes(nodes);
 
 		return success;
 	}
 
 	private boolean doAutoUnpack(AccessibilityNodeInfo root) {
-		AccessibilityNodeInfo listNode = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/listView1");
+		AccessibilityNodeInfo listNode = CavanAccessibilityHelper.findNodeByViewId(root, "com.tencent.mobileqq:id/listView1");
 		if (listNode == null) {
-			listNode = CavanAccessibility.findChildByClassName(root, CavanAccessibility.CLASS_ABS_LIST_VIEW);
+			listNode = CavanAccessibilityHelper.findChildByClassName(root, CavanAccessibilityHelper.CLASS_ABS_LIST_VIEW);
 			if (listNode == null) {
 				return false;
 			}
 		}
 
-		if (mFinishNodes.isEmpty() && CavanAccessibility.performScrollDown(listNode, 100)) {
+		if (mFinishNodes.isEmpty() && CavanAccessibilityHelper.performScrollDown(listNode, 100)) {
 			CavanJava.msleep(SCROLL_DELAY);
 		}
 
@@ -230,7 +230,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 				return true;
 			}
 
-			if (CavanAccessibility.performScrollUp(listNode)) {
+			if (CavanAccessibilityHelper.performScrollUp(listNode)) {
 				CavanAndroid.dLog("performScrollUp" + i);
 				CavanJava.msleep(SCROLL_DELAY);
 			} else {
@@ -238,7 +238,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 			}
 		}
 
-		for (int i = 0; i < 10 && CavanAccessibility.performScrollDown(listNode); i++) {
+		for (int i = 0; i < 10 && CavanAccessibilityHelper.performScrollDown(listNode); i++) {
 			CavanAndroid.dLog("performScrollDown" + i);
 
 			CavanJava.msleep(SCROLL_DELAY);
@@ -265,12 +265,12 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 	}
 
 	private AccessibilityNodeInfo findBackNode(AccessibilityNodeInfo root) {
-		AccessibilityNodeInfo node = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/ivTitleBtnLeft");
+		AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByViewId(root, "com.tencent.mobileqq:id/ivTitleBtnLeft");
 		if (node != null) {
 			return node;
 		}
 
-		AccessibilityNodeInfo parent = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/rlCommenTitle");
+		AccessibilityNodeInfo parent = CavanAccessibilityHelper.findNodeByViewId(root, "com.tencent.mobileqq:id/rlCommenTitle");
 		if (parent == null) {
 			return null;
 		}
@@ -289,7 +289,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 		if (backNode != null) {
 			mRunnableClick.cancel();
 
-			String title = CavanAccessibility.getNodeTextByViewId(root, "com.tencent.mobileqq:id/title");
+			String title = CavanAccessibilityHelper.getNodeTextByViewId(root, "com.tencent.mobileqq:id/title");
 			CavanAndroid.dLog("title = " + title);
 
 			if (title != null) {
@@ -311,7 +311,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 				}
 			}
 
-			CavanAccessibility.performClickAndRecycle(backNode);
+			CavanAccessibilityHelper.performClickAndRecycle(backNode);
 
 			return POLL_DELAY;
 		} else {
@@ -320,7 +320,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 				return POLL_DELAY;
 			}
 
-			AccessibilityNodeInfo listNode = CavanAccessibility.findNodeByViewId(root, "com.tencent.mobileqq:id/recent_chat_list");
+			AccessibilityNodeInfo listNode = CavanAccessibilityHelper.findNodeByViewId(root, "com.tencent.mobileqq:id/recent_chat_list");
 			if (listNode == null) {
 				performGlobalBackDelayed(POLL_DELAY_JUMP);
 				return POLL_DELAY;
@@ -329,14 +329,14 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 			mFinishNodes.clear();
 			cancelGlobalBack();
 
-			Rect bounds = CavanAccessibility.getBoundsInScreen(listNode);
+			Rect bounds = CavanAccessibilityHelper.getBoundsInScreen(listNode);
 			if (bounds.left > 0) {
 				listNode.recycle();
 				performGlobalBack(POLL_DELAY);
 				return 0;
 			}
 
-			CavanAccessibility.performScrollUp(listNode, 10);
+			CavanAccessibilityHelper.performScrollUp(listNode, 10);
 			List<AccessibilityNodeInfo> chats = null;
 
 			while (true) {
@@ -350,9 +350,9 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 					AccessibilityNodeInfo parent = chats.get(mChatIndex++).getParent();
 					if (parent != null) {
 						if (parent.hashCode() != listNode.hashCode()) {
-							if (mRetryCount == 0 || CavanAccessibility.getNodeCountByViewIds(parent, "com.tencent.mobileqq:id/unreadmsg") > 0) {
+							if (mRetryCount == 0 || CavanAccessibilityHelper.getNodeCountByViewIds(parent, "com.tencent.mobileqq:id/unreadmsg") > 0) {
 								mRunnableClick.post(POLL_DELAY_JUMP, false);
-								CavanAccessibility.performClickAndRecycle(parent);
+								CavanAccessibilityHelper.performClickAndRecycle(parent);
 								break;
 							}
 						}
@@ -374,7 +374,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 			}
 
 			if (chats != null) {
-				CavanAccessibility.recycleNodes(chats);
+				CavanAccessibilityHelper.recycleNodes(chats);
 			}
 
 			listNode.recycle();
@@ -428,16 +428,16 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 					break;
 				}
 
-				if (CavanAccessibility.containsTextsWhole(root, "群公告")) {
-					AccessibilityNodeInfo node = CavanAccessibility.findNodeByText(root, "我知道了");
+				if (CavanAccessibilityHelper.containsTextsWhole(root, "群公告")) {
+					AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "我知道了");
 					if (node != null) {
-						CavanAccessibility.performClickAndRecycle(node);
+						CavanAccessibilityHelper.performClickAndRecycle(node);
 						break;
 					}
 
-					node = CavanAccessibility.findNodeByClassName(root, CavanAccessibility.CLASS_BUTTON);
+					node = CavanAccessibilityHelper.findNodeByClassName(root, CavanAccessibilityHelper.CLASS_BUTTON);
 					if (node != null) {
-						CavanAccessibility.performClickAndRecycle(node);
+						CavanAccessibilityHelper.performClickAndRecycle(node);
 						break;
 					}
 				}
@@ -486,7 +486,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 			return;
 		}
 
-		if (CavanAccessibility.isTextView(source)) {
+		if (CavanAccessibilityHelper.isTextView(source)) {
 			AccessibilityNodeInfo parent = source.getParent();
 			if (parent == null) {
 				return;

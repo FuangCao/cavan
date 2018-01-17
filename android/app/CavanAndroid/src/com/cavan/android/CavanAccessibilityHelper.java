@@ -24,7 +24,7 @@ import com.cavan.java.CavanJava.Closure;
 import com.cavan.java.CavanJava.ClosureVoid;
 import com.cavan.java.CavanString;
 
-public class CavanAccessibility {
+public class CavanAccessibilityHelper {
 
 	public static final String CLASS_VIEW = View.class.getName();
 	public static final String CLASS_BUTTON = Button.class.getName();
@@ -846,5 +846,42 @@ public class CavanAccessibility {
 
 	public static boolean performGlobalBack(AccessibilityService service) {
 		return performGlobalAction(service, AccessibilityService.GLOBAL_ACTION_BACK);
+	}
+
+	public static List<AccessibilityNodeInfo> getChilds(AccessibilityNodeInfo parent) {
+		int count = parent.getChildCount();
+		List<AccessibilityNodeInfo> nodes = new ArrayList<AccessibilityNodeInfo>(count);
+
+		try {
+			for (int i = 0; i < count; i++) {
+				AccessibilityNodeInfo node = parent.getChild(i);
+				if (node != null) {
+					nodes.add(node);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return nodes;
+	}
+
+	public static List<CharSequence> getChildTexts(AccessibilityNodeInfo parent) {
+		int count = parent.getChildCount();
+		List<CharSequence> texts = new ArrayList<CharSequence>();
+
+		try {
+			for (int i = 0; i < count; i++) {
+				AccessibilityNodeInfo node = parent.getChild(i);
+				if (node != null) {
+					texts.add(node.getText());
+					node.recycle();
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return texts;
 	}
 }
