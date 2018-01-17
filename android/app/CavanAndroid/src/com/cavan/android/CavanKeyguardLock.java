@@ -14,8 +14,12 @@ public class CavanKeyguardLock {
 		mTag = tag;
 	}
 
+	public CavanKeyguardLock(Class<?> cls) {
+		this(cls.getCanonicalName());
+	}
+
 	public CavanKeyguardLock() {
-		this(CavanKeyguardLock.class.getCanonicalName());
+		this(CavanKeyguardLock.class);
 	}
 
 	public void release() {
