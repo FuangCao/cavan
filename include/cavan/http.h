@@ -53,8 +53,13 @@ typedef enum {
 	HTTP_HEADER_COUNT,
 } http_header_type_t;
 
+struct cavan_http_header {
+	u16 offset;
+	u16 length;
+};
+
 struct cavan_http_packet {
-	char *headers[HTTP_HEADER_COUNT];
+	struct cavan_http_header headers[HTTP_HEADER_COUNT];
 	cavan_string_t header;
 	cavan_string_t body;
 	int lines;
@@ -100,6 +105,7 @@ extern const char *http_mime_type_html;
 extern const char *http_mime_type_js;
 extern const char *http_mime_type_apk;
 
+int cavan_http_get_header_type(const char *name, int length);
 int cavan_http_time_tostring(struct tm *time, char *buff, int size);
 int cavan_http_time_tostring2(const time_t *time, char *buff, int size);
 int cavan_http_time_tostring3(char *buff, int size);
@@ -155,7 +161,7 @@ struct cavan_http_packet *cavan_http_packet_alloc(void);
 void cavan_http_packet_free(struct cavan_http_packet *packet);
 bool cavan_http_packet_content_printable(const struct cavan_http_packet *packet);
 void cavan_http_packet_dump(const struct cavan_http_packet *packet);
-int cavan_http_packet_add_line_end(struct cavan_http_packet *packet);
+int cavan_http_packet_get_header(const struct cavan_http_packet *packet, int header, char *buff, int size);
 int cavan_http_packet_add_line(struct cavan_http_packet *packet, const char *line, int size);
 __printf_format_23__ int cavan_http_packet_add_linef(struct cavan_http_packet *packet, const char *format, ...);
 int cavan_http_packet_parse_file(const char *pathname, struct cavan_http_packet *packets[], int size);
@@ -191,9 +197,9 @@ static inline const char *cavan_http_request_find_param_simple(struct cavan_http
 	return cavan_http_find_prop_simple(req->params, req->param_used, key);
 }
 
-static inline const char *cavan_http_packet_get_header(struct cavan_http_packet *packet, int header)
+static inline int cavan_http_packet_add_line_end(struct cavan_http_packet *packet)
 {
-	return packet->headers[header];
+	return cavan_string_append_line_end_dos(&packet->header);
 }
 
 static inline int cavan_http_packet_add_line2(struct cavan_http_packet *packet, const char *line)

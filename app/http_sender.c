@@ -151,7 +151,9 @@ out_fifo_deinit:
 out_pthread_cond_signal:
 	cavan_http_sender_lock(sender);
 	sender->running = false;
+	sender->write_count = 1;
 	pthread_cond_signal(&sender->cond_exit);
+	cavan_http_sender_post(&sender->cond_write);
 	cavan_http_sender_unlock(sender);
 	return NULL;
 }
@@ -451,7 +453,7 @@ int main(int argc, char *argv[])
 
 		while (1) {
 			cavan_string_t *header = &req.header;
-			const char *date;
+			char date[32];
 
 			ret = network_client_send(&client, header->text, header->length);
 			if (ret < 0) {
@@ -465,8 +467,7 @@ int main(int argc, char *argv[])
 				break;
 			}
 
-			date = rsp.headers[HTTP_HEADER_DATE];
-			if (date != NULL) {
+			if (cavan_http_packet_get_header(&rsp, HTTP_HEADER_DATE, date, sizeof(date)) > 0) {
 				char buff[1024];
 
 				cavan_http_time_tostring3(buff, sizeof(buff));
@@ -480,28 +481,30 @@ int main(int argc, char *argv[])
 
 		return 0;
 	} else if (count > 0) {
-		char *host = packets[0]->headers[HTTP_HEADER_HOST];
-		if (host == NULL) {
+		char host0[128];
+
+		if (cavan_http_packet_get_header(packets[0], HTTP_HEADER_HOST, host0, sizeof(host0)) < 0) {
 			pr_red_info("host not found");
 			return -EINVAL;
 		}
 
-		println("host = %s", host);
+		println("host = %s", host0);
 
 		for (i = 1; i < count; i++) {
-			char *p = packets[i]->headers[HTTP_HEADER_HOST];
-			if (p == NULL) {
+			char host1[128];
+
+			if (cavan_http_packet_get_header(packets[i], HTTP_HEADER_HOST, host1, sizeof(host1)) < 0) {
 				pr_red_info("host[%d] not found", i);
 				return -EINVAL;
 			}
 
-			if (strcmp(host, p) != 0) {
-				pr_red_info("host[%d] not mach: %s", i, p);
+			if (strcmp(host0, host1) != 0) {
+				pr_red_info("host[%d] not mach: %s", i, host1);
 				return -EINVAL;
 			}
 		}
 
-		return cavan_http_sender_main_loop(&sender, packets, count, host);
+		return cavan_http_sender_main_loop(&sender, packets, count, host0);
 	} else {
 		return -EINVAL;
 	}

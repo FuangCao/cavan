@@ -42,6 +42,19 @@ const cavan_string_t http_header_names[HTTP_HEADER_COUNT] = {
 	CAVAN_STRING_INITIALIZER("Transfer-Encoding"),
 };
 
+int cavan_http_get_header_type(const char *name, int length)
+{
+	const cavan_string_t *p, *p_end;
+
+	for (p = http_header_names, p_end = p + HTTP_HEADER_COUNT; p < p_end; p++) {
+		if (length == p->length && strncasecmp(name, p->text, length) == 0) {
+			return p - http_header_names;
+		}
+	}
+
+	return -EINVAL;
+}
+
 int cavan_http_time_tostring(struct tm *time, char *buff, int size)
 {
 	return snprintf(buff, size, "%s, %d-%s-%04d %02d:%02d:%02d GMT", week_tostring(time->tm_wday),
@@ -1670,7 +1683,7 @@ void cavan_http_packet_init(struct cavan_http_packet *packet)
 	int i;
 
 	for (i = 0; i < HTTP_HEADER_COUNT; i++) {
-		packet->headers[i] = NULL;
+		packet->headers[i].length = 0;
 	}
 
 	cavan_string_init(&packet->header, NULL, 0);
@@ -1683,10 +1696,7 @@ void cavan_http_packet_clear(struct cavan_http_packet *packet, bool depth)
 	int i;
 
 	for (i = 0; i < HTTP_HEADER_COUNT; i++) {
-		if (packet->headers[i]) {
-			free(packet->headers[i]);
-			packet->headers[i] = NULL;
-		}
+		packet->headers[i].length = 0;
 	}
 
 	cavan_string_clear(&packet->header, depth);
@@ -1713,9 +1723,9 @@ void cavan_http_packet_free(struct cavan_http_packet *packet)
 
 bool cavan_http_packet_content_printable(const struct cavan_http_packet *packet)
 {
-	const char *content_type = packet->headers[HTTP_HEADER_CONTENT_TYPE];
+	char content_type[1024];
 
-	if (content_type == NULL) {
+	if (cavan_http_packet_get_header(packet, HTTP_HEADER_CONTENT_TYPE, content_type, sizeof(content_type)) < 0) {
 		return false;
 	}
 
@@ -1743,15 +1753,28 @@ void cavan_http_packet_dump(const struct cavan_http_packet *packet)
 	cavan_stdout_write_string(header);
 
 	if (body->length > 0 && cavan_http_packet_content_printable(packet)) {
-		const char *content_encoding = packet->headers[HTTP_HEADER_CONTENT_ENCODING];
-		println("content_encoding = %s", content_encoding);
 		cavan_stdout_write_string(body);
 	}
 }
 
-int cavan_http_packet_add_line_end(struct cavan_http_packet *packet)
+int cavan_http_packet_get_header(const struct cavan_http_packet *packet, int header, char *buff, int size)
 {
-	return cavan_string_append(&packet->header, "\r\n", 2);
+	const struct cavan_http_header *p = packet->headers + header;
+	u16 length = p->length;
+
+	if (length > 0) {
+		if (length < size) {
+			buff[length] = 0;
+		} else {
+			length = size;
+		}
+
+		memcpy(buff, packet->header.text + p->offset, length);
+
+		return length;
+	}
+
+	return -ENOENT;
 }
 
 int cavan_http_packet_add_line(struct cavan_http_packet *packet, const char *line, int size)
@@ -1760,28 +1783,22 @@ int cavan_http_packet_add_line(struct cavan_http_packet *packet, const char *lin
 	int length;
 	const char *line_end;
 	const char *name, *value;
+	cavan_string_t *header = &packet->header;
+	int offset = header->length;
 
-	ret = cavan_string_append(&packet->header, line, size);
+	ret = cavan_string_append_line_dos(header, line, size);
 	if (ret < 0) {
-		pr_red_info("cavan_string_append");
+		pr_red_info("cavan_string_append_line_dos");
 		return ret;
 	}
 
-	ret = cavan_http_packet_add_line_end(packet);
-	if (ret < 0) {
-		pr_red_info("cavan_http_packet_add_line_end");
-		return ret;
-	}
-
-	packet->lines++;
-
-	if (packet->lines < 2) {
+	if (++packet->lines < 2) {
 		return 0;
 	}
 
-	length = 0;
-	name = line;
+	name = line = header->text + offset;
 	value = NULL;
+	length = 0;
 
 	for (line_end = line + size; line < line_end; line++) {
 		switch (*line) {
@@ -1804,15 +1821,10 @@ int cavan_http_packet_add_line(struct cavan_http_packet *packet, const char *lin
 
 		default:
 			if (value != NULL) {
-				int i;
-
-				for (i = 0; i < HTTP_HEADER_COUNT; i++) {
-					const cavan_string_t *p = http_header_names + i;
-
-					if (length == p->length && strncasecmp(p->text, name, length) == 0) {
-						packet->headers[i] = strndup(value, line_end - value);
-						break;
-					}
+				int type = cavan_http_get_header_type(name, length);
+				if (type >= 0) {
+					packet->headers[type].offset = value - header->text;
+					packet->headers[type].length = line_end - value;
 				}
 
 				return 0;
@@ -1935,9 +1947,9 @@ out_free_mem:
 
 int cavan_http_packet_read_body(struct cavan_http_packet *packet, struct cavan_fifo *fifo)
 {
-	const char *content_length = packet->headers[HTTP_HEADER_CONTENT_LENGTH];
+	char content_length[32];
 
-	if (content_length != NULL) {
+	if (cavan_http_packet_get_header(packet, HTTP_HEADER_CONTENT_LENGTH, content_length, sizeof(content_length)) > 0) {
 		int length = text2value_unsigned(content_length, NULL, 10);
 		cavan_string_t *body = &packet->body;
 		int ret;
