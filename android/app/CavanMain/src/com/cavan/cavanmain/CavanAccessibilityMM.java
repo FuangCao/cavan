@@ -28,6 +28,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		return sInstance;
 	}
 
+	private int mHashCode;
 	private long mUnpackTime;
 	private boolean mIsWebViewUi;
 	private boolean mIsLauncherUi;
@@ -234,6 +235,13 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	}
 
 	private AccessibilityNodeInfo findMessageListViewNode(AccessibilityNodeInfo root) {
+		if (mMessageListViewId != null) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByViewId(root, mMessageListViewId);
+			if (node == null || ListView.class.getName().equals(node.getClassName())) {
+				return node;
+			}
+		}
+
 		List<AccessibilityNodeInfo> childs = new ArrayList<AccessibilityNodeInfo>();
 
 		try {
@@ -248,48 +256,18 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 				childs.add(child);
 
 				if (LinearLayout.class.getName().equals(child.getClassName())) {
-					return CavanAccessibilityHelper.findChildByClassName(child, ListView.class.getName());
+					AccessibilityNodeInfo node = CavanAccessibilityHelper.findChildByClassName(child, ListView.class.getName());
+					if (node != null) {
+						mMessageListViewId = node.getViewIdResourceName();
+						CavanAndroid.dLog("mMessageListViewId = " + mMessageListViewId);
+						return node;
+					}
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
 			CavanAccessibilityHelper.recycleNodes(childs);
-		}
-
-		return null;
-	}
-
-	private AccessibilityNodeInfo findMessageListViewNode() {
-		AccessibilityNodeInfo root = getRootInActiveWindow();
-		if (root == null) {
-			return null;
-		}
-
-		try {
-			if (mMessageListViewId != null) {
-				AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByViewId(root, mMessageListViewId);
-				if (node == null || ListView.class.getName().equals(node.getClassName())) {
-					return node;
-				}
-			}
-
-			AccessibilityNodeInfo node = findMessageListViewNode(root);
-			if (node == null) {
-				return null;
-			}
-
-			String id = node.getViewIdResourceName();
-			if (mMessageListViewId == null || !mMessageListViewId.equals(id)) {
-				mMessageListViewId = id;
-				mRedPacketViewId = null;
-			}
-
-			return node;
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			root.recycle();
 		}
 
 		return null;
@@ -330,6 +308,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			if (parent != null) {
 				if (isRedPacketNode(parent)) {
 					mRedPacketViewId = parent.getViewIdResourceName();
+					CavanAndroid.dLog("mRedPacketViewId = " + mRedPacketViewId);
 					nodes.add(parent);
 				} else {
 					parent.recycle();
@@ -427,6 +406,19 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			break;
 
 		case "com.tencent.mm.ui.LauncherUI":
+			AccessibilityNodeInfo root = getRootInActiveWindow();
+			if (root != null) {
+				int code = root.hashCode();
+				if (code != mHashCode) {
+					mHashCode = code;
+					CavanAndroid.dLog("mHashCode = " + Integer.toHexString(code));
+
+					mRedPacketViewId = null;
+					mMessageListViewId = null;
+				}
+
+				root.recycle();
+			}
 		case "com.tencent.mm.ui.chatting.ChattingUI":
 		case "com.tencent.mm.ui.conversation.BizConversationUI":
 			mIsLauncherUi = true;
@@ -469,15 +461,21 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			return true;
 		}
 
-		AccessibilityNodeInfo listView = findMessageListViewNode();
-		if (listView == null) {
+		AccessibilityNodeInfo root = getRootInActiveWindow();
+		if (root == null) {
 			return false;
 		}
 
+		AccessibilityNodeInfo listView = null;
 		AccessibilityNodeInfo child = null;
 		AccessibilityNodeInfo node = null;
 
 		try {
+			listView = findMessageListViewNode(root);
+			if (listView == null) {
+				return false;
+			}
+
 			child = listView.getChild(listView.getChildCount() - 1);
 			node = findRedPacketNodeLast(child);
 
@@ -497,7 +495,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 				child.recycle();
 			}
 
-			listView.recycle();
+			if (listView != null) {
+				listView.recycle();
+			}
+
+			root.recycle();
 		}
 
 		return true;
