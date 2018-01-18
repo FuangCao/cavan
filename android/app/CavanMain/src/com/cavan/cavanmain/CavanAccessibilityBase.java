@@ -68,7 +68,7 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 			} else if (getWindowTimeConsume() > 500) {
 				CavanAndroid.dLog("mStableTimes = " + mStableTimes);
 
-				if (!onWindowContentStable(mStableTimes) && ++mStableTimes < 2) {
+				if (!onWindowContentStable(mStableTimes) && ++mStableTimes < 3) {
 					postDelayed(this, POLL_DELAY);
 				}
 			}

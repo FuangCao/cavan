@@ -478,6 +478,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 			child = listView.getChild(listView.getChildCount() - 1);
 			node = findRedPacketNodeLast(child);
+			if (node == null) {
+				return false;
+			}
 
 			if (isValidMessage(node) && updateUnpackTime()) {
 				setLockEnable(POLL_DELAY_UNPACK, false);

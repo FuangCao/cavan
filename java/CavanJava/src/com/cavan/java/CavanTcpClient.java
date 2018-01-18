@@ -437,7 +437,7 @@ public class CavanTcpClient implements Runnable {
 					addresses = new InetSocketAddress[count];
 					mAddresses.toArray(addresses);
 
-					if (mConnAddress != null) {
+					if (mConnAddress != null && count > 1) {
 						for (int i = 0; i < count; i++) {
 							if (addresses[i].equals(mConnAddress)) {
 								while (i > 0) {
