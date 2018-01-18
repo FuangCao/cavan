@@ -23,6 +23,7 @@ public class CavanTcpClient implements Runnable {
 	private Socket mSocket;
 	private InputStream mInputStream;
 	private OutputStream mOutputStream;
+	private InetSocketAddress mConnAddress;
 	private InetSocketAddress mCurrAddress;
 	private CavanTcpClientListener mTcpClientListener;
 	private List<InetSocketAddress> mAddresses = new ArrayList<InetSocketAddress>();
@@ -97,12 +98,30 @@ public class CavanTcpClient implements Runnable {
 		return address.getHostString() + ':' + address.getPort();
 	}
 
+	public synchronized boolean hasAddress(InetSocketAddress address) {
+		for (InetSocketAddress node : mAddresses) {
+			if (node.equals(address)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public synchronized boolean addAddresses(InetSocketAddress address) {
-		if (mAddresses.contains(address)) {
+		if (address == null) {
+			return false;
+		}
+
+		if (hasAddress(address)) {
 			return false;
 		}
 
 		mAddresses.add(address);
+
+		if (mConnected) {
+			return true;
+		}
 
 		return reconnect();
 	}
@@ -127,6 +146,10 @@ public class CavanTcpClient implements Runnable {
 		boolean reconn = mConnected;
 
 		for (InetSocketAddress address : addresses) {
+			if (address == null) {
+				continue;
+			}
+
 			mAddresses.add(address);
 
 			if (reconn && address.equals(mCurrAddress)) {
@@ -142,13 +165,9 @@ public class CavanTcpClient implements Runnable {
 	}
 
 	public synchronized boolean setAddresses(List<InetSocketAddress> addresses) {
-		mAddresses.clear();
-
-		for (InetSocketAddress address : addresses) {
-			mAddresses.add(address);
-		}
-
-		return reconnect();
+		InetSocketAddress[] array = new InetSocketAddress[addresses.size()];
+		addresses.toArray(array);
+		return setAddresses(array);
 	}
 
 	public synchronized CavanTcpClientListener getTcpClientListener() {
@@ -337,7 +356,7 @@ public class CavanTcpClient implements Runnable {
 		onTcpConnecting(address);
 
 		try {
-			socket.connect(address, 10000);
+			socket.connect(address, 6000);
 
 			synchronized (this) {
 				mOutputStream = socket.getOutputStream();
@@ -346,6 +365,7 @@ public class CavanTcpClient implements Runnable {
 				mConnected = true;
 
 				if (onTcpConnected(socket)) {
+					mConnAddress = address;
 					return true;
 				}
 
@@ -416,6 +436,20 @@ public class CavanTcpClient implements Runnable {
 
 					addresses = new InetSocketAddress[count];
 					mAddresses.toArray(addresses);
+
+					if (mConnAddress != null) {
+						for (int i = 0; i < count; i++) {
+							if (addresses[i].equals(mConnAddress)) {
+								while (i > 0) {
+									addresses[i] = addresses[i - 1];
+									i--;
+								}
+
+								addresses[0] = mConnAddress;
+								break;
+							}
+						}
+					}
 				}
 
 				boolean success = false;
