@@ -47,6 +47,7 @@
         <item>全部打开</item>
         <item>只开主马达</item>
         <item>只开副马达</item>
+        <item>全部打开同步</item>
     </string-array>
 
     <string name="shutdown">关机</string>

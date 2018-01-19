@@ -28,7 +28,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	private static final int SENSOR_DELAY_STEP = 100000;
 
 	public static final String[] BT_NAMES = {
-		"JwaooToy", "SenseTube", "SenseBand", "Sensevibe warm"
+		"JwaooToy", "SenseTube", "SenseBand", "Sensevibe warm", "SenseVibeWarm"
 	};
 
 	public static final UUID[] BT_UUIDS = {
@@ -72,6 +72,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final int MOTO_MODE_USER = 9;
 	public static final int MOTO_MODE_USER_MAIN = 10;
 	public static final int MOTO_MODE_USER_AUX = 11;
+	public static final int MOTO_MODE_USER_SYNC = 12;
 
 	public static final String DEVICE_NAME_COMMON = "JwaooToy";
 	public static final String DEVICE_NAME_K100 = "K100";

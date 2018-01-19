@@ -8,7 +8,7 @@ import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
-import com.cavan.android.CavanAccessibility;
+import com.cavan.android.CavanAccessibilityHelper;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.DelayedRunnable;
 import com.cavan.java.CavanString;
@@ -211,12 +211,12 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 	}
 
 	public void performGlobalBack() {
-		CavanAccessibility.performGlobalBack(mService);
+		CavanAccessibilityHelper.performGlobalBack(mService);
 	}
 
 	public void performGlobalBack(long delay) {
 		setLockEnable(delay, false);
-		CavanAccessibility.performGlobalBack(mService);
+		CavanAccessibilityHelper.performGlobalBack(mService);
 	}
 
 	public void performGlobalBackDelayed(long delay) {

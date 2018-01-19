@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
+Restart=always
 ExecStart=/cavan/out/host/debug/cavan-http_service -p 8021
 ExecReload=/bin/kill -HUP $MAINPID
 
