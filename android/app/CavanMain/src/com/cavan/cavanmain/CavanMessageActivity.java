@@ -88,11 +88,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	public static final String KEY_REPEAT_DELAY = "repeat_delay";
 	public static final String KEY_NOTIFY_AUTO_CLEAR = "notify_auto_clear";
 
-	private static CavanMessageActivity sInstance;
-
-	public static CavanMessageActivity getInstance() {
-		return sInstance;
-	}
+	public static CavanMessageActivity instance;
 
 	private static boolean sAutoOpenAppEnable = true;
 	private static boolean sRedPacketCodeReceiveEnabled = true;
@@ -341,7 +337,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	}
 
 	public void updateWanState() {
-		FloatMessageService service = FloatMessageService.getInstance();
+		FloatMessageService service = FloatMessageService.instance;
 
 		if (service != null) {
 			updateWanState(service.getWanState(), service.getWanSummary());
@@ -365,7 +361,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	}
 
 	public void updateBridgeState() {
-		FloatMessageService service = FloatMessageService.getInstance();
+		FloatMessageService service = FloatMessageService.instance;
 
 		if (service != null) {
 			updateBridgeState(service.getBridgeState());
@@ -481,7 +477,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		startService(service);
 		bindService(service, mFloatMessageConnection, 0);
 
-		sInstance = this;
+		instance = this;
 
 		updateWanState();
 		updateBridgeState();
@@ -491,7 +487,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 
 	@Override
 	protected void onDestroy() {
-		sInstance = null;
+		instance = null;
 		unbindService(mFloatMessageConnection);
 
 		super.onDestroy();
@@ -593,7 +589,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 					String code = RedPacketCode.filtration(line);
 
 					if (code.length() > 0) {
-						RedPacketListenerService listener = RedPacketListenerService.getInstance();
+						RedPacketListenerService listener = RedPacketListenerService.instance;
 						if (listener != null) {
 							listener.addRedPacketCode(code, "手动输入", false);
 						}
@@ -606,7 +602,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 
 			String text = (String) object;
 			if (text != null) {
-				RedPacketListenerService listener = RedPacketListenerService.getInstance();
+				RedPacketListenerService listener = RedPacketListenerService.instance;
 				if (listener != null) {
 					listener.addRedPacketContent(null, CavanString.fromCharSequence(text), "手动输入", false, true, 0);
 				}

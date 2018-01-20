@@ -182,7 +182,7 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 
 			if (length > 0) {
 				if (length % 8 == 0) {
-					RedPacketListenerService listener = RedPacketListenerService.getInstance();
+					RedPacketListenerService listener = RedPacketListenerService.instance;
 					if (listener != null) {
 						listener.addRedPacketCodes(RedPacketFinder.splitRedPacketDigitCodes(text), "手动提取", false);
 					}
@@ -198,7 +198,7 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 				CavanAndroid.postClipboardText(mContext, text);
 			}
 
-			FloatMessageService service = FloatMessageService.getInstance();
+			FloatMessageService service = FloatMessageService.instance;
 			if (service != null) {
 				service.sendWanCommand(FloatMessageService.NET_CMD_CLIPBOARD + text);
 			}
@@ -214,7 +214,7 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 						String code = RedPacketCode.filtration(line);
 
 						if (code.length() > 0) {
-							RedPacketListenerService listener = RedPacketListenerService.getInstance();
+							RedPacketListenerService listener = RedPacketListenerService.instance;
 							if (listener != null) {
 								listener.addRedPacketCode(code, "手动输入", false);
 							}
@@ -222,7 +222,7 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 					}
 				}
 			} else {
-				RedPacketListenerService listener = RedPacketListenerService.getInstance();
+				RedPacketListenerService listener = RedPacketListenerService.instance;
 				if (listener != null) {
 					listener.addRedPacketContent(null, text, "手动输入", false, true, 1);
 				}

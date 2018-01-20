@@ -39,14 +39,14 @@ public class CavanBroadcastReceiver extends BroadcastReceiver {
 		if (CavanMessageActivity.ACTION_CODE_RECEIVED.equals(action)) {
 			String code = intent.getStringExtra("code");
 			if (code != null) {
-				RedPacketListenerService listener = RedPacketListenerService.getInstance();
+				RedPacketListenerService listener = RedPacketListenerService.instance;
 				if (listener != null) {
 					listener.addRedPacketCode(code, "定时器", false);
 				}
 			}
 		} else if (CavanMessageActivity.ACTION_ON_TIME_NOTIFY.equals(action)) {
 			if (CavanMessageActivity.isOnTimeNotifyEnabled(context)) {
-				FloatMessageService service = FloatMessageService.getInstance();
+				FloatMessageService service = FloatMessageService.instance;
 				if (service != null) {
 					service.showOnTimeNotify();
 				}

@@ -25,11 +25,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 	private static final int MAX_SCROLL_COUNT = 2;
 	private static final int MAX_RETRY_COUNT = 3;
 
-	private static CavanAccessibilityQQ sInstance;
-
-	public static CavanAccessibilityQQ getInstance() {
-		return sInstance;
-	}
+	public static CavanAccessibilityQQ instance;
 
 	private int mChatIndex;
 	private int mRetryCount;
@@ -48,7 +44,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 
 	public CavanAccessibilityQQ(CavanAccessibilityService service) {
 		super(service);
-		sInstance = this;
+		instance = this;
 	}
 
 	public boolean isMessageBoxNode(AccessibilityNodeInfo node) {
@@ -470,7 +466,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 			}
 
 			if (!CavanAndroid.inKeyguardRestrictedInputMode(mService)) {
-				RedPacketListenerService listener = RedPacketListenerService.getInstance();
+				RedPacketListenerService listener = RedPacketListenerService.instance;
 				if (listener != null) {
 					listener.addRedPacketContent(source.getPackageName(), text, "QQ消息盒子", true, false, 0);
 				}

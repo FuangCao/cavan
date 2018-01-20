@@ -37,7 +37,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 				break;
 
 			case MSG_SHOW_MEDIA_VOLUME:
-				FloatMessageService service = FloatMessageService.getInstance();
+				FloatMessageService service = FloatMessageService.instance;
 				if (service != null) {
 					int volume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
 					service.postShowToastWithArgs(R.string.media_volume_changed, volume);
@@ -144,7 +144,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 	protected void onTcpPacketReceived(String[] args) {
 
 
-		CavanAccessibilityService accessibility = CavanAccessibilityService.getInstance();
+		CavanAccessibilityService accessibility = CavanAccessibilityService.instance;
 		boolean send = false;
 
 		switch (args[0]) {
@@ -158,7 +158,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 			if (args.length > 0) {
 				String text = args[1];
 				CavanAndroid.postClipboardTextTemp(getApplicationContext(), text);
-				FloatMessageService fms = FloatMessageService.getInstance();
+				FloatMessageService fms = FloatMessageService.instance;
 				if (fms != null) {
 					fms.postShowToastWithArgs(R.string.clipboard_updated, text);
 				}
@@ -210,7 +210,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 			break;
 
 		default:
-			CavanInputMethod ime = CavanInputMethod.getInstance();
+			CavanInputMethod ime = CavanInputMethod.instance;
 			if (ime == null) {
 				CavanAndroid.dLog("ime is null");
 				break;

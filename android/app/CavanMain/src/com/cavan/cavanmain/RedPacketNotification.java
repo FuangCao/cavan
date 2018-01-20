@@ -413,7 +413,7 @@ public class RedPacketNotification extends CavanNotification {
 	}
 
 	private boolean isMmFilterEnabled(String user) {
-		CavanAccessibilityService service = CavanAccessibilityService.getInstance();
+		CavanAccessibilityService service = CavanAccessibilityService.instance;
 		if (service != null && service.getAccessibilityMM().isWebViewUi()) {
 			return true;
 		}
@@ -439,7 +439,7 @@ public class RedPacketNotification extends CavanNotification {
 				CavanAndroid.dLog("Exclude user: " + user);
 				send = false;
 			} else {
-				CavanAccessibilityQQ qq = CavanAccessibilityQQ.getInstance();
+				CavanAccessibilityQQ qq = CavanAccessibilityQQ.instance;
 				if (qq != null) {
 					qq.addPacket(user);
 				}
@@ -449,7 +449,7 @@ public class RedPacketNotification extends CavanNotification {
 				CavanAndroid.dLog("Exclude user: " + user);
 				send = false;
 			} else {
-				CavanAccessibilityMM mm = CavanAccessibilityMM.getInstance();
+				CavanAccessibilityMM mm = CavanAccessibilityMM.instance;
 				if (mm != null) {
 					mm.addPacket(user);
 				}

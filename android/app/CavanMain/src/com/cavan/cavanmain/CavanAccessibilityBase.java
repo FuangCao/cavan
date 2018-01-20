@@ -255,7 +255,7 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 			dialog.show(6000);
 		}
 
-		RedPacketListenerService listener = RedPacketListenerService.getInstance();
+		RedPacketListenerService listener = RedPacketListenerService.instance;
 		if (listener != null) {
 			listener.addRedPacketContent(event.getPackageName(), text, "用户点击", false, true, 0);
 		}

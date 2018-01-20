@@ -41,11 +41,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 
 	private static final int MSG_COMMIT_TIMEOUT = 1;
 
-	private static CavanAccessibilityAlipay sInstance;
-
-	public static CavanAccessibilityAlipay getInstance() {
-		return sInstance;
-	}
+	public static CavanAccessibilityAlipay instance;
 
 	private int mCodeCount;
 	private RedPacketCode mCode;
@@ -94,7 +90,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 
 	public CavanAccessibilityAlipay(CavanAccessibilityService service) {
 		super(service);
-		sInstance = this;
+		instance = this;
 	}
 
 	private int getRedPacketCodeCount() {
@@ -482,7 +478,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 					long delay = code.getDelay();
 
 					if (delay > 0) {
-						FloatMessageService service = FloatMessageService.getInstance();
+						FloatMessageService service = FloatMessageService.instance;
 						if (service != null) {
 							service.setCountDownTime(code.getTime());
 						}
@@ -490,7 +486,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityBase<RedPacketCo
 						return delay;
 					}
 
-					CavanInputMethod method = CavanInputMethod.getInstance();
+					CavanInputMethod method = CavanInputMethod.instance;
 					if (method != null) {
 						if (old == null) {
 							method.sendKeyDownUp(KeyEvent.KEYCODE_DPAD_DOWN);

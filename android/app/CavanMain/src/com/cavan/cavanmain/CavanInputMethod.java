@@ -84,11 +84,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	private static final int MSG_SEND_TEXT = 6;
 	private static final int MSG_AUTO_SEND = 7;
 
-	private static CavanInputMethod sInstance;
-
-	public static CavanInputMethod getInstance() {
-		return sInstance;
-	}
+	public static CavanInputMethod instance;
 
 	private Handler mHandler = new Handler() {
 
@@ -120,7 +116,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 				break;
 
 			case MSG_SEND_TEXT:
-				CavanAccessibilityService accessibility = CavanAccessibilityService.getInstance();
+				CavanAccessibilityService accessibility = CavanAccessibilityService.instance;
 				if (accessibility != null && accessibility.commitText(CavanInputMethod.this)) {
 					if (mAutoSendText != null) {
 						int delay = CavanMessageActivity.getRepeatDelay(CavanInputMethod.this);
@@ -400,12 +396,12 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 		Intent service = CavanNetworkImeConnService.getIntent(this);
 		CavanAndroid.startAndBindService(this, service, mServiceConnection);
 
-		sInstance = this;
+		instance = this;
 	}
 
 	@Override
 	public void onDestroy() {
-		sInstance = null;
+		instance = null;
 		unbindService(mServiceConnection);
 		super.onDestroy();
 	}

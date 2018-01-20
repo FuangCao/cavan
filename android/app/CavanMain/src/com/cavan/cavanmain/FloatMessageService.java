@@ -83,11 +83,7 @@ public class FloatMessageService extends FloatWidowService {
 	public static final int MSG_SEND_TCP_COMMAND = 2;
 	private static final int MSG_KEEP_ALIVE = 3;
 
-	private static FloatMessageService sInstance;
-
-	public static FloatMessageService getInstance() {
-		return sInstance;
-	}
+	public static FloatMessageService instance;
 
 	private long mCountDownTime;
 	private boolean mScreenClosed;
@@ -149,7 +145,7 @@ public class FloatMessageService extends FloatWidowService {
 				break;
 
 			case MSG_TCP_SERVICE_STATE_CHANGED: {
-					CavanMessageActivity activity = CavanMessageActivity.getInstance();
+					CavanMessageActivity activity = CavanMessageActivity.instance;
 					if (activity != null) {
 						activity.updateWanState(mWanState, mWanSummary);
 					}
@@ -178,7 +174,7 @@ public class FloatMessageService extends FloatWidowService {
 				break;
 
 			case MSG_TCP_BRIDGE_STATE_CHANGED: {
-					CavanMessageActivity activity = CavanMessageActivity.getInstance();
+					CavanMessageActivity activity = CavanMessageActivity.instance;
 					if (activity != null) {
 						activity.updateBridgeState(mBridgeState);
 					}
@@ -380,7 +376,7 @@ public class FloatMessageService extends FloatWidowService {
 				RedPacketCode node = RedPacketCode.getInstence(code);
 				if (node != null) {
 					if (node.isTestOnly()) {
-						CavanAccessibilityService service = CavanAccessibilityService.getInstance();
+						CavanAccessibilityService service = CavanAccessibilityService.instance;
 						if (service != null) {
 							postShowToast(R.string.test_sucess);
 						}
@@ -390,7 +386,7 @@ public class FloatMessageService extends FloatWidowService {
 						if (node.isCompleted()) {
 							postShowToast(R.string.ignore_completed_code, code);
 						} else {
-							CavanAccessibilityAlipay alipay = CavanAccessibilityAlipay.getInstance();
+							CavanAccessibilityAlipay alipay = CavanAccessibilityAlipay.instance;
 							if (alipay != null) {
 								alipay.addCode(node);
 							}
@@ -430,7 +426,7 @@ public class FloatMessageService extends FloatWidowService {
 			if (code != null) {
 				code.setNetworkEnable();
 				mMessageCodeMap.remove(message);
-				CavanAccessibilityAlipay alipay = CavanAccessibilityAlipay.getInstance();
+				CavanAccessibilityAlipay alipay = CavanAccessibilityAlipay.instance;
 				if (alipay != null) {
 					alipay.removeCode(code);
 				}
@@ -566,9 +562,9 @@ public class FloatMessageService extends FloatWidowService {
 	}
 
 	public static boolean showToast(int what, Object messsage) {
-		FloatMessageService instance = sInstance;
-		if (instance != null) {
-			instance.postShowToast(what, messsage);
+		FloatMessageService service = instance;
+		if (service != null) {
+			service.postShowToast(what, messsage);
 			return true;
 		}
 
@@ -673,7 +669,7 @@ public class FloatMessageService extends FloatWidowService {
 			} else if (CavanMessageActivity.isRedPacketCodeReceiveEnabled()) {
 				RedPacketCode node = RedPacketCode.getInstence(code);
 				if (node == null || node.isRecvEnabled()) {
-					RedPacketListenerService listener = RedPacketListenerService.getInstance();
+					RedPacketListenerService listener = RedPacketListenerService.instance;
 					if (listener != null) {
 						listener.addRedPacketCode(code, type, true);
 					}
@@ -756,12 +752,12 @@ public class FloatMessageService extends FloatWidowService {
 
 		mHandler.sendEmptyMessage(MSG_CHECK_SERVICE_STATE);
 
-		sInstance = this;
+		instance = this;
 	}
 
 	@Override
 	public void onDestroy() {
-		sInstance = null;
+		instance = null;
 
 		if (mTcpDaemon != null) {
 			mTcpDaemon.setActive(false);

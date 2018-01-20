@@ -233,7 +233,7 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 				CavanAndroid.postClipboardText(mActivity, text);
 
 				if (which == DialogInterface.BUTTON_NEUTRAL || CavanString.getLineCount(text) < 2) {
-					FloatMessageService service = FloatMessageService.getInstance();
+					FloatMessageService service = FloatMessageService.instance;
 					if (service != null) {
 						service.sendWanCommand(FloatMessageService.NET_CMD_CLIPBOARD + text.toString().replace('\n', ' '));
 					}

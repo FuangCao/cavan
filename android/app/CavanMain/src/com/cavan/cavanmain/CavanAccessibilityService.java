@@ -56,11 +56,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		CavanPackageName.SOGOU_OCR,
 	};
 
-	private static CavanAccessibilityService sInstance;
-
-	public static CavanAccessibilityService getInstance() {
-		return sInstance;
-	}
+	public static CavanAccessibilityService instance;
 
 	private Dialog mCheckContentDialog;
 
@@ -160,7 +156,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 						setAutoOpenAppEnable(true);
 
-						RedPacketListenerService listener = RedPacketListenerService.getInstance();
+						RedPacketListenerService listener = RedPacketListenerService.instance;
 
 						if (listener != null) {
 							if (checkBox != null && checkBox.isChecked()) {
@@ -606,12 +602,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 			mHandler.sendEmptyMessage(MSG_BOOT_COMPLETED);
 		}
 
-		sInstance = this;
+		instance = this;
 	}
 
 	@Override
 	public void onDestroy() {
-		sInstance = null;
+		instance = null;
 
 		Intent intent = new Intent(CavanMessageActivity.ACTION_SERVICE_EXIT);
 		intent.putExtra("service", getClass().getCanonicalName());

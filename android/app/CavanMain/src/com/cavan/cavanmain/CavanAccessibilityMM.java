@@ -23,11 +23,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	private static final int POLL_DELAY = 500;
 	private static final int POLL_DELAY_UNPACK = 2000;
 
-	private static CavanAccessibilityMM sInstance;
-
-	public static CavanAccessibilityMM getInstance() {
-		return sInstance;
-	}
+	public static CavanAccessibilityMM instance;
 
 	private int mHashCode;
 	private long mUnpackTime;
@@ -40,7 +36,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 	public CavanAccessibilityMM(CavanAccessibilityService service) {
 		super(service);
-		sInstance = this;
+		instance = this;
 	}
 
 	public boolean isWebViewUi() {
@@ -156,7 +152,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	private long doUnpack(AccessibilityNodeInfo root) {
 		long time = System.currentTimeMillis();
 		if (mUnpackTime > time) {
-			FloatMessageService service = FloatMessageService.getInstance();
+			FloatMessageService service = FloatMessageService.instance;
 			if (service != null) {
 				service.setCountDownTime(mUnpackTime);
 			}

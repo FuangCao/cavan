@@ -46,11 +46,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	private static final int MSG_RED_PACKET_NOTIFICATION = 3;
 	private static final int MSG_CANCEL_NOTIFYCATION = 4;
 
-	private static RedPacketListenerService sInstance;
-
-	public static RedPacketListenerService getInstance() {
-		return sInstance;
-	}
+	public static RedPacketListenerService instance;
 
 	private CharSequence mClipText;
 	private ClipboardManager mClipboardManager;
@@ -360,12 +356,12 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			preferences.registerOnSharedPreferenceChangeListener(this);
 		}
 
-		sInstance = this;
+		instance = this;
 	}
 
 	@Override
 	public void onDestroy() {
-		sInstance = null;
+		instance = null;
 
 		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 		if (preferences != null) {
