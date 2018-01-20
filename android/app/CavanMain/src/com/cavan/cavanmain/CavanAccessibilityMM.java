@@ -204,12 +204,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	}
 
 	private boolean doFindAndUnpack(AccessibilityNodeInfo root) {
-		AccessibilityNodeInfo listView = findMessageListViewNode(root);
-		if (listView == null) {
-			return false;
-		}
-
-		List<AccessibilityNodeInfo> nodes = findRedPacketNodes(listView);
+		List<AccessibilityNodeInfo> nodes = findRedPacketNodes(root);
 		boolean success = false;
 
 		for (int i = nodes.size() - 1; i >= 0; i--) {
@@ -230,12 +225,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		}
 
 		CavanAccessibilityHelper.recycleNodes(nodes);
-		listView.recycle();
 
 		return success;
 	}
 
-	private AccessibilityNodeInfo findMessageListViewNode(AccessibilityNodeInfo root) {
+	public AccessibilityNodeInfo findMessageListViewNode(AccessibilityNodeInfo root) {
 		if (mMessageListViewId != null) {
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByViewId(root, mMessageListViewId);
 			if (node == null || ListView.class.getName().equals(node.getClassName())) {
@@ -302,9 +296,14 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			return root.findAccessibilityNodeInfosByViewId(mRedPacketViewId);
 		}
 
+		AccessibilityNodeInfo listView = findMessageListViewNode(root);
+		if (listView == null) {
+			return null;
+		}
+
 		List<AccessibilityNodeInfo> nodes = new ArrayList<AccessibilityNodeInfo>();
 
-		for (AccessibilityNodeInfo node : CavanAccessibilityHelper.findNodesByText(root, "微信红包")) {
+		for (AccessibilityNodeInfo node : CavanAccessibilityHelper.findNodesByText(listView, "微信红包")) {
 			AccessibilityNodeInfo parent = node.getParent();
 			if (parent != null) {
 				if (isRedPacketNode(parent)) {
@@ -318,6 +317,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 			node.recycle();
 		}
+
+		listView.recycle();
 
 		return nodes;
 	}
@@ -467,17 +468,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			return false;
 		}
 
-		AccessibilityNodeInfo listView = null;
 		AccessibilityNodeInfo parent = null;
 		AccessibilityNodeInfo node = null;
 
 		try {
-			listView = findMessageListViewNode(root);
-			if (listView == null) {
-				return false;
-			}
-
-			node = findRedPacketNodeLast(listView);
+			node = findRedPacketNodeLast(root);
 			if (node == null) {
 				return false;
 			}
@@ -502,10 +497,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 			if (node != null) {
 				node.recycle();
-			}
-
-			if (listView != null) {
-				listView.recycle();
 			}
 
 			root.recycle();
