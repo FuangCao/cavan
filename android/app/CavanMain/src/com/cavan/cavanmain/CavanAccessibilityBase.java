@@ -39,6 +39,7 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 	protected String mClassName = CavanString.EMPTY_STRING;
 	protected String mClassNamePrev = CavanString.EMPTY_STRING;
 	protected String mPackageName = CavanString.EMPTY_STRING;
+	protected HashSet<Integer> mContentChangedHashCodes = new HashSet<Integer>();
 
 	private DelayedRunnable mRunnableUnlock = new DelayedRunnable(this) {
 
@@ -65,11 +66,13 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 			long time = System.currentTimeMillis();
 			if (mStableTime > time) {
 				postDelayed(this, mStableTime - time);
-			} else if (getWindowTimeConsume() > 500) {
+			} else if (mContentChangedHashCodes.size() > 0 && getWindowTimeConsume() > 500) {
 				CavanAndroid.dLog("mStableTimes = " + mStableTimes);
 
 				if (!onWindowContentStable(mStableTimes) && ++mStableTimes < 3) {
 					postDelayed(this, POLL_DELAY);
+				} else {
+					mContentChangedHashCodes.clear();
 				}
 			}
 		}
@@ -139,17 +142,8 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 		}
 	}
 
-	protected void onWindowContentChanged(AccessibilityEvent event) {
-		if (mPackets.isEmpty()) {
-			long time = System.currentTimeMillis();
-
-			if (mStableTime < time) {
-				postDelayed(mRunnableContentStable, STABLE_DELAY);
-			}
-
-			mStableTimes = 0;
-			mStableTime = time + STABLE_DELAY;
-		}
+	protected boolean onWindowContentChanged(AccessibilityEvent event, AccessibilityNodeInfo source) {
+		return false;
 	}
 
 	protected boolean onWindowContentStable(int times) {
@@ -184,6 +178,31 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 		mClassNamePrev = mClassName;
 		mClassName = className;
 		onWindowStateChanged(event);
+	}
+
+	public void performWindowContentChanged(AccessibilityEvent event) {
+		if (mPackets.size() > 0) {
+			return;
+		}
+
+		AccessibilityNodeInfo source = event.getSource();
+		if (source == null) {
+			return;
+		}
+
+		if (onWindowContentChanged(event, source)) {
+			mContentChangedHashCodes.add(source.hashCode());
+		}
+
+		long time = System.currentTimeMillis();
+		if (mStableTime < time) {
+			postDelayed(mRunnableContentStable, STABLE_DELAY);
+		}
+
+		mStableTimes = 0;
+		mStableTime = time + STABLE_DELAY;
+
+		source.recycle();
 	}
 
 	public AccessibilityNodeInfo getRootInActiveWindow() {

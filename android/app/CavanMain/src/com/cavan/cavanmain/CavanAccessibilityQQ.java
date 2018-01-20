@@ -451,17 +451,16 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 	}
 
 	@Override
-	public void onWindowContentChanged(AccessibilityEvent event) {
-		AccessibilityNodeInfo source = event.getSource();
-		if (source != null && isMessageBoxNode(source)) {
+	public boolean onWindowContentChanged(AccessibilityEvent event, AccessibilityNodeInfo source) {
+		if (isMessageBoxNode(source)) {
 			CharSequence sequence = source.getText();
 			if (sequence == null) {
-				return;
+				return false;
 			}
 
 			String text = sequence.toString();
 			if (text.equals(mMessageBoxText)) {
-				return;
+				return false;
 			}
 
 			mMessageBoxText = text;
@@ -477,6 +476,8 @@ public class CavanAccessibilityQQ extends CavanAccessibilityBase<String> {
 				}
 			}
 		}
+
+		return false;
 	}
 
 	@Override

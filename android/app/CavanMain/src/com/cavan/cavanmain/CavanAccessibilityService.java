@@ -497,7 +497,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			break;
 
 		case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
-			accessibility.onWindowContentChanged(event);
+			accessibility.performWindowContentChanged(event);
 			break;
 
 		case AccessibilityEvent.TYPE_VIEW_CLICKED:

@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.cavan.android.CavanAccessibilityHelper;
@@ -467,7 +468,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		}
 
 		AccessibilityNodeInfo listView = null;
-		AccessibilityNodeInfo child = null;
+		AccessibilityNodeInfo parent = null;
 		AccessibilityNodeInfo node = null;
 
 		try {
@@ -476,13 +477,18 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 				return false;
 			}
 
-			child = listView.getChild(listView.getChildCount() - 1);
-			node = findRedPacketNodeLast(child);
+			node = findRedPacketNodeLast(listView);
 			if (node == null) {
 				return false;
 			}
 
-			if (isValidMessage(node) && updateUnpackTime()) {
+			parent = node.getParent();
+			if (parent == null) {
+				return false;
+			}
+
+			boolean changed = mContentChangedHashCodes.contains(parent.hashCode());
+			if (changed && isValidMessage(node) && updateUnpackTime()) {
 				setLockEnable(POLL_DELAY_UNPACK, false);
 				CavanAccessibilityHelper.performClick(node);
 				mUnpackPending = true;
@@ -490,12 +496,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		} catch (Exception e) {
 			return false;
 		} finally {
-			if (node != null) {
-				node.recycle();
+			if (parent != null) {
+				parent.recycle();
 			}
 
-			if (child != null) {
-				child.recycle();
+			if (node != null) {
+				node.recycle();
 			}
 
 			if (listView != null) {
@@ -526,5 +532,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		}
 
 		return false;
+	}
+
+	@Override
+	protected boolean onWindowContentChanged(AccessibilityEvent event, AccessibilityNodeInfo source) {
+		return RelativeLayout.class.getName().equals(source.getClassName());
 	}
 }
