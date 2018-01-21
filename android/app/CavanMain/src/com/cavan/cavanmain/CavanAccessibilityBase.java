@@ -122,15 +122,12 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 
 	public boolean setForceUnpackEnable(boolean enable, boolean poll) {
 		if (mPackets.size() > 0) {
+			mGotoIdleEnable = true;
 			mForceUnpack = false;
-
-			if (enable) {
-				poll = true;
-			}
+			poll = true;
 		} else if (enable) {
 			poll = true;
 			mForceUnpack = true;
-			mGotoIdleEnable = false;
 		} else {
 			mForceUnpack = false;
 		}
@@ -139,7 +136,7 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 			setLockEnable(POLL_DELAY, true);
 		}
 
-		CavanAndroid.dLog(getPackageName() + ": mForceUnpack = " + mForceUnpack);
+		CavanAndroid.dLog(getPackageName() + ": mForceUnpack = " + mForceUnpack + ", poll = " + poll);
 
 		return mForceUnpack;
 	}
@@ -320,6 +317,7 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 		} else if (getPacketCount() < 1) {
 			startNextActivity();
 			pollEnable = false;
+			mGotoIdleEnable = false;
 		} else if (mService.getMessageCount() < 1) {
 			clearPackets();
 			pollEnable = false;

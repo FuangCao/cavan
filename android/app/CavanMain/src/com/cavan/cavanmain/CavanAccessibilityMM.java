@@ -393,6 +393,17 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	protected long onPollEventFire(AccessibilityNodeInfo root) {
 		switch (mClassName) {
 		case "com.tencent.mm.ui.LauncherUI":
+			int code = root.hashCode();
+			if (code != mHashCode) {
+				mHashCode = code;
+				CavanAndroid.dLog("mHashCode = " + Integer.toHexString(code));
+
+				mRedPacketViewId = null;
+				mMessageListViewId = null;
+				mReceiveUiBackViewId = null;
+				mReceiveUnpackViewId = null;
+				mDetailUiBackViewId = null;
+			}
 		case "com.tencent.mm.ui.chatting.ChattingUI":
 		case "com.tencent.mm.ui.conversation.BizConversationUI":
 			if (doFindAndUnpack(root)) {
@@ -450,26 +461,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			break;
 
 		case "com.tencent.mm.ui.LauncherUI":
-			AccessibilityNodeInfo root = getRootInActiveWindow();
-			if (root != null) {
-				int code = root.hashCode();
-				if (code != mHashCode) {
-					mHashCode = code;
-					CavanAndroid.dLog("mHashCode = " + Integer.toHexString(code));
-
-					mRedPacketViewId = null;
-					mMessageListViewId = null;
-					mReceiveUiBackViewId = null;
-					mReceiveUnpackViewId = null;
-					mDetailUiBackViewId = null;
-				}
-
-				root.recycle();
-			}
 		case "com.tencent.mm.ui.chatting.ChattingUI":
 		case "com.tencent.mm.ui.conversation.BizConversationUI":
 			mIsLauncherUi = true;
-			setForceUnpackEnable(false, true);
+			setForceUnpackEnable(false, false);
 			break;
 
 		case "com.tencent.mm.plugin.webview.ui.tools.WebViewUI":
