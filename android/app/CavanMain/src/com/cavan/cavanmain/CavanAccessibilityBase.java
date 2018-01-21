@@ -120,15 +120,23 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 		mPackets.clear();
 	}
 
-	public boolean setForceUnpackEnable(boolean enable) {
+	public boolean setForceUnpackEnable(boolean enable, boolean poll) {
 		if (mPackets.size() > 0) {
 			mForceUnpack = false;
+
+			if (enable) {
+				poll = true;
+			}
 		} else if (enable) {
+			poll = true;
 			mForceUnpack = true;
 			mGotoIdleEnable = false;
-			setLockEnable(POLL_DELAY, true);
 		} else {
 			mForceUnpack = false;
+		}
+
+		if (poll) {
+			setLockEnable(POLL_DELAY, true);
 		}
 
 		CavanAndroid.dLog(getPackageName() + ": mForceUnpack = " + mForceUnpack);
@@ -192,15 +200,15 @@ public abstract class CavanAccessibilityBase<E> extends Handler implements Runna
 
 		if (onWindowContentChanged(event, source)) {
 			mContentChangedHashCodes.add(source.hashCode());
-		}
 
-		long time = System.currentTimeMillis();
-		if (mStableTime < time) {
-			postDelayed(mRunnableContentStable, STABLE_DELAY);
-		}
+			long time = System.currentTimeMillis();
+			if (mStableTime < time) {
+				postDelayed(mRunnableContentStable, STABLE_DELAY);
+			}
 
-		mStableTimes = 0;
-		mStableTime = time + STABLE_DELAY;
+			mStableTimes = 0;
+			mStableTime = time + STABLE_DELAY;
+		}
 
 		source.recycle();
 	}

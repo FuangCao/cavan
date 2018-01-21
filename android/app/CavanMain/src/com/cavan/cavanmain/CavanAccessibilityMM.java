@@ -32,6 +32,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	private boolean mUnpackPending;
 	private String mRedPacketViewId;
 	private String mMessageListViewId;
+	private String mReceiveUiBackViewId;
+	private String mReceiveUnpackViewId;
+	private String mDetailUiBackViewId;
 	private List<Integer> mFinishNodes = new ArrayList<Integer>();
 
 	public CavanAccessibilityMM(CavanAccessibilityService service) {
@@ -104,7 +107,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		}
 	}
 
-	private AccessibilityNodeInfo findReceiveUiBackNode(AccessibilityNodeInfo root) {
+	private AccessibilityNodeInfo findReceiveUiBackNodeRaw(AccessibilityNodeInfo root) {
 		if (root.getChildCount() > 4) {
 			AccessibilityNodeInfo node = root.getChild(4);
 			if (node != null) {
@@ -119,7 +122,21 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		return CavanAccessibilityHelper.findChildByClassName(root, ImageView.class.getName());
 	}
 
-	private AccessibilityNodeInfo findReceiveUiUnpckNode(AccessibilityNodeInfo root) {
+	private AccessibilityNodeInfo findReceiveUiBackNode(AccessibilityNodeInfo root) {
+		if (mReceiveUiBackViewId != null) {
+			return CavanAccessibilityHelper.findNodeByViewId(root, mReceiveUiBackViewId);
+		}
+
+		AccessibilityNodeInfo node = findReceiveUiBackNodeRaw(root);
+		if (node != null) {
+			mReceiveUiBackViewId = node.getViewIdResourceName();
+			CavanAndroid.dLog("mReceiveUiBackViewId = " + mReceiveUiBackViewId);
+		}
+
+		return node;
+	}
+
+	private AccessibilityNodeInfo findReceiveUiUnpckNodeRaw(AccessibilityNodeInfo root) {
 		if (root.getChildCount() > 3) {
 			AccessibilityNodeInfo node = root.getChild(3);
 			if (node != null) {
@@ -134,7 +151,21 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		return CavanAccessibilityHelper.findChildByClassName(root, Button.class.getName());
 	}
 
-	private AccessibilityNodeInfo findDetailUiBackNode(AccessibilityNodeInfo root) {
+	private AccessibilityNodeInfo findReceiveUiUnpckNode(AccessibilityNodeInfo root) {
+		if (mReceiveUnpackViewId != null) {
+			return CavanAccessibilityHelper.findNodeByViewId(root, mReceiveUnpackViewId);
+		}
+
+		AccessibilityNodeInfo node = findReceiveUiUnpckNodeRaw(root);
+		if (node != null) {
+			mReceiveUnpackViewId = node.getViewIdResourceName();
+			CavanAndroid.dLog("mReceiveUnpackViewId = " + mReceiveUnpackViewId);
+		}
+
+		return node;
+	}
+
+	private AccessibilityNodeInfo findDetailUiBackNodeRaw(AccessibilityNodeInfo root) {
 		AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByClassName(root, ImageView.class.getName());
 		if (node == null) {
 			return null;
@@ -144,6 +175,20 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		if (parent != null && LinearLayout.class.getName().equals(parent.getClassName())) {
 			node.recycle();
 			return parent;
+		}
+
+		return node;
+	}
+
+	private AccessibilityNodeInfo findDetailUiBackNode(AccessibilityNodeInfo root) {
+		if (mDetailUiBackViewId != null) {
+			return CavanAccessibilityHelper.findNodeByViewId(root, mDetailUiBackViewId);
+		}
+
+		AccessibilityNodeInfo node = findDetailUiBackNodeRaw(root);
+		if (node != null) {
+			mDetailUiBackViewId = node.getViewIdResourceName();
+			CavanAndroid.dLog("mDetailUiBackViewId = " + mDetailUiBackViewId);
 		}
 
 		return node;
@@ -173,7 +218,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		} else if (getPacketCount() > 0) {
 			CavanAccessibilityHelper.performClick(backNode);
 		} else {
-			setForceUnpackEnable(false);
+			setForceUnpackEnable(false, false);
 		}
 
 		backNode.recycle();
@@ -280,6 +325,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 					return false;
 				}
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
 		} finally {
 			CavanAccessibilityHelper.recycleNodes(childs);
 		}
@@ -368,7 +416,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 					CavanAccessibilityHelper.performClickAndRecycle(backNode);
 				}
 			} else {
-				setForceUnpackEnable(false);
+				setForceUnpackEnable(false, false);
 			}
 			break;
 
@@ -393,14 +441,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		switch (mClassName) {
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiReceiveUI":
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI":
-			if (setForceUnpackEnable(true)) {
-				break;
-			}
+			setForceUnpackEnable(true, true);
+			break;
+
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI":
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI":
-			if (getPacketCount() > 0) {
-				setLockEnable(POLL_DELAY, true);
-			}
+			setForceUnpackEnable(mUnpackPending, false);
 			break;
 
 		case "com.tencent.mm.ui.LauncherUI":
@@ -413,6 +459,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 					mRedPacketViewId = null;
 					mMessageListViewId = null;
+					mReceiveUiBackViewId = null;
+					mReceiveUnpackViewId = null;
+					mDetailUiBackViewId = null;
 				}
 
 				root.recycle();
@@ -420,11 +469,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		case "com.tencent.mm.ui.chatting.ChattingUI":
 		case "com.tencent.mm.ui.conversation.BizConversationUI":
 			mIsLauncherUi = true;
-			setForceUnpackEnable(false);
-
-			if (getPacketCount() > 0) {
-				setLockEnable(POLL_DELAY, true);
-			}
+			setForceUnpackEnable(false, true);
 			break;
 
 		case "com.tencent.mm.plugin.webview.ui.tools.WebViewUI":
@@ -433,20 +478,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 		default:
 			if (mClassName.startsWith("com.tencent.mm.plugin.luckymoney.ui.En_")) {
-				if (setForceUnpackEnable(true)) {
-					break;
-				}
-
-				if (getPacketCount() > 0) {
-					setLockEnable(POLL_DELAY, true);
-				}
+				setForceUnpackEnable(true, true);
 			} else if (mClassName.startsWith("com.tencent.mm.ui.chatting.En_")) {
 				mIsLauncherUi = true;
-				setForceUnpackEnable(false);
-
-				if (getPacketCount() > 0) {
-					setLockEnable(POLL_DELAY, true);
-				}
+				setForceUnpackEnable(false, true);
 			} else if (getPacketCount() > 0) {
 				setLockEnable(POLL_DELAY, false);
 			}
@@ -480,9 +515,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 			boolean changed = mContentChangedHashCodes.contains(parent.hashCode());
 			if (changed && isValidMessage(node) && updateUnpackTime()) {
+				mUnpackPending = true;
 				setLockEnable(POLL_DELAY_UNPACK, false);
 				CavanAccessibilityHelper.performClick(node);
-				mUnpackPending = true;
 			}
 		} catch (Exception e) {
 			return false;
@@ -523,6 +558,25 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 	@Override
 	protected boolean onWindowContentChanged(AccessibilityEvent event, AccessibilityNodeInfo source) {
-		return RelativeLayout.class.getName().equals(source.getClassName());
+		AccessibilityNodeInfo parent = source.getParent();
+		if (parent == null) {
+			return false;
+		}
+
+		try {
+			if (ListView.class.getName().equals(parent.getClassName())) {
+				if (mRedPacketViewId == null) {
+					return RelativeLayout.class.getName().equals(source.getClassName());
+				}
+
+				return (CavanAccessibilityHelper.getNodeCountByViewIds(source, mRedPacketViewId) == 1);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			parent.recycle();
+		}
+
+		return false;
 	}
 }
