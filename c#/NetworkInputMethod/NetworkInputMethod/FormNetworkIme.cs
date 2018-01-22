@@ -39,9 +39,19 @@ namespace NetworkInputMethod
             InitializeComponent();
 
             mService = new NetworkImeService(this);
-            mNextClipboardViewer = SetClipboardViewer(Handle);
-
             buttonStart_Click(buttonStart, null);
+        }
+
+        public void SetClipboardViewer()
+        {
+            IntPtr HWnd = Handle;
+
+            if (mNextClipboardViewer != null)
+            {
+                ChangeClipboardChain(HWnd, mNextClipboardViewer);
+            }
+
+            mNextClipboardViewer = SetClipboardViewer(HWnd);
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -159,6 +169,7 @@ namespace NetworkInputMethod
             {
                 mService.start();
                 buttonStart.Text = "停止";
+                SetClipboardViewer();
             }
         }
 
@@ -298,6 +309,7 @@ namespace NetworkInputMethod
             WindowState = FormWindowState.Minimized;
             ShowInTaskbar = false;
             Visible = false;
+            SetClipboardViewer();
         }
 
 
@@ -306,8 +318,13 @@ namespace NetworkInputMethod
             if (e.Button == MouseButtons.Left)
             {
                 WindowState = FormWindowState.Normal;
-                ShowInTaskbar = true;
-                Visible = true;
+
+                if (!Visible)
+                {
+                    ShowInTaskbar = true;
+                    Visible = true;
+                    SetClipboardViewer();
+                }
             }
         }
 
