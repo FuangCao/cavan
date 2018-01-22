@@ -15,6 +15,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.cavan.android.CavanAccessibilityHelper;
+import com.cavan.android.CavanAccessibilityHelper.CavanAccessibilityViewId;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 
@@ -32,9 +33,13 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	private boolean mUnpackPending;
 	private String mRedPacketViewId;
 	private String mMessageListViewId;
-	private String mReceiveUiBackViewId;
-	private String mReceiveUnpackViewId;
-	private String mDetailUiBackViewId;
+	private CavanAccessibilityViewId mReceiveBackViewId;
+	private CavanAccessibilityViewId mBusiReceiveBackViewId;
+	private CavanAccessibilityViewId mReceiveUnpackViewId;
+	private CavanAccessibilityViewId mBusiReceiveUnpackViewId;
+	private CavanAccessibilityViewId mDetailBackViewId;
+	private CavanAccessibilityViewId mBusiDetailBackViewId;
+
 	private List<Integer> mFinishNodes = new ArrayList<Integer>();
 
 	public CavanAccessibilityMM(CavanAccessibilityService service) {
@@ -122,15 +127,16 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		return CavanAccessibilityHelper.findChildByClassName(root, ImageView.class.getName());
 	}
 
-	private AccessibilityNodeInfo findReceiveUiBackNode(AccessibilityNodeInfo root) {
-		if (mReceiveUiBackViewId != null) {
-			return CavanAccessibilityHelper.findNodeByViewId(root, mReceiveUiBackViewId);
+	private AccessibilityNodeInfo findReceiveUiBackNode(AccessibilityNodeInfo root, CavanAccessibilityViewId id) {
+		String value = id.get();
+		if (value != null) {
+			return CavanAccessibilityHelper.findNodeByViewId(root, value);
 		}
 
 		AccessibilityNodeInfo node = findReceiveUiBackNodeRaw(root);
 		if (node != null) {
-			mReceiveUiBackViewId = node.getViewIdResourceName();
-			CavanAndroid.dLog("mReceiveUiBackViewId = " + mReceiveUiBackViewId);
+			mReceiveBackViewId.set(node.getViewIdResourceName());
+			CavanAndroid.dLog("mReceiveUiBackViewId = " + mReceiveBackViewId.get());
 		}
 
 		return node;
@@ -151,15 +157,14 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		return CavanAccessibilityHelper.findChildByClassName(root, Button.class.getName());
 	}
 
-	private AccessibilityNodeInfo findReceiveUiUnpckNode(AccessibilityNodeInfo root) {
-		if (mReceiveUnpackViewId != null) {
-			return CavanAccessibilityHelper.findNodeByViewId(root, mReceiveUnpackViewId);
+	private AccessibilityNodeInfo findReceiveUiUnpckNode(AccessibilityNodeInfo root, CavanAccessibilityViewId viewId) {
+		if (viewId.isValid()) {
+			return viewId.find(root);
 		}
 
 		AccessibilityNodeInfo node = findReceiveUiUnpckNodeRaw(root);
 		if (node != null) {
-			mReceiveUnpackViewId = node.getViewIdResourceName();
-			CavanAndroid.dLog("mReceiveUnpackViewId = " + mReceiveUnpackViewId);
+			viewId.set(node.getViewIdResourceName());
 		}
 
 		return node;
@@ -180,21 +185,33 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 		return node;
 	}
 
-	private AccessibilityNodeInfo findDetailUiBackNode(AccessibilityNodeInfo root) {
-		if (mDetailUiBackViewId != null) {
-			return CavanAccessibilityHelper.findNodeByViewId(root, mDetailUiBackViewId);
+	private AccessibilityNodeInfo findDetailUiBackNode(AccessibilityNodeInfo root, CavanAccessibilityViewId viewId) {
+		if (viewId.isValid()) {
+			return viewId.find(root);
 		}
 
 		AccessibilityNodeInfo node = findDetailUiBackNodeRaw(root);
 		if (node != null) {
-			mDetailUiBackViewId = node.getViewIdResourceName();
-			CavanAndroid.dLog("mDetailUiBackViewId = " + mDetailUiBackViewId);
+			viewId.set(node.getViewIdResourceName());
 		}
 
 		return node;
 	}
 
-	private long doUnpack(AccessibilityNodeInfo root) {
+	private void ProcessLuckyMoneyDetail(AccessibilityNodeInfo root, CavanAccessibilityViewId viewId) {
+		if (mUnpackPending || getPacketCount() > 0) {
+			AccessibilityNodeInfo backNode = findDetailUiBackNode(root, viewId);
+			if (backNode != null) {
+				mUnpackPending = false;
+				setLockEnable(POLL_DELAY, false);
+				CavanAccessibilityHelper.performClickAndRecycle(backNode);
+			}
+		} else {
+			setForceUnpackEnable(false, false);
+		}
+	}
+
+	private long doUnpack(AccessibilityNodeInfo root, CavanAccessibilityViewId backViewId, CavanAccessibilityViewId unpackViewId) {
 		long time = System.currentTimeMillis();
 		if (mUnpackTime > time) {
 			FloatMessageService service = FloatMessageService.instance;
@@ -205,14 +222,14 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			return mUnpackTime - time;
 		}
 
-		AccessibilityNodeInfo backNode = findReceiveUiBackNode(root);
+		AccessibilityNodeInfo backNode = findReceiveUiBackNode(root, backViewId);
 		if (backNode == null) {
 			return POLL_DELAY;
 		}
 
 		setLockEnable(POLL_DELAY, false);
 
-		AccessibilityNodeInfo button = findReceiveUiUnpckNode(root);
+		AccessibilityNodeInfo button = findReceiveUiUnpckNode(root, unpackViewId);
 		if (button != null) {
 			CavanAccessibilityHelper.performClickAndRecycle(button);
 		} else if (getPacketCount() > 0) {
@@ -400,9 +417,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 				mRedPacketViewId = null;
 				mMessageListViewId = null;
-				mReceiveUiBackViewId = null;
+				mReceiveBackViewId = null;
 				mReceiveUnpackViewId = null;
-				mDetailUiBackViewId = null;
+				mDetailBackViewId = null;
 			}
 		case "com.tencent.mm.ui.chatting.ChattingUI":
 		case "com.tencent.mm.ui.conversation.BizConversationUI":
@@ -414,21 +431,17 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			break;
 
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI":
+			return doUnpack(root, mReceiveBackViewId, mReceiveUnpackViewId);
+
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiReceiveUI":
-			return doUnpack(root);
+			return doUnpack(root, mBusiReceiveBackViewId, mBusiReceiveUnpackViewId);
 
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI":
+			ProcessLuckyMoneyDetail(root, mDetailBackViewId);
+			break;
+
 		case "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI":
-			if (mUnpackPending || getPacketCount() > 0) {
-				AccessibilityNodeInfo backNode = findDetailUiBackNode(root);
-				if (backNode != null) {
-					mUnpackPending = false;
-					setLockEnable(POLL_DELAY, false);
-					CavanAccessibilityHelper.performClickAndRecycle(backNode);
-				}
-			} else {
-				setForceUnpackEnable(false, false);
-			}
+			ProcessLuckyMoneyDetail(root, mBusiDetailBackViewId);
 			break;
 
 		case "com.tencent.mm.ui.base.p":
@@ -436,7 +449,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 		default:
 			if (mClassName.startsWith("com.tencent.mm.plugin.luckymoney.ui.En_")) {
-				return doUnpack(root);
+				return doUnpack(root, mBusiReceiveBackViewId, mBusiReceiveUnpackViewId);
 			}
 			return 0;
 		}

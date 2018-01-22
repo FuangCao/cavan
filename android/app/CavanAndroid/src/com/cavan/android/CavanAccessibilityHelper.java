@@ -26,6 +26,67 @@ import com.cavan.java.CavanString;
 
 public class CavanAccessibilityHelper {
 
+	public static class CavanAccessibilityViewId {
+
+		private String mValue;
+
+		public synchronized String get() {
+			return mValue;
+		}
+
+		public synchronized void set(String value) {
+			mValue = value;
+		}
+
+		public synchronized boolean isValid() {
+			return mValue != null;
+		}
+
+		public synchronized void clear() {
+			mValue = null;
+		}
+
+		public synchronized AccessibilityNodeInfo find(AccessibilityNodeInfo root) {
+			String viewId = mValue;
+			if (viewId == null) {
+				return null;
+			}
+
+			return CavanAccessibilityHelper.findNodeByViewId(root, viewId);
+		}
+
+		public synchronized List<AccessibilityNodeInfo> findAll(AccessibilityNodeInfo root) {
+			String viewId = mValue;
+			if (viewId == null) {
+				return null;
+			}
+
+			return root.findAccessibilityNodeInfosByViewId(viewId);
+		}
+
+		public synchronized AccessibilityNodeInfo findLast(AccessibilityNodeInfo root) {
+			List<AccessibilityNodeInfo> nodes = findAll(root);
+			if (nodes == null) {
+				return null;
+			}
+
+			Iterator<AccessibilityNodeInfo> iterator = nodes.iterator();
+
+			if (iterator.hasNext()) {
+				AccessibilityNodeInfo node = iterator.next();
+
+				while (iterator.hasNext()) {
+					node.recycle();
+					node = iterator.next();
+				}
+
+				return node;
+			}
+
+			return null;
+		}
+	}
+
 	public static final String CLASS_VIEW = View.class.getName();
 	public static final String CLASS_BUTTON = Button.class.getName();
 	public static final String CLASS_TAB_HOST = TabHost.class.getName();
