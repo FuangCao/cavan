@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormNetworkIme));
             this.labelPort = new System.Windows.Forms.Label();
             this.textBoxPort = new System.Windows.Forms.TextBox();
             this.buttonStart = new System.Windows.Forms.Button();
@@ -63,7 +64,14 @@
             this.buttonMute = new System.Windows.Forms.Button();
             this.buttonRequest = new System.Windows.Forms.Button();
             this.buttonHidden = new System.Windows.Forms.Button();
+            this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
+            this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripMenuItemExit = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemRequest = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemOpen = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemSelect = new System.Windows.Forms.ToolStripMenuItem();
             this.groupBoxMode.SuspendLayout();
+            this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // labelPort
@@ -403,6 +411,52 @@
             this.buttonHidden.Text = "隐藏";
             this.buttonHidden.UseVisualStyleBackColor = true;
             // 
+            // notifyIcon
+            // 
+            this.notifyIcon.ContextMenuStrip = this.contextMenuStrip;
+            this.notifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon.Icon")));
+            this.notifyIcon.Text = "网络输入法";
+            this.notifyIcon.Visible = true;
+            this.notifyIcon.MouseClick += new System.Windows.Forms.MouseEventHandler(this.notifyIcon_MouseClick);
+            // 
+            // contextMenuStrip
+            // 
+            this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItemOpen,
+            this.toolStripMenuItemSelect,
+            this.toolStripMenuItemRequest,
+            this.toolStripMenuItemExit});
+            this.contextMenuStrip.Name = "contextMenuStrip";
+            this.contextMenuStrip.Size = new System.Drawing.Size(153, 114);
+            // 
+            // toolStripMenuItemExit
+            // 
+            this.toolStripMenuItemExit.Name = "toolStripMenuItemExit";
+            this.toolStripMenuItemExit.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemExit.Text = "退出";
+            this.toolStripMenuItemExit.Click += new System.EventHandler(this.toolStripMenuItemExit_Click);
+            // 
+            // toolStripMenuItemRequest
+            // 
+            this.toolStripMenuItemRequest.Name = "toolStripMenuItemRequest";
+            this.toolStripMenuItemRequest.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemRequest.Text = "请求";
+            this.toolStripMenuItemRequest.Click += new System.EventHandler(this.buttonRequest_Click);
+            // 
+            // toolStripMenuItemOpen
+            // 
+            this.toolStripMenuItemOpen.Name = "toolStripMenuItemOpen";
+            this.toolStripMenuItemOpen.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemOpen.Text = "打开";
+            this.toolStripMenuItemOpen.Click += new System.EventHandler(this.buttonOpen_Click);
+            // 
+            // toolStripMenuItemSelect
+            // 
+            this.toolStripMenuItemSelect.Name = "toolStripMenuItemSelect";
+            this.toolStripMenuItemSelect.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemSelect.Text = "选择";
+            this.toolStripMenuItemSelect.Click += new System.EventHandler(this.buttonSelect_Click);
+            // 
             // FormNetworkIme
             // 
             this.AcceptButton = this.buttonStart;
@@ -438,12 +492,16 @@
             this.Controls.Add(this.buttonStart);
             this.Controls.Add(this.textBoxPort);
             this.Controls.Add(this.labelPort);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
             this.Name = "FormNetworkIme";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "网络输入法";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormNetworkIme_FormClosing);
             this.groupBoxMode.ResumeLayout(false);
             this.groupBoxMode.PerformLayout();
+            this.contextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -485,6 +543,12 @@
         private System.Windows.Forms.Button buttonMute;
         private System.Windows.Forms.Button buttonRequest;
         private System.Windows.Forms.Button buttonHidden;
+        private System.Windows.Forms.NotifyIcon notifyIcon;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemExit;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemRequest;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemOpen;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSelect;
     }
 }
 

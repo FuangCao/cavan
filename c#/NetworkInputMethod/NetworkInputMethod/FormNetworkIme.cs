@@ -17,6 +17,7 @@ namespace NetworkInputMethod
 
         private FormOpenApp mFormOpenApp;
         private FormSelect mFormSelect;
+        private FormHttpSender mFormSender;
 
         //API declarations...
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -293,7 +294,21 @@ namespace NetworkInputMethod
 
         private void FormNetworkIme_FormClosing(object sender, FormClosingEventArgs e)
         {
-            mService.stop(true);
+            e.Cancel = true;
+            WindowState = FormWindowState.Minimized;
+            ShowInTaskbar = false;
+            Visible = false;
+        }
+
+
+        private void notifyIcon_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                WindowState = FormWindowState.Normal;
+                ShowInTaskbar = true;
+                Visible = true;
+            }
         }
 
         private void backgroundWorkerRepeater_DoWork(object sender, DoWorkEventArgs e)
@@ -397,6 +412,10 @@ namespace NetworkInputMethod
                 mFormOpenApp = new FormOpenApp(this);
                 mFormOpenApp.Show();
             }
+            else
+            {
+                mFormOpenApp.WindowState = FormWindowState.Normal;
+            }
         }
 
         private void buttonSelect_Click(object sender, EventArgs e)
@@ -405,6 +424,10 @@ namespace NetworkInputMethod
             {
                 mFormSelect = new FormSelect(this);
                 mFormSelect.Show();
+            }
+            else
+            {
+                mFormSelect.WindowState = FormWindowState.Normal;
             }
         }
 
@@ -438,8 +461,21 @@ namespace NetworkInputMethod
 
         private void buttonRequest_Click(object sender, EventArgs e)
         {
-            FormHttpSender http = new FormHttpSender();
-            http.Show();
+            if (mFormSender == null || mFormSender.IsDisposed)
+            {
+                mFormSender = new FormHttpSender();
+                mFormSender.Show();
+            }
+            else
+            {
+                mFormSender.WindowState = FormWindowState.Normal;
+            }
+        }
+
+        private void toolStripMenuItemExit_Click(object sender, EventArgs e)
+        {
+            mService.stop(true);
+            Dispose(true);
         }
     }
 

@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormOpenApp));
             this.buttonMm = new System.Windows.Forms.Button();
             this.buttonNba = new System.Windows.Forms.Button();
             this.buttonSgame = new System.Windows.Forms.Button();
@@ -252,6 +253,9 @@
             this.Controls.Add(this.buttonSgame);
             this.Controls.Add(this.buttonNba);
             this.Controls.Add(this.buttonMm);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
             this.Name = "FormOpenApp";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "打开应用";
