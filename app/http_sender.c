@@ -454,6 +454,9 @@ int main(int argc, char *argv[])
 		while (1) {
 			cavan_string_t *header = &req.header;
 			char date[32];
+			u64 time;
+
+			time = clock_gettime_mono_ms();
 
 			ret = network_client_send(&client, header->text, header->length);
 			if (ret < 0) {
@@ -466,6 +469,8 @@ int main(int argc, char *argv[])
 				pr_red_info("cavan_http_packet_read");
 				break;
 			}
+
+			println("delay = %ld", clock_gettime_mono_ms() - time);
 
 			if (cavan_http_packet_get_header(&rsp, HTTP_HEADER_DATE, date, sizeof(date)) > 0) {
 				char buff[1024];
