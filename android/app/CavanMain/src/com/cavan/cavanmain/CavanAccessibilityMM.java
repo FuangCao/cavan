@@ -33,12 +33,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	private boolean mUnpackPending;
 	private String mRedPacketViewId;
 	private String mMessageListViewId;
-	private CavanAccessibilityViewId mReceiveBackViewId;
-	private CavanAccessibilityViewId mBusiReceiveBackViewId;
-	private CavanAccessibilityViewId mReceiveUnpackViewId;
-	private CavanAccessibilityViewId mBusiReceiveUnpackViewId;
-	private CavanAccessibilityViewId mDetailBackViewId;
-	private CavanAccessibilityViewId mBusiDetailBackViewId;
+	private CavanAccessibilityViewId mReceiveBackViewId = new CavanAccessibilityViewId();
+	private CavanAccessibilityViewId mBusiReceiveBackViewId = new CavanAccessibilityViewId();
+	private CavanAccessibilityViewId mReceiveUnpackViewId = new CavanAccessibilityViewId();
+	private CavanAccessibilityViewId mBusiReceiveUnpackViewId = new CavanAccessibilityViewId();
+	private CavanAccessibilityViewId mDetailBackViewId = new CavanAccessibilityViewId();
+	private CavanAccessibilityViewId mBusiDetailBackViewId = new CavanAccessibilityViewId();
 
 	private List<Integer> mFinishNodes = new ArrayList<Integer>();
 
@@ -417,9 +417,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 				mRedPacketViewId = null;
 				mMessageListViewId = null;
-				mReceiveBackViewId = null;
-				mReceiveUnpackViewId = null;
-				mDetailBackViewId = null;
+				mReceiveBackViewId.clear();
+				mBusiReceiveBackViewId.clear();
+				mReceiveUnpackViewId.clear();
+				mBusiReceiveUnpackViewId.clear();
+				mDetailBackViewId.clear();
+				mBusiDetailBackViewId.clear();
 			}
 		case "com.tencent.mm.ui.chatting.ChattingUI":
 		case "com.tencent.mm.ui.conversation.BizConversationUI":
