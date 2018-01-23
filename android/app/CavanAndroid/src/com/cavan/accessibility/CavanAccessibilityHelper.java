@@ -1,4 +1,4 @@
-package com.cavan.android;
+package com.cavan.accessibility;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -19,6 +19,8 @@ import android.widget.ImageButton;
 import android.widget.TabHost;
 import android.widget.TextView;
 
+import com.cavan.android.CavanAndroid;
+import com.cavan.android.SystemProperties;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanJava.Closure;
 import com.cavan.java.CavanJava.ClosureVoid;

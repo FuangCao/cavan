@@ -14,8 +14,8 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.cavan.android.CavanAccessibilityHelper;
-import com.cavan.android.CavanAccessibilityHelper.CavanAccessibilityViewId;
+import com.cavan.accessibility.CavanAccessibilityHelper;
+import com.cavan.accessibility.CavanAccessibilityHelper.CavanAccessibilityViewId;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 

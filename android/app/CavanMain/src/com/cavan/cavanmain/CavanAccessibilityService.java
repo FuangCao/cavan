@@ -32,7 +32,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
-import com.cavan.android.CavanAccessibilityHelper;
+import com.cavan.accessibility.CavanAccessibilityHelper;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.android.SystemProperties;
