@@ -3,6 +3,7 @@ package com.cavan.weixinredpacket;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.accessibilityservice.AccessibilityService;
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.os.Handler;
@@ -14,18 +15,19 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 
-import com.cavan.android.CavanAccessibilityHelper;
+import com.cavan.accessibility.CavanAccessibilityHelper;
+import com.cavan.accessibility.CavanAccessibilityPackage;
+import com.cavan.accessibility.CavanAccessibilityService;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 
-public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
+public class CavanAccessibilityMM extends CavanAccessibilityPackage<String> {
 
 	private static final int MSG_ADD_PACKET = 1;
 
 	private static final int POLL_DELAY = 500;
 	private static final int POLL_DELAY_UNPACK = 2000;
 
-	private long mUnpackTime;
 	private boolean mIsWebViewUi;
 	private boolean mIsLauncherUi;
 	private boolean mUnpackPending;
@@ -53,7 +55,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 	public CountDownDialog getCountDownDialog() {
 		if (mCountDownDialog == null) {
-			mCountDownDialog = new CountDownDialog(mService) {
+			mCountDownDialog = new CountDownDialog(getService()) {
 
 				@Override
 				protected void onButtonCancelClicked() {
@@ -64,8 +66,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 				@Override
 				protected void onButtonNowClicked() {
 					super.onButtonNowClicked();
-					mUnpackTime = System.currentTimeMillis();
-					setLockEnable(100, false);
+
+					setUnpackTime(System.currentTimeMillis());
+					post(100);
 				}
 			};
 		}
@@ -78,7 +81,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 	}
 
 	private boolean updateUnpackTime() {
-		int delay = MainActivity.getAutoUnpackMM(mService);
+		int delay = MainActivity.getAutoUnpackMM(getService());
 		if (delay < 0) {
 			return false;
 		}
@@ -434,5 +437,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			CavanAndroid.acquireWakeupLock(mService, 20000);
 			CavanAndroid.setLockScreenEnable(mService, false);
 		}
+	}
+
+	@Override
+	public int getEventTypes() {
+		return AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED;
 	}
 }

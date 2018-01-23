@@ -31,6 +31,14 @@ public class CavanAccessibilityService extends AccessibilityService implements R
 		return performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
 	}
 
+	public void post(long delay) {
+		mHandler.postDelayed(this, delay);
+	}
+
+	public void remove() {
+		mHandler.removeCallbacks(this);
+	}
+
 	@Override
 	protected void onServiceConnected() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
@@ -80,6 +88,8 @@ public class CavanAccessibilityService extends AccessibilityService implements R
 
 	@Override
 	public void run() {
+		mHandler.removeCallbacks(this);
+
 		if (mPackage != null) {
 			AccessibilityNodeInfo root = getRootInActiveWindow();
 			if (root != null) {

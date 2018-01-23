@@ -3,12 +3,12 @@ package com.cavan.accessibility;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-import com.cavan.android.CavanAndroid;
-
 import android.app.Notification;
 import android.os.Parcelable;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+
+import com.cavan.android.CavanAndroid;
 
 public abstract class CavanAccessibilityPackage<E> {
 
@@ -16,12 +16,13 @@ public abstract class CavanAccessibilityPackage<E> {
 	public static int BACK_WAIT_TIME = 5000;
 
 	private HashMap<String, CavanAccessibilityWindow> mWindows = new HashMap<String, CavanAccessibilityWindow>();
-	private LinkedList<E> mCodes = new LinkedList<E>();
+	private LinkedList<E> mPackets = new LinkedList<E>();
 
 	private CavanAccessibilityService mService;
 	private CavanAccessibilityWindow mWindow;
 	private boolean mPending;
 	private long mUpdateTime;
+	private long mUnpckTime;
 
 	public CavanAccessibilityPackage(CavanAccessibilityService service) {
 		mService = service;
@@ -30,8 +31,8 @@ public abstract class CavanAccessibilityPackage<E> {
 	public abstract String getPackageName();
 	public abstract int getEventTypes();
 
-	public void addWindow(CavanAccessibilityWindow win) {
-		mWindows.put(win.getClassName(), win);
+	public void addWindow(String name, CavanAccessibilityWindow win) {
+		mWindows.put(name, win);
 	}
 
 	public CavanAccessibilityWindow getWindow() {
@@ -42,16 +43,20 @@ public abstract class CavanAccessibilityPackage<E> {
 		return mService;
 	}
 
-	public void addCode(E code) {
-		mCodes.add(code);
+	public void addPacket(E code) {
+		mPackets.add(code);
 	}
 
-	public int getCodeCount() {
-		return mCodes.size();
+	public void clearPackets() {
+		mPackets.clear();
+	}
+
+	public int getPacketCount() {
+		return mPackets.size();
 	}
 
 	public boolean isPending() {
-		return mPending || mCodes.size() > 0;
+		return mPending || mPackets.size() > 0;
 	}
 
 	public void setPending(boolean pending) {
@@ -70,8 +75,20 @@ public abstract class CavanAccessibilityPackage<E> {
 		return System.currentTimeMillis() - mUpdateTime;
 	}
 
+	public void setUnpackTime(long time) {
+		mUnpckTime = time;
+	}
+
+	public long getUnpackTime() {
+		return mUnpckTime;
+	}
+
 	public boolean launch() {
 		return CavanAndroid.startActivity(mService, getPackageName());
+	}
+
+	public void post(long delay) {
+		mService.post(delay);
 	}
 
 	protected CavanAccessibilityWindow onWindowStateChanged(AccessibilityEvent event) {
@@ -140,16 +157,12 @@ public abstract class CavanAccessibilityPackage<E> {
 
 	public long run(AccessibilityNodeInfo root) {
 		if (isPending()) {
-			long consume = getTimeConsume();
+			long timeNow = System.currentTimeMillis();
+			long consume = timeNow - mUpdateTime;
 
 			if (mWindow != null) {
 				if (consume < WINDOW_WAIT_TIME) {
 					return WINDOW_WAIT_TIME - consume;
-				}
-
-				if (consume > BACK_WAIT_TIME) {
-					mService.performActionBack();
-					return WINDOW_WAIT_TIME;
 				}
 
 				return mWindow.run(root);

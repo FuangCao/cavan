@@ -12,8 +12,6 @@ public abstract class CavanAccessibilityWindow {
 		mPackage = pkg;
 	}
 
-	public abstract String getClassName();
-
 	public CavanAccessibilityPackage<?> getPackage() {
 		return mPackage;
 	}
