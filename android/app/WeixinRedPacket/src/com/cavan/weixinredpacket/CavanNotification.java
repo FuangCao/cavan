@@ -107,4 +107,22 @@ public class CavanNotification {
 
 		return true;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == null) {
+			return false;
+		}
+
+		if (o instanceof CavanNotification) {
+			CavanNotification notification = (CavanNotification) o;
+			return getUserName().equals(notification.getUserName());
+		}
+
+		if (o instanceof String) {
+			return getUserName().equals(o);
+		}
+
+		return false;
+	}
 }

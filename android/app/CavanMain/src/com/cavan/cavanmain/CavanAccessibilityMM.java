@@ -263,6 +263,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 
 	private boolean doFindAndUnpack(AccessibilityNodeInfo root) {
 		List<AccessibilityNodeInfo> nodes = findRedPacketNodes(root);
+		if (nodes == null) {
+			return false;
+		}
+
 		boolean success = false;
 
 		for (int i = nodes.size() - 1; i >= 0; i--) {

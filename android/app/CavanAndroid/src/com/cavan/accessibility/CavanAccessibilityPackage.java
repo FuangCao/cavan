@@ -9,20 +9,22 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.java.CavanString;
 
 public abstract class CavanAccessibilityPackage<E> {
 
-	public static int WINDOW_WAIT_TIME = 500;
 	public static int BACK_WAIT_TIME = 5000;
 
-	private HashMap<String, CavanAccessibilityWindow> mWindows = new HashMap<String, CavanAccessibilityWindow>();
-	private LinkedList<E> mPackets = new LinkedList<E>();
+	protected HashMap<String, CavanAccessibilityWindow> mWindows = new HashMap<String, CavanAccessibilityWindow>();
+	protected LinkedList<E> mPackets = new LinkedList<E>();
 
-	private CavanAccessibilityService mService;
-	private CavanAccessibilityWindow mWindow;
-	private boolean mPending;
-	private long mUpdateTime;
-	private long mUnpckTime;
+	protected CavanAccessibilityService mService;
+	protected CavanAccessibilityWindow mWindow;
+	protected boolean mPending;
+	protected long mUpdateTime;
+	protected long mUnpackTime;
+	protected long mUnlockTime;
+	protected int mPollTimes;
 
 	public CavanAccessibilityPackage(CavanAccessibilityService service) {
 		mService = service;
@@ -31,96 +33,179 @@ public abstract class CavanAccessibilityPackage<E> {
 	public abstract String getPackageName();
 	public abstract int getEventTypes();
 
-	public void addWindow(String name, CavanAccessibilityWindow win) {
-		mWindows.put(name, win);
+	public synchronized void addWindow(CavanAccessibilityWindow win) {
+		mWindows.put(win.getName(), win);
 	}
 
-	public CavanAccessibilityWindow getWindow() {
+	public synchronized CavanAccessibilityWindow getWindow() {
 		return mWindow;
 	}
 
-	public CavanAccessibilityService getService() {
+	public synchronized CavanAccessibilityWindow getWindow(String name) {
+		return mWindows.get(name);
+	}
+
+	public synchronized CavanAccessibilityService getService() {
 		return mService;
 	}
 
-	public void addPacket(E code) {
-		mPackets.add(code);
+	public synchronized long getUnpackDelay() {
+		return 0;
 	}
 
-	public void clearPackets() {
+	public synchronized boolean addPacket(E packet) {
+		long delay = getUnpackDelay();
+		if (delay < 0) {
+			return false;
+		}
+
+		CavanAndroid.acquireWakeupLock(mService, 20000);
+
+		if (mPackets.contains(packet)) {
+			return true;
+		}
+
+		long time = System.currentTimeMillis();
+		if (mUnpackTime < time) {
+			mUnpackTime += delay;
+		}
+
+		mPackets.add(packet);
+		setPending(true);
+		mPollTimes = 0;
+
+		return true;
+	}
+
+	public synchronized boolean removePacket(E packet) {
+		if (mPackets.remove(packet)) {
+			if (mPackets.isEmpty()) {
+				setPending(false);
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
+	public synchronized void clearPackets() {
 		mPackets.clear();
+		setPending(false);
 	}
 
-	public int getPacketCount() {
+	public synchronized int getPacketCount() {
 		return mPackets.size();
 	}
 
-	public boolean isPending() {
-		return mPending || mPackets.size() > 0;
+	public synchronized boolean isPending() {
+		return mPending;
 	}
 
-	public void setPending(boolean pending) {
-		mPending = pending;
+	public synchronized void setPending(boolean pending) {
+		if (pending || mPackets.size() > 0) {
+			mPending = true;
+			postDelayed();
+		} else {
+			mPending = false;
+			mUnpackTime = 0;
+			mService.gotoNextPackage();
+		}
 	}
 
-	public void touchUpdateTime() {
+	public synchronized void touchUpdateTime() {
 		mUpdateTime = System.currentTimeMillis();
 	}
 
-	public long getUpdateTime() {
+	public synchronized long getUpdateTime() {
 		return mUpdateTime;
 	}
 
-	public long getTimeConsume() {
+	public synchronized long getTimeConsume() {
 		return System.currentTimeMillis() - mUpdateTime;
 	}
 
-	public void setUnpackTime(long time) {
-		mUnpckTime = time;
+	public synchronized void setUnpackTime(long time) {
+		mUnpackTime = time;
 	}
 
-	public long getUnpackTime() {
-		return mUnpckTime;
+	public synchronized long getUnpackTime() {
+		return mUnpackTime;
+	}
+
+	public synchronized void setUnlockDelay(long delay) {
+		mUnlockTime = System.currentTimeMillis() + delay;
+	}
+
+	public synchronized void setUnlockTime(long time) {
+		mUnlockTime = time;
+		postDelayed();
 	}
 
 	public boolean launch() {
+		CavanAndroid.dLog("Launch: " + getPackageName());
 		return CavanAndroid.startActivity(mService, getPackageName());
 	}
 
-	public void post(long delay) {
-		mService.post(delay);
+	public void postDelayed() {
+		mService.postDelayed();
 	}
 
-	protected CavanAccessibilityWindow onWindowStateChanged(AccessibilityEvent event) {
+	public void post() {
+		mService.post();
+	}
+
+	public AccessibilityNodeInfo getRootInActiveWindow() {
+		return mService.getRootInActiveWindow();
+	}
+
+	public synchronized void performPackageUpdated() {
+		for (CavanAccessibilityWindow win : mWindows.values()) {
+			win.onPackageUpdated();
+		}
+	}
+
+	protected synchronized CavanAccessibilityWindow onWindowStateChanged(AccessibilityEvent event) {
 		touchUpdateTime();
 
-		CharSequence sequence = event.getClassName();
-		if (sequence == null) {
+		if (mUnlockTime > 0) {
+			setUnlockTime(0);
+		}
+
+		mPollTimes = 0;
+
+		if (isPending()) {
+			post();
+		}
+
+		String name = CavanString.fromCharSequence(event.getClassName(), null);
+		if (name == null) {
 			return null;
 		}
 
-		String className = sequence.toString();
-		if (className.startsWith("android.widget.")) {
+		CavanAndroid.dLog("onWindowStateChanged: " + getPackageName() + "/" + name);
+
+		if (name.startsWith("android.widget.")) {
 			return mWindow;
 		}
 
-		CavanAccessibilityWindow win = mWindows.get(className);
+		CavanAccessibilityWindow win = getWindow(name);
 		if (win != mWindow) {
 			if (mWindow != null) {
-				mWindow.leave();
+				mWindow.onLeave();
 			}
 
 			mWindow = win;
+		}
 
-			if (win != null) {
-				win.enter();
-			}
+		if (win != null) {
+			win.onEnter();
 		}
 
 		return win;
 	}
 
-	public void onAccessibilityEvent(AccessibilityEvent event) {
+	public synchronized void onAccessibilityEvent(AccessibilityEvent event) {
 		switch (event.getEventType()) {
 		case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
 			onWindowStateChanged(event);
@@ -153,30 +238,50 @@ public abstract class CavanAccessibilityPackage<E> {
 		}
 	}
 
-	public void onNotificationStateChanged(Notification data) {}
+	public synchronized void onNotificationStateChanged(Notification data) {}
 
-	public long run(AccessibilityNodeInfo root) {
+	public synchronized long poll(AccessibilityNodeInfo root) {
+		CavanAndroid.dLog("package = " + getPackageName());
+
 		if (isPending()) {
 			long timeNow = System.currentTimeMillis();
-			long consume = timeNow - mUpdateTime;
+			if (timeNow < mUnlockTime) {
+				return mUnlockTime - timeNow;
+			}
 
 			if (mWindow != null) {
-				if (consume < WINDOW_WAIT_TIME) {
-					return WINDOW_WAIT_TIME - consume;
+				CavanAndroid.dLog("window = " + mWindow);
+
+				if (mWindow.poll(root, ++mPollTimes)) {
+					return CavanAccessibilityService.POLL_DELAY;
 				}
 
-				return mWindow.run(root);
-			} else if (consume < BACK_WAIT_TIME) {
-				return BACK_WAIT_TIME - consume;
+				CavanAndroid.dLog("mPollTimes = " + mPollTimes);
+
+				if (mWindow.onPollFailed(mPollTimes)) {
+					return CavanAccessibilityService.POLL_DELAY;
+				}
+
+				return 0;
 			} else {
+				long consume = timeNow - mUpdateTime;
+				if (consume < BACK_WAIT_TIME) {
+					return BACK_WAIT_TIME - consume;
+				}
+
 				mService.performActionBack();
-				return WINDOW_WAIT_TIME;
+				return CavanAccessibilityService.POLL_DELAY;
 			}
 		}
 
 		return 0;
 	}
 
-	public void onCreate() {}
-	public void onDestroy() {}
+	public synchronized void onCreate() {}
+	public synchronized void onDestroy() {}
+
+	@Override
+	public String toString() {
+		return getPackageName();
+	}
 }

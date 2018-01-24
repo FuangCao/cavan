@@ -6,21 +6,39 @@ import android.view.accessibility.AccessibilityNodeInfo;
 
 public abstract class CavanAccessibilityWindow {
 
-	private CavanAccessibilityPackage<?> mPackage;
+	protected CavanAccessibilityPackage<?> mPackage;
+	protected String mName;
 
-	public CavanAccessibilityWindow(CavanAccessibilityPackage<?> pkg) {
+	public CavanAccessibilityWindow(CavanAccessibilityPackage<?> pkg, String name) {
 		mPackage = pkg;
+		mName = name;
+	}
+
+	public String getName() {
+		return mName;
 	}
 
 	public CavanAccessibilityPackage<?> getPackage() {
 		return mPackage;
 	}
 
-	public abstract int run(AccessibilityNodeInfo root);
+	public boolean poll(AccessibilityNodeInfo root, int times) {
+		return true;
+	}
 
-	public void enter() {}
-	public void leave() {}
+	public void onEnter() {}
+	public void onLeave() {}
+	public void onPackageUpdated() {}
 	public void onWindowContentChanged(AccessibilityEvent event) {}
 	public void onViewClicked(AccessibilityEvent event) {}
 	public void onViewTextChanged(AccessibilityEvent event) {}
+
+	public boolean onPollFailed(int times) {
+		return (times < 5);
+	}
+
+	@Override
+	public String toString() {
+		return mName;
+	}
 }

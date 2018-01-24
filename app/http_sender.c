@@ -470,7 +470,7 @@ int main(int argc, char *argv[])
 				break;
 			}
 
-			println("delay = %ld", clock_gettime_mono_ms() - time);
+			println("delay = %d", (int) (clock_gettime_mono_ms() - time));
 
 			if (cavan_http_packet_get_header(&rsp, HTTP_HEADER_DATE, date, sizeof(date)) > 0) {
 				char buff[1024];
