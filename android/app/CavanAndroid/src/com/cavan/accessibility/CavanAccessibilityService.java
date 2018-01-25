@@ -69,6 +69,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 				CavanAccessibilityPackage<?> pkg = getPendingPackage();
 				if (pkg != null) {
 					pkg.launch();
+				} else {
+					performActionHome();
 				}
 
 				CavanAndroid.dLog("PollThread suspend");
@@ -177,15 +179,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	public synchronized void post() {
 		mPollThread.start();
-	}
-
-	public synchronized void gotoNextPackage() {
-		CavanAccessibilityPackage<?> pkg = getPendingPackage();
-		if (pkg != null) {
-			pkg.launch();
-		} else {
-			performActionHome();
-		}
 	}
 
 	@Override

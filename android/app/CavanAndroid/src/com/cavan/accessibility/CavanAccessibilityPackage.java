@@ -112,7 +112,6 @@ public abstract class CavanAccessibilityPackage<E> {
 		} else {
 			mPending = false;
 			mUnpackTime = 0;
-			mService.gotoNextPackage();
 		}
 	}
 
@@ -258,7 +257,11 @@ public abstract class CavanAccessibilityPackage<E> {
 				CavanAndroid.dLog("window = " + win);
 
 				if (win.poll(root, ++mPollTimes)) {
-					return POLL_DELAY;
+					if (isPending()) {
+						return POLL_DELAY;
+					}
+
+					return 0;
 				}
 
 				CavanAndroid.dLog("mPollTimes = " + mPollTimes);

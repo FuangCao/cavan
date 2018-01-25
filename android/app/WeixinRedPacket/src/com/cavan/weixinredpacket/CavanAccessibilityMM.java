@@ -361,13 +361,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 				AccessibilityNodeInfo button = findUnpckNode(root);
 				if (button != null) {
 					CavanAccessibilityHelper.performClickAndRecycle(button);
-					setUnlockDelay(LOCK_DELAY);
-				} else if (isPending()) {
-					CavanAccessibilityHelper.performClick(backNode);
-					setUnlockDelay(LOCK_DELAY);
 				} else {
-					return false;
+					CavanAccessibilityHelper.performClick(backNode);
 				}
+
+				setUnlockDelay(LOCK_DELAY);
 			} catch (Exception e) {
 				e.printStackTrace();
 				return false;
@@ -425,18 +423,14 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 
 		@Override
 		public boolean poll(AccessibilityNodeInfo root, int times) {
-			if (isPending()) {
-				AccessibilityNodeInfo backNode = findBackNode(root);
-				if (backNode != null) {
-					CavanAccessibilityHelper.performClickAndRecycle(backNode);
-					setUnlockDelay(LOCK_DELAY);
-					return true;
-				}
-			} else {
-				return true;
+			AccessibilityNodeInfo backNode = findBackNode(root);
+			if (backNode == null) {
+				return false;
 			}
 
-			return false;
+			CavanAccessibilityHelper.performClickAndRecycle(backNode);
+			setUnlockDelay(LOCK_DELAY);
+			return true;
 		}
 	}
 
