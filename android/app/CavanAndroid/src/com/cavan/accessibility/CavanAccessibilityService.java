@@ -10,23 +10,79 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
-import android.os.Handler;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.cavan.android.CavanAndroid;
-import com.cavan.java.CavanString;
 
-public class CavanAccessibilityService extends AccessibilityService implements Runnable {
-
-	public static long POLL_DELAY = 500;
-	public static long LOCK_DELAY = 2000;
+public class CavanAccessibilityService extends AccessibilityService {
 
 	private HashMap<String, CavanAccessibilityPackage<?>> mPackages = new HashMap<String, CavanAccessibilityPackage<?>>();
-	protected CavanAccessibilityPackage<?> mPackage;
-	protected Handler mHandler = new Handler();
 	private boolean mUserPresent = true;
 	private boolean mScreenOn = true;
+
+	private Thread mPollThread = new Thread() {
+
+		@Override
+		public synchronized void start() {
+			if (isAlive()) {
+				notify();
+			} else {
+				super.start();
+			}
+		}
+
+		@Override
+		public void run() {
+			while (true) {
+				while (true) {
+					CavanAndroid.dLog("PollThread running");
+
+					AccessibilityNodeInfo root = getRootInActiveWindow();
+					if (root == null) {
+						break;
+					}
+
+					try {
+						CavanAccessibilityPackage<?> pkg = getPackage(root.getPackageName());
+						if (pkg == null) {
+							break;
+						}
+
+						long delay = pkg.poll(root);
+						if (delay > 0) {
+							CavanAndroid.dLog("PollThread waitting " + delay);
+
+							synchronized (this) {
+								wait(delay);
+							}
+						} else {
+							break;
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					} finally {
+						root.recycle();
+					}
+				}
+
+				CavanAccessibilityPackage<?> pkg = getPendingPackage();
+				if (pkg != null) {
+					pkg.launch();
+				}
+
+				CavanAndroid.dLog("PollThread suspend");
+
+				synchronized (this) {
+					try {
+						wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+	};
 
 	private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
 
@@ -101,6 +157,14 @@ public class CavanAccessibilityService extends AccessibilityService implements R
 		mPackages.put(pkg.getPackageName(), pkg);
 	}
 
+	public synchronized CavanAccessibilityPackage<?> getPackage(CharSequence name) {
+		if (name == null) {
+			return null;
+		}
+
+		return mPackages.get(name.toString());
+	}
+
 	public boolean performActionBack() {
 		CavanAndroid.dLog("performActionBack");
 		return performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
@@ -111,20 +175,8 @@ public class CavanAccessibilityService extends AccessibilityService implements R
 		return performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
 	}
 
-	public synchronized void postDelayed(long delay) {
-		mHandler.postDelayed(this, delay);
-	}
-
-	public synchronized void postDelayed() {
-		postDelayed(POLL_DELAY);
-	}
-
 	public synchronized void post() {
-		mHandler.post(this);
-	}
-
-	public synchronized void remove() {
-		mHandler.removeCallbacks(this);
+		mPollThread.start();
 	}
 
 	public synchronized void gotoNextPackage() {
@@ -169,49 +221,15 @@ public class CavanAccessibilityService extends AccessibilityService implements R
 
 	@Override
 	public void onAccessibilityEvent(AccessibilityEvent event) {
-		String pkgName = CavanString.fromCharSequence(event.getPackageName(), null);
-		if (pkgName != null) {
-			mPackage = mPackages.get(pkgName);
-			if (mPackage != null) {
-				mPackage.onAccessibilityEvent(event);;
-			}
+		CavanAccessibilityPackage<?> pkg = getPackage(event.getPackageName());
+		if (pkg != null) {
+			pkg.onAccessibilityEvent(event);
 		}
 	}
 
 	@Override
 	public void onInterrupt() {
 		CavanAndroid.pLog();
-	}
-
-	@Override
-	public void run() {
-		mHandler.removeCallbacks(this);
-
-		if (mPackage != null) {
-			AccessibilityNodeInfo root = getRootInActiveWindow();
-			if (root != null) {
-				String pkgName = CavanString.fromCharSequence(root.getPackageName(), null);
-				if (pkgName != null && mPackage.getPackageName().equals(pkgName)) {
-					long delay = mPackage.poll(root);
-					CavanAndroid.dLog("delay = " + delay);
-
-					if (delay > 0) {
-						postDelayed();
-					} else {
-						for (CavanAccessibilityPackage<?> pkg : mPackages.values()) {
-							if (pkg.isPending()) {
-								pkg.launch();
-								break;
-							}
-						}
-					}
-				} else {
-					mPackage = null;
-				}
-
-				root.recycle();
-			}
-		}
 	}
 
 	@Override

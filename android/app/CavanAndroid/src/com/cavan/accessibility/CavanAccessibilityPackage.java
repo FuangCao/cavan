@@ -13,8 +13,10 @@ import com.cavan.java.CavanString;
 
 public abstract class CavanAccessibilityPackage<E> {
 
-	public static int WAIT_TIME = 200;
-	public static int BACK_WAIT_TIME = 5000;
+	public static int WAIT_DELAY = 200;
+	public static int BACK_DELAY = 5000;
+	public static int POLL_DELAY = 500;
+	public static int LOCK_DELAY = 2000;
 
 	protected HashMap<String, CavanAccessibilityWindow> mWindows = new HashMap<String, CavanAccessibilityWindow>();
 	protected LinkedList<E> mPackets = new LinkedList<E>();
@@ -106,7 +108,7 @@ public abstract class CavanAccessibilityPackage<E> {
 	public synchronized void setPending(boolean pending) {
 		if (pending || mPackets.size() > 0) {
 			mPending = true;
-			postDelayed();
+			post();
 		} else {
 			mPending = false;
 			mUnpackTime = 0;
@@ -140,16 +142,12 @@ public abstract class CavanAccessibilityPackage<E> {
 
 	public synchronized void setUnlockTime(long time) {
 		mUnlockTime = time;
-		postDelayed();
+		post();
 	}
 
 	public boolean launch() {
 		CavanAndroid.dLog("Launch: " + getPackageName());
 		return CavanAndroid.startActivity(mService, getPackageName());
-	}
-
-	public void postDelayed() {
-		mService.postDelayed();
 	}
 
 	public void post() {
@@ -250,28 +248,33 @@ public abstract class CavanAccessibilityPackage<E> {
 				return mUnlockTime - timeNow;
 			}
 
-			if (mWindow != null) {
-				CavanAndroid.dLog("window = " + mWindow);
+			long consume = timeNow - mUpdateTime;
+			if (consume < WAIT_DELAY) {
+				return WAIT_DELAY - consume;
+			}
 
-				if (mWindow.poll(root, ++mPollTimes)) {
-					return CavanAccessibilityService.POLL_DELAY;
+			CavanAccessibilityWindow win = mWindow;
+			if (win != null) {
+				CavanAndroid.dLog("window = " + win);
+
+				if (win.poll(root, ++mPollTimes)) {
+					return POLL_DELAY;
 				}
 
 				CavanAndroid.dLog("mPollTimes = " + mPollTimes);
 
-				if (mWindow.onPollFailed(mPollTimes)) {
-					return CavanAccessibilityService.POLL_DELAY;
+				if (win.onPollFailed(mPollTimes)) {
+					return POLL_DELAY;
 				}
 
 				return 0;
 			} else {
-				long consume = timeNow - mUpdateTime;
-				if (consume < BACK_WAIT_TIME) {
-					return BACK_WAIT_TIME - consume;
+				if (consume < BACK_DELAY) {
+					return BACK_DELAY - consume;
 				}
 
 				mService.performActionBack();
-				return CavanAccessibilityService.POLL_DELAY;
+				return POLL_DELAY;
 			}
 		}
 
