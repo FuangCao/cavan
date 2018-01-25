@@ -268,6 +268,11 @@ public class FloatMessageService extends FloatWidowService {
 
 			case MSG_CHECK_SERVICE_STATE:
 				removeMessages(MSG_CHECK_SERVICE_STATE);
+
+				if (!CavanMessageActivity.isAutoCheckPermissionEnabled(FloatMessageService.this)) {
+					break;
+				}
+
 				if (checkServiceState()) {
 					break;
 				}
@@ -324,6 +329,10 @@ public class FloatMessageService extends FloatWidowService {
 				break;
 
 			case CavanMessageActivity.ACTION_SERVICE_EXIT:
+				if (!CavanMessageActivity.isAutoCheckPermissionEnabled(FloatMessageService.this)) {
+					break;
+				}
+
 				String service = intent.getStringExtra("service");
 				if (service == null) {
 					break;
@@ -752,7 +761,7 @@ public class FloatMessageService extends FloatWidowService {
 			CavanBroadcastReceiver.setOnTimeNotifyAlarm(this);
 		}
 
-		mHandler.sendEmptyMessage(MSG_CHECK_SERVICE_STATE);
+		mHandler.sendEmptyMessageDelayed(MSG_CHECK_SERVICE_STATE, 10000);
 
 		instance = this;
 	}

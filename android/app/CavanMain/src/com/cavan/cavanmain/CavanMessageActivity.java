@@ -87,6 +87,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	public static final String KEY_THANKS_SHARE = "thanks_share";
 	public static final String KEY_REPEAT_DELAY = "repeat_delay";
 	public static final String KEY_NOTIFY_AUTO_CLEAR = "notify_auto_clear";
+	public static final String KEY_AUTO_CHECK_PERMISSION = "auto_check_permission";
 
 	public static CavanMessageActivity instance;
 
@@ -275,6 +276,10 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 			e.printStackTrace();
 			return false;
 		}
+	}
+
+	public static boolean isAutoCheckPermissionEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_CHECK_PERMISSION);
 	}
 
 	private Preference mPreferenceRedPacketClear;

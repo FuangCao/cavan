@@ -808,5 +808,6 @@
 	<string name="role_change_client">内网穿透客户端</string>
 	<string name="keyword_notify_only">关键字仅通知</string>
 	<string name="notify_auto_clear">通知自动清除</string>
+	<string name="auto_check_permission">权限自动检查</string>
 
 </resources>

@@ -13,6 +13,7 @@ import com.cavan.java.CavanString;
 
 public abstract class CavanAccessibilityPackage<E> {
 
+	public static int WAIT_TIME = 200;
 	public static int BACK_WAIT_TIME = 5000;
 
 	protected HashMap<String, CavanAccessibilityWindow> mWindows = new HashMap<String, CavanAccessibilityWindow>();
