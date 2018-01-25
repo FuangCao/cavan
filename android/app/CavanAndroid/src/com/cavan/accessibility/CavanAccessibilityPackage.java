@@ -23,6 +23,7 @@ public abstract class CavanAccessibilityPackage<E> {
 
 	protected CavanAccessibilityService mService;
 	protected CavanAccessibilityWindow mWindow;
+	protected boolean mGotoIdleEnabled;
 	protected boolean mPending;
 	protected long mUpdateTime;
 	protected long mUnpackTime;
@@ -70,10 +71,12 @@ public abstract class CavanAccessibilityPackage<E> {
 
 		long time = System.currentTimeMillis();
 		if (mUnpackTime < time) {
-			mUnpackTime += delay;
+			mUnpackTime = time + delay;
 		}
 
 		mPackets.add(packet);
+
+		mGotoIdleEnabled = true;
 		setPending(true);
 		mPollTimes = 0;
 
@@ -103,6 +106,12 @@ public abstract class CavanAccessibilityPackage<E> {
 
 	public synchronized boolean isPending() {
 		return mPending;
+	}
+
+	public synchronized boolean isGotoIdleEnabled() {
+		boolean enabled = mGotoIdleEnabled;
+		mGotoIdleEnabled = false;
+		return enabled;
 	}
 
 	public synchronized void setPending(boolean pending) {

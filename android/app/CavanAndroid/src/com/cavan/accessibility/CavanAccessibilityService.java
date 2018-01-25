@@ -35,6 +35,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 		@Override
 		public void run() {
 			while (true) {
+				boolean gotoIdle = false;
+
 				while (true) {
 					CavanAndroid.dLog("PollThread running");
 
@@ -57,6 +59,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 								wait(delay);
 							}
 						} else {
+							gotoIdle = pkg.isGotoIdleEnabled();
 							break;
 						}
 					} catch (Exception e) {
@@ -69,7 +72,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				CavanAccessibilityPackage<?> pkg = getPendingPackage();
 				if (pkg != null) {
 					pkg.launch();
-				} else {
+				} else if (gotoIdle) {
 					performActionHome();
 				}
 
