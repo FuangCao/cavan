@@ -1,5 +1,7 @@
 package com.cavan.weixinredpacket;
 
+import android.view.accessibility.AccessibilityEvent;
+
 import com.cavan.accessibility.CavanAccessibilityService;
 
 public class WeixinRedPacketService extends CavanAccessibilityService {
@@ -8,6 +10,11 @@ public class WeixinRedPacketService extends CavanAccessibilityService {
 
 	public WeixinRedPacketService() {
 		addPackage(new CavanAccessibilityMM(this));
+	}
+
+	@Override
+	public int getEventTypes() {
+		return AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED | AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED;
 	}
 
 	@Override

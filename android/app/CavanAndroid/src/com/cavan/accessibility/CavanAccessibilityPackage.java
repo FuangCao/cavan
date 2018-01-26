@@ -35,7 +35,6 @@ public abstract class CavanAccessibilityPackage<E> {
 	}
 
 	public abstract String getPackageName();
-	public abstract int getEventTypes();
 
 	public synchronized void addWindow(CavanAccessibilityWindow win) {
 		mWindows.put(win.getName(), win);
@@ -49,11 +48,36 @@ public abstract class CavanAccessibilityPackage<E> {
 		return mWindows.get(name);
 	}
 
+	public synchronized void setWindow(CavanAccessibilityWindow win) {
+		if (win != mWindow) {
+			if (mWindow != null) {
+				mWindow.onLeave();
+			}
+
+			mWindow = win;
+		}
+
+		if (win != null) {
+			win.onEnter();
+		}
+	}
+
 	public synchronized CavanAccessibilityService getService() {
 		return mService;
 	}
 
-	public synchronized long getUnpackDelay() {
+	public long getUnpackDelay() {
+		return 0;
+	}
+
+	public synchronized long getUnpackRemain() {
+		if (mUnpackTime > 0) {
+			long timeNow = System.currentTimeMillis();
+			if (mUnpackTime > timeNow) {
+				return mUnpackTime - timeNow;
+			}
+		}
+
 		return 0;
 	}
 
@@ -63,7 +87,7 @@ public abstract class CavanAccessibilityPackage<E> {
 			return false;
 		}
 
-		CavanAndroid.acquireWakeupLock(mService, 20000);
+		mService.acquireWakeLock(20000);
 
 		if (mPackets.contains(packet)) {
 			return true;
@@ -76,7 +100,10 @@ public abstract class CavanAccessibilityPackage<E> {
 
 		mPackets.add(packet);
 
-		mGotoIdleEnabled = true;
+		if (packet != null) {
+			mGotoIdleEnabled = true;
+		}
+
 		setPending(true);
 		mPollTimes = 0;
 
@@ -162,6 +189,10 @@ public abstract class CavanAccessibilityPackage<E> {
 		mService.post();
 	}
 
+	public boolean isCurrentPackage() {
+		return (mService.getPackage() == this);
+	}
+
 	public AccessibilityNodeInfo getRootInActiveWindow() {
 		return mService.getRootInActiveWindow();
 	}
@@ -197,24 +228,14 @@ public abstract class CavanAccessibilityPackage<E> {
 		}
 
 		CavanAccessibilityWindow win = getWindow(name);
-		if (win != mWindow) {
-			if (mWindow != null) {
-				mWindow.onLeave();
-			}
-
-			mWindow = win;
-		}
-
-		if (win != null) {
-			win.onEnter();
-		}
-
+		setWindow(win);
 		return win;
 	}
 
 	public synchronized void onAccessibilityEvent(AccessibilityEvent event) {
 		switch (event.getEventType()) {
 		case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
+			mService.setPackage(this);
 			onWindowStateChanged(event);
 			break;
 
@@ -293,8 +314,10 @@ public abstract class CavanAccessibilityPackage<E> {
 		return 0;
 	}
 
-	public synchronized void onCreate() {}
-	public synchronized void onDestroy() {}
+	public void onEnter() {}
+	public void onLeave() {}
+	public void onCreate() {}
+	public void onDestroy() {}
 
 	@Override
 	public String toString() {

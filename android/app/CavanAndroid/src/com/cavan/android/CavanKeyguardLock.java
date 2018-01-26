@@ -1,5 +1,7 @@
 package com.cavan.android;
 
+import com.cavan.java.CavanIndexGenerator;
+
 import android.app.KeyguardManager;
 import android.app.KeyguardManager.KeyguardLock;
 import android.content.Context;
@@ -7,28 +9,30 @@ import android.content.Context;
 @SuppressWarnings("deprecation")
 public class CavanKeyguardLock {
 
+	private static final CavanIndexGenerator sGenerator = new CavanIndexGenerator();
+
 	private String mTag;
 	private KeyguardLock mLock;
 
 	public CavanKeyguardLock(String tag) {
-		mTag = tag;
-	}
-
-	public CavanKeyguardLock(Class<?> cls) {
-		this(cls.getCanonicalName());
+		setTag(tag);
 	}
 
 	public CavanKeyguardLock() {
-		this(CavanKeyguardLock.class);
+		this(CavanKeyguardLock.class.getCanonicalName());
 	}
 
-	public void release() {
+	public synchronized void setTag(String tag) {
+		mTag = tag + sGenerator.genIndex();
+	}
+
+	public synchronized void release() {
 		if (mLock != null) {
 			mLock.reenableKeyguard();
 		}
 	}
 
-	public boolean acquire(KeyguardManager manager) {
+	public synchronized boolean acquire(KeyguardManager manager) {
 		if (mLock == null) {
 			mLock = manager.newKeyguardLock(mTag);
 			if (mLock == null) {
@@ -41,7 +45,7 @@ public class CavanKeyguardLock {
 		return true;
 	}
 
-	public boolean acquire(Context context) {
+	public synchronized boolean acquire(Context context) {
 		KeyguardManager manager = (KeyguardManager) CavanAndroid.getSystemServiceCached(context, Context.KEYGUARD_SERVICE);
 		if (manager == null) {
 			return false;

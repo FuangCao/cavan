@@ -1,5 +1,8 @@
 package com.cavan.weixinredpacket;
 
+import com.cavan.accessibility.CavanAccessibilityPackage;
+import com.cavan.android.CavanAndroid;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -13,13 +16,13 @@ import android.widget.Button;
 public class CountDownDialog implements OnClickListener, Runnable {
 
 	private Context mContext;
+	private CavanAccessibilityPackage<?> mPackage;
 
 	private View mRootView;
 	private Button mButtonNow;
 	private Button mButtonCancel;
 
 	private Dialog mDialog;
-	private long mCommitTime;
 	private long mDismissTime;
 
 	public CountDownDialog(Context context) {
@@ -49,8 +52,8 @@ public class CountDownDialog implements OnClickListener, Runnable {
 		return params;
 	}
 
-	public void show(long time) {
-		mCommitTime = time;
+	public void show(CavanAccessibilityPackage<?> pkg) {
+		mPackage = pkg;
 
 		if (mDialog == null) {
 			AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
@@ -58,9 +61,9 @@ public class CountDownDialog implements OnClickListener, Runnable {
 			builder.setCancelable(true);
 			mDialog = builder.create();
 			mDialog.getWindow().setAttributes(createLayoutParams(0));
-			mRootView.post(this);
 		}
 
+		mRootView.post(this);
 		mDialog.show();
 	}
 
@@ -106,9 +109,10 @@ public class CountDownDialog implements OnClickListener, Runnable {
 		mRootView.removeCallbacks(this);
 
 		if (mDialog != null && mDialog.isShowing()) {
-			long time = System.currentTimeMillis();
-			if (mCommitTime > time) {
-				long delay = mCommitTime - time;
+			long delay = mPackage.getUnpackRemain();
+			CavanAndroid.dLog("delay = " + delay);
+
+			if (delay > 0) {
 				String text = mContext.getResources().getString(R.string.unpack_delayed, delay / 1000);
 
 				mButtonNow.setText(text);

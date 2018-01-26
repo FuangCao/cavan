@@ -172,7 +172,6 @@ static int app_network_service_main(int argc, char *argv[])
 	return ret;
 }
 
-
 CAVAN_COMMAND_MAP_START {
 	{ "client", app_network_client_main },
 	{ "service", app_network_service_main },

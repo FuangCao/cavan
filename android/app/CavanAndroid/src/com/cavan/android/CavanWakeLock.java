@@ -16,12 +16,12 @@ public class CavanWakeLock {
 	private WakeLock mLock;
 
 	public CavanWakeLock(String tag, int flags) {
-		mTag = tag;
+		setTag(tag);
 		mFlags = flags;
 	}
 
 	public CavanWakeLock(String tag, boolean light, boolean wakeup) {
-		mTag = tag;
+		setTag(tag);
 
 		if (wakeup) {
 			mFlags = PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP;
@@ -50,6 +50,10 @@ public class CavanWakeLock {
 
 	public CavanWakeLock() {
 		this(false);
+	}
+
+	synchronized public void setTag(String tag) {
+		mTag = tag + sGenerator.genIndex();
 	}
 
 	synchronized public void release() {
