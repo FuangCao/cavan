@@ -10,12 +10,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanKeyguardLock;
 import com.cavan.android.CavanWakeLock;
+import com.cavan.android.SystemProperties;
 
 public class CavanAccessibilityService extends AccessibilityService {
 
@@ -289,6 +291,27 @@ public class CavanAccessibilityService extends AccessibilityService {
 		if (pkg != null) {
 			pkg.onAccessibilityEvent(event);
 		}
+	}
+
+	@Override
+	protected boolean onKeyEvent(KeyEvent event) {
+		if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP && event.getAction() == KeyEvent.ACTION_UP) {
+			int dump = SystemProperties.getInt("debug.cavan.dump.node", 0);
+			if (dump > 0) {
+				AccessibilityNodeInfo root = getRootInActiveWindow();
+				if (root != null) {
+					if (dump > 1) {
+						CavanAccessibilityHelper.dumpNode(root);
+					} else {
+						CavanAccessibilityHelper.dumpNodeSimple(root);
+					}
+
+					root.recycle();
+				}
+			}
+		}
+
+		return super.onKeyEvent(event);
 	}
 
 	@Override

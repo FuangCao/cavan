@@ -117,6 +117,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 		}
 
 		private boolean isRedPacketNode(AccessibilityNodeInfo node) {
+			if (!LinearLayout.class.getName().equals(node.getClassName())) {
+				return false;
+			}
+
 			if (node.getChildCount() != 3) {
 				return false;
 			}
@@ -161,7 +165,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 					}
 				}
 			} catch (Exception e) {
-				return null;
+				e.printStackTrace();
 			} finally {
 				CavanAccessibilityHelper.recycleNodes(nodes);
 			}
@@ -184,30 +188,51 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 		}
 
 		private synchronized List<AccessibilityNodeInfo> findRedPacketNodes(AccessibilityNodeInfo root) {
+			List<AccessibilityNodeInfo> nodes = new ArrayList<AccessibilityNodeInfo>();
+
 			if (mRedPacketNodeId != null) {
-				return root.findAccessibilityNodeInfosByViewId(mRedPacketNodeId);
+				List<AccessibilityNodeInfo> childs = root.findAccessibilityNodeInfosByViewId(mRedPacketNodeId);
+				if (childs != null) {
+					for (AccessibilityNodeInfo child : childs) {
+						if ("微信红包".equals(child.getText())) {
+							AccessibilityNodeInfo node = child.getParent();
+							if (node != null) {
+								if (LinearLayout.class.getName().equals(node.getClassName())) {
+									nodes.add(node);
+								} else {
+									node.recycle();
+								}
+							}
+						}
+
+						child.recycle();
+					}
+				}
+
+				return nodes;
 			}
 
 			AccessibilityNodeInfo listView = findMessageListView(root);
 			if (listView == null) {
-				return null;
+				return nodes;
 			}
 
-			List<AccessibilityNodeInfo> nodes = new ArrayList<AccessibilityNodeInfo>();
-
-			for (AccessibilityNodeInfo node : CavanAccessibilityHelper.findNodesByText(listView, "微信红包")) {
-				AccessibilityNodeInfo parent = node.getParent();
-				if (parent != null) {
-					if (isRedPacketNode(parent)) {
-						mRedPacketNodeId = parent.getViewIdResourceName();
-						CavanAndroid.dLog("mRedPacketNodeId = " + mRedPacketNodeId);
-						nodes.add(parent);
-					} else {
-						parent.recycle();
+			List<AccessibilityNodeInfo> childs = CavanAccessibilityHelper.findNodesByText(listView, "微信红包");
+			if (childs != null) {
+				for (AccessibilityNodeInfo child : childs) {
+					AccessibilityNodeInfo node = child.getParent();
+					if (node != null) {
+						if (isRedPacketNode(node)) {
+							mRedPacketNodeId = child.getViewIdResourceName();
+							CavanAndroid.dLog("mRedPacketNodeId = " + mRedPacketNodeId);
+							nodes.add(node);
+						} else {
+							node.recycle();
+						}
 					}
-				}
 
-				node.recycle();
+					child.recycle();
+				}
 			}
 
 			listView.recycle();
@@ -232,8 +257,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 
 					if (isValidMessage(node)) {
 						mFinishNodes.add(hash);
-						CavanAccessibilityHelper.performClick(node);
 						setUnlockDelay(LOCK_DELAY);
+						CavanAccessibilityHelper.performClick(node);
 						return true;
 					}
 				}
@@ -287,11 +312,20 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 
 		public boolean isRedPacketLayout(AccessibilityNodeInfo node) {
 			if (RelativeLayout.class.getName().equals(node.getClassName())) {
-				if (mRedPacketNodeId == null) {
-					return true;
+				AccessibilityNodeInfo parent = node.getParent();
+				if (parent == null) {
+					return false;
 				}
 
-				return (CavanAccessibilityHelper.getNodeCountByViewIds(node, mRedPacketNodeId) > 0);
+				try {
+					if (ListView.class.getName().equals(parent.getClassName())) {
+						return (CavanAccessibilityHelper.getNodeCountByTexts(node, "微信红包") > 0);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				} finally {
+					parent.recycle();
+				}
 			}
 
 			return false;
@@ -312,34 +346,14 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 
 		@Override
 		public void onWindowContentChanged(AccessibilityEvent event) {
-			AccessibilityNodeInfo source = null;
-			AccessibilityNodeInfo parent = null;
-
-			try {
-				source = event.getSource();
-				if (source == null) {
-					return;
-				}
-
-				parent = source.getParent();
-				if (parent == null) {
-					return;
-				}
-
-				if (ListView.class.getName().equals(parent.getClassName()) && isRedPacketLayout(source)) {
+			AccessibilityNodeInfo source = event.getSource();
+			if (source != null) {
+				if (isRedPacketLayout(source)) {
 					setUnlockDelay(200);
 					addPacket(null);
 				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				if (parent != null) {
-					parent.recycle();
-				}
 
-				if (source != null) {
-					source.recycle();
-				}
+				source.recycle();
 			}
 		}
 	}
@@ -441,6 +455,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 				return false;
 			}
 
+			setUnlockDelay(LOCK_DELAY);
+
 			try {
 				AccessibilityNodeInfo button = findUnpckNode(root);
 				if (button != null) {
@@ -448,8 +464,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 				} else {
 					CavanAccessibilityHelper.performClick(backNode);
 				}
-
-				setUnlockDelay(LOCK_DELAY);
 			} catch (Exception e) {
 				e.printStackTrace();
 				return false;
@@ -512,8 +526,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 				return false;
 			}
 
-			CavanAccessibilityHelper.performClickAndRecycle(backNode);
 			setUnlockDelay(LOCK_DELAY);
+			CavanAccessibilityHelper.performClickAndRecycle(backNode);
+
 			return true;
 		}
 	}
@@ -592,16 +607,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 		}
 
 		return false;
-	}
-
-	@Override
-	public void onEnter() {
-		CavanAndroid.pLog();
-	}
-
-	@Override
-	public void onLeave() {
-		CavanAndroid.pLog();
 	}
 
 	@Override

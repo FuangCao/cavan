@@ -446,7 +446,12 @@ function cavan-adb-logcat()
 
 function cavan-adb-logcat-runtime()
 {
-	cavan-adb-logcat -s "System,System.err,AndroidRuntime" "$@"
+	cavan-adb-logcat -s "AndroidRuntime" "$@"
+}
+
+function cavan-adb-logcat-system()
+{
+	cavan-adb-logcat -s "System,System.err" "$@"
 }
 
 function cavan-adb-logcat-error()
