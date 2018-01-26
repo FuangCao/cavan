@@ -1,7 +1,9 @@
 package com.cavan.weixinredpacket;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.os.Handler;
@@ -14,6 +16,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
 import com.cavan.accessibility.CavanAccessibilityHelper;
 import com.cavan.accessibility.CavanAccessibilityPackage;
 import com.cavan.accessibility.CavanAccessibilityService;
@@ -30,7 +33,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 	private WeixinWindow mBaseWindow = new WeixinWindow("BaseWindow");
 	private WeixinReceiveWindow mReceiveWindowMore = new WeixinReceiveWindow("ReceiveWindowMore");
 	private WeixinChattingWindow mChattingWindowMore = new WeixinChattingWindow("ChattingWindowMore");
-	private List<Integer> mFinishNodes = new ArrayList<Integer>();
+	private HashSet<Integer> mFinishNodes = new HashSet<Integer>();
 
 	@SuppressLint("HandlerLeak")
 	private Handler mHandler = new Handler() {
