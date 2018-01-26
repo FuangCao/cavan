@@ -43,6 +43,8 @@ static void *app_network_receive_thread(void *data)
 		println("receive[%d]: %s", length, buff);
 	}
 
+	network_client_close_socket(client);
+
 	return NULL;
 }
 

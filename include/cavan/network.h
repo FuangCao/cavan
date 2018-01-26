@@ -482,6 +482,7 @@ int network_client_open2(struct network_client *client, const char *url, int fla
 __printf_format_34__ int network_client_openf(struct network_client *client, int flags, const char *url, ...);
 int network_client_ssl_attach(struct network_client *client, boolean server);
 void network_client_close(struct network_client *client);
+void network_client_close_socket(struct network_client *client);
 int network_client_vprintf(struct network_client *client, const char *format, va_list ap);
 int network_client_printf(struct network_client *client, const char *format, ...);
 ssize_t network_client_fill_buff(struct network_client *client, char *buff, size_t size);
@@ -709,6 +710,28 @@ static inline ssize_t network_client_fifo_read(struct cavan_fifo *fifo, void *bu
 static inline ssize_t network_client_fifo_write(struct cavan_fifo *fifo, const void *buff, size_t size)
 {
 	return network_client_send(fifo->private_data, buff, size);
+}
+
+static inline int network_client_get_send_timeout(struct network_client *client, struct timeval *tv)
+{
+	socklen_t len = sizeof(struct timeval);
+	return getsockopt(client->sockfd, SOL_SOCKET, SO_SNDTIMEO, tv, &len);
+}
+
+static inline int network_client_set_send_timeout(struct network_client *client, const struct timeval *tv)
+{
+	return setsockopt(client->sockfd, SOL_SOCKET, SO_SNDTIMEO, tv, sizeof(struct timeval));
+}
+
+static inline int network_client_get_recv_timeout(struct network_client *client, struct timeval *tv)
+{
+	socklen_t len = sizeof(struct timeval);
+	return getsockopt(client->sockfd, SOL_SOCKET, SO_RCVTIMEO, tv, &len);
+}
+
+static inline int network_client_set_recv_timeout(struct network_client *client, const struct timeval *tv)
+{
+	return setsockopt(client->sockfd, SOL_SOCKET, SO_RCVTIMEO, tv, sizeof(struct timeval));
 }
 
 static inline void network_service_set_data(struct network_service *service, void *data)

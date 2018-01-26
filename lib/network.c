@@ -4149,6 +4149,12 @@ void network_client_close(struct network_client *client)
 	client->sockfd = -1;
 }
 
+void network_client_close_socket(struct network_client *client)
+{
+	close(client->sockfd);
+	client->sockfd = -1;
+}
+
 int network_client_get_local_port(struct network_client *client)
 {
 	int ret;

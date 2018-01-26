@@ -24,7 +24,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 	private CountDownDialog mCountDownDialog;
 	private WeixinWindow mBaseWindow = new WeixinWindow("BaseWindow");
 	private WeixinReceiveWindow mReceiveWindowMore = new WeixinReceiveWindow("ReceiveWindowMore");
-	private WeixinChattingWindow mLauncherWindowMore = new WeixinChattingWindow("LauncherWindowMore");
+	private WeixinChattingWindow mChattingWindowMore = new WeixinChattingWindow("ChattingWindowMore");
 	private List<Integer> mFinishNodes = new ArrayList<Integer>();
 
 	public class WeixinWindow extends CavanAccessibilityWindow {
@@ -470,7 +470,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 		}
 
 		if (name.startsWith("com.tencent.mm.ui.chatting.En_")) {
-			return mLauncherWindowMore;
+			return mChattingWindowMore;
 		}
 
 		if (name.startsWith("com.tencent.mm.plugin.luckymoney.ui.En_")) {
