@@ -201,7 +201,7 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 
 		cavan_http_sender_lock(sender);
 
-		sender->write_count = count;
+		sender->write_count = count * 2;
 		sender->read_count = 0;
 
 		if (!sender->running) {
