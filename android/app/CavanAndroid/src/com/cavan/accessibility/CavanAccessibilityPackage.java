@@ -141,14 +141,20 @@ public abstract class CavanAccessibilityPackage<E> {
 		return enabled;
 	}
 
-	public synchronized void setPending(boolean pending) {
-		if (pending || mPackets.size() > 0) {
+	public synchronized void setPendingRaw(boolean pending) {
+		CavanAndroid.dLog("setPendingRaw: " + pending);
+
+		if (pending) {
 			mPending = true;
 			post();
 		} else {
 			mPending = false;
 			mUnpackTime = 0;
 		}
+	}
+
+	public synchronized void setPending(boolean pending) {
+		setPendingRaw(pending || mPackets.size() > 0);
 	}
 
 	public synchronized void touchUpdateTime() {

@@ -23,6 +23,8 @@ import com.cavan.android.SystemProperties;
 
 public class CavanAccessibilityService extends AccessibilityService {
 
+	public static final int POLL_DELAY = 500;
+
 	private static final int MSG_SCREEN_ON = 1;
 
 	private HashMap<String, CavanAccessibilityPackage<?>> mPackages = new HashMap<String, CavanAccessibilityPackage<?>>();
@@ -45,45 +47,104 @@ public class CavanAccessibilityService extends AccessibilityService {
 			}
 		}
 
-		@Override
-		public void run() {
-			while (true) {
-				boolean gotoIdle = false;
+		public int poll(CavanAccessibilityPackage<?> pkg) {
+			int retry = 0;
 
-				while (mScreenOn) {
-					CavanAndroid.dLog("PollThread running");
+			CavanAndroid.dLog("PollThread polling: " + pkg.getPackageName());
 
-					AccessibilityNodeInfo root = getRootInActiveWindow();
-					if (root == null) {
+			try {
+				pkg.launch();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			while (mScreenOn) {
+				long delay;
+
+				CavanAndroid.dLog("PollThread running");
+
+				AccessibilityNodeInfo root = getRootInActiveWindow();
+				if (root == null) {
+					CavanAndroid.dLog("Failed to getRootInActiveWindow: " + retry);
+
+					if (++retry > 5) {
 						break;
 					}
 
+					delay = POLL_DELAY;
+				} else {
 					try {
-						CavanAccessibilityPackage<?> pkg = getPackage(root.getPackageName());
-						if (pkg == null) {
-							break;
-						}
-
-						long delay = pkg.poll(root);
-						if (delay > 0) {
-							CavanAndroid.dLog("PollThread waitting " + delay);
-
-							synchronized (this) {
-								wait(delay);
+						if (pkg.getPackageName().equals(root.getPackageName())) {
+							delay = pkg.poll(root);
+							if (delay > 0) {
+								retry = 0;
+							} else if (pkg.isGotoIdleEnabled()) {
+								return 1;
+							} else {
+								return 0;
 							}
 						} else {
-							gotoIdle = pkg.isGotoIdleEnabled();
-							break;
+							CavanAndroid.dLog("Package not mach: " + retry);
+
+							if (++retry > 5) {
+								break;
+							}
+
+							delay = POLL_DELAY;
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
+						break;
 					} finally {
 						root.recycle();
 					}
 				}
 
-				CavanAndroid.dLog("PollThread suspend");
-				onPollSuspend(gotoIdle);
+				CavanAndroid.dLog("PollThread waitting " + delay);
+
+				synchronized (this) {
+					try {
+						wait(delay);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+			return -1;
+		}
+
+		@Override
+		public void run() {
+			while (true) {
+				boolean idle = false;
+
+				while (mScreenOn) {
+					CavanAccessibilityPackage<?> pkg = getPendingPackage();
+					if (pkg == null) {
+						break;
+					}
+
+					int retry = 0;
+
+					while (true) {
+						int ret = poll(pkg);
+						if (ret < 0) {
+							CavanAndroid.dLog("Failed to poll: " + retry);
+
+							if (++retry > 3) {
+								pkg.clearPackets();
+								break;
+							}
+						} else {
+							idle = (ret > 0);
+							break;
+						}
+					}
+				}
+
+				CavanAndroid.dLog("PollThread suspend: idle = " + idle);
+				onPollSuspend(idle);
 
 				synchronized (this) {
 					try {
@@ -151,14 +212,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 	};
 
-	protected void onPollSuspend(boolean gotoIdle) {
-		if (mScreenOn) {
-			CavanAccessibilityPackage<?> pkg = getPendingPackage();
-			if (pkg != null) {
-				pkg.launch();
-			} else if (gotoIdle) {
-				CavanAndroid.startLauncher(this);
-			}
+	protected void onPollSuspend(boolean idle) {
+		if (mScreenOn && idle) {
+			CavanAndroid.startLauncher(this);
 		}
 	}
 

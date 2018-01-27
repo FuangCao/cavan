@@ -613,10 +613,16 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 	public boolean launch() {
 		if (mPackets.size() > 0) {
 			CavanNotification notification = mPackets.get(0);
-			return notification.send();
+			if (notification == null) {
+				return true;
+			}
+
+			if (notification.send()) {
+				return true;
+			}
 		}
 
-		return false;
+		return super.launch();
 	}
 
 	@Override
