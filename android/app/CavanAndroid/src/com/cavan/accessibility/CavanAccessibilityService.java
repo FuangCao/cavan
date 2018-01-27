@@ -10,6 +10,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Message;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -20,6 +22,8 @@ import com.cavan.android.CavanWakeLock;
 import com.cavan.android.SystemProperties;
 
 public class CavanAccessibilityService extends AccessibilityService {
+
+	private static final int MSG_SCREEN_ON = 1;
 
 	private HashMap<String, CavanAccessibilityPackage<?>> mPackages = new HashMap<String, CavanAccessibilityPackage<?>>();
 	private CavanAccessibilityPackage<?> mPackage;
@@ -32,10 +36,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 		@Override
 		public synchronized void start() {
-			if (isAlive()) {
-				notify();
-			} else {
-				super.start();
+			if (mScreenOn) {
+				if (isAlive()) {
+					notify();
+				} else {
+					super.start();
+				}
 			}
 		}
 
@@ -44,7 +50,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			while (true) {
 				boolean gotoIdle = false;
 
-				while (true) {
+				while (mScreenOn) {
 					CavanAndroid.dLog("PollThread running");
 
 					AccessibilityNodeInfo root = getRootInActiveWindow();
@@ -76,14 +82,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 					}
 				}
 
-				CavanAccessibilityPackage<?> pkg = getPendingPackage();
-				if (pkg != null) {
-					pkg.launch();
-				} else if (gotoIdle) {
-					performActionHome();
-				}
-
 				CavanAndroid.dLog("PollThread suspend");
+				onPollSuspend(gotoIdle);
 
 				synchronized (this) {
 					try {
@@ -94,6 +94,19 @@ public class CavanAccessibilityService extends AccessibilityService {
 				}
 			}
 		}
+	};
+
+	private Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case MSG_SCREEN_ON:
+				mPollThread.start();
+				break;
+			}
+		}
+
 	};
 
 	private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
@@ -111,7 +124,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 				CavanAccessibilityPackage<?> pkg = getPendingPackage();
 				if (pkg != null) {
 					acquireScreenLock();
-					pkg.launch();
+					Message message = mHandler.obtainMessage(MSG_SCREEN_ON, pkg);
+					mHandler.sendMessageDelayed(message, 1000);
 				}
 				break;
 
@@ -137,11 +151,25 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 	};
 
-	protected void onUserOnline() {}
+	protected void onPollSuspend(boolean gotoIdle) {
+		if (mScreenOn) {
+			CavanAccessibilityPackage<?> pkg = getPendingPackage();
+			if (pkg != null) {
+				pkg.launch();
+			} else if (gotoIdle) {
+				CavanAndroid.startLauncher(this);
+			}
+		}
+	}
 
+	protected void onUserOnline() {}
 	protected void onUserOffline() {}
 	protected void onScreenOn() {}
 	protected void onScreenOff() {}
+
+	public Handler getHandler() {
+		return mHandler;
+	}
 
 	public synchronized boolean isUserPresent() {
 		return mUserPresent;
@@ -307,9 +335,13 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	@Override
 	public void onAccessibilityEvent(AccessibilityEvent event) {
-		CavanAccessibilityPackage<?> pkg = getPackage(event.getPackageName());
-		if (pkg != null) {
-			pkg.onAccessibilityEvent(event);
+		try {
+			CavanAccessibilityPackage<?> pkg = getPackage(event.getPackageName());
+			if (pkg != null) {
+				pkg.onAccessibilityEvent(event);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -352,7 +384,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 		filter.addAction(Intent.ACTION_SCREEN_ON);
 		filter.addAction(Intent.ACTION_USER_PRESENT);
 		filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
-		filter.addAction(Intent.ACTION_VIEW);
 		registerReceiver(mBroadcastReceiver, filter);
 	}
 

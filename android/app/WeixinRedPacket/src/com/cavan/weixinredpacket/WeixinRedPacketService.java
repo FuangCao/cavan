@@ -3,6 +3,7 @@ package com.cavan.weixinredpacket;
 import android.view.accessibility.AccessibilityEvent;
 
 import com.cavan.accessibility.CavanAccessibilityService;
+import com.cavan.android.CavanAndroid;
 
 public class WeixinRedPacketService extends CavanAccessibilityService {
 
@@ -27,6 +28,11 @@ public class WeixinRedPacketService extends CavanAccessibilityService {
 	public void onDestroy() {
 		instance = null;
 		super.onDestroy();
+	}
+
+	@Override
+	protected void onUserOffline() {
+		CavanAndroid.startLauncher(this);
 	}
 
 }

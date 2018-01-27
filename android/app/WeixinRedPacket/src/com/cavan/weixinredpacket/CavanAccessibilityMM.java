@@ -610,11 +610,20 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 	}
 
 	@Override
+	public boolean launch() {
+		if (mPackets.size() > 0) {
+			CavanNotification notification = mPackets.get(0);
+			return notification.send();
+		}
+
+		return false;
+	}
+
+	@Override
 	public void onNotificationStateChanged(Notification notification) {
 		CavanNotification cn = new CavanNotification(notification);
 
 		if (cn.isRedPacket()) {
-			cn.send();
 			addPacket(cn);
 		}
 	}

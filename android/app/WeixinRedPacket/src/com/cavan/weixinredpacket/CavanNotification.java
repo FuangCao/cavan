@@ -14,6 +14,7 @@ public class CavanNotification {
 	private String mContent;
 	private String mUserName;
 	private String mGroupName;
+	private int mSendTimes;
 
 	public CavanNotification(Notification notification) {
 		mNotification = notification;
@@ -93,6 +94,10 @@ public class CavanNotification {
 	}
 
 	public boolean send() {
+		if (mSendTimes > 0) {
+			return false;
+		}
+
 		PendingIntent intent = mNotification.contentIntent;
 		if (intent == null) {
 			return false;
@@ -100,6 +105,7 @@ public class CavanNotification {
 
 		try {
 			intent.send();
+			mSendTimes++;
 		} catch (CanceledException e) {
 			e.printStackTrace();
 			return false;

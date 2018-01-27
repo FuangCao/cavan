@@ -13,7 +13,7 @@ import com.cavan.java.CavanString;
 
 public abstract class CavanAccessibilityPackage<E> {
 
-	public static int WAIT_DELAY = 200;
+	public static int WAIT_DELAY = 500;
 	public static int BACK_DELAY = 5000;
 	public static int POLL_DELAY = 500;
 	public static int LOCK_DELAY = 2000;

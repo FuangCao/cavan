@@ -803,6 +803,12 @@ public class CavanAndroid {
 		return startActivity(context, new Intent(context, cls));
 	}
 
+	public static boolean startLauncher(Context context) {
+		Intent intent = new Intent(Intent.ACTION_MAIN);
+		intent.addCategory(Intent.CATEGORY_HOME);
+		return startActivity(context, intent);
+	}
+
 	public static File getExternalStorageFile(String name) {
 		return new File(Environment.getExternalStorageDirectory(), name);
 	}
