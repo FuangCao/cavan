@@ -26,6 +26,7 @@
 
 #define HTTP_SENDER_AHEAD			15000
 #define HTTP_SENDER_HOST			"game.weixin.qq.com"
+#define HTTP_SENDER_MAX				20
 
 struct cavan_http_sender {
 	struct network_client client;
@@ -201,7 +202,12 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 
 		cavan_http_sender_lock(sender);
 
-		sender->write_count = count * 2;
+		if (count < HTTP_SENDER_MAX) {
+			sender->write_count = HTTP_SENDER_MAX;
+		} else {
+			sender->write_count = count;
+		}
+
 		sender->read_count = 0;
 
 		if (!sender->running) {
