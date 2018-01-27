@@ -540,6 +540,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 		}
 
 		@Override
+		public boolean isWebviewUi() {
+			return isCurrentPackage();
+		}
+
+		@Override
 		public boolean poll(AccessibilityNodeInfo root, int times) {
 			return false;
 		}
@@ -582,11 +587,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 	public boolean isWebViewUi() {
 		WeixinWindow win = (WeixinWindow) mWindow;
 		return (win != null && win.isWebviewUi() && isCurrentPackage());
-	}
-
-	@Override
-	public synchronized boolean launch() {
-		return false;
 	}
 
 	@Override

@@ -190,7 +190,7 @@ public abstract class CavanAccessibilityPackage<E> {
 	}
 
 	public boolean isCurrentPackage() {
-		return (mService.getPackage() == this);
+		return getPackageName().equals(mService.getCurrntPacketName());
 	}
 
 	public AccessibilityNodeInfo getRootInActiveWindow() {

@@ -177,6 +177,26 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return setPackage(getPackage(name));
 	}
 
+	public synchronized String getCurrntPacketName() {
+		AccessibilityNodeInfo root = getRootInActiveWindow();
+		if (root == null) {
+			return null;
+		}
+
+		try {
+			CharSequence name = root.getPackageName();
+			if (name != null) {
+				return name.toString();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			root.recycle();
+		}
+
+		return null;
+	}
+
 	public CavanWakeLock getWakeLock() {
 		return mWakeLock;
 	}
