@@ -68,7 +68,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 					CavanAndroid.dLog("Failed to getRootInActiveWindow: " + retry);
 
 					if (++retry > 5) {
-						break;
+						return -1;
 					}
 
 					delay = POLL_DELAY;
@@ -87,14 +87,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 							CavanAndroid.dLog("Package not mach: " + retry);
 
 							if (++retry > 5) {
-								break;
+								return -1;
 							}
 
 							delay = POLL_DELAY;
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
-						break;
+						return -1;
 					} finally {
 						root.recycle();
 					}
@@ -111,7 +111,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				}
 			}
 
-			return -1;
+			return 0;
 		}
 
 		@Override
