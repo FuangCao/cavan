@@ -292,6 +292,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 					performPackageUpdated();
 				}
 			}
+
+			setForceUnpackEnable(true);
 		}
 
 		@Override

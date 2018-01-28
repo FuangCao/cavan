@@ -195,6 +195,7 @@ public abstract class CavanAccessibilityPackage<E extends ICavanRedPacket> {
 	}
 
 	public synchronized void setForceUnpackEnable(boolean enabled) {
+		CavanAndroid.dLog("mForceUnpack = " + enabled);
 		mForceUnpack = enabled;
 	}
 
