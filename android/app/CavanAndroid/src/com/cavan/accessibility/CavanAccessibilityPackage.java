@@ -11,7 +11,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanString;
 
-public abstract class CavanAccessibilityPackage<E> {
+public abstract class CavanAccessibilityPackage<E extends ICavanRedPacket> {
 
 	public static int WAIT_DELAY = 500;
 	public static int BACK_DELAY = 5000;
@@ -23,6 +23,7 @@ public abstract class CavanAccessibilityPackage<E> {
 
 	protected CavanAccessibilityService mService;
 	protected CavanAccessibilityWindow mWindow;
+	protected boolean mForceUnpack = true;
 	protected boolean mGotoIdleEnabled;
 	protected boolean mPending;
 	protected long mUpdateTime;
@@ -32,11 +33,14 @@ public abstract class CavanAccessibilityPackage<E> {
 
 	public CavanAccessibilityPackage(CavanAccessibilityService service) {
 		mService = service;
+		initWindows();
 	}
 
 	public abstract String getPackageName();
+	public abstract void initWindows();
 
 	public synchronized void addWindow(CavanAccessibilityWindow win) {
+		CavanAndroid.dLog(getPackageName() + " <= " + win.getName());
 		mWindows.put(win.getName(), win);
 	}
 
@@ -68,6 +72,14 @@ public abstract class CavanAccessibilityPackage<E> {
 
 	public long getUnpackDelay() {
 		return 0;
+	}
+
+	public void showCountDownView() {
+		mService.showCountDownView(this);
+	}
+
+	public void dismissCountDownView() {
+		mService.showCountDownView(null);
 	}
 
 	public synchronized long getUnpackRemain() {
@@ -135,6 +147,10 @@ public abstract class CavanAccessibilityPackage<E> {
 		return mPending;
 	}
 
+	public synchronized void setGotoIdleEnable(boolean enabled) {
+		mGotoIdleEnabled = enabled;
+	}
+
 	public synchronized boolean isGotoIdleEnabled() {
 		boolean enabled = mGotoIdleEnabled;
 		mGotoIdleEnabled = false;
@@ -145,6 +161,7 @@ public abstract class CavanAccessibilityPackage<E> {
 		CavanAndroid.dLog("setPendingRaw: " + pending);
 
 		if (pending) {
+			mForceUnpack = true;
 			mPending = true;
 			post();
 		} else {
@@ -177,6 +194,14 @@ public abstract class CavanAccessibilityPackage<E> {
 		return mUnpackTime;
 	}
 
+	public synchronized void setForceUnpackEnable(boolean enabled) {
+		mForceUnpack = enabled;
+	}
+
+	public synchronized boolean isForceUnpackEnabled() {
+		return mForceUnpack;
+	}
+
 	public synchronized void setUnlockDelay(long delay) {
 		mUnlockTime = System.currentTimeMillis() + delay;
 	}
@@ -186,8 +211,20 @@ public abstract class CavanAccessibilityPackage<E> {
 		post();
 	}
 
-	public boolean launch() {
+	public synchronized boolean launch() {
 		CavanAndroid.dLog("Launch: " + getPackageName());
+
+		if (mPackets.size() > 0) {
+			ICavanRedPacket packet = mPackets.get(0);
+			if (packet == null) {
+				return true;
+			}
+
+			if (packet.send()) {
+				return true;
+			}
+		}
+
 		return CavanAndroid.startActivity(mService, getPackageName());
 	}
 
@@ -207,6 +244,8 @@ public abstract class CavanAccessibilityPackage<E> {
 		for (CavanAccessibilityWindow win : mWindows.values()) {
 			win.onPackageUpdated();
 		}
+
+		onPackageUpdated();
 	}
 
 	protected synchronized CavanAccessibilityWindow onWindowStateChanged(AccessibilityEvent event) {
@@ -324,6 +363,7 @@ public abstract class CavanAccessibilityPackage<E> {
 	public void onLeave() {}
 	public void onCreate() {}
 	public void onDestroy() {}
+	public void onPackageUpdated() {}
 
 	@Override
 	public String toString() {

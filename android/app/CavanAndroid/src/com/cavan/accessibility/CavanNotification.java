@@ -1,20 +1,19 @@
-package com.cavan.weixinredpacket;
-
-import com.cavan.android.CavanAndroid;
-import com.cavan.java.CavanString;
+package com.cavan.accessibility;
 
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.PendingIntent.CanceledException;
 
-public class CavanNotification {
+import com.cavan.android.CavanAndroid;
 
-	private Notification mNotification;
-	private String mTitle;
-	private String mContent;
-	private String mUserName;
-	private String mGroupName;
-	private int mSendTimes;
+public abstract class CavanNotification implements ICavanRedPacket {
+
+	protected Notification mNotification;
+	protected String mTitle;
+	protected String mContent;
+	protected String mUserName;
+	protected String mGroupName;
+	protected int mSendTimes;
 
 	public CavanNotification(Notification notification) {
 		mNotification = notification;
@@ -33,19 +32,8 @@ public class CavanNotification {
 
 		if (text != null) {
 			String content = text.toString();
-			int endLine = CavanString.findLineEnd(content);
-
 			CavanAndroid.dLog(content);
-
-			int index = CavanString.lastIndexOf(content, endLine, ':');
-			if (index < 0) {
-				mContent = content;
-			} else {
-				mUserName = content.substring(0, index).trim();
-				mContent = content.substring(index + 1).trim();
-			}
-
-			mGroupName = mTitle;
+			parse(content);
 		}
 	}
 
@@ -74,30 +62,12 @@ public class CavanNotification {
 	}
 
 	public boolean isRedPacket() {
-		if (mContent == null) {
-			return false;
-		}
-
-		if (!mContent.startsWith("[微信红包]")) {
-			return false;
-		}
-
-		if (mContent.contains("测") || mContent.contains("挂")) {
-			return false;
-		}
-
-		if (CavanString.getLineCount(mContent) > 1) {
-			return false;
-		}
-
-		return true;
+		return false;
 	}
 
-	public boolean send() {
-		if (mSendTimes > 0) {
-			return false;
-		}
+	public abstract void parse(String content);
 
+	public boolean send() {
 		PendingIntent intent = mNotification.contentIntent;
 		if (intent == null) {
 			return false;

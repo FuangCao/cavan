@@ -26,6 +26,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	public static final int POLL_DELAY = 500;
 
 	private static final int MSG_SCREEN_ON = 1;
+	private static final int MSG_SHOW_COUNT_DOWN = 2;
 
 	private HashMap<String, CavanAccessibilityPackage<?>> mPackages = new HashMap<String, CavanAccessibilityPackage<?>>();
 	private CavanAccessibilityPackage<?> mPackage;
@@ -165,6 +166,26 @@ public class CavanAccessibilityService extends AccessibilityService {
 			case MSG_SCREEN_ON:
 				mPollThread.start();
 				break;
+
+			case MSG_SHOW_COUNT_DOWN:
+				CavanAccessibilityPackage<?> pkg = (CavanAccessibilityPackage<?>) msg.obj;
+				if (pkg != null) {
+					long remain = pkg.getUnpackRemain();
+					if (remain > 0) {
+						onCountDownUpdated(pkg, remain);
+
+						if (remain > 1000) {
+							remain = 1000;
+						}
+
+						Message message = obtainMessage(MSG_SHOW_COUNT_DOWN, pkg);
+						sendMessageDelayed(message, remain);
+						break;
+					}
+				}
+
+				onCountDownCompleted();
+				break;
 			}
 		}
 
@@ -216,6 +237,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 		if (mScreenOn && idle) {
 			CavanAndroid.startLauncher(this);
 		}
+	}
+
+	protected void onCountDownCompleted() {
+		CavanAndroid.dLog("onCountDownCompleted");
+	}
+
+	protected void onCountDownUpdated(CavanAccessibilityPackage<?> pkg, long remain) {
+		CavanAndroid.dLog("onCountDownUpdated: " + remain);
 	}
 
 	protected void onUserOnline() {}
@@ -330,6 +359,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public synchronized void addPackage(CavanAccessibilityPackage<?> pkg) {
+		CavanAndroid.dLog("addPackage: " + pkg.getPackageName());
 		mPackages.put(pkg.getPackageName(), pkg);
 	}
 
@@ -452,6 +482,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 
 		super.onDestroy();
+	}
+
+	public void showCountDownView(CavanAccessibilityPackage<?> pkg) {
+		mHandler.obtainMessage(MSG_SHOW_COUNT_DOWN, pkg).sendToTarget();
 	}
 
 }

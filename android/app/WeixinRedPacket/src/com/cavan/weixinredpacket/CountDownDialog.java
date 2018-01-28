@@ -1,8 +1,5 @@
 package com.cavan.weixinredpacket;
 
-import com.cavan.accessibility.CavanAccessibilityPackage;
-import com.cavan.android.CavanAndroid;
-
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -13,17 +10,18 @@ import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.Button;
 
-public class CountDownDialog implements OnClickListener, Runnable {
+import com.cavan.accessibility.CavanAccessibilityPackage;
 
-	private Context mContext;
-	private CavanAccessibilityPackage<?> mPackage;
+public class CountDownDialog implements OnClickListener {
+
+	protected Context mContext;
+	protected CavanAccessibilityPackage<?> mPackage;
 
 	private View mRootView;
 	private Button mButtonNow;
 	private Button mButtonCancel;
 
 	private Dialog mDialog;
-	private long mDismissTime;
 
 	public CountDownDialog(Context context) {
 		mContext = context;
@@ -52,7 +50,7 @@ public class CountDownDialog implements OnClickListener, Runnable {
 		return params;
 	}
 
-	public void show(CavanAccessibilityPackage<?> pkg) {
+	public void show(CavanAccessibilityPackage<?> pkg, long delay) {
 		mPackage = pkg;
 
 		if (mDialog == null) {
@@ -63,7 +61,8 @@ public class CountDownDialog implements OnClickListener, Runnable {
 			mDialog.getWindow().setAttributes(createLayoutParams(0));
 		}
 
-		mRootView.post(this);
+		String text = mContext.getResources().getString(R.string.unpack_delayed, delay / 1000);
+		mButtonNow.setText(text);
 		mDialog.show();
 	}
 
@@ -71,12 +70,6 @@ public class CountDownDialog implements OnClickListener, Runnable {
 		if (mDialog != null) {
 			mDialog.dismiss();
 		}
-
-		mDismissTime = System.currentTimeMillis();
-	}
-
-	public long getDismissOvertime() {
-		return System.currentTimeMillis() - mDismissTime;
 	}
 
 	public boolean isShowing() {
@@ -88,10 +81,15 @@ public class CountDownDialog implements OnClickListener, Runnable {
 	}
 
 	protected void onButtonCancelClicked() {
+		mPackage.setForceUnpackEnable(false);
+		mPackage.setGotoIdleEnable(false);
+		mPackage.clearPackets();
 		dismiss();
 	}
 
 	protected void onButtonNowClicked() {
+		mPackage.setGotoIdleEnable(false);
+		mPackage.setUnpackTime(0);
 		dismiss();
 	}
 
@@ -101,30 +99,6 @@ public class CountDownDialog implements OnClickListener, Runnable {
 			onButtonCancelClicked();
 		} else if (v == mButtonNow) {
 			onButtonNowClicked();
-		}
-	}
-
-	@Override
-	public void run() {
-		mRootView.removeCallbacks(this);
-
-		if (mDialog != null && mDialog.isShowing()) {
-			long delay = mPackage.getUnpackRemain();
-			CavanAndroid.dLog("delay = " + delay);
-
-			if (delay > 0) {
-				String text = mContext.getResources().getString(R.string.unpack_delayed, delay / 1000);
-
-				mButtonNow.setText(text);
-
-				if (delay > 1000) {
-					delay = 1000;
-				}
-
-				mRootView.postDelayed(this, delay);
-			} else {
-				onButtonNowClicked();
-			}
 		}
 	}
 }

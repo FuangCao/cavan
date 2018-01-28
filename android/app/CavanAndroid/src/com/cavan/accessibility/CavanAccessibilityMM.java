@@ -1,13 +1,10 @@
-package com.cavan.weixinredpacket;
+package com.cavan.accessibility;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import android.annotation.SuppressLint;
 import android.app.Notification;
-import android.os.Handler;
-import android.os.Message;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Button;
@@ -17,66 +14,19 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.cavan.accessibility.CavanAccessibilityHelper;
-import com.cavan.accessibility.CavanAccessibilityPackage;
-import com.cavan.accessibility.CavanAccessibilityService;
-import com.cavan.accessibility.CavanAccessibilityWindow;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 
-public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotification> {
+public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotificationMM> {
 
-	private static final int MSG_SHOW_COUNT_DOWN_DIALOG = 1;
-	private static final int MSG_DISMISS_COUNT_DOWN_DIALOG = 2;
-
-	private CountDownDialog mCountDownDialog;
-	private WeixinWindow mBaseWindow = new WeixinWindow("BaseWindow");
-	private WeixinReceiveWindow mReceiveWindowMore = new WeixinReceiveWindow("ReceiveWindowMore");
-	private WeixinChattingWindow mChattingWindowMore = new WeixinChattingWindow("ChattingWindowMore");
+	private BaseWindow mBaseWindow = getBaseWindow("BaseWindow");
+	private ReceiveWindow mReceiveWindow = getReceiveWindow("ReceiveWindowMore");
+	private ChattingWindow mChattingWindow = getChattingWindow("ChattingWindowMore");
 	private HashSet<Integer> mFinishNodes = new HashSet<Integer>();
 
-	@SuppressLint("HandlerLeak")
-	private Handler mHandler = new Handler() {
+	public class BaseWindow extends CavanAccessibilityWindow {
 
-		@Override
-		public void handleMessage(Message msg) {
-			switch (msg.what) {
-			case MSG_SHOW_COUNT_DOWN_DIALOG:
-				if (mCountDownDialog == null) {
-					mCountDownDialog = new CountDownDialog(getService()) {
-
-						@Override
-						protected void onButtonCancelClicked() {
-							super.onButtonCancelClicked();
-							clearPackets();
-						}
-
-						@Override
-						protected void onButtonNowClicked() {
-							super.onButtonNowClicked();
-
-							setUnpackTime(0);
-							CavanAccessibilityMM.this.post();
-						}
-					};
-				}
-
-				mCountDownDialog.show(CavanAccessibilityMM.this);
-				break;
-
-			case MSG_DISMISS_COUNT_DOWN_DIALOG:
-				if (mCountDownDialog != null) {
-					mCountDownDialog.dismiss();
-					mCountDownDialog = null;
-				}
-				break;
-			}
-		}
-	};
-
-	public class WeixinWindow extends CavanAccessibilityWindow {
-
-		public WeixinWindow(String name) {
+		public BaseWindow(String name) {
 			super(name);
 		}
 
@@ -89,12 +39,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 		}
 	}
 
-	public class WeixinChattingWindow extends WeixinWindow {
+	public class ChattingWindow extends BaseWindow {
 
 		protected String mMessageListViewId;
 		protected String mRedPacketNodeId;
 
-		public WeixinChattingWindow(String name) {
+		public ChattingWindow(String name) {
 			super(name);
 		}
 
@@ -302,11 +252,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 		}
 	}
 
-	public class WeixinLauncherWindow extends WeixinChattingWindow {
+	public class LauncherWindow extends ChattingWindow {
 
 		private int mHashCode;
 
-		public WeixinLauncherWindow(String name) {
+		public LauncherWindow(String name) {
 			super(name);
 		}
 
@@ -358,12 +308,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 		}
 	}
 
-	public class WeixinReceiveWindow extends WeixinWindow {
+	public class ReceiveWindow extends BaseWindow {
 
 		private String mUnpackNodeId;
 		private String mBackNodeId;
 
-		public WeixinReceiveWindow(String name) {
+		public ReceiveWindow(String name) {
 			super(name);
 		}
 
@@ -437,18 +387,25 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 
 		@Override
 		public void onEnter() {
-			setPending(true);
+			if (isForceUnpackEnabled()) {
+				setPending(true);
+			}
+		}
+
+		@Override
+		public void onLeave() {
+			setForceUnpackEnable(true);
 		}
 
 		@Override
 		public boolean poll(AccessibilityNodeInfo root, int times) {
 			long time = System.currentTimeMillis();
 			if (mUnpackTime > time) {
-				mHandler.sendEmptyMessage(MSG_SHOW_COUNT_DOWN_DIALOG);
+				showCountDownView();
 				return true;
 			}
 
-			mHandler.sendEmptyMessage(MSG_DISMISS_COUNT_DOWN_DIALOG);
+			dismissCountDownView();
 
 			AccessibilityNodeInfo backNode = findBackNode(root);
 			if (backNode == null) {
@@ -475,11 +432,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 		}
 	}
 
-	public class WeixinDetailWindow extends WeixinWindow {
+	public class DetailWindow extends BaseWindow {
 
 		private String mBackNodeId;
 
-		public WeixinDetailWindow(String name) {
+		public DetailWindow(String name) {
 			super(name);
 		}
 
@@ -533,9 +490,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 		}
 	}
 
-	public class WeixinWebViewWindow extends WeixinWindow {
+	public class WebViewWindow extends BaseWindow {
 
-		public WeixinWebViewWindow(String name) {
+		public WebViewWindow(String name) {
 			super(name);
 		}
 
@@ -552,14 +509,35 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 
 	public CavanAccessibilityMM(CavanAccessibilityService service) {
 		super(service);
-		addWindow(new WeixinLauncherWindow("com.tencent.mm.ui.LauncherUI"));
-		addWindow(new WeixinChattingWindow("com.tencent.mm.ui.chatting.ChattingUI"));
-		addWindow(new WeixinChattingWindow("com.tencent.mm.ui.conversation.BizConversationUI"));
-		addWindow(new WeixinReceiveWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI"));
-		addWindow(new WeixinReceiveWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiReceiveUI"));
-		addWindow(new WeixinDetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI"));
-		addWindow(new WeixinDetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI"));
-		addWindow(new WeixinWebViewWindow("com.tencent.mm.plugin.webview.ui.tools.WebViewUI"));
+	}
+
+	public boolean isWebViewUi() {
+		BaseWindow win = (BaseWindow) mWindow;
+		return (win != null && win.isWebviewUi() && isCurrentPackage());
+	}
+
+	public BaseWindow getBaseWindow(String name) {
+		return new BaseWindow(name);
+	}
+
+	public ReceiveWindow getReceiveWindow(String name) {
+		return new ReceiveWindow(name);
+	}
+
+	public ChattingWindow getChattingWindow(String name) {
+		return new ChattingWindow(name);
+	}
+
+	public CavanAccessibilityWindow getWebViewWindow(String name) {
+		return new WebViewWindow(name);
+	}
+
+	public CavanAccessibilityWindow getDetailWindow(String name) {
+		return new DetailWindow(name);
+	}
+
+	public CavanAccessibilityWindow getLauncherWindow(String name) {
+		return new LauncherWindow(name);
 	}
 
 	@Override
@@ -574,19 +552,26 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 		}
 
 		if (name.startsWith("com.tencent.mm.ui.chatting.En_")) {
-			return mChattingWindowMore;
+			return mChattingWindow;
 		}
 
 		if (name.startsWith("com.tencent.mm.plugin.luckymoney.ui.En_")) {
-			return mReceiveWindowMore;
+			return mReceiveWindow;
 		}
 
 		return null;
 	}
 
-	public boolean isWebViewUi() {
-		WeixinWindow win = (WeixinWindow) mWindow;
-		return (win != null && win.isWebviewUi() && isCurrentPackage());
+	@Override
+	public void initWindows() {
+		addWindow(getLauncherWindow("com.tencent.mm.ui.LauncherUI"));
+		addWindow(getChattingWindow("com.tencent.mm.ui.chatting.ChattingUI"));
+		addWindow(getChattingWindow("com.tencent.mm.ui.conversation.BizConversationUI"));
+		addWindow(getReceiveWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI"));
+		addWindow(getReceiveWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiReceiveUI"));
+		addWindow(getDetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI"));
+		addWindow(getDetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI"));
+		addWindow(getWebViewWindow("com.tencent.mm.plugin.webview.ui.tools.WebViewUI"));
 	}
 
 	@Override
@@ -595,12 +580,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 	}
 
 	@Override
-	public long getUnpackDelay() {
-		return MainActivity.getAutoUnpackMM(mService) * 1000;
-	}
-
-	@Override
-	public synchronized boolean addPacket(CavanNotification packet) {
+	public synchronized boolean addPacket(CavanNotificationMM packet) {
 		if (super.addPacket(packet)) {
 			mFinishNodes.clear();
 			return true;
@@ -610,27 +590,18 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 	}
 
 	@Override
-	public boolean launch() {
-		if (mPackets.size() > 0) {
-			CavanNotification notification = mPackets.get(0);
-			if (notification == null) {
-				return true;
-			}
-
-			if (notification.send()) {
-				return true;
-			}
-		}
-
-		return super.launch();
+	public void onPackageUpdated() {
+		mBaseWindow.onPackageUpdated();
+		mReceiveWindow.onPackageUpdated();
+		mChattingWindow.onPackageUpdated();
 	}
 
 	@Override
 	public void onNotificationStateChanged(Notification notification) {
-		CavanNotification cn = new CavanNotification(notification);
-
+		CavanNotificationMM cn = new CavanNotificationMM(notification);
 		if (cn.isRedPacket()) {
 			addPacket(cn);
 		}
 	}
+
 }
