@@ -18,7 +18,7 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanString;
 
-public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotificationMM> {
+public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 	private BaseWindow mBaseWindow = getBaseWindow("BaseWindow");
 	private ReceiveWindow mReceiveWindow = getReceiveWindow("ReceiveWindowMore");
@@ -587,7 +587,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 	}
 
 	@Override
-	public synchronized boolean addPacket(CavanNotificationMM packet) {
+	public synchronized boolean addPacket(CavanRedPacket packet) {
 		if (super.addPacket(packet)) {
 			mFinishNodes.clear();
 			return true;
@@ -605,9 +605,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 
 	@Override
 	public void onNotificationStateChanged(Notification notification) {
-		CavanNotificationMM cn = new CavanNotificationMM(notification);
-		if (cn.isRedPacket()) {
-			addPacket(cn);
+		CavanNotificationMM packet = new CavanNotificationMM(this, notification);
+		if (packet.isRedPacket()) {
+			addPacket(packet);
 		}
 	}
 

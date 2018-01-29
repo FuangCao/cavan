@@ -29,8 +29,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private static final int MSG_SCREEN_ON = 1;
 	private static final int MSG_SHOW_COUNT_DOWN = 2;
 
-	private HashMap<String, CavanAccessibilityPackage<?>> mPackages = new HashMap<String, CavanAccessibilityPackage<?>>();
-	private CavanAccessibilityPackage<?> mPackage;
+	private HashMap<String, CavanAccessibilityPackage> mPackages = new HashMap<String, CavanAccessibilityPackage>();
+	private CavanAccessibilityPackage mPackage;
 	private boolean mUserPresent = true;
 	private boolean mScreenOn = true;
 	private CavanKeyguardLock mKeyguardLock = new CavanKeyguardLock();
@@ -49,7 +49,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			}
 		}
 
-		public int poll(CavanAccessibilityPackage<?> pkg) {
+		public int poll(CavanAccessibilityPackage pkg) {
 			int retry = 0;
 
 			CavanAndroid.dLog("PollThread polling: " + pkg.getPackageName());
@@ -117,7 +117,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				boolean idle = false;
 
 				while (mScreenOn) {
-					CavanAccessibilityPackage<?> pkg = getPendingPackage();
+					CavanAccessibilityPackage pkg = getPendingPackage();
 					if (pkg == null) {
 						break;
 					}
@@ -164,7 +164,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				break;
 
 			case MSG_SHOW_COUNT_DOWN:
-				CavanAccessibilityPackage<?> pkg = (CavanAccessibilityPackage<?>) msg.obj;
+				CavanAccessibilityPackage pkg = (CavanAccessibilityPackage) msg.obj;
 				if (pkg != null) {
 					long remain = pkg.getUnpackRemain();
 					if (remain > 0) {
@@ -199,7 +199,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				mScreenOn = true;
 				onScreenOn();
 
-				CavanAccessibilityPackage<?> pkg = getPendingPackage();
+				CavanAccessibilityPackage pkg = getPendingPackage();
 				if (pkg != null) {
 					acquireScreenLock();
 					Message message = mHandler.obtainMessage(MSG_SCREEN_ON, pkg);
@@ -239,7 +239,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		CavanAndroid.dLog("onCountDownCompleted");
 	}
 
-	protected void onCountDownUpdated(CavanAccessibilityPackage<?> pkg, long remain) {
+	protected void onCountDownUpdated(CavanAccessibilityPackage pkg, long remain) {
 		CavanAndroid.dLog("onCountDownUpdated: " + remain);
 	}
 
@@ -260,11 +260,11 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return mScreenOn;
 	}
 
-	public synchronized CavanAccessibilityPackage<?> getPackage() {
+	public synchronized CavanAccessibilityPackage getPackage() {
 		return mPackage;
 	}
 
-	public synchronized boolean setPackage(CavanAccessibilityPackage<?> pkg) {
+	public synchronized boolean setPackage(CavanAccessibilityPackage pkg) {
 		if (mPackage == pkg) {
 			return false;
 		}
@@ -334,14 +334,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 		mKeyguardLock.release();
 	}
 
-	public synchronized CavanAccessibilityPackage<?> getPendingPackage() {
-		Iterator<CavanAccessibilityPackage<?>> iterator = mPackages.values().iterator();
+	public synchronized CavanAccessibilityPackage getPendingPackage() {
+		Iterator<CavanAccessibilityPackage> iterator = mPackages.values().iterator();
 
 		while (iterator.hasNext()) {
-			CavanAccessibilityPackage<?> pkg = iterator.next();
+			CavanAccessibilityPackage pkg = iterator.next();
 			if (pkg.isPending()) {
 				while (iterator.hasNext()) {
-					CavanAccessibilityPackage<?> node = iterator.next();
+					CavanAccessibilityPackage node = iterator.next();
 					if (node.isPending() && node.getUnpackTime() < pkg.getUnpackTime()) {
 						pkg = node;
 					}
@@ -354,12 +354,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return null;
 	}
 
-	public synchronized void addPackage(CavanAccessibilityPackage<?> pkg) {
+	public synchronized void addPackage(CavanAccessibilityPackage pkg) {
 		CavanAndroid.dLog("addPackage: " + pkg.getPackageName());
 		mPackages.put(pkg.getPackageName(), pkg);
 	}
 
-	public synchronized CavanAccessibilityPackage<?> getPackage(CharSequence name) {
+	public synchronized CavanAccessibilityPackage getPackage(CharSequence name) {
 		if (name == null) {
 			return null;
 		}
@@ -389,7 +389,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		String[] packages = new String[mPackages.size()];
 		int i = 0;
 
-		for (CavanAccessibilityPackage<?> pkg : mPackages.values()) {
+		for (CavanAccessibilityPackage pkg : mPackages.values()) {
 			packages[i++] = pkg.getPackageName();
 		}
 
@@ -418,7 +418,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	@Override
 	public void onAccessibilityEvent(AccessibilityEvent event) {
 		try {
-			CavanAccessibilityPackage<?> pkg = getPackage(event.getPackageName());
+			CavanAccessibilityPackage pkg = getPackage(event.getPackageName());
 			if (pkg != null) {
 				pkg.onAccessibilityEvent(event);
 			}
@@ -457,7 +457,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	public void onCreate() {
 		super.onCreate();
 
-		for (CavanAccessibilityPackage<?> pkg : mPackages.values()) {
+		for (CavanAccessibilityPackage pkg : mPackages.values()) {
 			pkg.onCreate();
 		}
 
@@ -473,14 +473,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 	public void onDestroy() {
 		unregisterReceiver(mBroadcastReceiver);
 
-		for (CavanAccessibilityPackage<?> pkg : mPackages.values()) {
+		for (CavanAccessibilityPackage pkg : mPackages.values()) {
 			pkg.onDestroy();
 		}
 
 		super.onDestroy();
 	}
 
-	public void showCountDownView(CavanAccessibilityPackage<?> pkg) {
+	public void showCountDownView(CavanAccessibilityPackage pkg) {
 		mHandler.obtainMessage(MSG_SHOW_COUNT_DOWN, pkg).sendToTarget();
 	}
 

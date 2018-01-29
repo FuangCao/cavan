@@ -3,9 +3,9 @@ package com.cavan.weixinredpacket;
 import com.cavan.accessibility.CavanAccessibilityMM;
 import com.cavan.accessibility.CavanAccessibilityService;
 
-public class WeixinAccessibilityPackage extends CavanAccessibilityMM {
+public class AccessibilityPackageMM extends CavanAccessibilityMM {
 
-	public WeixinAccessibilityPackage(CavanAccessibilityService service) {
+	public AccessibilityPackageMM(CavanAccessibilityService service) {
 		super(service);
 	}
 

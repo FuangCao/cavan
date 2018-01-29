@@ -5,8 +5,9 @@ import android.app.PendingIntent;
 import android.app.PendingIntent.CanceledException;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.java.CavanString;
 
-public abstract class CavanNotification implements ICavanRedPacket {
+public abstract class CavanNotification extends CavanRedPacket {
 
 	protected Notification mNotification;
 	protected String mTitle;
@@ -15,7 +16,9 @@ public abstract class CavanNotification implements ICavanRedPacket {
 	protected String mGroupName;
 	protected int mSendTimes;
 
-	public CavanNotification(Notification notification) {
+	public CavanNotification(CavanAccessibilityPackage pkg, Notification notification) {
+		super(pkg);
+
 		mNotification = notification;
 
 		CharSequence title = notification.extras.getCharSequence(Notification.EXTRA_TITLE);
@@ -59,6 +62,26 @@ public abstract class CavanNotification implements ICavanRedPacket {
 
 	public String getGroupName() {
 		return mGroupName;
+	}
+
+	public boolean isRedPacket(String prefix) {
+		if (mContent == null) {
+			return false;
+		}
+
+		if (!mContent.startsWith(prefix)) {
+			return false;
+		}
+
+		if (mContent.contains("测") || mContent.contains("挂")) {
+			return false;
+		}
+
+		if (CavanString.getLineCount(mContent) > 1) {
+			return false;
+		}
+
+		return true;
 	}
 
 	public boolean isRedPacket() {

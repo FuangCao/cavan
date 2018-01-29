@@ -15,7 +15,7 @@ import com.cavan.accessibility.CavanAccessibilityPackage;
 public class CountDownDialog implements OnClickListener {
 
 	protected Context mContext;
-	protected CavanAccessibilityPackage<?> mPackage;
+	protected CavanAccessibilityPackage mPackage;
 
 	private View mRootView;
 	private Button mButtonNow;
@@ -50,7 +50,7 @@ public class CountDownDialog implements OnClickListener {
 		return params;
 	}
 
-	public void show(CavanAccessibilityPackage<?> pkg, long delay) {
+	public void show(CavanAccessibilityPackage pkg, long delay) {
 		mPackage = pkg;
 
 		if (mDialog == null) {

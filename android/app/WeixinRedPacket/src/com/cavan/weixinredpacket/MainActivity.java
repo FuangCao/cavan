@@ -41,9 +41,9 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 	protected void onResume() {
 		super.onResume();
 
-		if (WeixinAccessibilityService.instance != null) {
+		if (AccessibilityServiceMM.instance != null) {
 			mPreferenceAccessibility.setSummary(R.string.opened);
-		} else if (CavanAndroid.isAccessibilityServiceEnabled(this, WeixinAccessibilityService.class)) {
+		} else if (CavanAndroid.isAccessibilityServiceEnabled(this, AccessibilityServiceMM.class)) {
 			mPreferenceAccessibility.setSummary(R.string.please_click_here_reopen);
 		} else {
 			mPreferenceAccessibility.setSummary(R.string.please_click_here_open);

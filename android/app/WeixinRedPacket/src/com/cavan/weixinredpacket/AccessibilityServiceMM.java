@@ -6,14 +6,14 @@ import com.cavan.accessibility.CavanAccessibilityPackage;
 import com.cavan.accessibility.CavanAccessibilityService;
 import com.cavan.android.CavanAndroid;
 
-public class WeixinAccessibilityService extends CavanAccessibilityService {
+public class AccessibilityServiceMM extends CavanAccessibilityService {
 
-	public static WeixinAccessibilityService instance;
+	public static AccessibilityServiceMM instance;
 
 	private CountDownDialog mCountDownDialog;
 
-	public WeixinAccessibilityService() {
-		addPackage(new WeixinAccessibilityPackage(this));
+	public AccessibilityServiceMM() {
+		addPackage(new AccessibilityPackageMM(this));
 	}
 
 	@Override
@@ -47,7 +47,7 @@ public class WeixinAccessibilityService extends CavanAccessibilityService {
 	}
 
 	@Override
-	protected void onCountDownUpdated(CavanAccessibilityPackage<?> pkg, long remain) {
+	protected void onCountDownUpdated(CavanAccessibilityPackage pkg, long remain) {
 		if (mCountDownDialog == null) {
 			mCountDownDialog = new CountDownDialog(this);
 		}

@@ -11,7 +11,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanString;
 
-public abstract class CavanAccessibilityPackage<E extends ICavanRedPacket> {
+public abstract class CavanAccessibilityPackage {
 
 	public static int WAIT_DELAY = 500;
 	public static int BACK_DELAY = 5000;
@@ -19,7 +19,7 @@ public abstract class CavanAccessibilityPackage<E extends ICavanRedPacket> {
 	public static int LOCK_DELAY = 2000;
 
 	protected HashMap<String, CavanAccessibilityWindow> mWindows = new HashMap<String, CavanAccessibilityWindow>();
-	protected LinkedList<E> mPackets = new LinkedList<E>();
+	protected LinkedList<CavanRedPacket> mPackets = new LinkedList<CavanRedPacket>();
 
 	protected CavanAccessibilityService mService;
 	protected CavanAccessibilityWindow mWindow;
@@ -94,7 +94,7 @@ public abstract class CavanAccessibilityPackage<E extends ICavanRedPacket> {
 		return 0;
 	}
 
-	public synchronized boolean addPacket(E packet) {
+	public synchronized boolean addPacket(CavanRedPacket packet) {
 		long delay = getUnpackDelay();
 		if (delay < 0) {
 			return false;
@@ -123,7 +123,7 @@ public abstract class CavanAccessibilityPackage<E extends ICavanRedPacket> {
 		return true;
 	}
 
-	public synchronized boolean removePacket(E packet) {
+	public synchronized boolean removePacket(CavanRedPacket packet) {
 		if (mPackets.remove(packet)) {
 			if (mPackets.isEmpty()) {
 				setPending(false);
@@ -217,7 +217,7 @@ public abstract class CavanAccessibilityPackage<E extends ICavanRedPacket> {
 		CavanAndroid.dLog("Launch: " + getPackageName());
 
 		if (mPackets.size() > 0) {
-			ICavanRedPacket packet = mPackets.get(0);
+			CavanRedPacket packet = mPackets.get(0);
 			if (packet == null) {
 				return true;
 			}

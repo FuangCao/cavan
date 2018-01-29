@@ -6,8 +6,8 @@ import com.cavan.java.CavanString;
 
 public class CavanNotificationMM extends CavanNotification {
 
-	public CavanNotificationMM(Notification notification) {
-		super(notification);
+	public CavanNotificationMM(CavanAccessibilityPackage pkg, Notification notification) {
+		super(pkg, notification);
 	}
 
 	@Override
@@ -36,23 +36,7 @@ public class CavanNotificationMM extends CavanNotification {
 
 	@Override
 	public boolean isRedPacket() {
-		if (mContent == null) {
-			return false;
-		}
-
-		if (!mContent.startsWith("[微信红包]")) {
-			return false;
-		}
-
-		if (mContent.contains("测") || mContent.contains("挂")) {
-			return false;
-		}
-
-		if (CavanString.getLineCount(mContent) > 1) {
-			return false;
-		}
-
-		return true;
+		return isRedPacket("[微信红包]");
 	}
 
 }
