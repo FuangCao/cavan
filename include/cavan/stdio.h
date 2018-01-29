@@ -46,13 +46,15 @@ using namespace std;
 #define __THROW
 #endif
 
-#ifndef __THROWNL
-#define __THROWNL __THROW
-#endif
-
 #ifdef __cplusplus
-#undef __THROWNL
-#define __THROWNL
+ #ifdef __THROWNL
+ #undef __THROWNL
+ #endif
+ #define __THROWNL
+#else
+ #ifndef __THROWNL
+ #define __THROWNL __THROW
+ #endif
 #endif
 
 #ifndef _POSIX_VDISABLE

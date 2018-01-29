@@ -59,6 +59,7 @@ public abstract class CavanAccessibilityPackage<E extends ICavanRedPacket> {
 			}
 
 			mWindow = win;
+			mPollTimes = 0;
 		}
 
 		if (win != null) {
@@ -195,11 +196,11 @@ public abstract class CavanAccessibilityPackage<E extends ICavanRedPacket> {
 	}
 
 	public synchronized void setForceUnpackEnable(boolean enabled) {
-		CavanAndroid.dLog("mForceUnpack = " + enabled);
 		mForceUnpack = enabled;
 	}
 
 	public synchronized boolean isForceUnpackEnabled() {
+		CavanAndroid.dLog("mForceUnpack = " + mForceUnpack);
 		return mForceUnpack;
 	}
 
@@ -250,24 +251,13 @@ public abstract class CavanAccessibilityPackage<E extends ICavanRedPacket> {
 	}
 
 	protected synchronized CavanAccessibilityWindow onWindowStateChanged(AccessibilityEvent event) {
-		touchUpdateTime();
-
-		if (mUnlockTime > 0) {
-			setUnlockTime(0);
-		}
-
-		mPollTimes = 0;
-
-		if (isPending()) {
-			post();
-		}
-
 		String name = CavanString.fromCharSequence(event.getClassName(), null);
 		if (name == null) {
 			return null;
 		}
 
 		CavanAndroid.dLog("onWindowStateChanged: " + getPackageName() + "/" + name);
+		touchUpdateTime();
 
 		if (name.startsWith("android.widget.")) {
 			return mWindow;
@@ -275,6 +265,11 @@ public abstract class CavanAccessibilityPackage<E extends ICavanRedPacket> {
 
 		CavanAccessibilityWindow win = getWindow(name);
 		setWindow(win);
+
+		if (isPending()) {
+			setUnlockTime(0);
+		}
+
 		return win;
 	}
 

@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
+import com.cavan.java.CavanString;
 
 public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotificationMM> {
 
@@ -144,7 +145,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 				List<AccessibilityNodeInfo> childs = root.findAccessibilityNodeInfosByViewId(mRedPacketNodeId);
 				if (childs != null) {
 					for (AccessibilityNodeInfo child : childs) {
-						if ("微信红包".equals(child.getText())) {
+						String text = CavanString.fromCharSequence(child.getText(), null);
+						if (text != null && "微信红包".equals(text)) {
 							AccessibilityNodeInfo node = child.getParent();
 							if (node != null) {
 								if (LinearLayout.class.getName().equals(node.getClassName())) {
@@ -164,6 +166,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 
 			AccessibilityNodeInfo listView = findMessageListView(root);
 			if (listView == null) {
+				CavanAndroid.eLog("Failed to findMessageListView");
 				return nodes;
 			}
 
@@ -420,8 +423,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage<CavanNotific
 				AccessibilityNodeInfo button = findUnpckNode(root);
 				if (button != null) {
 					CavanAccessibilityHelper.performClickAndRecycle(button);
-				} else {
+				} else if (getPacketCount() > 0) {
 					CavanAccessibilityHelper.performClick(backNode);
+				} else {
+					setPending(false);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

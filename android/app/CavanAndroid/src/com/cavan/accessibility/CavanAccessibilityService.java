@@ -24,6 +24,7 @@ import com.cavan.android.SystemProperties;
 public class CavanAccessibilityService extends AccessibilityService {
 
 	public static final int POLL_DELAY = 500;
+	public static final int LAUNCH_DELAY = 2000;
 
 	private static final int MSG_SCREEN_ON = 1;
 	private static final int MSG_SHOW_COUNT_DOWN = 2;
@@ -52,12 +53,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 			int retry = 0;
 
 			CavanAndroid.dLog("PollThread polling: " + pkg.getPackageName());
-
-			try {
-				pkg.launch();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
 
 			while (mScreenOn) {
 				long delay;
@@ -91,7 +86,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 								return -1;
 							}
 
-							delay = POLL_DELAY;
+							pkg.launch();
+							delay = LAUNCH_DELAY;
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
