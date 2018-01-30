@@ -69,7 +69,7 @@ void *list_queue_get_tail_data(struct list_queue *queue)
 
 // ================================================================================
 
-static int cavan_data_queue_thread_handler(struct cavan_thread *thread, void *data)
+static int cavan_data_queue_thread_handler(cavan_thread_t *thread, void *data)
 {
 	struct double_link_node *node;
 	struct cavan_data_queue *queue = data;
@@ -89,7 +89,7 @@ static int cavan_data_queue_thread_handler(struct cavan_thread *thread, void *da
 int cavan_data_queue_init(struct cavan_data_queue *queue, int offset, size_t node_size, int pool_size, void *data)
 {
 	int ret;
-	struct cavan_thread *thread;
+	cavan_thread_t *thread;
 
 	if (queue->handler == NULL) {
 		pr_red_info("queue->handler == NULL");

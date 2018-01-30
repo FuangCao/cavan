@@ -60,7 +60,7 @@ struct cavan_display_device {
 	cavan_display_color_t bg_color;
 
 	pthread_mutex_t lock;
-	struct cavan_thread thread;
+	cavan_thread_t thread;
 
 	int cx, cy;
 	int cx_min, cy_min;

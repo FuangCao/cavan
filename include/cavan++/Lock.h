@@ -50,12 +50,12 @@ public:
 };
 
 class MutexLock : public ILock {
-private:
+protected:
 	pthread_mutex_t mLock;
 
 public:
-	MutexLock(const pthread_mutexattr_t *attr = NULL) {
-		pthread_mutex_init(&mLock, attr);
+	MutexLock(void) {
+		init();
 	}
 
 	~MutexLock(void) {
@@ -73,21 +73,16 @@ public:
 	virtual int tryLock() {
 		return pthread_mutex_trylock(&mLock);
 	}
+
+protected:
+	virtual int init(void) {
+		return pthread_mutex_init(&mLock, NULL);
+	}
 };
 
 class ThreadLock : public MutexLock {
-private:
-	int mHeldCount;
-	pthread_t mOwner;
-
-public:
-	ThreadLock(bool acquire = false);
-	bool isHeldBy(pthread_t owner) { return pthread_equal(owner, mOwner); }
-	bool isHeld(void) { return isHeldBy(pthread_self()); }
-	int acquire(bool trylock);
-	virtual int acquire(void) { return acquire(false); }
-	virtual int tryLock(void) { return acquire(true); }
-	virtual int release(void);
+protected:
+	virtual int init(void);
 };
 
 class AutoLock {

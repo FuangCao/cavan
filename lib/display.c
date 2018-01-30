@@ -995,7 +995,7 @@ void cavan_display_refresh_sync(struct cavan_display_device *display)
 	cavan_display_unlock(display);
 }
 
-static int cavan_display_refresh_thread_handler(struct cavan_thread *thread, void *data)
+static int cavan_display_refresh_thread_handler(cavan_thread_t *thread, void *data)
 {
 	cavan_display_refresh_sync(data);
 	cavan_thread_suspend(thread);
@@ -1007,7 +1007,7 @@ int cavan_display_start(struct cavan_display_device *display)
 {
 	int ret;
 	struct cavan_font *font;
-	struct cavan_thread *thread;
+	cavan_thread_t *thread;
 
 	if (display == NULL) {
 		pr_red_info("display == NULL");

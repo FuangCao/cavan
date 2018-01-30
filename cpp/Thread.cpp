@@ -22,7 +22,7 @@
 
 #define CAVAN_THREAD_DEBUG 0
 
-int CavanThread::CavanThreadHandler(struct cavan_thread *_thread, void *data)
+int CavanThread::CavanThreadHandler(cavan_thread_t *_thread, void *data)
 {
 	CavanThread *thread = (CavanThread *) data;
 

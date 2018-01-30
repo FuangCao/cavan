@@ -42,7 +42,7 @@
 	TIME_DAY(365 * (time))
 
 struct cavan_alarm_thread {
-	struct cavan_thread thread;
+	cavan_thread_t thread;
 
 	pthread_mutex_t lock;
 	struct double_link link;

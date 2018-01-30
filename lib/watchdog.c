@@ -20,7 +20,7 @@
 #include <cavan.h>
 #include <cavan/watchdog.h>
 
-static int cavan_watchdog_thread_handler(struct cavan_thread *thread, void *data)
+static int cavan_watchdog_thread_handler(cavan_thread_t *thread, void *data)
 {
 	int ret;
 	struct cavan_watchdog *watchdog = data;
@@ -39,7 +39,7 @@ static int cavan_watchdog_thread_handler(struct cavan_thread *thread, void *data
 int cavan_watchdog_init(struct cavan_watchdog *watchdog, u32 msec, void *data)
 {
 	int ret;
-	struct cavan_thread *thread = &watchdog->thread;
+	cavan_thread_t *thread = &watchdog->thread;
 
 	thread->name = "WATCHDOG";
 	thread->wake_handker = NULL;

@@ -136,7 +136,7 @@ static int cavan_net_bridge_transfer(struct cavan_net_bridge_port *port)
 	return 0;
 }
 
-static int cavan_net_bridge_thread_handler(struct cavan_thread *thread, void *data)
+static int cavan_net_bridge_thread_handler(cavan_thread_t *thread, void *data)
 {
 	int count;
 	struct cavan_net_bridge *bridge = data;
@@ -228,7 +228,7 @@ out_cavan_net_bridge_unlock:
 int cavan_net_bridge_init(struct cavan_net_bridge *bridge)
 {
 	int ret;
-	struct cavan_thread *thread;
+	cavan_thread_t *thread;
 
 	ret = pthread_mutex_init(&bridge->lock, NULL);
 	if (ret < 0) {

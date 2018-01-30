@@ -1347,7 +1347,7 @@ static void cavan_application_message_queue_handler(cavan_input_message_t *messa
 	}
 }
 
-static int cavan_application_main_thread_handler(struct cavan_thread *thread, void *data)
+static int cavan_application_main_thread_handler(cavan_thread_t *thread, void *data)
 {
 	int ret;
 	u32 event;
@@ -1374,7 +1374,7 @@ static int cavan_application_main_thread_handler(struct cavan_thread *thread, vo
 int cavan_application_init(struct cavan_application_context *context, struct cavan_display_device *display, void *data)
 {
 	int ret;
-	struct cavan_thread *thread;
+	cavan_thread_t *thread;
 	struct cavan_input_service *input_service;
 
 	ret = pthread_mutex_init(&context->lock, NULL);

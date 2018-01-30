@@ -16,7 +16,7 @@ struct list_queue {
 struct cavan_data_queue {
 	void *private_data;
 	struct double_link link;
-	struct cavan_thread thread;
+	cavan_thread_t thread;
 	struct cavan_data_pool pool;
 
 	void (*handler)(void *addr, void *data);
@@ -27,7 +27,7 @@ struct cavan_mem_queue {
 	char *head, *head_peek;
 	char *tail, *tail_peek;
 
-	struct cavan_lock lock;
+	cavan_lock_t lock;
 };
 
 int list_queue_init(struct list_queue *queue, int count);

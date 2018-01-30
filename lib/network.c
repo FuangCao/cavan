@@ -4699,7 +4699,7 @@ int cavan_inet_get_ifconfig_list2(struct cavan_inet_ifconfig *configs, int max_c
 	return ret;
 }
 
-static int udp_discovery_service_handler(struct cavan_thread *thread, void *data)
+static int udp_discovery_service_handler(cavan_thread_t *thread, void *data)
 {
 	ssize_t rdlen;
 	ssize_t wrlen;
@@ -4737,7 +4737,7 @@ int udp_discovery_service_start(struct udp_discovery_service *service, const cha
 	int ret;
 	va_list ap;
 	struct network_url url;
-	struct cavan_thread *thread = &service->thread;
+	cavan_thread_t *thread = &service->thread;
 	struct network_service *udp_service = &service->service;
 
 	network_url_init(&url, "udp", NULL, service->port, NULL);

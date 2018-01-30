@@ -21,7 +21,7 @@
 #include <cavan/timer.h>
 #include <cavan/speed_detector.h>
 
-static int speed_detector_handler(struct cavan_thread *thread, void *data)
+static int speed_detector_handler(cavan_thread_t *thread, void *data)
 {
 	u32 count;
 	struct speed_detector *detector = data;
@@ -47,7 +47,7 @@ static int speed_detector_handler(struct cavan_thread *thread, void *data)
 
 int speed_detector_start(struct speed_detector *detector, u32 interval)
 {
-	struct cavan_thread *thread = &detector->thread;
+	cavan_thread_t *thread = &detector->thread;
 
 	detector->interval = interval;
 	detector->loop_count = 0;

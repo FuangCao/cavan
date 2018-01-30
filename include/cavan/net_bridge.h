@@ -27,7 +27,7 @@ struct cavan_net_bridge_port {
 };
 
 struct cavan_net_bridge {
-	struct cavan_thread thread;
+	cavan_thread_t thread;
 	pthread_mutex_t lock;
 	bool port_changed;
 	struct cavan_net_bridge_port *head;

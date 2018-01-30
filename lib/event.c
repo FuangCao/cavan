@@ -1696,7 +1696,7 @@ static int cavan_event_open_devices(struct cavan_event_service *service)
 	return count;
 }
 
-static int cavan_event_service_handler(struct cavan_thread *thread, void *data)
+static int cavan_event_service_handler(cavan_thread_t *thread, void *data)
 {
 	int ret;
 	ssize_t rdlen;
@@ -1791,7 +1791,7 @@ int cavan_event_service_start(struct cavan_event_service *service, void *data)
 	struct double_link_node *node;
 	struct cavan_event_device *dev;
 	struct pollfd *pfd, *pfd_end;
-	struct cavan_thread *thread;
+	cavan_thread_t *thread;
 
 	if (service == NULL) {
 		pr_red_info("service == NULL");

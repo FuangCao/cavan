@@ -360,7 +360,7 @@ void cavan_dynamic_service_destroy(struct cavan_dynamic_service *service)
 	free(service);
 }
 
-static int cavan_dynamic_service_keepalive_handler(struct cavan_thread *thread, void *data)
+static int cavan_dynamic_service_keepalive_handler(cavan_thread_t *thread, void *data)
 {
 	struct cavan_dynamic_service *service = data;
 
@@ -391,7 +391,7 @@ out_exit:
 	return 0;
 }
 
-static int cavan_dynamic_service_epoll_handler(struct cavan_thread *thread, void *data)
+static int cavan_dynamic_service_epoll_handler(cavan_thread_t *thread, void *data)
 {
 	struct cavan_dynamic_service *service = data;
 	time_t timeAlive = time(NULL);
@@ -743,7 +743,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 	pd_bold_info("conn_size = %" PRINT_FORMAT_SIZE, service->conn_size);
 
 	if (service->epoll) {
-		struct cavan_thread *thread;
+		cavan_thread_t *thread;
 		int fd;
 
 		fd = epoll_create(100);
@@ -768,7 +768,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 			goto out_service_stop;
 		}
 	} else if (service->keepalive) {
-		struct cavan_thread *thread = &service->epoll_thread;
+		cavan_thread_t *thread = &service->epoll_thread;
 
 		thread->name = "KEEP_ALIVE";
 		thread->wake_handker = NULL;

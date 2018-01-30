@@ -127,7 +127,7 @@ static inline void cavan_alarm_insert_node_base(struct cavan_alarm_thread *threa
 	double_link_cond_insert_append(&thread->link, &node->node, &node->time, cavan_alarm_insert_matcher);
 }
 
-static int cavan_alarm_thread_handler(struct cavan_thread *thread, void *data)
+static int cavan_alarm_thread_handler(cavan_thread_t *thread, void *data)
 {
 	struct cavan_alarm_thread *alarm_thread = data;
 	struct double_link_node *node;
@@ -183,7 +183,7 @@ static void cavan_alarm_sighandler(int signum)
 int cavan_alarm_thread_init(struct cavan_alarm_thread *alarm_thread)
 {
 	int ret;
-	struct cavan_thread *thread;
+	cavan_thread_t *thread;
 
 	ret = pthread_mutex_init(&alarm_thread->lock, NULL);
 	if (ret < 0) {

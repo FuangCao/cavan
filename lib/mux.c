@@ -20,7 +20,7 @@
 #include <cavan.h>
 #include <cavan/mux.h>
 
-static int cavan_mux_recv_thread_handler(struct cavan_thread *thread, void *data)
+static int cavan_mux_recv_thread_handler(cavan_thread_t *thread, void *data)
 {
 	char *p;
 	ssize_t rdlen, wrlen;
@@ -49,7 +49,7 @@ static int cavan_mux_recv_thread_handler(struct cavan_thread *thread, void *data
 	return 0;
 }
 
-static int cavan_mux_send_thread_handler(struct cavan_thread *thread, void *data)
+static int cavan_mux_send_thread_handler(cavan_thread_t *thread, void *data)
 {
 	struct cavan_mux *mux = data;
 	struct cavan_mux_package_raw *package_raw;
@@ -90,7 +90,7 @@ int cavan_mux_init(struct cavan_mux *mux, void *data)
 {
 	int i;
 	int ret;
-	struct cavan_thread *thread;
+	cavan_thread_t *thread;
 
 	if (mux->send == NULL || mux->recv == NULL) {
 		pr_red_info("mux->send = %p, mux->recv = %p", mux->send, mux->recv);

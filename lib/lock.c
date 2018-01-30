@@ -20,48 +20,30 @@
 #include <cavan.h>
 #include <cavan/lock.h>
 
-static pthread_mutex_t g_cavan_lock_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-void cavan_lock_init(cavan_lock_t *lock)
+int cavan_lock_init(cavan_lock_t *lock)
 {
-	pthread_mutex_init(&lock->mutex, NULL);
-	lock->owner = 0;
-	lock->count = 0;
-}
+	pthread_mutexattr_t attr;
+	int ret;
 
-void cavan_lock_deinit(cavan_lock_t *lock)
-{
-	pthread_mutex_destroy(&lock->mutex);
-}
-
-void cavan_lock_acquire(cavan_lock_t *lock)
-{
-	pthread_t owner = pthread_self();
-
-	pthread_mutex_lock(&g_cavan_lock_mutex);
-
-	if (lock->count > 0 && pthread_equal(owner, lock->owner)) {
-		lock->count++;
-	} else {
-		pthread_mutex_unlock(&g_cavan_lock_mutex);
-		pthread_mutex_lock(&lock->mutex);
-		pthread_mutex_lock(&g_cavan_lock_mutex);
-		lock->owner = owner;
-		lock->count = 1;
+	ret = pthread_mutexattr_init(&attr);
+	if (ret < 0) {
+		pr_err_info("pthread_mutexattr_init: %d", ret);
+		return ret;
 	}
 
-	pthread_mutex_unlock(&g_cavan_lock_mutex);
-}
-
-void cavan_lock_release(cavan_lock_t *lock)
-{
-	pthread_t owner = pthread_self();
-
-	pthread_mutex_lock(&g_cavan_lock_mutex);
-
-	if (pthread_equal(owner, lock->owner) && --lock->count == 0) {
-		pthread_mutex_unlock(&lock->mutex);
+	ret = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+	if (ret < 0) {
+		pr_err_info("pthread_mutexattr_settype: %d", ret);
+		goto out_pthread_mutexattr_destroy;
 	}
 
-	pthread_mutex_unlock(&g_cavan_lock_mutex);
+	ret = pthread_mutex_init(lock, &attr);
+	if (ret < 0) {
+		pr_err_info("pthread_mutexattr_init: %d", ret);
+		goto out_pthread_mutexattr_destroy;
+	}
+
+out_pthread_mutexattr_destroy:
+	pthread_mutexattr_destroy(&attr);
+	return ret;
 }

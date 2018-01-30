@@ -130,7 +130,7 @@ struct cavan_window_alias {
 
 struct cavan_application_context {
 	void *private_data;
-	struct cavan_thread thread;
+	cavan_thread_t thread;
 	struct cavan_display_device *display;
 	struct cavan_input_service input_service;
 	struct cavan_cursor cursor;

@@ -314,7 +314,7 @@ struct network_service {
 	socklen_t addrlen;
 	void *private_data;
 	network_protocol_t type;
-	struct cavan_lock lock;
+	cavan_lock_t lock;
 	sem_t sem;
 
 	ssize_t (*sendto)(struct network_service *service, const void *buff, size_t size, const struct sockaddr *addr);
@@ -324,7 +324,7 @@ struct network_service {
 };
 
 struct udp_discovery_service {
-	struct cavan_thread thread;
+	cavan_thread_t thread;
 	struct network_service service;
 	size_t command_len;
 	char command[1024];

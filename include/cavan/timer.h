@@ -23,7 +23,7 @@ struct cavan_timer {
 };
 
 struct cavan_timer_service {
-	struct cavan_thread thread;
+	cavan_thread_t thread;
 
 	u32 run_count;
 	struct cavan_timer *timer_waiting;
@@ -60,8 +60,8 @@ struct cavan_flasher_node {
 };
 
 struct cavan_flasher {
-	struct cavan_thread thread;
-	struct cavan_lock lock;
+	cavan_thread_t thread;
+	cavan_lock_t lock;
 	u32 delay;
 	struct cavan_flasher_node *head;
 };

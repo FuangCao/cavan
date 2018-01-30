@@ -20,50 +20,30 @@
 #include <cavan.h>
 #include <cavan++/Lock.h>
 
-ThreadLock::ThreadLock(bool acquire)
+int ThreadLock::init(void)
 {
-	if (acquire && MutexLock::acquire() == 0) {
-		mOwner = pthread_self();
-		mHeldCount = 1;
-	} else {
-		mOwner = 0;
-		mHeldCount = 0;
-	}
-}
+	pthread_mutexattr_t attr;
+	int ret;
 
-int ThreadLock::acquire(bool trylock)
-{
-	pthread_t owner;
-
-	owner = pthread_self();
-	if (isHeldBy(owner)) {
-		mHeldCount++;
-	} else {
-		int ret = trylock ? MutexLock::tryLock() : MutexLock::acquire();
-
-		if (ret < 0) {
-			return ret;
-		}
-
-		mOwner = owner;
-		mHeldCount = 1;
+	ret = pthread_mutexattr_init(&attr);
+	if (ret < 0) {
+		pr_err_info("pthread_mutexattr_init: %d", ret);
+		return ret;
 	}
 
-	return 0;
-}
-
-int ThreadLock::release(void)
-{
-	if (!isHeld() || --mHeldCount > 0) {
-		return 0;
+	ret = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+	if (ret < 0) {
+		pr_err_info("pthread_mutexattr_settype: %d", ret);
+		goto out_pthread_mutexattr_destroy;
 	}
 
-	if (mHeldCount < 0) {
-		pr_red_info("unbalanced %s %d", __FUNCTION__, mHeldCount);
-		mHeldCount = 0;
+	ret = pthread_mutex_init(&mLock, &attr);
+	if (ret < 0) {
+		pr_err_info("pthread_mutexattr_init: %d", ret);
+		goto out_pthread_mutexattr_destroy;
 	}
 
-	mOwner = 0;
-
-	return MutexLock::release();
+out_pthread_mutexattr_destroy:
+	pthread_mutexattr_destroy(&attr);
+	return ret;
 }

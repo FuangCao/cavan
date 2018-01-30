@@ -53,27 +53,27 @@ typedef struct cavan_thread {
 } cavan_thread_t;
 
 int cavan_pthread_create(pthread_t *pthread, void *(*handler)(void *), void *data, bool joinable);
-int cavan_thread_send_event(struct cavan_thread *thread, u32 event);
-int cavan_thread_recv_event(struct cavan_thread *thread, u32 *event);
-int cavan_thread_recv_event_timeout(struct cavan_thread *thread, u32 *event, u32 msec);
-int cavan_thread_wait_event(struct cavan_thread *thread, u32 msec);
-int cavan_thread_init(struct cavan_thread *thread, void *data, int flags);
-void cavan_thread_deinit(struct cavan_thread *thread);
-int cavan_thread_start(struct cavan_thread *thread);
-void cavan_thread_stop(struct cavan_thread *thread);
-int cavan_thread_run(struct cavan_thread *thread, void *data, int flags);
-int cavan_thread_run_self(struct cavan_thread *thread, void *data, int flags);
-void cavan_thread_suspend(struct cavan_thread *thread);
-void cavan_thread_resume(struct cavan_thread *thread);
-int cavan_thread_sleep_until(struct cavan_thread *thread, struct timespec *time);
-int cavan_thread_msleep(struct cavan_thread *thread, u32 msec);
-int cavan_thread_ssleep(struct cavan_thread *thread, u32 sec);
+int cavan_thread_send_event(cavan_thread_t *thread, u32 event);
+int cavan_thread_recv_event(cavan_thread_t *thread, u32 *event);
+int cavan_thread_recv_event_timeout(cavan_thread_t *thread, u32 *event, u32 msec);
+int cavan_thread_wait_event(cavan_thread_t *thread, u32 msec);
+int cavan_thread_init(cavan_thread_t *thread, void *data, int flags);
+void cavan_thread_deinit(cavan_thread_t *thread);
+int cavan_thread_start(cavan_thread_t *thread);
+void cavan_thread_stop(cavan_thread_t *thread);
+int cavan_thread_run(cavan_thread_t *thread, void *data, int flags);
+int cavan_thread_run_self(cavan_thread_t *thread, void *data, int flags);
+void cavan_thread_suspend(cavan_thread_t *thread);
+void cavan_thread_resume(cavan_thread_t *thread);
+int cavan_thread_sleep_until(cavan_thread_t *thread, struct timespec *time);
+int cavan_thread_msleep(cavan_thread_t *thread, u32 msec);
+int cavan_thread_ssleep(cavan_thread_t *thread, u32 sec);
 
-int cavan_thread_epoll_add(struct cavan_thread *thread, int fd, u32 events);
-int cavan_thread_epoll_remove(struct cavan_thread *thread, int fd);
-int cavan_thread_epoll_modify(struct cavan_thread *thread, int fd, u32 events);
-int cavan_thread_epoll_wait(struct cavan_thread *thread, struct epoll_event *events, int count, int timeout);
-int cavan_thread_epoll_wait_event(struct cavan_thread *thread, int timeout);
+int cavan_thread_epoll_add(cavan_thread_t *thread, int fd, u32 events);
+int cavan_thread_epoll_remove(cavan_thread_t *thread, int fd);
+int cavan_thread_epoll_modify(cavan_thread_t *thread, int fd, u32 events);
+int cavan_thread_epoll_wait(cavan_thread_t *thread, struct epoll_event *events, int count, int timeout);
+int cavan_thread_epoll_wait_event(cavan_thread_t *thread, int timeout);
 
 static inline int cavan_pthread_run(void *(handler) (void *), void *data)
 {
@@ -90,51 +90,51 @@ static inline int cavan_pthread_kill(pthread_t thread)
 	return pthread_kill(thread, SIGUSR1);
 }
 
-static inline int cavan_thread_join(struct cavan_thread *thread)
+static inline int cavan_thread_join(cavan_thread_t *thread)
 {
 	return cavan_pthread_join(thread->id);
 }
 
-static inline void cavan_thread_set_state(struct cavan_thread *thread, cavan_thread_state_t state)
+static inline void cavan_thread_set_state(cavan_thread_t *thread, cavan_thread_state_t state)
 {
 	pthread_mutex_lock(&thread->lock);
 	thread->state = state;
 	pthread_mutex_unlock(&thread->lock);
 }
 
-static inline void cavan_thread_should_stop(struct cavan_thread *thread)
+static inline void cavan_thread_should_stop(cavan_thread_t *thread)
 {
 	cavan_thread_set_state(thread, CAVAN_THREAD_STATE_STOPPPING);
 }
 
-static inline int cavan_thread_wake_handler_send_event(struct cavan_thread *thread, void *data)
+static inline int cavan_thread_wake_handler_send_event(cavan_thread_t *thread, void *data)
 {
 	return cavan_thread_send_event(thread, 0);
 }
 
-static inline int cavan_thread_wake_handler_none(struct cavan_thread *thread, void *data)
+static inline int cavan_thread_wake_handler_none(cavan_thread_t *thread, void *data)
 {
 	return 0;
 }
 
-static inline int cavan_thread_wake_handler_resume(struct cavan_thread *thread, void *data)
+static inline int cavan_thread_wake_handler_resume(cavan_thread_t *thread, void *data)
 {
 	cavan_thread_resume(thread);
 
 	return 0;
 }
 
-static inline int cavan_thread_wake_handler_empty(struct cavan_thread *thread, void *data)
+static inline int cavan_thread_wake_handler_empty(cavan_thread_t *thread, void *data)
 {
 	return 0;
 }
 
-static inline int cavan_thread_wakeup(struct cavan_thread *thread)
+static inline int cavan_thread_wakeup(cavan_thread_t *thread)
 {
 	return thread->wake_handker(thread, thread->private_data);
 }
 
-static inline void cavan_thread_exit(struct cavan_thread *thread)
+static inline void cavan_thread_exit(cavan_thread_t *thread)
 {
 	cavan_thread_stop(thread);
 	cavan_thread_deinit(thread);

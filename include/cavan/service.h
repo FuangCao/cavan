@@ -56,7 +56,7 @@ struct cavan_dynamic_service {
 	pthread_mutex_t lock;
 	const char *user, *group;
 	cavan_service_state_t state;
-	struct cavan_thread epoll_thread;
+	cavan_thread_t epoll_thread;
 	bool stopping;
 
 	void (*init_connect)(struct cavan_dynamic_service *service, void *conn_data);

@@ -21,16 +21,23 @@
 
 #include <cavan.h>
 
-#define CAVAN_LOCK_INITIALIZER \
-	{ .mutex = PTHREAD_MUTEX_INITIALIZER, .owner = 0, .count = 0 }
+#define CAVAN_LOCK_INITIALIZER	PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
 
-typedef struct cavan_lock {
-	pthread_mutex_t mutex;
-	pthread_t owner;
-	int count;
-} cavan_lock_t;
+typedef pthread_mutex_t cavan_lock_t;
 
-void cavan_lock_init(cavan_lock_t *lock);
-void cavan_lock_deinit(cavan_lock_t *lock);
-void cavan_lock_acquire(cavan_lock_t *lock);
-void cavan_lock_release(cavan_lock_t *lock);
+int cavan_lock_init(cavan_lock_t *lock);
+
+static inline void cavan_lock_deinit(cavan_lock_t *lock)
+{
+	pthread_mutex_destroy(lock);
+}
+
+static inline void cavan_lock_acquire(cavan_lock_t *lock)
+{
+	pthread_mutex_lock(lock);
+}
+
+static inline void cavan_lock_release(cavan_lock_t *lock)
+{
+	pthread_mutex_unlock(lock);
+}

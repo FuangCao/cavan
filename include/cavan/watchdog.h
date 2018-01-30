@@ -26,7 +26,7 @@
 	cavan_watchdog_flush(watchdog, __FILE__, __LINE__)
 
 struct cavan_watchdog {
-	struct cavan_thread thread;
+	cavan_thread_t thread;
 
 	u32 msec;
 	int count;

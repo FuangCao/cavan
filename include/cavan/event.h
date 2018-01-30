@@ -79,7 +79,7 @@ struct cavan_event_device {
 };
 
 struct cavan_event_service {
-	struct cavan_thread thread;
+	cavan_thread_t thread;
 	pthread_mutex_t lock;
 
 	void *private_data;

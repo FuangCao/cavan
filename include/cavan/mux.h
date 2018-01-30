@@ -47,15 +47,15 @@ struct cavan_mux_package_raw {
 };
 
 struct cavan_mux {
-	struct cavan_lock lock;
+	cavan_lock_t lock;
 	struct cavan_mux_package_raw *packages;
 
 	void *private_data;
-	struct cavan_thread send_thread;
+	cavan_thread_t send_thread;
 	struct cavan_mux_package_raw *package_head;
 	struct cavan_mux_package_raw **package_tail;
 
-	struct cavan_thread recv_thread;
+	cavan_thread_t recv_thread;
 	struct cavan_mem_queue recv_queue;
 	struct cavan_mux_link *links[CAVAN_MUX_LINK_TABLE_MASK + 1];
 
@@ -69,7 +69,7 @@ struct cavan_mux_link {
 
 	void *private_data;
 	struct cavan_mux *mux;
-	struct cavan_lock lock;
+	cavan_lock_t lock;
 	struct cavan_mux_link *next;
 
 	size_t hole_size;

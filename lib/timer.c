@@ -184,7 +184,7 @@ void cavan_timer_remove(struct cavan_timer_service *service, struct cavan_timer 
 	pthread_mutex_unlock(&service->lock);
 }
 
-static int cavan_timer_service_handler(struct cavan_thread *thread, void *data)
+static int cavan_timer_service_handler(cavan_thread_t *thread, void *data)
 {
 	struct double_link_node *node;
 	struct cavan_timer_service *service = data;
@@ -237,7 +237,7 @@ static int cavan_timer_service_handler(struct cavan_thread *thread, void *data)
 int cavan_timer_service_start(struct cavan_timer_service *service)
 {
 	int ret;
-	struct cavan_thread *thread = &service->thread;
+	cavan_thread_t *thread = &service->thread;
 
 	thread->name = "TIMER";
 	thread->wake_handker = NULL;
@@ -285,7 +285,7 @@ out_pthread_mutex_destroy:
 
 int cavan_timer_service_stop(struct cavan_timer_service *service)
 {
-	struct cavan_thread *thread = &service->thread;
+	cavan_thread_t *thread = &service->thread;
 
 	pthread_mutex_lock(&service->lock);
 	cavan_thread_stop(thread);
@@ -387,7 +387,7 @@ void cavan_flasher_add_node(struct cavan_flasher *flasher, struct cavan_flasher_
 	cavan_flasher_update_delay(flasher);
 }
 
-static int cavan_flasher_thread_handler(struct cavan_thread *thread, void *data)
+static int cavan_flasher_thread_handler(cavan_thread_t *thread, void *data)
 {
 	struct cavan_flasher *flasher = data;
 
@@ -422,7 +422,7 @@ static int cavan_flasher_thread_handler(struct cavan_thread *thread, void *data)
 
 int cavan_flasher_run(struct cavan_flasher *flasher)
 {
-	struct cavan_thread *thread = &flasher->thread;
+	cavan_thread_t *thread = &flasher->thread;
 
 	cavan_lock_init(&flasher->lock);
 
