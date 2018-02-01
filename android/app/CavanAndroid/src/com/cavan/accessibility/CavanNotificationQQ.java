@@ -21,7 +21,7 @@ public class CavanNotificationQQ extends CavanNotification {
 				mContent = content;
 			} else {
 				mUserName = content.substring(0, index).trim();
-				mContent = content.substring(index + 1);
+				mContent = content.substring(index + 2);
 			}
 		} else {
 			int group = index - 1;

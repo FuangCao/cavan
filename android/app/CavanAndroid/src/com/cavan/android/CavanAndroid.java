@@ -228,11 +228,18 @@ public class CavanAndroid {
 	}
 
 	public static void putSystemServiceCache(String name, Object service) {
-		mSystemServiceMap.put(name, service);
+		synchronized (mSystemServiceMap) {
+			mSystemServiceMap.put(name, service);
+		}
 	}
 
 	public static Object getSystemServiceCached(Context context, String name) {
-		Object service = mSystemServiceMap.get(name);
+		Object service;
+
+		synchronized (mSystemServiceMap) {
+			service = mSystemServiceMap.get(name);
+		}
+
 		if (service != null) {
 			return service;
 		}

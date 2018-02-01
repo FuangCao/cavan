@@ -286,7 +286,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return setPackage(getPackage(name));
 	}
 
-	public synchronized String getCurrntPacketName() {
+	public String getCurrntPacketName() {
 		AccessibilityNodeInfo root = getRootInActiveWindow();
 		if (root == null) {
 			return null;
@@ -334,37 +334,44 @@ public class CavanAccessibilityService extends AccessibilityService {
 		mKeyguardLock.release();
 	}
 
-	public synchronized CavanAccessibilityPackage getPendingPackage() {
-		Iterator<CavanAccessibilityPackage> iterator = mPackages.values().iterator();
+	public CavanAccessibilityPackage getPendingPackage() {
+		synchronized (mPackages) {
+			Iterator<CavanAccessibilityPackage> iterator = mPackages.values().iterator();
 
-		while (iterator.hasNext()) {
-			CavanAccessibilityPackage pkg = iterator.next();
-			if (pkg.isPending()) {
-				while (iterator.hasNext()) {
-					CavanAccessibilityPackage node = iterator.next();
-					if (node.isPending() && node.getUnpackTime() < pkg.getUnpackTime()) {
-						pkg = node;
+			while (iterator.hasNext()) {
+				CavanAccessibilityPackage pkg = iterator.next();
+				if (pkg.isPending()) {
+					while (iterator.hasNext()) {
+						CavanAccessibilityPackage node = iterator.next();
+						if (node.isPending() && node.getUnpackTime() < pkg.getUnpackTime()) {
+							pkg = node;
+						}
 					}
-				}
 
-				return pkg;
+					return pkg;
+				}
 			}
 		}
 
 		return null;
 	}
 
-	public synchronized void addPackage(CavanAccessibilityPackage pkg) {
+	public void addPackage(CavanAccessibilityPackage pkg) {
 		CavanAndroid.dLog("addPackage: " + pkg.getPackageName());
-		mPackages.put(pkg.getPackageName(), pkg);
+
+		synchronized (mPackages) {
+			mPackages.put(pkg.getPackageName(), pkg);
+		}
 	}
 
-	public synchronized CavanAccessibilityPackage getPackage(CharSequence name) {
+	public CavanAccessibilityPackage getPackage(CharSequence name) {
 		if (name == null) {
 			return null;
 		}
 
-		return mPackages.get(name.toString());
+		synchronized (mPackages) {
+			return mPackages.get(name.toString());
+		}
 	}
 
 	public boolean performActionBack() {
@@ -377,7 +384,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
 	}
 
-	public synchronized void post() {
+	public void post() {
 		mPollThread.start();
 	}
 

@@ -64,6 +64,18 @@ public abstract class CavanNotification extends CavanRedPacket {
 		return mGroupName;
 	}
 
+	public String getName() {
+		if (mGroupName != null) {
+			return mGroupName;
+		}
+
+		if (mUserName != null) {
+			return mUserName;
+		}
+
+		return null;
+	}
+
 	public boolean isRedPacket(String prefix) {
 		if (mContent == null) {
 			return false;

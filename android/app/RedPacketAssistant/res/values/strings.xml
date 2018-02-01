@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <string name="app_name">红包助手</string>
+    <string name="mm_unpack">微信拆红包</string>
+    <string name="accessibility">辅助功能</string>
+    <string name="please_click_here_open">请点击这里打开</string>
+    <string name="please_click_here_reopen">请点击这里重新开关或重启手机</string>
+    <string name="opened">已打开</string>
+    <string name="unpack_count_down"><xliff:g>%1$d</xliff:g> 秒后自动拆开</string>
+
+    <string-array name="delay_entries">
+        <item>关闭</item>
+        <item>不延时</item>
+        <item>延时1秒</item>
+        <item>延时2秒</item>
+        <item>延时3秒</item>
+        <item>延时4秒</item>
+        <item>延时5秒</item>
+        <item>延时6秒</item>
+        <item>延时7秒</item>
+        <item>延时8秒</item>
+        <item>延时9秒</item>
+        <item>延时10秒</item>
+        <item>延时11秒</item>
+        <item>延时12秒</item>
+        <item>延时13秒</item>
+        <item>延时14秒</item>
+        <item>延时15秒</item>
+        <item>延时16秒</item>
+        <item>延时17秒</item>
+        <item>延时18秒</item>
+        <item>延时19秒</item>
+        <item>延时20秒</item>
+    </string-array>
+    <string-array name="delay_values">
+        <item>-1</item>
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+        <item>13</item>
+        <item>14</item>
+        <item>15</item>
+        <item>16</item>
+        <item>17</item>
+        <item>18</item>
+        <item>19</item>
+        <item>20</item>
+    </string-array>
+
+    <string name="unpack_cancel">不拆开</string>
+    <string name="unpack_now">马上拆开</string>
+    <string name="unpack_delayed">拆开(<xliff:g>%1$d</xliff:g>)</string>
+
+</resources>

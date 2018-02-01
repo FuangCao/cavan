@@ -118,7 +118,6 @@ public abstract class CavanAccessibilityPackage {
 		}
 
 		setPending(true);
-		mPollTimes = 0;
 
 		return true;
 	}
@@ -164,6 +163,7 @@ public abstract class CavanAccessibilityPackage {
 		if (pending) {
 			mForceUnpack = true;
 			mPending = true;
+			mPollTimes = 0;
 			post();
 		} else {
 			mPending = false;
@@ -265,7 +265,6 @@ public abstract class CavanAccessibilityPackage {
 
 		CavanAccessibilityWindow win = getWindow(name);
 		setWindow(win);
-
 		if (isPending()) {
 			setUnlockTime(0);
 		}
@@ -340,6 +339,8 @@ public abstract class CavanAccessibilityPackage {
 				if (win.onPollFailed(mPollTimes)) {
 					return POLL_DELAY;
 				}
+
+				clearPackets();
 
 				return 0;
 			} else {
