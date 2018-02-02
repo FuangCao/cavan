@@ -20,10 +20,8 @@ import com.cavan.java.CavanString;
 
 public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
-	private BaseWindow mBaseWindow = getBaseWindow("BaseWindow");
-	private ReceiveWindow mReceiveWindow = getReceiveWindow("ReceiveWindowMore");
-	private ChattingWindow mChattingWindow = getChattingWindow("ChattingWindowMore");
 	private HashSet<Integer> mFinishNodes = new HashSet<Integer>();
+	private boolean mUnpackSuccess;
 
 	public class BaseWindow extends CavanAccessibilityWindow {
 
@@ -295,8 +293,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 					performPackageUpdated();
 				}
 			}
-
-			setForceUnpackEnable(true);
 		}
 
 		@Override
@@ -395,6 +391,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			if (isForceUnpackEnabled()) {
 				setPending(true);
 			}
+
+			mUnpackSuccess = false;
 		}
 
 		@Override
@@ -423,6 +421,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				AccessibilityNodeInfo button = findUnpckNode(root);
 				if (button != null) {
 					CavanAccessibilityHelper.performClickAndRecycle(button);
+					mUnpackSuccess = true;
 				} else if (getPacketCount() > 0) {
 					CavanAccessibilityHelper.performClick(backNode);
 				} else {
@@ -481,6 +480,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		@Override
 		public void onPackageUpdated() {
 			mBackNodeId = null;
+		}
+
+		@Override
+		public void onEnter() {
+			CavanAndroid.dLog("mUnpackSuccess = " + mUnpackSuccess);
+			setPending(mUnpackSuccess);
 		}
 
 		@Override
@@ -555,18 +560,18 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		if (name.startsWith("com.tencent.mm.ui.base.")) {
-			return mBaseWindow;
+			win = new BaseWindow(name);
+		} else if (name.startsWith("com.tencent.mm.ui.chatting.En_")) {
+			win = new ChattingWindow(name);
+		} else if (name.startsWith("com.tencent.mm.plugin.luckymoney.ui.En_")) {
+			win = new ReceiveWindow(name);
+		} else {
+			return null;
 		}
 
-		if (name.startsWith("com.tencent.mm.ui.chatting.En_")) {
-			return mChattingWindow;
-		}
+		addWindow(win);
 
-		if (name.startsWith("com.tencent.mm.plugin.luckymoney.ui.En_")) {
-			return mReceiveWindow;
-		}
-
-		return null;
+		return win;
 	}
 
 	@Override
@@ -594,13 +599,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		return false;
-	}
-
-	@Override
-	public void onPackageUpdated() {
-		mBaseWindow.onPackageUpdated();
-		mReceiveWindow.onPackageUpdated();
-		mChattingWindow.onPackageUpdated();
 	}
 
 	@Override
