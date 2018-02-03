@@ -335,7 +335,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityBase<String> {
 			return false;
 		}
 
-		List<AccessibilityNodeInfo> childs = CavanAccessibilityHelper.getChilds(node);
+		AccessibilityNodeInfo[] childs = CavanAccessibilityHelper.getChildsRaw(node, 0, 3);
 		if (childs == null) {
 			return false;
 		}

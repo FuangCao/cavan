@@ -2,6 +2,7 @@ package com.cavan.accessibility;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 import android.app.Notification;
 import android.os.Parcelable;
@@ -83,6 +84,18 @@ public abstract class CavanAccessibilityPackage {
 		mService.showCountDownView(null);
 	}
 
+	public boolean addRecycleNode(AccessibilityNodeInfo node) {
+		return mService.addRecycleNode(node);
+	}
+
+	public int addRecycleNodes(AccessibilityNodeInfo... nodes) {
+		return mService.addRecycleNodes(nodes);
+	}
+
+	public int addRecycleNodes(List<AccessibilityNodeInfo> nodes) {
+		return mService.addRecycleNodes(nodes);
+	}
+
 	public synchronized long getUnpackRemain() {
 		if (mUnpackTime > 0) {
 			long timeNow = System.currentTimeMillis();
@@ -112,6 +125,7 @@ public abstract class CavanAccessibilityPackage {
 		}
 
 		mPackets.add(packet);
+		onPacketAdded(packet);
 
 		if (packet != null) {
 			mGotoIdleEnabled = true;
@@ -361,6 +375,7 @@ public abstract class CavanAccessibilityPackage {
 	public void onCreate() {}
 	public void onDestroy() {}
 	public void onPackageUpdated() {}
+	public void onPacketAdded(CavanRedPacket packet) {}
 
 	@Override
 	public String toString() {

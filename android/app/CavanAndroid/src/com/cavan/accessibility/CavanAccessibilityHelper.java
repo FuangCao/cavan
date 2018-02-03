@@ -137,7 +137,11 @@ public class CavanAccessibilityHelper {
 
 	public static void recycleNodes(List<AccessibilityNodeInfo> nodes, int start, int end) {
 		while (start < end) {
-			nodes.get(start++).recycle();
+			try {
+				nodes.get(start++).recycle();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -147,6 +151,24 @@ public class CavanAccessibilityHelper {
 
 	public static void recycleNodes(List<AccessibilityNodeInfo> nodes) {
 		recycleNodes(nodes, 0);
+	}
+
+	public static void recycleNodes(AccessibilityNodeInfo[] nodes, int index, int count) {
+		for (int end = index + count; index < end; index++) {
+			try {
+				nodes[index].recycle();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public static void recycleNodes(AccessibilityNodeInfo[] nodes, int count) {
+		recycleNodes(nodes, 0, count);
+	}
+
+	public static void recycleNodes(AccessibilityNodeInfo[] nodes) {
+		recycleNodes(nodes, 0, nodes.length);
 	}
 
 	public static List<AccessibilityNodeInfo> findNodesByText(AccessibilityNodeInfo root, String text) {
@@ -160,12 +182,10 @@ public class CavanAccessibilityHelper {
 		while (iterator.hasNext()) {
 			AccessibilityNodeInfo node = iterator.next();
 
-			if (text.equals(getNodeText(node))) {
-				continue;
+			if (!text.equals(getNodeText(node))) {
+				iterator.remove();
+				node.recycle();
 			}
-
-			iterator.remove();
-			node.recycle();
 		}
 
 		return nodes;
@@ -301,7 +321,7 @@ public class CavanAccessibilityHelper {
 	public static String getNodeText(AccessibilityNodeInfo node) {
 		CharSequence text = node.getText();
 		if (text != null) {
-			return text.toString();
+			return text.toString().trim();
 		}
 
 		return CavanString.EMPTY_STRING;
@@ -911,22 +931,40 @@ public class CavanAccessibilityHelper {
 		return performGlobalAction(service, AccessibilityService.GLOBAL_ACTION_BACK);
 	}
 
-	public static List<AccessibilityNodeInfo> getChilds(AccessibilityNodeInfo parent) {
-		int count = parent.getChildCount();
-		List<AccessibilityNodeInfo> nodes = new ArrayList<AccessibilityNodeInfo>(count);
+	public static AccessibilityNodeInfo[] getChildsRaw(AccessibilityNodeInfo node, int index, int count) {
+		AccessibilityNodeInfo[] childs = new AccessibilityNodeInfo[count];
 
-		try {
-			for (int i = 0; i < count; i++) {
-				AccessibilityNodeInfo node = parent.getChild(i);
-				if (node != null) {
-					nodes.add(node);
+		for (int i = 0; i < count; i++, index++) {
+			try {
+				AccessibilityNodeInfo child = node.getChild(index);
+				if (child == null) {
+					return null;
 				}
+
+				childs[i] = child;
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 
-		return nodes;
+		return childs;
+	}
+
+	public static AccessibilityNodeInfo[] getChilds(AccessibilityNodeInfo node, int index, int count) {
+		if (index + count > node.getChildCount()) {
+			return null;
+		}
+
+		return getChildsRaw(node, index, count);
+	}
+
+	public static AccessibilityNodeInfo[] getChilds(AccessibilityNodeInfo node, int count) {
+		return getChilds(node, 0, count);
+	}
+
+	public static AccessibilityNodeInfo[] getChilds(AccessibilityNodeInfo node) {
+		return getChildsRaw(node, 0, node.getChildCount());
 	}
 
 	public static List<CharSequence> getChildTexts(AccessibilityNodeInfo parent) {

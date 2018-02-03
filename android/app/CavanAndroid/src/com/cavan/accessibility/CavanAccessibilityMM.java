@@ -70,26 +70,17 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				return false;
 			}
 
-			if (node.getChildCount() != 3) {
-				return false;
-			}
-
-			List<AccessibilityNodeInfo> childs = CavanAccessibilityHelper.getChilds(node);
+			AccessibilityNodeInfo[] childs = CavanAccessibilityHelper.getChilds(node, 0, 3);
 			if (childs == null) {
 				return false;
 			}
 
-			try {
-				for (AccessibilityNodeInfo child : childs) {
-					if (!TextView.class.getName().equals(child.getClassName())) {
-						return false;
-					}
+			addRecycleNodes(childs);
+
+			for (AccessibilityNodeInfo child : childs) {
+				if (!TextView.class.getName().equals(child.getClassName())) {
+					return false;
 				}
-			} catch (Exception e) {
-				e.printStackTrace();
-				return false;
-			} finally {
-				CavanAccessibilityHelper.recycleNodes(childs);
 			}
 
 			return true;
@@ -592,13 +583,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 	}
 
 	@Override
-	public synchronized boolean addPacket(CavanRedPacket packet) {
-		if (super.addPacket(packet)) {
-			mFinishNodes.clear();
-			return true;
-		}
-
-		return false;
+	public void onPacketAdded(CavanRedPacket packet) {
+		mFinishNodes.clear();
 	}
 
 	@Override

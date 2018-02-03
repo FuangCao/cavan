@@ -1,7 +1,9 @@
 package com.cavan.accessibility;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
@@ -30,6 +32,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private static final int MSG_SHOW_COUNT_DOWN = 2;
 
 	private HashMap<String, CavanAccessibilityPackage> mPackages = new HashMap<String, CavanAccessibilityPackage>();
+	private HashSet<AccessibilityNodeInfo> mRecycleNodes = new HashSet<AccessibilityNodeInfo>();
 	private CavanAccessibilityPackage mPackage;
 	private boolean mUserPresent = true;
 	private boolean mScreenOn = true;
@@ -93,6 +96,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 						e.printStackTrace();
 						return -1;
 					} finally {
+						removeRecycleNodes();
 						root.recycle();
 					}
 				}
@@ -258,6 +262,54 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	public synchronized boolean isScreenOn() {
 		return mScreenOn;
+	}
+
+	public boolean addRecycleNode(AccessibilityNodeInfo node) {
+		synchronized (mRecycleNodes) {
+			return mRecycleNodes.add(node);
+		}
+	}
+
+	public int addRecycleNodes(AccessibilityNodeInfo... nodes) {
+		int count = 0;
+
+		synchronized (mRecycleNodes) {
+			for (AccessibilityNodeInfo node : nodes) {
+				if (mRecycleNodes.add(node)) {
+					count++;
+				}
+			}
+		}
+
+		return count;
+	}
+
+	public int addRecycleNodes(List<AccessibilityNodeInfo> nodes) {
+		int count = 0;
+
+		synchronized (mRecycleNodes) {
+			for (AccessibilityNodeInfo node : nodes) {
+				if (mRecycleNodes.add(node)) {
+					count++;
+				}
+			}
+		}
+
+		return count;
+	}
+
+	public void removeRecycleNodes() {
+		synchronized (mRecycleNodes) {
+			try {
+				for (AccessibilityNodeInfo node : mRecycleNodes) {
+					node.recycle();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				mRecycleNodes.clear();
+			}
+		}
 	}
 
 	public synchronized CavanAccessibilityPackage getPackage() {
