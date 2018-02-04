@@ -719,8 +719,12 @@ public class CavanAccessibilityHelper {
 		return success;
 	}
 
+	public static boolean performActionAndRecycle(AccessibilityNodeInfo node, int action) {
+		return performActionAndRecycle(node, action, null);
+	}
+
 	public static boolean performClickAndRecycle(AccessibilityNodeInfo node) {
-		return performActionAndRecycle(node, AccessibilityNodeInfo.ACTION_CLICK, null);
+		return performActionAndRecycle(node, AccessibilityNodeInfo.ACTION_CLICK);
 	}
 
 	public static boolean performChildAction(AccessibilityNodeInfo parent, int index, int action) {

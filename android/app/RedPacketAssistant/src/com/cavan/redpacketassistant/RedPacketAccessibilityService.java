@@ -6,15 +6,16 @@ import com.cavan.accessibility.CavanAccessibilityService;
 import com.cavan.accessibility.CavanRedPacket;
 import com.cavan.android.CavanAndroid;
 
-public class RedPacketService extends CavanAccessibilityService {
+public class RedPacketAccessibilityService extends CavanAccessibilityService {
 
-	public static RedPacketService instance;
+	public static RedPacketAccessibilityService instance;
 
 	private CountDownDialog mCountDownDialog;
 
-	public RedPacketService() {
-		addPackage(new RedPacketMM(this));
-		addPackage(new RedPacketQQ(this));
+	public RedPacketAccessibilityService() {
+		addPackage(new RedPacketAccessibilityMM(this));
+		addPackage(new RedPacketAccessibilityQQ(this));
+		addPackage(new RedPacketAccessibilityAlipay(this));
 	}
 
 	@Override

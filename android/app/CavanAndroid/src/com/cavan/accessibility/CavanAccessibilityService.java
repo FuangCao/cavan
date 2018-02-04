@@ -508,11 +508,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	public void initServiceInfo(AccessibilityServiceInfo info) {
 		String[] packages = new String[mPackages.size()];
-		int i = 0;
-
-		for (CavanAccessibilityPackage pkg : mPackages.values()) {
-			packages[i++] = pkg.getName();
-		}
+		mPackages.keySet().toArray(packages);
 
 		info.packageNames = packages;
 

@@ -417,6 +417,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		addWindow(new SplashActivity("com.tencent.mobileqq.activity.SplashActivity"));
 		addWindow(new WalletActivity("cooperation.qwallet.plugin.QWalletPluginProxyActivity"));
 		addWindow(new BaseWindow("com.tencent.mobileqq.activity.PayBridgeActivity"));
+		addWindow(new BaseWindow("com.tenpay.sdk.h.au"));
 		addWindow(new BackableWindow("com.tencent.biz.pubaccount.serviceAccountFolder.ServiceAccountFolderActivity"));
 		addWindow(new BackableWindow("com.tencent.mobileqq.activity.ChatActivity"));
 	}

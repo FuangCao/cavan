@@ -109,6 +109,7 @@ public abstract class CavanNotification extends CavanRedPacket {
 			List<String> codes = finder.getRedPacketCodes();
 			if (codes != null && codes.size() > 0) {
 				for (String code : codes) {
+					CavanAndroid.dLog("code = " + code);
 					alipay.addPacket(code);
 				}
 

@@ -3,9 +3,9 @@ package com.cavan.redpacketassistant;
 import com.cavan.accessibility.CavanAccessibilityQQ;
 import com.cavan.accessibility.CavanAccessibilityService;
 
-public class RedPacketQQ extends CavanAccessibilityQQ {
+public class RedPacketAccessibilityQQ extends CavanAccessibilityQQ {
 
-	public RedPacketQQ(CavanAccessibilityService service) {
+	public RedPacketAccessibilityQQ(CavanAccessibilityService service) {
 		super(service);
 	}
 
