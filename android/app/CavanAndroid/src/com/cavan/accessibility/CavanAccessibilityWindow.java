@@ -4,7 +4,7 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 
-public abstract class CavanAccessibilityWindow {
+public class CavanAccessibilityWindow {
 
 	protected String mName;
 
@@ -16,7 +16,7 @@ public abstract class CavanAccessibilityWindow {
 		return mName;
 	}
 
-	public boolean poll(AccessibilityNodeInfo root, int times) {
+	public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
 		return true;
 	}
 
@@ -27,7 +27,7 @@ public abstract class CavanAccessibilityWindow {
 	public void onViewClicked(AccessibilityEvent event) {}
 	public void onViewTextChanged(AccessibilityEvent event) {}
 
-	public boolean onPollFailed(int times) {
+	public boolean onPollFailed(CavanRedPacket packet, int times) {
 		return (times < 5);
 	}
 

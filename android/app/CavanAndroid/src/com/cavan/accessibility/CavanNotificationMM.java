@@ -6,8 +6,8 @@ import com.cavan.java.CavanString;
 
 public class CavanNotificationMM extends CavanNotification {
 
-	public CavanNotificationMM(CavanAccessibilityPackage pkg, Notification notification) {
-		super(pkg, notification);
+	public CavanNotificationMM(Notification notification) {
+		super(notification);
 	}
 
 	@Override
@@ -26,17 +26,12 @@ public class CavanNotificationMM extends CavanNotification {
 	}
 
 	@Override
-	public boolean send() {
-		if (mSendTimes > 0) {
-			return false;
+	public boolean isRedPacket() {
+		if (isRedPacket("[微信红包]")) {
+			return true;
 		}
 
-		return super.send();
-	}
-
-	@Override
-	public boolean isRedPacket() {
-		return isRedPacket("[微信红包]");
+		return super.isRedPacket();
 	}
 
 }

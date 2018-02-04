@@ -2,7 +2,6 @@ package com.cavan.accessibility;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 
 import android.accessibilityservice.AccessibilityService;
@@ -33,6 +32,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	private HashMap<String, CavanAccessibilityPackage> mPackages = new HashMap<String, CavanAccessibilityPackage>();
 	private HashSet<AccessibilityNodeInfo> mRecycleNodes = new HashSet<AccessibilityNodeInfo>();
+	private CavanRedPacketList mPackets = new CavanRedPacketList();
+	private CavanRedPacket mPacketDummy = new CavanRedPacket();
 	private CavanAccessibilityPackage mPackage;
 	private boolean mUserPresent = true;
 	private boolean mScreenOn = true;
@@ -52,7 +53,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			}
 		}
 
-		public int poll(CavanAccessibilityPackage pkg) {
+		public boolean poll(CavanAccessibilityPackage pkg, CavanRedPacket packet) {
 			int retry = 0;
 
 			CavanAndroid.dLog("PollThread polling: " + pkg.getName());
@@ -67,34 +68,33 @@ public class CavanAccessibilityService extends AccessibilityService {
 					CavanAndroid.dLog("Failed to getRootInActiveWindow: " + retry);
 
 					if (++retry > 5) {
-						return -1;
+						return false;
 					}
 
 					delay = POLL_DELAY;
 				} else {
 					try {
 						if (pkg.isCurrentPackage(root)) {
-							delay = pkg.poll(root);
+							delay = pkg.poll(packet, root);
 							if (delay > 0) {
 								retry = 0;
-							} else if (pkg.isGotoIdleEnabled()) {
-								return 1;
 							} else {
-								return 0;
+								pkg.setPending(false);
+								return true;
 							}
 						} else {
 							CavanAndroid.dLog("Invalid package(" + retry + "): " + root.getPackageName());
 
 							if (++retry > 5) {
-								return -1;
+								return false;
 							}
 
-							pkg.launch();
+							packet.launch();
 							delay = LAUNCH_DELAY;
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
-						return -1;
+						return false;
 					} finally {
 						removeRecycleNodes();
 						root.recycle();
@@ -112,7 +112,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				}
 			}
 
-			return 0;
+			return true;
 		}
 
 		@Override
@@ -121,24 +121,35 @@ public class CavanAccessibilityService extends AccessibilityService {
 				boolean idle = false;
 
 				while (mScreenOn) {
-					CavanAccessibilityPackage pkg = getPendingPackage();
-					if (pkg == null) {
-						break;
+					CavanAccessibilityPackage pkg;
+					CavanRedPacket packet;
+
+					packet = mPackets.get();
+					if (packet == null) {
+						pkg = getPendingPackage();
+						if (pkg == null) {
+							break;
+						}
+
+						packet = mPacketDummy;
+						packet.setPackage(pkg);
+					} else {
+						pkg = packet.getPackage();
+						pkg.setPending(true);
 					}
 
 					int retry = 0;
 
 					while (true) {
-						int ret = poll(pkg);
-						if (ret < 0) {
-							CavanAndroid.dLog("Failed to poll: " + retry);
+						if (poll(pkg, packet)) {
+							idle = pkg.needGotoIdle();
+							break;
+						}
 
-							if (++retry > 3) {
-								pkg.clearPackets();
-								break;
-							}
-						} else {
-							idle = (ret > 0);
+						CavanAndroid.dLog("Failed to poll: " + retry);
+
+						if (++retry > 3) {
+							mPackets.remove(packet);
 							break;
 						}
 					}
@@ -168,17 +179,17 @@ public class CavanAccessibilityService extends AccessibilityService {
 				break;
 
 			case MSG_SHOW_COUNT_DOWN:
-				CavanAccessibilityPackage pkg = (CavanAccessibilityPackage) msg.obj;
-				if (pkg != null) {
-					long remain = pkg.getUnpackRemain();
+				CavanRedPacket packet = (CavanRedPacket) msg.obj;
+				if (packet != null) {
+					long remain = packet.getUnpackRemain();
 					if (remain > 0) {
-						onCountDownUpdated(pkg, remain);
+						onCountDownUpdated(packet, remain);
 
 						if (remain > 1000) {
 							remain = 1000;
 						}
 
-						Message message = obtainMessage(MSG_SHOW_COUNT_DOWN, pkg);
+						Message message = obtainMessage(MSG_SHOW_COUNT_DOWN, packet);
 						sendMessageDelayed(message, remain);
 						break;
 					}
@@ -203,12 +214,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 				mScreenOn = true;
 				onScreenOn();
 
-				CavanAccessibilityPackage pkg = getPendingPackage();
-				if (pkg != null) {
-					acquireScreenLock();
-					Message message = mHandler.obtainMessage(MSG_SCREEN_ON, pkg);
-					mHandler.sendMessageDelayed(message, 1000);
+				if (mPackets.isEmpty()) {
+					break;
 				}
+
+				mHandler.sendEmptyMessageDelayed(MSG_SCREEN_ON, 1000);
+				acquireScreenLock();
 				break;
 
 			case Intent.ACTION_SCREEN_OFF:
@@ -239,11 +250,23 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 	}
 
+	protected CavanAccessibilityPackage getPendingPackage() {
+		synchronized (mPackages) {
+			for (CavanAccessibilityPackage pkg : mPackages.values()) {
+				if (pkg.isPending()) {
+					return pkg;
+				}
+			}
+		}
+
+		return null;
+	}
+
 	protected void onCountDownCompleted() {
 		CavanAndroid.dLog("onCountDownCompleted");
 	}
 
-	protected void onCountDownUpdated(CavanAccessibilityPackage pkg, long remain) {
+	protected void onCountDownUpdated(CavanRedPacket packet, long remain) {
 		CavanAndroid.dLog("onCountDownUpdated: " + remain);
 	}
 
@@ -386,28 +409,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 		mKeyguardLock.release();
 	}
 
-	public CavanAccessibilityPackage getPendingPackage() {
-		synchronized (mPackages) {
-			Iterator<CavanAccessibilityPackage> iterator = mPackages.values().iterator();
-
-			while (iterator.hasNext()) {
-				CavanAccessibilityPackage pkg = iterator.next();
-				if (pkg.isPending()) {
-					while (iterator.hasNext()) {
-						CavanAccessibilityPackage node = iterator.next();
-						if (node.isPending() && node.getUnpackTime() < pkg.getUnpackTime()) {
-							pkg = node;
-						}
-					}
-
-					return pkg;
-				}
-			}
-		}
-
-		return null;
-	}
-
 	public void addPackage(CavanAccessibilityPackage pkg) {
 		synchronized (mPackages) {
 			for (String name : pkg.getNames()) {
@@ -470,6 +471,27 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 
 		return null;
+	}
+
+	public void showCountDownView(CavanRedPacket packet) {
+		mHandler.obtainMessage(MSG_SHOW_COUNT_DOWN, packet).sendToTarget();
+	}
+
+	public boolean addPacket(CavanRedPacket packet) {
+		acquireWakeLock(2000);
+		return mPackets.add(packet);
+	}
+
+	public CavanRedPacketList getPackets() {
+		return mPackets;
+	}
+
+	public void removePacket(CavanRedPacket packet) {
+		mPackets.remove(packet);
+	}
+
+	public void removePackets(CavanAccessibilityPackage pkg) {
+		mPackets.remove(pkg);
 	}
 
 	public void initServiceInfo(AccessibilityServiceInfo info) {
@@ -565,10 +587,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 
 		super.onDestroy();
-	}
-
-	public void showCountDownView(CavanAccessibilityPackage pkg) {
-		mHandler.obtainMessage(MSG_SHOW_COUNT_DOWN, pkg).sendToTarget();
 	}
 
 }

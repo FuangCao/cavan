@@ -28,6 +28,13 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		public BaseWindow(String name) {
 			super(name);
 		}
+	}
+
+	public class BackableWindow extends BaseWindow
+	{
+		public BackableWindow(String name) {
+			super(name);
+		}
 
 		public AccessibilityNodeInfo findBackNode(AccessibilityNodeInfo root) {
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByViewId(root, "com.tencent.mobileqq:id/ivTitleBtnLeft");
@@ -50,7 +57,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public boolean poll(AccessibilityNodeInfo root, int times) {
+		public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
 			AccessibilityNodeInfo node = findBackNode(root);
 			if (node != null) {
 				return CavanAccessibilityHelper.performClickAndRecycle(node);
@@ -60,7 +67,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		}
 	}
 
-	public class WalletActivity extends BaseWindow {
+	public class WalletActivity extends BackableWindow {
 
 		public WalletActivity(String name) {
 			super(name);
@@ -78,8 +85,8 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public boolean poll(AccessibilityNodeInfo root, int times) {
-			if (super.poll(root, times)) {
+		public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
+			if (super.poll(packet, root, times)) {
 				return true;
 			}
 
@@ -87,7 +94,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		}
 	}
 
-	public class SplashActivity extends BaseWindow {
+	public class SplashActivity extends BackableWindow {
 		public SplashActivity(String name) {
 			super(name);
 		}
@@ -256,11 +263,10 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 								return true;
 							}
 
-							if (removePacket(packet)) {
-								CavanAndroid.dLog("complete: " + packet);
-							}
-
+							removePacket(packet);
 							mFinishNodes.clear();
+
+							CavanAndroid.dLog("complete: " + packet);
 						}
 					}
 
@@ -340,7 +346,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public boolean poll(AccessibilityNodeInfo root, int times) {
+		public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
 			return doFindAndUnpack(root);
 		}
 	}
@@ -350,15 +356,23 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 	}
 
 	public synchronized CavanRedPacket findPacket(String title) {
-		for (CavanRedPacket packet : mPackets) {
-			CavanNotificationQQ notification = (CavanNotificationQQ) packet;
-			String name = notification.getName();
-			if (name == null) {
-				continue;
-			}
+		CavanRedPacketList packets = getPackets();
 
-			if (name.contains(title) || title.contains(name)) {
-				return packet;
+		synchronized (packets) {
+			for (CavanRedPacket packet : packets) {
+				if (packet.getPackage() != this) {
+					continue;
+				}
+
+				CavanNotificationQQ notification = (CavanNotificationQQ) packet;
+				String name = notification.getName();
+				if (name == null) {
+					continue;
+				}
+
+				if (name.contains(title) || title.contains(name)) {
+					return packet;
+				}
 			}
 		}
 
@@ -402,9 +416,9 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 	public void initWindows() {
 		addWindow(new SplashActivity("com.tencent.mobileqq.activity.SplashActivity"));
 		addWindow(new WalletActivity("cooperation.qwallet.plugin.QWalletPluginProxyActivity"));
-		addWindow(new WalletActivity("com.tencent.mobileqq.activity.PayBridgeActivity"));
-		addWindow(new BaseWindow("com.tencent.biz.pubaccount.serviceAccountFolder.ServiceAccountFolderActivity"));
-		addWindow(new BaseWindow("com.tencent.mobileqq.activity.ChatActivity"));
+		addWindow(new BaseWindow("com.tencent.mobileqq.activity.PayBridgeActivity"));
+		addWindow(new BackableWindow("com.tencent.biz.pubaccount.serviceAccountFolder.ServiceAccountFolderActivity"));
+		addWindow(new BackableWindow("com.tencent.mobileqq.activity.ChatActivity"));
 	}
 
 	@Override
@@ -416,7 +430,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 
 	@Override
 	public synchronized void onNotificationStateChanged(Notification notification) {
-		CavanNotificationQQ packet = new CavanNotificationQQ(this, notification);
+		CavanNotificationQQ packet = new CavanNotificationQQ(notification);
 		if (packet.isRedPacket()) {
 			addPacket(packet);
 		}

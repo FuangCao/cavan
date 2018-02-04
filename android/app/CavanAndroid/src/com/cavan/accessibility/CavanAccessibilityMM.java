@@ -228,13 +228,13 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public boolean poll(AccessibilityNodeInfo root, int times) {
+		public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
 			return doFindAndUnpack(root);
 		}
 
 		@Override
-		public boolean onPollFailed(int times) {
-			if (super.onPollFailed(times)) {
+		public boolean onPollFailed(CavanRedPacket packet, int times) {
+			if (super.onPollFailed(packet, times)) {
 				return true;
 			}
 
@@ -292,7 +292,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			if (source != null) {
 				if (isRedPacketLayout(source)) {
 					setUnlockDelay(200);
-					addPacket(null);
+					addPacket();
 				}
 
 				source.recycle();
@@ -392,10 +392,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public boolean poll(AccessibilityNodeInfo root, int times) {
+		public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
 			long time = System.currentTimeMillis();
-			if (mUnpackTime > time) {
-				showCountDownView();
+			if (packet.getUnpackTime() > time) {
+				showCountDownView(packet);
 				return true;
 			}
 
@@ -413,10 +413,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				if (button != null) {
 					CavanAccessibilityHelper.performClickAndRecycle(button);
 					mUnpackSuccess = true;
-				} else if (getPacketCount() > 0) {
-					CavanAccessibilityHelper.performClick(backNode);
 				} else {
-					setPending(false);
+					CavanAccessibilityHelper.performClick(backNode);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -480,7 +478,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public boolean poll(AccessibilityNodeInfo root, int times) {
+		public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
 			AccessibilityNodeInfo backNode = findBackNode(root);
 			if (backNode == null) {
 				return false;
@@ -505,7 +503,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public boolean poll(AccessibilityNodeInfo root, int times) {
+		public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
 			return false;
 		}
 	}
@@ -584,7 +582,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 	@Override
 	public void onNotificationStateChanged(Notification notification) {
-		CavanNotificationMM packet = new CavanNotificationMM(this, notification);
+		CavanNotificationMM packet = new CavanNotificationMM(notification);
 		if (packet.isRedPacket()) {
 			addPacket(packet);
 		}

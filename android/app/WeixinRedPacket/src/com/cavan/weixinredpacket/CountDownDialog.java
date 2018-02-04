@@ -11,11 +11,12 @@ import android.view.WindowManager.LayoutParams;
 import android.widget.Button;
 
 import com.cavan.accessibility.CavanAccessibilityPackage;
+import com.cavan.accessibility.CavanRedPacket;
 
 public class CountDownDialog implements OnClickListener {
 
 	protected Context mContext;
-	protected CavanAccessibilityPackage mPackage;
+	protected CavanRedPacket mPacket;
 
 	private View mRootView;
 	private Button mButtonNow;
@@ -50,8 +51,8 @@ public class CountDownDialog implements OnClickListener {
 		return params;
 	}
 
-	public void show(CavanAccessibilityPackage pkg, long delay) {
-		mPackage = pkg;
+	public void show(CavanRedPacket packet, long delay) {
+		mPacket = packet;
 
 		if (mDialog == null) {
 			AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
@@ -81,15 +82,17 @@ public class CountDownDialog implements OnClickListener {
 	}
 
 	protected void onButtonCancelClicked() {
-		mPackage.setForceUnpackEnable(false);
-		mPackage.setGotoIdleEnable(false);
-		mPackage.clearPackets();
+		CavanAccessibilityPackage pkg = mPacket.getPackage();
+		pkg.setForceUnpackEnable(false);
+		pkg.setGotoIdle(false);
+		pkg.clearPackets();
 		dismiss();
 	}
 
 	protected void onButtonNowClicked() {
-		mPackage.setGotoIdleEnable(false);
-		mPackage.setUnpackTime(0);
+		CavanAccessibilityPackage pkg = mPacket.getPackage();
+		pkg.setGotoIdle(false);
+		mPacket.setUnpackTime(0);
 		dismiss();
 	}
 

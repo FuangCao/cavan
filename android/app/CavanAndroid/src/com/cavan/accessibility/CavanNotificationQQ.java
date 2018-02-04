@@ -6,8 +6,8 @@ import android.app.Notification;
 
 public class CavanNotificationQQ extends CavanNotification {
 
-	public CavanNotificationQQ(CavanAccessibilityPackage pkg, Notification notification) {
-		super(pkg, notification);
+	public CavanNotificationQQ(Notification notification) {
+		super(notification);
 	}
 
 	@Override
@@ -50,17 +50,12 @@ public class CavanNotificationQQ extends CavanNotification {
 	}
 
 	@Override
-	public boolean send() {
-		if (mSendTimes > 0) {
-			return false;
+	public boolean isRedPacket() {
+		if (isRedPacket("[QQ红包]")) {
+			return true;
 		}
 
-		return super.send();
-	}
-
-	@Override
-	public boolean isRedPacket() {
-		return isRedPacket("[QQ红包]");
+		return super.isRedPacket();
 	}
 
 }
