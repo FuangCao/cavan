@@ -511,7 +511,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 	}
 
 	public CavanAccessibilityMM(CavanAccessibilityService service) {
-		super(service);
+		super(service, CavanPackageName.MM);
 	}
 
 	public boolean isWebViewUi() {
@@ -575,11 +575,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(getDetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI"));
 		addWindow(getDetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI"));
 		addWindow(getWebViewWindow("com.tencent.mm.plugin.webview.ui.tools.WebViewUI"));
-	}
-
-	@Override
-	public String getPackageName() {
-		return CavanPackageName.MM;
 	}
 
 	@Override

@@ -15,6 +15,7 @@ import com.cavan.java.CavanJava;
 public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 
 	private static final int SCROLL_DELAY = 200;
+	private static final int UNPACK_DELAY = 5000;
 	private static final int MAX_SCROLL_COUNT = 2;
 	private static final int MAX_RETRY_TIMES = 3;
 
@@ -86,7 +87,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		}
 	}
 
-	public class SplashActivity extends WalletActivity {
+	public class SplashActivity extends BaseWindow {
 		public SplashActivity(String name) {
 			super(name);
 		}
@@ -145,16 +146,26 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 			case "QQ红包":
 			case "点击拆开":
 			case "QQ红包个性版":
-				setUnlockDelay(LOCK_DELAY);
-				CavanAccessibilityHelper.performClick(node);
-				return true;
+				if (!CavanAccessibilityHelper.performClick(node)) {
+					return false;
+				}
+				break;
 
 			case "口令红包":
 			case "文字口令":
-				return sendText(root, message);
+				if (!sendText(root, message)) {
+					return false;
+				}
+				break;
+
+			default:
+				CavanAndroid.dLog("Invalid state: " + state);
+				return false;
 			}
 
-			return false;
+			setUnlockDelay(UNPACK_DELAY);
+
+			return true;
 		}
 
 		private boolean doAutoUnpack(AccessibilityNodeInfo root, AccessibilityNodeInfo listNode) {
@@ -330,16 +341,12 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 
 		@Override
 		public boolean poll(AccessibilityNodeInfo root, int times) {
-			if (doFindAndUnpack(root)) {
-				return true;
-			}
-
-			return showRedPacketDetail(root);
+			return doFindAndUnpack(root);
 		}
 	}
 
 	public CavanAccessibilityQQ(CavanAccessibilityService service) {
-		super(service);
+		super(service, new String[] { CavanPackageName.QQ, CavanPackageName.QWALLET });
 	}
 
 	public synchronized CavanRedPacket findPacket(String title) {
@@ -389,11 +396,6 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		}
 
 		return false;
-	}
-
-	@Override
-	public String getPackageName() {
-		return CavanPackageName.QQ;
 	}
 
 	@Override

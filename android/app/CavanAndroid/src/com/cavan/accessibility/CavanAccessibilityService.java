@@ -55,7 +55,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		public int poll(CavanAccessibilityPackage pkg) {
 			int retry = 0;
 
-			CavanAndroid.dLog("PollThread polling: " + pkg.getPackageName());
+			CavanAndroid.dLog("PollThread polling: " + pkg.getName());
 
 			while (mScreenOn) {
 				long delay;
@@ -73,7 +73,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 					delay = POLL_DELAY;
 				} else {
 					try {
-						if (pkg.getPackageName().equals(root.getPackageName())) {
+						if (pkg.isCurrentPackage(root)) {
 							delay = pkg.poll(root);
 							if (delay > 0) {
 								retry = 0;
@@ -83,7 +83,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 								return 0;
 							}
 						} else {
-							CavanAndroid.dLog("Package not mach: " + retry);
+							CavanAndroid.dLog("Invalid package(" + retry + "): " + root.getPackageName());
 
 							if (++retry > 5) {
 								return -1;
@@ -339,7 +339,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public String getCurrntPacketName() {
-		AccessibilityNodeInfo root = getRootInActiveWindow();
+		AccessibilityNodeInfo root = getRootInActiveWindow(10);
 		if (root == null) {
 			return null;
 		}
@@ -409,10 +409,11 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public void addPackage(CavanAccessibilityPackage pkg) {
-		CavanAndroid.dLog("addPackage: " + pkg.getPackageName());
-
 		synchronized (mPackages) {
-			mPackages.put(pkg.getPackageName(), pkg);
+			for (String name : pkg.getNames()) {
+				CavanAndroid.dLog("addPackage: " + name);
+				mPackages.put(name, pkg);
+			}
 		}
 	}
 
@@ -444,12 +445,39 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return 0;
 	}
 
+	public AccessibilityNodeInfo getRootInActiveWindow(int retry) {
+		while (true) {
+			AccessibilityNodeInfo root = getRootInActiveWindow();
+			if (root != null) {
+				return root;
+			}
+
+			CavanAndroid.eLog("Failed to getRootInActiveWindow: " + retry);
+
+			if (retry > 0) {
+				synchronized (mPollThread) {
+					try {
+						mPollThread.wait(100);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+
+				retry--;
+			} else {
+				break;
+			}
+		}
+
+		return null;
+	}
+
 	public void initServiceInfo(AccessibilityServiceInfo info) {
 		String[] packages = new String[mPackages.size()];
 		int i = 0;
 
 		for (CavanAccessibilityPackage pkg : mPackages.values()) {
-			packages[i++] = pkg.getPackageName();
+			packages[i++] = pkg.getName();
 		}
 
 		info.packageNames = packages;

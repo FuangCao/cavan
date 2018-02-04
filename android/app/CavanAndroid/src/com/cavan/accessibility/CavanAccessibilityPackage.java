@@ -31,17 +31,32 @@ public abstract class CavanAccessibilityPackage {
 	protected long mUnpackTime;
 	protected long mUnlockTime;
 	protected int mPollTimes;
+	protected String[] mNames;
+	protected String mName;
 
-	public CavanAccessibilityPackage(CavanAccessibilityService service) {
+	public CavanAccessibilityPackage(CavanAccessibilityService service, String[] names) {
 		mService = service;
+		mName = names[0];
+		mNames = names;
 		initWindows();
 	}
 
-	public abstract String getPackageName();
+	public CavanAccessibilityPackage(CavanAccessibilityService service, String name) {
+		this(service, new String[] { name });
+	}
+
+	public String getName() {
+		return mName;
+	}
+
+	public String[] getNames() {
+		return mNames;
+	}
+
 	public abstract void initWindows();
 
 	public synchronized void addWindow(CavanAccessibilityWindow win) {
-		CavanAndroid.dLog(getPackageName() + " <= " + win.getName());
+		CavanAndroid.dLog(mName + " <= " + win.getName());
 		mWindows.put(win.getName(), win);
 	}
 
@@ -228,7 +243,7 @@ public abstract class CavanAccessibilityPackage {
 	}
 
 	public synchronized boolean launch() {
-		CavanAndroid.dLog("Launch: " + getPackageName());
+		CavanAndroid.dLog("Launch: " + getName());
 
 		if (mPackets.size() > 0) {
 			CavanRedPacket packet = mPackets.get(0);
@@ -241,19 +256,51 @@ public abstract class CavanAccessibilityPackage {
 			}
 		}
 
-		return CavanAndroid.startActivity(mService, getPackageName());
+		return CavanAndroid.startActivity(mService, getName());
 	}
 
 	public void post() {
 		mService.post();
 	}
 
+	public boolean isCurrentPackage(String pkgName) {
+		for (String name : getNames()) {
+			if (name.equals(pkgName)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public boolean isCurrentPackage(AccessibilityNodeInfo root) {
+		CharSequence name = root.getPackageName();
+		if (name == null) {
+			return false;
+		}
+
+		return isCurrentPackage(name.toString());
+	}
+
 	public boolean isCurrentPackage() {
-		return getPackageName().equals(mService.getCurrntPacketName());
+		AccessibilityNodeInfo root = getRootInActiveWindow();
+		if (root == null) {
+			return false;
+		}
+
+		try {
+			return isCurrentPackage(getRootInActiveWindow());
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			root.recycle();
+		}
+
+		return false;
 	}
 
 	public AccessibilityNodeInfo getRootInActiveWindow() {
-		return mService.getRootInActiveWindow();
+		return mService.getRootInActiveWindow(10);
 	}
 
 	public synchronized void performPackageUpdated() {
@@ -270,7 +317,7 @@ public abstract class CavanAccessibilityPackage {
 			return null;
 		}
 
-		CavanAndroid.dLog("onWindowStateChanged: " + getPackageName() + "/" + name);
+		CavanAndroid.dLog("onWindowStateChanged: " + mName + "/" + name);
 		touchUpdateTime();
 
 		if (name.startsWith("android.widget.")) {
@@ -323,7 +370,7 @@ public abstract class CavanAccessibilityPackage {
 	public synchronized void onNotificationStateChanged(Notification data) {}
 
 	public synchronized long poll(AccessibilityNodeInfo root) {
-		CavanAndroid.dLog("package = " + getPackageName());
+		CavanAndroid.dLog("package = " + mName);
 
 		if (isPending()) {
 			long timeNow = System.currentTimeMillis();
@@ -379,6 +426,6 @@ public abstract class CavanAccessibilityPackage {
 
 	@Override
 	public String toString() {
-		return getPackageName();
+		return mName;
 	}
 }
