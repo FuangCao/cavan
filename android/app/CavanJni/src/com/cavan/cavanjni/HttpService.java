@@ -11,24 +11,23 @@ public class HttpService extends CavanNativeService {
 
 	public static final String NAME = "HTTP";
 
+	public HttpService() {
+		super(new CavanCommandHttpService());
+	}
+
 	@Override
 	public String getServiceName() {
 		return NAME;
 	}
 
 	@Override
-	protected void doMainLoop(int port) {
-		CavanJni.doHttpService("-p", Integer.toString(port));
+	protected String[] getCommandArgs(int port) {
+		return new String[] { "-p", Integer.toString(port) };
 	}
 
 	@Override
 	public int getDefaultPort() {
 		return 8021;
-	}
-
-	@Override
-	public boolean doStopService() {
-		return CavanJni.kill("http_service");
 	}
 
 	public static CavanFile getSharedDir(Context context) {

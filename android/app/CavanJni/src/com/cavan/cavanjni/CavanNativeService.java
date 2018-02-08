@@ -8,8 +8,9 @@ public abstract class CavanNativeService extends CavanService {
 
 	protected int mPort;
 	protected boolean mEnabled;
+	protected CavanNativeCommand mCommand;
 
-	class MyThread extends Thread {
+	class DaemonThread extends Thread {
 
 		@Override
 		public void run() {
@@ -17,8 +18,7 @@ public abstract class CavanNativeService extends CavanService {
 
 			while (mEnabled) {
 				setServiceState(CavanServiceState.RUNNING);
-				doMainLoop(mPort);
-
+				mCommand.run(getCommandArgs(mPort));
 				setServiceState(CavanServiceState.WAITING);
 
 				try {
@@ -35,11 +35,10 @@ public abstract class CavanNativeService extends CavanService {
 	}
 
 	public abstract int getDefaultPort();
-	public abstract boolean doStopService();
-	protected abstract void doMainLoop(int port);
+	protected abstract String[] getCommandArgs(int port);
 
-	public CavanNativeService() {
-		super();
+	public CavanNativeService(CavanNativeCommand command) {
+		mCommand = command;
 		mPort = getDefaultPort();
 	}
 
@@ -55,7 +54,7 @@ public abstract class CavanNativeService extends CavanService {
 
 		if (mState == CavanServiceState.STOPPED) {
 			mPort = port;
-			new MyThread().start();
+			new DaemonThread().start();
 		}
 	}
 
@@ -67,7 +66,7 @@ public abstract class CavanNativeService extends CavanService {
 	@Override
 	public void stop() {
 		mEnabled = false;
-		doStopService();
+		mCommand.kill();
 	}
 
 	@Override

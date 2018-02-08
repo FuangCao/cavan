@@ -14,7 +14,8 @@ import com.cavan.java.CavanFile;
 public class CavanJni extends CavanNative {
 	public static final String TAG = "Cavan";
 
-	public static native boolean kill(String name);
+	public static native int kill(int pid);
+	public static native int waitpid(int pid);
 	public static native boolean setEnv(String key, String value);
 	public static native boolean symlink(String target, String linkpath);
 
@@ -53,14 +54,14 @@ public class CavanJni extends CavanNative {
 		return true;
 	}
 
-	public static int doCommand(ICavanCommand command, String... args) {
-		return command.main(args);
+	public static int doCommand(CavanNativeCommand command, boolean async, String... args) {
+		return command.main(async, args);
 	}
 
-	public static int doCommand(String name, String... args) {
-		ICavanCommand command = sHashMap.get(name);
+	public static int doCommand(String name, boolean async, String... args) {
+		CavanNativeCommand command = sHashMap.get(name);
 		if (command != null) {
-			return doCommand(command, args);
+			return doCommand(command, async, args);
 		}
 
 		return -1;

@@ -120,9 +120,9 @@ $(LOCAL_PATH)/$(CAVAN_NATIVE_C): $(addprefix $(LOCAL_PATH)/,$(CAVAN_APP_SRC_FILE
 			echo; \
 			echo -e "extern int do_cavan_$${app}(int argc, char *argv[]);"; \
 			echo; \
-			echo -e "JNIEXPORT jint Java_$(CAVAN_NATIVE_NAME)_do$${native_app}(JNIEnv *env, jclass clazz, jobjectArray args)"; \
+			echo -e "JNIEXPORT jint Java_$(CAVAN_NATIVE_NAME)_do$${native_app}(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)"; \
 			echo -e "{"; \
-			echo -e "\treturn CavanMainExecute(env, args, \"$${app}\", do_cavan_$${app});"; \
+			echo -e "\treturn CavanMainExecute(env, \"$${app}\", async, args, do_cavan_$${app});"; \
 			echo -e "}"; \
 		done; \
 	} > $@
@@ -137,25 +137,22 @@ $(CAVAN_NATIVE_JAVA): $(addprefix $(LOCAL_PATH)/,$(CAVAN_APP_SRC_FILES)) $(CAVAN
 		echo -e "package com.cavan.cavanjni;"; \
 		echo; \
 		echo -e "import java.util.HashMap;"; \
-		echo; \
-		echo -e "interface ICavanCommand {"; \
-		echo -e "\tpublic int main(String... args);"; \
-		echo "}"; \
 		for app in $(CAVAN_APP_LIST); \
 		do \
 			native_app=$$(echo $${app} | sed 's/\(^\|_\)\([a-z]\)/\u\2/g'); \
 			echo; \
-			echo -e "class CavanCommand$${native_app} implements ICavanCommand {"; \
+			echo -e "class CavanCommand$${native_app} extends CavanNativeCommand {"; \
+			echo; \
 			echo -e "\t@Override"; \
-			echo -e "\tpublic int main(String... args) {"; \
-			echo -e "\t\treturn $${class_name}.do$${native_app}(args);"; \
+			echo -e "\tpublic int main(boolean async, String... args) {"; \
+			echo -e "\t\treturn $${class_name}.do$${native_app}(async, args);"; \
 			echo -e "\t}"; \
 			echo -e "}"; \
 		done; \
 		echo; \
 		echo -e "public class $${class_name} {"; \
 		echo; \
-		echo -e "\tpublic static HashMap<String, ICavanCommand> sHashMap = new HashMap<String, ICavanCommand>();"; \
+		echo -e "\tpublic static HashMap<String, CavanNativeCommand> sHashMap = new HashMap<String, CavanNativeCommand>();"; \
 		echo; \
 		echo -e "\tstatic {"; \
 		echo -e "\t\tSystem.loadLibrary(\"cavan-jni\");"; \
@@ -170,7 +167,7 @@ $(CAVAN_NATIVE_JAVA): $(addprefix $(LOCAL_PATH)/,$(CAVAN_APP_SRC_FILES)) $(CAVAN
 		for app in $(CAVAN_APP_LIST); \
 		do \
 			native_app=$$(echo $${app} | sed 's/\(^\|_\)\([a-z]\)/\u\2/g'); \
-			echo -e "\tpublic static native int do$${native_app}(String... args);"; \
+			echo -e "\tpublic static native int do$${native_app}(boolean async, String... args);"; \
 		done; \
 		echo -e "}"; \
 	} > $@

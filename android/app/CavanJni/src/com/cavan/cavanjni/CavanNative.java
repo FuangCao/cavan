@@ -4,916 +4,1041 @@ package com.cavan.cavanjni;
 
 import java.util.HashMap;
 
-interface ICavanCommand {
-	public int main(String... args);
-}
+class CavanCommandAbspath extends CavanNativeCommand {
 
-class CavanCommandAbspath implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doAbspath(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doAbspath(async, args);
 	}
 }
+
+class CavanCommandAlarm extends CavanNativeCommand {
 
-class CavanCommandAlarm implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doAlarm(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doAlarm(async, args);
 	}
 }
 
-class CavanCommandAlc5671Clock implements ICavanCommand {
+class CavanCommandAlc5671Clock extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doAlc5671Clock(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doAlc5671Clock(async, args);
 	}
 }
+
+class CavanCommandAutoDd extends CavanNativeCommand {
 
-class CavanCommandAutoDd implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doAutoDd(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doAutoDd(async, args);
 	}
 }
 
-class CavanCommandAutoInput implements ICavanCommand {
+class CavanCommandAutoInput extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doAutoInput(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doAutoInput(async, args);
 	}
 }
+
+class CavanCommandAutoMount extends CavanNativeCommand {
 
-class CavanCommandAutoMount implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doAutoMount(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doAutoMount(async, args);
 	}
 }
 
-class CavanCommandBattery implements ICavanCommand {
+class CavanCommandBattery extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doBattery(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doBattery(async, args);
 	}
 }
+
+class CavanCommandBatteryLevel extends CavanNativeCommand {
 
-class CavanCommandBatteryLevel implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doBatteryLevel(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doBatteryLevel(async, args);
 	}
 }
 
-class CavanCommandBdata implements ICavanCommand {
+class CavanCommandBdata extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doBdata(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doBdata(async, args);
 	}
 }
+
+class CavanCommandBkernel extends CavanNativeCommand {
 
-class CavanCommandBkernel implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doBkernel(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doBkernel(async, args);
 	}
 }
 
-class CavanCommandBmpView implements ICavanCommand {
+class CavanCommandBmpView extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doBmpView(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doBmpView(async, args);
 	}
 }
+
+class CavanCommandBootimg extends CavanNativeCommand {
 
-class CavanCommandBootimg implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doBootimg(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doBootimg(async, args);
 	}
 }
 
-class CavanCommandBramdisk implements ICavanCommand {
+class CavanCommandBramdisk extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doBramdisk(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doBramdisk(async, args);
 	}
 }
+
+class CavanCommandBrecovery extends CavanNativeCommand {
 
-class CavanCommandBrecovery implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doBrecovery(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doBrecovery(async, args);
 	}
 }
 
-class CavanCommandBsystem implements ICavanCommand {
+class CavanCommandBsystem extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doBsystem(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doBsystem(async, args);
 	}
 }
+
+class CavanCommandBuboot extends CavanNativeCommand {
 
-class CavanCommandBuboot implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doBuboot(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doBuboot(async, args);
 	}
 }
 
-class CavanCommandCalculator implements ICavanCommand {
+class CavanCommandCalculator extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doCalculator(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doCalculator(async, args);
 	}
 }
+
+class CavanCommandChroot extends CavanNativeCommand {
 
-class CavanCommandChroot implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doChroot(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doChroot(async, args);
 	}
 }
 
-class CavanCommandChtty implements ICavanCommand {
+class CavanCommandChtty extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doChtty(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doChtty(async, args);
 	}
 }
+
+class CavanCommandCopy extends CavanNativeCommand {
 
-class CavanCommandCopy implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doCopy(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doCopy(async, args);
 	}
 }
 
-class CavanCommandDd implements ICavanCommand {
+class CavanCommandDd extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doDd(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doDd(async, args);
 	}
 }
+
+class CavanCommandDf extends CavanNativeCommand {
 
-class CavanCommandDf implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doDf(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doDf(async, args);
 	}
 }
 
-class CavanCommandDicGenerator implements ICavanCommand {
+class CavanCommandDicGenerator extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doDicGenerator(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doDicGenerator(async, args);
 	}
 }
+
+class CavanCommandDisplay extends CavanNativeCommand {
 
-class CavanCommandDisplay implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doDisplay(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doDisplay(async, args);
 	}
 }
 
-class CavanCommandDos2unix implements ICavanCommand {
+class CavanCommandDos2unix extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doDos2unix(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doDos2unix(async, args);
 	}
 }
+
+class CavanCommandEavooSellStatistic extends CavanNativeCommand {
 
-class CavanCommandEavooSellStatistic implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doEavooSellStatistic(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doEavooSellStatistic(async, args);
 	}
 }
 
-class CavanCommandEcc implements ICavanCommand {
+class CavanCommandEcc extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doEcc(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doEcc(async, args);
 	}
 }
+
+class CavanCommandEventRepeater extends CavanNativeCommand {
 
-class CavanCommandEventRepeater implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doEventRepeater(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doEventRepeater(async, args);
 	}
 }
 
-class CavanCommandExt2 implements ICavanCommand {
+class CavanCommandExt2 extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doExt2(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doExt2(async, args);
 	}
 }
+
+class CavanCommandFbCapture extends CavanNativeCommand {
 
-class CavanCommandFbCapture implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doFbCapture(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doFbCapture(async, args);
 	}
 }
 
-class CavanCommandFdisk implements ICavanCommand {
+class CavanCommandFdisk extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doFdisk(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doFdisk(async, args);
 	}
 }
+
+class CavanCommandFileCrc32 extends CavanNativeCommand {
 
-class CavanCommandFileCrc32 implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doFileCrc32(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doFileCrc32(async, args);
 	}
 }
 
-class CavanCommandFileJoin implements ICavanCommand {
+class CavanCommandFileJoin extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doFileJoin(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doFileJoin(async, args);
 	}
 }
+
+class CavanCommandFileLoop extends CavanNativeCommand {
 
-class CavanCommandFileLoop implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doFileLoop(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doFileLoop(async, args);
 	}
 }
 
-class CavanCommandFileSplit implements ICavanCommand {
+class CavanCommandFileSplit extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doFileSplit(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doFileSplit(async, args);
 	}
 }
+
+class CavanCommandFtp extends CavanNativeCommand {
 
-class CavanCommandFtp implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doFtp(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doFtp(async, args);
 	}
 }
 
-class CavanCommandFtpServer implements ICavanCommand {
+class CavanCommandFtpServer extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doFtpServer(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doFtpServer(async, args);
 	}
 }
+
+class CavanCommandGitDaemon extends CavanNativeCommand {
 
-class CavanCommandGitDaemon implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doGitDaemon(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doGitDaemon(async, args);
 	}
 }
 
-class CavanCommandHeartRate implements ICavanCommand {
+class CavanCommandHeartRate extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doHeartRate(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doHeartRate(async, args);
 	}
 }
+
+class CavanCommandHttpClient extends CavanNativeCommand {
 
-class CavanCommandHttpClient implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doHttpClient(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doHttpClient(async, args);
 	}
 }
 
-class CavanCommandHttpSender implements ICavanCommand {
+class CavanCommandHttpSender extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doHttpSender(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doHttpSender(async, args);
 	}
 }
+
+class CavanCommandHttpService extends CavanNativeCommand {
 
-class CavanCommandHttpService implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doHttpService(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doHttpService(async, args);
 	}
 }
 
-class CavanCommandI2c implements ICavanCommand {
+class CavanCommandI2c extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doI2c(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doI2c(async, args);
 	}
 }
+
+class CavanCommandImageDd extends CavanNativeCommand {
 
-class CavanCommandImageDd implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doImageDd(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doImageDd(async, args);
 	}
 }
 
-class CavanCommandInotify implements ICavanCommand {
+class CavanCommandInotify extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doInotify(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doInotify(async, args);
 	}
 }
+
+class CavanCommandInput extends CavanNativeCommand {
 
-class CavanCommandInput implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doInput(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doInput(async, args);
 	}
 }
 
-class CavanCommandJw650Lcd implements ICavanCommand {
+class CavanCommandJw650Lcd extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doJw650Lcd(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doJw650Lcd(async, args);
 	}
 }
+
+class CavanCommandJwpUdp extends CavanNativeCommand {
 
-class CavanCommandJwpUdp implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doJwpUdp(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doJwpUdp(async, args);
 	}
 }
 
-class CavanCommandLm49350Clock implements ICavanCommand {
+class CavanCommandLm49350Clock extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doLm49350Clock(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doLm49350Clock(async, args);
 	}
 }
+
+class CavanCommandLoopRun extends CavanNativeCommand {
 
-class CavanCommandLoopRun implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doLoopRun(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doLoopRun(async, args);
 	}
 }
 
-class CavanCommandMd5sum implements ICavanCommand {
+class CavanCommandMd5sum extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doMd5sum(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doMd5sum(async, args);
 	}
 }
+
+class CavanCommandMkdir extends CavanNativeCommand {
 
-class CavanCommandMkdir implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doMkdir(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doMkdir(async, args);
 	}
 }
 
-class CavanCommandMknp implements ICavanCommand {
+class CavanCommandMknp extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doMknp(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doMknp(async, args);
 	}
 }
+
+class CavanCommandMksdcard extends CavanNativeCommand {
 
-class CavanCommandMksdcard implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doMksdcard(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doMksdcard(async, args);
 	}
 }
 
-class CavanCommandModemUpgrade implements ICavanCommand {
+class CavanCommandModemUpgrade extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doModemUpgrade(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doModemUpgrade(async, args);
 	}
 }
+
+class CavanCommandMount extends CavanNativeCommand {
 
-class CavanCommandMount implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doMount(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doMount(async, args);
 	}
 }
 
-class CavanCommandMove implements ICavanCommand {
+class CavanCommandMove extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doMove(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doMove(async, args);
 	}
 }
+
+class CavanCommandMtd extends CavanNativeCommand {
 
-class CavanCommandMtd implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doMtd(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doMtd(async, args);
 	}
 }
 
-class CavanCommandNetDiscovery implements ICavanCommand {
+class CavanCommandNetDiscovery extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doNetDiscovery(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doNetDiscovery(async, args);
 	}
 }
+
+class CavanCommandNetMonitor extends CavanNativeCommand {
 
-class CavanCommandNetMonitor implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doNetMonitor(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doNetMonitor(async, args);
 	}
 }
 
-class CavanCommandNetwork implements ICavanCommand {
+class CavanCommandNetwork extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doNetwork(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doNetwork(async, args);
 	}
 }
+
+class CavanCommandP2p extends CavanNativeCommand {
 
-class CavanCommandP2p implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doP2p(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doP2p(async, args);
 	}
 }
 
-class CavanCommandPartProbe implements ICavanCommand {
+class CavanCommandPartProbe extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doPartProbe(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doPartProbe(async, args);
 	}
 }
+
+class CavanCommandPartShow extends CavanNativeCommand {
 
-class CavanCommandPartShow implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doPartShow(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doPartShow(async, args);
 	}
 }
 
-class CavanCommandPartTable implements ICavanCommand {
+class CavanCommandPartTable extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doPartTable(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doPartTable(async, args);
 	}
 }
+
+class CavanCommandPing extends CavanNativeCommand {
 
-class CavanCommandPing implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doPing(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doPing(async, args);
 	}
 }
 
-class CavanCommandPollEvent implements ICavanCommand {
+class CavanCommandPollEvent extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doPollEvent(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doPollEvent(async, args);
 	}
 }
+
+class CavanCommandPollInput extends CavanNativeCommand {
 
-class CavanCommandPollInput implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doPollInput(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doPollInput(async, args);
 	}
 }
 
-class CavanCommandRamdisk implements ICavanCommand {
+class CavanCommandRamdisk extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doRamdisk(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doRamdisk(async, args);
 	}
 }
+
+class CavanCommandRedpacket extends CavanNativeCommand {
 
-class CavanCommandRedpacket implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doRedpacket(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doRedpacket(async, args);
 	}
 }
 
-class CavanCommandRemove implements ICavanCommand {
+class CavanCommandRemove extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doRemove(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doRemove(async, args);
 	}
 }
+
+class CavanCommandResize extends CavanNativeCommand {
 
-class CavanCommandResize implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doResize(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doResize(async, args);
 	}
 }
 
-class CavanCommandRle implements ICavanCommand {
+class CavanCommandRle extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doRle(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doRle(async, args);
 	}
 }
+
+class CavanCommandRoleChange extends CavanNativeCommand {
 
-class CavanCommandRoleChange implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doRoleChange(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doRoleChange(async, args);
 	}
 }
 
-class CavanCommandScreenMirror implements ICavanCommand {
+class CavanCommandScreenMirror extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doScreenMirror(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doScreenMirror(async, args);
 	}
 }
+
+class CavanCommandService extends CavanNativeCommand {
 
-class CavanCommandService implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doService(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doService(async, args);
 	}
 }
 
-class CavanCommandServiceManager implements ICavanCommand {
+class CavanCommandServiceManager extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doServiceManager(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doServiceManager(async, args);
 	}
 }
+
+class CavanCommandSha1sum extends CavanNativeCommand {
 
-class CavanCommandSha1sum implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSha1sum(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSha1sum(async, args);
 	}
 }
 
-class CavanCommandShowFile implements ICavanCommand {
+class CavanCommandShowFile extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doShowFile(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doShowFile(async, args);
 	}
 }
+
+class CavanCommandShrink extends CavanNativeCommand {
 
-class CavanCommandShrink implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doShrink(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doShrink(async, args);
 	}
 }
 
-class CavanCommandSprdAt implements ICavanCommand {
+class CavanCommandSprdAt extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSprdAt(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSprdAt(async, args);
 	}
 }
+
+class CavanCommandSprdWriteImei extends CavanNativeCommand {
 
-class CavanCommandSprdWriteImei implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSprdWriteImei(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSprdWriteImei(async, args);
 	}
 }
 
-class CavanCommandSsh implements ICavanCommand {
+class CavanCommandSsh extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSsh(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSsh(async, args);
 	}
 }
+
+class CavanCommandSshCopy extends CavanNativeCommand {
 
-class CavanCommandSshCopy implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSshCopy(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSshCopy(async, args);
 	}
 }
 
-class CavanCommandSshd implements ICavanCommand {
+class CavanCommandSshd extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSshd(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSshd(async, args);
 	}
 }
+
+class CavanCommandSshDd extends CavanNativeCommand {
 
-class CavanCommandSshDd implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSshDd(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSshDd(async, args);
 	}
 }
 
-class CavanCommandSu implements ICavanCommand {
+class CavanCommandSu extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSu(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSu(async, args);
 	}
 }
+
+class CavanCommandSudo extends CavanNativeCommand {
 
-class CavanCommandSudo implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSudo(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSudo(async, args);
 	}
 }
 
-class CavanCommandSuperUpgrade implements ICavanCommand {
+class CavanCommandSuperUpgrade extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSuperUpgrade(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSuperUpgrade(async, args);
 	}
 }
+
+class CavanCommandSwanCheck extends CavanNativeCommand {
 
-class CavanCommandSwanCheck implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSwanCheck(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanCheck(async, args);
 	}
 }
 
-class CavanCommandSwanEmmc implements ICavanCommand {
+class CavanCommandSwanEmmc extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSwanEmmc(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanEmmc(async, args);
 	}
 }
+
+class CavanCommandSwanFac extends CavanNativeCommand {
 
-class CavanCommandSwanFac implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSwanFac(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanFac(async, args);
 	}
 }
 
-class CavanCommandSwanIpu implements ICavanCommand {
+class CavanCommandSwanIpu extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSwanIpu(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanIpu(async, args);
 	}
 }
+
+class CavanCommandSwanMac extends CavanNativeCommand {
 
-class CavanCommandSwanMac implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSwanMac(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanMac(async, args);
 	}
 }
 
-class CavanCommandSwanMd5 implements ICavanCommand {
+class CavanCommandSwanMd5 extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSwanMd5(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanMd5(async, args);
 	}
 }
+
+class CavanCommandSwanMkfs extends CavanNativeCommand {
 
-class CavanCommandSwanMkfs implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSwanMkfs(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanMkfs(async, args);
 	}
 }
 
-class CavanCommandSwanSfdisk implements ICavanCommand {
+class CavanCommandSwanSfdisk extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSwanSfdisk(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanSfdisk(async, args);
 	}
 }
+
+class CavanCommandSwanTs extends CavanNativeCommand {
 
-class CavanCommandSwanTs implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSwanTs(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanTs(async, args);
 	}
 }
 
-class CavanCommandSwanUpgrade implements ICavanCommand {
+class CavanCommandSwanUpgrade extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSwanUpgrade(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanUpgrade(async, args);
 	}
 }
+
+class CavanCommandSwanVk extends CavanNativeCommand {
 
-class CavanCommandSwanVk implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSwanVk(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanVk(async, args);
 	}
 }
 
-class CavanCommandSwanVn implements ICavanCommand {
+class CavanCommandSwanVn extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSwanVn(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanVn(async, args);
 	}
 }
+
+class CavanCommandSystemInit extends CavanNativeCommand {
 
-class CavanCommandSystemInit implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doSystemInit(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doSystemInit(async, args);
 	}
 }
 
-class CavanCommandTcpBridge implements ICavanCommand {
+class CavanCommandTcpBridge extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doTcpBridge(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doTcpBridge(async, args);
 	}
 }
+
+class CavanCommandTcpCopy extends CavanNativeCommand {
 
-class CavanCommandTcpCopy implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doTcpCopy(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doTcpCopy(async, args);
 	}
 }
 
-class CavanCommandTcpDd implements ICavanCommand {
+class CavanCommandTcpDd extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doTcpDd(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doTcpDd(async, args);
 	}
 }
+
+class CavanCommandTcpDdServer extends CavanNativeCommand {
 
-class CavanCommandTcpDdServer implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doTcpDdServer(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doTcpDdServer(async, args);
 	}
 }
 
-class CavanCommandTcpExec implements ICavanCommand {
+class CavanCommandTcpExec extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doTcpExec(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doTcpExec(async, args);
 	}
 }
+
+class CavanCommandTcpInstall extends CavanNativeCommand {
 
-class CavanCommandTcpInstall implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doTcpInstall(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doTcpInstall(async, args);
 	}
 }
 
-class CavanCommandTcpKeypad implements ICavanCommand {
+class CavanCommandTcpKeypad extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doTcpKeypad(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doTcpKeypad(async, args);
 	}
 }
+
+class CavanCommandTcpProxy extends CavanNativeCommand {
 
-class CavanCommandTcpProxy implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doTcpProxy(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doTcpProxy(async, args);
 	}
 }
 
-class CavanCommandTcpRepeater implements ICavanCommand {
+class CavanCommandTcpRepeater extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doTcpRepeater(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doTcpRepeater(async, args);
 	}
 }
+
+class CavanCommandTee extends CavanNativeCommand {
 
-class CavanCommandTee implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doTee(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doTee(async, args);
 	}
 }
 
-class CavanCommandTextlen implements ICavanCommand {
+class CavanCommandTextlen extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doTextlen(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doTextlen(async, args);
 	}
 }
+
+class CavanCommandTftpAutoDd extends CavanNativeCommand {
 
-class CavanCommandTftpAutoDd implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doTftpAutoDd(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doTftpAutoDd(async, args);
 	}
 }
 
-class CavanCommandTftpCommand implements ICavanCommand {
+class CavanCommandTftpCommand extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doTftpCommand(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doTftpCommand(async, args);
 	}
 }
+
+class CavanCommandTftpCopy extends CavanNativeCommand {
 
-class CavanCommandTftpCopy implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doTftpCopy(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doTftpCopy(async, args);
 	}
 }
 
-class CavanCommandTftpDd implements ICavanCommand {
+class CavanCommandTftpDd extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doTftpDd(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doTftpDd(async, args);
 	}
 }
+
+class CavanCommandTftpDdServer extends CavanNativeCommand {
 
-class CavanCommandTftpDdServer implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doTftpDdServer(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doTftpDdServer(async, args);
 	}
 }
 
-class CavanCommandTouch implements ICavanCommand {
+class CavanCommandTouch extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doTouch(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doTouch(async, args);
 	}
 }
+
+class CavanCommandTtyMode extends CavanNativeCommand {
 
-class CavanCommandTtyMode implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doTtyMode(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doTtyMode(async, args);
 	}
 }
 
-class CavanCommandUmount implements ICavanCommand {
+class CavanCommandUmount extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doUmount(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doUmount(async, args);
 	}
 }
+
+class CavanCommandUsb extends CavanNativeCommand {
 
-class CavanCommandUsb implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doUsb(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doUsb(async, args);
 	}
 }
 
-class CavanCommandUsbCopy implements ICavanCommand {
+class CavanCommandUsbCopy extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doUsbCopy(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doUsbCopy(async, args);
 	}
 }
+
+class CavanCommandUsbDd extends CavanNativeCommand {
 
-class CavanCommandUsbDd implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doUsbDd(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doUsbDd(async, args);
 	}
 }
 
-class CavanCommandUsbDdServer implements ICavanCommand {
+class CavanCommandUsbDdServer extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doUsbDdServer(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doUsbDdServer(async, args);
 	}
 }
+
+class CavanCommandVfat extends CavanNativeCommand {
 
-class CavanCommandVfat implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doVfat(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doVfat(async, args);
 	}
 }
 
-class CavanCommandWebProxy implements ICavanCommand {
+class CavanCommandWebProxy extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doWebProxy(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doWebProxy(async, args);
 	}
 }
 
-class CavanCommandMkfs implements ICavanCommand {
+class CavanCommandMkfs extends CavanNativeCommand {
+
 	@Override
-	public int main(String... args) {
-		return CavanNative.doMkfs(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doMkfs(async, args);
 	}
 }
+
+class CavanCommandCppCalculator extends CavanNativeCommand {
 
-class CavanCommandCppCalculator implements ICavanCommand {
 	@Override
-	public int main(String... args) {
-		return CavanNative.doCppCalculator(args);
+	public int main(boolean async, String... args) {
+		return CavanNative.doCppCalculator(async, args);
 	}
 }
 
 public class CavanNative {
 
-	public static HashMap<String, ICavanCommand> sHashMap = new HashMap<String, ICavanCommand>();
+	public static HashMap<String, CavanNativeCommand> sHashMap = new HashMap<String, CavanNativeCommand>();
 
 	static {
 		System.loadLibrary("cavan-jni");
@@ -1049,133 +1174,133 @@ public class CavanNative {
 		sHashMap.put("cpp_calculator", new CavanCommandCppCalculator());
 	}
 
-	public static native int doAbspath(String... args);
-	public static native int doAlarm(String... args);
-	public static native int doAlc5671Clock(String... args);
-	public static native int doAutoDd(String... args);
-	public static native int doAutoInput(String... args);
-	public static native int doAutoMount(String... args);
-	public static native int doBattery(String... args);
-	public static native int doBatteryLevel(String... args);
-	public static native int doBdata(String... args);
-	public static native int doBkernel(String... args);
-	public static native int doBmpView(String... args);
-	public static native int doBootimg(String... args);
-	public static native int doBramdisk(String... args);
-	public static native int doBrecovery(String... args);
-	public static native int doBsystem(String... args);
-	public static native int doBuboot(String... args);
-	public static native int doCalculator(String... args);
-	public static native int doChroot(String... args);
-	public static native int doChtty(String... args);
-	public static native int doCopy(String... args);
-	public static native int doDd(String... args);
-	public static native int doDf(String... args);
-	public static native int doDicGenerator(String... args);
-	public static native int doDisplay(String... args);
-	public static native int doDos2unix(String... args);
-	public static native int doEavooSellStatistic(String... args);
-	public static native int doEcc(String... args);
-	public static native int doEventRepeater(String... args);
-	public static native int doExt2(String... args);
-	public static native int doFbCapture(String... args);
-	public static native int doFdisk(String... args);
-	public static native int doFileCrc32(String... args);
-	public static native int doFileJoin(String... args);
-	public static native int doFileLoop(String... args);
-	public static native int doFileSplit(String... args);
-	public static native int doFtp(String... args);
-	public static native int doFtpServer(String... args);
-	public static native int doGitDaemon(String... args);
-	public static native int doHeartRate(String... args);
-	public static native int doHttpClient(String... args);
-	public static native int doHttpSender(String... args);
-	public static native int doHttpService(String... args);
-	public static native int doI2c(String... args);
-	public static native int doImageDd(String... args);
-	public static native int doInotify(String... args);
-	public static native int doInput(String... args);
-	public static native int doJw650Lcd(String... args);
-	public static native int doJwpUdp(String... args);
-	public static native int doLm49350Clock(String... args);
-	public static native int doLoopRun(String... args);
-	public static native int doMd5sum(String... args);
-	public static native int doMkdir(String... args);
-	public static native int doMknp(String... args);
-	public static native int doMksdcard(String... args);
-	public static native int doModemUpgrade(String... args);
-	public static native int doMount(String... args);
-	public static native int doMove(String... args);
-	public static native int doMtd(String... args);
-	public static native int doNetDiscovery(String... args);
-	public static native int doNetMonitor(String... args);
-	public static native int doNetwork(String... args);
-	public static native int doP2p(String... args);
-	public static native int doPartProbe(String... args);
-	public static native int doPartShow(String... args);
-	public static native int doPartTable(String... args);
-	public static native int doPing(String... args);
-	public static native int doPollEvent(String... args);
-	public static native int doPollInput(String... args);
-	public static native int doRamdisk(String... args);
-	public static native int doRedpacket(String... args);
-	public static native int doRemove(String... args);
-	public static native int doResize(String... args);
-	public static native int doRle(String... args);
-	public static native int doRoleChange(String... args);
-	public static native int doScreenMirror(String... args);
-	public static native int doService(String... args);
-	public static native int doServiceManager(String... args);
-	public static native int doSha1sum(String... args);
-	public static native int doShowFile(String... args);
-	public static native int doShrink(String... args);
-	public static native int doSprdAt(String... args);
-	public static native int doSprdWriteImei(String... args);
-	public static native int doSsh(String... args);
-	public static native int doSshCopy(String... args);
-	public static native int doSshd(String... args);
-	public static native int doSshDd(String... args);
-	public static native int doSu(String... args);
-	public static native int doSudo(String... args);
-	public static native int doSuperUpgrade(String... args);
-	public static native int doSwanCheck(String... args);
-	public static native int doSwanEmmc(String... args);
-	public static native int doSwanFac(String... args);
-	public static native int doSwanIpu(String... args);
-	public static native int doSwanMac(String... args);
-	public static native int doSwanMd5(String... args);
-	public static native int doSwanMkfs(String... args);
-	public static native int doSwanSfdisk(String... args);
-	public static native int doSwanTs(String... args);
-	public static native int doSwanUpgrade(String... args);
-	public static native int doSwanVk(String... args);
-	public static native int doSwanVn(String... args);
-	public static native int doSystemInit(String... args);
-	public static native int doTcpBridge(String... args);
-	public static native int doTcpCopy(String... args);
-	public static native int doTcpDd(String... args);
-	public static native int doTcpDdServer(String... args);
-	public static native int doTcpExec(String... args);
-	public static native int doTcpInstall(String... args);
-	public static native int doTcpKeypad(String... args);
-	public static native int doTcpProxy(String... args);
-	public static native int doTcpRepeater(String... args);
-	public static native int doTee(String... args);
-	public static native int doTextlen(String... args);
-	public static native int doTftpAutoDd(String... args);
-	public static native int doTftpCommand(String... args);
-	public static native int doTftpCopy(String... args);
-	public static native int doTftpDd(String... args);
-	public static native int doTftpDdServer(String... args);
-	public static native int doTouch(String... args);
-	public static native int doTtyMode(String... args);
-	public static native int doUmount(String... args);
-	public static native int doUsb(String... args);
-	public static native int doUsbCopy(String... args);
-	public static native int doUsbDd(String... args);
-	public static native int doUsbDdServer(String... args);
-	public static native int doVfat(String... args);
-	public static native int doWebProxy(String... args);
-	public static native int doMkfs(String... args);
-	public static native int doCppCalculator(String... args);
+	public static native int doAbspath(boolean async, String... args);
+	public static native int doAlarm(boolean async, String... args);
+	public static native int doAlc5671Clock(boolean async, String... args);
+	public static native int doAutoDd(boolean async, String... args);
+	public static native int doAutoInput(boolean async, String... args);
+	public static native int doAutoMount(boolean async, String... args);
+	public static native int doBattery(boolean async, String... args);
+	public static native int doBatteryLevel(boolean async, String... args);
+	public static native int doBdata(boolean async, String... args);
+	public static native int doBkernel(boolean async, String... args);
+	public static native int doBmpView(boolean async, String... args);
+	public static native int doBootimg(boolean async, String... args);
+	public static native int doBramdisk(boolean async, String... args);
+	public static native int doBrecovery(boolean async, String... args);
+	public static native int doBsystem(boolean async, String... args);
+	public static native int doBuboot(boolean async, String... args);
+	public static native int doCalculator(boolean async, String... args);
+	public static native int doChroot(boolean async, String... args);
+	public static native int doChtty(boolean async, String... args);
+	public static native int doCopy(boolean async, String... args);
+	public static native int doDd(boolean async, String... args);
+	public static native int doDf(boolean async, String... args);
+	public static native int doDicGenerator(boolean async, String... args);
+	public static native int doDisplay(boolean async, String... args);
+	public static native int doDos2unix(boolean async, String... args);
+	public static native int doEavooSellStatistic(boolean async, String... args);
+	public static native int doEcc(boolean async, String... args);
+	public static native int doEventRepeater(boolean async, String... args);
+	public static native int doExt2(boolean async, String... args);
+	public static native int doFbCapture(boolean async, String... args);
+	public static native int doFdisk(boolean async, String... args);
+	public static native int doFileCrc32(boolean async, String... args);
+	public static native int doFileJoin(boolean async, String... args);
+	public static native int doFileLoop(boolean async, String... args);
+	public static native int doFileSplit(boolean async, String... args);
+	public static native int doFtp(boolean async, String... args);
+	public static native int doFtpServer(boolean async, String... args);
+	public static native int doGitDaemon(boolean async, String... args);
+	public static native int doHeartRate(boolean async, String... args);
+	public static native int doHttpClient(boolean async, String... args);
+	public static native int doHttpSender(boolean async, String... args);
+	public static native int doHttpService(boolean async, String... args);
+	public static native int doI2c(boolean async, String... args);
+	public static native int doImageDd(boolean async, String... args);
+	public static native int doInotify(boolean async, String... args);
+	public static native int doInput(boolean async, String... args);
+	public static native int doJw650Lcd(boolean async, String... args);
+	public static native int doJwpUdp(boolean async, String... args);
+	public static native int doLm49350Clock(boolean async, String... args);
+	public static native int doLoopRun(boolean async, String... args);
+	public static native int doMd5sum(boolean async, String... args);
+	public static native int doMkdir(boolean async, String... args);
+	public static native int doMknp(boolean async, String... args);
+	public static native int doMksdcard(boolean async, String... args);
+	public static native int doModemUpgrade(boolean async, String... args);
+	public static native int doMount(boolean async, String... args);
+	public static native int doMove(boolean async, String... args);
+	public static native int doMtd(boolean async, String... args);
+	public static native int doNetDiscovery(boolean async, String... args);
+	public static native int doNetMonitor(boolean async, String... args);
+	public static native int doNetwork(boolean async, String... args);
+	public static native int doP2p(boolean async, String... args);
+	public static native int doPartProbe(boolean async, String... args);
+	public static native int doPartShow(boolean async, String... args);
+	public static native int doPartTable(boolean async, String... args);
+	public static native int doPing(boolean async, String... args);
+	public static native int doPollEvent(boolean async, String... args);
+	public static native int doPollInput(boolean async, String... args);
+	public static native int doRamdisk(boolean async, String... args);
+	public static native int doRedpacket(boolean async, String... args);
+	public static native int doRemove(boolean async, String... args);
+	public static native int doResize(boolean async, String... args);
+	public static native int doRle(boolean async, String... args);
+	public static native int doRoleChange(boolean async, String... args);
+	public static native int doScreenMirror(boolean async, String... args);
+	public static native int doService(boolean async, String... args);
+	public static native int doServiceManager(boolean async, String... args);
+	public static native int doSha1sum(boolean async, String... args);
+	public static native int doShowFile(boolean async, String... args);
+	public static native int doShrink(boolean async, String... args);
+	public static native int doSprdAt(boolean async, String... args);
+	public static native int doSprdWriteImei(boolean async, String... args);
+	public static native int doSsh(boolean async, String... args);
+	public static native int doSshCopy(boolean async, String... args);
+	public static native int doSshd(boolean async, String... args);
+	public static native int doSshDd(boolean async, String... args);
+	public static native int doSu(boolean async, String... args);
+	public static native int doSudo(boolean async, String... args);
+	public static native int doSuperUpgrade(boolean async, String... args);
+	public static native int doSwanCheck(boolean async, String... args);
+	public static native int doSwanEmmc(boolean async, String... args);
+	public static native int doSwanFac(boolean async, String... args);
+	public static native int doSwanIpu(boolean async, String... args);
+	public static native int doSwanMac(boolean async, String... args);
+	public static native int doSwanMd5(boolean async, String... args);
+	public static native int doSwanMkfs(boolean async, String... args);
+	public static native int doSwanSfdisk(boolean async, String... args);
+	public static native int doSwanTs(boolean async, String... args);
+	public static native int doSwanUpgrade(boolean async, String... args);
+	public static native int doSwanVk(boolean async, String... args);
+	public static native int doSwanVn(boolean async, String... args);
+	public static native int doSystemInit(boolean async, String... args);
+	public static native int doTcpBridge(boolean async, String... args);
+	public static native int doTcpCopy(boolean async, String... args);
+	public static native int doTcpDd(boolean async, String... args);
+	public static native int doTcpDdServer(boolean async, String... args);
+	public static native int doTcpExec(boolean async, String... args);
+	public static native int doTcpInstall(boolean async, String... args);
+	public static native int doTcpKeypad(boolean async, String... args);
+	public static native int doTcpProxy(boolean async, String... args);
+	public static native int doTcpRepeater(boolean async, String... args);
+	public static native int doTee(boolean async, String... args);
+	public static native int doTextlen(boolean async, String... args);
+	public static native int doTftpAutoDd(boolean async, String... args);
+	public static native int doTftpCommand(boolean async, String... args);
+	public static native int doTftpCopy(boolean async, String... args);
+	public static native int doTftpDd(boolean async, String... args);
+	public static native int doTftpDdServer(boolean async, String... args);
+	public static native int doTouch(boolean async, String... args);
+	public static native int doTtyMode(boolean async, String... args);
+	public static native int doUmount(boolean async, String... args);
+	public static native int doUsb(boolean async, String... args);
+	public static native int doUsbCopy(boolean async, String... args);
+	public static native int doUsbDd(boolean async, String... args);
+	public static native int doUsbDdServer(boolean async, String... args);
+	public static native int doVfat(boolean async, String... args);
+	public static native int doWebProxy(boolean async, String... args);
+	public static native int doMkfs(boolean async, String... args);
+	public static native int doCppCalculator(boolean async, String... args);
 }

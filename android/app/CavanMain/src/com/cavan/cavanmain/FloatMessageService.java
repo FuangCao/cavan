@@ -1237,9 +1237,12 @@ public class FloatMessageService extends FloatWidowService {
 	public class TcpBridgeThread extends Thread {
 
 		private boolean mActive;
+		private int mPid;
 
 		public void killCommand() {
-			CavanJni.kill("tcp_bridge");
+			if (mPid != 0) {
+				CavanJni.kill(mPid);
+			}
 		}
 
 		public void setActive(boolean active) {
@@ -1272,7 +1275,12 @@ public class FloatMessageService extends FloatWidowService {
 				mBridgeState = R.string.tcp_bridge_running;
 				mHandler.sendEmptyMessage(MSG_TCP_BRIDGE_STATE_CHANGED);
 
-				CavanJni.doTcpBridge(url1, url2);
+				int pid = CavanJni.doTcpBridge(true, url1, url2);
+				if (pid >= 0) {
+					mPid = pid;
+					CavanJni.waitpid(pid);
+					mPid = 0;
+				}
 
 				mBridgeState = R.string.tcp_bridge_exit;
 				mHandler.sendEmptyMessage(MSG_TCP_BRIDGE_STATE_CHANGED);

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+stty -ixon
+
 [ -d "${CAVAN_HOME}" ] ||
 {
 	for fn in ${HOME}/cavan ${HOME}/work/cavan /cavan /work/cavan

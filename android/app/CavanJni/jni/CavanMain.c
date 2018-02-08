@@ -110,7 +110,7 @@ bool CavanProcessKill(const char *name)
 	return success;
 }
 
-int CavanMainRun(JNIEnv *env, jobjectArray args, const char *name, int (*main_func)(int argc, char *argv[]))
+int CavanMainRun(JNIEnv *env, const char *name, jobjectArray args, int (*main_func)(int argc, char *argv[]))
 {
 	int ret;
 
@@ -144,32 +144,27 @@ int CavanMainRun(JNIEnv *env, jobjectArray args, const char *name, int (*main_fu
 	return ret;
 }
 
-int CavanMainExecute(JNIEnv *env, jobjectArray args, const char *name, int (*main_func)(int argc, char *argv[]))
+int CavanMainExecute(JNIEnv *env, const char *name, jboolean async, jobjectArray args, int (*main_func)(int argc, char *argv[]))
 {
 	pid_t pid;
 
 	pid = cavan_exec_fork();
-	if (pid < 0) {
-		return pid;
-	}
-
-	if (pid == 0) {
-		int ret = CavanMainRun(env, args, name, main_func);
-		_exit(ret < 0);
-	} else {
+	if (pid != 0) {
 		int code;
-		int index;
 
-		index = CavanProcessInfoAdd(name, pid);
-		code = cavan_exec_waitpid(pid);
-		if (index >= 0) {
-			CavanProcessInfoRemove(index);
+		if (pid < 0 || async) {
+			return pid;
 		}
 
+		code = cavan_exec_waitpid(pid);
 		if (code != 0) {
 			return -code;
 		}
+
+		return 0;
 	}
+
+	_exit(CavanMainRun(env, name, args, main_func) < 0);
 
 	return 0;
 }

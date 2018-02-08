@@ -29,24 +29,23 @@ public class TcpDdService extends CavanNativeService {
 		return 0;
 	}
 
+	public TcpDdService() {
+		super(new CavanCommandTcpDdServer());
+	}
+
 	@Override
 	public String getServiceName() {
 		return NAME;
 	}
 
 	@Override
-	protected void doMainLoop(int port) {
-		CavanJni.doTcpDdServer("-p", Integer.toString(port), "-s", "0");
+	protected String[] getCommandArgs(int port) {
+		return new String[] { "-p", Integer.toString(port), "-s", "0" };
 	}
 
 	@Override
 	public int getDefaultPort() {
 		return 9898;
-	}
-
-	@Override
-	public boolean doStopService() {
-		return CavanJni.kill("tcp_dd_server");
 	}
 
 	@Override
