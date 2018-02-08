@@ -1,38 +1,46 @@
 package com.cavan.cavanjni;
 
+import com.cavan.android.CavanDaemonThread;
 import com.cavan.service.CavanService;
 import com.cavan.service.CavanServiceState;
 
 
 public abstract class CavanNativeService extends CavanService {
 
-	protected int mPort;
-	protected boolean mEnabled;
-	protected CavanNativeCommand mCommand;
-
-	class DaemonThread extends Thread {
+	private int mPort;
+	private CavanNativeCommand mCommand;
+	private CavanDaemonThread mDaemonThread = new CavanDaemonThread() {
 
 		@Override
-		public void run() {
+		protected void onDaemonStarted() {
 			setServiceState(CavanServiceState.PREPARE);
+		}
 
-			while (mEnabled) {
-				setServiceState(CavanServiceState.RUNNING);
-				mCommand.run(getCommandArgs(mPort));
-				setServiceState(CavanServiceState.WAITING);
-
-				try {
-					for (int i = 0; i < 10 && mEnabled; i++) {
-						Thread.sleep(200);
-					}
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-
+		@Override
+		protected void onDaemonStopped() {
 			setServiceState(CavanServiceState.STOPPED);
 		}
-	}
+
+		@Override
+		protected void onDaemonWaiting() {
+			setServiceState(CavanServiceState.WAITING);
+		}
+
+		@Override
+		protected void onDaemonRuning() {
+			setServiceState(CavanServiceState.RUNNING);
+		}
+
+		@Override
+		protected void onDaemonStopping() {
+			mCommand.kill();
+		}
+
+		@Override
+		protected void mainLoop() {
+			mCommand.run(getCommandArgs(mPort));
+		}
+	};
 
 	public abstract int getDefaultPort();
 	protected abstract String[] getCommandArgs(int port);
@@ -50,11 +58,11 @@ public abstract class CavanNativeService extends CavanService {
 
 	@Override
 	public void start(int port) {
-		mEnabled = true;
-
-		if (mState == CavanServiceState.STOPPED) {
+		if (mPort != port) {
 			mPort = port;
-			new DaemonThread().start();
+			mDaemonThread.restart();
+		} else {
+			mDaemonThread.start();
 		}
 	}
 
@@ -65,12 +73,11 @@ public abstract class CavanNativeService extends CavanService {
 
 	@Override
 	public void stop() {
-		mEnabled = false;
-		mCommand.kill();
+		mDaemonThread.stop();
 	}
 
 	@Override
 	public boolean isEnabled() {
-		return mEnabled;
+		return mDaemonThread.isEnabled();
 	}
 }
