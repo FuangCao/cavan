@@ -53,14 +53,24 @@ public abstract class CavanDaemonThread implements Runnable {
 	public void run() {
 		onDaemonStarted();
 
-		while (isEnabled()) {
+		while (true) {
+			Thread thread = getThread();
+			if (thread == null) {
+				break;
+			}
+
 			onDaemonRuning();
 			CavanDaemonThread.this.mainLoop();
 			onDaemonWaiting();
 
-			synchronized (this) {
+			thread = getThread();
+			if (thread == null) {
+				break;
+			}
+
+			synchronized (thread) {
 				try {
-					wait(5000);
+					thread.wait(5000);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
