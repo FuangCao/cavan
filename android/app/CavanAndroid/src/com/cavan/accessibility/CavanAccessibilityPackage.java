@@ -340,10 +340,15 @@ public class CavanAccessibilityPackage {
 				try {
 					if (win.poll(packet, root, ++mPollTimes)) {
 						if (isPending()) {
+							long delay = packet.getUnpackRemain();
+							if (delay > 0 && delay < POLL_DELAY) {
+								return delay;
+							}
+
 							return POLL_DELAY;
 						}
 
-						return 0;
+						return -1;
 					}
 
 					CavanAndroid.dLog("mPollTimes = " + mPollTimes);
@@ -357,7 +362,7 @@ public class CavanAccessibilityPackage {
 
 				clearPackets();
 
-				return 0;
+				return -1;
 			} else {
 				if (consume < BACK_DELAY) {
 					return BACK_DELAY - consume;
@@ -368,7 +373,7 @@ public class CavanAccessibilityPackage {
 			}
 		}
 
-		return 0;
+		return -1;
 	}
 
 	protected void initWindows() {}

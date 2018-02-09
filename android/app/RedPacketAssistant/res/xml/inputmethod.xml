@@ -1,0 +1,4 @@
+<input-method  xmlns:android="http://schemas.android.com/apk/res/android"
+	android:settingsActivity="com.cavan.redpacketassistant"
+	android:icon="@drawable/ic_launcher" >
+</input-method>

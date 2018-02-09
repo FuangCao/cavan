@@ -85,7 +85,7 @@ public class CountDownDialog implements OnClickListener {
 		CavanAccessibilityPackage pkg = mPacket.getPackage();
 		pkg.setForceUnpackEnable(false);
 		pkg.setGotoIdle(false);
-		pkg.clearPackets();
+		pkg.removePacket(mPacket);
 		dismiss();
 	}
 

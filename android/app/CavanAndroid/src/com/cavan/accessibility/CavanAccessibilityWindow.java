@@ -17,7 +17,7 @@ public class CavanAccessibilityWindow {
 	}
 
 	public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
-		return true;
+		return false;
 	}
 
 	public void onEnter() {}

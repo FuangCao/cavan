@@ -76,12 +76,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 					try {
 						if (pkg.isCurrentPackage(root)) {
 							delay = pkg.poll(packet, root);
-							if (delay > 0) {
-								retry = 0;
-							} else {
+							if (delay < 0) {
 								pkg.setPending(false);
 								return true;
 							}
+
+							retry = 0;
 						} else {
 							CavanAndroid.dLog("Invalid package(" + retry + "): " + root.getPackageName());
 

@@ -71,6 +71,24 @@ public class CavanRedPacketAlipay extends CavanRedPacket {
 		mRepeatTime = time;
 	}
 
+	public synchronized boolean updateRepeatTime() {
+		long timeNow = System.currentTimeMillis();
+
+		if (mRepeatTime < timeNow) {
+			if (mRepeatTime != 0) {
+				if (++mCommitCount > 5) {
+					return ((timeNow - mRepeatTime) < 20000);
+				}
+			} else {
+				mRepeatTime = ((timeNow - 5000) / 60000 + 1) * 60000;
+				mUnpackTime = mRepeatTime;
+				mCommitCount = 0;
+			}
+		}
+
+		return true;
+	}
+
 	public synchronized int getPriority() {
 		return mPriority;
 	}
@@ -115,11 +133,16 @@ public class CavanRedPacketAlipay extends CavanRedPacket {
 		return mRepeatable;
 	}
 
-	public synchronized void setRepeatable(boolean repeatable) {
-		mRepeatable = repeatable;
+	public synchronized void setRepeatable() {
+		mRepeatable = true;
+		mValid = true;
 	}
 
 	public synchronized boolean isMaybeInvalid() {
+		if (mValid) {
+			return false;
+		}
+
 		return mMaybeInvalid;
 	}
 

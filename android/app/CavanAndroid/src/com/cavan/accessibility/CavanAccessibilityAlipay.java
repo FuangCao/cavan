@@ -1,21 +1,14 @@
 package com.cavan.accessibility;
 
+import android.view.KeyEvent;
+import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
+import com.cavan.java.CavanJava;
 
 public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
-
-	private static final String[] BACK_VIEW_IDS = {
-		"com.alipay.mobile.ui:id/title_bar_back_button",
-		"com.alipay.android.phone.discovery.envelope:id/coupon_chai_close",
-		"com.alipay.mobile.nebula:id/h5_tv_nav_back",
-	};
-
-	private static final String[] OVER_VIEW_IDS = {
-		"com.alipay.android.phone.discovery.envelope:id/coupon_action",
-		"com.alipay.android.phone.discovery.envelope:id/sns_coupon_detail_action",
-	};
 
 	public static CavanAccessibilityAlipay instance;
 
@@ -69,6 +62,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
 	public class HomeActivity extends BaseWindow {
 
+		private String mInputText;
+
 		public HomeActivity(String name) {
 			super(name);
 		}
@@ -88,11 +83,39 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 		}
 
 		public boolean commitRedPacketCode() {
-			return false;
+			CavanInputMethodService ime = CavanInputMethodService.instance;
+			if (ime == null) {
+				return false;
+			}
+
+			return ime.commitAlipayCode();
+		}
+
+		public AccessibilityNodeInfo findInputNode(AccessibilityNodeInfo root) {
+			for (int i = 0; i < 10; i++) {
+				AccessibilityNodeInfo node = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
+				if (node != null) {
+					if (CavanAccessibilityHelper.isEditText(node)) {
+						return node;
+					}
+
+					node.recycle();
+				}
+
+				CavanInputMethodService ime = CavanInputMethodService.instance;
+				if (ime == null) {
+					return null;
+				}
+
+				ime.sendKeyDownUp(KeyEvent.KEYCODE_DPAD_DOWN);
+				CavanJava.msleep(50);
+			}
+
+			return null;
 		}
 
 		public boolean postRedPacketCode(AccessibilityNodeInfo root, CavanRedPacketAlipay packet) {
-			AccessibilityNodeInfo input = CavanAccessibilityHelper.findNodeByViewId(root, "com.alipay.android.phone.discovery.envelope:id/solitaire_edit");
+			AccessibilityNodeInfo input = findInputNode(root); // CavanAccessibilityHelper.findNodeByViewId(root, "com.alipay.android.phone.discovery.envelope:id/solitaire_edit");
 			if (input == null) {
 				return false;
 			}
@@ -104,6 +127,19 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 			}
 
 			if (!inputRedPacketCode(input, packet.getCode())) {
+				return false;
+			}
+
+			mInputText = packet.getCode();
+
+			if (packet.getUnpackRemain() > 0) {
+				showCountDownView(packet);
+				return true;
+			}
+
+			dismissCountDownView();
+
+			if (!commitRedPacketCode()) {
 				return false;
 			}
 
@@ -124,6 +160,27 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 			}
 
 			return postRedPacketCode(root, (CavanRedPacketAlipay) packet);
+		}
+
+		@Override
+		public void onLeave() {
+			if (mPacket != null) {
+				if (mPacket.getCode().equals(mInputText)) {
+					mPacket.setPostPending(false);
+				} else {
+					mPacket = null;
+				}
+			}
+		}
+
+		@Override
+		public void onViewTextChanged(AccessibilityEvent event) {
+			try {
+				mInputText = event.getText().get(0).toString();
+				CavanAndroid.dLog("mInputText = " + mInputText);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -152,6 +209,29 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
 		public H5Activity(String name) {
 			super(name);
+		}
+
+		@Override
+		public void onEnter() {
+			if (mPacket != null) {
+				mPacket.setRepeatable();
+			}
+		}
+
+		@Override
+		public void onLeave() {
+			if (mPacket != null && !mPacket.updateRepeatTime()) {
+				removePacket(mPacket);
+			}
+		}
+
+		@Override
+		public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
+			if (times < 3) {
+				return true;
+			}
+
+			return (CavanAccessibilityHelper.performClickByViewIds(root, "com.alipay.mobile.nebula:id/h5_tv_nav_back") > 0);
 		}
 	}
 
