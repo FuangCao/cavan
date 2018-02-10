@@ -101,16 +101,18 @@ public class CavanRedPacketAlipay extends CavanRedPacket {
 		return mValid;
 	}
 
-	public synchronized void setValid(boolean valid) {
-		mValid = valid;
+	public synchronized void setValid() {
+		mInvalid = false;
+		mValid = true;
 	}
 
 	public synchronized boolean isInvalid() {
 		return mInvalid;
 	}
 
-	public synchronized void setInvalid(boolean invalid) {
-		mInvalid = invalid;
+	public synchronized void setInvalid() {
+		mInvalid = true;
+		mValid = false;
 	}
 
 	public synchronized boolean isIgnored() {
@@ -125,17 +127,18 @@ public class CavanRedPacketAlipay extends CavanRedPacket {
 		return mCompleted;
 	}
 
-	public synchronized void setCompleted(boolean completed) {
-		mCompleted = completed;
+	public synchronized void setCompleted() {
+		mCompleted = true;
+		setValid();
 	}
 
 	public synchronized boolean isRepeatable() {
 		return mRepeatable;
 	}
 
-	public synchronized void setRepeatable() {
-		mRepeatable = true;
-		mValid = true;
+	public synchronized void setRepeatable(boolean repeatable) {
+		mRepeatable = repeatable;
+		setValid();
 	}
 
 	public synchronized boolean isMaybeInvalid() {

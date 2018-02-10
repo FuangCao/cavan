@@ -10,6 +10,9 @@ public class CavanRedPacketList implements Iterable<CavanRedPacket> {
 
 	public synchronized boolean add(CavanRedPacket packet) {
 		CavanAndroid.dLog("add packet: " + packet);
+		if (packet == null) {
+			return false;
+		}
 
 		CavanRedPacket head;
 
@@ -35,7 +38,9 @@ public class CavanRedPacketList implements Iterable<CavanRedPacket> {
 
 	public synchronized void remove(CavanRedPacket packet) {
 		CavanAndroid.dLog("remove packet: " + packet);
-		packet.remove();
+		if (packet != null) {
+			packet.remove();
+		}
 	}
 
 	public synchronized int remove(CavanAccessibilityPackage pkg) {

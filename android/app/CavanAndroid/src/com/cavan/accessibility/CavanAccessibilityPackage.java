@@ -1,6 +1,7 @@
 package com.cavan.accessibility;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import android.app.Notification;
@@ -19,6 +20,7 @@ public class CavanAccessibilityPackage {
 	public static int LOCK_DELAY = 2000;
 
 	protected HashMap<String, CavanAccessibilityWindow> mWindows = new HashMap<String, CavanAccessibilityWindow>();
+	protected HashSet<String> mProgressWindows = new HashSet<String>();
 	protected CavanAccessibilityService mService;
 	protected CavanAccessibilityWindow mWindow;
 	protected boolean mForceUnpack = true;
@@ -81,6 +83,14 @@ public class CavanAccessibilityPackage {
 		if (win != null) {
 			win.onEnter();
 		}
+	}
+
+	public synchronized boolean addProgressWindow(String name) {
+		return mProgressWindows.add(name);
+	}
+
+	public synchronized boolean isProgressWindow(String name) {
+		return mProgressWindows.contains(name);
 	}
 
 	public synchronized CavanAccessibilityService getService() {
@@ -276,8 +286,22 @@ public class CavanAccessibilityPackage {
 		CavanAndroid.dLog("onWindowStateChanged: " + mName + "/" + name);
 		touchUpdateTime();
 
+		if (isProgressWindow(name)) {
+			CavanAccessibilityWindow win = mWindow;
+			if (win != null) {
+				win.onProgress(name);
+			}
+
+			return win;
+		}
+
 		if (name.startsWith("android.widget.")) {
-			return mWindow;
+			CavanAccessibilityWindow win = mWindow;
+			if (win != null) {
+				win.onAndroidWidget(name);
+			}
+
+			return win;
 		}
 
 		CavanAccessibilityWindow win = getWindow(name);
