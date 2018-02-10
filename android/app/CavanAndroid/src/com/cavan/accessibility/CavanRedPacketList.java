@@ -2,11 +2,15 @@ package com.cavan.accessibility;
 
 import java.util.Iterator;
 
+import com.cavan.android.CavanAndroid;
+
 public class CavanRedPacketList implements Iterable<CavanRedPacket> {
 
 	private CavanRedPacket mHead = new CavanRedPacket();
 
 	public synchronized boolean add(CavanRedPacket packet) {
+		CavanAndroid.dLog("add packet: " + packet);
+
 		CavanRedPacket head;
 
 		for (head = mHead.next; head != mHead; head = head.next) {
@@ -30,6 +34,7 @@ public class CavanRedPacketList implements Iterable<CavanRedPacket> {
 	}
 
 	public synchronized void remove(CavanRedPacket packet) {
+		CavanAndroid.dLog("remove packet: " + packet);
 		packet.remove();
 	}
 
@@ -41,6 +46,7 @@ public class CavanRedPacketList implements Iterable<CavanRedPacket> {
 			CavanRedPacket next = node.next;
 
 			if (node.getPackage() == pkg) {
+				CavanAndroid.dLog("remove packet: " + node);
 				node.remove();
 				count++;
 			}

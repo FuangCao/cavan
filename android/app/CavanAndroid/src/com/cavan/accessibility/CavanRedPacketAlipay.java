@@ -167,4 +167,9 @@ public class CavanRedPacketAlipay extends CavanRedPacket {
 		return false;
 	}
 
+	@Override
+	public String toString() {
+		return mCode;
+	}
+
 }

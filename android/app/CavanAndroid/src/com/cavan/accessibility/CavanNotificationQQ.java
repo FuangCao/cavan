@@ -58,4 +58,13 @@ public class CavanNotificationQQ extends CavanNotification {
 		return super.isRedPacket();
 	}
 
+	@Override
+	public String toString() {
+		if (mContent != null) {
+			return mContent;
+		}
+
+		return "[QQ红包]";
+	}
+
 }

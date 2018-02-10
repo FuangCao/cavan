@@ -27,6 +27,7 @@ public class CavanAccessibilityPackage {
 	protected long mUpdateTime;
 	protected long mUnlockTime;
 	protected int mPollTimes;
+	protected int mFailTimes;
 	protected String[] mNames;
 	protected String mName;
 
@@ -49,6 +50,11 @@ public class CavanAccessibilityPackage {
 		return mNames;
 	}
 
+	public synchronized void resetTimes() {
+		mPollTimes = 0;
+		mFailTimes = 0;
+	}
+
 	public synchronized void addWindow(CavanAccessibilityWindow win) {
 		CavanAndroid.dLog(mName + " <= " + win.getName());
 		mWindows.put(win.getName(), win);
@@ -69,7 +75,7 @@ public class CavanAccessibilityPackage {
 			}
 
 			mWindow = win;
-			mPollTimes = 0;
+			resetTimes();
 		}
 
 		if (win != null) {
@@ -167,7 +173,7 @@ public class CavanAccessibilityPackage {
 		if (pending) {
 			mForceUnpack = true;
 			mPending = true;
-			mPollTimes = 0;
+			resetTimes();
 			post();
 		} else {
 			mPending = false;
@@ -338,7 +344,12 @@ public class CavanAccessibilityPackage {
 				CavanAndroid.dLog("window = " + win);
 
 				try {
-					if (win.poll(packet, root, ++mPollTimes)) {
+					mPollTimes++;
+					CavanAndroid.dLog("mPollTimes = " + mPollTimes);
+
+					if (win.poll(packet, root, mPollTimes)) {
+						mFailTimes = 0;
+
 						if (isPending()) {
 							long delay = packet.getUnpackRemain();
 							if (delay > 0 && delay < POLL_DELAY) {
@@ -351,9 +362,10 @@ public class CavanAccessibilityPackage {
 						return -1;
 					}
 
-					CavanAndroid.dLog("mPollTimes = " + mPollTimes);
+					mFailTimes++;
+					CavanAndroid.dLog("mFailTimes = " + mFailTimes);
 
-					if (win.onPollFailed(packet, mPollTimes)) {
+					if (win.onPollFailed(packet, mFailTimes)) {
 						return POLL_DELAY;
 					}
 				} catch (Exception e) {

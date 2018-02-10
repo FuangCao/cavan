@@ -34,4 +34,13 @@ public class CavanNotificationMM extends CavanNotification {
 		return super.isRedPacket();
 	}
 
+	@Override
+	public String toString() {
+		if (mContent != null) {
+			return mContent;
+		}
+
+		return "[微信红包]";
+	}
+
 }
