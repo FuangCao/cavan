@@ -28,7 +28,7 @@ public class CavanAccessibilityWindow {
 	public void onViewTextChanged(AccessibilityEvent event) {}
 
 	public boolean onPollFailed(CavanRedPacket packet, int times) {
-		return (times < 5);
+		return (times < 10);
 	}
 
 	@Override

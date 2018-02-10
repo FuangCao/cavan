@@ -183,7 +183,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 			case MSG_SHOW_COUNT_DOWN:
 				CavanRedPacket packet = (CavanRedPacket) msg.obj;
-				if (packet != null) {
+				if (packet == mPackets.get()) {
 					long remain = packet.getUnpackRemain();
 					if (remain > 0) {
 						onCountDownUpdated(packet, remain);
@@ -202,7 +202,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 				break;
 			}
 		}
-
 	};
 
 	private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {

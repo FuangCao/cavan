@@ -76,6 +76,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
 			CavanInputMethodService ime = CavanInputMethodService.instance;
 			if (ime == null) {
+				CavanAndroid.eLog("ime == null");
 				return false;
 			}
 
@@ -85,6 +86,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 		public boolean commitRedPacketCode() {
 			CavanInputMethodService ime = CavanInputMethodService.instance;
 			if (ime == null) {
+				CavanAndroid.eLog("ime == null");
 				return false;
 			}
 
@@ -104,6 +106,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
 				CavanInputMethodService ime = CavanInputMethodService.instance;
 				if (ime == null) {
+					CavanAndroid.eLog("ime == null");
 					return null;
 				}
 
