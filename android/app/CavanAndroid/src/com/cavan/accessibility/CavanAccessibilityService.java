@@ -298,10 +298,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 	protected void onScreenOn() {}
 	protected void onScreenOff() {}
 
-	public void onPacketCreated(CavanRedPacketAlipay packet) {
-		addPacket(packet);
-	}
-
 	public Handler getHandler() {
 		return mHandler;
 	}

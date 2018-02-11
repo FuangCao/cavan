@@ -7,6 +7,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanJava;
+import com.cavan.java.CavanString;
 
 public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
@@ -119,6 +120,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 		}
 
 		public boolean postRedPacketCode(AccessibilityNodeInfo root, CavanRedPacketAlipay packet) {
+			CavanAndroid.dLog("post: " + packet);
+
 			AccessibilityNodeInfo input = findInputNode(root); // CavanAccessibilityHelper.findNodeByViewId(root, "com.alipay.android.phone.discovery.envelope:id/solitaire_edit");
 			if (input == null) {
 				return false;
@@ -137,6 +140,14 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 				}
 
 				mMaybeInvalid = false;
+			}
+
+			if (!packet.isPending()) {
+				if (packet.isInvalid()) {
+					return inputRedPacketCode(input, CavanString.EMPTY_STRING);
+				}
+
+				return true;
 			}
 
 			if (!inputRedPacketCode(input, packet.getCode())) {
@@ -224,9 +235,19 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
 			if (CavanAccessibilityHelper.performClickByViewIds(root, "com.alipay.android.phone.discovery.envelope:id/coupon_chai_close") > 0) {
 				setPacketCompleted();
+				return true;
 			}
 
 			return false;
+		}
+
+		@Override
+		public boolean back(CavanAccessibilityPackage pkg, AccessibilityNodeInfo root) {
+			if (CavanAccessibilityHelper.performClickByViewIds(root, "com.alipay.android.phone.discovery.envelope:id/coupon_chai_close") > 0) {
+				return true;
+			}
+
+			return super.back(pkg, root);
 		}
 	}
 
@@ -358,7 +379,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 	}
 
 	public boolean addPacket(String code) {
-		return addPacket(CavanRedPacketAlipay.get(code, true));
+		return addPacket(CavanRedPacketAlipay.get(code, true, false));
 	}
 
 	@Override

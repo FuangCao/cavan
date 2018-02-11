@@ -23,21 +23,31 @@ public class CavanRedPacketAlipay extends CavanRedPacket {
 		CavanRedPacketAlipay packet = new CavanRedPacketAlipay(code, timeNow);
 		sPackets.put(code, packet);
 
-		CavanAccessibilityService service = CavanAccessibilityService.instance;
-		if (service != null) {
-			service.onPacketCreated(packet);
+		return packet;
+	}
+
+	public static synchronized CavanRedPacketAlipay get(String code, boolean create, boolean report) {
+		CavanRedPacketAlipay packet = sPackets.get(code);
+		if (packet == null && create) {
+			packet = create(code);
+
+			if (report) {
+				CavanAccessibilityAlipay alipay = CavanAccessibilityAlipay.instance;
+				if (alipay != null) {
+					alipay.onPacketCreated(packet);
+				}
+			}
 		}
 
 		return packet;
 	}
 
 	public static synchronized CavanRedPacketAlipay get(String code, boolean create) {
-		CavanRedPacketAlipay packet = sPackets.get(code);
-		if (packet == null && create) {
-			return create(code);
-		}
+		return get(code, create, true);
+	}
 
-		return packet;
+	public static synchronized CavanRedPacketAlipay get(String code) {
+		return get(code, false, false);
 	}
 
 	private String mCode;
@@ -188,6 +198,30 @@ public class CavanRedPacketAlipay extends CavanRedPacket {
 
 	@Override
 	public String toString() {
-		return mCode;
+		StringBuilder builder = new StringBuilder();
+
+		builder.append(mCode);
+
+		if (mInvalid) {
+			builder.append(",invalid");
+		}
+
+		if (mRepeatable) {
+			builder.append(",repeatable");
+		}
+
+		if (mIgnored) {
+			builder.append(",ignored");
+		}
+
+		if (mPending) {
+			builder.append(",pending");
+		}
+
+		if (mCompleted) {
+			builder.append(",completed");
+		}
+
+		return builder.toString();
 	}
 }

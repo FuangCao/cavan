@@ -20,6 +20,10 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
+	public boolean back(CavanAccessibilityPackage pkg, AccessibilityNodeInfo root) {
+		return pkg.getService().performActionBack();
+	}
+
 	public void onEnter() {}
 	public void onLeave() {}
 	public void onPackageUpdated() {}
@@ -30,7 +34,7 @@ public class CavanAccessibilityWindow {
 	public void onViewTextChanged(AccessibilityEvent event) {}
 
 	public boolean onPollFailed(CavanRedPacket packet, int times) {
-		return (times < 10);
+		return (times < CavanAccessibilityPackage.FAIL_TIMES);
 	}
 
 	public boolean isMainActivity() {

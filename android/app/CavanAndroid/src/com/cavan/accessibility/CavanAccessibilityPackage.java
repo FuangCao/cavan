@@ -18,6 +18,8 @@ public class CavanAccessibilityPackage {
 	public static int BACK_DELAY = 5000;
 	public static int POLL_DELAY = 500;
 	public static int LOCK_DELAY = 2000;
+	public static int POLL_TIMES = 10;
+	public static int FAIL_TIMES = 10;
 
 	protected HashMap<String, CavanAccessibilityWindow> mWindows = new HashMap<String, CavanAccessibilityWindow>();
 	protected HashSet<String> mProgressWindows = new HashSet<String>();
@@ -349,16 +351,21 @@ public class CavanAccessibilityPackage {
 					CavanAndroid.dLog("mPollTimes = " + mPollTimes);
 
 					if (win.poll(packet, root, mPollTimes)) {
-						mFailTimes = 0;
+						if (mPollTimes < POLL_TIMES) {
+							mFailTimes = 0;
 
-						if (packet.isPending()) {
-							return packet.getUnpackDelay(POLL_DELAY);
-						} else if (win.isMainActivity()) {
-							mService.removePacket(packet);
-							return -1;
+							if (packet.isPending()) {
+								return packet.getUnpackDelay(POLL_DELAY);
+							} else if (win.isMainActivity()) {
+								mService.removePacket(packet);
+								return -1;
+							}
+
+							return POLL_DELAY;
+						} else {
+							packet.setCompleted();
+							win.back(this, root);
 						}
-
-						return POLL_DELAY;
 					}
 
 					mFailTimes++;
@@ -391,12 +398,16 @@ public class CavanAccessibilityPackage {
 	protected void onPacketAdded(CavanRedPacket packet) {}
 	protected void onPacketRemoved(CavanRedPacket packet) {}
 
-	public void onEnter() {}
-	public void onLeave() {}
-	public void onCreate() {}
-	public void onDestroy() {}
-	public void onPollStarted() {}
-	public void onPollStopped() {}
+	protected void onPacketCreated(CavanRedPacket packet) {
+		addPacket(packet);
+	}
+
+	protected void onEnter() {}
+	protected void onLeave() {}
+	protected void onCreate() {}
+	protected void onDestroy() {}
+	protected void onPollStarted() {}
+	protected void onPollStopped() {}
 
 	@Override
 	public String toString() {
