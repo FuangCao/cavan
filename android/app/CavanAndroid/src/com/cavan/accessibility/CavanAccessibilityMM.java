@@ -29,10 +29,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			super(name);
 		}
 
-		public boolean isLauncherUi() {
-			return false;
-		}
-
 		public boolean isWebviewUi() {
 			return false;
 		}
@@ -182,7 +178,14 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			return nodes;
 		}
 
-		private synchronized boolean doFindAndUnpack(AccessibilityNodeInfo root) {
+		@Override
+		public synchronized void onPackageUpdated() {
+			mMessageListViewId = null;
+			mRedPacketNodeId = null;
+		}
+
+		@Override
+		public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
 			List<AccessibilityNodeInfo> nodes = findRedPacketNodes(root);
 			if (nodes == null || nodes.isEmpty()) {
 				return false;
@@ -206,41 +209,18 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				return false;
 			} finally {
 				CavanAccessibilityHelper.recycleNodes(nodes);
 			}
 
-			clearPackets();
+			packet.setCompleted();
 
-			return false;
-		}
-
-		@Override
-		public boolean isLauncherUi() {
 			return true;
 		}
 
 		@Override
-		public synchronized void onPackageUpdated() {
-			mMessageListViewId = null;
-			mRedPacketNodeId = null;
-		}
-
-		@Override
-		public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
-			return doFindAndUnpack(root);
-		}
-
-		@Override
-		public boolean onPollFailed(CavanRedPacket packet, int times) {
-			if (super.onPollFailed(packet, times)) {
-				return true;
-			}
-
-			clearPackets();
-
-			return false;
+		public boolean isMainActivity() {
+			return true;
 		}
 	}
 
@@ -292,7 +272,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			if (source != null) {
 				if (isRedPacketLayout(source)) {
 					setUnlockDelay(200);
-					addPacket();
+					setPending(true);
 				}
 
 				source.recycle();
@@ -576,7 +556,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 	}
 
 	@Override
-	public void onPacketAdded(CavanRedPacket packet) {
+	public void onPollStarted() {
 		mFinishNodes.clear();
 	}
 

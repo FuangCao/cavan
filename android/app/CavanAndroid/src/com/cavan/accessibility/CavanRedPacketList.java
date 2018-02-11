@@ -9,8 +9,8 @@ public class CavanRedPacketList implements Iterable<CavanRedPacket> {
 	private CavanRedPacket mHead = new CavanRedPacket();
 
 	public synchronized boolean add(CavanRedPacket packet) {
-		CavanAndroid.dLog("add packet: " + packet);
-		if (packet == null) {
+		CavanAndroid.dLog("add: " + packet);
+		if (packet == null || packet.isCompleted()) {
 			return false;
 		}
 
@@ -32,14 +32,16 @@ public class CavanRedPacketList implements Iterable<CavanRedPacket> {
 		}
 
 		head.addPrev(packet);
+		packet.onAdded();
 
 		return true;
 	}
 
 	public synchronized void remove(CavanRedPacket packet) {
-		CavanAndroid.dLog("remove packet: " + packet);
+		CavanAndroid.dLog("remove: " + packet);
 		if (packet != null) {
 			packet.remove();
+			packet.onRemoved();
 		}
 	}
 
@@ -51,8 +53,7 @@ public class CavanRedPacketList implements Iterable<CavanRedPacket> {
 			CavanRedPacket next = node.next;
 
 			if (node.getPackage() == pkg) {
-				CavanAndroid.dLog("remove packet: " + node);
-				node.remove();
+				remove(node);
 				count++;
 			}
 

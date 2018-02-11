@@ -24,7 +24,6 @@ public class CavanAccessibilityPackage {
 	protected CavanAccessibilityService mService;
 	protected CavanAccessibilityWindow mWindow;
 	protected boolean mForceUnpack = true;
-	protected boolean mGotoIdle;
 	protected boolean mPending;
 	protected long mUpdateTime;
 	protected long mUnlockTime;
@@ -134,19 +133,9 @@ public class CavanAccessibilityPackage {
 			return false;
 		}
 
-		if (packet.needGotoIdle()) {
-			mGotoIdle = true;
-		}
-
 		setPending(true);
 
-		onPacketAdded(packet);
-
 		return true;
-	}
-
-	public boolean addPacket() {
-		return addPacket(new CavanRedPacket());
 	}
 
 	public CavanRedPacketList getPackets() {
@@ -155,26 +144,14 @@ public class CavanAccessibilityPackage {
 
 	public void removePacket(CavanRedPacket packet) {
 		mService.removePacket(packet);
-		setPending(false);
 	}
 
-	public void clearPackets() {
-		mService.removePackets(this);
-		setPending(false);
+	public int removePackets() {
+		return mService.removePackets(this);
 	}
 
 	public synchronized boolean isPending() {
 		return mPending;
-	}
-
-	public synchronized void setGotoIdle(boolean enabled) {
-		mGotoIdle = enabled;
-	}
-
-	public synchronized boolean needGotoIdle() {
-		boolean enabled = mGotoIdle;
-		mGotoIdle = false;
-		return enabled;
 	}
 
 	public synchronized void setPending(boolean pending) {
@@ -184,7 +161,7 @@ public class CavanAccessibilityPackage {
 			mForceUnpack = true;
 			mPending = true;
 			resetTimes();
-			post();
+			startPollThread();
 		} else {
 			mPending = false;
 		}
@@ -217,7 +194,7 @@ public class CavanAccessibilityPackage {
 
 	public synchronized void setUnlockTime(long time) {
 		mUnlockTime = time;
-		post();
+		startPollThread();
 	}
 
 	public synchronized boolean launch() {
@@ -225,8 +202,8 @@ public class CavanAccessibilityPackage {
 		return CavanAndroid.startActivity(mService, getName());
 	}
 
-	public void post() {
-		mService.post();
+	public void startPollThread() {
+		mService.startPollThread();
 	}
 
 	public boolean isCurrentPackage(String pkgName) {
@@ -374,16 +351,14 @@ public class CavanAccessibilityPackage {
 					if (win.poll(packet, root, mPollTimes)) {
 						mFailTimes = 0;
 
-						if (isPending()) {
-							long delay = packet.getUnpackRemain();
-							if (delay > 0 && delay < POLL_DELAY) {
-								return delay;
-							}
-
-							return POLL_DELAY;
+						if (packet.isPending()) {
+							return packet.getUnpackDelay(POLL_DELAY);
+						} else if (win.isMainActivity()) {
+							mService.removePacket(packet);
+							return -1;
 						}
 
-						return -1;
+						return POLL_DELAY;
 					}
 
 					mFailTimes++;
@@ -396,8 +371,7 @@ public class CavanAccessibilityPackage {
 					e.printStackTrace();
 				}
 
-				clearPackets();
-
+				mService.removePackets(this);
 				return -1;
 			} else {
 				if (consume < BACK_DELAY) {
@@ -415,11 +389,14 @@ public class CavanAccessibilityPackage {
 	protected void initWindows() {}
 	protected void onPackageUpdated() {}
 	protected void onPacketAdded(CavanRedPacket packet) {}
+	protected void onPacketRemoved(CavanRedPacket packet) {}
 
 	public void onEnter() {}
 	public void onLeave() {}
 	public void onCreate() {}
 	public void onDestroy() {}
+	public void onPollStarted() {}
+	public void onPollStopped() {}
 
 	@Override
 	public String toString() {

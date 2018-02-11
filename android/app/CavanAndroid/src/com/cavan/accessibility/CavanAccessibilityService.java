@@ -30,6 +30,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private static final int MSG_SCREEN_ON = 1;
 	private static final int MSG_SHOW_COUNT_DOWN = 2;
 
+	public static CavanAccessibilityService instance;
+
 	private HashMap<String, CavanAccessibilityPackage> mPackages = new HashMap<String, CavanAccessibilityPackage>();
 	private HashSet<AccessibilityNodeInfo> mRecycleNodes = new HashSet<AccessibilityNodeInfo>();
 	private CavanRedPacketList mPackets = new CavanRedPacketList();
@@ -107,11 +109,13 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 				CavanAndroid.dLog("PollThread waitting " + delay);
 
-				synchronized (this) {
-					try {
-						wait(delay);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+				if (delay > 0) {
+					synchronized (this) {
+						try {
+							wait(delay);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
 					}
 				}
 			}
@@ -136,16 +140,20 @@ public class CavanAccessibilityService extends AccessibilityService {
 						}
 
 						packet.setPackage(pkg);
+						packet.setGotoIdle(false);
 					} else {
+						packet.setGotoIdle(true);
 						pkg = packet.getPackage();
 						pkg.setPending(true);
 					}
+
+					packet.setPending();
+					pkg.onPollStarted();
 
 					int retry = 0;
 
 					while (true) {
 						if (poll(pkg, packet)) {
-							idle = pkg.needGotoIdle();
 							break;
 						}
 
@@ -156,6 +164,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 							break;
 						}
 					}
+
+					pkg.setPending(false);
+					pkg.onPollStopped();
+					idle = packet.needGotoIdle();
 				}
 
 				CavanAndroid.dLog("PollThread suspend: idle = " + idle);
@@ -183,8 +195,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 			case MSG_SHOW_COUNT_DOWN:
 				CavanRedPacket packet = (CavanRedPacket) msg.obj;
-				if (packet == mPackets.get()) {
-					long remain = packet.getUnpackRemain();
+				if (packet != null && packet == mPackets.get()) {
+					long remain = packet.getUnpackDelay(0);
 					if (remain > 0) {
 						onCountDownUpdated(packet, remain);
 
@@ -285,6 +297,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 	protected void onUserOffline() {}
 	protected void onScreenOn() {}
 	protected void onScreenOff() {}
+
+	public void onPacketCreated(CavanRedPacketAlipay packet) {
+		addPacket(packet);
+	}
 
 	public Handler getHandler() {
 		return mHandler;
@@ -449,7 +465,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
 	}
 
-	public void post() {
+	public void startPollThread() {
 		mPollThread.start();
 	}
 
@@ -490,7 +506,13 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	public boolean addPacket(CavanRedPacket packet) {
 		acquireWakeLock(2000);
-		return mPackets.add(packet);
+
+		if (mPackets.add(packet)) {
+			startPollThread();
+			return true;
+		}
+
+		return false;
 	}
 
 	public CavanRedPacketList getPackets() {
@@ -501,8 +523,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 		mPackets.remove(packet);
 	}
 
-	public void removePackets(CavanAccessibilityPackage pkg) {
-		mPackets.remove(pkg);
+	public int removePackets(CavanAccessibilityPackage pkg) {
+		return mPackets.remove(pkg);
 	}
 
 	public void initServiceInfo(AccessibilityServiceInfo info) {
@@ -583,10 +605,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 		filter.addAction(Intent.ACTION_USER_PRESENT);
 		filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
 		registerReceiver(mBroadcastReceiver, filter);
+
+		instance = this;
 	}
 
 	@Override
 	public void onDestroy() {
+		instance = null;
+
 		unregisterReceiver(mBroadcastReceiver);
 
 		for (CavanAccessibilityPackage pkg : mPackages.values()) {
@@ -595,5 +621,4 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 		super.onDestroy();
 	}
-
 }

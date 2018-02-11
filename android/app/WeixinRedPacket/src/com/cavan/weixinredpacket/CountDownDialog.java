@@ -84,14 +84,13 @@ public class CountDownDialog implements OnClickListener {
 	protected void onButtonCancelClicked() {
 		CavanAccessibilityPackage pkg = mPacket.getPackage();
 		pkg.setForceUnpackEnable(false);
-		pkg.setGotoIdle(false);
-		pkg.clearPackets();
+		mPacket.setGotoIdle(false);
+		pkg.removePackets();
 		dismiss();
 	}
 
 	protected void onButtonNowClicked() {
-		CavanAccessibilityPackage pkg = mPacket.getPackage();
-		pkg.setGotoIdle(false);
+		mPacket.setGotoIdle(false);
 		mPacket.setUnpackTime(0);
 		dismiss();
 	}

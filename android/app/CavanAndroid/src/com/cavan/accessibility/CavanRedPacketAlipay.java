@@ -1,25 +1,55 @@
 package com.cavan.accessibility;
 
+import java.util.HashMap;
+import java.util.Iterator;
+
 public class CavanRedPacketAlipay extends CavanRedPacket {
 
+	private static long LIFE_TIME = 86400000;
+
+	private static HashMap<String, CavanRedPacketAlipay> sPackets = new HashMap<String, CavanRedPacketAlipay>();
+
+	private static synchronized CavanRedPacketAlipay create(String code) {
+		Iterator<CavanRedPacketAlipay> iterator = sPackets.values().iterator();
+		long timeNow = System.currentTimeMillis();
+
+		while (iterator.hasNext()) {
+			CavanRedPacketAlipay node = iterator.next();
+			if (node.getUnpackOver(timeNow) > LIFE_TIME) {
+				iterator.remove();
+			}
+		}
+
+		CavanRedPacketAlipay packet = new CavanRedPacketAlipay(code, timeNow);
+		sPackets.put(code, packet);
+
+		CavanAccessibilityService service = CavanAccessibilityService.instance;
+		if (service != null) {
+			service.onPacketCreated(packet);
+		}
+
+		return packet;
+	}
+
+	public static synchronized CavanRedPacketAlipay get(String code, boolean create) {
+		CavanRedPacketAlipay packet = sPackets.get(code);
+		if (packet == null && create) {
+			return create(code);
+		}
+
+		return packet;
+	}
+
 	private String mCode;
-
-	private int mPostCount;
-	private int mCommitCount;
-	private boolean mPostPending;
-
-	private long mExactTime;
+	private int mPostTimes;
+	private int mCommitTimes;
 	private long mRepeatTime;
-
-	private int mPriority;
-	private boolean mValid;
 	private boolean mInvalid;
 	private boolean mIgnored;
-	private boolean mCompleted;
 	private boolean mRepeatable;
-	private boolean mMaybeInvalid;
 
-	public CavanRedPacketAlipay(String code) {
+	private CavanRedPacketAlipay(String code, long time) {
+		mUnpackTime = time;
 		mCode = code;
 	}
 
@@ -31,36 +61,31 @@ public class CavanRedPacketAlipay extends CavanRedPacket {
 		mCode = code;
 	}
 
-	public synchronized int getPostCount() {
-		return mPostCount;
+	public synchronized int getPostTimes() {
+		return mPostTimes;
 	}
 
-	public synchronized void setPostCount(int count) {
-		mPostCount = count;
+	public synchronized int addPostTimes() {
+		return ++mPostTimes;
 	}
 
-	public synchronized int getCommitCount() {
-		return mCommitCount;
+	public synchronized int getCommitTimes() {
+		return mCommitTimes;
 	}
 
-	public synchronized void setCommitCount(int count) {
-		mCommitCount = count;
-	}
+	public synchronized int addCommitTimes(boolean repeatable) {
+		if (repeatable) {
+			if (!mRepeatable) {
+				updateUnpackTime();
+			}
+		} else {
+			mPending = false;
+		}
 
-	public synchronized boolean isPostPending() {
-		return mPostPending;
-	}
+		mRepeatable = repeatable;
+		mInvalid = false;
 
-	public synchronized void setPostPending(boolean pending) {
-		mPostPending = pending;
-	}
-
-	public synchronized long getExactTime() {
-		return mExactTime;
-	}
-
-	public synchronized void setExactTime(long time) {
-		mExactTime = time;
+		return ++mCommitTimes;
 	}
 
 	public synchronized long getRepeatTime() {
@@ -71,48 +96,12 @@ public class CavanRedPacketAlipay extends CavanRedPacket {
 		mRepeatTime = time;
 	}
 
-	public synchronized boolean updateRepeatTime() {
-		long timeNow = System.currentTimeMillis();
-
-		if (mRepeatTime < timeNow) {
-			if (mRepeatTime != 0) {
-				if (++mCommitCount > 5) {
-					return ((timeNow - mRepeatTime) < 20000);
-				}
-			} else {
-				mRepeatTime = ((timeNow - 5000) / 60000 + 1) * 60000;
-				mUnpackTime = mRepeatTime;
-				mCommitCount = 0;
-			}
-		}
-
-		return true;
-	}
-
-	public synchronized int getPriority() {
-		return mPriority;
-	}
-
-	public synchronized void setPriority(int priority) {
-		mPriority = priority;
-	}
-
-	public synchronized boolean isValid() {
-		return mValid;
-	}
-
-	public synchronized void setValid() {
-		mInvalid = false;
-		mValid = true;
-	}
-
 	public synchronized boolean isInvalid() {
 		return mInvalid;
 	}
 
-	public synchronized void setInvalid() {
+	public void setInvalid() {
 		mInvalid = true;
-		mValid = false;
 	}
 
 	public synchronized boolean isIgnored() {
@@ -123,34 +112,61 @@ public class CavanRedPacketAlipay extends CavanRedPacket {
 		mIgnored = ignored;
 	}
 
-	public synchronized boolean isCompleted() {
-		return mCompleted;
-	}
-
-	public synchronized void setCompleted() {
-		mCompleted = true;
-		setValid();
-	}
-
 	public synchronized boolean isRepeatable() {
 		return mRepeatable;
 	}
 
-	public synchronized void setRepeatable(boolean repeatable) {
-		mRepeatable = repeatable;
-		setValid();
+	public synchronized void updateUnpackTime() {
+		long timeNow = System.currentTimeMillis();
+		mUnpackTime = ((timeNow - 5000) / 60000 + 1) * 60000;
 	}
 
-	public synchronized boolean isMaybeInvalid() {
-		if (mValid) {
+	@Override
+	public void onAdded() {
+		if (mRepeatable) {
+			updateUnpackTime();
+		}
+
+		mPostTimes = 0;
+		mCommitTimes = 0;
+
+		super.onAdded();
+	}
+
+	@Override
+	public synchronized boolean isCompleted() {
+		if (mInvalid || mIgnored) {
+			return true;
+		}
+
+		if (mRepeatable) {
+			if (mRepeatTime == 0) {
+				return false;
+			}
+
+			long timeNow = System.currentTimeMillis();
+			if (mRepeatTime > timeNow) {
+				return ((mRepeatTime - timeNow) > 60000);
+			}
+
+			return ((timeNow - mRepeatTime) > 20000);
+		}
+
+		return super.isCompleted();
+	}
+
+	@Override
+	public synchronized boolean isPending() {
+		if (mInvalid || mIgnored) {
 			return false;
 		}
 
-		return mMaybeInvalid;
-	}
+		if (mRepeatable) {
+			long timeNow = System.currentTimeMillis();
+			return ((timeNow - mUnpackTime) < 20000);
+		}
 
-	public synchronized void setMaybeInvalid(boolean invalid) {
-		mMaybeInvalid = invalid;
+		return super.isPending();
 	}
 
 	@Override
@@ -174,5 +190,4 @@ public class CavanRedPacketAlipay extends CavanRedPacket {
 	public String toString() {
 		return mCode;
 	}
-
 }

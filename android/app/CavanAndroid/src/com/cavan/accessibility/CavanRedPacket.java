@@ -1,13 +1,26 @@
 package com.cavan.accessibility;
 
+import com.cavan.android.CavanAndroid;
+
 public class CavanRedPacket {
 
 	protected CavanAccessibilityPackage mPackage;
+	protected boolean mCompleted;
+	protected boolean mGotoIdle;
+	protected boolean mPending;
 	protected long mUnpackTime;
 	protected int mSendTimes;
 
 	public CavanRedPacket prev;
 	public CavanRedPacket next;
+
+	public void onAdded() {
+		mPackage.onPacketAdded(this);
+	}
+
+	public void onRemoved() {
+		mPackage.onPacketRemoved(this);
+	}
 
 	public CavanRedPacket() {
 		clear();
@@ -53,16 +66,48 @@ public class CavanRedPacket {
 		mUnpackTime = time;
 	}
 
+	public synchronized boolean isCompleted() {
+		return mCompleted;
+	}
+
+	public synchronized void setCompleted() {
+		CavanAndroid.dLog("complete: " + toString());
+		mCompleted = true;
+		mPending = false;
+	}
+
+	public synchronized boolean isPending() {
+		return mPending;
+	}
+
+	public synchronized void setPending() {
+		mPending = true;
+	}
+
+	public synchronized boolean needGotoIdle() {
+		return mGotoIdle;
+	}
+
+	public synchronized void setGotoIdle(boolean enable) {
+		mGotoIdle = enable;
+	}
+
 	public synchronized void setUnpackDelay(long delay) {
 		setUnpackTime(System.currentTimeMillis() + delay);
 	}
 
-	public synchronized long getUnpackRemain() {
-		if (mUnpackTime > 0) {
-			long timeNow = System.currentTimeMillis();
-			if (mUnpackTime > timeNow) {
-				return mUnpackTime - timeNow;
-			}
+	public synchronized long getUnpackDelay(long delay) {
+		long timeNow = System.currentTimeMillis();
+		if (mUnpackTime < timeNow) {
+			return delay;
+		}
+
+		return mUnpackTime - timeNow;
+	}
+
+	public synchronized long getUnpackOver(long time) {
+		if (time > mUnpackTime) {
+			return time - mUnpackTime;
 		}
 
 		return 0;
@@ -76,9 +121,4 @@ public class CavanRedPacket {
 
 		return false;
 	}
-
-	public boolean needGotoIdle() {
-		return false;
-	}
-
 }

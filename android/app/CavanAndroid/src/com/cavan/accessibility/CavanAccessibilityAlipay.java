@@ -12,8 +12,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
 	public static CavanAccessibilityAlipay instance;
 
-	private CavanRedPacketAlipay mPacket;
-	private String mInputText;
+	private CavanRedPacketAlipay mInputPacket;
+	private String mInputCode;
 
 	public class BaseWindow extends CavanAccessibilityWindow {
 
@@ -62,6 +62,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 	}
 
 	public class HomeActivity extends BaseWindow {
+
+		private boolean mMaybeInvalid;
 
 		public HomeActivity(String name) {
 			super(name);
@@ -124,13 +126,26 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
 			addRecycleNode(input);
 
+			if (mMaybeInvalid) {
+				CavanRedPacketAlipay node = getInputPacket(input);
+				if (node == packet) {
+					if (getTimeConsume() > 1000) {
+						node.setInvalid();
+					}
+
+					return true;
+				}
+
+				mMaybeInvalid = false;
+			}
+
 			if (!inputRedPacketCode(input, packet.getCode())) {
 				return false;
 			}
 
-			mInputText = packet.getCode();
+			setInputCode(packet.getCode());
 
-			if (packet.getUnpackRemain() > 0) {
+			if (packet.getUnpackDelay(0) > 0) {
 				showCountDownView(packet);
 				return true;
 			}
@@ -141,58 +156,49 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 				return false;
 			}
 
-			setPacket(packet);
-
 			return true;
 		}
 
 		@Override
 		public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
-			CavanRedPacketAlipay packetCurr = getPacket();
-			if (packetCurr != null && packetCurr.isMaybeInvalid()) {
-				if (getTimeConsume() > 1000) {
-					setPacketInvalid(packetCurr);
-				}
-
-				return true;
-			}
-
 			return postRedPacketCode(root, (CavanRedPacketAlipay) packet);
 		}
 
 		@Override
 		public void onEnter() {
-			mInputText = null;
+			setInputCode(null);
 		}
 
 		@Override
 		public void onProgress(String name) {
-			CavanRedPacketAlipay packet = getPacket();
+			CavanRedPacketAlipay packet = getInputPacket(true);
 			if (packet != null) {
-				if (packet.getCode().equals(mInputText)) {
-					packet.setPostPending(false);
-				} else {
-					setPacket(null);
-				}
+				mMaybeInvalid = true;
+				packet.addPostTimes();
 			}
 		}
 
 		@Override
 		public void onAndroidWidget(String name) {
-			CavanRedPacketAlipay packet = getPacket();
+			CavanRedPacketAlipay packet = getInputPacket(true);
 			if (packet != null) {
-				setPacketInvalid(packet);
+				packet.setInvalid();
 			}
 		}
 
 		@Override
 		public void onViewTextChanged(AccessibilityEvent event) {
 			try {
-				mInputText = event.getText().get(0).toString();
-				CavanAndroid.dLog("mInputText = " + mInputText);
+				mInputCode = event.getText().get(0).toString();
+				CavanAndroid.dLog("mInputCode = " + mInputCode);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		}
+
+		@Override
+		public boolean isMainActivity() {
+			return true;
 		}
 	}
 
@@ -204,12 +210,9 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
 		@Override
 		public void onEnter() {
-			if (mPacket != null) {
-				mPacket.setRepeatable(false);
-			} else if (mInputText != null) {
-				CavanRedPacketAlipay packet = new CavanRedPacketAlipay(mInputText);
-				addPacket(packet);
-				mPacket = packet;
+			CavanRedPacketAlipay packet = getInputPacket(true);
+			if (packet != null) {
+				packet.addCommitTimes(false);
 			}
 		}
 
@@ -220,8 +223,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 			}
 
 			if (CavanAccessibilityHelper.performClickByViewIds(root, "com.alipay.android.phone.discovery.envelope:id/coupon_chai_close") > 0) {
-				removePacket(mPacket);
-				return true;
+				setPacketCompleted();
 			}
 
 			return false;
@@ -235,10 +237,10 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public void onLeave() {
-			CavanRedPacketAlipay packet = mPacket;
+		public void onEnter() {
+			CavanRedPacketAlipay packet = getInputPacket(false);
 			if (packet != null) {
-				setPacketCompleted(packet);
+				packet.setCompleted();
 			}
 		}
 
@@ -256,15 +258,9 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
 		@Override
 		public void onEnter() {
-			if (mPacket != null) {
-				mPacket.setRepeatable(true);
-			}
-		}
-
-		@Override
-		public void onLeave() {
-			if (mPacket != null && !mPacket.updateRepeatTime()) {
-				removePacket(mPacket);
+			CavanRedPacketAlipay packet = getInputPacket(true);
+			if (packet != null) {
+				packet.addCommitTimes(true);
 			}
 		}
 
@@ -329,35 +325,40 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 		instance = this;
 	}
 
-	public synchronized void setPacket(CavanRedPacketAlipay packet) {
-		if (packet != mPacket) {
-			if (mPacket != null) {
-				mPacket.setPostPending(false);
-			}
+	public synchronized String getInputCode() {
+		return mInputCode;
+	}
 
-			packet.setPostPending(true);
-			mPacket = packet;
+	public synchronized void setInputCode(String code) {
+		mInputCode = code;
+	}
+
+	public CavanRedPacketAlipay getInputPacket(AccessibilityNodeInfo input) {
+		String text = CavanAccessibilityHelper.getNodeText(input);
+		if (text == null || text.isEmpty()) {
+			return null;
+		}
+
+		return CavanRedPacketAlipay.get(text, false);
+	}
+
+	public synchronized CavanRedPacketAlipay getInputPacket(boolean create) {
+		if (mInputPacket == null && mInputCode != null && mInputCode.length() > 0) {
+			mInputPacket = CavanRedPacketAlipay.get(mInputCode, create);
+		}
+
+		return mInputPacket;
+	}
+
+	public synchronized void setPacketCompleted() {
+		CavanRedPacketAlipay packet = getInputPacket(false);
+		if (packet != null) {
+			packet.setCompleted();
 		}
 	}
 
-	public synchronized CavanRedPacketAlipay getPacket() {
-		return mPacket;
-	}
-
 	public boolean addPacket(String code) {
-		return addPacket(new CavanRedPacketAlipay(code));
-	}
-
-	public synchronized void setPacketInvalid(CavanRedPacketAlipay packet) {
-		packet.setInvalid();
-		removePacket(packet);
-		mPacket = null;
-	}
-
-	public synchronized void setPacketCompleted(CavanRedPacketAlipay packet) {
-		packet.setCompleted();
-		removePacket(packet);
-		mPacket = null;
+		return addPacket(CavanRedPacketAlipay.get(code, true));
 	}
 
 	@Override

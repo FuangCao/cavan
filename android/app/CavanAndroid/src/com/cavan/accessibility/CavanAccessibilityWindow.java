@@ -33,6 +33,10 @@ public class CavanAccessibilityWindow {
 		return (times < 10);
 	}
 
+	public boolean isMainActivity() {
+		return false;
+	}
+
 	@Override
 	public String toString() {
 		return mName;

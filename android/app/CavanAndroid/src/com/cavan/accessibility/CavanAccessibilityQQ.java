@@ -95,6 +95,9 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 	}
 
 	public class SplashActivity extends BackableWindow {
+
+		private boolean mMainActivity;
+
 		public SplashActivity(String name) {
 			super(name);
 		}
@@ -287,7 +290,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 
 					if (++mRetryTimes > MAX_RETRY_TIMES) {
 						CavanAndroid.dLog("No packet found");
-						clearPackets();
+						removePackets();
 						mRetryTimes = 0;
 						break;
 					}
@@ -309,15 +312,13 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 				CavanRedPacket packet = findPacket(title);
 				CavanAndroid.dLog("packet = " + packet);
 
-				if (packet != null) {
+				if (packet != null && packet.isPending()) {
 					if (doAutoUnpack(root)) {
 						return true;
 					}
 
-					removePacket(packet);
+					packet.setCompleted();
 					mFinishNodes.clear();
-
-					CavanAndroid.dLog("complete: " + packet);
 				}
 			}
 
@@ -328,6 +329,8 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
 			AccessibilityNodeInfo backNode = findBackNode(root);
 			if (backNode != null) {
+				mMainActivity = false;
+
 				try {
 					return doFindAndUnpack(root, backNode);
 				} catch (Exception e) {
@@ -336,11 +339,17 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 					backNode.recycle();
 				}
 
-				return true;
+				return false;
 			}
 
 			AccessibilityNodeInfo listNode = CavanAccessibilityHelper.findNodeByViewId(root, "com.tencent.mobileqq:id/recent_chat_list");
 			if (listNode != null) {
+				mMainActivity = true;
+
+				if (packet.isCompleted()) {
+					return true;
+				}
+
 				try {
 					return doFindSession(listNode);
 				} catch (Exception e) {
@@ -348,7 +357,11 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 				} finally {
 					listNode.recycle();
 				}
+
+				return false;
 			}
+
+			mMainActivity = false;
 
 			if (times < 5) {
 				return true;
@@ -356,6 +369,11 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 
 			mService.performActionBack();
 			return false;
+		}
+
+		@Override
+		public boolean isMainActivity() {
+			return mMainActivity;
 		}
 	}
 
