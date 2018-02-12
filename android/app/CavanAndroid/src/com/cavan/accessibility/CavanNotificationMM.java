@@ -11,6 +11,11 @@ public class CavanNotificationMM extends CavanNotification {
 	}
 
 	@Override
+	protected String getPacketName() {
+		return "微信红包";
+	}
+
+	@Override
 	public void parse(String content) {
 		int endLine = CavanString.findLineEnd(content);
 
@@ -33,14 +38,4 @@ public class CavanNotificationMM extends CavanNotification {
 
 		return super.isRedPacket();
 	}
-
-	@Override
-	public String toString() {
-		if (mContent != null) {
-			return mContent;
-		}
-
-		return "[微信红包]";
-	}
-
 }

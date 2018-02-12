@@ -143,6 +143,11 @@ public abstract class CavanNotification extends CavanRedPacket {
 	public abstract void parse(String content);
 
 	@Override
+	protected String getPacketName() {
+		return "通知";
+	}
+
+	@Override
 	public synchronized boolean launch() {
 		if (sendPendingIntent()) {
 			mSendTimes++;

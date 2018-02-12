@@ -327,6 +327,15 @@ public class CavanAccessibilityHelper {
 		return CavanString.EMPTY_STRING;
 	}
 
+	public static String getEventText(AccessibilityEvent event) {
+		List<CharSequence> texts = event.getText();
+		if (texts.isEmpty()) {
+			return CavanString.EMPTY_STRING;
+		}
+
+		return texts.get(0).toString();
+	}
+
 	public static String getNodeViewId(AccessibilityNodeInfo node) {
 		if (CavanAndroid.SDK_VERSION < 18) {
 			return null;

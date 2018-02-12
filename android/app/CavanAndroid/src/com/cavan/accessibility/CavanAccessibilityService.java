@@ -237,6 +237,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				break;
 
 			case Intent.ACTION_SCREEN_OFF:
+				mPackets.clear();
 				setPackage(null);
 				mUserPresent = false;
 				onUserOffline();
@@ -500,10 +501,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 		mHandler.obtainMessage(MSG_SHOW_COUNT_DOWN, packet).sendToTarget();
 	}
 
-	public boolean addPacket(CavanRedPacket packet) {
+	public boolean addPacket(CavanAccessibilityPackage pkg, CavanRedPacket packet) {
 		acquireWakeLock(2000);
 
-		if (mPackets.add(packet)) {
+		if (mPackets.add(pkg, packet)) {
 			startPollThread();
 			return true;
 		}

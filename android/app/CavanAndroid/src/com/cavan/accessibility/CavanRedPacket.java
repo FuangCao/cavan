@@ -1,5 +1,8 @@
 package com.cavan.accessibility;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.cavan.android.CavanAndroid;
 
 public class CavanRedPacket {
@@ -11,8 +14,8 @@ public class CavanRedPacket {
 	protected long mUnpackTime;
 	protected int mSendTimes;
 
-	public CavanRedPacket prev;
-	public CavanRedPacket next;
+	protected CavanRedPacket prev;
+	protected CavanRedPacket next;
 
 	public void onAdded() {
 		mPackage.onPacketAdded(this);
@@ -26,14 +29,16 @@ public class CavanRedPacket {
 		clear();
 	}
 
-	public void addPrev(CavanRedPacket node) {
+	public void addPrev(CavanAccessibilityPackage pkg, CavanRedPacket node) {
+		node.setPackage(pkg);
 		node.prev = prev;
 		node.next = this;
 		prev.next = node;
 		prev = node;
 	}
 
-	public void addNext(CavanRedPacket node) {
+	public void addNext(CavanAccessibilityPackage pkg, CavanRedPacket node) {
+		node.setPackage(pkg);
 		node.prev = this;
 		node.next = next;
 		next.prev = node;
@@ -120,5 +125,52 @@ public class CavanRedPacket {
 		}
 
 		return false;
+	}
+
+	protected String getPacketName() {
+		return "dummy";
+	}
+
+	protected List<String> getOptions(List<String> options) {
+		if (mCompleted) {
+			options.add("completed");
+		}
+
+		if (mPending) {
+			options.add("pending");
+		}
+
+		if (mGotoIdle) {
+			options.add("idle");
+		}
+
+		if (mUnpackTime != 0) {
+			options.add("unpack=" + mUnpackTime);
+		}
+
+		return options;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder(getPacketName());
+
+		builder.append('@').append(Integer.toHexString(hashCode()));
+		builder.append(": [");
+
+		int index = 0;
+
+		for (String option : getOptions(new ArrayList<String>())) {
+			if (index > 0) {
+				builder.append(',');
+			}
+
+			builder.append(option);
+			index++;
+		}
+
+		builder.append(']');
+
+		return builder.toString();
 	}
 }

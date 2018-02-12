@@ -1,5 +1,7 @@
 package com.cavan.accessibility;
 
+import java.util.List;
+
 import com.cavan.java.CavanString;
 
 import android.app.Notification;
@@ -8,6 +10,11 @@ public class CavanNotificationQQ extends CavanNotification {
 
 	public CavanNotificationQQ(Notification notification) {
 		super(notification);
+	}
+
+	@Override
+	protected String getPacketName() {
+		return "QQ红包";
 	}
 
 	@Override
@@ -59,12 +66,8 @@ public class CavanNotificationQQ extends CavanNotification {
 	}
 
 	@Override
-	public String toString() {
-		if (mContent != null) {
-			return mContent;
-		}
-
-		return "[QQ红包]";
+	protected List<String> getOptions(List<String> options) {
+		options.add("QQ红包");
+		return super.getOptions(options);
 	}
-
 }

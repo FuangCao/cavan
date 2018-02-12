@@ -128,10 +128,9 @@ public class CavanAccessibilityPackage {
 			return false;
 		}
 
-		packet.setPackage(this);
 		packet.setUnpackDelay(delay);
 
-		if (!mService.addPacket(packet)) {
+		if (!mService.addPacket(this, packet)) {
 			return false;
 		}
 
@@ -285,6 +284,7 @@ public class CavanAccessibilityPackage {
 
 		CavanAccessibilityWindow win = getWindow(name);
 		setWindow(win);
+
 		if (isPending()) {
 			setUnlockTime(0);
 		}
@@ -364,7 +364,10 @@ public class CavanAccessibilityPackage {
 							return POLL_DELAY;
 						} else {
 							packet.setCompleted();
-							win.back(this, root);
+
+							if (win.performActionBack(root, this)) {
+								setUnlockDelay(LOCK_DELAY);
+							}
 						}
 					}
 

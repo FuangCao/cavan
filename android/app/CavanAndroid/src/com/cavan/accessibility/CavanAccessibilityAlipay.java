@@ -13,6 +13,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
 	public static CavanAccessibilityAlipay instance;
 
+	private CavanRedPacketAlipay mMaybeInvalid;
 	private CavanRedPacketAlipay mInputPacket;
 	private String mInputCode;
 
@@ -64,10 +65,9 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
 	public class HomeActivity extends BaseWindow {
 
-		private boolean mMaybeInvalid;
-
 		public HomeActivity(String name) {
 			super(name);
+			setBackViewId("com.alipay.mobile.ui:id/title_bar_back_button");
 		}
 
 		public boolean inputRedPacketCode(AccessibilityNodeInfo input, String code) {
@@ -129,18 +129,19 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
 			addRecycleNode(input);
 
-			if (mMaybeInvalid) {
-				CavanRedPacketAlipay node = getInputPacket(input);
-				if (node == packet) {
-					if (getTimeConsume() > 1000) {
-						node.setInvalid();
-					}
-
+			CavanRedPacketAlipay invalid = getMaybeInvalid();
+			if (invalid != null && invalid.getCode().equals(CavanAccessibilityHelper.getNodeText(input))) {
+				if (invalid.isInvalid()) {
+					packet = invalid;
+				} else if (getTimeConsume() > 1000) {
+					invalid.setInvalid();
+					packet = invalid;
+				} else {
 					return true;
 				}
-
-				mMaybeInvalid = false;
 			}
+
+			setMaybeInvalid(null);
 
 			if (!packet.isPending()) {
 				if (packet.isInvalid()) {
@@ -154,7 +155,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 				return false;
 			}
 
-			setInputCode(packet.getCode());
+			setInputPacket(packet);
 
 			if (packet.getUnpackDelay(0) > 0) {
 				showCountDownView(packet);
@@ -167,6 +168,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 				return false;
 			}
 
+			setUnlockDelay(LOCK_DELAY);
+
 			return true;
 		}
 
@@ -176,16 +179,11 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public void onEnter() {
-			setInputCode(null);
-		}
-
-		@Override
 		public void onProgress(String name) {
 			CavanRedPacketAlipay packet = getInputPacket(true);
 			if (packet != null) {
-				mMaybeInvalid = true;
 				packet.addPostTimes();
+				setMaybeInvalid(packet);
 			}
 		}
 
@@ -199,12 +197,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
 		@Override
 		public void onViewTextChanged(AccessibilityEvent event) {
-			try {
-				mInputCode = event.getText().get(0).toString();
-				CavanAndroid.dLog("mInputCode = " + mInputCode);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			String text = CavanAccessibilityHelper.getEventText(event);
+			setInputCode(text);
 		}
 
 		@Override
@@ -217,6 +211,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
 		public CouponDetailActivity(String name) {
 			super(name);
+			setBackViewId("com.alipay.android.phone.discovery.envelope:id/coupon_chai_close");
 		}
 
 		@Override
@@ -225,29 +220,24 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 			if (packet != null) {
 				packet.addCommitTimes(false);
 			}
+
+			setMaybeInvalid(null);
 		}
 
 		@Override
 		public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
 			if (CavanAccessibilityHelper.performClickByViewIds(root, "com.alipay.android.phone.discovery.envelope:id/action_chai") > 0) {
+				setUnlockDelay(LOCK_DELAY);
 				return true;
 			}
 
-			if (CavanAccessibilityHelper.performClickByViewIds(root, "com.alipay.android.phone.discovery.envelope:id/coupon_chai_close") > 0) {
+			if (performActionBack(root)) {
+				setUnlockDelay(LOCK_DELAY);
 				setPacketCompleted();
 				return true;
 			}
 
 			return false;
-		}
-
-		@Override
-		public boolean back(CavanAccessibilityPackage pkg, AccessibilityNodeInfo root) {
-			if (CavanAccessibilityHelper.performClickByViewIds(root, "com.alipay.android.phone.discovery.envelope:id/coupon_chai_close") > 0) {
-				return true;
-			}
-
-			return super.back(pkg, root);
 		}
 	}
 
@@ -255,19 +245,23 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
 		public ReceivedDetailActivity(String name) {
 			super(name);
+			setBackViewId("com.alipay.mobile.ui:id/title_bar_back_button");
 		}
 
 		@Override
 		public void onEnter() {
-			CavanRedPacketAlipay packet = getInputPacket(false);
-			if (packet != null) {
-				packet.setCompleted();
-			}
+			setMaybeInvalid(null);
 		}
 
 		@Override
 		public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
-			return (CavanAccessibilityHelper.performClickByViewIds(root, "com.alipay.mobile.ui:id/title_bar_back_button") > 0);
+			if (performActionBack(root)) {
+				setUnlockDelay(LOCK_DELAY);
+				setPacketCompleted();
+				return true;
+			}
+
+			return false;
 		}
 	}
 
@@ -275,6 +269,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
 		public H5Activity(String name) {
 			super(name);
+			setBackViewId("com.alipay.mobile.nebula:id/h5_tv_nav_back");
 		}
 
 		@Override
@@ -283,6 +278,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 			if (packet != null) {
 				packet.addCommitTimes(true);
 			}
+
+			setMaybeInvalid(null);
 		}
 
 		@Override
@@ -291,7 +288,12 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 				return true;
 			}
 
-			return (CavanAccessibilityHelper.performClickByViewIds(root, "com.alipay.mobile.nebula:id/h5_tv_nav_back") > 0);
+			if (performActionBack(root)) {
+				setUnlockDelay(LOCK_DELAY);
+				return true;
+			}
+
+			return false;
 		}
 	}
 
@@ -346,29 +348,45 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 		instance = this;
 	}
 
-	public synchronized String getInputCode() {
-		return mInputCode;
-	}
-
 	public synchronized void setInputCode(String code) {
+		CavanAndroid.dLog("setInputCode: " + code);
 		mInputCode = code;
 	}
 
-	public CavanRedPacketAlipay getInputPacket(AccessibilityNodeInfo input) {
-		String text = CavanAccessibilityHelper.getNodeText(input);
-		if (text == null || text.isEmpty()) {
-			return null;
-		}
-
-		return CavanRedPacketAlipay.get(text, false);
+	public synchronized void setInputPacket(CavanRedPacketAlipay packet) {
+		setInputCode(packet.getCode());
+		mInputPacket = packet;
 	}
 
 	public synchronized CavanRedPacketAlipay getInputPacket(boolean create) {
-		if (mInputPacket == null && mInputCode != null && mInputCode.length() > 0) {
-			mInputPacket = CavanRedPacketAlipay.get(mInputCode, create);
+		if (mInputPacket != null) {
+			if (mInputPacket.getCode().equals(mInputCode)) {
+				return mInputPacket;
+			}
+
+			mInputPacket = null;
 		}
 
+		if (mInputCode == null || mInputCode.isEmpty()) {
+			return null;
+		}
+
+		if (mInputCode.equals("输口令 领红包")) {
+			mInputCode = null;
+			return null;
+		}
+
+		mInputPacket = CavanRedPacketAlipay.get(mInputCode, true);
+
 		return mInputPacket;
+	}
+
+	public synchronized CavanRedPacketAlipay getMaybeInvalid() {
+		return mMaybeInvalid;
+	}
+
+	public synchronized void setMaybeInvalid(CavanRedPacketAlipay packet) {
+		mMaybeInvalid = packet;
 	}
 
 	public synchronized void setPacketCompleted() {

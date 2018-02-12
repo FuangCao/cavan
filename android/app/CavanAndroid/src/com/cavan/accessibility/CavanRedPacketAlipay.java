@@ -2,6 +2,9 @@ package com.cavan.accessibility;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+
+import com.cavan.android.CavanAndroid;
 
 public class CavanRedPacketAlipay extends CavanRedPacket {
 
@@ -21,13 +24,17 @@ public class CavanRedPacketAlipay extends CavanRedPacket {
 		}
 
 		CavanRedPacketAlipay packet = new CavanRedPacketAlipay(code, timeNow);
+
 		sPackets.put(code, packet);
+		CavanAndroid.dLog("put: " + code + " -> " + packet);
 
 		return packet;
 	}
 
 	public static synchronized CavanRedPacketAlipay get(String code, boolean create, boolean report) {
 		CavanRedPacketAlipay packet = sPackets.get(code);
+		CavanAndroid.dLog("get: " + code + " <- " + packet);
+
 		if (packet == null && create) {
 			packet = create(code);
 
@@ -132,6 +139,11 @@ public class CavanRedPacketAlipay extends CavanRedPacket {
 	}
 
 	@Override
+	protected String getPacketName() {
+		return "支付宝口令: " + mCode;
+	}
+
+	@Override
 	public void onAdded() {
 		if (mRepeatable) {
 			updateUnpackTime();
@@ -197,31 +209,23 @@ public class CavanRedPacketAlipay extends CavanRedPacket {
 	}
 
 	@Override
-	public String toString() {
-		StringBuilder builder = new StringBuilder();
-
-		builder.append(mCode);
-
+	protected List<String> getOptions(List<String> options) {
 		if (mInvalid) {
-			builder.append(",invalid");
+			options.add("invalid");
 		}
 
 		if (mRepeatable) {
-			builder.append(",repeatable");
+			if (mRepeatTime == 0) {
+				options.add("repeatable");
+			} else {
+				options.add("repeat=" + mRepeatTime);
+			}
 		}
 
 		if (mIgnored) {
-			builder.append(",ignored");
+			options.add("ignored");
 		}
 
-		if (mPending) {
-			builder.append(",pending");
-		}
-
-		if (mCompleted) {
-			builder.append(",completed");
-		}
-
-		return builder.toString();
+		return super.getOptions(options);
 	}
 }

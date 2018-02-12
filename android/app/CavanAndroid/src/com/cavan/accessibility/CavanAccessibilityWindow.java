@@ -6,6 +6,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 
 public class CavanAccessibilityWindow {
 
+	protected String mBackViewId;
 	protected String mName;
 
 	public CavanAccessibilityWindow(String name) {
@@ -16,12 +17,41 @@ public class CavanAccessibilityWindow {
 		return mName;
 	}
 
+	public void setBackViewId(String id) {
+		mBackViewId = id;
+	}
+
+	public String getBackViewId() {
+		return mBackViewId;
+	}
+
 	public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
 		return false;
 	}
 
-	public boolean back(CavanAccessibilityPackage pkg, AccessibilityNodeInfo root) {
+	public boolean performActionBack(AccessibilityNodeInfo root) {
+		String vid = mBackViewId;
+		if (vid == null) {
+			return false;
+		}
+
+		return (CavanAccessibilityHelper.performClickByViewIds(root, vid) > 0);
+	}
+
+	public boolean performActionBack(CavanAccessibilityPackage pkg) {
 		return pkg.getService().performActionBack();
+	}
+
+	public boolean performActionBack(AccessibilityNodeInfo root, CavanAccessibilityPackage pkg) {
+		if (performActionBack(root)) {
+			return true;
+		}
+
+		if (pkg == null) {
+			return false;
+		}
+
+		return performActionBack(pkg);
 	}
 
 	public void onEnter() {}
