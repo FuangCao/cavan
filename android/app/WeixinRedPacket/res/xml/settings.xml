@@ -7,6 +7,11 @@
     <Preference android:key="accessibility"
         android:title="@string/accessibility" />
 
+    <CheckBoxPreference android:key="disable_keyguard"
+	    android:persistent="true"
+	    android:defaultValue="false"
+	    android:title="@string/disable_keyguard" />
+
 	<ListPreference android:key="mm_unpack"
 	    android:persistent="true"
 		android:entries="@array/delay_entries"
@@ -14,8 +19,4 @@
 		android:defaultValue="0"
 	    android:title="@string/mm_unpack" />
 
-	<CheckBoxPreference android:key="disable_keyguard"
-		    android:persistent="true"
-		    android:defaultValue="false"
-		    android:title="@string/disable_keyguard" />
 </PreferenceScreen>

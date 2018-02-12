@@ -38,7 +38,7 @@ public class AccessibilityServiceMM extends CavanAccessibilityService {
 	@Override
 	protected void onScreenOff() {
 		if (MainActivity.isDisableKeyguardEnabled(this)) {
-			CavanAndroid.startActivity(this, CavanKeyguardActivity.class);
+			CavanKeyguardActivity.show(this);
 		} else {
 			CavanAndroid.startLauncher(this);
 		}

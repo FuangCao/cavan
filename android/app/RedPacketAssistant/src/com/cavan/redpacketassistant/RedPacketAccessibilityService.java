@@ -4,6 +4,7 @@ import android.view.accessibility.AccessibilityEvent;
 
 import com.cavan.accessibility.CavanAccessibilityService;
 import com.cavan.accessibility.CavanCountDownDialog;
+import com.cavan.accessibility.CavanKeyguardActivity;
 import com.cavan.accessibility.CavanRedPacket;
 import com.cavan.android.CavanAndroid;
 
@@ -37,8 +38,12 @@ public class RedPacketAccessibilityService extends CavanAccessibilityService {
 	}
 
 	@Override
-	protected void onUserOffline() {
-		CavanAndroid.startLauncher(this);
+	protected void onScreenOff() {
+		if (MainActivity.isDisableKeyguardEnabled(this)) {
+			CavanKeyguardActivity.show(this);
+		} else {
+			CavanAndroid.startLauncher(this);
+		}
 	}
 
 	@Override

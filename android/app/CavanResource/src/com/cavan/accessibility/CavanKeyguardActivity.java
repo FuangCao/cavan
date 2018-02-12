@@ -1,6 +1,7 @@
 package com.cavan.accessibility;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -12,6 +13,10 @@ import com.cavan.resource.R;
 public class CavanKeyguardActivity extends Activity implements OnClickListener {
 
 	public static CavanKeyguardActivity instance;
+
+	public static boolean show(Context context) {
+		return CavanAndroid.startActivity(context, CavanKeyguardActivity.class);
+	}
 
 	private Button mButtonUnlock;
 
