@@ -38,20 +38,16 @@ public class CavanAccessibilityWindow {
 		return (CavanAccessibilityHelper.performClickByViewIds(root, vid) > 0);
 	}
 
-	public boolean performActionBack(CavanAccessibilityPackage pkg) {
-		return pkg.getService().performActionBack();
-	}
-
 	public boolean performActionBack(AccessibilityNodeInfo root, CavanAccessibilityPackage pkg) {
 		if (performActionBack(root)) {
 			return true;
 		}
 
-		if (pkg == null) {
-			return false;
+		if (pkg != null) {
+			return pkg.performActionBack(root, true);
 		}
 
-		return performActionBack(pkg);
+		return false;
 	}
 
 	public void onEnter() {}
@@ -68,6 +64,10 @@ public class CavanAccessibilityWindow {
 	}
 
 	public boolean isMainActivity() {
+		return false;
+	}
+
+	public boolean isProgressView() {
 		return false;
 	}
 

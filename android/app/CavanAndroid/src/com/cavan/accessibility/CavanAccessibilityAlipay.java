@@ -11,6 +11,11 @@ import com.cavan.java.CavanString;
 
 public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
+	private static final String[] BACK_VIEW_IDS = {
+		"com.alipay.mobile.ui:id/title_bar_back_button",
+		"com.alipay.mobile.nebula:id/h5_tv_nav_back",
+	};
+
 	public static CavanAccessibilityAlipay instance;
 
 	private CavanRedPacketAlipay mMaybeInvalid;
@@ -76,7 +81,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 				return true;
 			}
 
-			CavanInputMethodService ime = CavanInputMethodService.instance;
+			CavanInputMethodService ime = mService.getInputMethodService();
 			if (ime == null) {
 				CavanAndroid.eLog("ime == null");
 				return false;
@@ -86,7 +91,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 		}
 
 		public boolean commitRedPacketCode() {
-			CavanInputMethodService ime = CavanInputMethodService.instance;
+			CavanInputMethodService ime = mService.getInputMethodService();
 			if (ime == null) {
 				CavanAndroid.eLog("ime == null");
 				return false;
@@ -106,7 +111,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 					node.recycle();
 				}
 
-				CavanInputMethodService ime = CavanInputMethodService.instance;
+				CavanInputMethodService ime = mService.getInputMethodService();
 				if (ime == null) {
 					CavanAndroid.eLog("ime == null");
 					return null;
@@ -345,7 +350,6 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
 	public CavanAccessibilityAlipay(CavanAccessibilityService service) {
 		super(service, CavanPackageName.ALIPAY);
-		instance = this;
 	}
 
 	public synchronized void setInputCode(String code) {
@@ -416,5 +420,22 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 		addWindow(new UserLoginActivity("com.alipay.mobile.security.login.ui.AlipayUserLoginActivity"));
 		addWindow(new XiuxiuActivity("com.alipay.mobile.xiuxiu.ui.RedPacketSettingsActivity"));
 		addWindow(new UpdateCommonDialog("com.alipay.mobile.about.widget.UpdateCommonDialog"));
+	}
+
+	@Override
+	public String[] getBackViewIds() {
+		return BACK_VIEW_IDS;
+	}
+
+	@Override
+	protected void onCreate() {
+		super.onCreate();
+		instance = this;
+	}
+
+	@Override
+	protected void onDestroy() {
+		instance = null;
+		super.onDestroy();
 	}
 }

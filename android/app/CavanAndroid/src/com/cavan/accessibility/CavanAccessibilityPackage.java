@@ -1,7 +1,6 @@
 package com.cavan.accessibility;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 import android.app.Notification;
@@ -22,9 +21,9 @@ public class CavanAccessibilityPackage {
 	public static int FAIL_TIMES = 10;
 
 	protected HashMap<String, CavanAccessibilityWindow> mWindows = new HashMap<String, CavanAccessibilityWindow>();
-	protected HashSet<String> mProgressWindows = new HashSet<String>();
 	protected CavanAccessibilityService mService;
 	protected CavanAccessibilityWindow mWindow;
+	protected CavanRedPacket mCurrentPacket;
 	protected boolean mForceUnpack = true;
 	protected boolean mPending;
 	protected long mUpdateTime;
@@ -33,6 +32,18 @@ public class CavanAccessibilityPackage {
 	protected int mFailTimes;
 	protected String[] mNames;
 	protected String mName;
+
+	public class ProgressWindow extends CavanAccessibilityWindow {
+
+		public ProgressWindow(String name) {
+			super(name);
+		}
+
+		@Override
+		public boolean isProgressView() {
+			return true;
+		}
+	};
 
 	public CavanAccessibilityPackage(CavanAccessibilityService service, String[] names) {
 		mService = service;
@@ -63,35 +74,16 @@ public class CavanAccessibilityPackage {
 		mWindows.put(win.getName(), win);
 	}
 
+	public synchronized void addProgressWindow(String name) {
+		addWindow(new ProgressWindow(name));
+	}
+
 	public synchronized CavanAccessibilityWindow getWindow() {
 		return mWindow;
 	}
 
 	public synchronized CavanAccessibilityWindow getWindow(String name) {
 		return mWindows.get(name);
-	}
-
-	public synchronized void setWindow(CavanAccessibilityWindow win) {
-		if (win != mWindow) {
-			if (mWindow != null) {
-				mWindow.onLeave();
-			}
-
-			mWindow = win;
-			resetTimes();
-		}
-
-		if (win != null) {
-			win.onEnter();
-		}
-	}
-
-	public synchronized boolean addProgressWindow(String name) {
-		return mProgressWindows.add(name);
-	}
-
-	public synchronized boolean isProgressWindow(String name) {
-		return mProgressWindows.contains(name);
 	}
 
 	public synchronized CavanAccessibilityService getService() {
@@ -168,6 +160,14 @@ public class CavanAccessibilityPackage {
 		}
 	}
 
+	public synchronized CavanRedPacket getCurrentPacket() {
+		return mCurrentPacket;
+	}
+
+	public synchronized void setCurrentPacket(CavanRedPacket packet) {
+		mCurrentPacket = packet;
+	}
+
 	public synchronized void touchUpdateTime() {
 		mUpdateTime = System.currentTimeMillis();
 	}
@@ -196,6 +196,24 @@ public class CavanAccessibilityPackage {
 	public synchronized void setUnlockTime(long time) {
 		mUnlockTime = time;
 		startPollThread();
+	}
+
+	public String[] getBackViewIds() {
+		return null;
+	}
+
+	public boolean performActionBack(AccessibilityNodeInfo root, boolean force) {
+		String[] vids = getBackViewIds();
+
+		if (vids != null && CavanAccessibilityHelper.performClickByViewIds(root, vids) > 0) {
+			return true;
+		}
+
+		if (force) {
+			return mService.performActionBack();
+		}
+
+		return false;
 	}
 
 	public synchronized boolean launch() {
@@ -264,15 +282,6 @@ public class CavanAccessibilityPackage {
 		CavanAndroid.dLog("onWindowStateChanged: " + mName + "/" + name);
 		touchUpdateTime();
 
-		if (isProgressWindow(name)) {
-			CavanAccessibilityWindow win = mWindow;
-			if (win != null) {
-				win.onProgress(name);
-			}
-
-			return win;
-		}
-
 		if (name.startsWith("android.widget.")) {
 			CavanAccessibilityWindow win = mWindow;
 			if (win != null) {
@@ -283,7 +292,26 @@ public class CavanAccessibilityPackage {
 		}
 
 		CavanAccessibilityWindow win = getWindow(name);
-		setWindow(win);
+		if (win != mWindow) {
+			if (win != null && win.isProgressView()) {
+				if (mWindow != null) {
+					mWindow.onProgress(name);
+				}
+
+				return mWindow;
+			}
+
+			if (mWindow != null) {
+				mWindow.onLeave();
+			}
+
+			mWindow = win;
+
+			if (win != null) {
+				win.onEnter();
+				resetTimes();
+			}
+		}
 
 		if (isPending()) {
 			setUnlockTime(0);
@@ -385,10 +413,14 @@ public class CavanAccessibilityPackage {
 				return -1;
 			} else {
 				if (consume < BACK_DELAY) {
+					if (performActionBack(root, false)) {
+						return POLL_DELAY;
+					}
+
 					return BACK_DELAY - consume;
 				}
 
-				mService.performActionBack();
+				performActionBack(root, true);
 				return POLL_DELAY;
 			}
 		}

@@ -222,6 +222,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		public boolean isMainActivity() {
 			return true;
 		}
+
+		@Override
+		public void onLeave() {
+			mUnpackSuccess = false;
+		}
 	}
 
 	public class LauncherWindow extends ChattingWindow {
@@ -362,8 +367,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			if (isForceUnpackEnabled()) {
 				setPending(true);
 			}
-
-			mUnpackSuccess = false;
 		}
 
 		@Override
@@ -453,8 +456,15 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		public void onEnter() {
-			CavanAndroid.dLog("mUnpackSuccess = " + mUnpackSuccess);
-			setPending(mUnpackSuccess);
+			if (getCurrentPacket() == null) {
+				CavanAndroid.dLog("mUnpackSuccess = " + mUnpackSuccess);
+				setPending(mUnpackSuccess);
+			}
+		}
+
+		@Override
+		public void onLeave() {
+			mUnpackSuccess = false;
 		}
 
 		@Override

@@ -16,11 +16,13 @@ import android.os.Message;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.inputmethod.InputMethodManager;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanKeyguardLock;
 import com.cavan.android.CavanWakeLock;
 import com.cavan.android.SystemProperties;
+import com.cavan.java.CavanJava;
 
 public class CavanAccessibilityService extends AccessibilityService {
 
@@ -141,10 +143,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 						packet.setPackage(pkg);
 						packet.setGotoIdle(false);
+						pkg.setCurrentPacket(null);
 					} else {
 						packet.setGotoIdle(true);
 						pkg = packet.getPackage();
 						pkg.setPending(true);
+						pkg.setCurrentPacket(packet);
 					}
 
 					packet.setPending();
@@ -165,6 +169,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 						}
 					}
 
+					pkg.setCurrentPacket(null);
 					pkg.setPending(false);
 					pkg.onPollStopped();
 					idle = packet.needGotoIdle();
@@ -536,6 +541,76 @@ public class CavanAccessibilityService extends AccessibilityService {
 				AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
 
 		info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED | getEventTypes();
+	}
+
+	public boolean setInputMethod(String name) {
+		InputMethodManager manager = (InputMethodManager) CavanAndroid.getSystemServiceCached(this, INPUT_METHOD_SERVICE);
+		if (manager == null) {
+			return false;
+		}
+
+		for (int i = 0; i < 10; i++) {
+			AccessibilityNodeInfo root = getRootInActiveWindow();
+
+			if (root != null) {
+				try {
+					if (CavanAccessibilityHelper.isNodePackgeEquals(root, "android") && "选择输入法".equals(CavanAccessibilityHelper.getChildText(root, 0))) {
+						AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, name);
+						if (node != null) {
+							AccessibilityNodeInfo parent = node.getParent();
+							node.recycle();
+
+							if (parent != null) {
+								return CavanAccessibilityHelper.performClickAndRecycle(parent);
+							}
+						}
+					} else {
+						manager.showInputMethodPicker();
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				} finally {
+					root.recycle();
+				}
+			}
+
+			CavanJava.msleep(500);
+		}
+
+		performActionBack();
+
+		return false;
+	}
+
+	public CavanInputMethodService getInputMethodService() {
+		CavanInputMethodService ime = CavanInputMethodService.instance;
+		if (ime != null) {
+			return ime;
+		}
+
+		String name = getInputMethodName();
+		if (name == null) {
+			return null;
+		}
+
+		CavanAndroid.dLog("ime = " + name);
+
+		if (setInputMethod(name)) {
+			for (int i = 0; i < 10; i++) {
+				ime = CavanInputMethodService.instance;
+				if (ime != null) {
+					return ime;
+				}
+
+				CavanJava.msleep(200);
+			}
+		}
+
+		return null;
+	}
+
+	protected String getInputMethodName() {
+		return null;
 	}
 
 	@Override

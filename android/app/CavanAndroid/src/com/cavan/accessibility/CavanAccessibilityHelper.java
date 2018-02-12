@@ -998,4 +998,17 @@ public class CavanAccessibilityHelper {
 
 		return texts;
 	}
+
+	public static String getNodePackageName(AccessibilityNodeInfo node) {
+		return CavanString.fromCharSequence(node.getPackageName(), null);
+	}
+
+	public static boolean isNodePackgeEquals(AccessibilityNodeInfo node, String pkg) {
+		CharSequence name = node.getPackageName();
+		if (name == null) {
+			return false;
+		}
+
+		return name.toString().equals(pkg);
+	}
 }

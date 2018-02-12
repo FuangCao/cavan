@@ -96,8 +96,8 @@ int directory_copy_main(const char *src, const char *dest)
 	int ret;
 	DIR *src_dir;
 	struct dirent *dt;
-	char tmp_dirname_src[1024], *src_p;
-	char tmp_dirname_dest[1024], *dest_p;
+	char tmp_dirname_src[4096], *src_p;
+	char tmp_dirname_dest[4096], *dest_p;
 
 	ret = directory_copy_only(src, dest);
 	if (ret < 0) {

@@ -57,4 +57,8 @@ public class RedPacketAccessibilityService extends CavanAccessibilityService {
 		mCountDownDialog.show(packet, remain);
 	}
 
+	@Override
+	protected String getInputMethodName() {
+		return getResources().getString(R.string.app_name);
+	}
 }
