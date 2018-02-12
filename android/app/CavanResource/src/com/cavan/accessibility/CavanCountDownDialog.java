@@ -1,4 +1,4 @@
-package com.cavan.weixinredpacket;
+package com.cavan.accessibility;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -10,10 +10,9 @@ import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.Button;
 
-import com.cavan.accessibility.CavanAccessibilityPackage;
-import com.cavan.accessibility.CavanRedPacket;
+import com.cavan.resource.R;
 
-public class CountDownDialog implements OnClickListener {
+public class CavanCountDownDialog implements OnClickListener {
 
 	protected Context mContext;
 	protected CavanRedPacket mPacket;
@@ -24,7 +23,7 @@ public class CountDownDialog implements OnClickListener {
 
 	private Dialog mDialog;
 
-	public CountDownDialog(Context context) {
+	public CavanCountDownDialog(Context context) {
 		mContext = context;
 
 		mRootView = View.inflate(context, R.layout.count_down_dialog, null);

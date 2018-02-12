@@ -3,6 +3,7 @@ package com.cavan.redpacketassistant;
 import android.view.accessibility.AccessibilityEvent;
 
 import com.cavan.accessibility.CavanAccessibilityService;
+import com.cavan.accessibility.CavanCountDownDialog;
 import com.cavan.accessibility.CavanRedPacket;
 import com.cavan.android.CavanAndroid;
 
@@ -10,7 +11,7 @@ public class RedPacketAccessibilityService extends CavanAccessibilityService {
 
 	public static RedPacketAccessibilityService instance;
 
-	private CountDownDialog mCountDownDialog;
+	private CavanCountDownDialog mCountDownDialog;
 
 	public RedPacketAccessibilityService() {
 		addPackage(new RedPacketAccessibilityMM(this));
@@ -51,7 +52,7 @@ public class RedPacketAccessibilityService extends CavanAccessibilityService {
 	@Override
 	protected void onCountDownUpdated(CavanRedPacket packet, long remain) {
 		if (mCountDownDialog == null) {
-			mCountDownDialog = new CountDownDialog(this);
+			mCountDownDialog = new CavanCountDownDialog(this);
 		}
 
 		mCountDownDialog.show(packet, remain);

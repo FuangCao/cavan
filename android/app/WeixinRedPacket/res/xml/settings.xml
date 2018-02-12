@@ -14,4 +14,8 @@
 		android:defaultValue="0"
 	    android:title="@string/mm_unpack" />
 
+	<CheckBoxPreference android:key="disable_keyguard"
+		    android:persistent="true"
+		    android:defaultValue="false"
+		    android:title="@string/disable_keyguard" />
 </PreferenceScreen>

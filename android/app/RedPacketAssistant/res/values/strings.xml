@@ -57,9 +57,4 @@
         <item>19</item>
         <item>20</item>
     </string-array>
-
-    <string name="unpack_cancel">不拆开</string>
-    <string name="unpack_now">马上拆开</string>
-    <string name="unpack_delayed">拆开(<xliff:g>%1$d</xliff:g>)</string>
-
 </resources>

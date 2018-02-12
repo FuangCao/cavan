@@ -34,15 +34,16 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	public static CavanAccessibilityService instance;
 
-	private HashMap<String, CavanAccessibilityPackage> mPackages = new HashMap<String, CavanAccessibilityPackage>();
-	private HashSet<AccessibilityNodeInfo> mRecycleNodes = new HashSet<AccessibilityNodeInfo>();
-	private CavanRedPacketList mPackets = new CavanRedPacketList();
-	private CavanRedPacket mPacketDummy = new CavanRedPacket();
-	private CavanAccessibilityPackage mPackage;
-	private boolean mUserPresent = true;
-	private boolean mScreenOn = true;
+	protected HashMap<String, CavanAccessibilityPackage> mPackages = new HashMap<String, CavanAccessibilityPackage>();
+	protected HashSet<AccessibilityNodeInfo> mRecycleNodes = new HashSet<AccessibilityNodeInfo>();
+	protected CavanRedPacketList mPackets = new CavanRedPacketList();
+	protected CavanAccessibilityPackage mPackage;
+	protected boolean mUserPresent = true;
+	protected boolean mScreenOn = true;
+
 	private CavanKeyguardLock mKeyguardLock = new CavanKeyguardLock();
 	private CavanWakeLock mWakeLock = new CavanWakeLock(true);
+	private CavanRedPacket mPacketDummy = new CavanRedPacket();
 
 	private Thread mPollThread = new Thread() {
 

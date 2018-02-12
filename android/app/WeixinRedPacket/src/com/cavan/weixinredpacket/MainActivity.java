@@ -14,9 +14,14 @@ public class MainActivity extends PreferenceActivity implements OnPreferenceChan
 
 	public static final String KEY_ACCESSIBILITY = "accessibility";
 	public static final String KEY_MM_UNPACK = "mm_unpack";
+	public static final String KEY_DISABLE_KEYGUARD = "disable_keyguard";
 
 	public static int getAutoUnpackMM(Context context) {
 		return CavanAndroid.getPreferenceInt(context, KEY_MM_UNPACK, 0);
+	}
+
+	public static boolean isDisableKeyguardEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_DISABLE_KEYGUARD);
 	}
 
 	public static Intent getAccessibilitySettingsIntent() {

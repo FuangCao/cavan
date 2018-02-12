@@ -64,10 +64,4 @@ public class CavanNotificationQQ extends CavanNotification {
 
 		return super.isRedPacket();
 	}
-
-	@Override
-	protected List<String> getOptions(List<String> options) {
-		options.add("QQ红包");
-		return super.getOptions(options);
-	}
 }

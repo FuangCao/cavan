@@ -51,5 +51,11 @@
     <string name="connecting_to">正在连接：<xliff:g>%1$s</xliff:g></string>
     <string name="unknown">未知</string>
     <string name="cmdline">命令行</string>
+    <string name="unpack_cancel">不拆开</string>
+    <string name="unpack_now">马上拆开</string>
+    <string name="unpack_delayed">拆开(<xliff:g>%1$d</xliff:g>)</string>
+    <string name="keyguard_disabled">已禁止锁屏</string>
+    <string name="disable_keyguard">禁止锁屏</string>
+    <string name="click_unlock">点击解锁</string>
 
 </resources>
