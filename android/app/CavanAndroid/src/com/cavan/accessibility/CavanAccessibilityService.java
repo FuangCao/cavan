@@ -31,6 +31,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	private static final int MSG_SCREEN_ON = 1;
 	private static final int MSG_SHOW_COUNT_DOWN = 2;
+	private static final int MSG_UPDATE_COUNT_DOWN = 3;
 
 	public static CavanAccessibilityService instance;
 
@@ -44,6 +45,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private CavanKeyguardLock mKeyguardLock = new CavanKeyguardLock();
 	private CavanWakeLock mWakeLock = new CavanWakeLock(true);
 	private CavanRedPacket mPacketDummy = new CavanRedPacket();
+	private CavanCountDownDialogBase mCountDownDialog;
 
 	private Thread mPollThread = new Thread() {
 
@@ -142,6 +144,13 @@ public class CavanAccessibilityService extends AccessibilityService {
 							break;
 						}
 
+						long delay = pkg.getUnpackDelay();
+						if (delay < 0) {
+							pkg.setPending(false);
+							continue;
+						}
+
+						packet.setUnpackDelay(delay);
 						packet.setPackage(pkg);
 						packet.setGotoIdle(false);
 						pkg.setCurrentPacket(null);
@@ -173,7 +182,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 					pkg.setCurrentPacket(null);
 					pkg.setPending(false);
 					pkg.onPollStopped();
-					idle = packet.needGotoIdle();
+					idle = packet.getGotoIdle();
 				}
 
 				CavanAndroid.dLog("PollThread suspend: idle = " + idle);
@@ -194,6 +203,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 		@Override
 		public void handleMessage(Message msg) {
+			removeMessages(msg.what);
+
 			switch (msg.what) {
 			case MSG_SCREEN_ON:
 				mPollThread.start();
@@ -201,22 +212,28 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 			case MSG_SHOW_COUNT_DOWN:
 				CavanRedPacket packet = (CavanRedPacket) msg.obj;
-				if (packet != null && packet == mPackets.get()) {
-					long remain = packet.getUnpackDelay(0);
-					if (remain > 0) {
-						onCountDownUpdated(packet, remain);
+				if (packet == null) {
+					removeMessages(MSG_UPDATE_COUNT_DOWN);
+					break;
+				}
 
-						if (remain > 1000) {
-							remain = 1000;
-						}
-
-						Message message = obtainMessage(MSG_SHOW_COUNT_DOWN, packet);
-						sendMessageDelayed(message, remain);
+				if (mCountDownDialog == null) {
+					mCountDownDialog = createCountDownDialog();
+					if (mCountDownDialog == null) {
 						break;
 					}
 				}
 
-				onCountDownCompleted();
+				mCountDownDialog.show(packet);
+
+			case MSG_UPDATE_COUNT_DOWN:
+				CavanCountDownDialogBase dialog = mCountDownDialog;
+				if (dialog != null) {
+					long delay = dialog.update();
+					if (delay > 0) {
+						sendEmptyMessageDelayed(MSG_UPDATE_COUNT_DOWN, delay);
+					}
+				}
 				break;
 			}
 		}
@@ -292,12 +309,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return mPacketDummy;
 	}
 
-	protected void onCountDownCompleted() {
-		CavanAndroid.dLog("onCountDownCompleted");
-	}
-
-	protected void onCountDownUpdated(CavanRedPacket packet, long remain) {
-		CavanAndroid.dLog("onCountDownUpdated: " + remain);
+	protected CavanCountDownDialogBase createCountDownDialog() {
+		return null;
 	}
 
 	protected void onUserOnline() {}
@@ -468,7 +481,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
 	}
 
-	public void startPollThread() {
+	public void startPoll() {
 		mPollThread.start();
 	}
 
@@ -503,15 +516,16 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return null;
 	}
 
-	public void showCountDownView(CavanRedPacket packet) {
-		mHandler.obtainMessage(MSG_SHOW_COUNT_DOWN, packet).sendToTarget();
+	public synchronized void showCountDownView(CavanRedPacket packet) {
+		Message message = mHandler.obtainMessage(MSG_SHOW_COUNT_DOWN, packet);
+		message.sendToTarget();
 	}
 
 	public boolean addPacket(CavanAccessibilityPackage pkg, CavanRedPacket packet) {
 		acquireWakeLock(2000);
 
 		if (mPackets.add(pkg, packet)) {
-			startPollThread();
+			startPoll();
 			return true;
 		}
 

@@ -1011,4 +1011,17 @@ public class CavanAccessibilityHelper {
 
 		return name.toString().equals(pkg);
 	}
+
+	public static boolean isNodeClassEquals(AccessibilityNodeInfo node, String cls) {
+		CharSequence name = node.getClassName();
+		if (name == null) {
+			return false;
+		}
+
+		return name.toString().equals(cls);
+	}
+
+	public static boolean isNodeClassEquals(AccessibilityNodeInfo node, Class<?> cls) {
+		return isNodeClassEquals(node, cls.getName());
+	}
 }

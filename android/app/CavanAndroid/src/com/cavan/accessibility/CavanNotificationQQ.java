@@ -1,10 +1,8 @@
 package com.cavan.accessibility;
 
-import java.util.List;
+import android.app.Notification;
 
 import com.cavan.java.CavanString;
-
-import android.app.Notification;
 
 public class CavanNotificationQQ extends CavanNotification {
 

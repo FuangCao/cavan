@@ -1,13 +1,64 @@
 package com.cavan.accessibility;
 
+import com.cavan.android.CavanAndroid;
+
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 
 public class CavanAccessibilityWindow {
 
+	public static final int WAIT_DELAY = 200;
+	public static final int WAIT_TIMES = 5;
+
 	protected String mBackViewId;
 	protected String mName;
+
+	protected Thread mWaitReadyThread = new Thread() {
+
+		private long mUpdateTime;
+		private int mWaitTimes;
+
+		@Override
+		public synchronized void start() {
+			if (mUpdateTime == 0) {
+				if (isAlive()) {
+					notify();
+				} else {
+					super.start();
+				}
+			}
+
+			mUpdateTime = System.currentTimeMillis();
+		}
+
+		@Override
+		public synchronized void run() {
+			while (true) {
+				long timeNow = System.currentTimeMillis();
+				long time = mUpdateTime + WAIT_DELAY;
+
+				if (time > timeNow) {
+					try {
+						wait(time - timeNow);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				} else if (++mWaitTimes > WAIT_TIMES || onWindowContentReady(mWaitTimes)) {
+					mUpdateTime = 0;
+					mWaitTimes = 0;
+
+					try {
+						wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				} else {
+					mUpdateTime = timeNow + WAIT_DELAY;
+				}
+			}
+		}
+	};
 
 	public CavanAccessibilityWindow(String name) {
 		mName = name;
@@ -23,6 +74,10 @@ public class CavanAccessibilityWindow {
 
 	public String getBackViewId() {
 		return mBackViewId;
+	}
+
+	public void startWaitReady() {
+		mWaitReadyThread.start();
 	}
 
 	public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
@@ -58,6 +113,11 @@ public class CavanAccessibilityWindow {
 	public void onWindowContentChanged(AccessibilityEvent event) {}
 	public void onViewClicked(AccessibilityEvent event) {}
 	public void onViewTextChanged(AccessibilityEvent event) {}
+
+	public boolean onWindowContentReady(int times) {
+		CavanAndroid.pLog();
+		return true;
+	}
 
 	public boolean onPollFailed(CavanRedPacket packet, int times) {
 		return (times < CavanAccessibilityPackage.FAIL_TIMES);

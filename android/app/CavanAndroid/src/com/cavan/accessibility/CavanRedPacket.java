@@ -86,10 +86,11 @@ public class CavanRedPacket {
 	}
 
 	public synchronized void setPending() {
+		mCompleted = false;
 		mPending = true;
 	}
 
-	public synchronized boolean needGotoIdle() {
+	public synchronized boolean getGotoIdle() {
 		return mGotoIdle;
 	}
 

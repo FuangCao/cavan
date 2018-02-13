@@ -12,10 +12,9 @@ import android.widget.Button;
 
 import com.cavan.resource.R;
 
-public class CavanCountDownDialog implements OnClickListener {
+public class CavanCountDownDialog extends CavanCountDownDialogBase implements OnClickListener {
 
 	protected Context mContext;
-	protected CavanRedPacket mPacket;
 
 	private View mRootView;
 	private Button mButtonNow;
@@ -50,8 +49,9 @@ public class CavanCountDownDialog implements OnClickListener {
 		return params;
 	}
 
-	public void show(CavanRedPacket packet, long delay) {
-		mPacket = packet;
+	@Override
+	public void show(CavanRedPacket packet) {
+		super.show(packet);
 
 		if (mDialog == null) {
 			AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
@@ -61,17 +61,20 @@ public class CavanCountDownDialog implements OnClickListener {
 			mDialog.getWindow().setAttributes(createLayoutParams(0));
 		}
 
-		String text = mContext.getResources().getString(R.string.unpack_delayed, delay / 1000);
-		mButtonNow.setText(text);
+		onUpdated(packet.getUnpackDelay(0));
 		mDialog.show();
 	}
 
+	@Override
 	public void dismiss() {
+		super.dismiss();
+
 		if (mDialog != null) {
 			mDialog.dismiss();
 		}
 	}
 
+	@Override
 	public boolean isShowing() {
 		if (mDialog != null) {
 			return mDialog.isShowing();
@@ -80,26 +83,18 @@ public class CavanCountDownDialog implements OnClickListener {
 		return false;
 	}
 
-	protected void onButtonCancelClicked() {
-		CavanAccessibilityPackage pkg = mPacket.getPackage();
-		pkg.setForceUnpackEnable(false);
-		mPacket.setGotoIdle(false);
-		pkg.removePackets();
-		dismiss();
-	}
-
-	protected void onButtonNowClicked() {
-		mPacket.setGotoIdle(false);
-		mPacket.setUnpackTime(0);
-		dismiss();
+	@Override
+	public void onUpdated(long delay) {
+		String text = mContext.getResources().getString(R.string.unpack_delayed, delay / 1000);
+		mButtonNow.setText(text);
 	}
 
 	@Override
 	public void onClick(View v) {
 		if (v == mButtonCancel) {
-			onButtonCancelClicked();
+			onCanceled();
 		} else if (v == mButtonNow) {
-			onButtonNowClicked();
+			onCompleted();
 		}
 	}
 }

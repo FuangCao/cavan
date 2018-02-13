@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import android.app.Notification;
+import android.os.Handler;
 import android.os.Parcelable;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -154,7 +155,7 @@ public class CavanAccessibilityPackage {
 			mForceUnpack = true;
 			mPending = true;
 			resetTimes();
-			startPollThread();
+			startPoll();
 		} else {
 			mPending = false;
 		}
@@ -195,7 +196,7 @@ public class CavanAccessibilityPackage {
 
 	public synchronized void setUnlockTime(long time) {
 		mUnlockTime = time;
-		startPollThread();
+		startPoll();
 	}
 
 	public String[] getBackViewIds() {
@@ -221,8 +222,24 @@ public class CavanAccessibilityPackage {
 		return CavanAndroid.startActivity(mService, getName());
 	}
 
-	public void startPollThread() {
-		mService.startPollThread();
+	public void startPoll() {
+		mService.startPoll();
+	}
+
+	public Handler getHandler() {
+		return mService.getHandler();
+	}
+
+	public void post(Runnable runnable) {
+		getHandler().post(runnable);
+	}
+
+	public void postDelayed(Runnable runnable, long delay) {
+		getHandler().postDelayed(runnable, delay);
+	}
+
+	public void cancel(Runnable runnable) {
+		getHandler().removeCallbacks(runnable);
 	}
 
 	public boolean isCurrentPackage(String pkgName) {

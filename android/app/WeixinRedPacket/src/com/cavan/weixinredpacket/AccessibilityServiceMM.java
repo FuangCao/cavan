@@ -4,15 +4,13 @@ import android.view.accessibility.AccessibilityEvent;
 
 import com.cavan.accessibility.CavanAccessibilityService;
 import com.cavan.accessibility.CavanCountDownDialog;
+import com.cavan.accessibility.CavanCountDownDialogBase;
 import com.cavan.accessibility.CavanKeyguardActivity;
-import com.cavan.accessibility.CavanRedPacket;
 import com.cavan.android.CavanAndroid;
 
 public class AccessibilityServiceMM extends CavanAccessibilityService {
 
 	public static AccessibilityServiceMM instance;
-
-	private CavanCountDownDialog mCountDownDialog;
 
 	public AccessibilityServiceMM() {
 		addPackage(new AccessibilityPackageMM(this));
@@ -45,20 +43,7 @@ public class AccessibilityServiceMM extends CavanAccessibilityService {
 	}
 
 	@Override
-	protected void onCountDownCompleted() {
-		if (mCountDownDialog != null) {
-			mCountDownDialog.dismiss();
-			mCountDownDialog = null;
-		}
+	protected CavanCountDownDialogBase createCountDownDialog() {
+		return new CavanCountDownDialog(this);
 	}
-
-	@Override
-	protected void onCountDownUpdated(CavanRedPacket packet, long remain) {
-		if (mCountDownDialog == null) {
-			mCountDownDialog = new CavanCountDownDialog(this);
-		}
-
-		mCountDownDialog.show(packet, remain);
-	}
-
 }

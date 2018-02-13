@@ -158,11 +158,6 @@ public abstract class CavanNotification extends CavanRedPacket {
 	}
 
 	@Override
-	public boolean needGotoIdle() {
-		return true;
-	}
-
-	@Override
 	public boolean equals(Object o) {
 		if (super.equals(o)) {
 			return true;
