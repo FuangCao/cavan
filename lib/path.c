@@ -194,15 +194,30 @@ char *cavan_path_to_abs2(const char *rel_path)
 
 const char *cavan_path_basename_simple(const char *pathname)
 {
-	const char *basename;
+	const char *basename = pathname;
 
-	for (basename = pathname; *pathname; pathname++) {
-		if (*pathname == '/') {
-			basename = pathname + 1;
+	while (1) {
+		switch (*pathname) {
+		case 0:
+			return basename;
+
+		case '/':
+			if (*++pathname == 0) {
+				return basename;
+			}
+
+			if (*pathname == '/') {
+				pathname++;
+				break;
+			}
+
+			basename = pathname;
+			break;
+
+		default:
+			pathname++;
 		}
 	}
-
-	return basename;
 }
 
 char *cavan_path_basename(char *buff, const char *path)

@@ -96,8 +96,8 @@ int directory_copy_main(const char *src, const char *dest)
 	int ret;
 	DIR *src_dir;
 	struct dirent *dt;
-	char tmp_dirname_src[4096], *src_p;
-	char tmp_dirname_dest[4096], *dest_p;
+	char src_buff[4096], *src_filename;
+	char dest_buff[4096], *dest_filename;
 
 	ret = directory_copy_only(src, dest);
 	if (ret < 0) {
@@ -111,15 +111,10 @@ int directory_copy_main(const char *src, const char *dest)
 		return -1;
 	}
 
-	src_p = cavan_path_copy(tmp_dirname_src, sizeof(tmp_dirname_src), src, true);
-	dest_p = cavan_path_copy(tmp_dirname_dest, sizeof(tmp_dirname_dest), dest, true);
+	src_filename = cavan_path_copy(src_buff, sizeof(src_buff), src, true);
+	dest_filename = cavan_path_copy(dest_buff, sizeof(dest_buff), dest, true);
 
-	while (1) {
-		dt = readdir(src_dir);
-		if (dt == NULL) {
-			break;
-		}
-
+	while ((dt = readdir(src_dir))) {
 #ifdef CAVAN_DEBUG
 		println("filename = %s", dt->d_name);
 #endif
@@ -134,10 +129,10 @@ int directory_copy_main(const char *src, const char *dest)
 			}
 		}
 
-		text_copy(src_p, dt->d_name);
-		text_copy(dest_p, dt->d_name);
+		text_copy(src_filename, dt->d_name);
+		text_copy(dest_filename, dt->d_name);
 
-		ret = file_copy_main(tmp_dirname_src, tmp_dirname_dest);
+		ret = file_copy_main(src_buff, dest_buff);
 		if (ret < 0) {
 			pr_red_info("file_copy_main");
 			goto out_close_dir;
@@ -153,7 +148,7 @@ out_close_dir:
 
 int copy_main(const char *src, const char *dest)
 {
-	char dest_path[1024];
+	char dest_buff[4096];
 
 	if (strcmp(src, dest) == 0) {
 		println("source file \"%s\" and dest file \"%s\" arm same files", src, dest);
@@ -161,12 +156,12 @@ int copy_main(const char *src, const char *dest)
 	}
 
 	if (S_ISDIR(file_get_mode(dest))) {
-		cavan_path_cat(dest_path, sizeof(dest_path), dest, cavan_path_basename_simple(src), false);
+		cavan_path_cat(dest_buff, sizeof(dest_buff), dest, cavan_path_basename_simple(src), false);
 	} else {
-		text_copy(dest_path, dest);
+		text_copy(dest_buff, dest);
 	}
 
-	return file_copy_main(src, dest_path);
+	return file_copy_main(src, dest_buff);
 }
 
 int move_auto(const char *srcpath, const char *destpath)
