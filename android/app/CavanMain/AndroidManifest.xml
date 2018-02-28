@@ -288,6 +288,8 @@
         <service android:name="CavanNetworkImeConnService"></service>
         <service android:name="com.cavan.service.CavanCommandService"></service>
         <service android:name="com.cavan.cavanjni.RoleChangeClient"></service>
+        <service android:name="com.cavan.cavanjni.RoleChangeService"></service>
+        <service android:name="com.cavan.cavanjni.RoleChangeProxy"></service>
     </application>
 
 </manifest>

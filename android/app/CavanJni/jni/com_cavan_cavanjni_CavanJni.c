@@ -5,6 +5,10 @@
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanJni_kill(JNIEnv *env, jclass clazz, jint pid)
 {
+	if (pid == 0) {
+		return 0;
+	}
+
 	pd_info("kill: %d", pid);
 	return kill(pid, SIGTERM);
 }

@@ -117,9 +117,9 @@ int CavanMainRun(JNIEnv *env, const char *name, jobjectArray args, int (*main_fu
 	optind = 0;
 
 	if (args) {
-		int i;
 		int length = (*env)->GetArrayLength(env, args);
 		char *argv[length + 2];
+		int i;
 
 		argv[0] = (char *) name;
 		argv[length + 1] = NULL;

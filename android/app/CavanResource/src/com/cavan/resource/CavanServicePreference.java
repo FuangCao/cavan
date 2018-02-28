@@ -223,7 +223,6 @@ public abstract class CavanServicePreference extends EditTextPreference {
 	}
 
 	public synchronized void updateSummary(int state) {
-
 		if (mService == null) {
 			setSummary(R.string.service_disconnected);
 		} else {

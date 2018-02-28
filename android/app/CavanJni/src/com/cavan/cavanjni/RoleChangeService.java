@@ -1,14 +1,14 @@
 package com.cavan.cavanjni;
 
 
-public class RoleChangeClient extends CavanNativeCommandService {
+public class RoleChangeService extends CavanNativeCommandService {
 
-	public RoleChangeClient() {
+	public RoleChangeService() {
 		super(new CavanCommandRoleChange());
 	}
 
 	@Override
 	protected String[] buildCommandArgs(String command) {
-		return new String[] { "client", command };
+		return new String[] { "service", command };
 	}
 }

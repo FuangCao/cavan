@@ -39,10 +39,20 @@
 	    android:persistent="true"
 	    android:title="@string/mock_location_service" />
 
-	<com.cavan.cavanjni.RoleChangeClientPreference android:key="role_change"
+	<com.cavan.cavanjni.RoleChangeServicePreference android:key="role_change_service"
+	    android:persistent="true"
+	    android:defaultValue="8868"
+	    android:title="@string/role_change_service" />
+
+	<com.cavan.cavanjni.RoleChangeClientPreference android:key="role_change_client"
 	    android:persistent="true"
 	    android:defaultValue="fuangcao.f3322.net:8868"
 	    android:title="@string/role_change_client" />
+
+	<com.cavan.cavanjni.RoleChangeProxyPreference android:key="role_change_proxy"
+	    android:persistent="true"
+	    android:defaultValue="8866 8868 9898"
+	    android:title="@string/role_change_proxy" />
 
 	<com.cavan.resource.CavanCommandServicePreference android:key="command"
 		android:persistent="true"

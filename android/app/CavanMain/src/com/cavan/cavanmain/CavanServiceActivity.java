@@ -10,6 +10,8 @@ import android.preference.PreferenceScreen;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.cavanjni.RoleChangeClientPreference;
+import com.cavan.cavanjni.RoleChangeProxyPreference;
+import com.cavan.cavanjni.RoleChangeServicePreference;
 import com.cavan.java.CavanJava;
 import com.cavan.resource.CavanCommandServicePreference;
 import com.cavan.resource.CavanServicePreference;
@@ -26,7 +28,9 @@ public class CavanServiceActivity extends PreferenceActivity {
 	public static final String KEY_TCP_REPEATER = "tcp_repeater";
 	public static final String KEY_MOCK_LOCATION = "mock_location";
 	public static final String KEY_NETWORK_IME = "network_ime";
-	public static final String KEY_ROLE_CHANGE = "role_change";
+	public static final String KEY_ROLE_CHANGE_SERVICE = "role_change_service";
+	public static final String KEY_ROLE_CHANGE_CLIENT = "role_change_client";
+	public static final String KEY_ROLE_CHANGE_PROXY = "role_change_proxy";
 	public static final String KEY_COMMAND = "command";
 
 	private Preference mPreferenceIpAddress;
@@ -38,7 +42,9 @@ public class CavanServiceActivity extends PreferenceActivity {
 	private CavanServicePreference mPreferenceTcpRepeater;
 	private CavanServicePreference mPreferenceMockLocation;
 	private CavanTcpClientPreference mPreferenceNewworkIme;
-	private RoleChangeClientPreference mPreferenceRoleChange;
+	private RoleChangeServicePreference mPreferenceRoleChangeService;
+	private RoleChangeClientPreference mPreferenceRoleChangeClient;
+	private RoleChangeProxyPreference mPreferenceRoleChangeProxy;
 	private CavanCommandServicePreference mPreferenceCommand;
 
 	@SuppressWarnings("deprecation")
@@ -57,7 +63,9 @@ public class CavanServiceActivity extends PreferenceActivity {
 		mPreferenceTcpRepeater = (CavanServicePreference) findPreference(KEY_TCP_REPEATER);
 		mPreferenceMockLocation = (CavanServicePreference) findPreference(KEY_MOCK_LOCATION);
 		mPreferenceNewworkIme = (CavanTcpClientPreference) findPreference(KEY_NETWORK_IME);
-		mPreferenceRoleChange = (RoleChangeClientPreference) findPreference(KEY_ROLE_CHANGE);
+		mPreferenceRoleChangeService = (RoleChangeServicePreference) findPreference(KEY_ROLE_CHANGE_SERVICE);
+		mPreferenceRoleChangeClient = (RoleChangeClientPreference) findPreference(KEY_ROLE_CHANGE_CLIENT);
+		mPreferenceRoleChangeProxy = (RoleChangeProxyPreference) findPreference(KEY_ROLE_CHANGE_PROXY);
 		mPreferenceCommand = (CavanCommandServicePreference) findPreference(KEY_COMMAND);
 
 		updateIpAddressStatus();
@@ -72,7 +80,9 @@ public class CavanServiceActivity extends PreferenceActivity {
 		mPreferenceTcpRepeater.unbindService(this);
 		mPreferenceMockLocation.unbindService(this);
 		mPreferenceNewworkIme.unbindService(this);
-		mPreferenceRoleChange.unbindService(this);
+		mPreferenceRoleChangeService.unbindService(this);
+		mPreferenceRoleChangeClient.unbindService(this);
+		mPreferenceRoleChangeProxy.unbindService(this);
 		mPreferenceCommand.unbindService(this);
 
 		super.onDestroy();
