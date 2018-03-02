@@ -435,7 +435,6 @@ int main(int argc, char *argv[])
 
 	println("delay = %d", delay);
 	println("repeat = %d", sender.repeat);
-	println("daemon = %d", sender.daemon);
 
 	sender.time += delay;
 
@@ -544,6 +543,15 @@ int main(int argc, char *argv[])
 		if (!cavan_http_sender_url_init(&sender, host0)) {
 			pr_red_info("cavan_http_sender_url_init");
 			return -EFAULT;
+		}
+
+		if (sender.daemon) {
+			pr_bold_info("run as daemon now");
+
+			ret = daemon(1, 0);
+			if (ret < 0) {
+				pr_err_info("daemon: %d", ret);
+			}
 		}
 
 		return cavan_http_sender_main_loop(&sender, packets, count);
