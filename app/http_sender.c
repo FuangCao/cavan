@@ -24,12 +24,14 @@
 #include <cavan/thread.h>
 #include <cavan/network.h>
 
-#define HTTP_SENDER_AHEAD			15000
+#define HTTP_SENDER_AHEAD			10000
+#define HTTP_SENDER_REPEAT			60
 #define HTTP_SENDER_HOST			"game.weixin.qq.com"
 #define HTTP_SENDER_MAX				20
 
 struct cavan_http_sender {
 	struct network_client client;
+	struct network_url url;
 	pthread_cond_t cond_write;
 	pthread_cond_t cond_read;
 	pthread_cond_t cond_exit;
@@ -38,7 +40,9 @@ struct cavan_http_sender {
 	int read_count;
 	bool running;
 	bool verbose;
+	bool daemon;
 	bool http;
+	u32 repeat;
 	u64 time;
 };
 
@@ -62,8 +66,9 @@ static inline void cavan_http_sender_post(pthread_cond_t *cond)
 	pthread_cond_signal(cond);
 }
 
-static bool cavan_http_sender_url_init(struct cavan_http_sender *sender, struct network_url *url, char *host)
+static bool cavan_http_sender_url_init(struct cavan_http_sender *sender, char *host)
 {
+	struct network_url *url = &sender->url;
 	char buff[1024];
 	u16 port;
 	char *p;
@@ -159,15 +164,10 @@ out_pthread_cond_signal:
 	return NULL;
 }
 
-static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct cavan_http_packet *packets[], int count, char *host)
+static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct cavan_http_packet *packets[], int count)
 {
+	u64 overtime = sender->time + sender->repeat * 1000;
 	struct network_client *client = &sender->client;
-	struct network_url url;
-
-	if (!cavan_http_sender_url_init(sender, &url, host)) {
-		pr_red_info("cavan_http_sender_url_init");
-		return -EFAULT;
-	}
 
 	while (1) {
 		u64 time = clock_gettime_real_ms();
@@ -184,12 +184,12 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 		}
 	}
 
-	while (1) {
+	while (clock_gettime_real_ms() < overtime) {
 		int ret;
 		int i;
 
 		while (1) {
-			ret = network_client_open(client, &url, 0);
+			ret = network_client_open(client, &sender->url, 0);
 			if (ret < 0) {
 				pr_red_info("network_client_open");
 				msleep(200);
@@ -240,7 +240,7 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 
 		i = 0;
 
-		while (sender->running) {
+		while (sender->running && clock_gettime_real_ms() < overtime) {
 			cavan_string_t *header;
 
 			while (sender->running) {
@@ -289,6 +289,8 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 
 		network_client_close(client);
 	}
+
+	return 0;
 }
 
 static void cavan_http_sender_show_usage(const char *command)
@@ -300,6 +302,8 @@ static void cavan_http_sender_show_usage(const char *command)
 	println("-T, -t, --test\t\ttest only");
 	println("-D, -d, --delay\t\t%s", cavan_help_message_delay_time);
 	println("-N, -n, --now\t\t%s", cavan_help_message_current_time);
+	println("-R, -r, --repeat\trepeat seconds");
+	println("--daemon\t\t%s", cavan_help_message_daemon);
 }
 
 int main(int argc, char *argv[])
@@ -350,11 +354,22 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_TEST,
 		}, {
+			.name = "repeat",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_REPEAT,
+		}, {
+			.name = "daemon",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_DAEMON,
+		}, {
 			0, 0, 0, 0
 		},
 	};
 
 	memset(&sender, 0x00, sizeof(sender));
+	sender.repeat = HTTP_SENDER_REPEAT;
 
 	pthread_cond_init(&sender.cond_write, NULL);
 	pthread_cond_init(&sender.cond_read, NULL);
@@ -363,7 +378,7 @@ int main(int argc, char *argv[])
 
 	sender.time = ((clock_gettime_real_ms() + 3600000 - 1) / 3600000) * 3600000;
 
-	while ((c = getopt_long(argc, argv, "vVhHd:D:tTnN", long_option, &option_index)) != EOF) {
+	while ((c = getopt_long(argc, argv, "vVhHd:D:tr:R:TnN", long_option, &option_index)) != EOF) {
 		switch (c) {
 		case 'v':
 		case 'V':
@@ -402,6 +417,16 @@ int main(int argc, char *argv[])
 			test = optarg;
 			break;
 
+		case 'r':
+		case 'R':
+		case CAVAN_COMMAND_OPTION_REPEAT:
+			sender.repeat = text2value_unsigned(optarg, NULL, 10);
+			break;
+
+		case CAVAN_COMMAND_OPTION_DAEMON:
+			sender.daemon = true;
+			break;
+
 		default:
 			cavan_http_sender_show_usage(argv[0]);
 			return -EINVAL;
@@ -409,6 +434,8 @@ int main(int argc, char *argv[])
 	}
 
 	println("delay = %d", delay);
+	println("repeat = %d", sender.repeat);
+	println("daemon = %d", sender.daemon);
 
 	sender.time += delay;
 
@@ -428,7 +455,6 @@ int main(int argc, char *argv[])
 		struct cavan_http_packet req;
 		struct cavan_http_packet rsp;
 		struct network_client client;
-		struct network_url url;
 		struct cavan_fifo fifo;
 
 		sender.verbose = true;
@@ -449,9 +475,9 @@ int main(int argc, char *argv[])
 		CAVAN_HTTP_PACKET_ADD_LINE(&req, "Connection: keep-alive");
 		cavan_http_packet_add_line_end(&req);
 
-		cavan_http_sender_url_init(&sender, &url, test);
+		cavan_http_sender_url_init(&sender, test);
 
-		ret = network_client_open(&client, &url, 0);
+		ret = network_client_open(&client, &sender.url, 0);
 		if (ret < 0) {
 			pr_red_info("network_client_open2");
 			return ret;
@@ -515,7 +541,12 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		return cavan_http_sender_main_loop(&sender, packets, count, host0);
+		if (!cavan_http_sender_url_init(&sender, host0)) {
+			pr_red_info("cavan_http_sender_url_init");
+			return -EFAULT;
+		}
+
+		return cavan_http_sender_main_loop(&sender, packets, count);
 	} else {
 		return -EINVAL;
 	}

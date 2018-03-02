@@ -57,7 +57,7 @@ int cavan_http_get_header_type(const char *name, int length)
 
 int cavan_http_time_tostring(struct tm *time, char *buff, int size)
 {
-	return snprintf(buff, size, "%s, %d-%s-%04d %02d:%02d:%02d GMT", week_tostring(time->tm_wday),
+	return snprintf(buff, size, "%s, %02d-%s-%04d %02d:%02d:%02d GMT", week_tostring(time->tm_wday),
 		time->tm_mday, month_tostring(time->tm_mon), CAVAN_TIME_FIXUP_YEAR(time->tm_year),
 		time->tm_hour, time->tm_min, time->tm_sec);
 }
