@@ -281,7 +281,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		}
 
 		mKeywords.add("你收到一个红包");
-		mKeywords.add("零钱入账");
+		mKeywords.add("商家付款入账通知");
 
 		CavanAndroid.dLog("mKeywords = " + mKeywords);
 	}
@@ -318,7 +318,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				}
 
 				if (node.increase(time) == times) {
-					String message = thanks + " 大水快去";
+					String message = thanks + " 大水";
 
 					if (CavanMessageActivity.isThanksShareEnabled(this)) {
 						try {

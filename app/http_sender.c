@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
 	int c;
 	int ret;
 	int count = 0;
-	int delay = 0;
+	int delay = -100;
 	int option_index;
 	char *test = NULL;
 	struct cavan_http_packet *packets[200];

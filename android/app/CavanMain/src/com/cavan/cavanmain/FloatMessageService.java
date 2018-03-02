@@ -37,11 +37,11 @@ import android.widget.TextView;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanThreadedHandler;
 import com.cavan.android.CavanWakeLock;
-import com.cavan.android.FloatWidowService;
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.java.CavanString;
+import com.cavan.service.FloatWindowService;
 
-public class FloatMessageService extends FloatWidowService {
+public class FloatMessageService extends FloatWindowService {
 
 	public static final long KEEP_ALIVE_DELAY = 120000;
 	public static final long UPDATE_LOCATION_DELAY = 2000;
@@ -389,7 +389,7 @@ public class FloatMessageService extends FloatWidowService {
 					if (node.isTestOnly()) {
 						CavanAccessibilityService service = CavanAccessibilityService.instance;
 						if (service != null) {
-							postShowToast(R.string.test_sucess);
+							postShowToast(R.string.test_success);
 						}
 					} else {
 						mMessageCodeMap.put(message, node);

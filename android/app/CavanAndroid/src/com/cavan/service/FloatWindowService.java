@@ -1,4 +1,4 @@
-package com.cavan.android;
+package com.cavan.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +17,9 @@ import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.LinearLayout;
 
-public abstract class FloatWidowService extends Service {
+import com.cavan.android.IFloatWindowService;
+
+public abstract class FloatWindowService extends Service {
 
 	protected View mRootView;
 	protected ViewGroup mViewGroup;
@@ -29,7 +31,7 @@ public abstract class FloatWidowService extends Service {
 
 		@Override
 		public int addText(CharSequence text, int index) throws RemoteException {
-			View view = FloatWidowService.this.addText(text, index);
+			View view = FloatWindowService.this.addText(text, index);
 			if (view != null) {
 				return view.getId();
 			}
@@ -39,23 +41,23 @@ public abstract class FloatWidowService extends Service {
 
 		@Override
 		public void removeText(CharSequence text) throws RemoteException {
-			FloatWidowService.this.removeText(text);
+			FloatWindowService.this.removeText(text);
 		}
 
 		@Override
 		public void removeTextAt(int index) throws RemoteException {
-			FloatWidowService.this.removeTextAt(index);
+			FloatWindowService.this.removeTextAt(index);
 		}
 
 		@Override
 		public void removeTextById(int id) throws RemoteException {
-			FloatWidowService.this.removeText(id);
+			FloatWindowService.this.removeText(id);
 
 		}
 
 		@Override
 		public void removeTextAll() throws RemoteException {
-			FloatWidowService.this.removeTextAll();
+			FloatWindowService.this.removeTextAll();
 		}
 	};
 

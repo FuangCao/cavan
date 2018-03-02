@@ -80,7 +80,7 @@
     <string name="commit_too_much_please_manual_commit">提交次数过多，请手动提交</string>
     <string name="auto_commit_not_enable_please_manual_commit">自动提交没有打开，请手动提交</string>
     <string name="auto_commit_count">提交次数：<xliff:g>%1$s</xliff:g></string>
-    <string name="test_sucess">测试成功</string>
+    <string name="test_success">测试成功</string>
     <string name="send">发送</string>
     <string name="recognize">识别</string>
     <string name="split">拆分</string>
