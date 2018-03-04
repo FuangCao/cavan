@@ -25,7 +25,7 @@ public class RedPacketFinder {
 	private static final String WORD_MULTI_LINE_PATTERN = "([\\w\\s]+)";
 
 	private static final Pattern PATTERN_URL = Pattern.compile("[a-z]+://\\S+", Pattern.CASE_INSENSITIVE);
-	private static final Pattern PATTERN_FU_DAI = Pattern.compile("\\[链接\\].*福袋");
+	private static final Pattern PATTERN_FU_DAI = Pattern.compile("\\[链接\\]\\s*\\w+的福袋！恭喜发财，福袋拿来");
 	private static final Pattern PATTERN_THANKS = Pattern.compile("^@(.+)谢谢(.*)$");
 
 	private static final Pattern[] sNormalPatterns = {
