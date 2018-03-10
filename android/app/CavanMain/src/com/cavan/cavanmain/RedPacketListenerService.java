@@ -25,6 +25,9 @@ import android.preference.PreferenceManager;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 
+import com.cavan.accessibility.CavanNotification;
+import com.cavan.accessibility.CavanNotificationTimer;
+import com.cavan.accessibility.CavanRedPacketAlipay;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanIndexGenerator;
@@ -66,21 +69,47 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				StatusBarNotification sbn = (StatusBarNotification) msg.obj;
 				String pkgName = sbn.getPackageName();
 
-				boolean testOnly;
-
 				if (getPackageName().equals(pkgName)) {
 					if (sbn.getId() != NOTIFY_TEST) {
 						break;
 					}
 
-					testOnly = true;
+					if (CavanMainAccessibilityService.instance != null) {
+						FloatMessageService.showToast(R.string.test_success);
+					}
 				} else {
-					testOnly = false;
+					CavanNotification notification;
+
+					switch (pkgName) {
+					case CavanPackageName.QQ:
+						notification = new CavanMainNotificationQQ(sbn);
+						break;
+
+					case CavanPackageName.MM:
+						notification = new CavanMainNotificationMM(sbn);
+						break;
+
+					case CavanPackageName.CALENDAR:
+					case CavanPackageName.DESKCLOCK:
+						notification = new CavanNotificationTimer(sbn);
+						break;
+
+					case CavanPackageName.TAOBAO:
+					case CavanPackageName.TMALL:
+					case CavanPackageName.ALIPAY:
+						notification = new CavanNotification(sbn);
+						break;
+
+					default:
+						return;
+					}
+
+					RedPacketNotification rpn = new RedPacketNotification(RedPacketListenerService.this, notification);
+					rpn.sendRedPacketNotifyAuto();
+					rpn.insert(getContentResolver());
 				}
 
-				RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, sbn, testOnly);
-				notification.sendRedPacketNotifyAuto();
-				notification.insert(getContentResolver());
+
 				break;
 
 			case MSG_REMOVE_NOTIFICATION:
@@ -115,12 +144,13 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				break;
 
 			case MSG_RED_PACKET_NOTIFICATION:
-				notification = (RedPacketNotification) msg.obj;
-				if (notification.sendRedPacketNotifyAlipay() > 0) {
+				RedPacketNotification notification = (RedPacketNotification) msg.obj;
+				RedPacketFinder finder = notification.getNotification().getFinder();
+				if (notification.sendRedPacketNotifyAlipay(finder) > 0) {
 					break;
 				}
 
-				notification.sendRedPacketNotifyNormal();
+				notification.sendRedPacketNotifyNormal(finder);
 				break;
 			}
 		}
@@ -140,13 +170,19 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		}
 	};
 
-	public void addRedPacketCode(String code, String type, boolean shared) {
+	public void addRedPacketCode(String code, String type, boolean report) {
 		CavanAndroid.dLog("code = " + code);
 
-		RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, type, code, true);
-		notification.setNetShared(shared);
-		notification.setPriority(1);
-		mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
+		CavanRedPacketAlipay packet = CavanRedPacketAlipay.get(code, true, report);
+		if (report) {
+			packet.setSendEnable(false);
+		}
+
+		try {
+			mFloatMessageService.addMessage(type + ": 支付宝@" + code, code);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void addRedPacketCodes(String[] codes, String type, boolean shared) {
@@ -155,15 +191,15 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		}
 	}
 
-	public void addRedPacketContent(CharSequence packageName, String content, String desc, boolean hasPrefix, boolean codeOnly, int priority) {
-		if (packageName == null) {
-			packageName = getPackageName();
+	public void addRedPacketContent(String pkgName, String content, String desc, boolean hasPrefix, boolean codeOnly, int priority) {
+		if (pkgName == null) {
+			pkgName = getPackageName();
 		}
 
-		RedPacketNotification notification = new RedPacketNotification(RedPacketListenerService.this, packageName.toString(), content, desc, hasPrefix);
-		notification.setCodeOnly(codeOnly);
-		notification.setPriority(priority);
-		mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
+		CavanNotification notification = new CavanNotification(pkgName, desc, content, hasPrefix);
+		RedPacketNotification rpn = new RedPacketNotification(RedPacketListenerService.this, notification);
+		rpn.setCodeOnly(codeOnly);
+		mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, rpn).sendToTarget();
 	}
 
 	public int createRequestCode() {
@@ -409,9 +445,9 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 			CavanAndroid.dLog("clip = " + text);
 
-			RedPacketNotification notification = new RedPacketNotification(this, "剪切板", text.toString(), false);
-			notification.setCodeOnly(true);
-			mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, notification).sendToTarget();
+			CavanNotification notification = new CavanNotification(getPackageName(), "剪切板", text.toString(), false);
+			RedPacketNotification rpn = new RedPacketNotification(this, notification);
+			mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, rpn).sendToTarget();
 		}
 	}
 

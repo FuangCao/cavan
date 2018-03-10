@@ -3,6 +3,8 @@ package com.cavan.cavanmain;
 import java.util.Date;
 import java.util.List;
 
+import com.cavan.accessibility.CavanRedPacketAlipay;
+
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -53,18 +55,18 @@ public class RedPacketEditActivity extends Activity implements OnClickListener, 
 
 	private BaseAdapter mAdapter = new BaseAdapter() {
 
-		private RedPacketCode[] mCodes = buildCodeArray();
+		private CavanRedPacketAlipay[] mPacket = buildPacketArray();
 
-		public RedPacketCode[] buildCodeArray() {
-			List<RedPacketCode> list = RedPacketCode.getLastCodes();
-			RedPacketCode[] codes = new RedPacketCode[list.size()];
-			list.toArray(codes);
-			return codes;
+		public CavanRedPacketAlipay[] buildPacketArray() {
+			List<CavanRedPacketAlipay> list = CavanRedPacketAlipay.getRecentPackets();
+			CavanRedPacketAlipay[] packets = new CavanRedPacketAlipay[list.size()];
+			list.toArray(packets);
+			return packets;
 		}
 
 		@Override
 		public void notifyDataSetChanged() {
-			mCodes = buildCodeArray();
+			mPacket = buildPacketArray();
 			super.notifyDataSetChanged();
 		}
 
@@ -78,7 +80,7 @@ public class RedPacketEditActivity extends Activity implements OnClickListener, 
 				view = new TextView(RedPacketEditActivity.this);
 			}
 
-			RedPacketCode node = mCodes[position];
+			CavanRedPacketAlipay node = mPacket[position];
 
 			view.setText(node.getCode());
 			view.setTextSize(20);
@@ -101,12 +103,12 @@ public class RedPacketEditActivity extends Activity implements OnClickListener, 
 
 		@Override
 		public Object getItem(int position) {
-			return mCodes[position];
+			return mPacket[position];
 		}
 
 		@Override
 		public int getCount() {
-			return mCodes.length;
+			return mPacket.length;
 		}
 	};
 
@@ -166,7 +168,7 @@ public class RedPacketEditActivity extends Activity implements OnClickListener, 
 
 			long time = date.getTime() / 60000 * 60000;
 
-			RedPacketCode node = RedPacketCode.update(this, code, time, mCheckBoxIgnore.isChecked());
+			CavanRedPacketAlipay node = CavanRedPacketAlipay.update(code, time, mCheckBoxIgnore.isChecked());
 			if (node == null) {
 				break;
 			}
@@ -175,7 +177,7 @@ public class RedPacketEditActivity extends Activity implements OnClickListener, 
 				StringBuilder builder = new StringBuilder();
 				builder.append(FloatMessageService.NET_CMD_UPDATE);
 				builder.append(node.getCode());
-				builder.append('|').append(node.getExactTime());
+				builder.append('|').append(node.getUnpackTime());
 				builder.append('|').append(node.isIgnored());
 
 				try {
@@ -192,12 +194,12 @@ public class RedPacketEditActivity extends Activity implements OnClickListener, 
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-		RedPacketCode node = (RedPacketCode) mAdapter.getItem(position);
+		CavanRedPacketAlipay packet = (CavanRedPacketAlipay) mAdapter.getItem(position);
 
-		mEditTextCode.setText(node.getCode());
-		mCheckBoxIgnore.setChecked(node.isIgnored());
+		mEditTextCode.setText(packet.getCode());
+		mCheckBoxIgnore.setChecked(packet.isIgnored());
 
-		Date date = new Date(node.getExactTime());
+		Date date = new Date(packet.getUnpackTime());
 		mTimePicker.setCurrentHour(date.getHours());
 		mTimePicker.setCurrentMinute(date.getMinutes());
 	}

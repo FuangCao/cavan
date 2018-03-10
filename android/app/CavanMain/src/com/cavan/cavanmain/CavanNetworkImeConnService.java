@@ -13,6 +13,7 @@ import android.os.RemoteException;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 
+import com.cavan.accessibility.CavanAccessibilityService;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanThreadedHandler;
 import com.cavan.android.SystemProperties;
@@ -142,8 +143,6 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 	}
 
 	protected void onTcpPacketReceived(String[] args) {
-
-
 		CavanAccessibilityService accessibility = CavanAccessibilityService.instance;
 		boolean send = false;
 
@@ -210,7 +209,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 			break;
 
 		default:
-			CavanInputMethod ime = CavanInputMethod.instance;
+			CavanMainInputMethod ime = CavanMainInputMethod.instance;
 			if (ime == null) {
 				CavanAndroid.dLog("ime is null");
 				break;
@@ -251,7 +250,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 				break;
 
 			case "COMMIT":
-				if (accessibility != null && accessibility.commitText(ime)) {
+				if (accessibility != null && accessibility.sendText(null)) {
 					break;
 				}
 			case "DONE":

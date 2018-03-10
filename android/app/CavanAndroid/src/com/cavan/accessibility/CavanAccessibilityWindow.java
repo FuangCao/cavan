@@ -105,21 +105,25 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
-	public void onEnter() {}
-	public void onLeave() {}
-	public void onPackageUpdated() {}
-	public void onProgress(String name) {}
-	public void onAndroidWidget(String name) {}
-	public void onWindowContentChanged(AccessibilityEvent event) {}
-	public void onViewClicked(AccessibilityEvent event) {}
-	public void onViewTextChanged(AccessibilityEvent event) {}
+	protected boolean doSendMessage(AccessibilityNodeInfo root, String message) {
+		return false;
+	}
 
-	public boolean onWindowContentReady(int times) {
+	protected void onEnter() {}
+	protected void onLeave() {}
+	protected void onPackageUpdated() {}
+	protected void onProgress(String name) {}
+	protected void onAndroidWidget(String name) {}
+	protected void onWindowContentChanged(AccessibilityEvent event) {}
+	protected void onViewClicked(AccessibilityEvent event) {}
+	protected void onViewTextChanged(AccessibilityEvent event) {}
+
+	protected boolean onWindowContentReady(int times) {
 		CavanAndroid.pLog();
 		return true;
 	}
 
-	public boolean onPollFailed(CavanRedPacket packet, int times) {
+	protected boolean onPollFailed(CavanRedPacket packet, int times) {
 		return (times < CavanAccessibilityPackage.FAIL_TIMES);
 	}
 

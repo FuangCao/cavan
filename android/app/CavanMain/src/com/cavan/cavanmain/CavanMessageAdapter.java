@@ -3,6 +3,8 @@ package com.cavan.cavanmain;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.cavan.accessibility.CavanNotification;
+
 import android.database.Cursor;
 import android.net.Uri;
 import android.view.View;
@@ -19,7 +21,7 @@ public class CavanMessageAdapter extends BaseAdapter {
 	private int mCount;
 	private Cursor mCursor;
 	private Cursor mCursorPending;
-	private List<CavanNotification> mNotifications = new ArrayList<CavanNotification>();
+	private List<CavanNotificationTable> mNotifications = new ArrayList<CavanNotificationTable>();
 
 	private Runnable mRunnableUpdate = new Runnable() {
 
@@ -92,12 +94,12 @@ public class CavanMessageAdapter extends BaseAdapter {
 
 	public boolean updateData(Uri uri, String selection, String[] selectionArgs, boolean bottom) {
 		if (uri == null) {
-			mCursorPending = CavanNotification.query(mActivity.getContentResolver(), selection, selectionArgs, null);
+			mCursorPending = CavanNotificationTable.query(mActivity.getContentResolver(), selection, selectionArgs, null);
 		} else {
-			Cursor cursor = CavanNotification.query(mActivity.getContentResolver(), uri, selection, selectionArgs, null);
+			Cursor cursor = CavanNotificationTable.query(mActivity.getContentResolver(), uri, selection, selectionArgs, null);
 			if (cursor.moveToFirst()) {
 				try {
-					mNotifications.add(new CavanNotification(cursor));
+					mNotifications.add(new CavanNotificationTable(cursor));
 				} catch (Exception e) {
 					e.printStackTrace();
 					return false;
@@ -136,7 +138,7 @@ public class CavanMessageAdapter extends BaseAdapter {
 			if (mCursor.moveToPosition(position)) {
 				notification = new CavanNotification(mCursor);
 			} else {
-				notification = mNotifications.get(position - mCursor.getCount());
+				notification = mNotifications.get(position - mCursor.getCount()).getNotification();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -155,7 +157,7 @@ public class CavanMessageAdapter extends BaseAdapter {
 
 		CharSequence content = notification.getContent();
 		if (content != null) {
-			view.setContent(content, notification.getPackageName().toString(), mActivity.getFilterPatterns());
+			view.setContent(content, notification.getPackageName(), mActivity.getFilterPatterns());
 		}
 
 		return view;

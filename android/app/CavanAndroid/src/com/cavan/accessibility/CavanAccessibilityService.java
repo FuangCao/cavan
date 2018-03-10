@@ -26,6 +26,8 @@ import com.cavan.java.CavanJava;
 
 public class CavanAccessibilityService extends AccessibilityService {
 
+	public static final String ACTION_CODE_RECEIVED = "com.cavan.intent.ACTION_CODE_RECEIVED";
+
 	public static final int POLL_DELAY = 500;
 	public static final int LAUNCH_DELAY = 2000;
 
@@ -424,6 +426,17 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return null;
 	}
 
+	public CavanAccessibilityPackage getCurrentPackage() {
+		String name = getCurrntPacketName();
+		if (name == null) {
+			return null;
+		}
+
+		synchronized (mPackages) {
+			return mPackages.get(name);
+		}
+	}
+
 	public CavanWakeLock getWakeLock() {
 		return mWakeLock;
 	}
@@ -626,6 +639,24 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	protected String getInputMethodName() {
 		return null;
+	}
+
+	public boolean sendText(String message) {
+		AccessibilityNodeInfo root = getRootInActiveWindow(3);
+		if (root == null) {
+			return false;
+		}
+
+		CavanAccessibilityPackage pkg = getPackage(root.getPackageName());
+		if (pkg == null) {
+			return false;
+		}
+
+		return pkg.doSendMessage(root, message);
+	}
+
+	public Class<?> getBroadcastReceiverClass() {
+		return mBroadcastReceiver.getClass();
 	}
 
 	@Override

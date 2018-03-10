@@ -10,6 +10,8 @@ import com.cavan.android.CavanAndroid;
 
 public class CavanBroadcastReceiver extends BroadcastReceiver {
 
+	public static boolean sBootCompleted;
+
 	public static void setOnTimeNotifyAlarm(Context context) {
 		AlarmManager manager = (AlarmManager) CavanAndroid.getSystemServiceCached(context, Context.ALARM_SERVICE);
 		if (manager != null) {
@@ -54,7 +56,7 @@ public class CavanBroadcastReceiver extends BroadcastReceiver {
 				setOnTimeNotifyAlarm(context);
 			}
 		} else if (Intent.ACTION_BOOT_COMPLETED.equals(action)) {
-			CavanAccessibilityService.sBootComplete = true;
+			sBootCompleted = true;
 			CavanAndroid.acquireWakeupLock(context, 60000);
 			CavanAndroid.setLockScreenEnable(context, false);
 			context.startService(new Intent(context, FloatMessageService.class));

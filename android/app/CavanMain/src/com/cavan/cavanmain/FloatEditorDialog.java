@@ -19,6 +19,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
+import com.cavan.accessibility.CavanRedPacketAlipay;
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.RedPacketFinder;
 
@@ -211,7 +212,7 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 			if (mCheckBox != null && mCheckBox.isChecked()) {
 				if (text != null) {
 					for (String line : text.split("\n")) {
-						String code = RedPacketCode.filtration(line);
+						String code = CavanRedPacketAlipay.filtration(line);
 
 						if (code.length() > 0) {
 							RedPacketListenerService listener = RedPacketListenerService.instance;

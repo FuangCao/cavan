@@ -125,7 +125,7 @@
         </activity>
 
         <service
-            android:name="CavanInputMethod"
+            android:name="CavanMainInputMethod"
             android:label="@string/cavan_input_method"
             android:permission="android.permission.BIND_INPUT_METHOD" >
             <intent-filter>
@@ -137,7 +137,7 @@
                 android:resource="@xml/inputmethod" />
         </service>
         <service
-            android:name="CavanAccessibilityService"
+            android:name="CavanMainAccessibilityService"
             android:label="@string/cavan_red_packet_notify"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" >
             <meta-data

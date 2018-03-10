@@ -3,13 +3,10 @@ package com.cavan.cavanmain;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 import android.app.Notification;
 import android.app.PendingIntent;
-import android.app.PendingIntent.CanceledException;
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.Ringtone;
@@ -18,35 +15,16 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.service.notification.StatusBarNotification;
 
+import com.cavan.accessibility.CavanNotification;
+import com.cavan.accessibility.CavanRedPacketAlipay;
 import com.cavan.android.CavanAndroid;
-import com.cavan.android.CavanPackageName;
 import com.cavan.java.RedPacketFinder;
 
-public class RedPacketNotification extends CavanNotification {
+public class RedPacketNotification extends CavanNotificationTable {
 
 	private static final long CODE_OVERTIME = 3600000;
 	private static final long REPEAT_CODE_OVERTIME = 20000;
-
-	private static final HashSet<CharSequence> sExcludeUsersQQ = new HashSet<CharSequence>();
-	private static final HashSet<CharSequence> sExcludeUsersMM = new HashSet<CharSequence>();
-	private static final HashSet<CharSequence> sTimerPackages = new HashSet<CharSequence>();
-	private static final HashSet<CharSequence> sSavePackages = new HashSet<CharSequence>();
-
-	static {
-		sExcludeUsersQQ.add("QQ钱包");
-		sExcludeUsersMM.add("微信游戏");
-
-		sTimerPackages.add(CavanPackageName.CALENDAR);
-		sTimerPackages.add(CavanPackageName.DESKCLOCK);
-
-		sSavePackages.add(CavanPackageName.QQ);
-		sSavePackages.add(CavanPackageName.MM);
-		sSavePackages.add(CavanPackageName.TMALL);
-		sSavePackages.add(CavanPackageName.TAOBAO);
-		sSavePackages.add(CavanPackageName.ALIPAY);
-	}
 
 	private static String[] sSoundExtensions = {
 		"m4a", "ogg", "wav", "mp3", "ac3", "wma"
@@ -55,80 +33,20 @@ public class RedPacketNotification extends CavanNotification {
 	public static HashMap<CharSequence, Long> sCodeTimeMap = new HashMap<CharSequence, Long>();
 	public static List<String> sExcludeCodes = new ArrayList<String>();
 
-	private boolean mTestOnly;
-	private boolean mNeedSave;
-	private RedPacketFinder mFinder = new RedPacketFinder();
-
-	private int mPriority;
-	private boolean mIsCode;
-	private boolean mNetShared;
-	private boolean mCodeOnly;
-	private boolean mIsTimedCode;
-	private String mDescription;
 	private RedPacketListenerService mService;
-	private StatusBarNotification mNotification;
+	private boolean mCodeOnly;
 
-	public RedPacketNotification(RedPacketListenerService service, StatusBarNotification sbn, boolean test) {
-		super(sbn);
-
-		mTestOnly = test;
+	public RedPacketNotification(RedPacketListenerService service, CavanNotification notification) {
+		super(notification);
 		mService = service;
-		mNotification = sbn;
-		mIsTimedCode = sTimerPackages.contains(mPackageName);
-
-		if (mTitle != null && mIsTimedCode) {
-			mFinder.addLine(mTitle);
-		}
-
-		mNeedSave = sSavePackages.contains(mPackageName);
-		if (mNeedSave || mIsTimedCode || mService.getPackageName().equals(getPackageName())) {
-			mFinder.split(mContent);
-		}
-	}
-
-	public RedPacketNotification(RedPacketListenerService service, String user, String content, boolean isCode) {
-		super(service.getPackageName(), user, null, null, content);
-
-		mService = service;
-		mIsCode = isCode;
-
-		if (isCode) {
-			mFinder.addLine(content);
-		} else {
-			mFinder.split(content);
-		}
-	}
-
-	public RedPacketNotification(RedPacketListenerService service, String packageName, String content, String desc, boolean hasPrefix) {
-		super(packageName, content, hasPrefix);
-
-		mDescription = desc;
-		mService = service;
-		mFinder.split(mContent);
-	}
-
-	public void setPriority(int priority) {
-		mPriority = priority;
-	}
-
-	public void setNetShared(boolean shared) {
-		mNetShared = shared;
 	}
 
 	public void setCodeOnly(boolean only) {
 		mCodeOnly = only;
 	}
 
-	public Notification getNotification() {
-		if (mNotification == null) {
-			return null;
-		}
-
-		return mNotification.getNotification();
-	}
-
 	public Bundle getExtras() {
-		return getNotification().extras;
+		return mNotification.getExtras();
 	}
 
 	public CharSequence getExtra(String key) {
@@ -161,24 +79,7 @@ public class RedPacketNotification extends CavanNotification {
 	}
 
 	public String getUserDescription() {
-		if (mGroupName != null) {
-			return mGroupName;
-		}
-
-		if (mUserName != null) {
-			return mUserName;
-		}
-
-		if (mDescription != null) {
-			return mDescription;
-		}
-
-		String name = getApplicationName();
-		if (name != null) {
-			return name;
-		}
-
-		return "未知用户";
+		return mNotification.getUserDescription(mService);
 	}
 
 	public File getRingtoneFile() {
@@ -252,7 +153,7 @@ public class RedPacketNotification extends CavanNotification {
 		return builder.build();
 	}
 
-	public Notification buildRedPacketNotifyAlipay(RedPacketCode node) {
+	public Notification buildRedPacketNotifyAlipay(CavanRedPacketAlipay node) {
 		String code = node.getCode();
 
 		if (sExcludeCodes.indexOf(code) >= 0) {
@@ -281,78 +182,26 @@ public class RedPacketNotification extends CavanNotification {
 
 	// ================================================================================
 
-	private long getCodeDelay() {
-		if (mGroupName != null) {
-			if (mGroupName.equals("【VIP】内部福利6群")) {
-				return 8000;
-			}
 
-			if (mGroupName.equals("【小六04】内部VIP群")) {
-				return 10000;
-			}
-
-			if (mGroupName.equals("11-VIP客户内部福利群")) {
-				return 5000;
-			}
-		}
-
-		if (mContent != null) {
-			if (mContent.contains("手气王")) {
-				return 15000;
-			}
-
-			if (mContent.contains("运气王")) {
-				return 5000;
-			}
-		}
-
-		return 0;
-	}
-
-	public int sendRedPacketNotifyAlipay() {
-		List<String> codes;
-		long time = System.currentTimeMillis();
-
-		if (mIsCode) {
-			codes = new ArrayList<String>();
-			codes.add(mContent);
-		} else {
-			codes = mFinder.getRedPacketCodes();
-			time += getCodeDelay();
-		}
-
+	public int sendRedPacketNotifyAlipay(RedPacketFinder finder) {
+		List<String> codes = finder.getRedPacketCodes();
 		int count = codes.size();
 		if (count <= 0) {
 			return 0;
 		}
 
-		boolean needStartAlipay = true;
+		long time = System.currentTimeMillis() + mNotification.getCodeDelay();
 
 		for (String code : codes) {
-			RedPacketCode node = RedPacketCode.getInstence(code, mPriority, true, mTestOnly, false);
-			CavanAndroid.dLog("node = " + node);
-			CavanAndroid.dLog("needSkip = " + node.needSkip());
-			if (node == null || node.needSkip()) {
+			CavanRedPacketAlipay packet = mNotification.getRedPacketAlipay(code);
+			CavanAndroid.dLog("packet = " + packet);
+			if (packet == null || packet.isCompleted()) {
 				continue;
 			}
 
-			if (needStartAlipay && !node.isCompleted()) {
-				needStartAlipay = false;
-				mService.startAlipayActivity();
-			}
-
-			Notification notification = buildRedPacketNotifyAlipay(node);
+			Notification notification = buildRedPacketNotifyAlipay(packet);
 			if (notification != null) {
-				node.setTime(time);
-
-				if (mNetShared) {
-					node.setSendEnable(false);
-				}
-
-				if (mIsTimedCode) {
-					node.setRepeatable();
-				}
-
+				packet.setUnpackTime(time);
 				mService.sendNotification(notification, "支付宝@" + getUserDescription() + ": " + code, code);
 			}
 		}
@@ -360,135 +209,85 @@ public class RedPacketNotification extends CavanNotification {
 		return count;
 	}
 
-	public boolean sendRedPacketNotifyNormal(String content, String message, boolean send) {
+	public boolean sendRedPacketNotifyNormal(String content, String message) {
 		PendingIntent intent;
-		Notification notification;
 
 		if (mNotification != null) {
 			intent = mNotification.getNotification().contentIntent;
-
-			if (send && intent != null && CavanMessageActivity.isAutoOpenAppEnabled(mService) &&
-					(CavanMessageActivity.isAutoOpenAlipayEnabled(mService) == false || mService.getCodePending() == 0)) {
-				try {
-					intent.send();
-				} catch (CanceledException e) {
-					e.printStackTrace();
-				}
-			}
 		} else {
 			intent = null;
 		}
 
-		notification = buildNotification(content, intent);
+		Notification notification = buildNotification(content, intent);
 		mService.sendNotification(notification, message, null);
 
 		return true;
 	}
 
-	public boolean sendRedPacketNotifyAlipayPredict() {
-		String code = mFinder.getPredictCode();
+	public boolean sendRedPacketNotifyAlipayPredict(RedPacketFinder finder) {
+		String code = finder.getPredictCode();
 		if (code != null) {
-			return sendRedPacketNotifyNormal(code, code + "@" + getUserDescription(), false);
+			return sendRedPacketNotifyNormal(code, code + "@" + getUserDescription());
 		}
 
 		return false;
 	}
 
-	public boolean sendKeyword() {
-		String keyword = mService.getKeyword(mFinder);
+	public boolean sendKeyword(RedPacketFinder finder) {
+		String keyword = mService.getKeyword(finder);
 		if (keyword != null) {
 			String message = getUserDescription() + ": " + keyword;
 			if (CavanMessageActivity.isKeywordNotifyOnly(mService)) {
 				FloatMessageService.showNotify(message);
 			} else {
-				return sendRedPacketNotifyNormal(keyword, "关键字@" + message, false);
+				return sendRedPacketNotifyNormal(keyword, "关键字@" + message);
 			}
 		}
 
 		return false;
 	}
 
-	public String getRedPacketCodeNormal() {
-		return mFinder.getNormalCode(getPackageName(), CavanMessageActivity.isFuDaiNotifyEnabled(mService));
-	}
-
-	private boolean isMmFilterEnabled(String user) {
-		CavanAccessibilityService service = CavanAccessibilityService.instance;
-		if (service != null && service.getAccessibilityMM().isWebViewUi()) {
-			return true;
+	public String getRedPacketCodeNormal(RedPacketFinder finder, String user) {
+		if (mNotification.addRedPacket(user)) {
+			return mNotification.getPacketName();
 		}
 
-		return CavanMessageActivity.isMmFilterEnabled(mService) && sExcludeUsersMM.contains(user);
+		return finder.getNormalCode(getPackageName(), CavanMessageActivity.isFuDaiNotifyEnabled(mService));
 	}
 
-	public boolean sendRedPacketNotifyNormal() {
+	public boolean sendRedPacketNotifyNormal(RedPacketFinder finder) {
 		if (mCodeOnly) {
 			return false;
 		}
 
-		String code = getRedPacketCodeNormal();
+		String user = getUserDescription();
+		String code = getRedPacketCodeNormal(finder, user);
 		if (code == null) {
 			return false;
 		}
 
-		boolean send = true;
-		String user = getUserDescription();
-
-		if ("QQ".equals(code)) {
-			if (CavanMessageActivity.isQqFilterEnabled(mService) && sExcludeUsersQQ.contains(user)) {
-				CavanAndroid.dLog("Exclude user: " + user);
-				send = false;
-			} else {
-				CavanAccessibilityQQ qq = CavanAccessibilityQQ.instance;
-				if (qq != null) {
-					qq.addPacket(user);
-				}
-			}
-		} else if ("微信".equals(code)) {
-			if (isMmFilterEnabled(user)) {
-				CavanAndroid.dLog("Exclude user: " + user);
-				send = false;
-			} else {
-				CavanAccessibilityMM mm = CavanAccessibilityMM.instance;
-				if (mm != null) {
-					mm.addPacket(user);
-				}
-			}
-		}
-
-		return sendRedPacketNotifyNormal(code + "红包", code + "@" + user, send);
+		return sendRedPacketNotifyNormal(code + "红包", code + "@" + user);
 	}
 
 	public boolean sendRedPacketNotifyAuto() {
-		if (sendRedPacketNotifyNormal()) {
+		RedPacketFinder finder = mNotification.getFinder();
+
+		if (sendRedPacketNotifyNormal(finder)) {
 			return true;
 		}
 
-		if (sendRedPacketNotifyAlipay() > 0) {
+		if (sendRedPacketNotifyAlipay(finder) > 0) {
 			return true;
 		}
 
-		if (sendRedPacketNotifyAlipayPredict()) {
+		if (sendRedPacketNotifyAlipayPredict(finder)) {
 			return true;
 		}
 
-		if (sendKeyword()) {
+		if (sendKeyword(finder)) {
 			return true;
 		}
 
 		return false;
-	}
-
-	@Override
-	public Uri insert(ContentResolver resolver) {
-		if (mPackageName == null || mContent == null) {
-			return null;
-		}
-
-		if (mNeedSave) {
-			return super.insert(resolver);
-		}
-
-		return null;
 	}
 }

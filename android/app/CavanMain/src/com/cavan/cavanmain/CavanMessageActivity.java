@@ -27,6 +27,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.preference.RingtonePreference;
 
+import com.cavan.accessibility.CavanRedPacketAlipay;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanString;
@@ -561,7 +562,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 			mPreferenceAutoOpenAlipay.setChecked(true);
 			mPreferenceWanReceive.setChecked(true);
 
-			if (!CavanInputMethod.isDefaultInputMethod(this)) {
+			if (CavanMainInputMethod.instance == null) {
 				CavanAndroid.showInputMethodPicker(this);
 			}
 		} else if (preference == mPreferenceRedPacketClear) {
@@ -573,7 +574,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 				}
 			}
 
-			RedPacketCode.getLastCodes().clear();
+			CavanRedPacketAlipay.getRecentPackets().clear();
 			CavanAndroid.showToast(this, R.string.already_clear);
 		}
 
@@ -591,7 +592,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 			String text = (String) object;
 			if (text != null) {
 				for (String line : text.split("\n")) {
-					String code = RedPacketCode.filtration(line);
+					String code = CavanRedPacketAlipay.filtration(line);
 
 					if (code.length() > 0) {
 						RedPacketListenerService listener = RedPacketListenerService.instance;
@@ -621,14 +622,14 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 						continue;
 					}
 
-					RedPacketCode.getInstence(code, 0, true, false, false);
+					CavanRedPacketAlipay.get(code, true, true);
 				}
 			}
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
 			if (!CavanAndroid.isNotificationListenerEnabled(this, RedPacketListenerService.class)) {
 				PermissionSettingsActivity.startNotificationListenerSettingsActivity(this);
 				FloatMessageService.showToast("请打开通知读取权限");
-			} else if (!CavanAccessibilityService.checkAndOpenSettingsActivity(this)) {
+			} else if (!CavanMainAccessibilityService.checkAndOpenSettingsActivity(this)) {
 				FloatMessageService.showToast("请打开辅助功能");
 			} else {
 				NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);

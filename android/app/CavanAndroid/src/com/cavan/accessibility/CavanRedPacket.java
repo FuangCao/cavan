@@ -1,11 +1,18 @@
 package com.cavan.accessibility;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+
+import android.content.Context;
 
 import com.cavan.android.CavanAndroid;
 
 public class CavanRedPacket {
+
+	public static final SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
 
 	protected CavanAccessibilityPackage mPackage;
 	protected boolean mCompleted;
@@ -119,6 +126,10 @@ public class CavanRedPacket {
 		return 0;
 	}
 
+	public long getUnpackOver() {
+		return getUnpackOver(System.currentTimeMillis());
+	}
+
 	public synchronized boolean launch() {
 		if (mPackage.launch()) {
 			mSendTimes++;
@@ -128,8 +139,12 @@ public class CavanRedPacket {
 		return false;
 	}
 
-	protected String getPacketName() {
+	public String getPacketName() {
 		return "dummy";
+	}
+
+	public boolean isExcluded(Context context, String user) {
+		return false;
 	}
 
 	protected List<String> getOptions(List<String> options) {
@@ -146,7 +161,7 @@ public class CavanRedPacket {
 		}
 
 		if (mUnpackTime != 0) {
-			options.add("unpack=" + mUnpackTime);
+			options.add("unpack=" + sDateFormat.format(new Date(mUnpackTime)));
 		}
 
 		return options;

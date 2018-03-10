@@ -29,8 +29,8 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.cavan.accessibility.CavanNotification;
 import com.cavan.android.CavanAndroid;
-import com.cavan.cavanmain.R;
 
 public class MessageActivity extends Activity {
 
@@ -135,7 +135,7 @@ public class MessageActivity extends Activity {
 			mAdapter = new CavanMessageAdapter(this);
 			updateData(null, true);
 
-			getContentResolver().registerContentObserver(CavanNotification.CONTENT_URI, true, mContentObserverMessage);
+			getContentResolver().registerContentObserver(CavanNotificationTable.CONTENT_URI, true, mContentObserverMessage);
 		}
 	}
 
@@ -165,7 +165,7 @@ public class MessageActivity extends Activity {
 
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-					int count = CavanNotification.deleteAll(getContentResolver());
+					int count = CavanNotificationTable.deleteAll(getContentResolver());
 					CavanAndroid.showToast(getApplicationContext(), String.format("成功清除 %d 条消息", count));
 					updateData(null, true);
 				}

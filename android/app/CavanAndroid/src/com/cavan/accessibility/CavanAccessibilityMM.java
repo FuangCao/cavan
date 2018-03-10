@@ -23,6 +23,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 	private HashSet<Integer> mFinishNodes = new HashSet<Integer>();
 	private boolean mUnpackSuccess;
 
+	public static CavanAccessibilityMM instance;
+
 	public class BaseWindow extends CavanAccessibilityWindow {
 
 		public BaseWindow(String name) {
@@ -613,6 +615,18 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		if (packet.isRedPacket()) {
 			addPacket(packet);
 		}
+	}
+
+	@Override
+	protected void onCreate() {
+		super.onCreate();
+		instance = this;
+	}
+
+	@Override
+	protected void onDestroy() {
+		instance = null;
+		super.onDestroy();
 	}
 
 }

@@ -2,6 +2,7 @@ package com.cavan.cavanmain;
 
 import android.net.Uri;
 
+import com.cavan.accessibility.CavanNotification;
 import com.cavan.android.CavanDatabaseProvider;
 
 public class CavanNotificationProvider extends CavanDatabaseProvider {

@@ -34,6 +34,9 @@ import android.view.ViewGroup;
 import android.view.WindowManager.LayoutParams;
 import android.widget.TextView;
 
+import com.cavan.accessibility.CavanAccessibilityAlipay;
+import com.cavan.accessibility.CavanAccessibilityService;
+import com.cavan.accessibility.CavanRedPacketAlipay;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanThreadedHandler;
 import com.cavan.android.CavanWakeLock;
@@ -91,7 +94,7 @@ public class FloatMessageService extends FloatWindowService {
 	private TextView mTextViewToast;
 	private TextView mTextViewNotify;
 	private CavanWakeLock mWakeLock = new CavanWakeLock(FloatMessageService.class.getCanonicalName());
-	private HashMap<CharSequence, RedPacketCode> mMessageCodeMap = new HashMap<CharSequence, RedPacketCode>();
+	private HashMap<CharSequence, CavanRedPacketAlipay> mMessageCodeMap = new HashMap<CharSequence, CavanRedPacketAlipay>();
 
 	private UdpDaemonThread mUdpDaemon;
 	private TcpDaemonThread mTcpDaemon;
@@ -261,7 +264,7 @@ public class FloatMessageService extends FloatWindowService {
 				break;
 
 			case MSG_RED_PACKET_UPDATED:
-				RedPacketCode node = (RedPacketCode) msg.obj;
+				CavanRedPacketAlipay node = (CavanRedPacketAlipay) msg.obj;
 				text = getResources().getString(R.string.red_packet_code_updated, node.getCode());
 				postShowToast(text);
 				break;
@@ -338,8 +341,8 @@ public class FloatMessageService extends FloatWindowService {
 					break;
 				}
 
-				if (service.equals(CavanAccessibilityService.class.getCanonicalName())) {
-					CavanAccessibilityService.checkAndOpenSettingsActivity(getApplicationContext());
+				if (service.equals(CavanMainAccessibilityService.class.getCanonicalName())) {
+					CavanMainAccessibilityService.checkAndOpenSettingsActivity(getApplicationContext());
 				} else if (service.equals(RedPacketListenerService.class.getCanonicalName())) {
 					RedPacketListenerService.checkAndOpenSettingsActivity(getApplicationContext());
 				}
@@ -384,32 +387,25 @@ public class FloatMessageService extends FloatWindowService {
 			CavanAndroid.acquireWakeupLock(getApplicationContext(), 20000);
 
 			if (code != null) {
-				RedPacketCode node = RedPacketCode.getInstence(code);
-				if (node != null) {
-					if (node.isTestOnly()) {
+				CavanRedPacketAlipay packet = CavanRedPacketAlipay.get(code);
+				if (packet != null) {
+					mMessageCodeMap.put(message, packet);
+
+					if (packet.isCompleted()) {
+						postShowToast(R.string.ignore_completed_code, code);
+					} else {
 						CavanAccessibilityService service = CavanAccessibilityService.instance;
 						if (service != null) {
-							postShowToast(R.string.test_success);
+							service.addPacket(CavanAccessibilityAlipay.instance, packet);
 						}
-					} else {
-						mMessageCodeMap.put(message, node);
+					}
 
-						if (node.isCompleted()) {
-							postShowToast(R.string.ignore_completed_code, code);
+					if (packet.isSendEnabled()) {
+						if (packet.isRepeatable()) {
+							mNetworkSendHandler.sendCode(code, 0);
 						} else {
-							CavanAccessibilityAlipay alipay = CavanAccessibilityAlipay.instance;
-							if (alipay != null) {
-								alipay.addCode(node);
-							}
-						}
-
-						if (node.isSendEnabled()) {
-							if (node.isRepeatable()) {
-								mNetworkSendHandler.sendCode(code, 0);
-							} else {
-								long delay = node.getTime() - System.currentTimeMillis();
-								mNetworkSendHandler.sendCode(code, delay);
-							}
+							long delay = packet.getUnpackDelay(0);
+							mNetworkSendHandler.sendCode(code, delay);
 						}
 					}
 				}
@@ -433,13 +429,13 @@ public class FloatMessageService extends FloatWindowService {
 		public void removeMessage(CharSequence message) throws RemoteException {
 			FloatMessageService.this.removeText(message);
 
-			RedPacketCode code = mMessageCodeMap.get(message);
-			if (code != null) {
-				code.setNetworkEnable();
+			CavanRedPacketAlipay packet = mMessageCodeMap.get(message);
+			if (packet != null) {
+				packet.setNetworkEnable(true, true);
 				mMessageCodeMap.remove(message);
-				CavanAccessibilityAlipay alipay = CavanAccessibilityAlipay.instance;
-				if (alipay != null) {
-					alipay.removeCode(code);
+				CavanAccessibilityService service = CavanAccessibilityService.instance;
+				if (service != null) {
+					service.removePacket(packet);
 				}
 			}
 		}
@@ -469,8 +465,8 @@ public class FloatMessageService extends FloatWindowService {
 		public List<String> getCodes() throws RemoteException {
 			List<String> codes = new ArrayList<String>();
 
-			for (RedPacketCode code : mMessageCodeMap.values()) {
-				codes.add(code.getCode());
+			for (CavanRedPacketAlipay packet : mMessageCodeMap.values()) {
+				codes.add(packet.getCode());
 			}
 
 			return codes;
@@ -485,8 +481,8 @@ public class FloatMessageService extends FloatWindowService {
 		public int getCodePending() throws RemoteException {
 			int count = 0;
 
-			for (RedPacketCode code : mMessageCodeMap.values()) {
-				if (!code.isCompleted()) {
+			for (CavanRedPacketAlipay packet : mMessageCodeMap.values()) {
+				if (!packet.isCompleted()) {
 					count++;
 				}
 			}
@@ -591,7 +587,7 @@ public class FloatMessageService extends FloatWindowService {
 	}
 
 	private boolean checkServiceState() {
-		if (!CavanAccessibilityService.checkAndOpenSettingsActivity(this)) {
+		if (!CavanMainAccessibilityService.checkAndOpenSettingsActivity(this)) {
 			return false;
 		}
 
@@ -678,8 +674,8 @@ public class FloatMessageService extends FloatWindowService {
 				command = getResources().getString(R.string.network_test_success, type);
 				postShowToast(command);
 			} else if (CavanMessageActivity.isRedPacketCodeReceiveEnabled()) {
-				RedPacketCode node = RedPacketCode.getInstence(code);
-				if (node == null || node.isRecvEnabled()) {
+				CavanRedPacketAlipay packet = CavanRedPacketAlipay.get(code);
+				if (packet == null || packet.isRecvEnabled()) {
 					RedPacketListenerService listener = RedPacketListenerService.instance;
 					if (listener != null) {
 						listener.addRedPacketCode(code, type, true);
@@ -696,9 +692,9 @@ public class FloatMessageService extends FloatWindowService {
 					long time = Long.parseLong(texts[1]);
 					boolean ignore = Boolean.parseBoolean(texts[2]);
 
-					RedPacketCode node = RedPacketCode.update(this, code, time, ignore);
-					if (node != null) {
-						mHandler.obtainMessage(MSG_RED_PACKET_UPDATED, node).sendToTarget();
+					CavanRedPacketAlipay packet = CavanRedPacketAlipay.update(code, time, ignore);
+					if (packet != null) {
+						mHandler.obtainMessage(MSG_RED_PACKET_UPDATED, packet).sendToTarget();
 					}
 				} catch (Exception e) {
 					e.printStackTrace();

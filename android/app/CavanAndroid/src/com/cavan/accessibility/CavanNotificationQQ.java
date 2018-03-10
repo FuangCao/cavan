@@ -1,6 +1,7 @@
 package com.cavan.accessibility;
 
 import android.app.Notification;
+import android.service.notification.StatusBarNotification;
 
 import com.cavan.java.CavanString;
 
@@ -10,9 +11,23 @@ public class CavanNotificationQQ extends CavanNotification {
 		super(notification);
 	}
 
+	public CavanNotificationQQ(StatusBarNotification notification) {
+		super(notification);
+	}
+
 	@Override
-	protected String getPacketName() {
-		return "QQ红包";
+	public String getPacketName() {
+		return "QQ";
+	}
+
+	@Override
+	public synchronized CavanAccessibilityPackage getPackage() {
+		CavanAccessibilityPackage pkg = super.getPackage();
+		if (pkg != null) {
+			return pkg;
+		}
+
+		return CavanAccessibilityQQ.instance;
 	}
 
 	@Override
@@ -61,5 +76,24 @@ public class CavanNotificationQQ extends CavanNotification {
 		}
 
 		return super.isRedPacket();
+	}
+
+	@Override
+	public long getCodeDelay() {
+		if (mGroupName != null) {
+			if (mGroupName.equals("【VIP】内部福利6群")) {
+				return 8000;
+			}
+
+			if (mGroupName.equals("【小六04】内部VIP群")) {
+				return 10000;
+			}
+
+			if (mGroupName.equals("11-VIP客户内部福利群")) {
+				return 5000;
+			}
+		}
+
+		return super.getCodeDelay();
 	}
 }

@@ -445,6 +445,15 @@ public class CavanAccessibilityPackage {
 		return -1;
 	}
 
+	protected boolean doSendMessage(AccessibilityNodeInfo root, String message) {
+		CavanAccessibilityWindow win = getWindow();
+		if (win == null) {
+			return false;
+		}
+
+		return win.doSendMessage(root, message);
+	}
+
 	protected void initWindows() {}
 	protected void onPackageUpdated() {}
 	protected void onPacketAdded(CavanRedPacket packet) {}

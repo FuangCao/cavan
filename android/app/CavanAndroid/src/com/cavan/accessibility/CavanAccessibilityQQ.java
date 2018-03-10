@@ -19,6 +19,8 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 	private static final int MAX_SCROLL_COUNT = 2;
 	private static final int MAX_RETRY_TIMES = 3;
 
+	public static CavanAccessibilityQQ instance;
+
 	private HashSet<Integer> mFinishNodes = new HashSet<Integer>();
 	private int mRetryTimes;
 	private int mChatIndex;
@@ -375,6 +377,11 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		public boolean isMainActivity() {
 			return mMainActivity;
 		}
+
+		@Override
+		protected boolean doSendMessage(AccessibilityNodeInfo root, String message) {
+			return sendText(root, message);
+		}
 	}
 
 	public CavanAccessibilityQQ(CavanAccessibilityService service) {
@@ -419,7 +426,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 				return false;
 			}
 
-			if (CavanAccessibilityHelper.setChildText(mService, inputBar, 0, message) == null) {
+			if (message != null && CavanAccessibilityHelper.setChildText(mService, inputBar, 0, message) == null) {
 				return false;
 			}
 
@@ -461,6 +468,18 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		if (packet.isRedPacket()) {
 			addPacket(packet);
 		}
+	}
+
+	@Override
+	protected void onCreate() {
+		super.onCreate();
+		instance = this;
+	}
+
+	@Override
+	protected void onDestroy() {
+		instance = null;
+		super.onDestroy();
 	}
 
 }

@@ -9,7 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
-import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.inputmethodservice.KeyboardView.OnKeyboardActionListener;
@@ -31,13 +30,16 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.GridView;
 
+import com.cavan.accessibility.CavanAccessibilityService;
+import com.cavan.accessibility.CavanInputMethodService;
+import com.cavan.accessibility.CavanRedPacketAlipay;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
 import com.cavan.service.ICavanTcpConnService;
 
-public class CavanInputMethod extends InputMethodService implements OnKeyboardActionListener {
+public class CavanMainInputMethod extends CavanInputMethodService implements OnKeyboardActionListener {
 
 	private static final int CODE_MAX_COLUMNS = 3;
 	private static final int AUTO_COMMIT_DELAY = 100;
@@ -84,7 +86,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	private static final int MSG_SEND_TEXT = 6;
 	private static final int MSG_AUTO_SEND = 7;
 
-	public static CavanInputMethod instance;
+	public static CavanMainInputMethod instance;
 
 	private Handler mHandler = new Handler() {
 
@@ -117,9 +119,9 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 			case MSG_SEND_TEXT:
 				CavanAccessibilityService accessibility = CavanAccessibilityService.instance;
-				if (accessibility != null && accessibility.commitText(CavanInputMethod.this)) {
+				if (accessibility != null && accessibility.sendText(null)) {
 					if (mAutoSendText != null) {
-						int delay = CavanMessageActivity.getRepeatDelay(CavanInputMethod.this);
+						int delay = CavanMessageActivity.getRepeatDelay(CavanMainInputMethod.this);
 						sendEmptyMessageDelayed(MSG_AUTO_SEND, delay);
 					}
 				}
@@ -145,7 +147,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 	};
 
 	private GridView mGridViewCodes;
-	private RedPacketCode[] mUiCodes;
+	private CavanRedPacketAlipay[] mUiPackets;
 	private RedPacketViewAdapter mAdapterCodes = new RedPacketViewAdapter();
 
 	private GridView mGridViewLines;
@@ -171,7 +173,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			if (convertView != null) {
 				button = (Button) convertView;
 			} else {
-				button = new Button(CavanInputMethod.this);
+				button = new Button(CavanMainInputMethod.this);
 				button.setOnClickListener(mOnClickListener);
 				button.setBackgroundColor(Color.BLACK);
 				button.setTextColor(Color.WHITE);
@@ -267,10 +269,6 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			mNetworkIme = ICavanTcpConnService.Stub.asInterface(service);
 		}
 	};
-
-	public static boolean isDefaultInputMethod(Context context) {
-		return "com.cavan.cavanmain/.CavanInputMethod".equals(CavanAndroid.getDefaultInputMethod(context));
-	}
 
 	public Handler getHandler() {
 		return mHandler;
@@ -707,7 +705,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 				if (text == null || text.length() <= 0) {
 					text = mAutoSendTextPrev;
 					if (text == null) {
-						text = CavanAndroid.getClipboardText(CavanInputMethod.this);
+						text = CavanAndroid.getClipboardText(CavanMainInputMethod.this);
 						if (text != null && text.length() <= 0) {
 							text = null;
 						}
@@ -760,7 +758,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 	public class RedPacketView extends Button implements OnClickListener {
 
-		private RedPacketCode mCode;
+		private CavanRedPacketAlipay mPacket;
 
 		public RedPacketView(Context context) {
 			super(context);
@@ -771,19 +769,19 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			setOnClickListener(this);
 		}
 
-		public void setRedPacketCode(RedPacketCode code) {
-			mCode = code;
-			setText(code.getCode());
-			setTextColor(code.isInvalid() ? Color.RED : Color.BLACK);
+		public void setPacket(CavanRedPacketAlipay packet) {
+			mPacket = packet;
+			setText(packet.getCode());
+			setTextColor(packet.isInvalid() ? Color.RED : Color.BLACK);
 		}
 
-		public RedPacketCode getPacketCode() {
-			return mCode;
+		public CavanRedPacketAlipay getPacket() {
+			return mPacket;
 		}
 
 		@Override
 		public void onClick(View v) {
-			sendRedPacketCode(mCode.getCode(), !mCode.isInvalid());
+			sendRedPacketCode(mPacket.getCode(), !mPacket.isInvalid());
 		}
 	}
 
@@ -795,14 +793,14 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 			public void handleMessage(Message msg) {
 				mHandler.removeMessages(0);
 
-				List<RedPacketCode> codes = RedPacketCode.getLastCodes();
-				if (codes == null) {
+				List<CavanRedPacketAlipay> packets = CavanRedPacketAlipay.getRecentPackets();
+				if (packets == null) {
 					return;
 				}
 
 				int lines;
 				int columns;
-				int size = codes.size();
+				int size = packets.size();
 
 				if (size > CODE_MAX_COLUMNS) {
 					lines = (size + CODE_MAX_COLUMNS - 1) / CODE_MAX_COLUMNS;
@@ -838,8 +836,8 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 				mGridViewCodes.getLayoutParams().height = height;
 
-				mUiCodes = new RedPacketCode[size];
-				codes.toArray(mUiCodes);
+				mUiPackets = new CavanRedPacketAlipay[size];
+				packets.toArray(mUiPackets);
 
 				notifyDataSetChanged();
 			}
@@ -859,7 +857,7 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 				view = new RedPacketView(getApplicationContext());
 			}
 
-			view.setRedPacketCode(mUiCodes[position]);
+			view.setPacket(mUiPackets[position]);
 
 			return view;
 		}
@@ -876,8 +874,8 @@ public class CavanInputMethod extends InputMethodService implements OnKeyboardAc
 
 		@Override
 		public int getCount() {
-			if (mUiCodes != null) {
-				return mUiCodes.length;
+			if (mUiPackets != null) {
+				return mUiPackets.length;
 			}
 
 			return 0;
