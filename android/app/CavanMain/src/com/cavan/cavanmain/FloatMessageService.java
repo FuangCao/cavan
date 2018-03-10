@@ -296,13 +296,6 @@ public class FloatMessageService extends FloatWindowService {
 
 			switch (action) {
 			case Intent.ACTION_SCREEN_OFF:
-				if (CavanMessageActivity.isDisableKeyguardEnabled(getApplicationContext())) {
-					CavanAndroid.acquireWakeLock(getApplicationContext(), 5000);
-					CavanAndroid.startActivity(getApplicationContext(), KeyguardActivity.class);
-				} else {
-					CavanAndroid.releaseWakeLock();
-				}
-
 				setLockScreenEnable(true);
 
 				synchronized (mHandler) {

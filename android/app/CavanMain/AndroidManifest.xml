@@ -182,7 +182,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="KeyguardActivity"
+            android:name="com.cavan.accessibility.CavanKeyguardActivity"
             android:excludeFromRecents="true"
             android:launchMode="singleTask"
             android:showOnLockScreen="true" >

@@ -4,6 +4,8 @@ import android.content.Context;
 
 import com.cavan.accessibility.CavanAccessibilityAlipay;
 import com.cavan.accessibility.CavanAccessibilityService;
+import com.cavan.accessibility.CavanKeyguardActivity;
+import com.cavan.android.CavanAndroid;
 
 public class CavanMainAccessibilityService extends CavanAccessibilityService {
 
@@ -45,5 +47,14 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 	public void onDestroy() {
 		instance = null;
 		super.onDestroy();
+	}
+
+	@Override
+	protected void onScreenOff() {
+		if (CavanMessageActivity.isDisableKeyguardEnabled(this)) {
+			CavanKeyguardActivity.show(this);
+		} else {
+			CavanAndroid.startLauncher(this);
+		}
 	}
 }
