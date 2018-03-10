@@ -134,6 +134,7 @@ public class CavanRedPacketAlipay extends CavanRedPacket {
 
 		synchronized (mRecentPackets) {
 			updateRecentPackets();
+			mRecentPackets.remove(packet);
 			mRecentPackets.addFirst(packet);
 		}
 

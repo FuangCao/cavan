@@ -34,6 +34,7 @@ public class RedPacketNotification extends CavanNotificationTable {
 	public static List<String> sExcludeCodes = new ArrayList<String>();
 
 	private RedPacketListenerService mService;
+	private CavanRedPacketAlipay mPacket;
 	private boolean mCodeOnly;
 
 	public RedPacketNotification(RedPacketListenerService service, CavanNotification notification) {
@@ -43,6 +44,14 @@ public class RedPacketNotification extends CavanNotificationTable {
 
 	public void setCodeOnly(boolean only) {
 		mCodeOnly = only;
+	}
+
+	public CavanRedPacketAlipay getPacket() {
+		return mPacket;
+	}
+
+	public void setPacket(CavanRedPacketAlipay packet) {
+		mPacket = packet;
 	}
 
 	public Bundle getExtras() {
@@ -62,10 +71,6 @@ public class RedPacketNotification extends CavanNotificationTable {
 	}
 
 	public String getPackageName() {
-		if (mNotification == null) {
-			return null;
-		}
-
 		return mNotification.getPackageName();
 	}
 
@@ -182,6 +187,21 @@ public class RedPacketNotification extends CavanNotificationTable {
 
 	// ================================================================================
 
+	public boolean sendRedPacketNotifyAlipay(CavanRedPacketAlipay packet, long time) {
+		CavanAndroid.dLog("packet = " + packet);
+		if (packet == null || packet.isCompleted()) {
+			return false;
+		}
+
+		Notification notification = buildRedPacketNotifyAlipay(packet);
+		if (notification != null) {
+			packet.setUnpackTime(time);
+			String code = packet.getCode();
+			mService.sendNotification(notification, "支付宝@" + getUserDescription() + ": " + code, code);
+		}
+
+		return true;
+	}
 
 	public int sendRedPacketNotifyAlipay(RedPacketFinder finder) {
 		List<String> codes = finder.getRedPacketCodes();
@@ -194,31 +214,23 @@ public class RedPacketNotification extends CavanNotificationTable {
 
 		for (String code : codes) {
 			CavanRedPacketAlipay packet = mNotification.getRedPacketAlipay(code);
-			CavanAndroid.dLog("packet = " + packet);
-			if (packet == null || packet.isCompleted()) {
-				continue;
-			}
-
-			Notification notification = buildRedPacketNotifyAlipay(packet);
-			if (notification != null) {
-				packet.setUnpackTime(time);
-				mService.sendNotification(notification, "支付宝@" + getUserDescription() + ": " + code, code);
-			}
+			sendRedPacketNotifyAlipay(packet, time);
 		}
 
 		return count;
 	}
 
 	public boolean sendRedPacketNotifyNormal(String content, String message) {
+		Notification notification = mNotification.getNotification();
 		PendingIntent intent;
 
-		if (mNotification != null) {
-			intent = mNotification.getNotification().contentIntent;
+		if (notification != null) {
+			intent = notification.contentIntent;
 		} else {
 			intent = null;
 		}
 
-		Notification notification = buildNotification(content, intent);
+		notification = buildNotification(content, intent);
 		mService.sendNotification(notification, message, null);
 
 		return true;

@@ -31,7 +31,6 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 	private boolean mShowing;
 	private boolean mAutoDismiss;
 
-	private boolean mCopy;
 	private View mRootView;
 	private Button mButtonCopy;
 	private Button mButtonSend;
@@ -79,7 +78,6 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 	}
 
 	public void updateContent(CharSequence text, boolean checked, boolean copy) {
-		mCopy = copy;
 		mCheckBox.setChecked(checked);
 		mEditText.setText(text);
 		mButtonCopy.setText(copy ? R.string.copy : R.string.share);
@@ -195,14 +193,13 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 		} else if (v == mButtonCopy) {
 			String text = mEditText.getText().toString();
 
-			if (mCopy) {
-				CavanAndroid.postClipboardText(mContext, text);
-			}
+			CavanAndroid.postClipboardTextTemp(mContext, text);
 
 			FloatMessageService service = FloatMessageService.instance;
 			if (service != null) {
 				service.sendWanCommand(FloatMessageService.NET_CMD_CLIPBOARD + text);
 			}
+
 			dismiss();
 		} else if (v == mButtonSend) {
 			String text = mEditText.getText().toString();

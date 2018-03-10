@@ -108,8 +108,6 @@ public class RedPacketListenerService extends NotificationListenerService implem
 					rpn.sendRedPacketNotifyAuto();
 					rpn.insert(getContentResolver());
 				}
-
-
 				break;
 
 			case MSG_REMOVE_NOTIFICATION:
@@ -145,12 +143,17 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 			case MSG_RED_PACKET_NOTIFICATION:
 				RedPacketNotification notification = (RedPacketNotification) msg.obj;
-				RedPacketFinder finder = notification.getNotification().getFinder();
-				if (notification.sendRedPacketNotifyAlipay(finder) > 0) {
-					break;
-				}
+				CavanRedPacketAlipay packet = notification.getPacket();
+				if (packet != null) {
+					notification.sendRedPacketNotifyAlipay(packet, System.currentTimeMillis());
+				} else {
+					RedPacketFinder finder = notification.getNotification().getFinder();
+					if (notification.sendRedPacketNotifyAlipay(finder) > 0) {
+						break;
+					}
 
-				notification.sendRedPacketNotifyNormal(finder);
+					notification.sendRedPacketNotifyNormal(finder);
+				}
 				break;
 			}
 		}
@@ -178,11 +181,10 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			packet.setSendEnable(false);
 		}
 
-		try {
-			mFloatMessageService.addMessage(type + ": 支付宝@" + code, code);
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		}
+		CavanNotification notification = new CavanNotification(getPackageName(), type, code, false);
+		RedPacketNotification rpn = new RedPacketNotification(this, notification);
+		rpn.setPacket(packet);
+		mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, rpn).sendToTarget();
 	}
 
 	public void addRedPacketCodes(String[] codes, String type, boolean shared) {
