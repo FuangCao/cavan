@@ -276,13 +276,20 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 			break;
 
 		case "CLIPBOARD":
-			if (args.length > 0) {
+			if (args.length > 1) {
 				String text = args[1];
 				CavanAndroid.postClipboardTextTemp(getApplicationContext(), text);
 				FloatMessageService fms = FloatMessageService.instance;
 				if (fms != null) {
 					fms.postShowToastWithArgs(R.string.clipboard_updated, text);
 				}
+			}
+			break;
+
+		case "GLOBAL":
+			if (accessibility != null && args.length > 1) {
+				int action = CavanJava.parseInt(args[1]);
+				accessibility.performGlobalAction(action);
 			}
 			break;
 
@@ -295,6 +302,12 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 		case "BACK":
 			if (accessibility != null) {
 				accessibility.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+			}
+			break;
+
+		case "RECENTS":
+			if (accessibility != null) {
+				accessibility.performGlobalAction(AccessibilityService.GLOBAL_ACTION_RECENTS);
 			}
 			break;
 
