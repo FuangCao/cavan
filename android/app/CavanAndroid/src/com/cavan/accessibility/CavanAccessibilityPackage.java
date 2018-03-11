@@ -401,18 +401,25 @@ public class CavanAccessibilityPackage {
 
 							if (packet.isPending()) {
 								return packet.getUnpackDelay(POLL_DELAY);
-							} else if (win.isMainActivity()) {
+							}
+
+							if (win.isMainActivity()) {
 								mService.removePacket(packet);
 								return -1;
 							}
 
 							return POLL_DELAY;
-						} else {
-							packet.setCompleted();
+						}
 
-							if (win.performActionBack(root, this)) {
-								setUnlockDelay(LOCK_DELAY);
-							}
+						packet.setCompleted();
+
+						if (win.performActionBack(root, this)) {
+							setUnlockDelay(LOCK_DELAY);
+						}
+
+						if (win.isMainActivity()) {
+							mService.removePacket(packet);
+							return -1;
 						}
 					}
 
@@ -445,13 +452,13 @@ public class CavanAccessibilityPackage {
 		return -1;
 	}
 
-	protected boolean doSendMessage(AccessibilityNodeInfo root, String message) {
+	public boolean doSendText(AccessibilityNodeInfo root, String message, boolean commit) {
 		CavanAccessibilityWindow win = getWindow();
 		if (win == null) {
 			return false;
 		}
 
-		return win.doSendMessage(root, message);
+		return win.doSendText(root, message, commit);
 	}
 
 	protected void initWindows() {}

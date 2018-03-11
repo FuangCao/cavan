@@ -641,7 +641,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return null;
 	}
 
-	public boolean sendText(String message) {
+	public boolean sendText(String message, boolean commit) {
 		AccessibilityNodeInfo root = getRootInActiveWindow(3);
 		if (root == null) {
 			return false;
@@ -652,7 +652,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			return false;
 		}
 
-		return pkg.doSendMessage(root, message);
+		return pkg.doSendText(root, message, commit);
 	}
 
 	public Class<?> getBroadcastReceiverClass() {

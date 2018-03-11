@@ -142,9 +142,131 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 		context.startService(getIntent(context));
 	}
 
+	private boolean processCommand(CavanMainInputMethod ime, CavanAccessibilityService accessibility, String[] args) {
+		InputConnection conn = ime.getCurrentInputConnection();
+		if (conn == null) {
+			CavanAndroid.dLog("conn is null");
+			return false;
+		}
+
+		boolean send = false;
+
+		switch (args[0]) {
+		case "SEND":
+			if (accessibility != null && accessibility.sendText(args[1], true)) {
+				break;
+			}
+
+			send = true;
+		case "REPLACE":
+			if (!conn.performContextMenuAction(android.R.id.selectAll)) {
+				return false;
+			}
+		case "INSERT":
+			if (args.length > 1) {
+				conn.commitText(args[1], 0);
+
+				if (send) {
+					ime.postAutoCommit();
+				}
+			} else {
+				return conn.commitText(CavanString.EMPTY_STRING, 0);
+			}
+			break;
+
+		case "DELETE":
+			CharSequence text = conn.getSelectedText(0);
+			if (text != null && text.length() > 0) {
+				return conn.commitText(CavanString.EMPTY_STRING, 1);
+			} else {
+				return conn.deleteSurroundingText(1, 0);
+			}
+
+		case "COMMIT":
+			if (accessibility != null && accessibility.sendText(null, true)) {
+				break;
+			}
+		case "DONE":
+			return ime.sendGoAction(conn);
+
+		case "KEY":
+			if (args.length > 1) {
+				try {
+					args = args[1].split("\\s+");
+
+					int code = Integer.parseInt(args[0].trim());
+
+					if (args.length > 1) {
+						int value = Integer.parseInt(args[1].trim());
+						return ime.sendKeyEvent(code, value);
+					} else {
+						return ime.sendKeyDownUp(code);
+					}
+				} catch (NumberFormatException e) {
+					e.printStackTrace();
+				}
+			}
+			break;
+
+		case "ACTION":
+			if (args.length > 0) {
+				try {
+					int action = Integer.parseInt(args[1].trim());
+					return conn.performEditorAction(action);
+				} catch (NumberFormatException e) {
+					e.printStackTrace();
+				}
+			}
+			break;
+
+		case "MENU_ACTION":
+			if (args.length > 0) {
+				try {
+					int action = Integer.parseInt(args[1].trim());
+					return conn.performContextMenuAction(action);
+				} catch (NumberFormatException e) {
+					e.printStackTrace();
+				}
+			}
+			break;
+
+		case "COPY":
+			return conn.performContextMenuAction(android.R.id.copy);
+
+		case "PASTE":
+			return conn.performContextMenuAction(android.R.id.paste);
+
+		case "SELECT_ALL":
+			return conn.performContextMenuAction(android.R.id.selectAll);
+
+		default:
+			CavanAndroid.eLog("Invalid command: " + args[0]);
+			return false;
+		}
+
+		return true;
+	}
+
+	private boolean processCommand(CavanAccessibilityService accessibility, String[] args) {
+		switch (args[0]) {
+		case "SEND":
+			return accessibility.sendText(args[1], true);
+
+		case "REPLACE":
+			return accessibility.sendText(args[1], false);
+
+		case "COMMIT":
+		case "DONE":
+			return accessibility.sendText(null, true);
+
+		default:
+			CavanAndroid.eLog("Invalid command: " + args[0]);
+			return false;
+		}
+	}
+
 	protected void onTcpPacketReceived(String[] args) {
 		CavanAccessibilityService accessibility = CavanAccessibilityService.instance;
-		boolean send = false;
 
 		switch (args[0]) {
 		case "OPEN":
@@ -211,104 +333,11 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 		default:
 			CavanMainInputMethod ime = CavanMainInputMethod.instance;
 			if (ime == null) {
-				CavanAndroid.dLog("ime is null");
-				break;
-			}
-
-			InputConnection conn = ime.getCurrentInputConnection();
-			if (conn == null) {
-				CavanAndroid.dLog("conn is null");
-				break;
-			}
-
-			switch (args[0]) {
-			case "SEND":
-				send = true;
-			case "REPLACE":
-				if (!conn.performContextMenuAction(android.R.id.selectAll)) {
-					break;
+				if (accessibility != null) {
+					processCommand(accessibility, args);
 				}
-			case "INSERT":
-				if (args.length > 1) {
-					conn.commitText(args[1], 0);
-
-					if (send) {
-						ime.postAutoCommit();
-					}
-				} else {
-					conn.commitText(CavanString.EMPTY_STRING, 0);
-				}
-				break;
-
-			case "DELETE":
-				CharSequence text = conn.getSelectedText(0);
-				if (text != null && text.length() > 0) {
-					conn.commitText(CavanString.EMPTY_STRING, 1);
-				} else {
-					conn.deleteSurroundingText(1, 0);
-				}
-				break;
-
-			case "COMMIT":
-				if (accessibility != null && accessibility.sendText(null)) {
-					break;
-				}
-			case "DONE":
-				ime.sendGoAction(conn);
-				break;
-
-			case "KEY":
-				if (args.length > 1) {
-					try {
-						args = args[1].split("\\s+");
-
-						int code = Integer.parseInt(args[0].trim());
-
-						if (args.length > 1) {
-							int value = Integer.parseInt(args[1].trim());
-							ime.sendKeyEvent(code, value);
-						} else {
-							ime.sendKeyDownUp(code);
-						}
-					} catch (NumberFormatException e) {
-						e.printStackTrace();
-					}
-				}
-				break;
-
-			case "ACTION":
-				if (args.length > 0) {
-					try {
-						int action = Integer.parseInt(args[1].trim());
-						conn.performEditorAction(action);
-					} catch (NumberFormatException e) {
-						e.printStackTrace();
-					}
-				}
-				break;
-
-			case "MENU_ACTION":
-				if (args.length > 0) {
-					try {
-						int action = Integer.parseInt(args[1].trim());
-						conn.performContextMenuAction(action);
-					} catch (NumberFormatException e) {
-						e.printStackTrace();
-					}
-				}
-				break;
-
-			case "COPY":
-				conn.performContextMenuAction(android.R.id.copy);
-				break;
-
-			case "PASTE":
-				conn.performContextMenuAction(android.R.id.paste);
-				break;
-
-			case "SELECT_ALL":
-				conn.performContextMenuAction(android.R.id.selectAll);
-				break;
+			} else {
+				processCommand(ime, accessibility, args);
 			}
 		}
 	}

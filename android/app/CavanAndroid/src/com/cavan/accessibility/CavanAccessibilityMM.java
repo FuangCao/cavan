@@ -180,6 +180,73 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			return nodes;
 		}
 
+		public AccessibilityNodeInfo findInputNode(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
+			CavanAndroid.pLog("node = " + node);
+			if (node != null) {
+				if (CavanAccessibilityHelper.isEditText(node)) {
+					return node;
+				}
+
+				node.recycle();
+			}
+
+			node = CavanAccessibilityHelper.getChildRecursive(root, 0, 0, 0, -1, 0, 1, 0);
+			CavanAndroid.pLog("node = " + node);
+			if (node != null) {
+				if (CavanAccessibilityHelper.isEditText(node)) {
+					return node;
+				}
+
+				node.recycle();
+			}
+
+			return null;
+		}
+
+		public boolean doCommitMessage(AccessibilityNodeInfo root) {
+			List<AccessibilityNodeInfo> nodes = CavanAccessibilityHelper.findNodesByText(root, "发送");
+			if (nodes == null) {
+				return false;
+			}
+
+			try {
+				for (AccessibilityNodeInfo node : nodes) {
+					if (CavanAccessibilityHelper.isButton(node)) {
+						return CavanAccessibilityHelper.performClick(node);
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				CavanAccessibilityHelper.recycleNodes(nodes);
+			}
+
+			return false;
+		}
+
+		@Override
+		protected boolean doSendText(AccessibilityNodeInfo root, String message, boolean commit) {
+			if (message != null) {
+				AccessibilityNodeInfo node = findInputNode(root);
+				if (node == null) {
+					return false;
+				}
+
+				try {
+					if (CavanAccessibilityHelper.setNodeText(mService, node, message) == null) {
+						return false;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				} finally {
+					node.recycle();
+				}
+			}
+
+			return doCommitMessage(root);
+		}
+
 		@Override
 		public synchronized void onPackageUpdated() {
 			mMessageListViewId = null;

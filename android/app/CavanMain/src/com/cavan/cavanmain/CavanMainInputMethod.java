@@ -119,7 +119,7 @@ public class CavanMainInputMethod extends CavanInputMethodService implements OnK
 
 			case MSG_SEND_TEXT:
 				CavanAccessibilityService accessibility = CavanAccessibilityService.instance;
-				if (accessibility != null && accessibility.sendText(null)) {
+				if (accessibility != null && accessibility.sendText(null, true)) {
 					if (mAutoSendText != null) {
 						int delay = CavanMessageActivity.getRepeatDelay(CavanMainInputMethod.this);
 						sendEmptyMessageDelayed(MSG_AUTO_SEND, delay);

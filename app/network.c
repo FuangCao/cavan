@@ -31,16 +31,22 @@ static void *app_network_receive_thread(void *data)
 	struct network_client *client = data;
 
 	while (1) {
-		int length;
 		char buff[1024];
+		int rdlen, wrlen;
 
-		length = client->recv(client, buff, sizeof(buff));
-		if (length <= 0) {
+		rdlen = client->recv(client, buff, sizeof(buff));
+		if (rdlen <= 0) {
+			pr_red_info("recv: %d", rdlen);
 			break;
 		}
 
-		buff[length] = 0;
-		println("receive[%d]: %s", length, buff);
+		wrlen = write(stdout_fd, buff, rdlen);
+		if (wrlen < rdlen) {
+			pr_red_info("write: %d", wrlen);
+			break;
+		}
+
+		fsync(stdout_fd);
 	}
 
 	network_client_close_socket(client);
@@ -51,9 +57,10 @@ static void *app_network_receive_thread(void *data)
 static int app_network_cmdline(struct network_client *client)
 {
 	int ret;
-	int length;
-	char buff[1024];
+	int index = 0;
 	pthread_t thread;
+	cavan_string_t *backup;
+	cavan_string_t texts[2];
 
 	ret = cavan_pthread_create(&thread, app_network_receive_thread, client, true);
 	if (ret < 0) {
@@ -61,21 +68,36 @@ static int app_network_cmdline(struct network_client *client)
 		return ret;
 	}
 
+	backup = NULL;
+	cavan_string_init(texts, NULL, 1024);
+	cavan_string_init(texts + 1, NULL, 1024);
+
 	while (1) {
+		cavan_string_t *text = texts + index;
+		int wrlen;
+
 		print_ntext("> ", 2);
 
-		if (fgets(buff, sizeof(buff), stdin) == NULL) {
+		if (fgets(text->text, text->allocated, stdin) == NULL) {
 			pr_err_info("fgets");
 			break;
 		}
 
-		length = strlen(buff);
-		buff[length] = 0;
+		text->length = strlen(text->text);
+		if (text->length > 1) {
+			backup = text;
+			backup->length--;
+			index = (index + 1) & 1;
+		} else if (backup) {
+			text = backup;
+		} else {
+			continue;
+		}
 
-		println("send[%d]: %s", length, buff);
+		println("send[%d]: %s", text->length, text->text);
 
-		length = client->send(client, buff, length);
-		if (length <= 0) {
+		wrlen = client->send(client, text->text, text->length);
+		if (wrlen < text->length) {
 			break;
 		}
 	}

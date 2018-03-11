@@ -165,7 +165,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 
 			case "口令红包":
 			case "文字口令":
-				if (!sendText(root, message)) {
+				if (!sendText(root, message, true)) {
 					return false;
 				}
 				break;
@@ -279,6 +279,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 							if (mRetryTimes == 0 || CavanAccessibilityHelper.getNodeCountByViewIds(parent, "com.tencent.mobileqq:id/unreadmsg") > 0) {
 								setUnlockDelay(POLL_DELAY);
 								CavanAccessibilityHelper.performClickAndRecycle(parent);
+								resetTimes();
 								break;
 							}
 						}
@@ -379,8 +380,8 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		protected boolean doSendMessage(AccessibilityNodeInfo root, String message) {
-			return sendText(root, message);
+		protected boolean doSendText(AccessibilityNodeInfo root, String message, boolean commit) {
+			return sendText(root, message, commit);
 		}
 	}
 
@@ -412,7 +413,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		return null;
 	}
 
-	public boolean sendText(AccessibilityNodeInfo root, String message) {
+	public boolean sendText(AccessibilityNodeInfo root, String message, boolean commit) {
 		AccessibilityNodeInfo inputBar = CavanAccessibilityHelper.findNodeByViewId(root, "com.tencent.mobileqq:id/inputBar");
 		if (inputBar == null) {
 			return false;
@@ -430,7 +431,10 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 				return false;
 			}
 
-			CavanAccessibilityHelper.performChildClick(inputBar, 1);
+			if (commit) {
+				return CavanAccessibilityHelper.performChildClick(inputBar, 1);
+			}
+
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -463,7 +467,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 	}
 
 	@Override
-	public synchronized void onNotificationStateChanged(Notification notification) {
+	public void onNotificationStateChanged(Notification notification) {
 		CavanNotificationQQ packet = new CavanNotificationQQ(notification);
 		if (packet.isRedPacket()) {
 			addPacket(packet);

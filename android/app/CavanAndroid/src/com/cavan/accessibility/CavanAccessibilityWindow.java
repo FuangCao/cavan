@@ -105,7 +105,7 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
-	protected boolean doSendMessage(AccessibilityNodeInfo root, String message) {
+	protected boolean doSendText(AccessibilityNodeInfo root, String message, boolean commit) {
 		return false;
 	}
 

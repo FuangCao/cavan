@@ -275,8 +275,8 @@ double text2frequency(const char *text, const char *text_end, const char **last)
 
 char *time2text_msec(u64 msec, char *buff, size_t size);
 
-void cavan_string_init(cavan_string_t *str, const char *text, int length);
-int cavan_string_reinit(cavan_string_t *str, int size);
+int cavan_string_init(cavan_string_t *str, const char *text, int length);
+int cavan_string_alloc(cavan_string_t *str, int size, bool force);
 bool cavan_string_extand(cavan_string_t *str, int length);
 int cavan_string_append(cavan_string_t *str, const char *text, int size);
 int cavan_string_append_line_unix(cavan_string_t *str, const char *line, int size);

@@ -3013,22 +3013,36 @@ char *time2text_msec(u64 msec, char *buff, size_t size)
 	return buff;
 }
 
-void cavan_string_init(cavan_string_t *str, const char *text, int length)
+int cavan_string_init(cavan_string_t *str, const char *text, int length)
 {
 	if (text == NULL) {
-		str->text = "";
+		if (length > 0) {
+			str->text = malloc(length);
+			if (str->text == NULL) {
+				pr_err_info("malloc");
+				return -ENOMEM;
+			}
+
+			str->text[0] = 0;
+		} else {
+			str->text = "";
+		}
+
 		str->length = 0;
 	} else {
 		str->text = (char *) text;
 		str->length = length;
+		length = 0;
 	}
 
-	str->allocated = 0;
+	str->allocated = length;
+
+	return 0;
 }
 
-int cavan_string_reinit(cavan_string_t *str, int size)
+int cavan_string_alloc(cavan_string_t *str, int size, bool force)
 {
-	if (str->allocated <= size) {
+	if (force || str->allocated <= size) {
 		int total = size + 1;
 
 		if (str->allocated > 0) {

@@ -1954,7 +1954,7 @@ int cavan_http_packet_read_body(struct cavan_http_packet *packet, struct cavan_f
 		cavan_string_t *body = &packet->body;
 		int ret;
 
-		ret = cavan_string_reinit(body, length);
+		ret = cavan_string_alloc(body, length, false);
 		if (ret < 0) {
 			pr_red_info("cavan_string_reinit");
 			return ret;
