@@ -35,10 +35,10 @@ import com.cavan.resource.EditableMultiSelectListPreference;
 
 public class CavanMessageActivity extends PreferenceActivity implements OnPreferenceChangeListener {
 
-	public static final String ACTION_BOOT_COMPLETED = "com.cavan.ACTION_BOOT_COMPLETED";
-	public static final String ACTION_SERVICE_EXIT = "com.cavan.ACTION_SERVICE_EXIT";
-	public static final String ACTION_CODE_RECEIVED = "com.cavan.ACTION_CODE_RECEIVED";
-	public static final String ACTION_ON_TIME_NOTIFY = "com.cavan.ACTION_ON_TIME_NOTIFY";
+	public static final String ACTION_BOOT_COMPLETED = "com.cavan.intent.ACTION_BOOT_COMPLETED";
+	public static final String ACTION_SERVICE_EXIT = "com.cavan.intent.ACTION_SERVICE_EXIT";
+	public static final String ACTION_ON_TIME_NOTIFY = "com.cavan.intent.ACTION_ON_TIME_NOTIFY";
+	public static final String ACTION_ON_TIME_MUTE = "com.cavan.intent.ACTION_ON_TIME_MUTE";
 
 	public static final String KEY_AUTO_UNLOCK = "auto_unlock";
 	public static final String KEY_AUTO_COMMIT = "auto_commit";
@@ -48,6 +48,8 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	public static final String KEY_FLOAT_TIMER = "float_timer";
 	public static final String KEY_ON_TIME_NOTIFY = "on_time_notify";
 	public static final String KEY_ON_TIME_SETTING = "on_time_setting";
+	public static final String KEY_ON_TIME_MUTE = "on_time_mute";
+	public static final String KEY_MUTE_TIME_SETTING = "mute_time_setting";
 	public static final String KEY_LAN_SHARE = "lan_share";
 	public static final String KEY_LAN_TEST = "lan_test";
 	public static final String KEY_WAN_SHARE = "wan_share";
@@ -109,6 +111,14 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 
 	public static boolean isOnTimeNotifyEnabled(Context context) {
 		return CavanAndroid.isPreferenceEnabled(context, KEY_ON_TIME_NOTIFY);
+	}
+
+	public static boolean isOnTimeMuteEnabled(Context context) {
+		return CavanAndroid.isPreferenceEnabled(context, KEY_ON_TIME_MUTE);
+	}
+
+	public static String getOnTimeMuteSetting(Context context) {
+		return CavanAndroid.getPreference(context, KEY_MUTE_TIME_SETTING, "0");
 	}
 
 	public static boolean isOnTimeNotifyEnabledNow(Context context) {
@@ -308,6 +318,8 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	private Preference mPreferenceWanTest;
 	private CheckBoxPreference mPreferenceTcpBridge;
 	private EditTextPreference mPreferenceTcpBridgeSetting;
+	private CheckBoxPreference mPreferenceOnTimeMute;
+	private ListPreference mPreferenceMuteTimeSetting;
 
 	private IFloatMessageService mFloatMessageService;
 	private ServiceConnection mFloatMessageConnection = new ServiceConnection() {
@@ -371,6 +383,13 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 
 		if (service != null) {
 			updateBridgeState(service.getBridgeState());
+		}
+	}
+
+	private void updateListPreferenceSummary(ListPreference preference, String value) {
+		int index = preference.findIndexOfValue(value);
+		if (index >= 0) {
+			preference.setSummary(preference.getEntries()[index]);
 		}
 	}
 
@@ -468,6 +487,12 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 
 		mPreferenceOnTimeNotify = (CheckBoxPreference) findPreference(KEY_ON_TIME_NOTIFY);
 		mPreferenceOnTimeNotify.setOnPreferenceChangeListener(this);
+
+		mPreferenceOnTimeMute = (CheckBoxPreference) findPreference(KEY_ON_TIME_MUTE);
+		mPreferenceOnTimeMute.setOnPreferenceChangeListener(this);
+
+		mPreferenceMuteTimeSetting = findListPreference(KEY_MUTE_TIME_SETTING);
+		mPreferenceMuteTimeSetting.setOnPreferenceChangeListener(this);
 
 		findListPreference(KEY_THANKS_NOTIFY);
 		findListPreference(KEY_AUTO_COMMIT);
@@ -672,12 +697,6 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 					e.printStackTrace();
 				}
 			}
-		} else if (preference instanceof ListPreference) {
-			ListPreference listPreference = (ListPreference) preference;
-			int index = listPreference.findIndexOfValue((String) object);
-			if (index >= 0) {
-				listPreference.setSummary(listPreference.getEntries()[index]);
-			}
 		} else if (preference == mPreferenceAutoUnlock) {
 			if ((boolean) object) {
 				CavanAndroid.setLockScreenEnable(this, true);
@@ -696,6 +715,14 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 			if ((boolean) object) {
 				CavanBroadcastReceiver.setOnTimeNotifyAlarm(this);
 			}
+		} else if (preference == mPreferenceOnTimeMute) {
+			CavanBroadcastReceiver.setOnTimeMuteAlarm(this, (boolean) object, mPreferenceMuteTimeSetting.getValue());
+		} else if (preference == mPreferenceMuteTimeSetting) {
+			String value = (String) object;
+			CavanBroadcastReceiver.setOnTimeMuteAlarm(this, mPreferenceOnTimeMute.isChecked(), value);
+			updateListPreferenceSummary(mPreferenceMuteTimeSetting, value);
+		} else if (preference instanceof ListPreference) {
+			updateListPreferenceSummary((ListPreference) preference, (String) object);
 		}
 
 		return true;

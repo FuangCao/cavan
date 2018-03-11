@@ -811,5 +811,7 @@
 	<string name="auto_check_permission">权限自动检查</string>
 	<string name="role_change_service">内网穿透服务器</string>
 	<string name="role_change_proxy">内网穿透代理</string>
+	<string name="on_time_mute">定时静音</string>
+	<string name="mute_time_setting">静音时间设置</string>
 
 </resources>

@@ -230,6 +230,18 @@
 	    android:defaultValue="false"
 	    android:title="@string/on_time_notify" />
 
+	<CheckBoxPreference android:key="on_time_mute"
+	    android:persistent="true"
+	    android:defaultValue="false"
+	    android:title="@string/on_time_mute" />
+
+	<ListPreference android:key="mute_time_setting"
+	    android:persistent="true"
+	    android:defaultValue="0"
+		android:entries="@array/on_time_entries"
+		android:entryValues="@array/on_time_values"
+	    android:title="@string/mute_time_setting" />
+
 	<CheckBoxPreference android:key="tcp_bridge"
 	    android:persistent="true"
 	    android:title="@string/tcp_bridge" />

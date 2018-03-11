@@ -750,6 +750,10 @@ public class FloatMessageService extends FloatWindowService {
 			CavanBroadcastReceiver.setOnTimeNotifyAlarm(this);
 		}
 
+		if (CavanMessageActivity.isOnTimeMuteEnabled(this)) {
+			CavanBroadcastReceiver.setOnTimeMuteAlarm(this, true);
+		}
+
 		mHandler.sendEmptyMessageDelayed(MSG_CHECK_SERVICE_STATE, 10000);
 
 		instance = this;
