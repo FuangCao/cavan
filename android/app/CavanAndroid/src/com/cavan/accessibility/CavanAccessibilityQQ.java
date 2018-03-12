@@ -140,6 +140,8 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 				if (length > 4) {
 					state = state.substring(2, length - 2);
 				}
+			} else if (state.startsWith("QQ红包")) {
+				state = "QQ红包";
 			} else {
 				return false;
 			}
