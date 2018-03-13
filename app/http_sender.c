@@ -223,9 +223,8 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 			if (time < sender->time) {
 				int delay = sender->time - time;
 
-				println("delay = %d", delay);
-
 				if (delay > 1000) {
+					println("delay = %d", delay);
 					usleep(1000000);
 				} else {
 					usleep(delay * 1000);

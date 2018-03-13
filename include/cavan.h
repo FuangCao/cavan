@@ -153,9 +153,10 @@ static inline void msleep(useconds_t msec)
 {
 	if (msec >= 1000) {
 		sleep(msec / 1000);
+		msec %= 1000;
 	}
 
-	usleep(msec % 1000 * 1000);
+	usleep(msec * 1000);
 }
 
 static inline void ssleep(useconds_t sec)
