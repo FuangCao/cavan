@@ -122,6 +122,21 @@ static inline void cavan_cursor_stop(struct cavan_cursor *cursor)
 	}
 }
 
+static inline u64 cavan_timespec_nseconds(const struct timespec *time)
+{
+	return (u64) time->tv_sec * 1000000000ul + time->tv_nsec;
+}
+
+static inline u64 cavan_timespec_useconds(const struct timespec *time)
+{
+	return (u64) time->tv_sec * 1000000ul + time->tv_nsec / 1000ul;
+}
+
+static inline u64 cavan_timespec_mseconds(const struct timespec *time)
+{
+	return (u64) time->tv_sec * 1000ul + time->tv_nsec / 1000000ul;
+}
+
 static inline int clock_gettime_mono(struct timespec *time)
 {
 	return clock_gettime_safe(CLOCK_MONOTONIC, time);

@@ -170,15 +170,24 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 	struct network_client *client = &sender->client;
 
 	while (1) {
-		u64 time = clock_gettime_real_ms();
-		if (time + HTTP_SENDER_AHEAD < sender->time) {
+		struct timespec ts;
+		struct tm tm;
+		u64 mseconds;
+
+		clock_gettime_real(&ts);
+		localtime_r(&ts.tv_sec, &tm);
+
+		println("mseconds  = %02d:%02d:%02d", tm.tm_hour, tm.tm_min, tm.tm_sec);
+
+		mseconds = cavan_timespec_mseconds(&ts);
+		if (mseconds + HTTP_SENDER_AHEAD < sender->time) {
 			char buff[1024];
 			int delay;
 
-			delay = sender->time - time;
+			delay = sender->time - mseconds;
 			time2text_msec(delay, buff, sizeof(buff));
 			println("delay = %s", buff);
-			msleep(1000);
+			msleep(1000 - (mseconds % 1000));
 		} else {
 			break;
 		}
@@ -225,9 +234,9 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 
 				if (delay > 1000) {
 					println("delay = %d", delay);
-					usleep(1000000);
+					msleep(1000);
 				} else {
-					usleep(delay * 1000);
+					msleep(delay);
 					break;
 				}
 			} else {

@@ -149,19 +149,19 @@ __BEGIN_DECLS
 
 extern int main(int argc, char *argv[]);
 
-static inline void msleep(useconds_t msec)
+static inline int msleep(unsigned long mseconds)
 {
-	if (msec >= 1000) {
-		sleep(msec / 1000);
-		msec %= 1000;
-	}
+	struct timespec ts = {
+		.tv_sec = (long int) (mseconds / 1000),
+		.tv_nsec = (long int) ((mseconds % 1000) * 1000000ul),
+	};
 
-	usleep(msec * 1000);
+	return nanosleep(&ts, NULL);
 }
 
-static inline void ssleep(useconds_t sec)
+static inline unsigned int ssleep(unsigned int seconds)
 {
-	sleep(sec);
+	return sleep(seconds);
 }
 
 __END_DECLS

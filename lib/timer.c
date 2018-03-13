@@ -28,7 +28,7 @@ u64 clock_gettime_ns(clockid_t clk)
 		return ret;
 	}
 
-	return (u64) time.tv_sec * 1000000000UL + time.tv_nsec;
+	return cavan_timespec_nseconds(&time);
 }
 
 u64 clock_gettime_us(clockid_t clk)
@@ -42,7 +42,7 @@ u64 clock_gettime_us(clockid_t clk)
 		return ret;
 	}
 
-	return (u64) time.tv_sec * 1000000UL + time.tv_nsec / 1000;
+	return cavan_timespec_useconds(&time);
 }
 
 u64 clock_gettime_ms(clockid_t clk)
@@ -56,7 +56,7 @@ u64 clock_gettime_ms(clockid_t clk)
 		return ret;
 	}
 
-	return (u64) time.tv_sec * 1000 + time.tv_nsec / (1000000UL);
+	return cavan_timespec_mseconds(&time);
 }
 
 int cavan_timespec_cmp(const struct timespec *t1, const struct timespec *t2)
