@@ -494,6 +494,11 @@ namespace NetworkInputMethod
             mService.stop(true);
             Dispose(true);
         }
+
+        private void buttonRecents_Click(object sender, EventArgs e)
+        {
+            sendCommand("RECENTS", false);
+        }
     }
 
     public class NetworkImeClient : CavanTcpPacketClient

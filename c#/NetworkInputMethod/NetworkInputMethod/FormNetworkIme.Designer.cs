@@ -61,15 +61,15 @@
             this.buttonIme = new System.Windows.Forms.Button();
             this.buttonMm = new System.Windows.Forms.Button();
             this.timerKeepAlive = new System.Windows.Forms.Timer(this.components);
-            this.buttonMute = new System.Windows.Forms.Button();
             this.buttonRequest = new System.Windows.Forms.Button();
             this.buttonHidden = new System.Windows.Forms.Button();
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.toolStripMenuItemExit = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItemRequest = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemOpen = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemSelect = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemRequest = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemExit = new System.Windows.Forms.ToolStripMenuItem();
+            this.buttonRecents = new System.Windows.Forms.Button();
             this.groupBoxMode.SuspendLayout();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
@@ -288,7 +288,7 @@
             // 
             // buttonComplete
             // 
-            this.buttonComplete.Location = new System.Drawing.Point(174, 361);
+            this.buttonComplete.Location = new System.Drawing.Point(255, 361);
             this.buttonComplete.Name = "buttonComplete";
             this.buttonComplete.Size = new System.Drawing.Size(75, 23);
             this.buttonComplete.TabIndex = 30;
@@ -298,7 +298,7 @@
             // 
             // buttonOpen
             // 
-            this.buttonOpen.Location = new System.Drawing.Point(255, 330);
+            this.buttonOpen.Location = new System.Drawing.Point(93, 332);
             this.buttonOpen.Name = "buttonOpen";
             this.buttonOpen.Size = new System.Drawing.Size(75, 23);
             this.buttonOpen.TabIndex = 31;
@@ -308,7 +308,7 @@
             // 
             // buttonSelect
             // 
-            this.buttonSelect.Location = new System.Drawing.Point(255, 361);
+            this.buttonSelect.Location = new System.Drawing.Point(255, 332);
             this.buttonSelect.Name = "buttonSelect";
             this.buttonSelect.Size = new System.Drawing.Size(75, 23);
             this.buttonSelect.TabIndex = 32;
@@ -328,7 +328,7 @@
             // 
             // buttonVolumeDown
             // 
-            this.buttonVolumeDown.Location = new System.Drawing.Point(12, 330);
+            this.buttonVolumeDown.Location = new System.Drawing.Point(93, 361);
             this.buttonVolumeDown.Name = "buttonVolumeDown";
             this.buttonVolumeDown.Size = new System.Drawing.Size(75, 23);
             this.buttonVolumeDown.TabIndex = 34;
@@ -338,7 +338,7 @@
             // 
             // buttonVolumeUp
             // 
-            this.buttonVolumeUp.Location = new System.Drawing.Point(174, 330);
+            this.buttonVolumeUp.Location = new System.Drawing.Point(174, 361);
             this.buttonVolumeUp.Name = "buttonVolumeUp";
             this.buttonVolumeUp.Size = new System.Drawing.Size(75, 23);
             this.buttonVolumeUp.TabIndex = 35;
@@ -382,19 +382,9 @@
             this.timerKeepAlive.Interval = 60000;
             this.timerKeepAlive.Tick += new System.EventHandler(this.timerKeepAlive_Tick);
             // 
-            // buttonMute
-            // 
-            this.buttonMute.Location = new System.Drawing.Point(93, 330);
-            this.buttonMute.Name = "buttonMute";
-            this.buttonMute.Size = new System.Drawing.Size(75, 23);
-            this.buttonMute.TabIndex = 36;
-            this.buttonMute.Text = "静音";
-            this.buttonMute.UseVisualStyleBackColor = true;
-            this.buttonMute.Click += new System.EventHandler(this.buttonMute_Click);
-            // 
             // buttonRequest
             // 
-            this.buttonRequest.Location = new System.Drawing.Point(93, 361);
+            this.buttonRequest.Location = new System.Drawing.Point(174, 332);
             this.buttonRequest.Name = "buttonRequest";
             this.buttonRequest.Size = new System.Drawing.Size(75, 23);
             this.buttonRequest.TabIndex = 40;
@@ -427,35 +417,45 @@
             this.toolStripMenuItemRequest,
             this.toolStripMenuItemExit});
             this.contextMenuStrip.Name = "contextMenuStrip";
-            this.contextMenuStrip.Size = new System.Drawing.Size(153, 114);
-            // 
-            // toolStripMenuItemExit
-            // 
-            this.toolStripMenuItemExit.Name = "toolStripMenuItemExit";
-            this.toolStripMenuItemExit.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItemExit.Text = "退出";
-            this.toolStripMenuItemExit.Click += new System.EventHandler(this.toolStripMenuItemExit_Click);
-            // 
-            // toolStripMenuItemRequest
-            // 
-            this.toolStripMenuItemRequest.Name = "toolStripMenuItemRequest";
-            this.toolStripMenuItemRequest.Size = new System.Drawing.Size(152, 22);
-            this.toolStripMenuItemRequest.Text = "请求";
-            this.toolStripMenuItemRequest.Click += new System.EventHandler(this.buttonRequest_Click);
+            this.contextMenuStrip.Size = new System.Drawing.Size(101, 92);
             // 
             // toolStripMenuItemOpen
             // 
             this.toolStripMenuItemOpen.Name = "toolStripMenuItemOpen";
-            this.toolStripMenuItemOpen.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemOpen.Size = new System.Drawing.Size(100, 22);
             this.toolStripMenuItemOpen.Text = "打开";
             this.toolStripMenuItemOpen.Click += new System.EventHandler(this.buttonOpen_Click);
             // 
             // toolStripMenuItemSelect
             // 
             this.toolStripMenuItemSelect.Name = "toolStripMenuItemSelect";
-            this.toolStripMenuItemSelect.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemSelect.Size = new System.Drawing.Size(100, 22);
             this.toolStripMenuItemSelect.Text = "选择";
             this.toolStripMenuItemSelect.Click += new System.EventHandler(this.buttonSelect_Click);
+            // 
+            // toolStripMenuItemRequest
+            // 
+            this.toolStripMenuItemRequest.Name = "toolStripMenuItemRequest";
+            this.toolStripMenuItemRequest.Size = new System.Drawing.Size(100, 22);
+            this.toolStripMenuItemRequest.Text = "请求";
+            this.toolStripMenuItemRequest.Click += new System.EventHandler(this.buttonRequest_Click);
+            // 
+            // toolStripMenuItemExit
+            // 
+            this.toolStripMenuItemExit.Name = "toolStripMenuItemExit";
+            this.toolStripMenuItemExit.Size = new System.Drawing.Size(100, 22);
+            this.toolStripMenuItemExit.Text = "退出";
+            this.toolStripMenuItemExit.Click += new System.EventHandler(this.toolStripMenuItemExit_Click);
+            // 
+            // buttonRecents
+            // 
+            this.buttonRecents.Location = new System.Drawing.Point(12, 332);
+            this.buttonRecents.Name = "buttonRecents";
+            this.buttonRecents.Size = new System.Drawing.Size(75, 23);
+            this.buttonRecents.TabIndex = 42;
+            this.buttonRecents.Text = "任务";
+            this.buttonRecents.UseVisualStyleBackColor = true;
+            this.buttonRecents.Click += new System.EventHandler(this.buttonRecents_Click);
             // 
             // FormNetworkIme
             // 
@@ -463,12 +463,12 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(423, 456);
+            this.Controls.Add(this.buttonRecents);
             this.Controls.Add(this.buttonHidden);
             this.Controls.Add(this.buttonRequest);
             this.Controls.Add(this.buttonMm);
             this.Controls.Add(this.buttonIme);
             this.Controls.Add(this.buttonHome);
-            this.Controls.Add(this.buttonMute);
             this.Controls.Add(this.buttonVolumeUp);
             this.Controls.Add(this.buttonVolumeDown);
             this.Controls.Add(this.buttonBack);
@@ -540,7 +540,6 @@
         private System.Windows.Forms.Button buttonIme;
         private System.Windows.Forms.Button buttonMm;
         private System.Windows.Forms.Timer timerKeepAlive;
-        private System.Windows.Forms.Button buttonMute;
         private System.Windows.Forms.Button buttonRequest;
         private System.Windows.Forms.Button buttonHidden;
         private System.Windows.Forms.NotifyIcon notifyIcon;
@@ -549,6 +548,7 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemRequest;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemOpen;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSelect;
+        private System.Windows.Forms.Button buttonRecents;
     }
 }
 
