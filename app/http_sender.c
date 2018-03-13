@@ -177,7 +177,7 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 		clock_gettime_real(&ts);
 		localtime_r(&ts.tv_sec, &tm);
 
-		println("mseconds  = %02d:%02d:%02d", tm.tm_hour, tm.tm_min, tm.tm_sec);
+		println("time  = %02d:%02d:%02d", tm.tm_hour, tm.tm_min, tm.tm_sec);
 
 		mseconds = cavan_timespec_mseconds(&ts);
 		if (mseconds + HTTP_SENDER_AHEAD < sender->time) {
