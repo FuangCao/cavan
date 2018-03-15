@@ -432,3 +432,40 @@ function cavan-remove-fuse-hidden()
 		mv -v "${fn}" "${fuse_hidden}"
 	done
 }
+
+function cavan-fixup-download()
+{
+	local fn nfn
+
+	[ "$1" ] || return 1
+
+	for fn in $1\([0-9]\).*
+	do
+		[ -f "$fn" ] || continue
+
+		if [ -z "$nfn" ]
+		then
+			nfn=$fn
+		elif [ "$fn" -nt "$nfn" ]
+		then
+			rm -fv "$nfn"
+			nfn=$fn
+		else
+			rm -fv "$fn"
+		fi
+	done
+
+	if [ "$2" ]
+	then
+		fn=$2
+	else
+		fn=$(echo "$nfn" | sed 's/\(.*\)([0-9]\+)\(\.\w\+\)$/\1\2/g')
+	fi
+
+	if [ "$fn" -nt "$nfn" ]
+	then
+		rm -fv "$nfn"
+	else
+		mv -v "$nfn" "$fn"
+	fi
+}
