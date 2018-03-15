@@ -500,3 +500,15 @@ function cavan-tc3587xx-inotify()
 
 	cavan-inotify ${src_file} -c "cavan-tc3587xx-converter ${src_file} ${dest_file}"
 }
+
+function cavan-gen-vimrc()
+{
+	cat << EOF
+let CAVAN_VIMRC = \$CAVAN_HOME . '/script/vim/vimrc.vim'
+let Tlist_Ctags_Cmd = '/usr/bin/ctags'
+
+if filereadable(CAVAN_VIMRC)
+  execute 'source ' . CAVAN_VIMRC
+endif
+EOF
+}
