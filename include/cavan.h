@@ -149,21 +149,6 @@ __BEGIN_DECLS
 
 extern int main(int argc, char *argv[]);
 
-static inline int msleep(unsigned long mseconds)
-{
-	struct timespec ts = {
-		.tv_sec = (long int) (mseconds / 1000),
-		.tv_nsec = (long int) ((mseconds % 1000) * 1000000ul),
-	};
-
-	return nanosleep(&ts, NULL);
-}
-
-static inline unsigned int ssleep(unsigned int seconds)
-{
-	return sleep(seconds);
-}
-
 __END_DECLS
 
 #include <cavan/debug.h>

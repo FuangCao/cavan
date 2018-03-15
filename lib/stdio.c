@@ -889,3 +889,13 @@ int cavan_stdout_write_line(const char *line, int length)
 
 	return ret;
 }
+
+int msleep(ulong mseconds)
+{
+	struct timespec ts = {
+		.tv_sec = (slong) (mseconds / 1000),
+		.tv_nsec = (slong) ((mseconds % 1000) * 1000000ul),
+	};
+
+	return nanosleep(&ts, NULL);
+}
