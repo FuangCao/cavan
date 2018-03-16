@@ -1,6 +1,7 @@
 package com.cavan.cavanmain;
 
 import android.content.Context;
+import android.view.accessibility.AccessibilityEvent;
 
 import com.cavan.accessibility.CavanAccessibilityAlipay;
 import com.cavan.accessibility.CavanAccessibilityService;
@@ -25,6 +26,11 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 		addPackage(new CavanMainAccessibilityMM(this));
 		addPackage(new CavanMainAccessibilityQQ(this));
 		addPackage(new CavanAccessibilityAlipay(this));
+	}
+
+	@Override
+	public int getEventTypes() {
+		return AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED | AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED;
 	}
 
 	@Override

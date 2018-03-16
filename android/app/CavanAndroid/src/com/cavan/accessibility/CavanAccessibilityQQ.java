@@ -77,13 +77,12 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 
 		public boolean showRedPacketDetail(AccessibilityNodeInfo root) {
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "查看领取详情");
-			if (node == null) {
-				return false;
+			if (node != null) {
+				setUnlockDelay(LOCK_DELAY);
+				return CavanAccessibilityHelper.performClickAndRecycle(node);
 			}
 
-			setUnlockDelay(LOCK_DELAY);
-
-			return CavanAccessibilityHelper.performClickAndRecycle(node);
+			return tryCloseDialog(root);
 		}
 
 		@Override
@@ -98,7 +97,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 
 	public class SplashActivity extends BackableWindow {
 
-		private boolean mMainActivity;
+		private boolean mHomePage;
 
 		public SplashActivity(String name) {
 			super(name);
@@ -334,7 +333,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
 			AccessibilityNodeInfo backNode = findBackNode(root);
 			if (backNode != null) {
-				mMainActivity = false;
+				mHomePage = false;
 
 				try {
 					return doFindAndUnpack(root, backNode);
@@ -349,7 +348,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 
 			AccessibilityNodeInfo listNode = CavanAccessibilityHelper.findNodeByViewId(root, "com.tencent.mobileqq:id/recent_chat_list");
 			if (listNode != null) {
-				mMainActivity = true;
+				mHomePage = true;
 
 				if (packet.isCompleted()) {
 					return true;
@@ -366,7 +365,11 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 				return false;
 			}
 
-			mMainActivity = false;
+			mHomePage = false;
+
+			if (tryCloseDialog(root)) {
+				return true;
+			}
 
 			if (times < 5) {
 				return true;
@@ -377,8 +380,8 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public boolean isMainActivity() {
-			return mMainActivity;
+		public boolean isHomePage() {
+			return mHomePage;
 		}
 
 		@Override

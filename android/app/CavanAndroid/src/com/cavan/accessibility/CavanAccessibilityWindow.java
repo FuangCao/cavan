@@ -127,7 +127,7 @@ public class CavanAccessibilityWindow {
 		return (times < CavanAccessibilityPackage.FAIL_TIMES);
 	}
 
-	public boolean isMainActivity() {
+	public boolean isHomePage() {
 		return false;
 	}
 

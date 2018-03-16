@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import android.app.Notification;
+import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Parcelable;
 import android.view.accessibility.AccessibilityEvent;
@@ -21,12 +22,16 @@ public class CavanAccessibilityPackage {
 	public static int POLL_TIMES = 10;
 	public static int FAIL_TIMES = 10;
 
+	public static final int PENDING_PACKET = 1 << 0;
+	public static final int PENDING_HOME = 1 << 1;
+	public static final int PENDING_ALL = PENDING_PACKET | PENDING_HOME;
+
 	protected HashMap<String, CavanAccessibilityWindow> mWindows = new HashMap<String, CavanAccessibilityWindow>();
 	protected CavanAccessibilityService mService;
 	protected CavanAccessibilityWindow mWindow;
 	protected CavanRedPacket mCurrentPacket;
 	protected boolean mForceUnpack = true;
-	protected boolean mPending;
+	protected int mPending;
 	protected long mUpdateTime;
 	protected long mUnlockTime;
 	protected int mPollTimes;
@@ -145,20 +150,32 @@ public class CavanAccessibilityPackage {
 	}
 
 	public synchronized boolean isPending() {
-		return mPending;
+		return (mPending != 0);
 	}
 
-	public synchronized void setPending(boolean pending) {
-		CavanAndroid.dLog("setPending: " + pending);
-
-		if (pending) {
+	public synchronized void setPending(boolean enabled, int mask) {
+		if (enabled) {
+			mPending |= mask;
 			mForceUnpack = true;
-			mPending = true;
 			resetTimes();
 			startPoll();
 		} else {
-			mPending = false;
+			mPending &= ~mask;
 		}
+	}
+
+	public synchronized void setPending(boolean enabled) {
+		CavanAndroid.dLog("setPending: " + enabled);
+		setPending(enabled, PENDING_PACKET);
+	}
+
+	public synchronized void setGotoHome(boolean enabled) {
+		CavanAndroid.dLog("setGotoHome: " + enabled);
+		setPending(enabled, PENDING_HOME);
+	}
+
+	public synchronized void setComplete() {
+		mPending = 0;
 	}
 
 	public synchronized CavanRedPacket getCurrentPacket() {
@@ -282,6 +299,33 @@ public class CavanAccessibilityPackage {
 		return mService.getRootInActiveWindow(10);
 	}
 
+	public boolean isDialog(AccessibilityNodeInfo root) {
+		Rect bounds = new Rect();
+		root.getBoundsInScreen(bounds);
+		return bounds.left > 0 || bounds.top > 0;
+	}
+
+	public boolean tryCloseDialog(AccessibilityNodeInfo root) {
+		if (isDialog(root)) {
+			AccessibilityNodeInfo child = CavanAccessibilityHelper.getChild(root, -1);
+			if (child != null) {
+				try {
+					if (CavanAccessibilityHelper.isButton(child)) {
+						return CavanAccessibilityHelper.performClick(child);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				} finally {
+					child.recycle();
+				}
+			}
+
+			return mService.performActionBack();
+		}
+
+		return false;
+	}
+
 	public synchronized void performPackageUpdated() {
 		for (CavanAccessibilityWindow win : mWindows.values()) {
 			win.onPackageUpdated();
@@ -403,8 +447,8 @@ public class CavanAccessibilityPackage {
 								return packet.getUnpackDelay(POLL_DELAY);
 							}
 
-							if (win.isMainActivity()) {
-								mService.removePacket(packet);
+							if (win.isHomePage()) {
+								onHomePage(packet);
 								return -1;
 							}
 
@@ -417,8 +461,8 @@ public class CavanAccessibilityPackage {
 							setUnlockDelay(LOCK_DELAY);
 						}
 
-						if (win.isMainActivity()) {
-							mService.removePacket(packet);
+						if (win.isHomePage()) {
+							onHomePage(packet);
 							return -1;
 						}
 					}
@@ -468,6 +512,10 @@ public class CavanAccessibilityPackage {
 
 	protected void onPacketCreated(CavanRedPacket packet) {
 		addPacket(packet);
+	}
+
+	protected void onHomePage(CavanRedPacket packet) {
+		mService.removePacket(packet);
 	}
 
 	protected void onEnter() {}

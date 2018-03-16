@@ -207,7 +207,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public boolean isMainActivity() {
+		public boolean isHomePage() {
 			return true;
 		}
 	}

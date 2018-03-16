@@ -160,6 +160,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 						packet.setGotoIdle(true);
 						pkg = packet.getPackage();
 						pkg.setPending(true);
+						pkg.setGotoHome(true);
 						pkg.setCurrentPacket(packet);
 					}
 
@@ -182,7 +183,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 					}
 
 					pkg.setCurrentPacket(null);
-					pkg.setPending(false);
+					pkg.setComplete();
 					pkg.onPollStopped();
 					idle = packet.getGotoIdle();
 				}

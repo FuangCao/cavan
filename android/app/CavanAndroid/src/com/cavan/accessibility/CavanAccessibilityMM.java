@@ -21,7 +21,6 @@ import com.cavan.java.CavanString;
 public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 	private HashSet<Integer> mFinishNodes = new HashSet<Integer>();
-	private boolean mUnpackSuccess;
 
 	public static CavanAccessibilityMM instance;
 
@@ -288,13 +287,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public boolean isMainActivity() {
+		public boolean isHomePage() {
 			return true;
-		}
-
-		@Override
-		public void onLeave() {
-			mUnpackSuccess = false;
 		}
 	}
 
@@ -362,6 +356,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			synchronized (mChangedNodes) {
 				for (AccessibilityNodeInfo node : mChangedNodes) {
 					if (isRedPacketLayout(node)) {
+						setGotoHome(true);
 						setPending(true);
 						break;
 					}
@@ -485,7 +480,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				AccessibilityNodeInfo button = findUnpckNode(root);
 				if (button != null) {
 					CavanAccessibilityHelper.performClickAndRecycle(button);
-					mUnpackSuccess = true;
 				} else if (getCurrentPacket() != null) {
 					CavanAccessibilityHelper.performClick(backNode);
 				} else {
@@ -551,14 +545,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			CavanRedPacket packet = getCurrentPacket();
 			CavanAndroid.dLog("packet = " + packet);
 			if (getCurrentPacket() == null) {
-				CavanAndroid.dLog("mUnpackSuccess = " + mUnpackSuccess);
-				setPending(mUnpackSuccess);
+				setPending(false);
 			}
-		}
-
-		@Override
-		public void onLeave() {
-			mUnpackSuccess = false;
 		}
 
 		@Override
