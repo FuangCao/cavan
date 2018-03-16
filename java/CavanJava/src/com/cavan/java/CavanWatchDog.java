@@ -41,12 +41,12 @@ public abstract class CavanWatchDog extends Thread {
 
 				try {
 					wait(mMseconds);
+
+					if (mHungry && mEnabled) {
+						onWatchDogFire();
+					}
 				} catch (InterruptedException e) {
 					e.printStackTrace();
-				}
-
-				if (mHungry && mEnabled) {
-					onWatchDogFire();
 				}
 			}
 
