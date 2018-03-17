@@ -28,16 +28,28 @@
 #define HTTP_SENDER_REPEAT			60
 #define HTTP_SENDER_HOST			"game.weixin.qq.com"
 #define HTTP_SENDER_MAX				20
+#define HTTP_SENDER_CONN_COUNT		8
+#define HTTP_SENDER_QUEUE_SIZE		8
+
+struct cavan_http_sender;
+
+struct cavan_http_client {
+	struct network_client client;
+	struct cavan_http_sender *sender;
+	pthread_cond_t cond_exit;
+	bool running;
+
+	u8 packets[HTTP_SENDER_QUEUE_SIZE];
+	u8 head;
+	u8 tail;
+};
 
 struct cavan_http_sender {
-	struct network_client client;
-	struct network_url url;
+	struct cavan_http_client clients[HTTP_SENDER_CONN_COUNT];
 	pthread_cond_t cond_write;
-	pthread_cond_t cond_read;
-	pthread_cond_t cond_exit;
+	struct network_url url;
 	pthread_mutex_t lock;
-	int write_count;
-	int read_count;
+	int conn_count;
 	bool running;
 	bool verbose;
 	bool daemon;
@@ -45,6 +57,8 @@ struct cavan_http_sender {
 	u32 repeat;
 	u64 time;
 };
+
+static void *cavan_http_sender_receive_thread(void *data);
 
 static inline void cavan_http_sender_lock(struct cavan_http_sender *sender)
 {
@@ -89,14 +103,154 @@ static bool cavan_http_sender_url_init(struct cavan_http_sender *sender, char *h
 	return true;
 }
 
+static void cavan_http_client_init(struct cavan_http_client *client)
+{
+	pthread_cond_init(&client->cond_exit, NULL);
+	client->running = false;
+}
+
+static int cavan_http_client_open(struct cavan_http_client *client, struct cavan_http_sender *sender)
+{
+	int count = 0;
+
+	while (1) {
+		int ret = network_client_open(&client->client, &sender->url, 0);
+		if (ret < 0) {
+			pr_red_info("network_client_open");
+
+			if (++count > 3) {
+				return ret;
+			}
+		} else {
+			break;
+		}
+
+		msleep(100);
+	}
+
+	client->sender = sender;
+	client->head = client->tail = 0;
+
+	if (!client->running) {
+		client->running = true;
+		cavan_pthread_run(cavan_http_sender_receive_thread, client);
+	}
+
+	return 0;
+}
+
+static void cavan_http_client_close(struct cavan_http_client *client)
+{
+	if (client->running) {
+		client->running = false;
+		close(client->client.sockfd);
+		cavan_http_sender_wait(client->sender, &client->cond_exit);
+	}
+
+	network_client_close(&client->client);
+}
+
+static inline bool cavan_http_client_writeable(struct cavan_http_client *client)
+{
+	return client->running && (((client->tail + 1) % HTTP_SENDER_QUEUE_SIZE) != client->head);
+}
+
+static void cavan_http_client_enqueue(struct cavan_http_client *client, u8 value)
+{
+	client->packets[client->tail] = value;
+	client->tail = (client->tail + 1) % HTTP_SENDER_QUEUE_SIZE;
+}
+
+static int cavan_http_client_dequeue(struct cavan_http_client *client)
+{
+	int value;
+
+	if (client->head == client->tail) {
+		return -1;
+	}
+
+	value = client->packets[client->head];
+	client->head = (client->head + 1) % HTTP_SENDER_QUEUE_SIZE;
+
+	if (((client->tail + 2) % HTTP_SENDER_QUEUE_SIZE) == client->head) {
+		cavan_http_sender_post(&client->sender->cond_write);
+	}
+
+	return value;
+}
+
+static void cavan_http_sender_init(struct cavan_http_sender *sender)
+{
+	int i;
+
+	memset(sender, 0x00, sizeof(*sender));
+	pthread_mutex_init(&sender->lock, NULL);
+	pthread_cond_init(&sender->cond_write, NULL);
+
+	for (i = 0; i < HTTP_SENDER_CONN_COUNT; i++) {
+		cavan_http_client_init(sender->clients + i);
+	}
+}
+
+static int cavan_http_sender_open(struct cavan_http_sender *sender, int count)
+{
+	int i;
+
+	if (count > HTTP_SENDER_CONN_COUNT) {
+		count = HTTP_SENDER_CONN_COUNT;
+	}
+
+	for (i = 0; i < count; i++) {
+		struct cavan_http_client *client = sender->clients + i;
+		int ret;
+
+		ret = cavan_http_client_open(client, sender);
+		if (ret < 0) {
+			pr_red_info("cavan_http_client_open");
+			break;
+		}
+	}
+
+	return i;
+}
+
+static void cavan_http_sender_close(struct cavan_http_sender *sender, int count)
+{
+	int i;
+
+	for (i = 0; i < count; i++) {
+		cavan_http_client_close(sender->clients + i);
+	}
+}
+
+static int cavan_http_sender_get_client(struct cavan_http_sender *sender, int index, int count)
+{
+	int i;
+
+	for (i = index; i < count; i++) {
+		if (cavan_http_client_writeable(sender->clients + i)) {
+			return i;
+		}
+	}
+
+	for (i = 0; i < index; i++) {
+		if (cavan_http_client_writeable(sender->clients + i)) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
 static void *cavan_http_sender_receive_thread(void *data)
 {
-	struct cavan_http_sender *sender = data;
+	struct cavan_http_client *client = data;
+	struct cavan_http_sender *sender = client->sender;
 	struct cavan_http_packet *rsp;
 	struct cavan_fifo fifo;
 	int ret;
 
-	ret = cavan_fifo_init(&fifo, 4096, &sender->client);
+	ret = cavan_fifo_init(&fifo, 4096, &client->client);
 	if (ret < 0) {
 		pr_red_info("cavan_fifo_init");
 		goto out_pthread_cond_signal;
@@ -112,23 +266,8 @@ static void *cavan_http_sender_receive_thread(void *data)
 
 	cavan_http_sender_lock(sender);
 
-	while (sender->running) {
-		while (sender->running) {
-			if (sender->read_count > 0) {
-				sender->read_count--;
-				break;
-			}
-
-			if (sender->verbose) {
-				println("wait for read");
-			}
-
-			cavan_http_sender_wait(sender, &sender->cond_read);
-		}
-
-		if (!sender->running) {
-			break;
-		}
+	while (client->running) {
+		int packet;
 
 		cavan_http_sender_unlock(sender);
 		ret = cavan_http_packet_read(rsp, &fifo);
@@ -139,12 +278,12 @@ static void *cavan_http_sender_receive_thread(void *data)
 			break;
 		}
 
-		if (++sender->write_count == 1) {
-			cavan_http_sender_post(&sender->cond_write);
-		}
+		packet = cavan_http_client_dequeue(client);
 
 		if (sender->verbose) {
 			cavan_string_t *body = &rsp->body;
+
+			println("received: packet = %d", packet);
 			cavan_stdout_write_line(body->text, body->length);
 		}
 	}
@@ -156,9 +295,9 @@ out_fifo_deinit:
 	cavan_fifo_deinit(&fifo);
 out_pthread_cond_signal:
 	cavan_http_sender_lock(sender);
-	sender->running = false;
-	sender->write_count = 1;
-	pthread_cond_signal(&sender->cond_exit);
+	client->running = false;
+	sender->conn_count--;
+	cavan_http_sender_post(&client->cond_exit);
 	cavan_http_sender_post(&sender->cond_write);
 	cavan_http_sender_unlock(sender);
 	return NULL;
@@ -167,7 +306,6 @@ out_pthread_cond_signal:
 static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct cavan_http_packet *packets[], int count)
 {
 	u64 overtime = sender->time + sender->repeat * 1000;
-	struct network_client *client = &sender->client;
 
 	while (1) {
 		struct timespec ts;
@@ -194,37 +332,21 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 	}
 
 	while (clock_gettime_real_ms() < overtime) {
+		int packet_index;
+		int conn_index;
+		int conn_count;
 		int ret;
-		int i;
 
 		while (1) {
-			ret = network_client_open(client, &sender->url, 0);
-			if (ret < 0) {
-				pr_red_info("network_client_open");
-				msleep(200);
-			} else {
+			conn_count = cavan_http_sender_open(sender, count);
+			if (conn_count > 0) {
 				break;
 			}
 		}
 
-		println("connect successfull");
+		sender->conn_count = conn_count;
 
-		cavan_http_sender_lock(sender);
-
-		if (count < HTTP_SENDER_MAX) {
-			sender->write_count = HTTP_SENDER_MAX;
-		} else {
-			sender->write_count = count;
-		}
-
-		sender->read_count = 0;
-
-		if (!sender->running) {
-			sender->running = true;
-			cavan_pthread_run(cavan_http_sender_receive_thread, sender);
-		}
-
-		cavan_http_sender_unlock(sender);
+		println("open %d connects successfull", conn_count);
 
 		while (1) {
 			u64 time = clock_gettime_real_ms();
@@ -244,17 +366,19 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 			}
 		}
 
+		conn_index = 0;
+		packet_index = 0;
+
 		cavan_http_sender_lock(sender);
 
-		i = 0;
-
-		while (sender->running && clock_gettime_real_ms() < overtime) {
+		while (sender->conn_count > 0 && clock_gettime_real_ms() < overtime) {
+			struct cavan_http_client *client;
 			cavan_string_t *header;
+			int index;
 
-			while (sender->running) {
-				if (sender->write_count > 0) {
-					sender->write_count--;
-					break;
+			while ((index = cavan_http_sender_get_client(sender, conn_index, conn_count)) < 0) {
+				if (sender->conn_count <= 0) {
+					goto out_cavan_http_sender_close;
 				}
 
 				if (sender->verbose) {
@@ -264,38 +388,33 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 				cavan_http_sender_wait(sender, &sender->cond_write);
 			}
 
-			if (!sender->running) {
-				break;
+			cavan_http_sender_unlock(sender);
+
+			if (sender->verbose) {
+				println("send: conn = %d, packet = %d", index, packet_index);
 			}
 
-			cavan_http_sender_unlock(sender);
-			header = &packets[i]->header;
-			ret = network_client_send(client, header->text, header->length);
+			client = sender->clients + index;
+			conn_index = (index + 1) % conn_count;
+			header = &packets[packet_index]->header;
+
+			ret = network_client_send(&client->client, header->text, header->length);
+
 			cavan_http_sender_lock(sender);
 
 			if (ret < 0) {
 				pr_red_info("network_client_send");
-				break;
+				cavan_http_client_close(client);
+				continue;
 			}
 
-			i = (i + 1) % count;
-
-			if (++sender->read_count == 1) {
-				cavan_http_sender_post(&sender->cond_read);
-			}
+			cavan_http_client_enqueue(client, packet_index);
+			packet_index = (packet_index + 1) % count;
 		}
 
-		if (sender->running) {
-			sender->running = false;
-			close(client->sockfd);
-			sender->read_count = 1;
-			cavan_http_sender_post(&sender->cond_read);
-			cavan_http_sender_wait(sender, &sender->cond_exit);
-		}
-
+out_cavan_http_sender_close:
+		cavan_http_sender_close(sender, conn_count);
 		cavan_http_sender_unlock(sender);
-
-		network_client_close(client);
 	}
 
 	return 0;
@@ -376,14 +495,9 @@ int main(int argc, char *argv[])
 		},
 	};
 
-	memset(&sender, 0x00, sizeof(sender));
+	cavan_http_sender_init(&sender);
+
 	sender.repeat = HTTP_SENDER_REPEAT;
-
-	pthread_cond_init(&sender.cond_write, NULL);
-	pthread_cond_init(&sender.cond_read, NULL);
-	pthread_cond_init(&sender.cond_exit, NULL);
-	pthread_mutex_init(&sender.lock, NULL);
-
 	sender.time = ((clock_gettime_real_ms() + 3600000 - 1) / 3600000) * 3600000;
 
 	while ((c = getopt_long(argc, argv, "vVhHd:D:tr:R:TnN", long_option, &option_index)) != EOF) {
