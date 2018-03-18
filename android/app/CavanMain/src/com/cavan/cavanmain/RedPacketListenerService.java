@@ -25,6 +25,7 @@ import android.preference.PreferenceManager;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 
+import com.cavan.accessibility.CavanAccessibilityService;
 import com.cavan.accessibility.CavanNotification;
 import com.cavan.accessibility.CavanNotificationTimer;
 import com.cavan.accessibility.CavanRedPacketAlipay;
@@ -40,6 +41,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	public static final int NOTIFY_TEST = -1;
 	public static final String EXTRA_CODE = "cavan.code";
 	public static final String EXTRA_MESSAGE = "cavan.message";
+	public static final String EXTRA_PACKAGE = "cavan.package";
 
 	private static final long THANKS_LONG_OVERTIME = 3600000;
 	private static final long THANKS_SHORT_OVERTIME = 300000;
@@ -123,6 +125,14 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 					if (code != null) {
 						RedPacketNotification.removeCode(code);
+					} else {
+						CharSequence pkg = extras.getCharSequence(EXTRA_PACKAGE);
+						if (pkg != null) {
+							CavanAccessibilityService accessibility = CavanMainAccessibilityService.instance;
+							if (accessibility != null) {
+								accessibility.removePackets(pkg);
+							}
+						}
 					}
 
 					if (message != null && mFloatMessageService != null) {
@@ -173,6 +183,14 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		}
 	};
 
+	public CharSequence getClipText() {
+		return mClipText;
+	}
+
+	public void setClipText(CharSequence clipText) {
+		mClipText = clipText;
+	}
+
 	public void addRedPacketCode(String code, String type, boolean report) {
 		CavanAndroid.dLog("code = " + code);
 
@@ -193,14 +211,14 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		}
 	}
 
-	public void addRedPacketContent(String pkgName, String content, String desc, boolean hasPrefix, boolean codeOnly, int priority) {
+	public void addRedPacketContent(String pkgName, String content, String desc) {
 		if (pkgName == null) {
 			pkgName = getPackageName();
 		}
 
-		CavanNotification notification = new CavanNotification(pkgName, desc, content, hasPrefix);
+		CavanNotification notification = new CavanNotification(pkgName, desc, content, false);
 		RedPacketNotification rpn = new RedPacketNotification(RedPacketListenerService.this, notification);
-		rpn.setCodeOnly(codeOnly);
+		rpn.setCodeOnly(true);
 		mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, rpn).sendToTarget();
 	}
 
@@ -248,9 +266,13 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		return 0;
 	}
 
-	public void sendNotification(Notification notification, CharSequence message, String code) {
+	public void sendNotification(Notification notification, String message, String pkg, String code) {
 		if (mNotificationManager != null) {
 			int id = createNotificationId();
+
+			if (pkg != null) {
+				notification.extras.putCharSequence(EXTRA_PACKAGE, pkg);
+			}
 
 			if (code != null) {
 				notification.extras.putCharSequence(EXTRA_CODE, code);
@@ -429,7 +451,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			}
 
 			CharSequence text = clip.getItemAt(0).coerceToText(this);
-			if (text == null || text.equals(mClipText)) {
+			if (text == null /* || text.equals(mClipText) */) {
 				return;
 			}
 

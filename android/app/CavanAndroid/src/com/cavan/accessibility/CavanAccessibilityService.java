@@ -558,6 +558,15 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return mPackets.remove(pkg);
 	}
 
+	public int removePackets(CharSequence pkgName) {
+		CavanAccessibilityPackage pkg = getPackage(pkgName);
+		if (pkg == null) {
+			return -1;
+		}
+
+		return removePackets(pkg);
+	}
+
 	public void initServiceInfo(AccessibilityServiceInfo info) {
 		String[] packages = new String[mPackages.size()];
 		mPackages.keySet().toArray(packages);

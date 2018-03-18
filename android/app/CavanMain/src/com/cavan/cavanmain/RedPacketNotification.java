@@ -197,7 +197,7 @@ public class RedPacketNotification extends CavanNotificationTable {
 		if (notification != null) {
 			packet.setUnpackTime(time);
 			String code = packet.getCode();
-			mService.sendNotification(notification, "支付宝@" + getUserDescription() + ": " + code, code);
+			mService.sendNotification(notification, "支付宝@" + getUserDescription() + ": " + code, null, code);
 		}
 
 		return true;
@@ -220,7 +220,7 @@ public class RedPacketNotification extends CavanNotificationTable {
 		return count;
 	}
 
-	public boolean sendRedPacketNotifyNormal(String content, String message) {
+	public boolean sendRedPacketNotifyNormal(String content, String message, String pkg) {
 		Notification notification = mNotification.getNotification();
 		PendingIntent intent;
 
@@ -231,18 +231,18 @@ public class RedPacketNotification extends CavanNotificationTable {
 		}
 
 		notification = buildNotification(content, intent);
-		mService.sendNotification(notification, message, null);
+		mService.sendNotification(notification, message, pkg, null);
 
 		return true;
 	}
 
 	public boolean sendRedPacketNotifyAlipayPredict(RedPacketFinder finder) {
 		String code = finder.getPredictCode();
-		if (code != null) {
-			return sendRedPacketNotifyNormal(code, code + "@" + getUserDescription());
+		if (code == null) {
+			return false;
 		}
 
-		return false;
+		return sendRedPacketNotifyNormal(code, code + "@" + getUserDescription(), null);
 	}
 
 	public boolean sendKeyword(RedPacketFinder finder) {
@@ -252,7 +252,7 @@ public class RedPacketNotification extends CavanNotificationTable {
 			if (CavanMessageActivity.isKeywordNotifyOnly(mService)) {
 				FloatMessageService.showNotify(message);
 			} else {
-				return sendRedPacketNotifyNormal(keyword, "关键字@" + message);
+				return sendRedPacketNotifyNormal(keyword, "关键字@" + message, null);
 			}
 		}
 
@@ -278,7 +278,7 @@ public class RedPacketNotification extends CavanNotificationTable {
 			return false;
 		}
 
-		return sendRedPacketNotifyNormal(code + "红包", code + "@" + user);
+		return sendRedPacketNotifyNormal(code + "红包", code + "@" + user, mNotification.getPackageName());
 	}
 
 	public boolean sendRedPacketNotifyAuto() {
