@@ -18,7 +18,6 @@ namespace NetworkInputMethod
     {
         private const long START_AHEAD = 15000;
 
-        private StringBuilder mLogBuilder = new StringBuilder();
         private CavanHttpSender mSender;
         private long mCommitTime;
         private bool mSendEnabled;
@@ -89,29 +88,28 @@ namespace NetworkInputMethod
             }
         }
 
+        private void onWriteLog(object sender, EventArgs e)
+        {
+            textBoxLog.AppendText(sender as string);
+            textBoxLog.AppendText("\r\n");
+        }
+
         public void WriteLog(string log)
         {
-            lock (mLogBuilder)
+            if (textBoxLog.InvokeRequired)
             {
-                mLogBuilder.Append(log);
-                mLogBuilder.Append("\r\n");
+                EventHandler handler = new EventHandler(onWriteLog);
+                textBoxLog.Invoke(handler, log);
             }
-
-            EventHandler handler = new EventHandler(onLogUpdated);
-            textBoxLog.Invoke(handler);
+            else
+            {
+                onWriteLog(log, null);
+            }
         }
 
         public bool isDebugEnabled()
         {
             return checkBoxDebug.Checked;
-        }
-
-        private void onLogUpdated(object sender, EventArgs e)
-        {
-            lock (mLogBuilder)
-            {
-                textBoxLog.Text = mLogBuilder.ToString();
-            }
         }
 
         private void startLocked(long delay)
@@ -197,11 +195,7 @@ namespace NetworkInputMethod
 
         private void buttonClear_Click(object sender, EventArgs e)
         {
-            lock (mLogBuilder)
-            {
-                mLogBuilder.Length = 0;
-                textBoxLog.Text = mLogBuilder.ToString();
-            }
+            textBoxLog.Clear();
         }
 
         private string delayToString(long delay)
