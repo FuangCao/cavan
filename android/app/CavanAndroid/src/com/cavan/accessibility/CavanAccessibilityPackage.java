@@ -505,6 +505,15 @@ public class CavanAccessibilityPackage {
 		return win.doSendText(root, message, commit);
 	}
 
+	protected boolean doLogin(AccessibilityNodeInfo root, String username, String password) {
+		CavanAccessibilityWindow win = getWindow();
+		if (win == null) {
+			return false;
+		}
+
+		return win.doLogin(root, username, password);
+	}
+
 	protected void initWindows() {}
 	protected void onPackageUpdated() {}
 	protected void onPacketAdded(CavanRedPacket packet) {}

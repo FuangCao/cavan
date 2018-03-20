@@ -109,6 +109,10 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
+	protected boolean doLogin(AccessibilityNodeInfo root, String username, String password) {
+		return false;
+	}
+
 	protected void onEnter() {}
 	protected void onLeave() {}
 	protected void onPackageUpdated() {}

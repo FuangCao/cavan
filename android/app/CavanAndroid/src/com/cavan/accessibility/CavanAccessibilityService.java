@@ -665,6 +665,20 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return pkg.doSendText(root, message, commit);
 	}
 
+	public boolean login(String username, String password) {
+		AccessibilityNodeInfo root = getRootInActiveWindow(3);
+		if (root == null) {
+			return false;
+		}
+
+		CavanAccessibilityPackage pkg = getPackage(root.getPackageName());
+		if (pkg == null) {
+			return false;
+		}
+
+		return pkg.doLogin(root, username, password);
+	}
+
 	public Class<?> getBroadcastReceiverClass() {
 		return mBroadcastReceiver.getClass();
 	}

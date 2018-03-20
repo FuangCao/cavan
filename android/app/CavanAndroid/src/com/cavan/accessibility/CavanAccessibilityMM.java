@@ -181,7 +181,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		public AccessibilityNodeInfo findInputNode(AccessibilityNodeInfo root) {
 			AccessibilityNodeInfo node = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
-			CavanAndroid.pLog("node = " + node);
 			if (node != null) {
 				if (CavanAccessibilityHelper.isEditText(node)) {
 					return node;
@@ -191,7 +190,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			}
 
 			node = CavanAccessibilityHelper.getChildRecursive(root, 0, 0, 0, -1, 0, 1, 0);
-			CavanAndroid.pLog("node = " + node);
 			if (node != null) {
 				if (CavanAccessibilityHelper.isEditText(node)) {
 					return node;
@@ -542,8 +540,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		public void onEnter() {
-			CavanRedPacket packet = getCurrentPacket();
-			CavanAndroid.dLog("packet = " + packet);
 			if (getCurrentPacket() == null) {
 				setPending(false);
 			}
@@ -592,6 +588,97 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 	}
 
+	public class LoginPasswordWindow extends BaseWindow {
+
+		public LoginPasswordWindow(String name) {
+			super(name);
+		}
+
+		public boolean setInputText(AccessibilityNodeInfo root, String label, String text) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, label);
+			if (node == null) {
+				return false;
+			}
+
+			AccessibilityNodeInfo parent = null;
+			AccessibilityNodeInfo input = null;
+
+			try {
+				parent = node.getParent();
+				if (parent == null) {
+					return false;
+				}
+
+				input = CavanAccessibilityHelper.getChild(parent, 1);
+				if (input == null) {
+					return false;
+				}
+
+				if (CavanAccessibilityHelper.isEditText(input) && CavanAccessibilityHelper.setNodeText(mService, input, text) != null) {
+					return true;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				if (input != null) {
+					input.recycle();
+				}
+
+				if (parent != null) {
+					parent.recycle();
+				}
+
+				node.recycle();
+			}
+
+			return false;
+		}
+
+		public boolean clickLoginButton(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "登录");
+			if (node == null) {
+				return false;
+			}
+
+			try {
+				if (CavanAccessibilityHelper.isButton(node)) {
+					return CavanAccessibilityHelper.performClick(node);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				node.recycle();
+			}
+
+			return false;
+		}
+
+		@Override
+		protected boolean doLogin(AccessibilityNodeInfo root, String username, String password) {
+			if (!setInputText(root, "密码", password)) {
+				return false;
+			}
+
+			return clickLoginButton(root);
+		}
+	}
+
+	public class LoginWindow extends LoginPasswordWindow {
+
+		public LoginWindow(String name) {
+			super(name);
+		}
+
+		@Override
+		protected boolean doLogin(AccessibilityNodeInfo root, String username, String password) {
+			if (!setInputText(root, "帐号", username)) {
+				return false;
+			}
+
+			return super.doLogin(root, username, password);
+		}
+	}
+
 	public CavanAccessibilityMM(CavanAccessibilityService service) {
 		super(service, CavanPackageName.MM);
 	}
@@ -623,6 +710,14 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 	public CavanAccessibilityWindow getLauncherWindow(String name) {
 		return new LauncherWindow(name);
+	}
+
+	public CavanAccessibilityWindow getLoginWindow(String name) {
+		return new LoginWindow(name);
+	}
+
+	public CavanAccessibilityWindow getLoginPasswordWindow(String name) {
+		return new LoginPasswordWindow(name);
 	}
 
 	@Override
@@ -657,6 +752,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(getDetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI"));
 		addWindow(getDetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI"));
 		addWindow(getWebViewWindow("com.tencent.mm.plugin.webview.ui.tools.WebViewUI"));
+		addWindow(getLoginWindow("com.tencent.mm.ui.account.LoginUI"));
+		addWindow(getLoginPasswordWindow("com.tencent.mm.ui.account.LoginPasswordUI"));
 	}
 
 	@Override

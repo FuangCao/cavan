@@ -270,7 +270,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 
 		switch (args[0]) {
 		case "OPEN":
-			if (args.length > 0) {
+			if (args.length > 1) {
 				CavanAndroid.startActivity(getApplicationContext(), args[1]);
 			}
 			break;
@@ -308,6 +308,22 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 		case "RECENTS":
 			if (accessibility != null) {
 				accessibility.performGlobalAction(AccessibilityService.GLOBAL_ACTION_RECENTS);
+			}
+			break;
+
+		case "LOGIN":
+			if (accessibility != null) {
+				if (args.length > 1) {
+					String[] params = args[1].split("\\s+", 2);
+
+					if (params.length > 1) {
+						accessibility.login(params[0], params[1]);
+					} else {
+						accessibility.login(args[1], null);
+					}
+				} else {
+					accessibility.login(null, null);
+				}
 			}
 			break;
 
