@@ -3,32 +3,34 @@ package com.cavan.java;
 public abstract class CavanWatchDog extends Thread {
 
 	private boolean mEnabled;
-	private boolean mHungry;
-	private	int mMseconds;
+	private long mFeedTime;
+	private	int mOvertime;
 
-	public CavanWatchDog(int mseconds) {
-		mMseconds = mseconds;
+	public CavanWatchDog(int overtime) {
+		mOvertime = overtime;
 	}
 
 	public synchronized boolean isEnabled() {
 		return mEnabled;
 	}
 
-	public synchronized void setEnabled(boolean enabled) {
-		mEnabled = enabled;
-		mHungry = false;
+	public synchronized void enable() {
+		mEnabled = true;
+		feed();
 
-		if (enabled) {
-			if (isAlive()) {
-				notify();
-			} else {
-				start();
-			}
+		if (isAlive()) {
+			notify();
+		} else {
+			start();
 		}
 	}
 
+	public synchronized void disable() {
+		mEnabled = false;
+	}
+
 	public synchronized void feed() {
-		mHungry = false;
+		mFeedTime = System.currentTimeMillis();
 	}
 
 	protected abstract void onWatchDogFire();
@@ -36,22 +38,20 @@ public abstract class CavanWatchDog extends Thread {
 	@Override
 	public synchronized void run() {
 		while (true) {
-			while (mEnabled) {
-				mHungry = true;
+			try {
+				if (mEnabled) {
+					long timeNow = System.currentTimeMillis();
+					long time = mFeedTime + mOvertime;
 
-				try {
-					wait(mMseconds);
-
-					if (mHungry && mEnabled) {
+					if (time > timeNow) {
+						wait(time - timeNow);
+					} else if (mEnabled) {
+						mEnabled = false;
 						onWatchDogFire();
 					}
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+				} else {
+					wait();
 				}
-			}
-
-			try {
-				wait();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
