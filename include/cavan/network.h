@@ -235,6 +235,7 @@ typedef enum {
 	NETWORK_PROTOCOL_FILE_RW,
 	NETWORK_PROTOCOL_FILE_RO,
 	NETWORK_PROTOCOL_FILE_WO,
+	NETWORK_PROTOCOL_COUNT,
 } network_protocol_t;
 
 struct network_url {
@@ -611,7 +612,7 @@ static inline ssize_t inet_recv2(int sockfd, void *buff, size_t size)
 static inline ssize_t inet_recv_timeout(int sockfd, void *buff, size_t size, int timeout_ms)
 {
 	if (file_poll_input(sockfd, timeout_ms)) {
-		return inet_recv(sockfd, buff, size);
+		return inet_recv(sockfd, (char *) buff, size);
 	}
 
 	return -ETIMEDOUT;
@@ -620,7 +621,7 @@ static inline ssize_t inet_recv_timeout(int sockfd, void *buff, size_t size, int
 static inline ssize_t inet_recvfrom_timeout(int sockfd, void *buff, size_t size, struct sockaddr_in *addr, socklen_t *addrlen, int timeout_ms)
 {
 	if (file_poll_input(sockfd, timeout_ms)) {
-		return inet_recvfrom(sockfd, buff, size, addr, addrlen);
+		return inet_recvfrom(sockfd, (char *) buff, size, addr, addrlen);
 	}
 
 	return -ETIMEDOUT;
@@ -704,12 +705,12 @@ static inline int network_client_get_remote_addr(struct network_client *client, 
 
 static inline ssize_t network_client_fifo_read(struct cavan_fifo *fifo, void *buff, size_t size)
 {
-	return network_client_recv(fifo->private_data, buff, size);
+	return network_client_recv((struct network_client *) fifo->private_data, buff, size);
 }
 
 static inline ssize_t network_client_fifo_write(struct cavan_fifo *fifo, const void *buff, size_t size)
 {
-	return network_client_send(fifo->private_data, buff, size);
+	return network_client_send((struct network_client *) fifo->private_data, buff, size);
 }
 
 static inline int network_client_get_send_timeout(struct network_client *client, struct timeval *tv)
