@@ -25,4 +25,37 @@
 class TcpClient : public NetworkClient {
 public:
 	virtual ~TcpClient() {}
+
+public:
+	virtual int open(NetworkUrl *url);
+
+	virtual void close(void) {
+		if (mSockfd != INVALID_SOCKET) {
+			closeSocket(mSockfd, true);
+			mSockfd = INVALID_SOCKET;
+		}
+	}
 };
+
+class TcpClientPacked : public TcpClient {
+public:
+	virtual ssize_t send(const void *buff, size_t size) {
+		return sendPacked(buff, size);
+	}
+
+	virtual ssize_t recv(void *buff, size_t size) {
+		return recvPacked(buff, size);
+	}
+};
+
+class TcpClientMasked : public TcpClient {
+public:
+	virtual ssize_t send(const void *buff, size_t size) {
+		return sendMasked(buff, size);
+	}
+
+	virtual ssize_t recv(void *buff, size_t size) {
+		return recvMasked(buff, size);
+	}
+};
+

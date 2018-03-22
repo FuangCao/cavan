@@ -1,9 +1,7 @@
-#pragma once
-
 /*
- * File:		NetworkService.h
+ * File:		NetworkBase.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2018-03-21 10:30:00
+ * Created:		2018-03-22 10:47:36
  *
  * Copyright (c) 2018 Fuang.Cao <cavan.cfa@gmail.com>
  *
@@ -20,21 +18,4 @@
  */
 
 #include <cavan.h>
-#include <cavan++/NetworkClient.h>
-
-class NetworkService : public NetworkBase {
-public:
-	virtual ~NetworkService() {}
-
-public:
-	virtual int accept(struct sockaddr *addr, socklen_t *addrlen) {
-		return ::accept(mSockfd, addr, addrlen);
-	}
-
-	virtual int accept(struct sockaddr_in *addr) {
-		socklen_t addrlen;
-		return accept((struct sockaddr *) addr, &addrlen);
-	}
-
-	virtual NetworkClient *accept(void) = 0;
-};
+#include <cavan++/NetworkBase.h>

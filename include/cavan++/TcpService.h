@@ -20,9 +20,35 @@
  */
 
 #include <cavan.h>
+#include <cavan++/TcpClient.h>
 #include <cavan++/NetworkService.h>
 
 class TcpService : public NetworkService {
 public:
 	virtual ~TcpService() {}
+
+public:
+	virtual int open(NetworkUrl *url);
+	virtual NetworkClient *accept(void);
+
+	virtual TcpClient *newTcpClient(void) {
+		return new TcpClient();
+	}
+
+	virtual void close(void) {
+		if (mSockfd != INVALID_SOCKET) {
+			closeSocket(mSockfd, false);
+			mSockfd = INVALID_SOCKET;
+		}
+	}
+};
+
+class TcpServicePacked : public TcpService {
+public:
+	virtual NetworkClient *accept(void);
+};
+
+class TcpServiceMasked : public TcpService {
+public:
+	virtual NetworkClient *accept(void);
 };

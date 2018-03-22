@@ -19,9 +19,10 @@
 
 #include <cavan.h>
 #include <cavan++/NetworkUrl.h>
+#include <cavan++/NetworkProtocol.h>
 
 const char *NetworkUrl::DEFAULT_PROTOCOL = "tcp";
-const char *NetworkUrl::DEFAULT_HOST = "localhost";
+const char *NetworkUrl::DEFAULT_HOST = "127.0.0.1";
 
 void NetworkUrl::dump(void)
 {
@@ -181,4 +182,102 @@ bool NetworkUrl::parse(const char *url, size_t size)
 
 out_complete:
 	return true;
+}
+
+void NetworkUrl::build(struct sockaddr_in *addr, bool any)
+{
+	addr->sin_family = PF_INET;
+	addr->sin_port = htons(getPort());
+
+	if (any) {
+		addr->sin_addr.s_addr = INADDR_ANY;
+	} else {
+		addr->sin_addr.s_addr = inet_addr(getHost());
+	}
+}
+
+NetworkProtocol *NetworkUrl::getNetworkProtocol(void)
+{
+	if (mProtocol == NULL) {
+		pr_red_info("Need protocol!");
+		return NULL;
+	}
+
+	NetworkProtocol *protocol = NetworkProtocol::instance(mProtocol);
+	if (protocol == NULL) {
+		pr_red_info("Invalid protocol: %s", mProtocol);
+		return NULL;
+	}
+
+	return protocol;
+}
+
+NetworkClient *NetworkUrl::newClient(void)
+{
+	NetworkProtocol *protocol = getNetworkProtocol();
+	if (protocol == NULL) {
+		return NULL;
+	}
+
+	return protocol->newClient();
+}
+
+NetworkClient *NetworkUrl::openClient(void)
+{
+	NetworkClient *client = newClient();
+	if (client != NULL) {
+		if (client->open(this)) {
+			return client;
+		}
+
+		delete client;
+	}
+
+	return NULL;
+}
+
+NetworkClient *NetworkUrl::openClient(const char *url_text)
+{
+	NetworkUrl url;
+
+	if (url.parse(url_text)) {
+		return url.openClient();
+	}
+
+	return NULL;
+}
+
+NetworkService *NetworkUrl::newService(void)
+{
+	NetworkProtocol *protocol = getNetworkProtocol();
+	if (protocol == NULL) {
+		return NULL;
+	}
+
+	return protocol->newService();
+}
+
+NetworkService *NetworkUrl::openService(void)
+{
+	NetworkService *service = newService();
+	if (service != NULL) {
+		if (service->open(this)) {
+			return service;
+		}
+
+		delete service;
+	}
+
+	return NULL;
+}
+
+NetworkService *NetworkUrl::openService(const char *url_text)
+{
+	NetworkUrl url;
+
+	if (url.parse(url_text)) {
+		return url.openService();
+	}
+
+	return NULL;
 }

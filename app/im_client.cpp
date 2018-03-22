@@ -1,9 +1,7 @@
-#pragma once
-
 /*
- * File:		NetworkService.h
+ * File:		im_client.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2018-03-21 10:30:00
+ * Created:		2018-03-22 11:54:16
  *
  * Copyright (c) 2018 Fuang.Cao <cavan.cfa@gmail.com>
  *
@@ -20,21 +18,25 @@
  */
 
 #include <cavan.h>
+#include <cavan++/NetworkUrl.h>
 #include <cavan++/NetworkClient.h>
 
-class NetworkService : public NetworkBase {
-public:
-	virtual ~NetworkService() {}
+int main(int argc, char *argv[])
+{
+	assert(argc > 1);
 
-public:
-	virtual int accept(struct sockaddr *addr, socklen_t *addrlen) {
-		return ::accept(mSockfd, addr, addrlen);
+	NetworkClient *client = NetworkUrl::openClient(argv[1]);
+	if (client == NULL) {
+		pr_red_info("openClient");
+		return -EFAULT;
 	}
 
-	virtual int accept(struct sockaddr_in *addr) {
-		socklen_t addrlen;
-		return accept((struct sockaddr *) addr, &addrlen);
+ 	while (client->send("123456", 6) > 0) {
+		pr_pos_info();
+		msleep(2000);
 	}
 
-	virtual NetworkClient *accept(void) = 0;
-};
+	client->close();
+
+	return 0;
+}

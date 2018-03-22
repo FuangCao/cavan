@@ -21,6 +21,10 @@
 
 #include <cavan.h>
 
+class NetworkProtocol;
+class NetworkService;
+class NetworkClient;
+
 class NetworkUrl {
 public:
 	static const char *DEFAULT_PROTOCOL;
@@ -46,7 +50,11 @@ public:
 	}
 
 	const char *getProtocol(void) {
-		return mProtocol;
+		if (mProtocol != NULL) {
+			return mProtocol;
+		}
+
+		return DEFAULT_PROTOCOL;
 	}
 
 	void setProtocol(const char *protocol) {
@@ -54,7 +62,11 @@ public:
 	}
 
 	const char *getHost(void) {
-		return mHost;
+		if (mHost != NULL) {
+			return mHost;
+		}
+
+		return DEFAULT_HOST;
 	}
 
 	void setHost(const char *host) {
@@ -73,16 +85,29 @@ public:
 		return mPort;
 	}
 
-	void setPort(u16 port) {
-		mPort = port;
+	void setPort(u16 port, bool override = true) {
+		if (override || port == 0) {
+			mPort = port;
+		}
 	}
 
 public:
 	void dump(void);
 	void clear(void);
 	bool parse(const char *url, size_t size);
+	void build(struct sockaddr_in *addr, bool any = false);
+
+	NetworkProtocol *getNetworkProtocol(void);
+	NetworkClient *newClient(void);
+	NetworkService *newService(void);
+	NetworkClient *openClient(void);
+	NetworkService *openService(void);
 
 	bool parse(const char *url) {
 		return parse(url, strlen(url));
 	}
+
+public:
+	static NetworkClient *openClient(const char *url);
+	static NetworkService *openService(const char *url);
 };

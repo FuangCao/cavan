@@ -19,3 +19,34 @@
 
 #include <cavan.h>
 #include <cavan++/TcpClient.h>
+
+int TcpClient::open(NetworkUrl *url)
+{
+	struct sockaddr_in addr;
+	int sockfd;
+	int ret;
+
+	sockfd = openSocketTcp();
+	if (sockfd < 0) {
+		pr_red_info("openSocketTcp: %d", sockfd);
+		return sockfd;
+	}
+
+	url->build(&addr);
+
+	ret = connect(sockfd, (struct sockaddr *) &addr, sizeof(addr));
+	if (ret < 0) {
+		pr_err_info("connect: %d", ret);
+		goto out_close_sockfd;
+	}
+
+	mSockfd = sockfd;
+	setReuseAddr();
+	setReusePort();
+
+	return true;
+
+out_close_sockfd:
+	closeSocket(sockfd);
+	return ret;
+}

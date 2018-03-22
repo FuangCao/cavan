@@ -1,7 +1,7 @@
 /*
- * File:		NetworkProtocol.cpp
+ * File:		im_server.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2018-03-21 11:23:19
+ * Created:		2018-03-22 11:54:10
  *
  * Copyright (c) 2018 Fuang.Cao <cavan.cfa@gmail.com>
  *
@@ -19,35 +19,39 @@
 
 #include <cavan.h>
 #include <cavan++/NetworkProtocol.h>
-#include <cavan++/TcpClient.h>
-#include <cavan++/TcpService.h>
 
-class NetworkProtocolTcp : public NetworkProtocol {
-public:
-	virtual const char *getName(void) {
-		return "tcp";
-	}
-
-	virtual NetworkClient *newClient(void) {
-		return new TcpClient();
-	}
-
-	virtual NetworkService *newService(void) {
-		return new TcpService();
-	}
-} gNetworkProtocolTcp;
-
-NetworkProtocol *NetworkProtocol::instance(const char *protocol)
+int main(int argc, char *argv[])
 {
-	println("protocol = %s", protocol);
+	assert(argc > 1);
 
-	if (protocol == NULL) {
-		return NULL;
+	NetworkService *service = NetworkUrl::openService(argv[1]);
+	if (service == NULL) {
+		return -EFAULT;
 	}
 
-	if (strcmp(protocol, "tcp") == 0) {
-		return &gNetworkProtocolTcp;
+	while (1) {
+		println("accept");
+
+		NetworkClient *client = service->accept();
+		if (client == NULL) {
+			break;
+		}
+
+		println("recv");
+
+		while (1) {
+			char buff[1024];
+			int rdlen;
+
+			rdlen = client->recv(buff, sizeof(buff));
+			if (rdlen > 0) {
+				buff[rdlen] = 0;
+				println("buff[%d] = %s", rdlen, buff);
+			} else {
+				break;
+			}
+		}
 	}
 
-	return NULL;
+	return 0;
 }

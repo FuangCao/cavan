@@ -22,45 +22,13 @@
 
 #define NETWORK_DATA_MASK	0xAA
 
-int NetworkClient::openSocket(void)
-{
-	return socket(PF_INET, SOCK_STREAM, 0);
-}
-
-void NetworkClient::closeSocket(int sockfd)
-{
-	shutdown(sockfd, SHUT_RDWR);
-	close(sockfd);
-}
-
-bool NetworkClient::connect(const NetworkUrl *url)
-{
-	int sockfd;
-
-	sockfd = openSocket();
-	if (sockfd < 0) {
-		return false;
-	}
-
-#if 0
-	if (url->connect(sockfd)) {
-		mSockfd = sockfd;
-		return true;
-	}
-#endif
-
-	closeSocket(sockfd);
-
-	return false;
-}
-
 ssize_t NetworkClient::send(const void *buff, size_t size)
 {
 	size_t remain = size;
 	int retry = 100;
 
 	while (remain > 0) {
-		ssize_t wrlen = sendRaw(buff, remain);
+		ssize_t wrlen = sendraw(buff, remain);
 		if (wrlen > 0) {
 			buff = (char *) buff + wrlen;
 			remain -= wrlen;
@@ -85,7 +53,7 @@ ssize_t NetworkClient::recv(void *buff, size_t size)
 	int retry = 100;
 
 	while (1) {
-		ssize_t rdlen = recvRaw(buff, size);
+		ssize_t rdlen = recvraw(buff, size);
 		if (rdlen >= 0 || retry <= 0 || ERRNO_NOT_RETRY()) {
 			return rdlen;
 		}
@@ -126,7 +94,7 @@ void NetworkClient::mask(const uchar *src, uchar *dest, size_t size)
 	}
 }
 
-ssize_t NetworkClient::sendPacket(const void *buff, size_t size)
+ssize_t NetworkClient::sendPacked(const void *buff, size_t size)
 {
 	if (!send<u16>(size)) {
 		return -EIO;
@@ -139,7 +107,7 @@ ssize_t NetworkClient::sendPacket(const void *buff, size_t size)
 	return size;
 }
 
-ssize_t NetworkClient::recvPacket(void *buff, size_t size)
+ssize_t NetworkClient::recvPacked(void *buff, size_t size)
 {
 	u16 length;
 

@@ -20,32 +20,36 @@
  */
 
 #include <cavan.h>
-#include <cavan++/NetworkUrl.h>
-#include <sys/socket.h>
+#include <cavan++/NetworkBase.h>
 
-class NetworkClient {
-private:
-	int mSockfd;
-
+class NetworkClient : public NetworkBase {
 public:
-	NetworkClient(void) : mSockfd(INVALID_SOCKET) {}
 	virtual ~NetworkClient() {}
 
-	virtual int getSockfd(void) {
-		return mSockfd;
-	}
-
-	virtual void setSockfd(int sockfd) {
-		mSockfd = sockfd;
-	}
-
 public:
-	virtual ssize_t sendRaw(const void *buff, size_t size) {
+	virtual ssize_t sendraw(const void *buff, size_t size) {
 		return ::send(mSockfd, buff, size, MSG_NOSIGNAL);
 	}
 
-	virtual ssize_t recvRaw(void *buff, size_t size) {
+	virtual ssize_t recvraw(void *buff, size_t size) {
 		return ::recv(mSockfd, buff, size, MSG_NOSIGNAL);
+	}
+
+	virtual ssize_t sendto(const void *buff, size_t size, const struct sockaddr *addr, socklen_t addrlen) {
+		return ::sendto(mSockfd, buff, size, MSG_NOSIGNAL, addr, addrlen);
+	}
+
+	virtual ssize_t recvfrom(void *buff, size_t size, struct sockaddr *addr, socklen_t *addrlen) {
+		return ::recvfrom(mSockfd, buff, size, MSG_NOSIGNAL, addr, addrlen);
+	}
+
+	virtual ssize_t sendto(const void *buff, size_t size, const struct sockaddr_in *addr) {
+		return ::sendto(mSockfd, buff, size, MSG_NOSIGNAL, (const struct sockaddr *) addr, sizeof(*addr));
+	}
+
+	virtual ssize_t recvfrom(void *buff, size_t size, struct sockaddr_in *addr) {
+		socklen_t addrlen;
+		return ::recvfrom(mSockfd, buff, size, MSG_NOSIGNAL, (struct sockaddr *) addr, &addrlen);
 	}
 
 	template <typename T> bool send(T value) {
@@ -57,16 +61,13 @@ public:
 	}
 
 public:
-	virtual bool connect(const NetworkUrl *url);
-	virtual int openSocket(void);
-	virtual void closeSocket(int sockfd);
 	virtual ssize_t send(const void *buff, size_t size);
 	virtual ssize_t recv(void *buff, size_t size);
 	virtual ssize_t fill(void *buff, size_t size);
 	virtual void mask(uchar *buff, size_t size);
 	virtual void mask(const uchar *src, uchar *dest, size_t size);
-	virtual ssize_t sendPacket(const void *buff, size_t size);
-	virtual ssize_t recvPacket(void *buff, size_t size);
+	virtual ssize_t sendPacked(const void *buff, size_t size);
+	virtual ssize_t recvPacked(void *buff, size_t size);
 	virtual ssize_t sendMasked(const void *buff, size_t size);
 	virtual ssize_t recvMasked(void *buff, size_t size);
 };

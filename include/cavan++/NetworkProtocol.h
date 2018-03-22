@@ -29,11 +29,16 @@ public:
 	virtual ~NetworkProtocol() {}
 
 public:
-	virtual u16 getPort(void) {
-		return 0;
+	virtual const char *getName(void) = 0;
+
+	virtual NetworkClient *newClient(void) {
+		return NULL;
 	}
 
-	virtual const char *getName(void) = 0;
-	virtual NetworkClient *newClient(void) = 0;
-	virtual NetworkService *newService(void) = 0;
+	virtual NetworkService *newService(void) {
+		return NULL;
+	}
+
+public:
+	static NetworkProtocol *instance(const char *protocol);
 };
