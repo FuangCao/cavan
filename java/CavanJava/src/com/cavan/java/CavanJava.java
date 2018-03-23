@@ -12,11 +12,11 @@ import java.util.Enumeration;
 import java.util.List;
 
 import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
 
 public class CavanJava {
 
 	public static CavanLogger sLogger = new CavanLogger();
+	public static CavanAesCipher sAesCipher = new CavanAesCipher();
 
 	public interface Closure {
 		Object call(Object... args);
@@ -488,29 +488,20 @@ public class CavanJava {
 		msleep(millis, (int) (nanos - millis * 1000000));
 	}
 
-	public static byte[] AesCrypt(byte[] bytes, byte[] password, int opmode) {
-		try {
-			SecretKeySpec key = new SecretKeySpec(password, "AES");
-			Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-			cipher.init(opmode, key);
-			return cipher.doFinal(bytes);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return null;
+	public static byte[] AesCrypt(byte[] bytes, int opmode) {
+		return sAesCipher.crypt(bytes, opmode);
 	}
 
-	public static byte[] AesCrypt(byte[] bytes, byte[] password, boolean encrypt) {
-		return AesCrypt(bytes, password, encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE);
+	public static byte[] AesEncrypt(byte[] bytes) {
+		return AesCrypt(bytes, Cipher.ENCRYPT_MODE);
 	}
 
-	public static byte[] AesEncrypt(byte[] bytes, byte[] password) {
-		return AesCrypt(bytes, password, Cipher.ENCRYPT_MODE);
+	public static byte[] AesEncrypt(String text) {
+		return AesEncrypt(text.getBytes());
 	}
 
-	public static byte[] AesDecrypt(byte[] bytes, byte[] password) {
-		return AesCrypt(bytes, password, Cipher.DECRYPT_MODE);
+	public static byte[] AesDecrypt(byte[] bytes) {
+		return AesCrypt(bytes, Cipher.DECRYPT_MODE);
 	}
 
 	public static int parseInt(String text) {

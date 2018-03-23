@@ -1,5 +1,6 @@
 package com.cavan.android;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import android.content.ContentProvider;
@@ -72,6 +73,7 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 
 		private String mName;
 		private int mBaseCode;
+		private ArrayList<String> mSqls = new ArrayList<String>();
 		private HashMap<String, CavanDatabaseColumn> mColumnNameMap = new HashMap<String, CavanDatabaseColumn>();
 
 		private CavanDatabaseTable(String name, int code) {
@@ -139,9 +141,17 @@ public abstract class CavanDatabaseProvider extends ContentProvider {
 				index++;
 			}
 
+			for (String sql : mSqls) {
+				builder.append(',').append(sql);
+			}
+
 			builder.append(")");
 
 			return builder.toString();
+		}
+
+		public void addSql(String sql) {
+			mSqls.add(sql);
 		}
 
 		public void addURI(String path, int code) {

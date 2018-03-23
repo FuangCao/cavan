@@ -60,8 +60,8 @@ public class CavanSetting {
 	public static void initDatabaseTable(CavanNotificationProvider provider) {
 		CavanDatabaseTable table = provider.getTable(TABLE_NAME);
 
-		table.setColumn(KEY_NAME, "text");
-		table.setColumn(KEY_VALUE, "text unique on conflict replace");
+		table.setColumn(KEY_NAME, "text unique on conflict replace");
+		table.setColumn(KEY_VALUE, "text");
 	}
 
 	public static Uri put(ContentResolver resolver, String key, String value) {
