@@ -813,5 +813,9 @@
 	<string name="role_change_proxy">内网穿透代理</string>
 	<string name="on_time_mute">定时静音</string>
 	<string name="mute_time_setting">静音时间设置</string>
+	<string name="label_application">应用：</string>
+	<string name="label_account">账号：</string>
+	<string name="label_password">密码：</string>
+	<string name="account_manage">账号管理</string>
 
 </resources>

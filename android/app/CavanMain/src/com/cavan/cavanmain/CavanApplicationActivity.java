@@ -16,6 +16,7 @@ public class CavanApplicationActivity extends PreferenceActivity {
 	private static final HashMap<String, Class<?>> sHashMapKeyActivity = new HashMap<String, Class<?>>();
 
 	static {
+		sHashMapKeyActivity.put("account_manage", com.cavan.cavanmain.CavanUserInfoActivity.class);
 		sHashMapKeyActivity.put("text_search", com.cavan.textsearch.MainActivity.class);
 		sHashMapKeyActivity.put("apk_backup", com.cavan.apkbackup.MainActivity.class);
 		sHashMapKeyActivity.put("qr_code_encode", com.cavan.qrcode.QrCodeEncodeActivity.class);

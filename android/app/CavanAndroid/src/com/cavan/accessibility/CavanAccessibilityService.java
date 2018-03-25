@@ -34,6 +34,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private static final int MSG_SCREEN_ON = 1;
 	private static final int MSG_SHOW_COUNT_DOWN = 2;
 	private static final int MSG_UPDATE_COUNT_DOWN = 3;
+	private static final int MSG_SHOW_LOGIN_DIALOG = 4;
 
 	public static CavanAccessibilityService instance;
 
@@ -237,6 +238,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 						sendEmptyMessageDelayed(MSG_UPDATE_COUNT_DOWN, delay);
 					}
 				}
+				break;
+
+			case MSG_SHOW_LOGIN_DIALOG:
+				onShowLoginDialog((CavanAccessibilityPackage) msg.obj);
 				break;
 			}
 		}
@@ -762,5 +767,20 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 
 		super.onDestroy();
+	}
+
+	public void showLoginDialog(CavanAccessibilityPackage pkg) {
+		CavanAndroid.dLog("showLoginDialog");
+		mHandler.obtainMessage(MSG_SHOW_LOGIN_DIALOG, pkg).sendToTarget();
+	}
+
+	public boolean onShowLoginDialog(CavanAccessibilityPackage pkg) {
+		CavanAndroid.dLog("onShowLoginDialog");
+		return false;
+	}
+
+	public String getPassword(CavanAccessibilityPackage pkg, String username) {
+		CavanAndroid.dLog("getPassword: " + username);
+		return null;
 	}
 }

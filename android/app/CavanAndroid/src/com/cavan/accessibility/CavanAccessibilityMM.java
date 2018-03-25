@@ -634,6 +634,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			return false;
 		}
 
+		public boolean setPassword(AccessibilityNodeInfo root, String password) {
+			return setInputText(root, "密码", password);
+		}
+
 		public boolean clickLoginButton(AccessibilityNodeInfo root) {
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "登录");
 			if (node == null) {
@@ -653,9 +657,44 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			return false;
 		}
 
+		public String getUserName(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 2, 0);
+			if (node == null) {
+				return null;
+			}
+
+			try {
+				return CavanAccessibilityHelper.getNodeText(node);
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				node.recycle();
+			}
+
+			return null;
+		}
+
 		@Override
 		protected boolean doLogin(AccessibilityNodeInfo root, String username, String password) {
-			if (!setInputText(root, "密码", password)) {
+			String usernameNow = getUserName(root);
+			if (usernameNow == null) {
+				return false;
+			}
+
+			if (username == null) {
+				username = usernameNow;
+			} else if (!username.equals(usernameNow)) {
+				return false;
+			}
+
+			if (password == null) {
+				password = mService.getPassword(CavanAccessibilityMM.this, username);
+				if (password == null) {
+					return false;
+				}
+			}
+
+			if (!setPassword(root, password)) {
 				return false;
 			}
 
@@ -669,13 +708,27 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			super(name);
 		}
 
+		public boolean setUserName(AccessibilityNodeInfo root, String username) {
+			if (username != null) {
+				return setInputText(root, "帐号", username);
+			}
+
+			mService.showLoginDialog(CavanAccessibilityMM.this);
+
+			return false;
+		}
+
 		@Override
 		protected boolean doLogin(AccessibilityNodeInfo root, String username, String password) {
-			if (!setInputText(root, "帐号", username)) {
+			if (!setUserName(root, username)) {
 				return false;
 			}
 
-			return super.doLogin(root, username, password);
+			if (!setPassword(root, password)) {
+				return false;
+			}
+
+			return clickLoginButton(root);
 		}
 	}
 

@@ -75,7 +75,11 @@ public:
 	}
 
 	int setReusePort(int reuse = 1) {
+#ifdef SO_REUSEPORT
 		return setsockopt(mSockfd, SOL_SOCKET, SO_REUSEPORT, (void *) &reuse, sizeof(reuse));
+#else
+		return 0;
+#endif
 	}
 
 	virtual int open(NetworkUrl *url) = 0;

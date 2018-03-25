@@ -1036,6 +1036,22 @@ class CavanCommandCppCalculator extends CavanNativeCommand {
 	}
 }
 
+class CavanCommandImClient extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doImClient(async, args);
+	}
+}
+
+class CavanCommandImServer extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doImServer(async, args);
+	}
+}
+
 public class CavanNative {
 
 	public static HashMap<String, CavanNativeCommand> sHashMap = new HashMap<String, CavanNativeCommand>();
@@ -1172,6 +1188,8 @@ public class CavanNative {
 		sHashMap.put("web_proxy", new CavanCommandWebProxy());
 		sHashMap.put("mkfs", new CavanCommandMkfs());
 		sHashMap.put("cpp_calculator", new CavanCommandCppCalculator());
+		sHashMap.put("im_client", new CavanCommandImClient());
+		sHashMap.put("im_server", new CavanCommandImServer());
 	}
 
 	public static native int doAbspath(boolean async, String... args);
@@ -1303,4 +1321,6 @@ public class CavanNative {
 	public static native int doWebProxy(boolean async, String... args);
 	public static native int doMkfs(boolean async, String... args);
 	public static native int doCppCalculator(boolean async, String... args);
+	public static native int doImClient(boolean async, String... args);
+	public static native int doImServer(boolean async, String... args);
 }

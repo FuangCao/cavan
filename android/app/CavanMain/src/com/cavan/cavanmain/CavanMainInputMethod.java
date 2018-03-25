@@ -80,6 +80,7 @@ public class CavanMainInputMethod extends CavanInputMethodService implements OnK
 	public static final int KEYCODE_HIDDEN = 31;
 	public static final int KEYCODE_SPLIT = 32;
 	public static final int KEYCODE_AUTO = 33;
+	public static final int KEYCODE_LOGIN = 34;
 
 	private static final int MSG_REPLACE_TEXT = 4;
 	private static final int MSG_INSERT_TEXT = 5;
@@ -717,6 +718,13 @@ public class CavanMainInputMethod extends CavanInputMethodService implements OnK
 				}
 
 				setAutoSendText(text);
+			}
+			break;
+
+		case KEYCODE_LOGIN:
+			CavanAccessibilityService accessibility = CavanAccessibilityService.instance;
+			if (accessibility != null) {
+				accessibility.login(null, null);
 			}
 			break;
 		}

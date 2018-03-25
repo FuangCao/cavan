@@ -904,3 +904,17 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doCppCalculator(JNIEnv *env, 
 {
 	return CavanMainExecute(env, "cpp_calculator", async, args, do_cavan_cpp_calculator);
 }
+
+extern int do_cavan_im_client(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doImClient(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "im_client", async, args, do_cavan_im_client);
+}
+
+extern int do_cavan_im_server(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doImServer(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "im_server", async, args, do_cavan_im_server);
+}

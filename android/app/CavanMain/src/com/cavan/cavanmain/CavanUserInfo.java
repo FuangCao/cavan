@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.util.Base64;
 
+import com.cavan.android.CavanDatabaseProvider;
 import com.cavan.android.CavanDatabaseProvider.CavanDatabaseTable;
 import com.cavan.java.CavanJava;
 
@@ -19,12 +20,14 @@ public class CavanUserInfo {
 	public static final String KEY_PASSWORD = "password";
 
 	private static final String[] PROJECTION = {
-		KEY_PACKAGE, KEY_ACCOUNT, KEY_PASSWORD
+		CavanDatabaseProvider.KEY_ID, KEY_PACKAGE, KEY_ACCOUNT, KEY_PASSWORD
 	};
 
+	private long mDatabaseId;
 	private String mPackage;
 	private String mAccount;
 	private String mPassword;
+	private boolean mChecked;
 
 	public CavanUserInfo(String pkg, String account, String password) {
 		mPackage = pkg;
@@ -37,9 +40,18 @@ public class CavanUserInfo {
 	}
 
 	public void parse(Cursor cursor) {
-		mPackage = cursor.getString(0);
-		mAccount = cursor.getString(1);
-		setPasswordAes(cursor.getString(2));
+		mDatabaseId = cursor.getLong(0);
+		mPackage = cursor.getString(1);
+		mAccount = cursor.getString(2);
+		setPasswordAes(cursor.getString(3));
+	}
+
+	public long getDatabaseId() {
+		return mDatabaseId;
+	}
+
+	public void setDatabaseId(long id) {
+		mDatabaseId = id;
 	}
 
 	public String getPackage() {
@@ -66,6 +78,14 @@ public class CavanUserInfo {
 		mPassword = password;
 	}
 
+	public boolean isChecked() {
+		return mChecked;
+	}
+
+	public void setChecked(boolean checked) {
+		mChecked = checked;
+	}
+
 	public String getPasswordAes() {
 		byte[] bytes = CavanJava.AesEncrypt(mPassword);
 		return Base64.encodeToString(bytes, 0);
@@ -90,6 +110,11 @@ public class CavanUserInfo {
 
 	public Uri save(ContentResolver resolver) {
 		return resolver.insert(CONTENT_URI, getContentValues());
+	}
+
+	public int delete(ContentResolver resolver) {
+		String where = CavanDatabaseProvider.KEY_ID + '=' + mDatabaseId;
+		return resolver.delete(CONTENT_URI, where, null);
 	}
 
 	@Override

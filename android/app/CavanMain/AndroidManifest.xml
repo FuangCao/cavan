@@ -35,11 +35,14 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
+        android:name="CavanMainApplication"
         android:allowBackup="false"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:persistent="true"
-        android:theme="@style/AppTheme" android:name="CavanMainApplication">
+        android:theme="@style/AppTheme"
+        android:windowSoftInputMode="adjustPan" >
+
         <activity
             android:name="CavanApplicationActivity"
             android:label="@string/my_application"
@@ -257,7 +260,8 @@
         <activity
             android:name="CavanShareAppActivity"
             android:label="@string/share_app"
-            android:launchMode="singleTask" android:windowSoftInputMode="adjustPan">
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustPan" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -267,7 +271,8 @@
         <activity
             android:name="com.cavan.location.MockLocationActivity"
             android:label="@string/mock_location"
-            android:launchMode="singleTask" android:windowSoftInputMode="adjustPan">
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustPan" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -284,12 +289,30 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <service android:name="com.cavan.service.MockLocationService"></service>
-        <service android:name="CavanNetworkImeConnService"></service>
-        <service android:name="com.cavan.service.CavanCommandService"></service>
-        <service android:name="com.cavan.cavanjni.RoleChangeClient"></service>
-        <service android:name="com.cavan.cavanjni.RoleChangeService"></service>
-        <service android:name="com.cavan.cavanjni.RoleChangeProxy"></service>
+
+        <activity
+            android:name="CavanUserInfoActivity"
+            android:label="@string/account_manage"
+            android:launchMode="singleTask" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <service android:name="com.cavan.service.MockLocationService" >
+        </service>
+        <service android:name="CavanNetworkImeConnService" >
+        </service>
+        <service android:name="com.cavan.service.CavanCommandService" >
+        </service>
+        <service android:name="com.cavan.cavanjni.RoleChangeClient" >
+        </service>
+        <service android:name="com.cavan.cavanjni.RoleChangeService" >
+        </service>
+        <service android:name="com.cavan.cavanjni.RoleChangeProxy" >
+        </service>
     </application>
 
 </manifest>
