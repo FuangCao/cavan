@@ -16,8 +16,8 @@
             android:codes="26"
             android:keyLabel="微信" />
         <Key
-            android:codes="34"
-            android:keyLabel="登录" />
+            android:codes="32"
+            android:keyLabel="分行" />
         <Key
             android:codes="33"
             android:keyLabel="自动" />

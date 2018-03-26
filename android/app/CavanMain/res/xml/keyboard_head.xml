@@ -40,8 +40,8 @@
             android:codes="20"
             android:keyLabel="选择" />
         <Key
-            android:codes="32"
-            android:keyLabel="分行" />
+            android:codes="34"
+            android:keyLabel="登录" />
         <Key
             android:codes="-4"
             android:keyLabel="前往" />
