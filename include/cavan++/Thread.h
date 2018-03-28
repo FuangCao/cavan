@@ -25,7 +25,7 @@
 
 class CavanThread;
 
-typedef int (*cavan_thread_handler_t)(CavanThread *thread);
+typedef void (*cavan_thread_handler_t)(CavanThread *thread);
 
 class CavanThread {
 private:
@@ -33,10 +33,10 @@ private:
 	cavan_thread_handler_t mHandler;
 	struct cavan_thread mThread;
 
-	static int CavanThreadHandler(struct cavan_thread *_thread, void *data);
+	static int CavanThreadHandler(struct cavan_thread *thread, void *data);
 
 protected:
-	virtual int run(void);
+	virtual void run(void);
 
 public:
 	CavanThread(const char *name, cavan_thread_handler_t handler = NULL, int flags = 0);
@@ -50,59 +50,110 @@ public:
 		mData = data;
 	}
 
-	int sendEvent(u32 event) {
+	virtual int sendEvent(u32 event) {
 		return cavan_thread_send_event(&mThread, event);
 	}
 
-	int recvEvent(u32 *event) {
+	virtual int recvEvent(u32 *event) {
 		return cavan_thread_recv_event(&mThread, event);
 	}
 
-	int recvEventTimeout(u32 *event, u32 msec) {
+	virtual int recvEventTimeout(u32 *event, u32 msec) {
 		return cavan_thread_recv_event_timeout(&mThread, event, msec);
 	}
 
-	int waitEvent(u32 msec) {
+	virtual int waitEvent(u32 msec) {
 		return cavan_thread_wait_event(&mThread, msec);
 	}
 
-	int start(void) {
+	virtual int start(void) {
 		return cavan_thread_start(&mThread);
 	}
 
-	void stop(void) {
+	virtual void stop(void) {
 		cavan_thread_stop(&mThread);
 	}
 
-	void suspend(void) {
+	virtual void suspend(void) {
 		cavan_thread_suspend(&mThread);
 	}
 
-	void resume(void) {
+	virtual void resume(void) {
 		cavan_thread_resume(&mThread);
 	}
 
-	int msleepUntil(struct timespec *time) {
+	virtual int msleepUntil(struct timespec *time) {
 		return cavan_thread_sleep_until(&mThread, time);
 	}
 
-	int msleep(u32 msec) {
+	virtual int msleep(u32 msec) {
 		return cavan_thread_msleep(&mThread, msec);
 	}
 
-	void setState(cavan_thread_state_t state) {
+	virtual void setState(cavan_thread_state_t state) {
 		cavan_thread_set_state(&mThread, state);
 	}
 
-	void shouldStop(void) {
+	virtual void shouldStop(void) {
 		cavan_thread_should_stop(&mThread);
 	}
 
-	int join(void) {
+	virtual int join(void) {
 		return cavan_thread_join(&mThread);
 	}
 
-	int wakeup(void) {
+	virtual int wakeup(void) {
 		return cavan_thread_wakeup(&mThread);
 	}
+};
+
+class SimpleThread {
+private:
+	pthread_t mThread;
+
+public:
+	SimpleThread(void) : mThread(-1) {}
+	virtual ~SimpleThread() {}
+
+private:
+	static void SigKillHandler(int signum)
+	{
+		pd_bold_info("signum = %d", signum);
+		pthread_exit(0);
+	}
+
+	static void *ThreadHandler(void *data) {
+		SimpleThread *thread = (SimpleThread *) data;
+
+		signal(SIGUSR1, SigKillHandler);
+
+		thread->onStarted();
+		thread->run();
+		thread->onStopped();
+		thread->detach();
+
+		return NULL;
+	}
+
+public:
+	virtual int start(void) {
+		return pthread_create(&mThread, NULL, ThreadHandler, this);
+	}
+
+	virtual int kill(void) {
+		return pthread_kill(mThread, SIGUSR1);
+	}
+
+	virtual int join(void) {
+		return pthread_join(mThread, NULL);
+	}
+
+	virtual int detach(void) {
+		return pthread_detach(mThread);
+	}
+
+protected:
+	virtual void run(void) = 0;
+	virtual void onStarted(void) {}
+	virtual void onStopped(void) {}
 };

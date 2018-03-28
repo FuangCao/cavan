@@ -21,7 +21,7 @@
 #include <cavan++/Lock.h>
 #include <cavan++/Thread.h>
 
-static int TestLockThreadHandler(CavanThread *thread)
+static void TestLockThreadHandler(CavanThread *thread)
 {
 	ThreadLock *lock = (ThreadLock *) thread->getData();
 
@@ -43,8 +43,6 @@ static int TestLockThreadHandler(CavanThread *thread)
 	lock->release();
 	pr_pos_info();
 	msleep(500);
-
-	return 0;
 }
 
 int main(int argc, char *argv[])

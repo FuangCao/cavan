@@ -31,22 +31,6 @@ public:
 	virtual int tryLock(void) {
 		return -ENOENT;
 	}
-
-	int get(void) {
-		return acquire();
-	}
-
-	int put(void) {
-		return release();
-	}
-
-	int lock(void) {
-		return acquire();
-	}
-
-	int unlock(void) {
-		return release();
-	}
 };
 
 class MutexLock : public ILock {
@@ -94,62 +78,60 @@ public:
 		mLock.acquire();
 	}
 
-	~AutoLock() {
+	virtual ~AutoLock() {
 		mLock.release();
 	}
 };
 
-class Condition {
+class Condition : public ThreadLock {
 private:
-	pthread_mutex_t mLock;
 	pthread_cond_t mCond;
 
 public:
 	Condition(const pthread_condattr_t *attr = NULL) {
-		pthread_mutex_init(&mLock, NULL);
 		pthread_cond_init(&mCond, attr);
 	}
 
-	~Condition(void) {
+	virtual ~Condition(void) {
 		pthread_cond_destroy(&mCond);
-		pthread_mutex_destroy(&mLock);
 	}
 
-	int signal(void) {
+	virtual int signal(void) {
 		return pthread_cond_signal(&mCond);
 	}
 
-	int broadcast(void) {
+	virtual int broadcast(void) {
 		return pthread_cond_broadcast(&mCond);
 	}
 
-	int notify(void) {
+	virtual int notify(void) {
 		return signal();
 	}
 
-	int notifyAll(void) {
+	virtual int notifyAll(void) {
 		return broadcast();
 	}
 
-	int wait(void) {
-		pthread_mutex_lock(&mLock);
-		int ret = pthread_cond_wait(&mCond, &mLock);
-		pthread_mutex_unlock(&mLock);
-
-		return ret;
+	virtual int waitLocked(void) {
+		return pthread_cond_wait(&mCond, &mLock);
 	}
 
-	int wait(const struct timespec *abstime) {
-		pthread_mutex_lock(&mLock);
-		int ret = pthread_cond_timedwait(&mCond, &mLock, abstime);
-		pthread_mutex_unlock(&mLock);
-
-		return ret;
+	virtual int wait(void) {
+		AutoLock lock(*this);
+		return waitLocked();
 	}
 
-	int wait(u32 ms) {
+	virtual int waitLocked(const struct timespec *abstime) {
+		return pthread_cond_timedwait(&mCond, &mLock, abstime);
+	}
+
+	virtual int wait(const struct timespec *abstime) {
+		AutoLock lock(*this);
+		return waitLocked(abstime);
+	}
+
+	virtual int wait(u32 ms) {
 		struct timespec abstime;
-
 		cavan_timer_set_timespec_ms(&abstime, ms);
 		return wait(&abstime);
 	}

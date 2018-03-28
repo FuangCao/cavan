@@ -173,3 +173,118 @@ public:
 		return getTailNode();
 	}
 };
+
+template <class T>
+class SimpleLink {
+private:
+	SimpleLink<T> *prev;
+	SimpleLink<T> *next;
+
+public:
+	SimpleLink(void) {
+		prev = next = this;
+	}
+
+	virtual ~SimpleLink() {}
+
+	virtual void prepend(T *node) {
+		node->next = next;
+		node->prev = this;
+		next->prev = node;
+		next = node;
+	}
+
+	virtual void append(T *node) {
+		node->prev = prev;
+		node->next = this;
+		prev->next = node;
+		prev = node;
+	}
+
+	virtual T *removeFirst(void) {
+		SimpleLink<T> *node = next;
+
+		if (node == prev) {
+			return NULL;
+		}
+
+		next = node->next;
+		next->prev = this;
+
+		return (T *) node;
+	}
+
+	virtual T *removeLast(void) {
+		SimpleLink<T> *node = prev;
+
+		if (node == next) {
+			return NULL;
+		}
+
+		prev = node->prev;
+		prev->next = this;
+
+		return (T *) node;
+	}
+
+	virtual bool isEmpty(void) {
+		return (next == prev);
+	}
+
+	virtual bool isNotEmpty(void) {
+		return (next != prev);
+	}
+};
+
+template <class T>
+class SimpleLinkQueue {
+private:
+	SimpleLink<T> mHead;
+	Condition mCond;
+	u32 mCount;
+
+public:
+	SimpleLinkQueue(void) : mCount(0) {}
+	virtual ~SimpleLinkQueue() {}
+
+	virtual u32 getCount(void) {
+		AutoLock lock(mCond);
+		return mCount;
+	}
+
+	virtual ILock &getLock(void) {
+		return mCond;
+	}
+
+	virtual void lock(void) {
+		mCond.acquire();
+	}
+
+	virtual void unlock(void) {
+		mCond.release();
+	}
+
+	virtual void enqueue(T *node) {
+		AutoLock lock(mCond);
+
+		mHead.append(node);
+
+		if (++mCount == 1) {
+			mCond.signal();
+		}
+	}
+
+	virtual T *dequeue(void) {
+		AutoLock lock(mCond);
+
+		while (1) {
+			T *node = mHead.removeFirst();
+			if (node != NULL) {
+				mCount--;
+				return node;
+			}
+
+			mCond.waitLocked();
+		}
+	}
+};

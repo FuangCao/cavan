@@ -4,20 +4,16 @@
 class MyThread : public CavanThread {
 public:
 	MyThread(const char *name) : CavanThread(name) {}
-	int run(void) {
+	void run(void) {
 		pr_pos_info();
 		msleep(200);
-
-		return 0;
 	}
 };
 
-static int handler(CavanThread *CavanThread)
+static void handler(CavanThread *CavanThread)
 {
 	pr_pos_info();
 	msleep(200);
-
-	return 0;
 }
 
 int main(int argc, char *argv[])

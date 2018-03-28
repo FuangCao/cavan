@@ -25,8 +25,8 @@
 int CavanThread::CavanThreadHandler(cavan_thread_t *_thread, void *data)
 {
 	CavanThread *thread = (CavanThread *) data;
-
-	return thread->run();
+	thread->run();
+	return 0;
 }
 
 CavanThread::CavanThread(const char *name, cavan_thread_handler_t handler, int flags)
@@ -44,11 +44,9 @@ CavanThread::~CavanThread(void)
 	cavan_thread_deinit(&mThread);
 }
 
-int CavanThread::run(void)
+void CavanThread::run(void)
 {
 	if (mHandler) {
-		return mHandler(this);
+		mHandler(this);
 	}
-
-	return 0;
 }
