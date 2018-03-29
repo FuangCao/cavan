@@ -68,12 +68,13 @@ public:
 	}
 };
 
-class EpollClient {
+class EpollClient : public SimpleLink<EpollClient> {
 	friend EpollPacket;
 	friend EpollService;
 
 private:
 	SimpleLinkQueue<EpollPacket> mWrQueue;
+	SimpleLinkQueue<EpollPacket> mRdQueue;
 	EpollPacket *mWrPacket;
 	EpollPacket *mRdPacket;
 
@@ -90,6 +91,8 @@ protected:
 	virtual int doEpollWrite(const void *buff, int size) = 0;
 	virtual int onEpollHeaderReceived(const void *buff, int size) = 0;
 	virtual int onEpollPacketReceived(EpollPacket *packet) = 0;
+
+	virtual int processEpollPackages(void);
 
 	virtual u32 getEpollEventsRO(void) {
 		return EPOLLIN | EPOLLERR | EPOLLHUP;

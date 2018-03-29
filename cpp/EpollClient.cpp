@@ -108,8 +108,9 @@ int EpollClient::onEpollDataReceived(EpollService *service, const void *buff, in
 
 	int length = mRdPacket->write(buff, size);
 	if (length > 0 && mRdPacket->isCompleted()) {
-		service->enqueueEpollPacket(mRdPacket);
+		mRdQueue.enqueue(mRdPacket);
 		mRdPacket = NULL;
+		service->enqueueEpollClient(this);
 	}
 
 	return length;
@@ -135,4 +136,21 @@ int EpollClient::onEpollOut(EpollService *service)
 void EpollClient::onEpollError(EpollService *service)
 {
 	removeEpollFrom(service);
+}
+
+int EpollClient::processEpollPackages(void)
+{
+	while (1) {
+		EpollPacket *packet = mRdQueue.dequeue();
+		if (packet == NULL) {
+			break;
+		}
+
+		int ret = onEpollPacketReceived(packet);
+		if (ret < 0) {
+			return ret;
+		}
+	}
+
+	return 0;
 }

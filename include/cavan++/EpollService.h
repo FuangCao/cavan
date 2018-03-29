@@ -42,7 +42,7 @@ private:
 	int mEpollFd;
 	ThreadLock mLock;
 	SimpleLinkQueue<EpollDaemon> mDaemonQueue;
-	SimpleLinkQueue<EpollPacket> mPacketQueue;
+	SimpleWaitQueue<EpollClient> mClientQueue;
 
 public:
 	EpollService(void) : mEpollFd(-1) {}
@@ -64,12 +64,12 @@ public:
 		return doEpollCtrl(EPOLL_CTL_DEL, fd, 0, NULL);
 	}
 
-	virtual void enqueueEpollPacket(EpollPacket *packet) {
-		mPacketQueue.enqueue(packet);
+	virtual bool enqueueEpollClient(EpollClient *client) {
+		return mClientQueue.enqueueSafe(client);
 	}
 
-	virtual EpollPacket *dequeueEpollPacket(void) {
-		return mPacketQueue.dequeue();
+	virtual EpollClient *dequeueEpollClient(void) {
+		return mClientQueue.dequeue();
 	}
 
 protected:

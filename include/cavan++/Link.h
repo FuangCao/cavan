@@ -182,10 +182,14 @@ private:
 
 public:
 	SimpleLink(void) {
-		prev = next = this;
+		clear();
 	}
 
 	virtual ~SimpleLink() {}
+
+	virtual void clear(void) {
+		next = prev = this;
+	}
 
 	virtual void prepend(T *node) {
 		node->next = next;
@@ -201,6 +205,12 @@ public:
 		prev = node;
 	}
 
+	virtual void remove(void) {
+		prev->next = next;
+		next->prev = prev;
+		clear();
+	}
+
 	virtual T *removeFirst(void) {
 		SimpleLink<T> *node = next;
 
@@ -210,6 +220,7 @@ public:
 
 		next = node->next;
 		next->prev = this;
+		node->clear();
 
 		return (T *) node;
 	}
@@ -223,8 +234,17 @@ public:
 
 		prev = node->prev;
 		prev->next = this;
+		node->clear();
 
 		return (T *) node;
+	}
+
+	virtual bool isFree(void) {
+		return (next == prev);
+	}
+
+	virtual bool isUsed(void) {
+		return (next != prev);
 	}
 
 	virtual bool isEmpty(void) {
@@ -238,35 +258,63 @@ public:
 
 template <class T>
 class SimpleLinkQueue {
-private:
+protected:
 	SimpleLink<T> mHead;
-	Condition mCond;
+	ThreadLock mLock;
 	u32 mCount;
 
 public:
 	SimpleLinkQueue(void) : mCount(0) {}
 	virtual ~SimpleLinkQueue() {}
 
-	virtual u32 getCount(void) {
-		AutoLock lock(mCond);
-		return mCount;
-	}
-
 	virtual ILock &getLock(void) {
-		return mCond;
+		return mLock;
 	}
 
 	virtual void lock(void) {
-		mCond.acquire();
+		mLock.acquire();
 	}
 
 	virtual void unlock(void) {
-		mCond.release();
+		mLock.release();
+	}
+
+	virtual u32 getCount(void) {
+		AutoLock lock(mLock);
+		return mCount;
 	}
 
 	virtual void enqueue(T *node) {
-		AutoLock lock(mCond);
+		AutoLock lock(mLock);
+		mHead.append(node);
+		mCount++;
+	}
 
+	virtual T *dequeue(void) {
+		AutoLock lock(mLock);
+
+		T *node = mHead.removeFirst();
+		if (node == NULL) {
+			return NULL;
+		}
+
+		mCount--;
+
+		return node;
+	}
+};
+
+template <class T>
+class SimpleWaitQueue : public SimpleLinkQueue<T> {
+	using SimpleLinkQueue<T>::mCount;
+	using SimpleLinkQueue<T>::mLock;
+	using SimpleLinkQueue<T>::mHead;
+
+protected:
+	Condition mCond;
+
+private:
+	virtual void enqueueLocked(T *node) {
 		mHead.append(node);
 
 		if (++mCount == 1) {
@@ -274,8 +322,26 @@ public:
 		}
 	}
 
+public:
+	virtual void enqueue(T *node) {
+		AutoLock lock(mLock);
+		enqueueLocked(node);
+	}
+
+	virtual bool enqueueSafe(T *node) {
+		AutoLock lock(mLock);
+
+		if (node->isUsed()) {
+			return false;
+		}
+
+		enqueueLocked(node);
+
+		return true;
+	}
+
 	virtual T *dequeue(void) {
-		AutoLock lock(mCond);
+		AutoLock lock(mLock);
 
 		while (1) {
 			T *node = mHead.removeFirst();
@@ -284,7 +350,7 @@ public:
 				return node;
 			}
 
-			mCond.waitLocked();
+			mCond.waitLocked(mLock);
 		}
 	}
 };

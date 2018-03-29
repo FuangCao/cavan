@@ -99,13 +99,7 @@ void EpollService::run(void)
 void EpollService::runEpollDaemon(void)
 {
 	while (1) {
-		EpollPacket *packet = dequeueEpollPacket();
-		EpollClient *client = packet->getClient();
-
-		if (client->onEpollPacketReceived(packet) < 0) {
-			client->onEpollError(this);
-		}
-
-		delete packet;
+		EpollClient *client = dequeueEpollClient();
+		client->processEpollPackages();
 	}
 }
