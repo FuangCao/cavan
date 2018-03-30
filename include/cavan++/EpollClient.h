@@ -50,6 +50,14 @@ public:
 	virtual int writeTo(EpollClient *client);
 	virtual int write(const void *buff, u16 length);
 
+	virtual u16 getLength(void) {
+		return mLength;
+	}
+
+	virtual void seek(u16 offset) {
+		mOffset = offset;
+	}
+
 	virtual bool isPending(void) {
 		return (mOffset < mLength);
 	}
@@ -68,6 +76,7 @@ private:
 	SimpleLinkQueue<EpollPacket> mRdQueue;
 	EpollPacket *mWrPacket;
 	EpollPacket *mRdPacket;
+	EpollPacket *mHeader;
 
 public:
 	virtual ~EpollClient() {}
@@ -78,9 +87,9 @@ public:
 
 protected:
 	virtual int getEpollFd(void) = 0;
+	virtual EpollPacket *newEpollHeader(void) = 0;
 	virtual int doEpollRead(void *buff, int size) = 0;
 	virtual int doEpollWrite(const void *buff, int size) = 0;
-	virtual int onEpollHeaderReceived(const void *buff, int size) = 0;
 	virtual int onEpollPacketReceived(EpollPacket *packet) = 0;
 
 	virtual int processEpollPackages(void);

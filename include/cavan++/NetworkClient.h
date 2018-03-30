@@ -21,6 +21,7 @@
 
 #include <cavan.h>
 #include <cavan++/NetworkBase.h>
+#include <cavan++/EpollClient.h>
 
 class NetworkClient : public NetworkBase {
 public:
@@ -70,4 +71,17 @@ public:
 	virtual ssize_t recvPacked(void *buff, size_t size);
 	virtual ssize_t sendMasked(const void *buff, size_t size);
 	virtual ssize_t recvMasked(void *buff, size_t size);
+};
+
+template <class T>
+class NetworkEpollClient : public EpollClient {
+private:
+	NetworkClient &mClient;
+	T mHeader;
+
+public:
+	NetworkEpollClient(NetworkClient &client) : mClient(client) {}
+	virtual ~NetworkEpollClient() {};
+
+
 };

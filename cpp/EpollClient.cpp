@@ -103,7 +103,27 @@ int EpollClient::onEpollIn(EpollService *service)
 int EpollClient::onEpollDataReceived(EpollService *service, const void *buff, int size)
 {
 	if (mRdPacket == NULL) {
-		return onEpollHeaderReceived(buff, size);
+		EpollPacket *header = mHeader;
+		if (header == NULL) {
+			header = newEpollHeader();
+			if (header == NULL) {
+				return -ENOMEM;
+			}
+
+			mHeader = header;
+		}
+
+		int length = header->write(buff, size);
+		if (length > 0 && header->isCompleted()) {
+			mRdPacket = new EpollPacket(header->getLength());
+			if (mRdPacket == NULL) {
+				return -ENOMEM;
+			}
+
+			header->seek(0);
+		}
+
+		return length;
 	}
 
 	int length = mRdPacket->write(buff, size);
