@@ -2040,3 +2040,71 @@ int cavan_async_command_cancel(struct cavan_async_command_service *service, void
 
 	return count;
 }
+
+int cavan_simple_cmdline_init(struct cavan_simple_cmdline *cmdline)
+{
+	int ret;
+
+	ret = cavan_lock_init(&cmdline->lock);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = cavan_string_init(cmdline->texts, NULL, 1024);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = cavan_string_init(cmdline->texts + 1, NULL, 1024);
+	if (ret < 0) {
+		return ret;
+	}
+
+	cmdline->backup = NULL;
+	cmdline->index = 0;
+
+	return 0;
+}
+
+void cavan_simple_cmdline_deinit(struct cavan_simple_cmdline *cmdline)
+{
+	cavan_string_deinit(cmdline->texts);
+	cavan_string_deinit(cmdline->texts + 1);
+	cavan_lock_deinit(&cmdline->lock);
+}
+
+cavan_string_t *cavan_simple_cmdline_readline(struct cavan_simple_cmdline *cmdline)
+{
+	cavan_string_t *text;
+
+	cavan_lock_acquire(&cmdline->lock);
+
+	text = cmdline->texts + cmdline->index;
+
+	while (1) {
+		print_ntext("> ", 2);
+
+		if (fgets(text->text, text->allocated, stdin) == NULL) {
+			pr_err_info("fgets");
+			text = NULL;
+			break;
+		}
+
+		text->length = strlen(text->text);
+		if (text->length > 1) {
+			text->length--;
+			cmdline->index = (cmdline->index + 1) & 1;
+			cmdline->backup = text;
+			break;
+		}
+
+		if (cmdline->backup != NULL) {
+			text = cmdline->backup;
+			break;
+		}
+	}
+
+	cavan_lock_release(&cmdline->lock);
+
+	return text;
+}

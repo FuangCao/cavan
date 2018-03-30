@@ -36,7 +36,7 @@ protected:
 };
 
 class EpollService : public SimpleThread {
-	friend EpollDaemon;
+	friend class EpollDaemon;
 
 private:
 	int mEpollFd;

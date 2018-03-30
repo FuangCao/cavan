@@ -3040,6 +3040,16 @@ int cavan_string_init(cavan_string_t *str, const char *text, int length)
 	return 0;
 }
 
+void cavan_string_deinit(cavan_string_t *str)
+{
+	if (str->allocated > 0) {
+		free(str->text);
+		str->allocated = 0;
+		str->text = "";
+		str->length = 0;
+	}
+}
+
 int cavan_string_alloc(cavan_string_t *str, int size, bool force)
 {
 	if (force || str->allocated <= size) {

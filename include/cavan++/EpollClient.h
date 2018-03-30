@@ -69,8 +69,8 @@ public:
 };
 
 class EpollClient : public SimpleLink<EpollClient> {
-	friend EpollPacket;
-	friend EpollService;
+	friend class EpollPacket;
+	friend class EpollService;
 
 private:
 	SimpleLinkQueue<EpollPacket> mWrQueue;

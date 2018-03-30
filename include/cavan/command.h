@@ -227,6 +227,13 @@ struct cavan_async_command_service {
 	struct cavan_async_command *head;
 };
 
+struct cavan_simple_cmdline {
+	cavan_string_t texts[2];
+	cavan_string_t *backup;
+	cavan_lock_t lock;
+	int index;
+};
+
 // ============================================================
 
 extern const char *cavan_help_message_help;
@@ -363,6 +370,10 @@ int cavan_pipe_cmdline_run4(const struct cavan_command_entry2 cmd_list[], size_t
 int cavan_async_command_service_init(struct cavan_async_command_service *service);
 void cavan_async_command_service_deinit(struct cavan_async_command_service *service);
 int cavan_async_command_execute(struct cavan_async_command_service *service, void (*handler)(void *data), void *data, long msec);
+
+int cavan_simple_cmdline_init(struct cavan_simple_cmdline *cmdline);
+void cavan_simple_cmdline_deinit(struct cavan_simple_cmdline *cmdline);
+cavan_string_t *cavan_simple_cmdline_readline(struct cavan_simple_cmdline *cmdline);
 
 static inline int cavan_async_command_execute_simple(void (*handler)(void *data), void *data, long msec)
 {

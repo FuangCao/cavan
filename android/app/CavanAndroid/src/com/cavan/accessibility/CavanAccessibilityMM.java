@@ -597,16 +597,15 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 	}
 
-	public class WebViewMenu extends WebViewWindow {
+	public class MenuWindow extends WebViewWindow {
 
-		public WebViewMenu(String name) {
+		public MenuWindow(String name) {
 			super(name);
 		}
 
 		@Override
 		protected boolean doRefresh(AccessibilityNodeInfo root) {
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "刷新");
-			CavanAndroid.dLog("node = " + node);
 			if (node == null) {
 				return false;
 			}
@@ -822,8 +821,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		return new WebViewWindow(name);
 	}
 
-	public CavanAccessibilityWindow getWebViewMenu(String name) {
-		return new WebViewMenu(name);
+	public CavanAccessibilityWindow getMenuWindow(String name) {
+		return new MenuWindow(name);
 	}
 
 	public CavanAccessibilityWindow getDetailWindow(String name) {
@@ -874,7 +873,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(getDetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI"));
 		addWindow(getDetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI"));
 		addWindow(getWebViewWindow("com.tencent.mm.plugin.webview.ui.tools.WebViewUI"));
-		addWindow(getWebViewMenu("android.support.design.widget.c"));
+		addWindow(getMenuWindow("android.support.design.widget.c"));
 		addWindow(getLoginWindow("com.tencent.mm.ui.account.LoginUI"));
 		addWindow(getLoginPasswordWindow("com.tencent.mm.ui.account.LoginPasswordUI"));
 	}

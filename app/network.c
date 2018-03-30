@@ -23,6 +23,7 @@
 
 struct app_network_service {
 	struct network_service service;
+	struct cavan_simple_cmdline cmdline;
 	const char *url;
 };
 
@@ -54,13 +55,10 @@ static void *app_network_receive_thread(void *data)
 	return NULL;
 }
 
-static int app_network_cmdline(struct network_client *client)
+static int app_network_cmdline(struct cavan_simple_cmdline *cmdline, struct network_client *client)
 {
 	int ret;
-	int index = 0;
 	pthread_t thread;
-	cavan_string_t *backup;
-	cavan_string_t texts[2];
 
 	ret = cavan_pthread_create(&thread, app_network_receive_thread, client, true);
 	if (ret < 0) {
@@ -68,30 +66,13 @@ static int app_network_cmdline(struct network_client *client)
 		return ret;
 	}
 
-	backup = NULL;
-	cavan_string_init(texts, NULL, 1024);
-	cavan_string_init(texts + 1, NULL, 1024);
-
 	while (1) {
-		cavan_string_t *text = texts + index;
+		cavan_string_t *text;
 		int wrlen;
 
-		print_ntext("> ", 2);
-
-		if (fgets(text->text, text->allocated, stdin) == NULL) {
-			pr_err_info("fgets");
+		text = cavan_simple_cmdline_readline(cmdline);
+		if (text == NULL) {
 			break;
-		}
-
-		text->length = strlen(text->text);
-		if (text->length > 1) {
-			backup = text;
-			backup->length--;
-			index = (index + 1) & 1;
-		} else if (backup) {
-			text = backup;
-		} else {
-			continue;
 		}
 
 		println("send[%d]: %s", text->length, text->text);
@@ -100,6 +81,8 @@ static int app_network_cmdline(struct network_client *client)
 		if (wrlen < text->length) {
 			break;
 		}
+
+		fsync(client->sockfd);
 	}
 
 	cavan_pthread_join(thread);
@@ -109,8 +92,9 @@ static int app_network_cmdline(struct network_client *client)
 
 static int app_network_client_main(int argc, char *argv[])
 {
-	int ret;
+	struct cavan_simple_cmdline cmdline;
 	struct network_client client;
+	int ret;
 
 	assert(argc > 1);
 
@@ -120,7 +104,11 @@ static int app_network_client_main(int argc, char *argv[])
 		return ret;
 	}
 
-	ret = app_network_cmdline(&client);
+	ret = cavan_simple_cmdline_init(&cmdline);
+	if (ret >= 0) {
+		ret = app_network_cmdline(&cmdline, &client);
+		cavan_simple_cmdline_deinit(&cmdline);
+	}
 
 	network_client_close(&client);
 
@@ -156,7 +144,9 @@ static bool app_network_close_connect(struct cavan_dynamic_service *service, voi
 
 static int app_network_run_handler(struct cavan_dynamic_service *service, void *conn_data)
 {
-	return app_network_cmdline(conn_data);
+	struct app_network_service *app_service = cavan_dynamic_service_get_data(service);
+
+	return app_network_cmdline(&app_service->cmdline, conn_data);
 }
 
 static int app_network_service_main(int argc, char *argv[])
@@ -173,6 +163,15 @@ static int app_network_service_main(int argc, char *argv[])
 		return -ENOMEM;
 	}
 
+	app_service = cavan_dynamic_service_get_data(service);
+	app_service->url = argv[1];
+
+	ret = cavan_simple_cmdline_init(&app_service->cmdline);
+	if (ret < 0) {
+		pr_red_info("cavan_simple_cmdline_init");
+		goto out_cavan_dynamic_service_destroy;
+	}
+
 	service->min = 20;
 	service->max = 1000;
 	service->verbose = true;
@@ -184,13 +183,10 @@ static int app_network_service_main(int argc, char *argv[])
 	service->open_connect = app_network_open_connect;
 	service->close_connect = app_network_close_connect;
 
-	app_service = cavan_dynamic_service_get_data(service);
-	app_service->url = argv[1];
-
 	ret = cavan_dynamic_service_run(service);
 
+out_cavan_dynamic_service_destroy:
 	cavan_dynamic_service_destroy(service);
-
 	return ret;
 }
 
