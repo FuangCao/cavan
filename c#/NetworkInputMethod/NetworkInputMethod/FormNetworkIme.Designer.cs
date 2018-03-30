@@ -48,7 +48,6 @@
             this.backgroundWorkerRepeater = new System.ComponentModel.BackgroundWorker();
             this.checkBoxShareClipboard = new System.Windows.Forms.CheckBox();
             this.checkBoxSelectAll = new System.Windows.Forms.CheckBox();
-            this.buttonDelete = new System.Windows.Forms.Button();
             this.buttonCopy = new System.Windows.Forms.Button();
             this.buttonPaste = new System.Windows.Forms.Button();
             this.buttonComplete = new System.Windows.Forms.Button();
@@ -70,6 +69,7 @@
             this.toolStripMenuItemRequest = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemExit = new System.Windows.Forms.ToolStripMenuItem();
             this.buttonRecents = new System.Windows.Forms.Button();
+            this.buttonRefresh = new System.Windows.Forms.Button();
             this.groupBoxMode.SuspendLayout();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
@@ -256,16 +256,6 @@
             this.checkBoxSelectAll.UseVisualStyleBackColor = true;
             this.checkBoxSelectAll.CheckedChanged += new System.EventHandler(this.checkBoxSelectAll_CheckedChanged);
             // 
-            // buttonDelete
-            // 
-            this.buttonDelete.Location = new System.Drawing.Point(174, 392);
-            this.buttonDelete.Name = "buttonDelete";
-            this.buttonDelete.Size = new System.Drawing.Size(75, 23);
-            this.buttonDelete.TabIndex = 25;
-            this.buttonDelete.Text = "删除";
-            this.buttonDelete.UseVisualStyleBackColor = true;
-            this.buttonDelete.Click += new System.EventHandler(this.buttonDelete_Click);
-            // 
             // buttonCopy
             // 
             this.buttonCopy.Location = new System.Drawing.Point(255, 392);
@@ -278,7 +268,7 @@
             // 
             // buttonPaste
             // 
-            this.buttonPaste.Location = new System.Drawing.Point(174, 423);
+            this.buttonPaste.Location = new System.Drawing.Point(174, 392);
             this.buttonPaste.Name = "buttonPaste";
             this.buttonPaste.Size = new System.Drawing.Size(75, 23);
             this.buttonPaste.TabIndex = 29;
@@ -457,12 +447,23 @@
             this.buttonRecents.UseVisualStyleBackColor = true;
             this.buttonRecents.Click += new System.EventHandler(this.buttonRecents_Click);
             // 
+            // buttonRefresh
+            // 
+            this.buttonRefresh.Location = new System.Drawing.Point(174, 423);
+            this.buttonRefresh.Name = "buttonRefresh";
+            this.buttonRefresh.Size = new System.Drawing.Size(75, 23);
+            this.buttonRefresh.TabIndex = 43;
+            this.buttonRefresh.Text = "刷新";
+            this.buttonRefresh.UseVisualStyleBackColor = true;
+            this.buttonRefresh.Click += new System.EventHandler(this.buttonRefresh_Click);
+            // 
             // FormNetworkIme
             // 
             this.AcceptButton = this.buttonStart;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(423, 456);
+            this.Controls.Add(this.buttonRefresh);
             this.Controls.Add(this.buttonRecents);
             this.Controls.Add(this.buttonHidden);
             this.Controls.Add(this.buttonRequest);
@@ -477,7 +478,6 @@
             this.Controls.Add(this.buttonComplete);
             this.Controls.Add(this.buttonPaste);
             this.Controls.Add(this.buttonCopy);
-            this.Controls.Add(this.buttonDelete);
             this.Controls.Add(this.checkBoxSelectAll);
             this.Controls.Add(this.checkBoxShareClipboard);
             this.Controls.Add(this.checkBoxEnterSend);
@@ -527,7 +527,6 @@
         private System.ComponentModel.BackgroundWorker backgroundWorkerRepeater;
         private System.Windows.Forms.CheckBox checkBoxShareClipboard;
         private System.Windows.Forms.CheckBox checkBoxSelectAll;
-        private System.Windows.Forms.Button buttonDelete;
         private System.Windows.Forms.Button buttonCopy;
         private System.Windows.Forms.Button buttonPaste;
         private System.Windows.Forms.Button buttonComplete;
@@ -549,6 +548,7 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemOpen;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSelect;
         private System.Windows.Forms.Button buttonRecents;
+        private System.Windows.Forms.Button buttonRefresh;
     }
 }
 

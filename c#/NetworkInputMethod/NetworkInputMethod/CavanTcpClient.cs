@@ -109,7 +109,9 @@ namespace NetworkInputMethod
 
                 try
                 {
-                    mTcpClient.GetStream().Write(bytes, offset, length);
+                    var stream = mTcpClient.GetStream();
+                    stream.Write(bytes, offset, length);
+                    stream.Flush();
                 }
                 catch (Exception)
                 {

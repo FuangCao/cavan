@@ -499,6 +499,11 @@ namespace NetworkInputMethod
         {
             sendCommand("RECENTS", false);
         }
+
+        private void buttonRefresh_Click(object sender, EventArgs e)
+        {
+            sendCommand("REFRESH", false);
+        }
     }
 
     public class NetworkImeClient : CavanTcpPacketClient
