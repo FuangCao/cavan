@@ -28,13 +28,12 @@ class EpollClient;
 
 class EpollPacket : public SimpleLink<EpollPacket> {
 private:
-	EpollClient *mClient;
 	char *mData;
 	u16 mLength;
 	u16 mOffset;
 
 public:
-	EpollPacket(EpollClient *client, u16 length = 0) : mClient(client), mLength(length), mOffset(0) {
+	EpollPacket(u16 length = 0) : mLength(length), mOffset(0) {
 		if (length > 0) {
 			mData = new char[length];
 		} else {
@@ -46,14 +45,6 @@ public:
 		if (mData != NULL) {
 			delete[] mData;
 		}
-	}
-
-	virtual EpollClient *getClient() {
-		return mClient;
-	}
-
-	virtual void setClient(EpollClient *client) {
-		mClient = client;
 	}
 
 	virtual int writeTo(EpollClient *client);
