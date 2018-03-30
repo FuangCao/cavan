@@ -21,6 +21,7 @@ import com.cavan.java.CavanString;
 public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 	private HashSet<Integer> mFinishNodes = new HashSet<Integer>();
+	private boolean mRefreshPending;
 
 	public static CavanAccessibilityMM instance;
 
@@ -570,9 +571,73 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			return isCurrentPackage();
 		}
 
-		@Override
-		public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
+		public boolean clickMenuButton(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, -1);
+			if (node == null) {
+				return false;
+			}
+
+			try {
+				if (CavanAccessibilityHelper.isDescriptionEquals(node, "更多")) {
+					return CavanAccessibilityHelper.performClick(node);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				node.recycle();
+			}
+
 			return false;
+		}
+
+		@Override
+		protected boolean doRefresh(AccessibilityNodeInfo root) {
+			mRefreshPending = clickMenuButton(root);
+			return mRefreshPending;
+		}
+	}
+
+	public class WebViewMenu extends WebViewWindow {
+
+		public WebViewMenu(String name) {
+			super(name);
+		}
+
+		@Override
+		protected boolean doRefresh(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "刷新");
+			CavanAndroid.dLog("node = " + node);
+			if (node == null) {
+				return false;
+			}
+
+			AccessibilityNodeInfo parent = node.getParent();
+
+			try {
+				if (parent != null) {
+					return CavanAccessibilityHelper.performClick(parent);
+				}
+			} catch (Exception e) {
+				if (parent != null) {
+					parent.recycle();
+				}
+
+				node.recycle();
+			}
+
+			return false;
+		}
+
+		@Override
+		protected void onEnter() {
+			if (mRefreshPending) {
+				doRefresh(getRootInActiveWindow());
+			}
+		}
+
+		@Override
+		protected void onLeave() {
+			mRefreshPending = false;
 		}
 	}
 
@@ -757,6 +822,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		return new WebViewWindow(name);
 	}
 
+	public CavanAccessibilityWindow getWebViewMenu(String name) {
+		return new WebViewMenu(name);
+	}
+
 	public CavanAccessibilityWindow getDetailWindow(String name) {
 		return new DetailWindow(name);
 	}
@@ -805,6 +874,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(getDetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI"));
 		addWindow(getDetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI"));
 		addWindow(getWebViewWindow("com.tencent.mm.plugin.webview.ui.tools.WebViewUI"));
+		addWindow(getWebViewMenu("android.support.design.widget.c"));
 		addWindow(getLoginWindow("com.tencent.mm.ui.account.LoginUI"));
 		addWindow(getLoginPasswordWindow("com.tencent.mm.ui.account.LoginPasswordUI"));
 	}

@@ -327,6 +327,12 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 			}
 			break;
 
+		case "REFRESH":
+			if (accessibility != null) {
+				accessibility.refresh();
+			}
+			break;
+
 		case "IME":
 			mInputMethodManager.showInputMethodPicker();
 			break;

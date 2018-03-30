@@ -327,6 +327,23 @@ public class CavanAccessibilityHelper {
 		return CavanString.EMPTY_STRING;
 	}
 
+	public static boolean isTextEquals(AccessibilityNodeInfo node, String text) {
+		return getNodeText(node).equals(text);
+	}
+
+	public static String getNodeDescription(AccessibilityNodeInfo node) {
+		CharSequence description = node.getContentDescription();
+		if (description != null) {
+			return description.toString().trim();
+		}
+
+		return CavanString.EMPTY_STRING;
+	}
+
+	public static boolean isDescriptionEquals(AccessibilityNodeInfo node, String text) {
+		return getNodeDescription(node).equals(text);
+	}
+
 	public static String getEventText(AccessibilityEvent event) {
 		List<CharSequence> texts = event.getText();
 		if (texts.isEmpty()) {
@@ -875,6 +892,7 @@ public class CavanAccessibilityHelper {
 
 				builder.append(": ");
 				builder.append(node.getText());
+				builder.append('@').append(node.getContentDescription());
 			}
 		});
 	}

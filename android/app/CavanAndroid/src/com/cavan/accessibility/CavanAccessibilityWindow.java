@@ -113,6 +113,10 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
+	protected boolean doRefresh(AccessibilityNodeInfo root) {
+		return false;
+	}
+
 	protected void onEnter() {}
 	protected void onLeave() {}
 	protected void onPackageUpdated() {}

@@ -490,6 +490,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 	}
 
+	public CavanAccessibilityPackage getPackage(AccessibilityNodeInfo root) {
+		return getPackage(root.getPackageName());
+	}
+
 	public boolean performActionBack() {
 		CavanAndroid.dLog("performActionBack");
 		return performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
@@ -656,32 +660,40 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return null;
 	}
 
-	public boolean sendText(String message, boolean commit) {
+	public boolean sendCommand(int command, Object... args) {
 		AccessibilityNodeInfo root = getRootInActiveWindow(3);
 		if (root == null) {
 			return false;
 		}
 
-		CavanAccessibilityPackage pkg = getPackage(root.getPackageName());
+		CavanAccessibilityPackage pkg = getPackage(root);
 		if (pkg == null) {
 			return false;
 		}
 
-		return pkg.doSendText(root, message, commit);
+		try {
+			return pkg.doCommand(root, command, args);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return false;
+	}
+
+	public boolean sendCommand(int command) {
+		return sendCommand(command, (Object[]) null);
+	}
+
+	public boolean sendText(String message, boolean commit) {
+		return sendCommand(CavanAccessibilityPackage.CMD_SEND_TEXT, message, commit);
 	}
 
 	public boolean login(String username, String password) {
-		AccessibilityNodeInfo root = getRootInActiveWindow(3);
-		if (root == null) {
-			return false;
-		}
+		return sendCommand(CavanAccessibilityPackage.CMD_LOGIN, username, password);
+	}
 
-		CavanAccessibilityPackage pkg = getPackage(root.getPackageName());
-		if (pkg == null) {
-			return false;
-		}
-
-		return pkg.doLogin(root, username, password);
+	public boolean refresh() {
+		return sendCommand(CavanAccessibilityPackage.CMD_REFRESH);
 	}
 
 	public Class<?> getBroadcastReceiverClass() {

@@ -15,6 +15,10 @@ import com.cavan.java.CavanString;
 
 public class CavanAccessibilityPackage {
 
+	public static final int CMD_SEND_TEXT = 1;
+	public static final int CMD_LOGIN = 2;
+	public static final int CMD_REFRESH = 3;
+
 	public static int WAIT_DELAY = 500;
 	public static int BACK_DELAY = 5000;
 	public static int POLL_DELAY = 500;
@@ -496,22 +500,29 @@ public class CavanAccessibilityPackage {
 		return -1;
 	}
 
-	public boolean doSendText(AccessibilityNodeInfo root, String message, boolean commit) {
+	public boolean doCommand(AccessibilityNodeInfo root, int command, Object[] args) {
 		CavanAccessibilityWindow win = getWindow();
 		if (win == null) {
 			return false;
 		}
 
-		return win.doSendText(root, message, commit);
-	}
+		switch (command) {
+		case CMD_SEND_TEXT:
+			CavanAndroid.dLog("CMD_SEND_TEXT");
+			return win.doSendText(root, (String) args[0], (boolean) args[1]);
 
-	protected boolean doLogin(AccessibilityNodeInfo root, String username, String password) {
-		CavanAccessibilityWindow win = getWindow();
-		if (win == null) {
+		case CMD_LOGIN:
+			CavanAndroid.dLog("CMD_LOGIN");
+			return win.doLogin(root, (String) args[0], (String) args[1]);
+
+		case CMD_REFRESH:
+			CavanAndroid.dLog("CMD_REFRESH");
+			return win.doRefresh(root);
+
+		default:
+			CavanAndroid.eLog("Invalid command: " + command);
 			return false;
 		}
-
-		return win.doLogin(root, username, password);
 	}
 
 	protected void initWindows() {}
