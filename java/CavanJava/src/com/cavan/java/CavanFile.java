@@ -931,10 +931,6 @@ public class CavanFile extends File {
 
 	public static String replaceInvalidFilenameChar(String filename, char newChar) {
 		for (char oldChar : INVALID_FILENAME_CHARS) {
-			if (filename.indexOf(oldChar) < 0) {
-				continue;
-			}
-
 			filename = filename.replace(oldChar, newChar);
 		}
 

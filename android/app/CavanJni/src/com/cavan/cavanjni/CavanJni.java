@@ -68,7 +68,7 @@ public class CavanJni extends CavanNative {
 	}
 
 	public static CavanFile symlinkApk(CavanFile dir, CavanPackageInfo info) {
-		CavanFile file = new CavanFile(dir, info.getBackupName());
+		CavanFile file = new CavanFile(dir, info.getBackupName().replaceAll("\\s+", "_"));
 		if (symlink(info.getSourcePath(), file.getPath())) {
 			return file;
 		}
