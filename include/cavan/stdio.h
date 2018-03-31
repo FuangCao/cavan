@@ -638,6 +638,7 @@ int cavan_stdio_redirect3(const char *pathname, int flags);
 
 int cavan_stdout_write_line(const char *line, int length);
 
+int nsleep(ulong nseconds);
 int msleep(ulong mseconds);
 
 static inline unsigned int ssleep(unsigned int seconds)
