@@ -95,11 +95,3 @@ void EpollService::run(void)
 
 	pr_red_info("epoll thread exit!");
 }
-
-void EpollService::runEpollDaemon(void)
-{
-	while (1) {
-		EpollClient *client = dequeueEpollClient();
-		client->processEpollPackages();
-	}
-}

@@ -41,8 +41,8 @@ class EpollService : public SimpleThread {
 private:
 	int mEpollFd;
 	ThreadLock mLock;
+	EpollClientQueue mClientQueue;
 	SimpleLinkQueue<EpollDaemon> mDaemonQueue;
-	SimpleWaitQueue<EpollClient> mClientQueue;
 
 public:
 	EpollService(void) : mEpollFd(-1) {}
@@ -65,14 +65,13 @@ public:
 	}
 
 	virtual bool enqueueEpollClient(EpollClient *client) {
-		return mClientQueue.enqueueSafe(client);
-	}
-
-	virtual EpollClient *dequeueEpollClient(void) {
-		return mClientQueue.dequeue();
+		return mClientQueue.enqueue(client);
 	}
 
 protected:
 	virtual void run(void);
-	virtual void runEpollDaemon(void);
+
+	virtual void runEpollDaemon(void) {
+		mClientQueue.processPackets();
+	}
 };

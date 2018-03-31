@@ -156,6 +156,14 @@ class CavanCommandChtty extends CavanNativeCommand {
 	}
 }
 
+class CavanCommandClock extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doClock(async, args);
+	}
+}
+
 class CavanCommandCopy extends CavanNativeCommand {
 
 	@Override
@@ -1078,6 +1086,7 @@ public class CavanNative {
 		sHashMap.put("calculator", new CavanCommandCalculator());
 		sHashMap.put("chroot", new CavanCommandChroot());
 		sHashMap.put("chtty", new CavanCommandChtty());
+		sHashMap.put("clock", new CavanCommandClock());
 		sHashMap.put("copy", new CavanCommandCopy());
 		sHashMap.put("dd", new CavanCommandDd());
 		sHashMap.put("df", new CavanCommandDf());
@@ -1211,6 +1220,7 @@ public class CavanNative {
 	public static native int doCalculator(boolean async, String... args);
 	public static native int doChroot(boolean async, String... args);
 	public static native int doChtty(boolean async, String... args);
+	public static native int doClock(boolean async, String... args);
 	public static native int doCopy(boolean async, String... args);
 	public static native int doDd(boolean async, String... args);
 	public static native int doDf(boolean async, String... args);

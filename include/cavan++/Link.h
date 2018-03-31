@@ -182,12 +182,20 @@ private:
 
 public:
 	SimpleLink(void) {
-		clear();
+		reset();
 	}
 
 	virtual ~SimpleLink() {}
 
-	virtual void clear(void) {
+	virtual T *getPrev(void) {
+		return (T *) prev;
+	}
+
+	virtual T *getNext(void) {
+		return (T *) next;
+	}
+
+	virtual void reset(void) {
 		next = prev = this;
 	}
 
@@ -208,7 +216,7 @@ public:
 	virtual void remove(void) {
 		prev->next = next;
 		next->prev = prev;
-		clear();
+		reset();
 	}
 
 	virtual T *removeFirst(void) {
@@ -220,7 +228,7 @@ public:
 
 		next = node->next;
 		next->prev = this;
-		node->clear();
+		node->reset();
 
 		return (T *) node;
 	}
@@ -234,7 +242,7 @@ public:
 
 		prev = node->prev;
 		prev->next = this;
-		node->clear();
+		node->reset();
 
 		return (T *) node;
 	}

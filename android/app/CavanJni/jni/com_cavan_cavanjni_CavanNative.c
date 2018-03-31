@@ -135,6 +135,13 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doChtty(JNIEnv *env, jclass c
 	return CavanMainExecute(env, "chtty", async, args, do_cavan_chtty);
 }
 
+extern int do_cavan_clock(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doClock(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "clock", async, args, do_cavan_clock);
+}
+
 extern int do_cavan_copy(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doCopy(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)

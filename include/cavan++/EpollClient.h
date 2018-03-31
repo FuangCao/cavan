@@ -70,6 +70,7 @@ public:
 class EpollClient : public SimpleLink<EpollClient> {
 	friend class EpollPacket;
 	friend class EpollService;
+	friend class EpollClientQueue;
 
 private:
 	SimpleLinkQueue<EpollPacket> mWrQueue;
@@ -85,14 +86,16 @@ public:
 	virtual int setEpollReadonly(EpollService *service);
 	virtual int setEpollReadWrite(EpollService *service);
 
+	virtual EpollPacket *dequeueEpollPacket(void) {
+		return mRdQueue.dequeue();
+	}
+
 protected:
 	virtual int getEpollFd(void) = 0;
 	virtual EpollPacket *newEpollHeader(void) = 0;
 	virtual int doEpollRead(void *buff, int size) = 0;
 	virtual int doEpollWrite(const void *buff, int size) = 0;
 	virtual int onEpollPacketReceived(EpollPacket *packet) = 0;
-
-	virtual int processEpollPackages(void);
 
 	virtual u32 getEpollEventsRO(void) {
 		return EPOLLIN | EPOLLERR | EPOLLHUP;
@@ -108,4 +111,19 @@ protected:
 	virtual void onEpollEvent(EpollService *service, u32 events);
 	virtual int onEpollOut(EpollService *service);
 	virtual void onEpollError(EpollService *service);
+};
+
+class EpollClientQueue {
+private:
+	EpollClient *mHead;
+	ThreadLock mLock;
+	Condition mCond;
+
+public:
+	EpollClientQueue(void) : mHead(NULL) {}
+	virtual ~EpollClientQueue() {}
+
+public:
+	virtual bool enqueue(EpollClient *client);
+	virtual void processPackets(void);
 };

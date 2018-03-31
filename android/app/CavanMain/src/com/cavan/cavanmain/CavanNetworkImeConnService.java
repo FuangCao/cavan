@@ -34,7 +34,11 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case MSG_TCP_PACKET_RECEIVED:
-				onTcpPacketReceived((String[]) msg.obj);
+				try {
+					onTcpPacketReceived((String[]) msg.obj);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 				break;
 
 			case MSG_SHOW_MEDIA_VOLUME:
@@ -153,6 +157,10 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 
 		switch (args[0]) {
 		case "SEND":
+			if (args.length < 2) {
+				break;
+			}
+
 			if (accessibility != null && accessibility.sendText(args[1], true)) {
 				break;
 			}

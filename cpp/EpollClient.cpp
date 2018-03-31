@@ -158,19 +158,48 @@ void EpollClient::onEpollError(EpollService *service)
 	removeEpollFrom(service);
 }
 
-int EpollClient::processEpollPackages(void)
+bool EpollClientQueue::enqueue(EpollClient *client)
 {
-	while (1) {
-		EpollPacket *packet = mRdQueue.dequeue();
-		if (packet == NULL) {
-			break;
+	AutoLock lock(mLock);
+
+	if (mHead != NULL) {
+		if (client->isUsed()) {
+			return true;
 		}
 
-		int ret = onEpollPacketReceived(packet);
-		if (ret < 0) {
-			return ret;
-		}
+		mHead->append(client);
+	} else {
+		client->reset();
+		mHead = client;
+		mCond.signal();
 	}
 
-	return 0;
+	return true;
+}
+
+void EpollClientQueue::processPackets(void)
+{
+	mLock.acquire();
+
+	while (1) {
+		while (mHead == NULL) {
+			mCond.waitLocked(mLock);
+		}
+
+		EpollClient *client = mHead;
+		mHead = client->getNext();
+
+		EpollPacket *packet = client->dequeueEpollPacket();
+		if (packet == NULL) {
+			if (mHead == client) {
+				mHead = NULL;
+			} else {
+				client->remove();
+			}
+		} else {
+			mLock.release();
+			client->onEpollPacketReceived(packet);
+			mLock.acquire();
+		}
+	}
 }
