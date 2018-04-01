@@ -48,7 +48,6 @@ struct cavan_http_client {
 struct cavan_http_sender {
 	struct cavan_http_client clients[HTTP_SENDER_CONN_COUNT];
 	bool status[HTTP_SENDER_PACKAGES];
-	int counts[HTTP_SENDER_PACKAGES];
 	pthread_cond_t cond_write;
 	struct network_url url;
 	pthread_mutex_t lock;
@@ -357,7 +356,7 @@ static void *cavan_http_sender_receive_thread(void *data)
 			cavan_stdout_write_line(body->text, body->length);
 		}
 
-		if (++sender->counts[packet] > HTTP_SENDER_SEND_COUNT || cavan_http_sender_is_completed(body)) {
+		if (cavan_http_sender_is_completed(body)) {
 			sender->status[packet] = false;
 		}
 	}
@@ -404,7 +403,6 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 
 	for (i = 0; i < count; i++) {
 		sender->status[i] = true;
-		sender->counts[i] = 0;
 	}
 
 	while (1) {
