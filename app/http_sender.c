@@ -27,9 +27,10 @@
 #define HTTP_SENDER_AHEAD			10000
 #define HTTP_SENDER_REPEAT			60
 #define HTTP_SENDER_HOST			"game.weixin.qq.com"
-#define HTTP_SENDER_MAX				20
-#define HTTP_SENDER_CONN_COUNT		8
-#define HTTP_SENDER_QUEUE_SIZE		8
+#define HTTP_SENDER_SEND_COUNT		200
+#define HTTP_SENDER_CONN_COUNT		4
+#define HTTP_SENDER_QUEUE_SIZE		4
+#define HTTP_SENDER_PACKAGES		200
 
 struct cavan_http_sender;
 
@@ -46,6 +47,8 @@ struct cavan_http_client {
 
 struct cavan_http_sender {
 	struct cavan_http_client clients[HTTP_SENDER_CONN_COUNT];
+	bool status[HTTP_SENDER_PACKAGES];
+	int counts[HTTP_SENDER_PACKAGES];
 	pthread_cond_t cond_write;
 	struct network_url url;
 	pthread_mutex_t lock;
@@ -242,12 +245,79 @@ static int cavan_http_sender_get_client(struct cavan_http_sender *sender, int in
 	return -1;
 }
 
+static int cavan_http_sender_find_errdesc(cavan_string_t *body, char *buff, int size)
+{
+	const char *errdesc, *end;
+	int length;
+
+	errdesc = strstr(body->text, "\"errdesc\":");
+	if (errdesc == NULL) {
+		return -ENOENT;
+	}
+
+	errdesc += 10;
+
+	if (*errdesc != '"') {
+		return -EINVAL;
+	}
+
+	errdesc++;
+
+	end = strchr(errdesc, '"');
+	if (end == NULL) {
+		return -EINVAL;
+	}
+
+	length = end - errdesc;
+	if (length >= size) {
+		length = size - 1;
+	}
+
+	memcpy(buff, errdesc, length);
+	buff[length] = 0;
+
+	return length;
+}
+
+static bool cavan_http_sender_is_completed(cavan_string_t *body)
+{
+	int i;
+	int length;
+	char errdesc[1024];
+	const char *texts[] = {
+		"\u4e0a\u9650",
+		"\u9886\u5b8c",
+		"\u592a\u5feb",
+		"\u9891\u7e41",
+		"\u9886\u53d6\u8fc7",
+	};
+
+	length = cavan_http_sender_find_errdesc(body, errdesc, sizeof(errdesc));
+	if (length < 0) {
+		return false;
+	}
+
+	if (length < 2) {
+		return true;
+	}
+
+	for (i = 0; i < NELEM(texts); i++) {
+		if (strstr(errdesc, texts[i])) {
+			println("Found: %s", texts[i]);
+			return true;
+		}
+	}
+
+	return false;
+}
+
 static void *cavan_http_sender_receive_thread(void *data)
 {
 	struct cavan_http_client *client = data;
 	struct cavan_http_sender *sender = client->sender;
 	struct cavan_http_packet *rsp;
 	struct cavan_fifo fifo;
+	cavan_string_t *body;
 	int ret;
 
 	ret = cavan_fifo_init(&fifo, 4096, &client->client);
@@ -263,6 +333,8 @@ static void *cavan_http_sender_receive_thread(void *data)
 		pr_red_info("cavan_http_packet_alloc");
 		goto out_fifo_deinit;
 	}
+
+	body = &rsp->body;
 
 	cavan_http_sender_lock(sender);
 
@@ -281,10 +353,12 @@ static void *cavan_http_sender_receive_thread(void *data)
 		packet = cavan_http_client_dequeue(client);
 
 		if (sender->verbose) {
-			cavan_string_t *body = &rsp->body;
-
 			println("received: packet = %d", packet);
 			cavan_stdout_write_line(body->text, body->length);
+		}
+
+		if (++sender->counts[packet] > HTTP_SENDER_SEND_COUNT || cavan_http_sender_is_completed(body)) {
+			sender->status[packet] = false;
 		}
 	}
 
@@ -303,9 +377,35 @@ out_pthread_cond_signal:
 	return NULL;
 }
 
+static int cavan_http_sender_get_packet(struct cavan_http_sender *sender, int index, int count)
+{
+	int i;
+
+	for (i = index; i < count; i++) {
+		if (sender->status[i]) {
+			return i;
+		}
+	}
+
+	for (i = 0; i < index; i++) {
+		if (sender->status[i]) {
+			return i;
+		}
+	}
+
+	return -ENOENT;
+}
+
 static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct cavan_http_packet *packets[], int count)
 {
 	u64 overtime = sender->time + sender->repeat * 1000;
+	bool pending = true;
+	int i;
+
+	for (i = 0; i < count; i++) {
+		sender->status[i] = true;
+		sender->counts[i] = 0;
+	}
 
 	while (1) {
 		struct timespec ts;
@@ -331,10 +431,11 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 		}
 	}
 
-	while (clock_gettime_real_ms() < overtime) {
+	while (pending && clock_gettime_real_ms() < overtime) {
 		int packet_index;
 		int conn_index;
 		int conn_count;
+		int index;
 		int ret;
 
 		while (1) {
@@ -374,7 +475,6 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 		while (sender->conn_count > 0 && clock_gettime_real_ms() < overtime) {
 			struct cavan_http_client *client;
 			cavan_string_t *header;
-			int index;
 
 			while ((index = cavan_http_sender_get_client(sender, conn_index, conn_count)) < 0) {
 				if (sender->conn_count <= 0) {
@@ -386,6 +486,12 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 				}
 
 				cavan_http_sender_wait(sender, &sender->cond_write);
+			}
+
+			packet_index = cavan_http_sender_get_packet(sender, packet_index, count);
+			if (packet_index < 0) {
+				pending = false;
+				break;
 			}
 
 			cavan_http_sender_unlock(sender);
@@ -442,7 +548,7 @@ int main(int argc, char *argv[])
 	int delay = -200;
 	int option_index;
 	char *test = NULL;
-	struct cavan_http_packet *packets[200];
+	struct cavan_http_packet *packets[HTTP_SENDER_PACKAGES];
 	struct cavan_http_sender sender;
 	struct option long_option[] = {
 		{
