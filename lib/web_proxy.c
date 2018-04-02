@@ -582,14 +582,17 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 		url_prev = url;
 		url = (url == urls) ? urls + 1 : urls;
 
-		req = network_url_parse(url, url_text);
-		if (req == NULL) {
-			pr_red_info("web_proxy_parse_url:\n%s", url_text);
-			ret = -EINVAL;
-			goto out_network_client_close_proxy;
-		}
+		if (url_text[0] == '/') {
+			tcp_proxy = true;
+			url = &proxy->url_proxy;
+		} else {
+			req = network_url_parse(url, url_text);
+			if (req == NULL) {
+				pr_red_info("web_proxy_parse_url:\n%s", url_text);
+				ret = -EINVAL;
+				goto out_network_client_close_proxy;
+			}
 
-		if (url->hostname[0]) {
 			if (url->protocol[0] == 0) {
 				if (url->port == NETWORK_PORT_INVALID) {
 					pr_red_info("invalid url %s", network_url_tostring(url, NULL, 0, NULL));
@@ -602,9 +605,6 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 
 			tcp_proxy = false;
 			pr_info("%s[%d](%d)", cavan_http_request_type_tostring(type), type, count);
-		} else {
-			tcp_proxy = true;
-			url = &proxy->url_proxy;
 		}
 
 		if (url_prev == NULL || network_url_equals(url_prev, url) == false) {
@@ -625,6 +625,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 		}
 
 		switch (remote.type) {
+		case NETWORK_PROTOCOL_TCP:
 		case NETWORK_PROTOCOL_HTTP:
 		case NETWORK_PROTOCOL_HTTPS:
 			switch (type) {
