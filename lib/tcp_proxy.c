@@ -69,7 +69,7 @@ static int tcp_proxy_open_connect(struct cavan_dynamic_service *service, void *c
 {
 	struct tcp_proxy_service *proxy = cavan_dynamic_service_get_data(service);
 
-	return network_service_accept(&proxy->service, conn);
+	return network_service_accept(&proxy->service, conn, CAVAN_NET_FLAG_NODELAY);
 }
 
 static bool tcp_proxy_close_connect(struct cavan_dynamic_service *service, void *conn)

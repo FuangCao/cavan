@@ -489,7 +489,7 @@ static int web_proxy_open_connect(struct cavan_dynamic_service *service, void *c
 {
 	struct web_proxy_service *proxy = cavan_dynamic_service_get_data(service);
 
-	return network_service_accept(&proxy->service, conn);
+	return network_service_accept(&proxy->service, conn, 0);
 }
 
 static bool web_proxy_close_connect(struct cavan_dynamic_service *service, void *conn)

@@ -15,6 +15,7 @@
 #include <linux/un.h>
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>
+#include <linux/tcp.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/time.h>
@@ -51,6 +52,7 @@
 #define CAVAN_NET_FLAG_TALK			(1 << 0)
 #define CAVAN_NET_FLAG_SYNC			(1 << 1)
 #define CAVAN_NET_FLAG_WAIT			(1 << 2)
+#define CAVAN_NET_FLAG_NODELAY		(1 << 3)
 
 #ifndef SO_REUSEPORT
 #define SO_REUSEPORT				15
@@ -273,7 +275,6 @@ struct network_client {
 	network_protocol_t type;
 	struct network_service *service;
 
-	int (*flush)(struct network_client *client);
 	void (*close)(struct network_client *client);
 	void (*shutdown)(struct network_client *client);
 	ssize_t (*send)(struct network_client *client, const void *buff, size_t size);
@@ -321,7 +322,7 @@ struct network_service {
 
 	ssize_t (*sendto)(struct network_service *service, const void *buff, size_t size, const struct sockaddr *addr);
 	ssize_t (*recvfrom)(struct network_service *service, void *buff, size_t size, struct sockaddr *addr);
-	int (*accept)(struct network_service *service, struct network_client *conn);
+	int (*accept)(struct network_service *service, struct network_client *conn, int flags);
 	void (*close)(struct network_service *service);
 };
 
@@ -507,7 +508,7 @@ ssize_t network_client_recv_packet(struct network_client *client, void *buff, si
 int network_client_fifo_init(struct cavan_fifo *fifo, size_t size, struct network_client *client);
 int network_client_fifo_read_cache(struct cavan_fifo *fifo, struct network_client *client);
 
-int network_service_accept_timed(struct network_service *service, struct network_client *client, u32 msec);
+int network_service_accept_timed(struct network_service *service, struct network_client *client, u32 msec, int flags);
 int network_service_open(struct network_service *service, const struct network_url *url, int flags);
 int network_service_open2(struct network_service *service, const char *url, int flags);
 __printf_format_34__ int network_service_openf(struct network_service *service, int flags, const char *url, ...);
@@ -530,6 +531,31 @@ int udp_discovery_service_start(struct udp_discovery_service *service, const cha
 void udp_discovery_service_stop(struct udp_discovery_service *service);
 int udp_discovery_client_run(u16 port, void *data, void (*handler)(int index, const char *command, struct sockaddr_in *addr, void *data));
 int tcp_discovery_client_run(struct tcp_discovery_client *client, void *data);
+
+static inline int setsockopt_uint(int sockfd, int level, int optname, uint value)
+{
+	return setsockopt(sockfd, level, optname, (void *) &value, sizeof(value));
+}
+
+static inline int setsockopt_reuse_addr(int sockfd)
+{
+	return setsockopt_uint(sockfd, SOL_SOCKET, SO_REUSEADDR, 1);
+}
+
+static inline int setsockopt_reuse_port(int sockfd)
+{
+	return setsockopt_uint(sockfd, SOL_SOCKET, SO_REUSEPORT, 1);
+}
+
+static inline int setsockopt_keepalive(int sockfd)
+{
+	return setsockopt_uint(sockfd, SOL_SOCKET, SO_KEEPALIVE, 1);
+}
+
+static inline int setsockopt_tcp_nodelay(int sockfd)
+{
+	return setsockopt_uint(sockfd, IPPROTO_TCP, TCP_NODELAY, 1);
+}
 
 static inline int inet_socket(int type)
 {
@@ -741,6 +767,16 @@ static inline void network_client_shutdown(struct network_client *client)
 	client->shutdown(client);
 }
 
+static inline int network_client_set_keepalive(struct network_client *client)
+{
+	return setsockopt_keepalive(client->sockfd);
+}
+
+static inline int network_client_set_tcp_nodelay(struct network_client *client)
+{
+	return setsockopt_tcp_nodelay(client->sockfd);
+}
+
 static inline void network_service_set_data(struct network_service *service, void *data)
 {
 	service->private_data = data;
@@ -751,9 +787,9 @@ static inline void *network_service_get_data(struct network_service *service)
 	return service->private_data;
 }
 
-static inline int network_service_accept(struct network_service *service, struct network_client *client)
+static inline int network_service_accept(struct network_service *service, struct network_client *client, int flags)
 {
-	return service->accept(service, client);
+	return service->accept(service, client, flags);
 }
 
 static inline int network_service_get_local_addr(struct network_service *service, struct sockaddr *addr, socklen_t addrlen)
@@ -785,18 +821,4 @@ static inline int network_client_send_file3(struct network_client *client, const
 {
 	size64_t size = file_get_size(pathname);
 	return network_client_send_file2(client, pathname, size);
-}
-
-static inline int socket_set_reuse_addr(int sockfd)
-{
-	int reuse = 1;
-
-	return setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (void *) &reuse, sizeof(reuse));
-}
-
-static inline int socket_set_reuse_port(int sockfd)
-{
-	int reuse = 1;
-
-	return setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, (void *) &reuse, sizeof(reuse));
 }

@@ -119,7 +119,7 @@ static int role_change_service_open_connect(struct cavan_dynamic_service *servic
 {
 	struct role_change_service *role = cavan_dynamic_service_get_data(service);
 
-	return network_service_accept(&role->service, conn);
+	return network_service_accept(&role->service, conn, CAVAN_NET_FLAG_NODELAY);
 }
 
 static bool role_change_service_close_connect(struct cavan_dynamic_service *service, void *data)
@@ -783,13 +783,13 @@ static int role_change_client_burrow(struct network_client *conn, struct network
 		return port;
 	}
 
-	ret = socket_set_reuse_addr(conn->sockfd);
+	ret = setsockopt_reuse_addr(conn->sockfd);
 	if (ret < 0) {
 		pr_red_info("socket_set_reuse_addr");
 		return ret;
 	}
 
-	ret = socket_set_reuse_port(conn->sockfd);
+	ret = setsockopt_reuse_port(conn->sockfd);
 	if (ret < 0) {
 		pr_red_info("socket_set_reuse_port");
 		return ret;
@@ -803,7 +803,7 @@ static int role_change_client_burrow(struct network_client *conn, struct network
 		return ret;
 	}
 
-	ret = network_service_accept_timed(&service, client, 60000);
+	ret = network_service_accept_timed(&service, client, 60000, CAVAN_NET_FLAG_NODELAY);
 	if (ret < 0) {
 		pr_red_info("network_service_accept_timed");
 	}
@@ -902,7 +902,7 @@ static int role_change_proxy_open_connect(struct cavan_dynamic_service *service,
 {
 	struct role_change_proxy *proxy = cavan_dynamic_service_get_data(service);
 
-	return network_service_accept(&proxy->service, conn);
+	return network_service_accept(&proxy->service, conn, CAVAN_NET_FLAG_NODELAY);
 }
 
 static bool role_change_proxy_close_connect(struct cavan_dynamic_service *service, void *conn)

@@ -133,7 +133,7 @@ static int app_network_open_connect(struct cavan_dynamic_service *service, void 
 {
 	struct app_network_service *app_service = cavan_dynamic_service_get_data(service);
 
-	return network_service_accept(&app_service->service, conn);
+	return network_service_accept(&app_service->service, conn, CAVAN_NET_FLAG_NODELAY);
 }
 
 static bool app_network_close_connect(struct cavan_dynamic_service *service, void *conn)

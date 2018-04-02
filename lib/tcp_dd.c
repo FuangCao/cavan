@@ -111,8 +111,6 @@ ssize_t tcp_dd_package_send(struct network_client *client, struct tcp_dd_package
 		return -EFAULT;
 	}
 
-	client->flush(client);
-
 	return 0;
 }
 
@@ -159,7 +157,7 @@ int tcp_dd_send_request3(struct network_url *url, struct tcp_dd_package *pkg, st
 	int ret;
 	struct network_client client;
 
-	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT | CAVAN_NET_FLAG_NODELAY);
 	if (ret < 0) {
 		pr_red_info("network_client_open2");
 		return ret;
@@ -173,7 +171,7 @@ int tcp_dd_send_request4(struct network_url *url, struct tcp_dd_package *pkg, u1
 	int ret;
 	struct network_client client;
 
-	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT | CAVAN_NET_FLAG_NODELAY);
 	if (ret < 0) {
 		pr_red_info("network_client_open2");
 		return ret;
@@ -1331,7 +1329,7 @@ static int tcp_dd_service_open_connect(struct cavan_dynamic_service *service, vo
 {
 	struct cavan_tcp_dd_service *dd_service = cavan_dynamic_service_get_data(service);
 
-	return dd_service->service.accept(&dd_service->service, conn);
+	return dd_service->service.accept(&dd_service->service, conn, CAVAN_NET_FLAG_NODELAY);
 }
 
 static bool tcp_dd_service_close_connect(struct cavan_dynamic_service *service, void *conn)
@@ -1611,7 +1609,7 @@ int tcp_dd_send_file(struct network_url *url, struct network_file_request *file_
 		}
 	}
 
-	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT | CAVAN_NET_FLAG_NODELAY);
 	if (ret < 0) {
 		pr_red_info("network_client_open2");
 		goto out_close_fd;
@@ -1721,7 +1719,7 @@ int tcp_dd_receive_file(struct network_url *url, struct network_file_request *fi
 		umount_partition(dest_file, MNT_DETACH);
 	}
 
-	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT | CAVAN_NET_FLAG_NODELAY);
 	if (ret < 0) {
 		pr_red_info("inet_create_tcp_link2");
 		return ret;
@@ -1835,7 +1833,7 @@ int tcp_dd_exec_command(struct network_url *url, const char *command)
 	struct termios tty_attr;
 	struct network_client client;
 
-	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT | CAVAN_NET_FLAG_NODELAY);
 	if (ret < 0) {
 		pr_red_info("network_client_open2");
 		return ret;
@@ -1879,7 +1877,7 @@ int tcp_dd_keypad_client_run(struct network_url *url, int flags)
 	int ret;
 	struct network_client client;
 
-	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT | CAVAN_NET_FLAG_NODELAY);
 	if (ret < 0) {
 		pr_red_info("network_client_open2");
 		return ret;
@@ -1991,7 +1989,7 @@ int tcp_alarm_add(struct network_url *url, const char *command, time_t time, tim
 	int ret;
 	struct network_client client;
 
-	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT | CAVAN_NET_FLAG_NODELAY);
 	if (ret < 0) {
 		pr_red_info("network_client_open2");
 		return ret;
@@ -2012,7 +2010,7 @@ int tcp_alarm_remove(struct network_url *url, int index)
 	int ret;
 	struct network_client client;
 
-	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT | CAVAN_NET_FLAG_NODELAY);
 	if (ret < 0) {
 		pr_red_info("network_client_open2");
 		return ret;
@@ -2030,7 +2028,7 @@ int tcp_alarm_list(struct network_url *url, int index)
 	struct network_client client;
 	struct tcp_alarm_add_request alarm;
 
-	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT | CAVAN_NET_FLAG_NODELAY);
 	if (ret < 0) {
 		pr_red_info("network_client_open2");
 		return ret;
@@ -2140,7 +2138,7 @@ int tcp_dd_install(struct network_url *url, const char *pathname)
 		return -ENOENT;
 	}
 
-	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT);
+	ret = network_client_open(&client, url, CAVAN_NET_FLAG_TALK | CAVAN_NET_FLAG_SYNC | CAVAN_NET_FLAG_WAIT | CAVAN_NET_FLAG_NODELAY);
 	if (ret < 0) {
 		pr_red_info("network_client_open");
 		return ret;

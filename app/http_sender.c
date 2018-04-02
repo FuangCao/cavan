@@ -117,7 +117,7 @@ static int cavan_http_client_open(struct cavan_http_client *client, struct cavan
 	int count = 0;
 
 	while (1) {
-		int ret = network_client_open(&client->client, &sender->url, 0);
+		int ret = network_client_open(&client->client, &sender->url, CAVAN_NET_FLAG_NODELAY);
 		if (ret < 0) {
 			pr_red_info("network_client_open");
 
@@ -144,20 +144,20 @@ static int cavan_http_client_open(struct cavan_http_client *client, struct cavan
 
 static void cavan_http_client_close(struct cavan_http_client *client)
 {
-	if (client->running) {
-		int i;
+	int i;
 
-		for (i = 20; i > 0 && client->running; i--) {
-			if (client->head == client->tail) {
-				break;
-			}
-
-			cavan_http_sender_unlock(client->sender);
-			println("wait recv complete: %d", i);
-			msleep(100);
-			cavan_http_sender_lock(client->sender);
+	for (i = 20; i > 0 && client->running; i--) {
+		if (client->head == client->tail) {
+			break;
 		}
 
+		cavan_http_sender_unlock(client->sender);
+		println("wait recv complete: %d", i);
+		msleep(100);
+		cavan_http_sender_lock(client->sender);
+	}
+
+	if (client->running) {
 		client->running = false;
 		network_client_shutdown(&client->client);
 		cavan_http_sender_wait(client->sender, &client->cond_exit);
@@ -366,7 +366,13 @@ static void *cavan_http_sender_receive_thread(void *data)
 			break;
 		}
 
-		packet = cavan_http_client_dequeue(client);
+		while ((packet = cavan_http_client_dequeue(client)) < 0 && client->running) {
+			cavan_http_sender_unlock(sender);
+			pr_red_info("wait packet enqueue");
+			msleep(100);
+			cavan_http_sender_lock(sender);
+		}
+
 		count = ++sender->counts[packet];
 
 		if (sender->verbose) {
@@ -513,27 +519,25 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 				break;
 			}
 
-			cavan_http_sender_unlock(sender);
+			client = sender->clients + index;
+			conn_index = (index + 1) % conn_count;
+			header = &packets[packet_index]->header;
+			cavan_http_client_enqueue(client, packet_index);
 
 			if (sender->verbose) {
 				println("send: conn = %d, packet = %d", index, packet_index);
 			}
 
-			client = sender->clients + index;
-			conn_index = (index + 1) % conn_count;
-			header = &packets[packet_index]->header;
-
+			cavan_http_sender_unlock(sender);
 			ret = network_client_send(&client->client, header->text, header->length);
-
 			cavan_http_sender_lock(sender);
 
 			if (ret < 0) {
-				pr_red_info("network_client_send");
+				pr_red_info("cavan_http_sender_send_packet");
 				cavan_http_client_close(client);
 				continue;
 			}
 
-			cavan_http_client_enqueue(client, packet_index);
 			packet_index = (packet_index + 1) % count;
 		}
 

@@ -800,7 +800,7 @@ int inet_create_service(int type, u16 port)
 		return sockfd;
 	}
 
-	ret = socket_set_reuse_addr(sockfd);
+	ret = setsockopt_reuse_addr(sockfd);
 	if (ret < 0) {
 		pr_err_info("socket_set_reuse_addr");
 		goto out_close_sockfd;
@@ -1949,11 +1949,6 @@ static void network_client_tcp_close(struct network_client *client)
 	inet_close_tcp_socket(client->sockfd);
 }
 
-static int network_client_flush_dummy(struct network_client *client)
-{
-	return fsync(client->sockfd);
-}
-
 static ssize_t network_client_send_dummy(struct network_client *client, const void *buff, size_t size)
 {
 	return inet_send(client->sockfd, buff, size);
@@ -2065,7 +2060,6 @@ static ssize_t network_client_recv_packed(struct network_client *client, void *b
 static int network_protocol_open_client(const struct network_protocol_desc *desc, struct network_client *client, const struct network_url *url, int flags)
 {
 	client->type = desc->type;
-	client->flush = network_client_flush_dummy;
 	client->close = network_client_close_dummy;
 	client->shutdown = network_client_shutdown_dummy;
 	client->send = network_client_send_dummy;
@@ -2093,7 +2087,7 @@ static ssize_t network_service_recvfrom_dummy(struct network_service *service, v
 	return recvfrom(service->sockfd, buff, size, 0, addr, &service->addrlen);
 }
 
-static int network_service_accept_dummy(struct network_service *service, struct network_client *conn)
+static int network_service_accept_dummy(struct network_service *service, struct network_client *conn, int flags)
 {
 	struct sockaddr *addr;
 
@@ -2110,13 +2104,16 @@ static int network_service_accept_dummy(struct network_service *service, struct 
 		return conn->sockfd;
 	}
 
+	if ((flags & CAVAN_NET_FLAG_NODELAY)) {
+		setsockopt_tcp_nodelay(conn->sockfd);
+	}
+
 	pd_info("%s", network_sockaddr_tostring(addr, NULL, 0));
 
 	conn->close = network_client_tcp_close;
 	conn->shutdown = network_client_shutdown_dummy;
 	conn->send = network_client_send_dummy;
 	conn->recv = network_client_recv_dummy;
-	conn->flush = network_client_flush_dummy;
 	conn->sendto = network_client_sendto_dummy;
 	conn->recvfrom = network_client_recvfrom_dummy;
 
@@ -2573,6 +2570,10 @@ static int network_client_tcp_open(struct network_client *client, const struct n
 		return sockfd;
 	}
 
+	if ((flags & CAVAN_NET_FLAG_NODELAY)) {
+		setsockopt_tcp_nodelay(sockfd);
+	}
+
 	client->sockfd = sockfd;
 	client->addrlen = sizeof(struct sockaddr_in);
 	client->close = network_client_tcp_close;
@@ -2633,6 +2634,10 @@ static int network_client_unix_tcp_open(struct network_client *client, const str
 	if (sockfd < 0) {
 		pr_error_info("unix_socket %s", url->pathname);
 		return sockfd;
+	}
+
+	if ((flags & CAVAN_NET_FLAG_NODELAY)) {
+		setsockopt_tcp_nodelay(sockfd);
 	}
 
 	client->sockfd = sockfd;
@@ -2849,7 +2854,7 @@ static int network_client_file_open(struct network_client *client, const struct 
 	return 0;
 }
 
-static int network_service_file_accept(struct network_service *service, struct network_client *client)
+static int network_service_file_accept(struct network_service *service, struct network_client *client, int flags)
 {
 	sem_wait(&service->sem);
 
@@ -3049,8 +3054,6 @@ int network_client_send_file(struct network_client *client, int fd, size64_t ski
 			progress_bar_add(&bar, rdlen);
 		}
 	}
-
-	client->flush(client);
 
 	progress_bar_finish(&bar);
 
@@ -3361,7 +3364,7 @@ out_client_close:
 	return ret;
 }
 
-static int network_service_udp_accept(struct network_service *service, struct network_client *client)
+static int network_service_udp_accept(struct network_service *service, struct network_client *client, int flags)
 {
 	int ret;
 
@@ -3410,9 +3413,9 @@ static int network_service_tcp_open(struct network_service *service, const struc
 	return 0;
 }
 
-static int network_service_accept_tcp_masked(struct network_service *service, struct network_client *conn)
+static int network_service_accept_tcp_masked(struct network_service *service, struct network_client *conn, int flags)
 {
-	int ret = network_service_accept_dummy(service, conn);
+	int ret = network_service_accept_dummy(service, conn, flags);
 
 	if (ret < 0) {
 		pr_red_info("network_service_accept_dummy");
@@ -3425,9 +3428,9 @@ static int network_service_accept_tcp_masked(struct network_service *service, st
 	return 0;
 }
 
-static int network_service_accept_tcp_packed(struct network_service *service, struct network_client *conn)
+static int network_service_accept_tcp_packed(struct network_service *service, struct network_client *conn, int flags)
 {
-	int ret = network_service_accept_dummy(service, conn);
+	int ret = network_service_accept_dummy(service, conn, flags);
 
 	if (ret < 0) {
 		pr_red_info("network_service_accept_dummy");
@@ -3732,11 +3735,11 @@ out_client_close:
 	return -EFAULT;
 }
 
-static int network_service_ssl_accept(struct network_service *service, struct network_client *conn)
+static int network_service_ssl_accept(struct network_service *service, struct network_client *conn, int flags)
 {
 	int ret;
 
-	ret = network_service_accept_dummy(service, conn);
+	ret = network_service_accept_dummy(service, conn, flags);
 	if (ret < 0) {
 		pr_red_info("network_service_accept_dummy");
 		return ret;
@@ -4313,13 +4316,13 @@ int network_client_fifo_read_cache(struct cavan_fifo *fifo, struct network_clien
 	return length;
 }
 
-int network_service_accept_timed(struct network_service *service, struct network_client *client, u32 msec)
+int network_service_accept_timed(struct network_service *service, struct network_client *client, u32 msec, int flags)
 {
 	if (!file_poll_input(service->sockfd, msec)) {
 		return -ETIMEDOUT;
 	}
 
-	return network_service_accept(service, client);
+	return network_service_accept(service, client, flags);
 }
 
 int network_service_open(struct network_service *service, const struct network_url *url, int flags)

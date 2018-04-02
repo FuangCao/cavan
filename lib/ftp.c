@@ -18,7 +18,7 @@ static int ftp_data_link_open(struct cavan_ftp_client *ftp)
 		return network_client_open(&ftp->data_client, &ftp->data_url, 0);
 	} else if (ftp->pasv_received) {
 		ftp->pasv_received = false;
-		return network_service_accept_timed(&ftp->data_service, &ftp->data_client, 2000);
+		return network_service_accept_timed(&ftp->data_service, &ftp->data_client, 2000, 0);
 	} else {
 		return -EFAULT;
 	}
@@ -621,7 +621,7 @@ static int ftp_service_open_connect(struct cavan_dynamic_service *service, void 
 {
 	struct cavan_ftp_service *ftp = cavan_dynamic_service_get_data(service);
 
-	return network_service_accept(&ftp->service, conn);
+	return network_service_accept(&ftp->service, conn, 0);
 }
 
 static bool ftp_service_close_connect(struct cavan_dynamic_service *service, void *conn)
@@ -814,7 +814,7 @@ int ftp_client_send_command_package(struct network_client *client, struct ftp_co
 	}
 
 	if (pkg->service && pkg->data_client) {
-		ret = network_service_accept(pkg->service, pkg->data_client);
+		ret = network_service_accept(pkg->service, pkg->data_client, 0);
 		if (ret < 0) {
 			pd_err_info("network_service_accept: %d", ret);
 			return ret;

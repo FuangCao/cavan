@@ -110,7 +110,7 @@ static int do_test_service(int argc, char *argv[])
 		return ret;
 	}
 
-	ret = service.accept(&service, &client);
+	ret = service.accept(&service, &client, CAVAN_NET_FLAG_NODELAY);
 	if (ret < 0) {
 		pr_red_info("service.accept");
 		goto out_network_service_close;
@@ -163,7 +163,7 @@ static int do_test_dump(int argc, char *argv[])
 	}
 
 	while (1) {
-		ret = network_service_accept(&service, &client);
+		ret = network_service_accept(&service, &client, CAVAN_NET_FLAG_NODELAY);
 		if (ret < 0) {
 			pr_red_info("network_service_accept");
 			goto out_network_service_close;

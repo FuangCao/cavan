@@ -1463,7 +1463,7 @@ static int cavan_http_open_connect(struct cavan_dynamic_service *service, void *
 {
 	struct cavan_http_service *http = cavan_dynamic_service_get_data(service);
 
-	return network_service_accept(&http->service, conn);
+	return network_service_accept(&http->service, conn, 0);
 }
 
 static bool cavan_http_close_connect(struct cavan_dynamic_service *service, void *conn)
@@ -1533,7 +1533,7 @@ static int cavan_http_service_run_handler(struct cavan_dynamic_service *service,
 			break;
 		}
 
-		cavan_fifo_reset(&fifo);
+		// cavan_fifo_reset(&fifo);
 		cavan_http_request_reset(req);
 	}
 
