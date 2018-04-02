@@ -318,11 +318,11 @@ static bool cavan_http_sender_is_completed(cavan_string_t *body, int count)
 		}
 	}
 
-	if (strstr(errdesc, "\u5b8c")) { // Íê
-		return (count > HTTP_SENDER_SEND_MIN);
+	if (strstr(errdesc, "\u9519\u8bef")) { // ´íÎó
+		return false;
 	}
 
-	return false;
+	return (count > HTTP_SENDER_SEND_MIN);
 }
 #endif
 
