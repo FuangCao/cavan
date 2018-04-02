@@ -1937,6 +1937,13 @@ static void network_client_close_dummy(struct network_client *client)
 	close(client->sockfd);
 }
 
+static void network_client_shutdown_dummy(struct network_client *client)
+{
+	if (shutdown(client->sockfd, SHUT_RDWR) < 0) {
+		close(client->sockfd);
+	}
+}
+
 static void network_client_tcp_close(struct network_client *client)
 {
 	inet_close_tcp_socket(client->sockfd);
@@ -2060,6 +2067,7 @@ static int network_protocol_open_client(const struct network_protocol_desc *desc
 	client->type = desc->type;
 	client->flush = network_client_flush_dummy;
 	client->close = network_client_close_dummy;
+	client->shutdown = network_client_shutdown_dummy;
 	client->send = network_client_send_dummy;
 	client->recv = network_client_recv_dummy;
 	client->sendto = network_client_sendto_dummy;
@@ -2105,6 +2113,7 @@ static int network_service_accept_dummy(struct network_service *service, struct 
 	pd_info("%s", network_sockaddr_tostring(addr, NULL, 0));
 
 	conn->close = network_client_tcp_close;
+	conn->shutdown = network_client_shutdown_dummy;
 	conn->send = network_client_send_dummy;
 	conn->recv = network_client_recv_dummy;
 	conn->flush = network_client_flush_dummy;

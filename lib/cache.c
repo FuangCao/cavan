@@ -733,6 +733,7 @@ int cavan_fifo_init(struct cavan_fifo *fifo, size_t size, void *data)
 	cavan_string_init(&fifo->line, NULL, 0);
 
 	fifo->size = size;
+	fifo->readed = 0;
 	fifo->available = 0;
 	fifo->private_data = data;
 

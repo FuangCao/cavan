@@ -107,7 +107,8 @@ CFLAGS += -Wframe-larger-than=$(FRAME_SIZE)
 endif
 
 CPPFLAGS := $(CPPFLAGS) $(CFLAGS)
-CFLAGS += -Werror-implicit-function-declaration -Wstrict-prototypes -std=gnu99
+CFLAGS += -Werror-implicit-function-declaration -Wstrict-prototypes
+CFLAGS += -std=gnu99 -DCONFIG_CAVAN_C99
 LDFLAGS += -lm -lrt -lpthread
 
 ifeq ($(BUILD_TYPE),static)

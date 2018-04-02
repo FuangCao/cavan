@@ -27,7 +27,7 @@
 #define HTTP_SENDER_AHEAD			10000
 #define HTTP_SENDER_REPEAT			60
 #define HTTP_SENDER_HOST			"game.weixin.qq.com"
-#define HTTP_SENDER_SEND_COUNT		200
+#define HTTP_SENDER_SEND_MIN		5
 #define HTTP_SENDER_CONN_COUNT		4
 #define HTTP_SENDER_QUEUE_SIZE		4
 #define HTTP_SENDER_PACKAGES		200
@@ -48,6 +48,7 @@ struct cavan_http_client {
 struct cavan_http_sender {
 	struct cavan_http_client clients[HTTP_SENDER_CONN_COUNT];
 	bool status[HTTP_SENDER_PACKAGES];
+	int counts[HTTP_SENDER_PACKAGES];
 	pthread_cond_t cond_write;
 	struct network_url url;
 	pthread_mutex_t lock;
@@ -144,8 +145,21 @@ static int cavan_http_client_open(struct cavan_http_client *client, struct cavan
 static void cavan_http_client_close(struct cavan_http_client *client)
 {
 	if (client->running) {
+		int i;
+
+		for (i = 20; i > 0 && client->running; i--) {
+			if (client->head == client->tail) {
+				break;
+			}
+
+			cavan_http_sender_unlock(client->sender);
+			println("wait recv complete: %d", i);
+			msleep(100);
+			cavan_http_sender_lock(client->sender);
+		}
+
 		client->running = false;
-		close(client->client.sockfd);
+		network_client_shutdown(&client->client);
 		cavan_http_sender_wait(client->sender, &client->cond_exit);
 	}
 
@@ -244,6 +258,7 @@ static int cavan_http_sender_get_client(struct cavan_http_sender *sender, int in
 	return -1;
 }
 
+#if CONFIG_CAVAN_C99
 static int cavan_http_sender_find_errdesc(cavan_string_t *body, char *buff, int size)
 {
 	const char *errdesc, *end;
@@ -278,26 +293,22 @@ static int cavan_http_sender_find_errdesc(cavan_string_t *body, char *buff, int 
 	return length;
 }
 
-static bool cavan_http_sender_is_completed(cavan_string_t *body)
+static bool cavan_http_sender_is_completed(cavan_string_t *body, int count)
 {
 	int i;
 	int length;
 	char errdesc[1024];
 	const char *texts[] = {
-		"\u4e0a\u9650",
-		"\u9886\u5b8c",
-		"\u592a\u5feb",
-		"\u9891\u7e41",
-		"\u9886\u53d6\u8fc7",
+		"\u4e0a\u9650", // 上限
+		"\u7528\u5b8c", // 用完
+		"\u592a\u5feb", // 太快
+		"\u9891\u7e41", // 频繁
+		"\u9886\u53d6\u8fc7", // 领取过
 	};
 
 	length = cavan_http_sender_find_errdesc(body, errdesc, sizeof(errdesc));
 	if (length < 0) {
 		return false;
-	}
-
-	if (length < 2) {
-		return true;
 	}
 
 	for (i = 0; i < NELEM(texts); i++) {
@@ -307,8 +318,13 @@ static bool cavan_http_sender_is_completed(cavan_string_t *body)
 		}
 	}
 
+	if (strstr(errdesc, "\u5b8c")) { // 完
+		return (count > HTTP_SENDER_SEND_MIN);
+	}
+
 	return false;
 }
+#endif
 
 static void *cavan_http_sender_receive_thread(void *data)
 {
@@ -339,6 +355,7 @@ static void *cavan_http_sender_receive_thread(void *data)
 
 	while (client->running) {
 		int packet;
+		int count;
 
 		cavan_http_sender_unlock(sender);
 		ret = cavan_http_packet_read(rsp, &fifo);
@@ -350,15 +367,18 @@ static void *cavan_http_sender_receive_thread(void *data)
 		}
 
 		packet = cavan_http_client_dequeue(client);
+		count = ++sender->counts[packet];
 
 		if (sender->verbose) {
-			println("received: packet = %d", packet);
+			println("received: packet[%d] = %d", count, packet);
 			cavan_stdout_write_line(body->text, body->length);
 		}
 
-		if (cavan_http_sender_is_completed(body)) {
+#if CONFIG_CAVAN_C99
+		if (cavan_http_sender_is_completed(body, count)) {
 			sender->status[packet] = false;
 		}
+#endif
 	}
 
 	cavan_http_sender_unlock(sender);
@@ -403,6 +423,7 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 
 	for (i = 0; i < count; i++) {
 		sender->status[i] = true;
+		sender->counts[i] = 0;
 	}
 
 	while (1) {

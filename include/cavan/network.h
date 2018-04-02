@@ -275,6 +275,7 @@ struct network_client {
 
 	int (*flush)(struct network_client *client);
 	void (*close)(struct network_client *client);
+	void (*shutdown)(struct network_client *client);
 	ssize_t (*send)(struct network_client *client, const void *buff, size_t size);
 	ssize_t (*recv)(struct network_client *client, void *buff, size_t size);
 	ssize_t (*sendto)(struct network_client *client, const void *buff, size_t size, const struct sockaddr *addr);
@@ -733,6 +734,11 @@ static inline int network_client_get_recv_timeout(struct network_client *client,
 static inline int network_client_set_recv_timeout(struct network_client *client, const struct timeval *tv)
 {
 	return setsockopt(client->sockfd, SOL_SOCKET, SO_RCVTIMEO, tv, sizeof(struct timeval));
+}
+
+static inline void network_client_shutdown(struct network_client *client)
+{
+	client->shutdown(client);
 }
 
 static inline void network_service_set_data(struct network_service *service, void *data)
