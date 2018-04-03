@@ -210,6 +210,7 @@ size_t file_line_count(const char *filename);
 
 int file_mmap(const char *pathname, void **addr, size_t *size, int flags);
 void file_unmap(int fd, void *addr, size_t size);
+ssize_t ffile_read_all(int fd, void *buff, size_t size);
 void *file_read_all(const char *pathname, size_t extra, size_t *size);
 char *file_read_all_text(const char *pathname, size_t *size);
 

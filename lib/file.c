@@ -2651,12 +2651,34 @@ void file_unmap(int fd, void *addr, size_t size)
 	close(fd);
 }
 
+ssize_t ffile_read_all(int fd, void *buff, size_t size)
+{
+	size_t remain = size;
+
+	while (remain > 0) {
+		ssize_t rdlen = ffile_read(fd, buff, remain);
+		if (unlikely(rdlen <= 0)) {
+			if (rdlen < 0) {
+				return rdlen;
+			}
+
+			return (size - remain);
+		}
+
+		buff = POINTER_ADD(buff, rdlen);
+		remain -= rdlen;
+	}
+
+	return size;
+}
+
 void *file_read_all(const char *pathname, size_t extra, size_t *size)
 {
-	int fd;
-	void *mem;
+	void *mem = NULL;
+	struct stat sb;
 	ssize_t rdlen;
-	off_t last;
+	size_t length;
+	int fd;
 
 	fd = open(pathname, O_RDONLY);
 	if (fd < 0) {
@@ -2664,20 +2686,28 @@ void *file_read_all(const char *pathname, size_t extra, size_t *size)
 		return NULL;
 	}
 
-	last = lseek(fd, 0, SEEK_END);
-	if (last == (off_t) -1) {
-		last = KB(100);
-	} else {
-		lseek(fd, 0, SEEK_SET);
+	if (fstat(fd, &sb) < 0) {
+		pr_err_info("fstat");
+		goto out_close_fd;
 	}
 
-	mem = malloc(last + extra);
+	if (S_ISDIR(sb.st_mode)) {
+		pr_err_info("Is directory");
+		goto out_close_fd;
+	}
+
+	length = sb.st_size;
+	if (length == 0) {
+		length = MB(1);
+	}
+
+	mem = malloc(length + extra);
 	if (mem == NULL) {
 		pr_error_info("malloc");
 		goto out_close_fd;
 	}
 
-	rdlen = ffile_read(fd, mem, last);
+	rdlen = ffile_read_all(fd, mem, length);
 	if (rdlen < 0) {
 		pr_error_info("ffile_read");
 		free(mem);

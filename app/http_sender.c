@@ -693,10 +693,11 @@ int main(int argc, char *argv[])
 		ret = cavan_http_packet_parse_file(argv[i], packets + count, NELEM(packets) - count);
 		if (ret < 0) {
 			pr_red_info("cavan_http_sender_load_file");
-			return ret;
+		} else if (ret > 0) {
+			count += ret;
+		} else {
+			pr_warn_info("No packet found!");
 		}
-
-		count += ret;
 	}
 
 	println("count = %d", count);
