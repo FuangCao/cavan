@@ -20,6 +20,7 @@
  */
 
 #include <cavan.h>
+#include <cavan++/EpollService.h>
 #include <cavan++/NetworkClient.h>
 
 class NetworkService : public NetworkBase {
@@ -37,4 +38,24 @@ public:
 	}
 
 	virtual NetworkClient *accept(void) = 0;
+};
+
+class NetworkEpollService : public EpollService, public EpollClient {
+private:
+	NetworkService *mService;
+
+public:
+	NetworkEpollService(NetworkService *service) : mService(service) {}
+
+protected:
+	virtual EpollClient *newEpollClient(NetworkClient *client) = 0;
+	virtual int onEpollIn(EpollService *service);
+
+	virtual int getEpollFd(void) {
+		return mService->getSockfd();
+	}
+
+	virtual int onEpollStarted(void) {
+		return addEpollTo(this);
+	}
 };

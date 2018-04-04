@@ -545,8 +545,6 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 	remote.sockfd = -1;
 
 	while (1) {
-		bool tcp_proxy;
-
 		ret = web_proxy_read_request(client, buff, sizeof(buff) - proxy->proxy_hostlen - 1);
 		if (ret <= 0) {
 			goto out_network_client_close_proxy;
@@ -583,7 +581,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 		url = (url == urls) ? urls + 1 : urls;
 
 		if (url_text[0] == '/') {
-			tcp_proxy = true;
+			req = NULL;
 			url = &proxy->url_proxy;
 		} else {
 			req = network_url_parse(url, url_text);
@@ -603,7 +601,6 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 				url->protocol = "http";
 			}
 
-			tcp_proxy = false;
 			pr_info("%s[%d](%d)", cavan_http_request_type_tostring(type), type, count);
 		}
 
@@ -660,7 +657,7 @@ static int web_proxy_run_handler(struct cavan_dynamic_service *service, void *co
 				goto out_network_client_close_proxy;
 
 			default:
-				if (tcp_proxy) {
+				if (req == NULL) {
 					buff_end = web_proxy_set_prop(buff, buff_end, "Host", 4, proxy->url_proxy.hostname, proxy->proxy_hostlen);
 #if WEB_PROXY_DEBUG
 					*buff_end = 0;

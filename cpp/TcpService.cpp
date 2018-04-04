@@ -48,8 +48,6 @@ int TcpService::open(NetworkUrl *url)
 	}
 
 	mSockfd = sockfd;
-	setReuseAddr();
-	setReusePort();
 
 	return sockfd;
 
@@ -77,8 +75,6 @@ NetworkClient *TcpService::accept(void)
 	}
 
 	client->setSockfd(sockfd);
-	client->setReuseAddr();
-	client->setReusePort();
 
 	return client;
 }

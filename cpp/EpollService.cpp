@@ -22,7 +22,7 @@
 
 void EpollDaemon::run(void)
 {
-	mService->runEpollDaemon();
+	mService->runEpollDaemon(this);
 }
 
 int EpollService::doEpollCtrl(int op, int fd, u32 events, EpollClient *client)
@@ -66,6 +66,10 @@ void EpollService::run(void)
 
 	mEpollFd = fd;
 
+	if (onEpollStarted() < 0) {
+		goto out_exit;
+	}
+
 	while (1) {
 		struct epoll_event *p, *p_end;
 		struct epoll_event events[10];
@@ -88,10 +92,20 @@ void EpollService::run(void)
 		}
 	}
 
+	onEpollStopped();
+
+out_exit:
 	if (fd == mEpollFd) {
 		mEpollFd = -1;
 		::close(fd);
 	}
 
 	pr_red_info("epoll thread exit!");
+}
+
+void EpollService::runEpollDaemon(EpollDaemon *daemon)
+{
+	onEpollDaemonStarted(daemon);
+	mClientQueue.processPackets(this, daemon);
+	onEpollDaemonStopped(daemon);
 }

@@ -18,7 +18,33 @@
  */
 
 #include <cavan.h>
+#include <cavan++/EpollClient.h>
+#include <cavan++/EpollService.h>
 #include <cavan++/NetworkProtocol.h>
+
+class TestEpollClient : public NetworkEpollClient<EpollBufferU16> {
+public:
+	TestEpollClient(NetworkClient *client) : NetworkEpollClient(client) {}
+
+protected:
+	virtual int onEpollPacketReceived(EpollPacket *packet) {
+		println("onEpollPacketReceived[%d]: %s", packet->getLength(), packet->getData());
+		pr_warn_info("wait");
+		msleep(10000);
+		pr_warn_info("wakeup");
+		return 0;
+	}
+};
+
+class TestEpollService : public NetworkEpollService {
+public:
+	TestEpollService(NetworkService *service) : NetworkEpollService(service) {}
+
+protected:
+	EpollClient *newEpollClient(NetworkClient *client) {
+		return new TestEpollClient(client);
+	}
+};
 
 int main(int argc, char *argv[])
 {
@@ -29,29 +55,9 @@ int main(int argc, char *argv[])
 		return -EFAULT;
 	}
 
-	while (1) {
-		println("accept");
-
-		NetworkClient *client = service->accept();
-		if (client == NULL) {
-			break;
-		}
-
-		println("recv");
-
-		while (1) {
-			char buff[1024];
-			int rdlen;
-
-			rdlen = client->recv(buff, sizeof(buff));
-			if (rdlen > 0) {
-				buff[rdlen] = 0;
-				println("buff[%d] = %s", rdlen, buff);
-			} else {
-				break;
-			}
-		}
-	}
+	TestEpollService epoll(service);
+	epoll.start();
+	epoll.join();
 
 	return 0;
 }

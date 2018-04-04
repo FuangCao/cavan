@@ -21,26 +21,27 @@
 #include <cavan++/EpollClient.h>
 #include <cavan++/EpollService.h>
 
-int EpollPacket::writeTo(EpollClient *client)
+int EpollBuffer::write(const void *buff, u16 length)
 {
-	int wrlen = client->doEpollWrite(mData + mOffset, mLength - mOffset);
+	u16 remain = getRemain();
+	if (length > remain) {
+		length = remain;
+	}
+
+	memcpy(getDataHead(), buff, length);
+	mOffset += length;
+
+	return length;
+}
+
+int EpollBuffer::writeTo(EpollClient *client)
+{
+	int wrlen = client->doEpollWrite(getDataHead(), getRemain());
 	if (wrlen > 0) {
 		mOffset += wrlen;
 	}
 
 	return wrlen;
-}
-
-int EpollPacket::write(const void *buff, u16 length)
-{
-	u16 remain = mLength - mOffset;
-	if (length > remain) {
-		length = remain;
-	}
-
-	memcpy(mData, buff, length);
-
-	return length;
 }
 
 // ================================================================================
@@ -52,7 +53,7 @@ int EpollClient::addEpollTo(EpollService *service)
 
 int EpollClient::removeEpollFrom(EpollService *service)
 {
-	return service->removeEpollClient(getEpollFd());
+	return service->removeEpollClient(getEpollFd(), this);
 }
 
 int EpollClient::setEpollReadonly(EpollService *service)
@@ -87,40 +88,40 @@ int EpollClient::onEpollIn(EpollService *service)
 	char buff[4096], *p = buff;
 	int rdlen = doEpollRead(buff, sizeof(buff));
 
-	while (rdlen > 0) {
-		int length = onEpollDataReceived(service, p, rdlen);
-		if (length < 0) {
-			return length;
-		}
-
-		p += length;
-		rdlen -= length;
+	if (rdlen <= 0) {
+		return -EFAULT;
 	}
 
-	return rdlen;
+	while (1) {
+		int length = onEpollDataReceived(service, p, rdlen);
+		if (length < rdlen) {
+			if (length < 0) {
+				return length;
+			}
+
+			p += length;
+			rdlen -= length;
+		} else {
+			break;
+		}
+	}
+
+	return 0;
 }
 
 int EpollClient::onEpollDataReceived(EpollService *service, const void *buff, int size)
 {
 	if (mRdPacket == NULL) {
-		EpollPacket *header = mHeader;
-		if (header == NULL) {
-			header = newEpollHeader();
-			if (header == NULL) {
-				return -ENOMEM;
-			}
-
-			mHeader = header;
-		}
-
+		EpollBuffer *header = getEpollHeader();
 		int length = header->write(buff, size);
+
 		if (length > 0 && header->isCompleted()) {
 			mRdPacket = new EpollPacket(header->getLength());
 			if (mRdPacket == NULL) {
 				return -ENOMEM;
 			}
 
-			header->seek(0);
+			header->setOffset(0);
 		}
 
 		return length;
@@ -147,8 +148,13 @@ int EpollClient::onEpollOut(EpollService *service)
 		}
 
 		int length = mWrPacket->writeTo(this);
-		if (length < 0) {
+		if (length <= 0) {
 			return length;
+		}
+
+		if (mWrPacket->isCompleted()) {
+			delete mWrPacket;
+			mWrPacket = NULL;
 		}
 	}
 }
@@ -164,26 +170,77 @@ bool EpollClientQueue::enqueue(EpollClient *client)
 
 	if (mHead != NULL) {
 		if (client->isUsed()) {
-			return true;
+			return false;
 		}
 
 		mHead->append(client);
 	} else {
-		client->reset();
+		// client->reset();
 		mHead = client;
-		mCond.signal();
 	}
+
+	mCond.signal();
 
 	return true;
 }
 
-void EpollClientQueue::processPackets(void)
+EpollClient *EpollClientQueue::dequeueLocked(void)
+{
+	EpollClient *client = mHead;
+	if (client == NULL) {
+		return NULL;
+	}
+
+	EpollClient *next = client->getNext();
+	if (next == client) {
+		mHead = NULL;
+	} else {
+		client->remove();
+		mHead = next;
+	}
+
+	return client;
+}
+
+EpollClient *EpollClientQueue::dequeue(void)
+{
+	AutoLock lock(mLock);
+	return dequeueLocked();
+}
+
+void EpollClientQueue::removeLocked(EpollClient *client)
+{
+	if (client == mHead) {
+		EpollClient *next = client->getNext();
+		if (next == client) {
+			mHead = NULL;
+		} else {
+			client->remove();
+			mHead = next;
+		}
+	} else {
+		client->remove();
+	}
+}
+
+void EpollClientQueue::remove(EpollClient *client)
+{
+	AutoLock lock(mLock);
+	removeLocked(client);
+}
+
+void EpollClientQueue::processPackets(EpollService *service, EpollDaemon *daemon)
 {
 	mLock.acquire();
 
 	while (1) {
 		while (mHead == NULL) {
+			if (service->onEpollDaemonReady(daemon)) {
+				goto out_exit;
+			}
+
 			mCond.waitLocked(mLock);
+			service->onEpollDaemonBusy(daemon);
 		}
 
 		EpollClient *client = mHead;
@@ -191,7 +248,7 @@ void EpollClientQueue::processPackets(void)
 
 		EpollPacket *packet = client->dequeueEpollPacket();
 		if (packet == NULL) {
-			if (mHead == client) {
+			if (client == mHead) {
 				mHead = NULL;
 			} else {
 				client->remove();
@@ -202,4 +259,7 @@ void EpollClientQueue::processPackets(void)
 			mLock.acquire();
 		}
 	}
+
+out_exit:
+	mLock.release();
 }

@@ -46,12 +46,36 @@ public:
 	}
 
 public:
+	static int setSockOptInt(int sockfd, int level, int optname, int value) {
+		return setsockopt(sockfd, level, optname, (void *) &value, sizeof(value));
+	}
+
+	static int setReuseAddr(int sockfd, int reuse) {
+		return setSockOptInt(sockfd, SOL_SOCKET, SO_REUSEADDR, reuse);
+	}
+
+	static int setReusePort(int sockfd, int reuse) {
+#ifdef SO_REUSEPORT
+		return setSockOptInt(sockfd, SOL_SOCKET, SO_REUSEPORT, reuse);
+#else
+		return 0;
+#endif
+	}
+
+public:
 	int openSocket(int domain, int type) {
 		return ::socket(domain, type, 0);
 	}
 
 	int openSocketInet(int type) {
-		return openSocket(PF_INET, type);
+		int sockfd = openSocket(PF_INET, type);
+		if (sockfd < 0) {
+			return sockfd;
+		}
+
+		setReuseAddr(sockfd, 1);
+
+		return sockfd;
 	}
 
 	int openSocketTcp(void) {
@@ -71,12 +95,12 @@ public:
 	}
 
 	int setReuseAddr(int reuse = 1) {
-		return setsockopt(mSockfd, SOL_SOCKET, SO_REUSEADDR, (void *) &reuse, sizeof(reuse));
+		return setReuseAddr(mSockfd, reuse);
 	}
 
 	int setReusePort(int reuse = 1) {
 #ifdef SO_REUSEPORT
-		return setsockopt(mSockfd, SOL_SOCKET, SO_REUSEPORT, (void *) &reuse, sizeof(reuse));
+		return setReusePort(mSockfd, reuse);
 #else
 		return 0;
 #endif

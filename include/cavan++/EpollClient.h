@@ -24,16 +24,78 @@
 #include <cavan++/Link.h>
 
 class EpollService;
+class EpollDaemon;
 class EpollClient;
 
-class EpollPacket : public SimpleLink<EpollPacket> {
-private:
-	char *mData;
-	u16 mLength;
+class EpollBuffer {
+protected:
 	u16 mOffset;
 
 public:
-	EpollPacket(u16 length = 0) : mLength(length), mOffset(0) {
+	EpollBuffer(void) : mOffset(0) {}
+	virtual ~EpollBuffer() {}
+
+public:
+	virtual u16 getSize(void) = 0;
+	virtual char *getData(void) = 0;
+
+	virtual int writeTo(EpollClient *client);
+	virtual int write(const void *buff, u16 length);
+
+	virtual u16 getLength(void) {
+		return getSize();
+	}
+
+	virtual char *getDataHead(void) {
+		return getData() + mOffset;
+	}
+
+	virtual u16 getOffset(void) {
+		return mOffset;
+	}
+
+	virtual void setOffset(u16 offset) {
+		mOffset = offset;
+	}
+
+	virtual u16 getRemain(void) {
+		return getSize() - mOffset;
+	}
+
+	virtual bool isPending(void) {
+		return (mOffset < getSize());
+	}
+
+	virtual bool isCompleted(void) {
+		return (mOffset >= getSize());
+	}
+};
+
+class EpollBufferU16 : public EpollBuffer {
+private:
+	u16 mLength;
+
+public:
+	virtual u16 getSize(void) {
+		return sizeof(mLength);
+	};
+
+	virtual u16 getLength(void) {
+		return mLength;
+	}
+
+	virtual char *getData(void) {
+		return (char *) &mLength;
+	}
+};
+
+class EpollPacket : public EpollBuffer, public SimpleLink<EpollPacket> {
+private:
+	char *mData;
+	u16 mLength;
+
+public:
+	EpollPacket(u16 length = 0) : mLength(length) {
 		if (length > 0) {
 			mData = new char[length];
 		} else {
@@ -47,27 +109,17 @@ public:
 		}
 	}
 
-	virtual int writeTo(EpollClient *client);
-	virtual int write(const void *buff, u16 length);
-
-	virtual u16 getLength(void) {
+	virtual u16 getSize(void) {
 		return mLength;
 	}
 
-	virtual void seek(u16 offset) {
-		mOffset = offset;
-	}
-
-	virtual bool isPending(void) {
-		return (mOffset < mLength);
-	}
-
-	virtual bool isCompleted(void) {
-		return (mOffset >= mLength);
+	virtual char *getData(void) {
+		return mData;
 	}
 };
 
 class EpollClient : public SimpleLink<EpollClient> {
+	friend class EpollBuffer;
 	friend class EpollPacket;
 	friend class EpollService;
 	friend class EpollClientQueue;
@@ -77,9 +129,13 @@ private:
 	SimpleLinkQueue<EpollPacket> mRdQueue;
 	EpollPacket *mWrPacket;
 	EpollPacket *mRdPacket;
-	EpollPacket *mHeader;
 
 public:
+	EpollClient(void) {
+		mWrPacket = NULL;
+		mRdPacket = NULL;
+	}
+
 	virtual ~EpollClient() {}
 	virtual int addEpollTo(EpollService *service);
 	virtual int removeEpollFrom(EpollService *service);
@@ -92,10 +148,26 @@ public:
 
 protected:
 	virtual int getEpollFd(void) = 0;
-	virtual EpollPacket *newEpollHeader(void) = 0;
-	virtual int doEpollRead(void *buff, int size) = 0;
-	virtual int doEpollWrite(const void *buff, int size) = 0;
-	virtual int onEpollPacketReceived(EpollPacket *packet) = 0;
+
+	virtual EpollBuffer *getEpollHeader(void) {
+		pr_red_info("getEpollHeader no implement!");
+		return NULL;
+	}
+
+	virtual int doEpollRead(void *buff, int size) {
+		pr_red_info("doEpollRead no implement!");
+		return -ENOENT;
+	}
+
+	virtual int doEpollWrite(const void *buff, int size) {
+		pr_red_info("doEpollWrite no implement!");
+		return -ENOENT;
+	}
+
+	virtual int onEpollPacketReceived(EpollPacket *packet) {
+		pr_red_info("onEpollPacketReceived no implement!");
+		return -ENOENT;
+	}
 
 	virtual u32 getEpollEventsRO(void) {
 		return EPOLLIN | EPOLLERR | EPOLLHUP;
@@ -125,5 +197,9 @@ public:
 
 public:
 	virtual bool enqueue(EpollClient *client);
-	virtual void processPackets(void);
+	virtual EpollClient *dequeueLocked(void);
+	virtual EpollClient *dequeue(void);
+	virtual void removeLocked(EpollClient *client);
+	virtual void remove(EpollClient *client);
+	virtual void processPackets(EpollService *service, EpollDaemon *daemon);
 };

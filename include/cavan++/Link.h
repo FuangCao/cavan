@@ -222,7 +222,7 @@ public:
 	virtual T *removeFirst(void) {
 		SimpleLink<T> *node = next;
 
-		if (node == prev) {
+		if (node == this) {
 			return NULL;
 		}
 
@@ -236,7 +236,7 @@ public:
 	virtual T *removeLast(void) {
 		SimpleLink<T> *node = prev;
 
-		if (node == next) {
+		if (node == this) {
 			return NULL;
 		}
 

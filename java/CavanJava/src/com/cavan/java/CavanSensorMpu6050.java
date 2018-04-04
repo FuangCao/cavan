@@ -4,10 +4,6 @@ public class CavanSensorMpu6050 extends CavanAccelSensor {
 
 	private CavanByteCache mCache = new CavanByteCache();
 
-	public CavanSensorMpu6050() {
-		super();
-	}
-
 	public CavanSensorMpu6050(byte[] bytes) {
 		super(bytes);
 	}

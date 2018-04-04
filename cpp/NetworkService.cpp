@@ -18,4 +18,37 @@
  */
 
 #include <cavan.h>
+#include <cavan++/NetworkClient.h>
 #include <cavan++/NetworkService.h>
+
+int NetworkEpollService::onEpollIn(EpollService *service)
+{
+	NetworkClient *client;
+	EpollClient *epoll;
+
+	client = mService->accept();
+	if (client == NULL) {
+		return -EFAULT;
+	}
+
+	if (client->onConnected() < 0) {
+		goto out_delete_client;
+	}
+
+	epoll = newEpollClient(client);
+	if (epoll == NULL) {
+		goto out_delete_client;
+	}
+
+	if (epoll->addEpollTo(this) < 0) {
+		goto out_delete_epoll;
+	}
+
+	return 0;
+
+out_delete_epoll:
+	delete epoll;
+out_delete_client:
+	delete client;
+	return -EFAULT;
+}

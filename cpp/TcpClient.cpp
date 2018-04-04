@@ -41,8 +41,6 @@ int TcpClient::open(NetworkUrl *url)
 	}
 
 	mSockfd = sockfd;
-	setReuseAddr();
-	setReusePort();
 
 	return true;
 

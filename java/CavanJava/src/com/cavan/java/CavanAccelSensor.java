@@ -2,14 +2,17 @@ package com.cavan.java;
 
 public abstract class CavanAccelSensor {
 
-	double mAxisX;
-	double mAxisY;
-	double mAxisZ;
+	private double mAxisX;
+	private double mAxisY;
+	private double mAxisZ;
+	private double mAxisX2;
+	private double mAxisY2;
+	private double mAxisZ2;
 
 	public abstract void putBytes(byte[] bytes);
 
 	public CavanAccelSensor() {
-		mAxisX = mAxisY = mAxisZ = 0;
+		super();
 	}
 
 	public CavanAccelSensor(byte[] bytes) {
@@ -38,6 +41,30 @@ public abstract class CavanAccelSensor {
 
 	public void setAxisZ(double z) {
 		mAxisZ = z;
+	}
+
+	public double getAxisX2() {
+		return mAxisX2;
+	}
+
+	public void setAxisX2(double x) {
+		mAxisX2 = x;
+	}
+
+	public double getAxisY2() {
+		return mAxisY2;
+	}
+
+	public void setAxisY2(double y) {
+		mAxisY2 = y;
+	}
+
+	public double getAxisZ2() {
+		return mAxisZ2;
+	}
+
+	public void setAxisZ2(double z) {
+		mAxisZ2 = z;
 	}
 
 	public String getAccelText() {
