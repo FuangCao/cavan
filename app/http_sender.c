@@ -27,7 +27,7 @@
 #define HTTP_SENDER_AHEAD			10000
 #define HTTP_SENDER_REPEAT			60
 #define HTTP_SENDER_HOST			"game.weixin.qq.com"
-#define HTTP_SENDER_SEND_MIN		10
+#define HTTP_SENDER_SEND_COUNT		10
 #define HTTP_SENDER_CONN_COUNT		4
 #define HTTP_SENDER_QUEUE_SIZE		4
 #define HTTP_SENDER_PACKAGES		200
@@ -52,6 +52,7 @@ struct cavan_http_sender {
 	pthread_cond_t cond_write;
 	struct network_url url;
 	pthread_mutex_t lock;
+	int send_count;
 	int conn_count;
 	bool running;
 	bool verbose;
@@ -293,7 +294,7 @@ static int cavan_http_sender_find_errdesc(cavan_string_t *body, char *buff, int 
 	return length;
 }
 
-static bool cavan_http_sender_is_completed(cavan_string_t *body, int count)
+static bool cavan_http_sender_is_completed(struct cavan_http_sender *sender, cavan_string_t *body, int count)
 {
 	int i;
 	int length;
@@ -322,7 +323,7 @@ static bool cavan_http_sender_is_completed(cavan_string_t *body, int count)
 		return false;
 	}
 
-	return (count > HTTP_SENDER_SEND_MIN);
+	return (count > sender->send_count);
 }
 #endif
 
@@ -381,7 +382,7 @@ static void *cavan_http_sender_receive_thread(void *data)
 		}
 
 #if CONFIG_CAVAN_C99
-		if (cavan_http_sender_is_completed(body, count)) {
+		if (cavan_http_sender_is_completed(sender, body, count)) {
 			sender->status[packet] = false;
 		}
 #endif
@@ -552,13 +553,14 @@ out_cavan_http_sender_close:
 static void cavan_http_sender_show_usage(const char *command)
 {
 	println("Usage:");
-	println("%s [option] URL", command);
+	println("%s [option] FILES", command);
 	println("-H, -h, --help\t\t%s", cavan_help_message_help);
 	println("-V, -v, --verbose\t%s", cavan_help_message_verbose);
 	println("-T, -t, --test\t\ttest only");
 	println("-D, -d, --delay\t\t%s", cavan_help_message_delay_time);
 	println("-N, -n, --now\t\t%s", cavan_help_message_current_time);
 	println("-R, -r, --repeat\trepeat seconds");
+	println("-C, -c, --count\t\tsend count");
 	println("--daemon\t\t%s", cavan_help_message_daemon);
 }
 
@@ -615,6 +617,11 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_REPEAT,
 		}, {
+			.name = "count",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_COUNT,
+		}, {
 			.name = "daemon",
 			.has_arg = no_argument,
 			.flag = NULL,
@@ -627,9 +634,10 @@ int main(int argc, char *argv[])
 	cavan_http_sender_init(&sender);
 
 	sender.repeat = HTTP_SENDER_REPEAT;
+	sender.send_count = HTTP_SENDER_SEND_COUNT;
 	sender.time = ((clock_gettime_real_ms() + 3600000 - 1) / 3600000) * 3600000;
 
-	while ((c = getopt_long(argc, argv, "vVhHd:D:tr:R:TnN", long_option, &option_index)) != EOF) {
+	while ((c = getopt_long(argc, argv, "vVhHd:D:tr:R:c:C:TnN", long_option, &option_index)) != EOF) {
 		switch (c) {
 		case 'v':
 		case 'V':
@@ -674,6 +682,12 @@ int main(int argc, char *argv[])
 			sender.repeat = text2value_unsigned(optarg, NULL, 10);
 			break;
 
+		case 'c':
+		case 'C':
+		case CAVAN_COMMAND_OPTION_COUNT:
+			sender.send_count = text2value_unsigned(optarg, NULL, 10);
+			break;
+
 		case CAVAN_COMMAND_OPTION_DAEMON:
 			sender.daemon = true;
 			break;
@@ -686,6 +700,7 @@ int main(int argc, char *argv[])
 
 	println("delay = %d", delay);
 	println("repeat = %d", sender.repeat);
+	println("send_count = %d", sender.send_count);
 
 	sender.time += delay;
 
