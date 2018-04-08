@@ -1180,6 +1180,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			mSensor = new JwaooToySensorS1();
 			mDeviceName = DEVICE_NAME_S1;
 			mDeviceId = DEVICE_ID_S1;
+			mStateLed = LED_BATT;
 		} else if (identify.equals(DEVICE_NAME_T1)) {
 			mSensor = new JwaooToySensorK101();
 			mDeviceName = DEVICE_NAME_T1;

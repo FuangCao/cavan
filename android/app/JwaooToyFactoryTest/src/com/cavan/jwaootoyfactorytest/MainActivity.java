@@ -80,6 +80,22 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		new SuspendTestFragment(),
 	};
 
+	private TestItemFragment[] mTestItemFragmanetsS1 = {
+		new ButtonTestFragment(),
+		new GsensorTestFragment(),
+		new LedTestFragment(),
+		new ChargeTestFragment(),
+		new SuspendTestFragment(),
+	};
+
+	private TestItemFragment[] mTestItemFragmanetsT1 = {
+		new ButtonTestFragment(),
+		new LedTestFragment(),
+		new MotoTestFragment(),
+		new ChargeTestFragment(),
+		new SuspendTestFragment(),
+	};
+
 	private Button mButtonPass;
 	private Button mButtonFail;
 	private Button mButtonStart;
@@ -235,6 +251,14 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 				case JwaooBleToy.DEVICE_ID_MODEL01:
 					mTestItemFragmanets = mTestItemFragmanetsModel01;
+					break;
+
+				case JwaooBleToy.DEVICE_ID_S1:
+					mTestItemFragmanets = mTestItemFragmanetsS1;
+					break;
+
+				case JwaooBleToy.DEVICE_ID_T1:
+					mTestItemFragmanets = mTestItemFragmanetsT1;
 					break;
 
 				default:
@@ -595,6 +619,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 		protected boolean doInitialize() {
 			switch (mBleToy.getDeviveId()) {
 			case JwaooBleToy.DEVICE_ID_MODEL10:
+			case JwaooBleToy.DEVICE_ID_S1:
 				findViewById(R.id.buttonKey0).setVisibility(View.INVISIBLE);
 				findViewById(R.id.buttonKey1).setVisibility(View.INVISIBLE);
 				findViewById(R.id.buttonKey3).setVisibility(View.INVISIBLE);
@@ -607,6 +632,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 				break;
 
 			case JwaooBleToy.DEVICE_ID_MODEL01:
+			case JwaooBleToy.DEVICE_ID_T1:
 				findViewById(R.id.buttonKey3).setVisibility(View.INVISIBLE);
 
 				mButtons = new JwaooKeyTestView[] {
@@ -799,11 +825,33 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 		@Override
 		protected boolean doInitialize() {
-			mTestViews = new JwaooSensorTestView[] {
-				(JwaooSensorTestView) findViewById(R.id.gsensorView1),
-				(JwaooSensorTestView) findViewById(R.id.gsensorView2),
-				(JwaooSensorTestView) findViewById(R.id.gsensorView3),
-			};
+			switch (mBleToy.getDeviveId()) {
+			case JwaooBleToy.DEVICE_ID_S1:
+				mTestViews = new JwaooSensorTestView[] {
+					(JwaooSensorTestView) findViewById(R.id.gsensorView1),
+					(JwaooSensorTestView) findViewById(R.id.gsensorView2),
+					(JwaooSensorTestView) findViewById(R.id.gsensorView3),
+					(JwaooSensorTestView) findViewById(R.id.gsensorView4),
+					(JwaooSensorTestView) findViewById(R.id.gsensorView5),
+					(JwaooSensorTestView) findViewById(R.id.gsensorView6),
+				};
+
+				for (int i = 3; i < 6; i++) {
+					mTestViews[i].setVisibility(View.VISIBLE);
+				}
+				break;
+
+			default:
+				mTestViews = new JwaooSensorTestView[] {
+					(JwaooSensorTestView) findViewById(R.id.gsensorView1),
+					(JwaooSensorTestView) findViewById(R.id.gsensorView2),
+					(JwaooSensorTestView) findViewById(R.id.gsensorView3),
+				};
+
+				for (int id : new int[] { R.id.gsensorView4, R.id.gsensorView5, R.id.gsensorView6 }) {
+					findViewById(id).setVisibility(View.GONE);
+				}
+			}
 
 			setDifferenceMin(4);
 
@@ -815,6 +863,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 			mTestViews[0].putValueValue(sensor.getAxisX());
 			mTestViews[1].putValueValue(sensor.getAxisY());
 			mTestViews[2].putValueValue(sensor.getAxisZ());
+
+			if (mTestViews.length >= 6) {
+				mTestViews[3].putValueValue(sensor.getAxisX2());
+				mTestViews[4].putValueValue(sensor.getAxisY2());
+				mTestViews[5].putValueValue(sensor.getAxisZ2());
+			}
 		}
 	}
 
@@ -940,6 +994,8 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 			switch (mBleToy.getDeviveId()) {
 			case JwaooBleToy.DEVICE_ID_MODEL10:
 			case JwaooBleToy.DEVICE_ID_MODEL01:
+			case JwaooBleToy.DEVICE_ID_S1:
+			case JwaooBleToy.DEVICE_ID_T1:
 				mCheckBoxLedBatt.setVisibility(View.INVISIBLE);
 				mCheckBoxLedBt.setVisibility(View.INVISIBLE);
 
