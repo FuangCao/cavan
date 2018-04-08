@@ -27,6 +27,12 @@ public class MacConvertActivity extends Activity {
 
 	public static final CavanMacAddress sAddressStartModel06 = new CavanMacAddress().fromString("88:EA:00:00:00:00");
 	public static final CavanMacAddress sAddressStartModel10 = new CavanMacAddress().fromString("88:EB:00:00:00:00");
+	public static final CavanMacAddress sAddressStartModel01 = new CavanMacAddress().fromString("88:EC:00:00:00:00");
+	public static final CavanMacAddress sAddressStartModel11 = new CavanMacAddress().fromString("88:ED:00:00:00:00");
+	public static final CavanMacAddress sAddressStartModel03 = new CavanMacAddress().fromString("88:EE:00:00:00:00");
+
+	public static final CavanMacAddress sAddressStartS1 = new CavanMacAddress().fromString("89:F1:00:00:00:00");
+	public static final CavanMacAddress sAddressStartT1 = new CavanMacAddress().fromString("89:F2:00:00:00:00");
 
 	private static final int MSG_START_ADDR_CHANGED = 2;
 	private static final int MSG_END_ADDR_CHANGED = 3;
@@ -37,6 +43,11 @@ public class MacConvertActivity extends Activity {
 	private static final int PROJECT_INDEX_NONE = 0;
 	private static final int PROJECT_INDEX_MODEL06 = 1;
 	private static final int PROJECT_INDEX_MODEL10 = 2;
+	private static final int PROJECT_INDEX_MODEL01 = 3;
+	private static final int PROJECT_INDEX_MODEL03 = 4;
+	private static final int PROJECT_INDEX_MODEL11 = 5;
+	private static final int PROJECT_INDEX_S1 = 6;
+	private static final int PROJECT_INDEX_T1 = 7;
 
 	private CavanMacAddressView mAddressViewStart;
 	private CavanMacAddressView mAddressViewEnd;
@@ -76,8 +87,20 @@ public class MacConvertActivity extends Activity {
 
 					if (position == PROJECT_INDEX_MODEL06) {
 						address.setPrefix(sAddressStartModel06);
-					} else {
+					} else if (position == PROJECT_INDEX_MODEL10) {
 						address.setPrefix(sAddressStartModel10);
+					} else if (position == PROJECT_INDEX_MODEL01) {
+						address.setPrefix(sAddressStartModel01);
+					} else if (position == PROJECT_INDEX_MODEL11) {
+						address.setPrefix(sAddressStartModel11);
+					} else if (position == PROJECT_INDEX_MODEL03) {
+						address.setPrefix(sAddressStartModel03);
+					} else if (position == PROJECT_INDEX_S1) {
+						address.setPrefix(sAddressStartS1);
+					} else if (position == PROJECT_INDEX_T1) {
+						address.setPrefix(sAddressStartT1);
+					} else {
+						CavanAndroid.showToast(getApplicationContext(), "Invalid project！");
 					}
 
 					mLock.setOwner(mAddressViewStart);
@@ -93,6 +116,14 @@ public class MacConvertActivity extends Activity {
 					mSpinnerProject.setSelection(PROJECT_INDEX_MODEL06);
 				} else if (address.startsWith(sAddressStartModel10)) {
 					mSpinnerProject.setSelection(PROJECT_INDEX_MODEL10);
+				} else if (address.startsWith(sAddressStartModel11)) {
+					mSpinnerProject.setSelection(PROJECT_INDEX_MODEL11);
+				} else if (address.startsWith(sAddressStartModel03)) {
+					mSpinnerProject.setSelection(PROJECT_INDEX_MODEL03);
+				} else if (address.startsWith(sAddressStartS1)) {
+					mSpinnerProject.setSelection(PROJECT_INDEX_S1);
+				} else if (address.startsWith(sAddressStartT1)) {
+					mSpinnerProject.setSelection(PROJECT_INDEX_T1);
 				} else {
 					mSpinnerProject.setSelection(PROJECT_INDEX_NONE);
 				}

@@ -72,6 +72,8 @@
         <item >MODEL-01</item>
         <item >MODEL-11</item>
         <item >MODEL-03</item>
+        <item >JWAOO-S1</item>
+        <item >JWAOO-T1</item>
     </string-array>
         <string name="copy">复制</string>
         <string name="prompt_copied_to_clipboard">文字已复制到剪切板</string>
