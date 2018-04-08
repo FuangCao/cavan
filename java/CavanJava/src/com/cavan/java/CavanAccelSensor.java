@@ -5,9 +5,6 @@ public abstract class CavanAccelSensor {
 	private double mAxisX;
 	private double mAxisY;
 	private double mAxisZ;
-	private double mAxisX2;
-	private double mAxisY2;
-	private double mAxisZ2;
 
 	public abstract void putBytes(byte[] bytes);
 
@@ -44,27 +41,15 @@ public abstract class CavanAccelSensor {
 	}
 
 	public double getAxisX2() {
-		return mAxisX2;
-	}
-
-	public void setAxisX2(double x) {
-		mAxisX2 = x;
+		return 0;
 	}
 
 	public double getAxisY2() {
-		return mAxisY2;
-	}
-
-	public void setAxisY2(double y) {
-		mAxisY2 = y;
+		return 0;
 	}
 
 	public double getAxisZ2() {
-		return mAxisZ2;
-	}
-
-	public void setAxisZ2(double z) {
-		mAxisZ2 = z;
+		return 0;
 	}
 
 	public String getAccelText() {

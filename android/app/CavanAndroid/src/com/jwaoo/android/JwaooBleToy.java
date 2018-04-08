@@ -28,7 +28,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	private static final int SENSOR_DELAY_STEP = 100000;
 
 	public static final String[] BT_NAMES = {
-		"JwaooToy", "SenseTube", "SenseBand", "Sensevibe warm", "SenseVibeWarm"
+		"JwaooToy", "SenseTube", "SenseBand", "Sensevibe warm", "SenseVibeWarm", "LovaraBand",
 	};
 
 	public static final UUID[] BT_UUIDS = {
@@ -83,6 +83,9 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final String DEVICE_NAME_MODEL01 = "MODEL-01";
 	public static final String DEVICE_NAME_MODEL03 = "MODEL-03";
 
+	public static final String DEVICE_NAME_S1 = "JWAOO-S1";
+	public static final String DEVICE_NAME_T1 = "JWAOO-T1";
+
 	public static final int DEVICE_ID_K100 = 100;
 	public static final int DEVICE_ID_K101 = 101;
 	public static final int DEVICE_ID_MODEL06 = 102;
@@ -90,6 +93,9 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final int DEVICE_ID_MODEL11 = 106;
 	public static final int DEVICE_ID_MODEL01 = 107;
 	public static final int DEVICE_ID_MODEL03 = 108;
+
+	public static final int DEVICE_ID_S1 = 201;
+	public static final int DEVICE_ID_T1 = 202;
 
 	public static final UUID UUID_SERVICE = UUID.fromString("00001888-0000-1000-8000-00805f9b34fb");
 	public static final UUID UUID_COMMAND = UUID.fromString("00001889-0000-1000-8000-00805f9b34fb");
@@ -459,6 +465,14 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public boolean isDeviceModel10() {
 		return getDeviveId() == DEVICE_ID_MODEL10;
+	}
+
+	public boolean isDeviceS1() {
+		return getDeviveId() == DEVICE_ID_S1;
+	}
+
+	public boolean isDeviceT1() {
+		return getDeviveId() == DEVICE_ID_T1;
 	}
 
 	public boolean isDeviceSenseTube() {
@@ -1162,6 +1176,14 @@ public class JwaooBleToy extends CavanBleGatt {
 			mSensor = new JwaooToySensorModel10();
 			mDeviceName = DEVICE_NAME_MODEL03;
 			mDeviceId = DEVICE_ID_MODEL03;
+		} else if (identify.equals(DEVICE_NAME_S1)) {
+			mSensor = new JwaooToySensorS1();
+			mDeviceName = DEVICE_NAME_S1;
+			mDeviceId = DEVICE_ID_S1;
+		} else if (identify.equals(DEVICE_NAME_T1)) {
+			mSensor = new JwaooToySensorK101();
+			mDeviceName = DEVICE_NAME_T1;
+			mDeviceId = DEVICE_ID_T1;
 		} else {
 			CavanAndroid.eLog("Invalid identify");
 			return false;
