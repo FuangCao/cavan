@@ -28,8 +28,8 @@ public class MacConvertActivity extends Activity {
 	public static final CavanMacAddress sAddressStartModel06 = new CavanMacAddress().fromString("88:EA:00:00:00:00");
 	public static final CavanMacAddress sAddressStartModel10 = new CavanMacAddress().fromString("88:EB:00:00:00:00");
 	public static final CavanMacAddress sAddressStartModel01 = new CavanMacAddress().fromString("88:EC:00:00:00:00");
-	public static final CavanMacAddress sAddressStartModel11 = new CavanMacAddress().fromString("88:ED:00:00:00:00");
-	public static final CavanMacAddress sAddressStartModel03 = new CavanMacAddress().fromString("88:EE:00:00:00:00");
+	public static final CavanMacAddress sAddressStartModel03 = new CavanMacAddress().fromString("88:ED:00:00:00:00");
+	public static final CavanMacAddress sAddressStartModel11 = new CavanMacAddress().fromString("88:EE:00:00:00:00");
 
 	public static final CavanMacAddress sAddressStartS1 = new CavanMacAddress().fromString("89:F1:00:00:00:00");
 	public static final CavanMacAddress sAddressStartT1 = new CavanMacAddress().fromString("89:F2:00:00:00:00");
