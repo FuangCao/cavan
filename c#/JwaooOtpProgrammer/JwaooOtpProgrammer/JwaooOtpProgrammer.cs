@@ -9,9 +9,11 @@ using ZXing;
 using ZXing.Common;
 using System.Drawing;
 
-namespace JwaooOtpProgrammer {
+namespace JwaooOtpProgrammer
+{
 
-    public partial class JwaooOtpProgrammer : Form {
+    public partial class JwaooOtpProgrammer : Form
+    {
 
         private const String KEY_SMATR_SNIPPETS_PATH = "SmartSnippet";
         private const String KEY_FIRMWARE_PATH = "Firmware";
@@ -43,9 +45,12 @@ namespace JwaooOtpProgrammer {
             new JwaooMacAddress("JwaooMacModel01.txt", "JwaooFwModel01", new CavanMacAddress().fromString("88:EC:00:00:00:00")),
             new JwaooMacAddress("JwaooMacModel03.txt", "JwaooFwModel03", new CavanMacAddress().fromString("88:ED:00:00:00:00")),
             new JwaooMacAddress("JwaooMacModel11.txt", "JwaooFwModel11", new CavanMacAddress().fromString("88:EE:00:00:00:00")),
+            new JwaooMacAddress("JwaooMacS1.txt", "JwaooFwS1", new CavanMacAddress().fromString("89:F1:00:00:00:00")),
+            new JwaooMacAddress("JwaooMacT1.txt", "JwaooFwT1", new CavanMacAddress().fromString("89:F2:00:00:00:00")),
         };
 
-        public JwaooOtpProgrammer() {
+        public JwaooOtpProgrammer()
+        {
             InitializeComponent();
 
             loadConfigFile();
@@ -54,15 +59,18 @@ namespace JwaooOtpProgrammer {
 
             mBarcodeWriter = new BarcodeWriter();
             mBarcodeWriter.Format = BarcodeFormat.QR_CODE;
-            mBarcodeWriter.Options = new EncodingOptions {
+            mBarcodeWriter.Options = new EncodingOptions
+            {
                 Width = pictureBoxQrCode.Width,
                 Height = pictureBoxQrCode.Height,
                 Margin = 0,
             };
         }
 
-        private void Programmer_FormClosed(object sender, FormClosedEventArgs e) {
-            if (mFileStreamLog != null) {
+        private void Programmer_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            if (mFileStreamLog != null)
+            {
                 mFileStreamLog.Close();
                 mFileStreamLog = null;
             }
@@ -70,11 +78,14 @@ namespace JwaooOtpProgrammer {
             saveConfigFile();
         }
 
-        private JwaooMacAddress getMacAddress(String pathname) {
+        private JwaooMacAddress getMacAddress(String pathname)
+        {
             String name = Path.GetFileName(pathname);
 
-            foreach (JwaooMacAddress address in mMacAddressArray) {
-                if (name.StartsWith(address.FwPrefix)) {
+            foreach (JwaooMacAddress address in mMacAddressArray)
+            {
+                if (name.StartsWith(address.FwPrefix))
+                {
                     return address;
                 }
             }
@@ -82,16 +93,19 @@ namespace JwaooOtpProgrammer {
             return null;
         }
 
-        private bool setFwFilePath(String pathname) {
+        private bool setFwFilePath(String pathname)
+        {
             JwaooMacAddress address = getMacAddress(pathname);
-            if (address == null) {
+            if (address == null)
+            {
                 MessageBox.Show("固件文件名不正确，请重新选择！");
                 return false;
             }
 
             mMacAddress = address;
 
-            if (updateMacAdressUI(true, true, true)) {
+            if (updateMacAdressUI(true, true, true))
+            {
                 labelState.Text = "就绪";
                 labelState.ForeColor = Color.Black;
             }
@@ -103,99 +117,129 @@ namespace JwaooOtpProgrammer {
             return true;
         }
 
-        public void loadConfigFile() {
+        public void loadConfigFile()
+        {
             String pathname = ConfigurationManager.AppSettings[KEY_FIRMWARE_PATH];
-            if (File.Exists(pathname)) {
+            if (File.Exists(pathname))
+            {
                 setFwFilePath(pathname);
             }
 
             pathname = ConfigurationManager.AppSettings[KEY_SMATR_SNIPPETS_PATH];
-            if (File.Exists(pathname)) {
+            if (File.Exists(pathname))
+            {
                 mFileSmartSnippetsExe = pathname;
             }
         }
 
-        public bool saveConfigFile() {
-            try {
+        public bool saveConfigFile()
+        {
+            try
+            {
                 Configuration config = ConfigurationManager.OpenExeConfiguration(Application.ExecutablePath);
-                if (config == null) {
+                if (config == null)
+                {
                     return false;
                 }
 
                 KeyValueConfigurationCollection settings = config.AppSettings.Settings;
                 settings.Clear();
 
-                if (File.Exists(mFileSmartSnippetsExe)) {
+                if (File.Exists(mFileSmartSnippetsExe))
+                {
                     settings.Add(KEY_SMATR_SNIPPETS_PATH, mFileSmartSnippetsExe);
                 }
 
                 String pathname = textBoxFirmware.Text;
-                if (File.Exists(pathname)) {
+                if (File.Exists(pathname))
+                {
                     settings.Add(KEY_FIRMWARE_PATH, pathname);
                 }
 
                 config.Save(ConfigurationSaveMode.Full);
 
                 return true;
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 MessageBox.Show("保存配置出错: " + e);
                 return false;
             }
         }
 
-        public bool writeLogFile(String text) {
-            if (!checkBoxSaveLog.Checked) {
+        public bool writeLogFile(String text)
+        {
+            if (!checkBoxSaveLog.Checked)
+            {
                 return true;
             }
 
-            if (mFileStreamLog == null) {
+            if (mFileStreamLog == null)
+            {
                 mFileStreamLog = File.Open(Path.Combine(Application.StartupPath, "log.txt"), FileMode.Append, FileAccess.Write, FileShare.Read);
-                if (mFileStreamLog == null) {
+                if (mFileStreamLog == null)
+                {
                     return false;
                 }
             }
 
-            try {
+            try
+            {
                 byte[] bytes = Encoding.UTF8.GetBytes(text);
                 mFileStreamLog.Write(bytes, 0, bytes.Length);
                 mFileStreamLog.Flush();
                 return true;
-            } catch {
+            }
+            catch
+            {
                 return false;
             }
         }
 
-        public bool writeLog(String line) {
+        public bool writeLog(String line)
+        {
             return writeLogFile(line) && writeLogFile("\r\n");
         }
 
-        public void appendLog(String line) {
+        public void appendLog(String line)
+        {
             CavanDelegate.appendText(textBoxLog, line + "\r\n");
         }
 
-        private bool updateMacAdressUI(bool reload, bool burnEnable, bool checkAddrCount) {
+        private bool updateMacAdressUI(bool reload, bool burnEnable, bool checkAddrCount)
+        {
             bool success;
 
-            if (mMacAddress == null) {
+            if (mMacAddress == null)
+            {
                 success = false;
                 CavanDelegate.setText(labelState, "请选择正确的固件文件！");
 
                 CavanDelegate.clearText(textBoxMacAddressStart);
                 CavanDelegate.clearText(textBoxMacAddressEnd);
                 CavanDelegate.clearText(textBoxMacAddressCount);
-            } else {
-                if (reload) {
+            }
+            else
+            {
+                if (reload)
+                {
                     success = mMacAddress.readFromFile();
-                } else {
+                }
+                else
+                {
                     success = mMacAddress.LoadSucceed;
                 }
 
-                if (success) {
-                    if (checkAddrCount && mMacAddress.AddressCount <= 0) {
+                if (success)
+                {
+                    if (checkAddrCount && mMacAddress.AddressCount <= 0)
+                    {
                         success = false;
                         CavanDelegate.setText(labelState, "MAC地址用完了，请重新分配！");
                     }
-                } else {
+                }
+                else
+                {
                     success = false;
                     CavanDelegate.setText(labelState, "MAC地址格式错误！");
                 }
@@ -205,9 +249,12 @@ namespace JwaooOtpProgrammer {
                 CavanDelegate.setText(textBoxMacAddressCount, mMacAddress.AddressCount + " (个)");
             }
 
-            if (success) {
+            if (success)
+            {
                 CavanDelegate.setEnable(buttonBurn, burnEnable);
-            } else {
+            }
+            else
+            {
                 CavanDelegate.setForeColor(labelState, Color.Red);
                 CavanDelegate.setEnable(buttonBurn, false);
             }
@@ -215,14 +262,19 @@ namespace JwaooOtpProgrammer {
             return success;
         }
 
-        private String findSmartSnippetsPath() {
-            foreach (String path in sProgramFiles) {
+        private String findSmartSnippetsPath()
+        {
+            foreach (String path in sProgramFiles)
+            {
                 String rootDir = Path.Combine(path, "SmartSnippets");
-                if (Directory.Exists(rootDir)) {
+                if (Directory.Exists(rootDir))
+                {
                     String binDir = Path.Combine(rootDir, "bin");
-                    if (Directory.Exists(binDir)) {
+                    if (Directory.Exists(binDir))
+                    {
                         String smartSnippetsPath = Path.Combine(binDir, "SmartSnippets.exe");
-                        if (File.Exists(smartSnippetsPath)) {
+                        if (File.Exists(smartSnippetsPath))
+                        {
                             return smartSnippetsPath;
                         }
                     }
@@ -232,17 +284,21 @@ namespace JwaooOtpProgrammer {
             return null;
         }
 
-        private String getSmartSnippetsPath() {
-            if (mFileSmartSnippetsExe != null && File.Exists(mFileSmartSnippetsExe)) {
+        private String getSmartSnippetsPath()
+        {
+            if (mFileSmartSnippetsExe != null && File.Exists(mFileSmartSnippetsExe))
+            {
                 return mFileSmartSnippetsExe;
             }
 
             mFileSmartSnippetsExe = findSmartSnippetsPath();
-            if (mFileSmartSnippetsExe != null) {
+            if (mFileSmartSnippetsExe != null)
+            {
                 return mFileSmartSnippetsExe;
             }
 
-            if (openFileDialogSmartSnippets.ShowDialog() != DialogResult.OK) {
+            if (openFileDialogSmartSnippets.ShowDialog() != DialogResult.OK)
+            {
                 return null;
             }
 
@@ -251,26 +307,32 @@ namespace JwaooOtpProgrammer {
             return mFileSmartSnippetsExe;
         }
 
-        private String doRunCommand(ShellCommandRunner runner) {
-            if (runner.execute()) {
+        private String doRunCommand(ShellCommandRunner runner)
+        {
+            if (runner.execute())
+            {
                 return runner.LastOutputLine;
             }
 
             return null;
         }
 
-        private String runSmartSnippetsCommand(params String[] args) {
+        private String runSmartSnippetsCommand(params String[] args)
+        {
             ShellCommandRunner runner = new ShellCommandRunner(getSmartSnippetsPath(), this);
             runner.addArguments(args);
             return doRunCommand(runner);
         }
 
-        private String runOtpCommand(bool withFirmware, params String[] args) {
+        private String runOtpCommand(bool withFirmware, params String[] args)
+        {
             ShellCommandRunner runner = new ShellCommandRunner(getSmartSnippetsPath(), this);
             runner.addArguments(sOtpCommandArgs);
 
-            if (withFirmware) {
-                if (!File.Exists(sFileProgrammerBin)) {
+            if (withFirmware)
+            {
+                if (!File.Exists(sFileProgrammerBin))
+                {
                     MessageBox.Show("找不到文件：" + sFileProgrammerBin);
                     return null;
                 }
@@ -283,43 +345,52 @@ namespace JwaooOtpProgrammer {
             return doRunCommand(runner);
         }
 
-        private bool writeOtpData(String offset, String data) {
+        private bool writeOtpData(String offset, String data)
+        {
             // appendLog("写数据: " + data + " => " + offset);
 
             String line = runOtpCommand(false, "-cmd", "write_field", "-offset", offset, "-data", data);
-            if (line == null) {
+            if (line == null)
+            {
                 return false;
             }
 
-            if (line.StartsWith("Failed")) {
+            if (line.StartsWith("Failed"))
+            {
                 return false;
             }
 
             return line.StartsWith("Burned");
         }
 
-        private String getBytesHexString(byte[] bytes) {
+        private String getBytesHexString(byte[] bytes)
+        {
             StringBuilder builder = new StringBuilder();
 
-            foreach (byte value in bytes) {
+            foreach (byte value in bytes)
+            {
                 CavanString.fromByte(builder, value);
             }
 
             return builder.ToString();
         }
 
-        private bool writeOtpData(String offset, byte[] data) {
+        private bool writeOtpData(String offset, byte[] data)
+        {
             return writeOtpData(offset, getBytesHexString(data));
         }
 
-        private bool writeBdAddress() {
-            if (mMacAddress == null || mMacAddress.AddressCount <= 0) {
+        private bool writeBdAddress()
+        {
+            if (mMacAddress == null || mMacAddress.AddressCount <= 0)
+            {
                 return false;
             }
 
             appendLog("写MAC地址：" + mMacAddress);
 
-            if (!writeOtpData("0x7FD4", mMacAddress.getBytes())) {
+            if (!writeOtpData("0x7FD4", mMacAddress.getBytes()))
+            {
                 return false;
             }
 
@@ -328,76 +399,93 @@ namespace JwaooOtpProgrammer {
             return mMacAddress.increaseAndSave();
         }
 
-        private bool setOtpBootEnable() {
+        private bool setOtpBootEnable()
+        {
             appendLog("设置从OTP启动");
 
             return writeOtpData("0x7F00", "1234A5A5A5A51234");
         }
 
-        private bool readOtpHeader(String pathname) {
+        private bool readOtpHeader(String pathname)
+        {
             appendLog("读取OTP头部到：" + pathname);
 
             String line = runOtpCommand(true, "-cmd", "read_header", "-file", pathname);
-            if (line == null) {
+            if (line == null)
+            {
                 return false;
             }
 
-            if (line.StartsWith("Failed")) {
+            if (line.StartsWith("Failed"))
+            {
                 return false;
             }
 
             return line.StartsWith("Reading is complete");
         }
 
-        private byte[] readOtpHeader() {
-            if (!readOtpHeader(sFileOtpHeaderBin)) {
+        private byte[] readOtpHeader()
+        {
+            if (!readOtpHeader(sFileOtpHeaderBin))
+            {
                 return null;
             }
 
             return File.ReadAllBytes(sFileOtpHeaderBin);
         }
 
-        private bool readOtpFirmware(String pathname) {
+        private bool readOtpFirmware(String pathname)
+        {
             appendLog("从OTP读取固件到：" + pathname);
 
             String line = runOtpCommand(true, "-cmd", "read_custom_code", "-file", pathname);
-            if (line == null) {
+            if (line == null)
+            {
                 return false;
             }
 
-            if (line.StartsWith("OTP memory reading has failed")) {
+            if (line.StartsWith("OTP memory reading has failed"))
+            {
                 return false;
             }
 
             return line.StartsWith("OTP memory reading has finished");
         }
 
-        private byte[] readOtpFirmware() {
-            if (!readOtpFirmware(sFileOtpFirmwareBin)) {
+        private byte[] readOtpFirmware()
+        {
+            if (!readOtpFirmware(sFileOtpFirmwareBin))
+            {
                 return null;
             }
 
             return File.ReadAllBytes(sFileOtpFirmwareBin);
         }
 
-        private bool writeOtpFirmware(String pathname) {
+        private bool writeOtpFirmware(String pathname)
+        {
             appendLog("写固件文件到OTP：" + pathname);
 
             String line = runOtpCommand(false, "-cmd", "write_custom_code", "-y", "-file", pathname);
-            if (line == null) {
+            if (line == null)
+            {
                 return false;
             }
 
-            if (line.StartsWith("OTP Memory burning failed")) {
+            if (line.StartsWith("OTP Memory burning failed"))
+            {
                 return false;
             }
 
             return line.StartsWith("OTP Memory burning completed successfully");
         }
 
-        private bool isMemoryEmpty(byte[] bytes, int offset, int length) {
-            for (int end = offset + length; offset < end; offset++) {
-                if (bytes[offset] != 0x00) {
+        private bool isMemoryEmpty(byte[] bytes, int offset, int length)
+        {
+            for (int end = offset + length; offset < end; offset++)
+            {
+                if (bytes[offset] != 0x00)
+                {
                     return false;
                 }
             }
@@ -405,9 +493,12 @@ namespace JwaooOtpProgrammer {
             return true;
         }
 
-        private bool isMemeoryMatch(byte[] mem1, int off1, byte[] mem2, int off2, int length) {
-            for (int i = 0; i < length; i++) {
-                if (mem1[off1 + i] != mem2[off2 + i]) {
+        private bool isMemeoryMatch(byte[] mem1, int off1, byte[] mem2, int off2, int length)
+        {
+            for (int i = 0; i < length; i++)
+            {
+                if (mem1[off1 + i] != mem2[off2 + i])
+                {
                     return false;
                 }
             }
@@ -415,9 +506,11 @@ namespace JwaooOtpProgrammer {
             return true;
         }
 
-        private bool burnOtpFirmwareAll(String pathname) {
+        private bool burnOtpFirmwareAll(String pathname)
+        {
             byte[] bytes = readOtpFirmware();
-            if (bytes == null) {
+            if (bytes == null)
+            {
                 MessageBox.Show("读取固件失败！");
                 return false;
             }
@@ -426,26 +519,34 @@ namespace JwaooOtpProgrammer {
 
             CavanDelegate.setText(textBoxMacAddressNow, new JwaooMacAddress().fromOtpFirmware(bytes).ToString());
 
-            if (isMemoryEmpty(bytes, 0, 0x7F00)) {
-                if (!writeOtpFirmware(pathname)) {
+            if (isMemoryEmpty(bytes, 0, 0x7F00))
+            {
+                if (!writeOtpFirmware(pathname))
+                {
                     MessageBox.Show("写固件失败: " + pathname);
                     return false;
                 }
 
                 appendLog("成功");
-            } else {
+            }
+            else
+            {
                 // MessageBox.Show("OTP中的固件不为空，可能已经写过了");
                 appendLog("已经写过固件了，直接跳过");
             }
 
-            if (isMemoryEmpty(bytes, 0x7FD4, 6)) {
-                if (!writeBdAddress()) {
+            if (isMemoryEmpty(bytes, 0x7FD4, 6))
+            {
+                if (!writeBdAddress())
+                {
                     MessageBox.Show("写MAC地址失败！");
                     return false;
                 }
 
                 appendLog("成功");
-            } else {
+            }
+            else
+            {
                 // MessageBox.Show("OTP中的MAC地址不为空，可能已经写过了");
                 appendLog("已经写过MAC地址了，直接跳过");
 
@@ -456,16 +557,22 @@ namespace JwaooOtpProgrammer {
                 }
             }
 
-            if (isMemoryEmpty(bytes, 0x7F00, 8)) {
-                if (!setOtpBootEnable()) {
+            if (isMemoryEmpty(bytes, 0x7F00, 8))
+            {
+                if (!setOtpBootEnable())
+                {
                     MessageBox.Show("设置从OTP启动失败！");
                     return false;
                 }
 
                 appendLog("成功");
-            } else if (isMemeoryMatch(bytes, 0x7F00, sOtpBootMagic, 0, sOtpBootMagic.Length)) {
+            }
+            else if (isMemeoryMatch(bytes, 0x7F00, sOtpBootMagic, 0, sOtpBootMagic.Length))
+            {
                 appendLog("已经设置从OTP启动了，直接跳过");
-            } else {
+            }
+            else
+            {
                 MessageBox.Show("OTP启动标志位不匹配！！！");
                 return false;
             }
@@ -473,107 +580,132 @@ namespace JwaooOtpProgrammer {
             return true;
         }
 
-        private void buttonFirmware_Click(object sender, EventArgs e) {
-            if (openFileDialogFirmware.ShowDialog() == DialogResult.OK) {
+        private void buttonFirmware_Click(object sender, EventArgs e)
+        {
+            if (openFileDialogFirmware.ShowDialog() == DialogResult.OK)
+            {
                 setFwFilePath(openFileDialogFirmware.FileName);
             }
         }
 
         // ================================================================================
 
-        private void backgroundWorkerConnTest_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e) {
-            switch (e.ProgressPercentage) {
-            case 1:
-                labelState.Text = "正在测试连接...";
-                labelState.ForeColor = Color.Black;
-                break;
+        private void backgroundWorkerConnTest_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
+        {
+            switch (e.ProgressPercentage)
+            {
+                case 1:
+                    labelState.Text = "正在测试连接...";
+                    labelState.ForeColor = Color.Black;
+                    break;
 
-            case 2:
-                appendLog("连接成功");
-                labelState.Text = "连接成功";
-                labelState.ForeColor = Color.LimeGreen;
+                case 2:
+                    appendLog("连接成功");
+                    labelState.Text = "连接成功";
+                    labelState.ForeColor = Color.LimeGreen;
 
-                textBoxMacAddressNow.Text = new JwaooMacAddress().fromOtpHeader((byte[])e.UserState).ToString();
-                break;
+                    textBoxMacAddressNow.Text = new JwaooMacAddress().fromOtpHeader((byte[])e.UserState).ToString();
+                    break;
 
-            case 3:
-                appendLog("连接失败！！！");
-                labelState.Text = "连接失败！";
-                labelState.ForeColor = Color.Red;
-                break;
+                case 3:
+                    appendLog("连接失败！！！");
+                    labelState.Text = "连接失败！";
+                    labelState.ForeColor = Color.Red;
+                    break;
             }
         }
 
-        private void backgroundWorkerConnTest_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e) {
+        private void backgroundWorkerConnTest_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
+        {
             buttonConnect.Enabled = true;
         }
 
-        private void backgroundWorkerConnTest_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e) {
+        private void backgroundWorkerConnTest_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        {
             backgroundWorkerConnTest.ReportProgress(1);
 
             byte[] bytes = readOtpHeader();
-            if (bytes != null) {
+            if (bytes != null)
+            {
                 backgroundWorkerConnTest.ReportProgress(2, bytes);
                 updateMacAdressUI(false, true, false);
-            } else {
+            }
+            else
+            {
                 backgroundWorkerConnTest.ReportProgress(3);
             }
         }
 
-        private void buttonConnect_Click(object sender, EventArgs e) {
+        private void buttonConnect_Click(object sender, EventArgs e)
+        {
             buttonConnect.Enabled = false;
             buttonBurn.Enabled = false;
 
-            try {
+            try
+            {
                 backgroundWorkerConnTest.RunWorkerAsync();
-            } catch (Exception err) {
+            }
+            catch (Exception err)
+            {
                 MessageBox.Show("启动后台任务失败：" + err);
             }
         }
 
         // ================================================================================
 
-        private void backgroundWorkerOtpBurn_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e) {
-            switch (e.ProgressPercentage) {
-            case 1:
-                labelState.Text = "正在烧录...";
-                labelState.ForeColor = Color.Black;
-                break;
+        private void backgroundWorkerOtpBurn_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
+        {
+            switch (e.ProgressPercentage)
+            {
+                case 1:
+                    labelState.Text = "正在烧录...";
+                    labelState.ForeColor = Color.Black;
+                    break;
 
-            case 2:
-                appendLog("烧录成功");
-                labelState.Text = "烧录成功";
-                labelState.ForeColor = Color.LimeGreen;
-                break;
+                case 2:
+                    appendLog("烧录成功");
+                    labelState.Text = "烧录成功";
+                    labelState.ForeColor = Color.LimeGreen;
+                    break;
 
-            case 3:
-                appendLog("烧录失败！！！");
-                labelState.Text = "烧录失败！";
-                labelState.ForeColor = Color.Red;
-                break;
+                case 3:
+                    appendLog("烧录失败！！！");
+                    labelState.Text = "烧录失败！";
+                    labelState.ForeColor = Color.Red;
+                    break;
             }
         }
 
-        private void backgroundWorkerOtpBurn_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e) {
+        private void backgroundWorkerOtpBurn_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
+        {
             buttonConnect.Enabled = true;
             buttonFirmware.Enabled = true;
             buttonAddressEdit.Enabled = true;
         }
 
-        private void backgroundWorkerOtpBurn_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e) {
+        private void backgroundWorkerOtpBurn_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        {
             String pathname = (String)e.Argument;
 
-            if (pathname.Length == 0) {
+            if (pathname.Length == 0)
+            {
                 MessageBox.Show("请选择固件文件");
-            } else if (!File.Exists(pathname)) {
+            }
+            else if (!File.Exists(pathname))
+            {
                 MessageBox.Show("固件文件不存在：" + pathname);
-            } else if (updateMacAdressUI(false, false, true)) {
+            }
+            else if (updateMacAdressUI(false, false, true))
+            {
                 backgroundWorkerOtpBurn.ReportProgress(1);
 
-                if (burnOtpFirmwareAll(pathname)) {
+                if (burnOtpFirmwareAll(pathname))
+                {
                     mBurnSuccess = true;
                     backgroundWorkerOtpBurn.ReportProgress(2);
-                } else {
+                }
+                else
+                {
                     backgroundWorkerOtpBurn.ReportProgress(3);
                 }
 
@@ -581,80 +713,101 @@ namespace JwaooOtpProgrammer {
             }
         }
 
-        private void buttonBurn_Click(object sender, EventArgs e) {
+        private void buttonBurn_Click(object sender, EventArgs e)
+        {
             buttonBurn.Enabled = false;
             buttonConnect.Enabled = false;
             buttonFirmware.Enabled = false;
             buttonAddressEdit.Enabled = false;
 
-            if (mBurnSuccess) {
+            if (mBurnSuccess)
+            {
                 mBurnSuccess = false;
                 textBoxLog.Clear();
             }
 
-            try {
+            try
+            {
                 backgroundWorkerOtpBurn.RunWorkerAsync(textBoxFirmware.Text);
-            } catch (Exception err) {
+            }
+            catch (Exception err)
+            {
                 MessageBox.Show("启动后台任务失败：" + err);
             }
         }
 
         // ================================================================================
 
-        private void textBoxMacAddressNow_TextChanged(object sender, EventArgs e) {
+        private void textBoxMacAddressNow_TextChanged(object sender, EventArgs e)
+        {
             mBarcodeText = textBoxMacAddressNow.Text;
 
-            if (!backgroundWorkerQrCodeEncode.IsBusy) {
+            if (!backgroundWorkerQrCodeEncode.IsBusy)
+            {
                 pictureBoxQrCode.Image = null;
                 backgroundWorkerQrCodeEncode.RunWorkerAsync();
             }
         }
 
-        private void backgroundWorkerQrCodeEncode_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e) {
+        private void backgroundWorkerQrCodeEncode_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        {
             mBarcodeBitmap = null;
 
-            while (mBarcodeText != null) {
+            while (mBarcodeText != null)
+            {
                 String text = mBarcodeText;
 
                 mBarcodeText = null;
 
-                if (text.Length > 0) {
+                if (text.Length > 0)
+                {
                     Image image = mBarcodeWriter.Write(text);
-                    if (image != null) {
+                    if (image != null)
+                    {
                         mBarcodeBitmap = new Bitmap(image);
                     }
                 }
             }
         }
 
-        private void backgroundWorkerQrCodeEncode_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e) {
+        private void backgroundWorkerQrCodeEncode_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
+        {
             pictureBoxQrCode.Image = mBarcodeBitmap;
 
-            if (mBarcodeBitmap == null) {
+            if (mBarcodeBitmap == null)
+            {
                 pictureBoxQrCode.BorderStyle = BorderStyle.FixedSingle;
-            } else {
+            }
+            else
+            {
                 pictureBoxQrCode.BorderStyle = BorderStyle.None;
             }
         }
 
         // ================================================================================
 
-        private void buttonClearLog_Click(object sender, EventArgs e) {
-            if (mFileStreamLog != null) {
+        private void buttonClearLog_Click(object sender, EventArgs e)
+        {
+            if (mFileStreamLog != null)
+            {
                 mFileStreamLog.SetLength(0);
             }
 
             textBoxLog.Clear();
         }
 
-        private void buttonMacAlloc_Click(object sender, EventArgs e) {
+        private void buttonMacAlloc_Click(object sender, EventArgs e)
+        {
             CavanMacAddress address = new CavanMacAddress();
             UInt32 count;
 
-            if (mMacAddress != null) {
+            if (mMacAddress != null)
+            {
                 count = mMacAddress.AddressCount;
                 address.copyFrom(mMacAddress);
-            } else {
+            }
+            else
+            {
                 count = 0;
             }
 
@@ -662,13 +815,19 @@ namespace JwaooOtpProgrammer {
             manager.Show(this);
         }
 
-        private void buttonAddressEdit_Click(object sender, EventArgs e) {
-            if (mMacAddress == null) {
+        private void buttonAddressEdit_Click(object sender, EventArgs e)
+        {
+            if (mMacAddress == null)
+            {
                 MessageBox.Show("请先选择正确的固件文件！");
-            } else {
+            }
+            else
+            {
                 JwaooMacAddressEditDialog dialog = new JwaooMacAddressEditDialog(mMacAddress);
-                if (dialog.ShowDialog() == DialogResult.OK) {
-                    if (mMacAddress.writeToFile() && updateMacAdressUI(true, true, false)) {
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    if (mMacAddress.writeToFile() && updateMacAdressUI(true, true, false))
+                    {
                         CavanDelegate.setText(labelState, "修改MAC地址成功");
                         CavanDelegate.setForeColor(labelState, Color.LimeGreen);
                     }
@@ -677,7 +836,8 @@ namespace JwaooOtpProgrammer {
         }
     }
 
-    public class ShellCommandRunner {
+    public class ShellCommandRunner
+    {
 
         private String mCommand;
         private JwaooOtpProgrammer mProgrammer;
@@ -685,68 +845,88 @@ namespace JwaooOtpProgrammer {
         private List<String> mOutLines = new List<string>();
         private List<String> mArgumants = new List<string>();
 
-        public ShellCommandRunner(String command, JwaooOtpProgrammer programmer) {
+        public ShellCommandRunner(String command, JwaooOtpProgrammer programmer)
+        {
             mCommand = command;
             mProgrammer = programmer;
         }
 
-        public void setArguments(List<String> args) {
-            if (args == null) {
+        public void setArguments(List<String> args)
+        {
+            if (args == null)
+            {
                 mArgumants.Clear();
-            } else {
+            }
+            else
+            {
                 mArgumants = args;
             }
         }
 
-        public void setArguments(params String[] args) {
+        public void setArguments(params String[] args)
+        {
             mArgumants = new List<string>(args.Length);
             addArguments(args);
         }
 
-        public void addArgument(String arg) {
+        public void addArgument(String arg)
+        {
             mArgumants.Add(arg);
         }
 
-        public void addArguments(params String[] args) {
-            foreach (String arg in args) {
+        public void addArguments(params String[] args)
+        {
+            foreach (String arg in args)
+            {
                 mArgumants.Add(arg);
             }
         }
 
-        public void addArguments(List<String> args) {
-            foreach (String arg in args) {
+        public void addArguments(List<String> args)
+        {
+            foreach (String arg in args)
+            {
                 mArgumants.Add(arg);
             }
         }
 
-        private String linesToString(List<String> lines) {
+        private String linesToString(List<String> lines)
+        {
             StringBuilder builder = new StringBuilder();
 
-            for (int i = 0; i < lines.Count; i++) {
+            for (int i = 0; i < lines.Count; i++)
+            {
                 builder.Append(i + ". " + lines[i] + "\r\n");
             }
 
             return builder.ToString();
         }
 
-        public bool execute() {
+        public bool execute()
+        {
             mProgrammer.writeLog("================================================================================");
             mProgrammer.writeLog("command = " + mCommand);
 
-            if (mCommand == null) {
+            if (mCommand == null)
+            {
                 return false;
             }
 
             Process process = new Process();
 
-            if (mArgumants != null && mArgumants.Count > 0) {
+            if (mArgumants != null && mArgumants.Count > 0)
+            {
                 bool needSpace = false;
                 StringBuilder builder = new StringBuilder();
 
-                foreach (String arg in mArgumants) {
-                    if (needSpace) {
+                foreach (String arg in mArgumants)
+                {
+                    if (needSpace)
+                    {
                         builder.Append(" \"");
-                    } else {
+                    }
+                    else
+                    {
                         needSpace = true;
                         builder.Append('"');
                     }
@@ -771,41 +951,53 @@ namespace JwaooOtpProgrammer {
             mOutLines.Clear();
             mErrLines.Clear();
 
-            try {
-                if (process.Start()) {
+            try
+            {
+                if (process.Start())
+                {
                     process.BeginOutputReadLine();
                     process.BeginErrorReadLine();
                     process.WaitForExit();
 
-                    if (process.ExitCode != 0) {
+                    if (process.ExitCode != 0)
+                    {
                         return false;
                     }
 
                     return true;
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 MessageBox.Show("运行命令出错: " + e);
             }
 
             return false;
         }
 
-        public List<String> OutputLines {
-            get {
+        public List<String> OutputLines
+        {
+            get
+            {
                 return mOutLines;
             }
         }
 
-        public int OutputLineCount {
-            get {
+        public int OutputLineCount
+        {
+            get
+            {
                 return mOutLines.Count;
             }
         }
 
-        public String LastOutputLine {
-            get {
+        public String LastOutputLine
+        {
+            get
+            {
                 int count = mOutLines.Count;
-                if (count > 0) {
+                if (count > 0)
+                {
                     return mOutLines[count - 1];
                 }
 
@@ -813,29 +1005,37 @@ namespace JwaooOtpProgrammer {
             }
         }
 
-        public List<String> ErrorLines {
-            get {
+        public List<String> ErrorLines
+        {
+            get
+            {
                 return mErrLines;
             }
         }
 
-        public String getOutputLine(int index) {
+        public String getOutputLine(int index)
+        {
             return mOutLines[index];
         }
 
-        public String getErrorLine(int index) {
+        public String getErrorLine(int index)
+        {
             return mErrLines[index];
         }
 
-        private void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e) {
-            if (e.Data != null) {
+        private void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (e.Data != null)
+            {
                 mErrLines.Add(e.Data);
                 mProgrammer.writeLog(e.Data);
             }
         }
 
-        private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e) {
-            if (e.Data != null) {
+        private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (e.Data != null)
+            {
                 mOutLines.Add(e.Data);
                 mProgrammer.writeLog(e.Data);
             }

@@ -119,7 +119,7 @@
             // 
             // openFileDialogFirmware
             // 
-            this.openFileDialogFirmware.Filter = "固件文件|JwaooFwModel*.hex";
+            this.openFileDialogFirmware.Filter = "固件文件|JwaooFw*.hex";
             this.openFileDialogFirmware.Title = "选择固件文件";
             // 
             // openFileDialogSmartSnippets
