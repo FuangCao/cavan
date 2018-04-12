@@ -13,8 +13,8 @@ function cavan-virtualbox-osx-fixup()
 	vm_name="$1"
 	cmd_set_data="VBoxManage setextradata ${vm_name}"
 
-	VBoxManage modifyvm "${vm_name}" --cpuidset 00000001 000306a9 04100800 7fbae3ff bfebfbff || return 1
-	${cmd_set_data} "VBoxInternal/Devices/efi/0/Config/DmiSystemProduct" "MacBookPro11,3" || return 1
+	VBoxManage modifyvm "${vm_name}" --cpuidset 00000001 000106e5 00100800 0098e3fd bfebfbff || return 1
+	${cmd_set_data} "VBoxInternal/Devices/efi/0/Config/DmiSystemProduct" "iMac11,3" || return 1
 	${cmd_set_data} "VBoxInternal/Devices/efi/0/Config/DmiSystemVersion" "1.0" || return 1
 	${cmd_set_data} "VBoxInternal/Devices/efi/0/Config/DmiBoardProduct" "Iloveapple" || return 1
 	${cmd_set_data} "VBoxInternal/Devices/smc/0/Config/DeviceKey" "ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc" || return 1
