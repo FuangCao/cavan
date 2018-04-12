@@ -25,10 +25,11 @@
 #include <cavan/network.h>
 
 #define HTTP_SENDER_AHEAD			10000
+#define HTTP_SENDER_DELAY			(-150)
 #define HTTP_SENDER_REPEAT			60
 #define HTTP_SENDER_HOST			"game.weixin.qq.com"
-#define HTTP_SENDER_SEND_COUNT		10
-#define HTTP_SENDER_CONN_COUNT		4
+#define HTTP_SENDER_SEND_COUNT		5
+#define HTTP_SENDER_CONN_COUNT		8
 #define HTTP_SENDER_QUEUE_SIZE		4
 #define HTTP_SENDER_PACKAGES		200
 
@@ -570,7 +571,7 @@ int main(int argc, char *argv[])
 	int c;
 	int ret;
 	int count = 0;
-	int delay = -200;
+	int delay = HTTP_SENDER_DELAY;
 	int option_index;
 	char *test = NULL;
 	struct cavan_http_packet *packets[HTTP_SENDER_PACKAGES];
