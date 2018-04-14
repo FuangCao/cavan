@@ -71,7 +71,7 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-		builder.setSingleChoiceItems(items, 0, new OnClickListener() {
+		builder.setSingleChoiceItems(items, -1, new OnClickListener() {
 
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
