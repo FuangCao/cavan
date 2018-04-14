@@ -666,9 +666,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			}
 
 			try {
-				if (CavanAccessibilityHelper.isButton(node) && CavanAccessibilityHelper.performClick(node)) {
-					mService.showLoginDialog(CavanAccessibilityMM.this);
-					return true;
+				if (CavanAccessibilityHelper.isButton(node)) {
+					return CavanAccessibilityHelper.performClick(node);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -810,6 +809,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			mService.showLoginDialog(CavanAccessibilityMM.this);
 
 			return false;
+		}
+
+		@Override
+		protected void onEnter() {
+			mService.showLoginDialog(CavanAccessibilityMM.this);
 		}
 
 		@Override
