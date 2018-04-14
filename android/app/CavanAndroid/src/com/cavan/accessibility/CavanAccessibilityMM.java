@@ -652,6 +652,34 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 	}
 
+	public class MobileInputWindow extends BaseWindow {
+
+		public MobileInputWindow(String name) {
+			super(name);
+		}
+
+		@Override
+		protected boolean doLogin(AccessibilityNodeInfo root, String username, String password) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 2, 3);
+			if (node == null) {
+				return false;
+			}
+
+			try {
+				if (CavanAccessibilityHelper.isButton(node) && CavanAccessibilityHelper.performClick(node)) {
+					mService.showLoginDialog(CavanAccessibilityMM.this);
+					return true;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				node.recycle();
+			}
+
+			return false;
+		}
+	};
+
 	public class LoginPasswordWindow extends BaseWindow {
 
 		public LoginPasswordWindow(String name) {
@@ -751,6 +779,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				return false;
 			}
 
+			CavanAndroid.dLog("username = " + username);
+
 			if (password == null) {
 				password = mService.getPassword(CavanAccessibilityMM.this, username);
 				if (password == null) {
@@ -805,42 +835,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		return (win != null && win.isWebviewUi() && isCurrentPackage());
 	}
 
-	public BaseWindow getBaseWindow(String name) {
-		return new BaseWindow(name);
-	}
-
-	public ReceiveWindow getReceiveWindow(String name) {
-		return new ReceiveWindow(name);
-	}
-
-	public ChattingWindow getChattingWindow(String name) {
-		return new ChattingWindow(name);
-	}
-
-	public CavanAccessibilityWindow getWebViewWindow(String name) {
-		return new WebViewWindow(name);
-	}
-
-	public CavanAccessibilityWindow getMenuWindow(String name) {
-		return new MenuWindow(name);
-	}
-
-	public CavanAccessibilityWindow getDetailWindow(String name) {
-		return new DetailWindow(name);
-	}
-
-	public CavanAccessibilityWindow getLauncherWindow(String name) {
-		return new LauncherWindow(name);
-	}
-
-	public CavanAccessibilityWindow getLoginWindow(String name) {
-		return new LoginWindow(name);
-	}
-
-	public CavanAccessibilityWindow getLoginPasswordWindow(String name) {
-		return new LoginPasswordWindow(name);
-	}
-
 	@Override
 	public synchronized CavanAccessibilityWindow getWindow(String name) {
 		CavanAccessibilityWindow win = super.getWindow(name);
@@ -865,17 +859,21 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 	@Override
 	public void initWindows() {
-		addWindow(getLauncherWindow("com.tencent.mm.ui.LauncherUI"));
-		addWindow(getChattingWindow("com.tencent.mm.ui.chatting.ChattingUI"));
-		addWindow(getChattingWindow("com.tencent.mm.ui.conversation.BizConversationUI"));
-		addWindow(getReceiveWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI"));
-		addWindow(getReceiveWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiReceiveUI"));
-		addWindow(getDetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI"));
-		addWindow(getDetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI"));
-		addWindow(getWebViewWindow("com.tencent.mm.plugin.webview.ui.tools.WebViewUI"));
-		addWindow(getMenuWindow("android.support.design.widget.c"));
-		addWindow(getLoginWindow("com.tencent.mm.ui.account.LoginUI"));
-		addWindow(getLoginPasswordWindow("com.tencent.mm.ui.account.LoginPasswordUI"));
+		addWindow(new LauncherWindow("com.tencent.mm.ui.LauncherUI"));
+		addWindow(new ChattingWindow("com.tencent.mm.ui.chatting.ChattingUI"));
+		addWindow(new ChattingWindow("com.tencent.mm.ui.conversation.BizConversationUI"));
+		addWindow(new ReceiveWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI"));
+		addWindow(new ReceiveWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiReceiveUI"));
+		addWindow(new DetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI"));
+		addWindow(new DetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI"));
+		addWindow(new WebViewWindow("com.tencent.mm.plugin.webview.ui.tools.WebViewUI"));
+		addWindow(new MenuWindow("android.support.design.widget.c"));
+		addWindow(new MobileInputWindow("com.tencent.mm.ui.account.MobileInputUI"));
+		addWindow(new MobileInputWindow("com.tencent.mm.plugin.account.ui.MobileInputUI"));
+		addWindow(new LoginWindow("com.tencent.mm.ui.account.LoginUI"));
+		addWindow(new LoginWindow("com.tencent.mm.plugin.account.ui.LoginUI"));
+		addWindow(new LoginPasswordWindow("com.tencent.mm.ui.account.LoginPasswordUI"));
+		addWindow(new LoginPasswordWindow("com.tencent.mm.plugin.account.ui.LoginPasswordUI"));
 	}
 
 	@Override
