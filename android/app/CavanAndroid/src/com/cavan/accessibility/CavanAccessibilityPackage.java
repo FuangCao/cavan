@@ -81,7 +81,11 @@ public class CavanAccessibilityPackage {
 
 	public synchronized void addWindow(CavanAccessibilityWindow win) {
 		CavanAndroid.dLog(mName + " <= " + win.getName());
-		mWindows.put(win.getName(), win);
+
+		CavanAccessibilityWindow previous = mWindows.put(win.getName(), win);
+		if (previous != null) {
+			CavanAndroid.wLog("Override: " + previous.getName());
+		}
 	}
 
 	public synchronized void addProgressWindow(String name) {
