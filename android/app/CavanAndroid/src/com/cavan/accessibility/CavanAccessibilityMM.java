@@ -870,9 +870,13 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(new MenuWindow("android.support.design.widget.c"));
 		addWindow(new MobileInputWindow("com.tencent.mm.ui.account.MobileInputUI"));
 		addWindow(new MobileInputWindow("com.tencent.mm.plugin.account.ui.MobileInputUI"));
+
 		addWindow(new LoginWindow("com.tencent.mm.ui.account.LoginUI"));
-		addWindow(new LoginWindow("com.tencent.mm.plugin.account.ui.LoginUI"));
+		addWindow(new LoginWindow("com.tencent.mm.ui.account.SimpleLoginUI"));
 		addWindow(new LoginPasswordWindow("com.tencent.mm.ui.account.LoginPasswordUI"));
+
+		addWindow(new LoginWindow("com.tencent.mm.plugin.account.ui.LoginUI"));
+		addWindow(new LoginWindow("com.tencent.mm.plugin.account.ui.SimpleLoginUI"));
 		addWindow(new LoginPasswordWindow("com.tencent.mm.plugin.account.ui.LoginPasswordUI"));
 	}
 
