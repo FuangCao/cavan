@@ -92,6 +92,14 @@ export CAVAN_CROSS_COMPILE MAKE_JOBS TARGET_DEVICE CAVAN_OUT_DEBUG
 export CAVAN_HOME CAVAN_SERVER_IP CAVAN_SERVER_PORT TOOLS_HOME
 export CAVAN_TOOLCHIAN_NAME CAVAN_TOOLCHIAN_GNUEABI CAVAN_TOOLCHIAN_ANDROIDEABI FILE_CAVAN_SH
 
+for pem in ${HOME}/.ssh/*.pem
+do
+	[ -f "${pem}" ] && chmod 0600 "${pem}" && ssh-add "${pem}" &&
+	{
+		export SSH_SERVERS="$(basename ${pem/.pem}) ${SSH_SERVERS}"
+	}
+done > /dev/null 2>&1
+
 for fn in alias.sh file.sh bash_completion application.sh device.sh build.sh stdio.sh path.sh
 do
 	fn="${CAVAN_HOME}/script/core/${fn}"
@@ -107,10 +115,5 @@ done
 do
 	[ -f "${fn}" ] && source "${fn}"
 done
-
-for pem in ${HOME}/.ssh/*.pem
-do
-	[ -f "${pem}" ] && ssh-add "${pem}"
-done 2>/dev/null > /dev/null
 
 unset JAVA_TOOL_OPTIONS
