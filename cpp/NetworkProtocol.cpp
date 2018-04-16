@@ -39,8 +39,6 @@ public:
 
 NetworkProtocol *NetworkProtocol::instance(const char *protocol)
 {
-	println("protocol = %s", protocol);
-
 	if (protocol == NULL) {
 		return NULL;
 	}

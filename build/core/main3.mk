@@ -50,7 +50,8 @@ ifneq ($(CAVAN_OS_MAC),true)
 CFLAGS += -frename-registers -fgcse-after-reload -frerun-cse-after-loop -fno-inline-functions-called-once -finline-limit=64 -finline-functions
 endif
 
-CFLAGS +=	-Wall -Wundef -Wextra -Werror -Wsign-compare -Winit-self -Wpointer-arith -Wa,--noexecstack -Wstrict-aliasing=2 -Wno-unused-parameter \
+CFLAGS +=	-Wall -Wundef -Wextra -Werror -Wsign-compare -Winit-self -Wpointer-arith -Wa,--noexecstack -Wstrict-aliasing=2 \
+			-Wno-unused-parameter -Wno-format-overflow -Wno-implicit-fallthrough \
 			-fno-strict-aliasing -fno-exceptions -ffunction-sections -funwind-tables -fstack-protector -fomit-frame-pointer \
 			-g -I$(INCLUDE_PATH) -DCAVAN -DCAVAN_ARCH=\"$(ARCH)\" -DCAVAN_PLAT=\"$(CAVAN_PLAT)\" -include cavan/config.h
 

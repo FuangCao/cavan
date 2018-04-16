@@ -45,7 +45,12 @@ private:
 	NetworkService *mService;
 
 public:
-	NetworkEpollService(NetworkService *service) : mService(service) {}
+	NetworkEpollService(NetworkService *service = NULL) : mService(service) {}
+	virtual ~NetworkEpollService() {}
+
+public:
+	virtual int open(NetworkUrl *url);
+	virtual int open(const char *url);
 
 protected:
 	virtual EpollClient *newEpollClient(NetworkClient *client) = 0;

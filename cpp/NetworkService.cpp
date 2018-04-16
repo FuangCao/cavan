@@ -52,3 +52,26 @@ out_delete_client:
 	delete client;
 	return -EFAULT;
 }
+
+int NetworkEpollService::open(NetworkUrl *url)
+{
+	NetworkService *service = url->openService();
+	if (service == NULL) {
+		return -EFAULT;
+	}
+
+	mService = service;
+
+	return start();
+}
+
+int NetworkEpollService::open(const char *url_text)
+{
+	NetworkUrl url;
+
+	if (url.parse(url_text)) {
+		return open(&url);
+	}
+
+	return -EFAULT;
+}

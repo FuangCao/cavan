@@ -32,7 +32,10 @@ protected:
 	u16 mOffset;
 
 public:
-	EpollBuffer(void) : mOffset(0) {}
+	EpollBuffer(void) {
+		reset();
+	}
+
 	virtual ~EpollBuffer() {}
 
 public:
@@ -42,8 +45,12 @@ public:
 	virtual int writeTo(EpollClient *client);
 	virtual int write(const void *buff, u16 length);
 
+	virtual void reset(void) {
+		mOffset = 0;
+	}
+
 	virtual u16 getLength(void) {
-		return getSize();
+		return mOffset;
 	}
 
 	virtual char *getDataHead(void) {
@@ -60,10 +67,6 @@ public:
 
 	virtual u16 getRemain(void) {
 		return getSize() - mOffset;
-	}
-
-	virtual bool isPending(void) {
-		return (mOffset < getSize());
 	}
 
 	virtual bool isCompleted(void) {
@@ -89,8 +92,44 @@ public:
 	}
 };
 
+class EpollBufferAuto : public EpollBuffer {
+protected:
+	char *mData;
+	u16 mSize;
+	bool mCompleted;
+
+public:
+	EpollBufferAuto(void) : mData(NULL), mSize(0), mCompleted(false) {}
+
+	virtual ~EpollBufferAuto() {
+		if (mData != NULL) {
+			delete[] mData;
+		}
+	}
+
+	virtual int alloc(u16 length);
+	virtual int putchar(char c);
+	virtual int write(const void *buff, u16 length);
+
+	virtual u16 getSize(void) {
+		return mSize;
+	}
+
+	virtual char *getData(void) {
+		return mData;
+	}
+
+	virtual bool isCompleted(void) {
+		return mCompleted;
+	}
+
+	virtual void setCompleted(bool completed) {
+		mCompleted = completed;
+	}
+};
+
 class EpollPacket : public EpollBuffer, public SimpleLink<EpollPacket> {
-private:
+protected:
 	char *mData;
 	u16 mLength;
 
@@ -141,6 +180,7 @@ public:
 	virtual int removeEpollFrom(EpollService *service);
 	virtual int setEpollReadonly(EpollService *service);
 	virtual int setEpollReadWrite(EpollService *service);
+	virtual int sendEpollPacket(EpollPacket *packet);
 
 	virtual EpollPacket *dequeueEpollPacket(void) {
 		return mRdQueue.dequeue();
@@ -180,6 +220,7 @@ protected:
 protected:
 	virtual int onEpollIn(EpollService *service);
 	virtual int onEpollDataReceived(EpollService *service, const void *buff, int size);
+	virtual EpollPacket *onEpollHeaderReceived(EpollBuffer *header);
 	virtual void onEpollEvent(EpollService *service, u32 events);
 	virtual int onEpollOut(EpollService *service);
 	virtual void onEpollError(EpollService *service);

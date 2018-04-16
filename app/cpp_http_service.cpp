@@ -1,7 +1,7 @@
 /*
- * File:		clock.c
+ * File:		cpp_http_service.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2018-03-31 16:07:46
+ * Created:		2018-04-09 17:13:07
  *
  * Copyright (c) 2018 Fuang.Cao <cavan.cfa@gmail.com>
  *
@@ -18,23 +18,22 @@
  */
 
 #include <cavan.h>
-#include <cavan/timer.h>
+#include <cavan++/HttpFileManager.h>
 
 int main(int argc, char *argv[])
 {
-	while (1) {
-		struct timespec ts;
-		struct tm tm;
-		u16 mseconds;
+	HttpFileService service;
+	int ret;
 
-		clock_gettime_real(&ts);
-		localtime_r(&ts.tv_sec, &tm);
-		mseconds = ts.tv_nsec / 1000000ul;
+	assert(argc > 1);
 
-		print("%02d:%02d:%02d.%03d\r", tm.tm_hour, tm.tm_min, tm.tm_sec, mseconds);
-
-		nsleep(1000000000ul - ts.tv_nsec);
+	ret = service.open(argv[1]);
+	if (ret < 0) {
+		pr_red_info("service.open");
+		return ret;
 	}
+
+	service.join();
 
 	return 0;
 }

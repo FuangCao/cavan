@@ -20,7 +20,7 @@
 #include <sys/mman.h>
 #include <sys/select.h>
 #include <sys/stat.h>
-#include <sys/types.h>
+#include <sys/sysmacros.h>
 #include <sys/cdefs.h>
 #include <sys/syscall.h>
 #include <poll.h>

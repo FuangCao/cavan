@@ -44,6 +44,56 @@ int EpollBuffer::writeTo(EpollClient *client)
 	return wrlen;
 }
 
+int EpollBufferAuto::alloc(u16 length)
+{
+	if (mSize < length) {
+		u16 size = 32;
+
+		while (size < length) {
+			size <<= 1;
+		}
+
+		char *data = new char[size];
+		if (data == NULL) {
+			return -ENOMEM;
+		}
+
+		if (mData != NULL) {
+			memcpy(data, mData, mOffset);
+			delete[] mData;
+		}
+
+		mData = data;
+	}
+
+	return 0;
+}
+
+int EpollBufferAuto::putchar(char c)
+{
+	int ret = alloc(mOffset + 1);
+	if (ret < 0) {
+		return ret;
+	}
+
+	mData[mOffset++] = c;
+
+	return 1;
+}
+
+int EpollBufferAuto::write(const void *buff, u16 length)
+{
+	int ret = alloc(mOffset + length);
+	if (ret < 0) {
+		return ret;
+	}
+
+	memcpy(getDataHead(), buff, length);
+	mOffset += length;
+
+	return length;
+}
+
 // ================================================================================
 
 int EpollClient::addEpollTo(EpollService *service)
@@ -64,6 +114,11 @@ int EpollClient::setEpollReadonly(EpollService *service)
 int EpollClient::setEpollReadWrite(EpollService *service)
 {
 	return service->modifyEpollClient(getEpollFd(), getEpollEventsRW(), this);
+}
+
+int EpollClient::sendEpollPacket(EpollPacket *packet)
+{
+	return -ENOENT;
 }
 
 void EpollClient::onEpollEvent(EpollService *service, u32 events)
@@ -111,30 +166,43 @@ int EpollClient::onEpollIn(EpollService *service)
 
 int EpollClient::onEpollDataReceived(EpollService *service, const void *buff, int size)
 {
+	int length;
+
 	if (mRdPacket == NULL) {
 		EpollBuffer *header = getEpollHeader();
-		int length = header->write(buff, size);
+		if (header == NULL) {
+			return -ENOMEM;
+		}
 
-		if (length > 0 && header->isCompleted()) {
-			mRdPacket = new EpollPacket(header->getLength());
+		length = header->write(buff, size);
+		if (header->isCompleted()) {
+			mRdPacket = onEpollHeaderReceived(header);
 			if (mRdPacket == NULL) {
 				return -ENOMEM;
 			}
-
-			header->setOffset(0);
+		} else {
+			return length;
 		}
-
-		return length;
+	} else {
+		length = mRdPacket->write(buff, size);
 	}
 
-	int length = mRdPacket->write(buff, size);
-	if (length > 0 && mRdPacket->isCompleted()) {
+	if (mRdPacket->isCompleted()) {
 		mRdQueue.enqueue(mRdPacket);
 		mRdPacket = NULL;
 		service->enqueueEpollClient(this);
 	}
 
 	return length;
+}
+
+EpollPacket *EpollClient::onEpollHeaderReceived(EpollBuffer *header)
+{
+	EpollPacket *packet;
+
+	packet = new EpollPacket(header->getLength());
+	header->reset();
+	return packet;
 }
 
 int EpollClient::onEpollOut(EpollService *service)
@@ -256,6 +324,7 @@ void EpollClientQueue::processPackets(EpollService *service, EpollDaemon *daemon
 		} else {
 			mLock.release();
 			client->onEpollPacketReceived(packet);
+			delete packet;
 			mLock.acquire();
 		}
 	}

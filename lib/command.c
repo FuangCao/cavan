@@ -94,6 +94,7 @@ const char *cavan_help_message_start_time = "set start time";
 const char *cavan_help_message_delay_time = "set delay time";
 const char *cavan_help_message_current_time = "set current time";
 const char *cavan_help_message_monitor_mode = "use monitor mode";
+const char *cavan_help_message_repeat = "repeated execute";
 
 static const char *const cavan_exec_tty_prefix[3] = { "stdin", "stdout", "stderr" };
 static const int cavan_exec_tty_master_open_flags[3] = { O_RDONLY, O_WRONLY, O_WRONLY };

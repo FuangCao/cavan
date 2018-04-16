@@ -788,8 +788,6 @@ int main(int argc, char *argv[])
 
 			msleep(100);
 		}
-
-		return 0;
 	} else if (count > 0) {
 		char host0[128];
 
@@ -828,8 +826,14 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		return cavan_http_sender_main_loop(&sender, packets, count);
+		while (1) {
+			cavan_http_sender_main_loop(&sender, packets, count);
+			println("Press Enter to continue");
+			while (getchar() != '\n');
+		}
 	} else {
 		return -EINVAL;
 	}
+
+	return 0;
 }

@@ -1,7 +1,7 @@
 /*
- * File:		clock.c
+ * File:		HttpFileManager.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
- * Created:		2018-03-31 16:07:46
+ * Created:		2018-04-10 12:02:44
  *
  * Copyright (c) 2018 Fuang.Cao <cavan.cfa@gmail.com>
  *
@@ -18,22 +18,19 @@
  */
 
 #include <cavan.h>
-#include <cavan/timer.h>
+#include <cavan++/HttpFileManager.h>
 
-int main(int argc, char *argv[])
+int HttpFileClient::onHttpPacketReceived(HttpPacket *packet)
 {
-	while (1) {
-		struct timespec ts;
-		struct tm tm;
-		u16 mseconds;
+	HttpHeader *header = packet->getHeader();
+	const char *type = header->getType();
 
-		clock_gettime_real(&ts);
-		localtime_r(&ts.tv_sec, &tm);
-		mseconds = ts.tv_nsec / 1000000ul;
+	if (strcmp(type, "GET") == 0) {
+	} else if (strcmp(type, "POST") == 0) {
 
-		print("%02d:%02d:%02d.%03d\r", tm.tm_hour, tm.tm_min, tm.tm_sec, mseconds);
-
-		nsleep(1000000000ul - ts.tv_nsec);
+	} else {
+		pr_red_info("Invalid type: %s", type);
+		return -EINVAL;
 	}
 
 	return 0;

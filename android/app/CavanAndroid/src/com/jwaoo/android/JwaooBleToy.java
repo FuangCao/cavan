@@ -28,7 +28,8 @@ public class JwaooBleToy extends CavanBleGatt {
 	private static final int SENSOR_DELAY_STEP = 100000;
 
 	public static final String[] BT_NAMES = {
-		"JwaooToy", "SenseTube", "SenseBand", "Sensevibe warm", "SenseVibeWarm", "LovaraBand",
+		"JwaooToy", "SenseTube", "SenseBand", "Sensevibe warm", "SenseVibeWarm",
+		"LovaraBand", "LovaBand", "LovaVibe"
 	};
 
 	public static final UUID[] BT_UUIDS = {
@@ -1185,6 +1186,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			mSensor = new JwaooToySensorK101();
 			mDeviceName = DEVICE_NAME_T1;
 			mDeviceId = DEVICE_ID_T1;
+			mStateLed = LED_BATT;
 		} else {
 			CavanAndroid.eLog("Invalid identify");
 			return false;
