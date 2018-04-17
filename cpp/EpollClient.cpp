@@ -69,7 +69,7 @@ int EpollBufferAuto::alloc(u16 length)
 	return 0;
 }
 
-int EpollBufferAuto::putchar(char c)
+int EpollBufferAuto::write(char c)
 {
 	int ret = alloc(mOffset + 1);
 	if (ret < 0) {

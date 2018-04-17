@@ -33,10 +33,7 @@ HttpStatusCode HttpStatusCode::InternalServerError = HttpStatusCode(500, "Intern
 HttpStatusCode HttpStatusCode::BadGateway = HttpStatusCode( 502, "Bad Gateway");
 
 const char *HttpHeader::sHeaderNames[HTTP_HEADER_COUNT] = {
-	[HTTP_HEADER_HOST] = "Host",
-	[HTTP_HEADER_CONNECTION] = "Connection",
-	[HTTP_HEADER_CONTENT_TYPE] = "Content-Type",
-	[HTTP_HEADER_CONTENT_LENGTH] = "Content-Length",
+	"Host", "Connection", "Content-Type", "Content-Length",
 };
 
 int HttpHeader::getHeaderType(const char *name)

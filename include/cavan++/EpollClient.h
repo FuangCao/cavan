@@ -108,7 +108,7 @@ public:
 	}
 
 	virtual int alloc(u16 length);
-	virtual int putchar(char c);
+	virtual int write(char c);
 	virtual int write(const void *buff, u16 length);
 
 	virtual u16 getSize(void) {
