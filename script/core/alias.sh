@@ -42,6 +42,8 @@ alias cavan-ps-ef="ps -ef"
 alias cavan-ps-aux="ps -aux"
 alias cavan-ps="cavan-ps-ef"
 alias cavan-timestamp="date +%s"
+alias cavan-android-eclipse="${TOOLS_ANDROID}/eclipse/eclipse > /dev/null 2>&1 &"
+alias cavan-android-studio="${TOOLS_ANDROID}/studio/bin/studio.sh > /dev/null 2>&1 &"
 
 for svr in ${SSH_SERVERS}
 do
