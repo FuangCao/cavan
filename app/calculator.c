@@ -24,6 +24,61 @@ static void show_usage(const char *command)
 	println("--mask, -m, -M\t\tshow bit location");
 }
 
+static int app_calculator_main(char *formula, bool long_cal, bool show_bitmask, int length[2], int base, int flags)
+{
+	int ret;
+
+	text2lowercase(formula);
+
+	if (long_cal) {
+		byte result[1024];
+
+		math_memory_calculator(formula, result, sizeof(result), base, '0', length[0]);
+	} else {
+		double result;
+
+		ret = complete_calculation(formula, &result);
+		if (ret < 0) {
+			return ret;
+		}
+
+		if (base < 2 || base == 10) {
+			if (length[0] || length[1]) {
+				char format[64];
+
+				sprintf(format, "%%0%d.%dlf", length[0], length[1]);
+				println(format, result);
+			} else {
+				println("%lf", result);
+			}
+		} else {
+			char buff[1024];
+
+			double2text(&result, buff, length[0], 0, base | flags);
+			println("%s", buff);
+		}
+
+		if (show_bitmask) {
+			u64 value64 = result;
+			char buff[1024];
+			int i = 0;
+
+			value2bitlist(value64, buff, sizeof(buff), " | ");
+			println("%s", buff);
+
+			for (i = 31; i >= 0; i--) {
+				u32 mask = 1ULL << i;
+
+				if (value64 & mask) {
+					println("%2d. 0x%08x %d", i, mask, mask);
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
 	int c;
@@ -68,8 +123,6 @@ int main(int argc, char *argv[])
 			0, 0, 0, 0
 		},
 	};
-	int ret;
-	char buff[1024];
 	int base = 0;
 	int length[2];
 	int flags = 0;
@@ -128,52 +181,26 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	assert(argc > optind);
+	if (optind < argc) {
+		char buff[1024];
 
-	text_cat2(buff, argv + optind, argc - optind);
-	text2lowercase(buff);
-
-	if (long_cal) {
-		byte result[1024];
-
-		math_memory_calculator(buff, result, sizeof(result), base, '0', length[0]);
+		text_cat2(buff, argv + optind, argc - optind);
+		return app_calculator_main(buff, long_cal, show_bitmask, length, base, flags);
 	} else {
-		double result;
+		struct cavan_simple_cmdline cmdline;
 
-		ret = complete_calculation(buff, &result);
-		if (ret < 0) {
-			return ret;
-		}
+		cavan_simple_cmdline_init(&cmdline);
 
-		if (base < 2 || base == 10) {
-			if (length[0] || length[1]) {
-				char format[64];
-
-				sprintf(format, "%%0%d.%dlf", length[0], length[1]);
-				println(format, result);
-			} else {
-				println("%lf", result);
+		while (1) {
+			cavan_string_t *line = cavan_simple_cmdline_readline(&cmdline);
+			if (line == NULL) {
+				break;
 			}
-		} else {
-			double2text(&result, buff, length[0], 0, base | flags);
-			println("%s", buff);
+
+			app_calculator_main(line->text, long_cal, show_bitmask, length, base, flags);
 		}
 
-		if (show_bitmask) {
-			u64 value64 = result;
-			int i = 0;
-
-			value2bitlist(value64, buff, sizeof(buff), " | ");
-			println("%s", buff);
-
-			for (i = 31; i >= 0; i--) {
-				u32 mask = 1ULL << i;
-
-				if (value64 & mask) {
-					println("%2d. 0x%08x %d", i, mask, mask);
-				}
-			}
-		}
+		cavan_simple_cmdline_deinit(&cmdline);
 	}
 
 	return 0;
