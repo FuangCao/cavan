@@ -692,6 +692,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return sendCommand(CavanAccessibilityPackage.CMD_LOGIN, username, password);
 	}
 
+	public boolean signin() {
+		return sendCommand(CavanAccessibilityPackage.CMD_SIGNIN);
+	}
+
+	public boolean unfollow() {
+		return sendCommand(CavanAccessibilityPackage.CMD_UNFOLLOW);
+	}
+
 	public boolean refresh() {
 		return sendCommand(CavanAccessibilityPackage.CMD_REFRESH);
 	}

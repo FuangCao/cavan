@@ -753,6 +753,27 @@ public class CavanAccessibilityHelper {
 		return performActionAndRecycle(node, AccessibilityNodeInfo.ACTION_CLICK);
 	}
 
+	public static boolean performClickParent(AccessibilityNodeInfo node) {
+		AccessibilityNodeInfo parent = node.getParent();
+		if (parent != null) {
+			return CavanAccessibilityHelper.performClickAndRecycle(parent);
+		}
+
+		return false;
+	}
+
+	public static boolean performClickParentAndRecycle(AccessibilityNodeInfo node) {
+		try {
+			return performClickParent(node);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			node.recycle();
+		}
+
+		return false;
+	}
+
 	public static boolean performChildAction(AccessibilityNodeInfo parent, int index, int action) {
 		try {
 			AccessibilityNodeInfo child = parent.getChild(index);

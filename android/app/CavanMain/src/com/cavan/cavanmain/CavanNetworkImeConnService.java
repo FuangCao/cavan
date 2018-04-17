@@ -335,9 +335,21 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 			}
 			break;
 
+		case "SIGNIN":
+			if (accessibility != null) {
+				accessibility.signin();
+			}
+			break;
+
 		case "REFRESH":
 			if (accessibility != null) {
 				accessibility.refresh();
+			}
+			break;
+
+		case "UNFOLLOW":
+			if (accessibility != null) {
+				accessibility.unfollow();
 			}
 			break;
 

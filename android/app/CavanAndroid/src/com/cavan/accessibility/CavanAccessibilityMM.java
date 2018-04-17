@@ -21,7 +21,7 @@ import com.cavan.java.CavanString;
 public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 	private HashSet<Integer> mFinishNodes = new HashSet<Integer>();
-	private boolean mRefreshPending;
+	private String mMenuItem;
 
 	public static CavanAccessibilityMM instance;
 
@@ -33,6 +33,43 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		public boolean isWebviewUi() {
 			return false;
+		}
+	}
+
+	public class MenuWindow extends BaseWindow {
+
+		public MenuWindow(String name) {
+			super(name);
+		}
+
+		public boolean doClickMenuItem(AccessibilityNodeInfo root, String item) {
+			return false;
+		}
+
+		@Override
+		protected void onEnter() {
+			if (mMenuItem != null) {
+				CavanAndroid.dLog("mMenuItem = " + mMenuItem);
+				doClickMenuItem(getRootInActiveWindow(), mMenuItem);
+				mMenuItem = null;
+			}
+		}
+	}
+
+	public class ChattingMenu extends MenuWindow {
+
+		public ChattingMenu(String name) {
+			super(name);
+		}
+
+		@Override
+		public boolean doClickMenuItem(AccessibilityNodeInfo root, String item) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, item);
+			if (node == null) {
+				return false;
+			}
+
+			return CavanAccessibilityHelper.performClickAndRecycle(node);
 		}
 	}
 
@@ -245,6 +282,78 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			return doCommitMessage(root);
 		}
 
+		public String getChattingName(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, -2);
+			if (node == null) {
+				return null;
+			}
+
+			try {
+				if (CavanAccessibilityHelper.isTextView(node)) {
+					return CavanAccessibilityHelper.getNodeText(node);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				node.recycle();
+			}
+
+			return null;
+		}
+
+		public boolean doClickMenuItem(AccessibilityNodeInfo root, String menu, String item) {
+			List<AccessibilityNodeInfo> nodes = CavanAccessibilityHelper.findNodesByText(root, menu);
+			if (nodes == null || nodes.isEmpty()) {
+				return false;
+			}
+
+			try {
+				AccessibilityNodeInfo node = nodes.get(nodes.size() - 1);
+				if (CavanAccessibilityHelper.performClickParent(node)) {
+					mMenuItem = item;
+					return true;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				CavanAccessibilityHelper.recycleNodes(nodes);
+			}
+
+			return false;
+		}
+
+		@Override
+		protected boolean doSignin(AccessibilityNodeInfo root) {
+			String chatting = getChattingName(root);
+			if (chatting == null) {
+				return false;
+			}
+
+			CavanAndroid.dLog("chatting = " + chatting);
+
+			switch (chatting) {
+			case "轩辕传奇手游":
+				doClickMenuItem(root, "活动专区", "CDKey兑换");
+				break;
+
+			case "征途手机版":
+				doClickMenuItem(root, "互动专区", "礼包兑换");
+				break;
+
+			case "热血传奇手游":
+				doClickMenuItem(root, "我的互动", "礼包兑换");
+				break;
+			}
+
+			return false;
+		}
+
+		@Override
+		protected boolean doUnfollow(AccessibilityNodeInfo root) {
+			CavanAndroid.pLog();
+			return false;
+		}
+
 		@Override
 		public synchronized void onPackageUpdated() {
 			mMessageListViewId = null;
@@ -366,6 +475,16 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			}
 
 			return true;
+		}
+
+		@Override
+		protected boolean doSignin(AccessibilityNodeInfo root) {
+			return false;
+		}
+
+		@Override
+		protected boolean doUnfollow(AccessibilityNodeInfo root) {
+			return false;
 		}
 	}
 
@@ -592,20 +711,29 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doRefresh(AccessibilityNodeInfo root) {
-			mRefreshPending = clickMenuButton(root);
-			return mRefreshPending;
+			if (clickMenuButton(root)) {
+				mMenuItem = "刷新";
+				return true;
+			}
+
+			return false;
 		}
 	}
 
-	public class MenuWindow extends WebViewWindow {
+	public class WebViewMenu extends MenuWindow {
 
-		public MenuWindow(String name) {
+		public WebViewMenu(String name) {
 			super(name);
 		}
 
 		@Override
-		protected boolean doRefresh(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "刷新");
+		public boolean isWebviewUi() {
+			return isCurrentPackage();
+		}
+
+		@Override
+		public boolean doClickMenuItem(AccessibilityNodeInfo root, String item) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, item);
 			if (node == null) {
 				return false;
 			}
@@ -628,15 +756,13 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		protected void onEnter() {
-			if (mRefreshPending) {
-				doRefresh(getRootInActiveWindow());
-			}
+		protected boolean doRefresh(AccessibilityNodeInfo root) {
+			return doClickMenuItem(root, "刷新");
 		}
 
 		@Override
-		protected void onLeave() {
-			mRefreshPending = false;
+		protected boolean doUnfollow(AccessibilityNodeInfo root) {
+			return doClickMenuItem(root, "不再关注");
 		}
 	}
 
@@ -871,7 +997,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(new DetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI"));
 		addWindow(new DetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI"));
 		addWindow(new WebViewWindow("com.tencent.mm.plugin.webview.ui.tools.WebViewUI"));
-		addWindow(new MenuWindow("android.support.design.widget.c"));
+		addWindow(new WebViewMenu("android.support.design.widget.c"));
+		addWindow(new ChattingMenu("android.widget.FrameLayout"));
 		addWindow(new MobileInputWindow("com.tencent.mm.ui.account.MobileInputUI"));
 		addWindow(new MobileInputWindow("com.tencent.mm.plugin.account.ui.MobileInputUI"));
 

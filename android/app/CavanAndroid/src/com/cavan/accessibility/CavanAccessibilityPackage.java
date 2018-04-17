@@ -18,6 +18,8 @@ public class CavanAccessibilityPackage {
 	public static final int CMD_SEND_TEXT = 1;
 	public static final int CMD_LOGIN = 2;
 	public static final int CMD_REFRESH = 3;
+	public static final int CMD_SIGNIN = 4;
+	public static final int CMD_UNFOLLOW = 5;
 
 	public static int WAIT_DELAY = 500;
 	public static int BACK_DELAY = 5000;
@@ -351,8 +353,10 @@ public class CavanAccessibilityPackage {
 		CavanAndroid.dLog("onWindowStateChanged: " + mName + "/" + name);
 		touchUpdateTime();
 
-		if (name.startsWith("android.widget.")) {
-			CavanAccessibilityWindow win = mWindow;
+		CavanAccessibilityWindow win = getWindow(name);
+		if (win == null && name.startsWith("android.widget.")) {
+			win = mWindow;
+
 			if (win != null) {
 				win.onAndroidWidget(name);
 			}
@@ -360,7 +364,6 @@ public class CavanAccessibilityPackage {
 			return win;
 		}
 
-		CavanAccessibilityWindow win = getWindow(name);
 		if (win != mWindow) {
 			if (win != null && win.isProgressView()) {
 				if (mWindow != null) {
@@ -522,6 +525,14 @@ public class CavanAccessibilityPackage {
 		case CMD_REFRESH:
 			CavanAndroid.dLog("CMD_REFRESH");
 			return win.doRefresh(root);
+
+		case CMD_SIGNIN:
+			CavanAndroid.dLog("CMD_SIGNIN");
+			return win.doSignin(root);
+
+		case CMD_UNFOLLOW:
+			CavanAndroid.dLog("CMD_UNFOLLOW");
+			return win.doUnfollow(root);
 
 		default:
 			CavanAndroid.eLog("Invalid command: " + command);
