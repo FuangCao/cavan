@@ -504,6 +504,16 @@ namespace NetworkInputMethod
         {
             sendCommand("REFRESH", false);
         }
+
+        private void buttonSignin_Click(object sender, EventArgs e)
+        {
+            sendCommand("SIGNIN", true);
+        }
+
+        private void buttonUnfollow_Click(object sender, EventArgs e)
+        {
+            sendCommand("UNFOLLOW", false);
+        }
     }
 
     public class NetworkImeClient : CavanTcpPacketClient

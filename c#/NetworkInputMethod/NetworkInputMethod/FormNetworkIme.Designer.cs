@@ -57,8 +57,6 @@
             this.buttonVolumeDown = new System.Windows.Forms.Button();
             this.buttonVolumeUp = new System.Windows.Forms.Button();
             this.buttonHome = new System.Windows.Forms.Button();
-            this.buttonIme = new System.Windows.Forms.Button();
-            this.buttonMm = new System.Windows.Forms.Button();
             this.timerKeepAlive = new System.Windows.Forms.Timer(this.components);
             this.buttonRequest = new System.Windows.Forms.Button();
             this.buttonHidden = new System.Windows.Forms.Button();
@@ -70,6 +68,8 @@
             this.toolStripMenuItemExit = new System.Windows.Forms.ToolStripMenuItem();
             this.buttonRecents = new System.Windows.Forms.Button();
             this.buttonRefresh = new System.Windows.Forms.Button();
+            this.buttonSignin = new System.Windows.Forms.Button();
+            this.buttonUnfollow = new System.Windows.Forms.Button();
             this.groupBoxMode.SuspendLayout();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
@@ -346,26 +346,6 @@
             this.buttonHome.UseVisualStyleBackColor = true;
             this.buttonHome.Click += new System.EventHandler(this.buttonHome_Click);
             // 
-            // buttonIme
-            // 
-            this.buttonIme.Location = new System.Drawing.Point(12, 392);
-            this.buttonIme.Name = "buttonIme";
-            this.buttonIme.Size = new System.Drawing.Size(75, 23);
-            this.buttonIme.TabIndex = 38;
-            this.buttonIme.Text = "输入法";
-            this.buttonIme.UseVisualStyleBackColor = true;
-            this.buttonIme.Click += new System.EventHandler(this.buttonIme_Click);
-            // 
-            // buttonMm
-            // 
-            this.buttonMm.Location = new System.Drawing.Point(93, 392);
-            this.buttonMm.Name = "buttonMm";
-            this.buttonMm.Size = new System.Drawing.Size(75, 23);
-            this.buttonMm.TabIndex = 39;
-            this.buttonMm.Text = "微信";
-            this.buttonMm.UseVisualStyleBackColor = true;
-            this.buttonMm.Click += new System.EventHandler(this.buttonMm_Click);
-            // 
             // timerKeepAlive
             // 
             this.timerKeepAlive.Enabled = true;
@@ -384,7 +364,7 @@
             // 
             // buttonHidden
             // 
-            this.buttonHidden.Location = new System.Drawing.Point(12, 361);
+            this.buttonHidden.Location = new System.Drawing.Point(93, 392);
             this.buttonHidden.Name = "buttonHidden";
             this.buttonHidden.Size = new System.Drawing.Size(75, 23);
             this.buttonHidden.TabIndex = 41;
@@ -439,7 +419,7 @@
             // 
             // buttonRecents
             // 
-            this.buttonRecents.Location = new System.Drawing.Point(12, 332);
+            this.buttonRecents.Location = new System.Drawing.Point(12, 392);
             this.buttonRecents.Name = "buttonRecents";
             this.buttonRecents.Size = new System.Drawing.Size(75, 23);
             this.buttonRecents.TabIndex = 42;
@@ -457,18 +437,38 @@
             this.buttonRefresh.UseVisualStyleBackColor = true;
             this.buttonRefresh.Click += new System.EventHandler(this.buttonRefresh_Click);
             // 
+            // buttonSignin
+            // 
+            this.buttonSignin.Location = new System.Drawing.Point(12, 332);
+            this.buttonSignin.Name = "buttonSignin";
+            this.buttonSignin.Size = new System.Drawing.Size(75, 23);
+            this.buttonSignin.TabIndex = 44;
+            this.buttonSignin.Text = "签到";
+            this.buttonSignin.UseVisualStyleBackColor = true;
+            this.buttonSignin.Click += new System.EventHandler(this.buttonSignin_Click);
+            // 
+            // buttonUnfollow
+            // 
+            this.buttonUnfollow.Location = new System.Drawing.Point(12, 361);
+            this.buttonUnfollow.Name = "buttonUnfollow";
+            this.buttonUnfollow.Size = new System.Drawing.Size(75, 23);
+            this.buttonUnfollow.TabIndex = 45;
+            this.buttonUnfollow.Text = "取关";
+            this.buttonUnfollow.UseVisualStyleBackColor = true;
+            this.buttonUnfollow.Click += new System.EventHandler(this.buttonUnfollow_Click);
+            // 
             // FormNetworkIme
             // 
             this.AcceptButton = this.buttonStart;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(423, 456);
+            this.Controls.Add(this.buttonUnfollow);
+            this.Controls.Add(this.buttonSignin);
             this.Controls.Add(this.buttonRefresh);
             this.Controls.Add(this.buttonRecents);
             this.Controls.Add(this.buttonHidden);
             this.Controls.Add(this.buttonRequest);
-            this.Controls.Add(this.buttonMm);
-            this.Controls.Add(this.buttonIme);
             this.Controls.Add(this.buttonHome);
             this.Controls.Add(this.buttonVolumeUp);
             this.Controls.Add(this.buttonVolumeDown);
@@ -536,8 +536,6 @@
         private System.Windows.Forms.Button buttonVolumeDown;
         private System.Windows.Forms.Button buttonVolumeUp;
         private System.Windows.Forms.Button buttonHome;
-        private System.Windows.Forms.Button buttonIme;
-        private System.Windows.Forms.Button buttonMm;
         private System.Windows.Forms.Timer timerKeepAlive;
         private System.Windows.Forms.Button buttonRequest;
         private System.Windows.Forms.Button buttonHidden;
@@ -549,6 +547,8 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSelect;
         private System.Windows.Forms.Button buttonRecents;
         private System.Windows.Forms.Button buttonRefresh;
+        private System.Windows.Forms.Button buttonSignin;
+        private System.Windows.Forms.Button buttonUnfollow;
     }
 }
 
