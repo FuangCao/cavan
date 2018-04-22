@@ -125,6 +125,14 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
+	protected boolean doActionBack(AccessibilityNodeInfo root) {
+		return false;
+	}
+
+	protected boolean doActionHome(AccessibilityNodeInfo root) {
+		return false;
+	}
+
 	protected void onEnter() {}
 	protected void onLeave() {}
 	protected void onPackageUpdated() {}

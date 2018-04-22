@@ -20,6 +20,8 @@ public class CavanAccessibilityPackage {
 	public static final int CMD_REFRESH = 3;
 	public static final int CMD_SIGNIN = 4;
 	public static final int CMD_UNFOLLOW = 5;
+	public static final int CMD_BACK = 6;
+	public static final int CMD_HOME = 7;
 
 	public static int WAIT_DELAY = 500;
 	public static int BACK_DELAY = 5000;
@@ -533,6 +535,14 @@ public class CavanAccessibilityPackage {
 		case CMD_UNFOLLOW:
 			CavanAndroid.dLog("CMD_UNFOLLOW");
 			return win.doUnfollow(root);
+
+		case CMD_BACK:
+			CavanAndroid.dLog("CMD_BACK");
+			return win.doActionBack(root);
+
+		case CMD_HOME:
+			CavanAndroid.dLog("CMD_HOME");
+			return win.doActionHome(root);
 
 		default:
 			CavanAndroid.eLog("Invalid command: " + command);

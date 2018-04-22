@@ -303,12 +303,20 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 
 		case "HOME":
 			if (accessibility != null) {
+				if (accessibility.sendCommandHome()) {
+					break;
+				}
+
 				accessibility.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
 			}
 			break;
 
 		case "BACK":
 			if (accessibility != null) {
+				if (accessibility.sendCommandBack()) {
+					break;
+				}
+
 				accessibility.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
 			}
 			break;
