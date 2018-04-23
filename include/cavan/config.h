@@ -63,6 +63,10 @@
 #define CONFIG_CAVAN_JSON			0
 #endif
 
+#ifndef CONFIG_CAVAN_JPEG
+#define CONFIG_CAVAN_JPEG			0
+#endif
+
 #ifndef CONFIG_CAVAN_C99
 #define CONFIG_CAVAN_C99			0
 #endif

@@ -99,6 +99,11 @@ CFLAGS += -DCONFIG_CAVAN_JSON $(shell pkg-config --cflags json-c)
 LDFLAGS += $(shell pkg-config --libs json-c)
 endif
 
+ifeq ($(CONFIG_CAVAN_JPEG),true)
+CFLAGS += -DCONFIG_CAVAN_JPEG $(shell pkg-config --cflags libjpeg)
+LDFLAGS += $(shell pkg-config --libs libjpeg)
+endif
+
 ifneq ($(BUILD_ENTRY),cavan)
 CFLAGS += -Wmissing-declarations
 endif

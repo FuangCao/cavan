@@ -23,8 +23,8 @@
 /config.h
 /config.log
 /config.status
-/Makefile
 /stamp-h1
+Makefile
 CMakeFiles
 CMakeCache.txt
 cmake_install.cmake
