@@ -25,7 +25,7 @@
 #include <cavan/network.h>
 
 #define HTTP_SENDER_AHEAD			10000
-#define HTTP_SENDER_DELAY			(-150)
+#define HTTP_SENDER_DELAY			(-200)
 #define HTTP_SENDER_HOST			"game.weixin.qq.com"
 #define HTTP_SENDER_SEND_COUNT		10
 #define HTTP_SENDER_CONN_COUNT		8
