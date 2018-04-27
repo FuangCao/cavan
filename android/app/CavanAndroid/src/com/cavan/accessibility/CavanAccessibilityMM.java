@@ -343,6 +343,22 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			case "热血传奇手游":
 				doClickMenuItem(root, "我的互动", "礼包兑换");
 				break;
+
+			case "新剑侠情缘手游":
+				doClickMenuItem(root, "重磅福利", "兑换中心");
+				break;
+
+			case "传奇霸业手游":
+				doClickMenuItem(root, "公测豪礼", "CDK兑换");
+				break;
+
+			case "绝地求生全军出击":
+				doClickMenuItem(root, "福利补给", "CDKEY兑换");
+				break;
+
+			case "择天记手游":
+				doClickMenuItem(root, "神都福利", "CDK兑换");
+				break;
 			}
 
 			return false;
@@ -855,6 +871,20 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			return setInputText(root, "密码", password);
 		}
 
+		public boolean setPassword(AccessibilityNodeInfo root) {
+			String username = getUserName(root);
+			if (username == null) {
+				return false;
+			}
+
+			String password = mService.getPassword(CavanAccessibilityMM.this, username);
+			if (password == null) {
+				return false;
+			}
+
+			return setPassword(root, password);
+		}
+
 		public boolean clickLoginButton(AccessibilityNodeInfo root) {
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "登录");
 			if (node == null) {
@@ -889,6 +919,15 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			}
 
 			return null;
+		}
+
+		@Override
+		protected void onEnter() {
+			AccessibilityNodeInfo root = getRootInActiveWindow();
+			if (root != null) {
+				setPassword(root);
+				root.recycle();
+			}
 		}
 
 		@Override
