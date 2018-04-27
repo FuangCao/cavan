@@ -15,7 +15,6 @@ class CavanGrub(CavanCommandBase):
 
 	def buildUbuntuIsoEnv(self, fpath, dpath):
 		mpath = "/mnt/cavan-grub-iso"
-		self.doExecute(["pwd"])
 		if not self.doMountFile(fpath, mpath):
 			return False
 
