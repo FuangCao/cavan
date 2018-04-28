@@ -234,11 +234,11 @@ public class CavanUserInfoActivity extends Activity implements OnClickListener, 
 
 			CavanUserInfo user = new CavanUserInfo(ainfo.packageName, username, password);
 			if (user.save(getContentResolver()) == null) {
-				CavanAndroid.showToast(CavanUserInfoActivity.this, "Failed to save user info!");
-				break;
+				CavanAndroid.showToast(CavanUserInfoActivity.this, R.string.add_failed);
+			} else {
+				CavanAndroid.showToast(CavanUserInfoActivity.this, R.string.add_success);
+				mAdapterUsers.notifyDataSetChanged();
 			}
-
-			mAdapterUsers.notifyDataSetChanged();
 			break;
 
 		case R.id.buttonRemove:

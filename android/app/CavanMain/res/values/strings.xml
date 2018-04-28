@@ -817,5 +817,7 @@
 	<string name="label_account">账号：</string>
 	<string name="label_password">密码：</string>
 	<string name="account_manage">账号管理</string>
+	<string name="add_success">添加成功</string>
+	<string name="add_failed">添加失败</string>
 
 </resources>
