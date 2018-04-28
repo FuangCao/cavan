@@ -183,7 +183,7 @@ function create_symlinks()
 	cavan-symlink ${GPAN_PATH} /gpan || return 1
 	cavan-symlink ${UBUNTU_PATH} /ubuntu || return 1
 
-	for dir in cavan work git svn book project tools app temp logs
+	for dir in cavan work git svn book project tools app temp logs downloads
 	do
 		cavan-symlink ${UBUNTU_PATH}/${dir} /${dir} || return 1
 	done
@@ -300,11 +300,12 @@ function config_single_home()
 
 	cd $1 || return 1
 
-	for dir in Desktop Documents Downloads Music Pictures .stardict .gradle .VirtualBox "VirtualBox VMs"
+	for dir in Desktop Documents Music Pictures .stardict .gradle .VirtualBox "VirtualBox VMs"
 	do
 		cavan-symlink "${UBUNTU_HOME}/${dir}" "${dir}" || return 1
 	done
 
+	cavan-symlink "${UBUNTU_PATH}/downloads" "Downloads" || return 1
 	cavan-symlink "${CAVAN_HOME}" "cavan" || return 1
 	cavan-symlink "${SCRIPT_PATH}/configs/netrc" ".netrc" || return 1
 }
