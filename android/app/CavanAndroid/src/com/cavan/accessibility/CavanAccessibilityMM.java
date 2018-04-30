@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
+import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
 
 public class CavanAccessibilityMM extends CavanAccessibilityPackage {
@@ -25,6 +26,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 	private HashMap<String, String> mAnswerMap = new HashMap<String, String>();
 	private HashSet<Integer> mFinishNodes = new HashSet<Integer>();
 	private String mMenuItem;
+	private boolean mSigninPending;
+	private boolean mHomePending;
 
 	public static CavanAccessibilityMM instance;
 
@@ -414,6 +417,61 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
+		protected boolean doActionBack(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo[] nodes = CavanAccessibilityHelper.getChildsRecursive(root, 0, 1, 0);
+			if (nodes == null) {
+				return false;
+			}
+
+			try {
+				if ("返回".equals(CavanAccessibilityHelper.getNodeDescription(nodes[2]))) {
+					return CavanAccessibilityHelper.performClick(nodes[1]);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				CavanAccessibilityHelper.recycleNodes(nodes);
+			}
+
+			return false;
+		}
+
+		@Override
+		protected boolean doActionHome(AccessibilityNodeInfo root) {
+			mHomePending = doActionBack(root);
+			return mHomePending;
+		}
+
+		@Override
+		protected void onEnter() {
+			if (mSigninPending) {
+				AccessibilityNodeInfo root = getRootInActiveWindow();
+				if (root != null) {
+					try {
+						doSignin(root);
+					} catch (Exception e) {
+						e.printStackTrace();
+					} finally {
+						root.recycle();
+					}
+				}
+
+				mSigninPending = false;
+			} else if (mHomePending) {
+				AccessibilityNodeInfo root = getRootInActiveWindow();
+				if (root != null) {
+					try {
+						doActionHome(root);
+					} catch (Exception e) {
+						e.printStackTrace();
+					} finally {
+						root.recycle();
+					}
+				}
+			}
+		}
+
+		@Override
 		public boolean isHomePage() {
 			return true;
 		}
@@ -458,6 +516,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 					performPackageUpdated();
 				}
 			}
+
+			mHomePending = false;
 		}
 
 		@Override
@@ -498,12 +558,117 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doSignin(AccessibilityNodeInfo root) {
+			List<AccessibilityNodeInfo> nodes = CavanAccessibilityHelper.findNodesByTexts(root, "公众号名片");
+			if (nodes == null || nodes.isEmpty()) {
+				return false;
+			}
+
+			try {
+				if (CavanAccessibilityHelper.performClickParent(nodes.get(nodes.size() - 1))) {
+					mSigninPending = true;
+					return true;
+				}
+
+				mSigninPending = false;
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				CavanAccessibilityHelper.recycleNodes(nodes);
+			}
+
 			return false;
 		}
 
 		@Override
 		protected boolean doUnfollow(AccessibilityNodeInfo root) {
 			return false;
+		}
+	}
+
+	public class ContactInfoWindow extends BaseWindow {
+
+		public ContactInfoWindow(String name) {
+			super(name);
+		}
+
+		@Override
+		protected boolean doSignin(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo listView = CavanAccessibilityHelper.getChildRecursive(root, 0, 3);
+			if (listView == null) {
+				return false;
+			}
+
+			try {
+				for (int i = 0; i < 3; i++) {
+					AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(listView, "进入公众号");
+					if (node != null && CavanAccessibilityHelper.performClickParentAndRecycle(node)) {
+						mSigninPending = true;
+						return true;
+					}
+
+					CavanAccessibilityHelper.performScrollDown(listView);
+					CavanJava.msleep(200);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				listView.recycle();
+			}
+
+			return false;
+		}
+
+		@Override
+		protected boolean doActionBack(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo[] nodes = CavanAccessibilityHelper.getChildsRecursive(root, 0, 0, 0);
+			if (nodes == null) {
+				return false;
+			}
+
+			try {
+				if ("返回".equals(CavanAccessibilityHelper.getNodeDescription(nodes[2]))) {
+					return CavanAccessibilityHelper.performClick(nodes[1]);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				CavanAccessibilityHelper.recycleNodes(nodes);
+			}
+
+			return false;
+		}
+
+		@Override
+		protected boolean doActionHome(AccessibilityNodeInfo root) {
+			mHomePending = doActionBack(root);
+			return mHomePending;
+		}
+
+		@Override
+		protected void onEnter() {
+			if (mSigninPending) {
+				AccessibilityNodeInfo root = getRootInActiveWindow();
+				if (root != null) {
+					try {
+						doSignin(root);
+					} catch (Exception e) {
+						e.printStackTrace();
+					} finally {
+						root.recycle();
+					}
+				}
+			} else if (mHomePending) {
+				AccessibilityNodeInfo root = getRootInActiveWindow();
+				if (root != null) {
+					try {
+						doActionHome(root);
+					} catch (Exception e) {
+						e.printStackTrace();
+					} finally {
+						root.recycle();
+					}
+				}
+			}
 		}
 	}
 
@@ -736,6 +901,32 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			}
 
 			return false;
+		}
+
+		@Override
+		protected boolean doActionBack(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo[] nodes = CavanAccessibilityHelper.getChildsRecursive(root, 0, 3, 0, 0);
+			if (nodes == null) {
+				return false;
+			}
+
+			try {
+				if ("返回".equals(CavanAccessibilityHelper.getNodeDescription(nodes[3]))) {
+					return CavanAccessibilityHelper.performClick(nodes[2]);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				CavanAccessibilityHelper.recycleNodes(nodes);
+			}
+
+			return false;
+		}
+
+		@Override
+		protected boolean doActionHome(AccessibilityNodeInfo root) {
+			mHomePending = doActionBack(root);
+			return mHomePending;
 		}
 	}
 
@@ -1335,6 +1526,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		addWindow(new AppBrandWindow("com.tencent.mm.plugin.appbrand.ui.AppBrandUI"));
 		addWindow(new AppBrandWindow("com.tencent.mm.plugin.appbrand.ui.AppBrandUI1"));
+		addWindow(new ContactInfoWindow("com.tencent.mm.plugin.profile.ui.ContactInfoUI"));
 	}
 
 	@Override
