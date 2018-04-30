@@ -339,8 +339,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				return false;
 			}
 
-			CavanAndroid.dLog("chatting = " + chatting);
-
 			switch (chatting) {
 			case "轩辕传奇手游":
 				doClickMenuItem(root, "活动专区", "CDKey兑换");
@@ -368,6 +366,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 			case "择天记手游":
 				doClickMenuItem(root, "神都福利", "CDK兑换");
+				break;
+
+			case "穿越火线官方FPS手游":
+				mSigninPending = doClickMenuItem(root, "官网", "CDK兑换");
 				break;
 			}
 
@@ -892,6 +894,23 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			super(name);
 		}
 
+		public String getTitle(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 3, 1);
+			if (node == null) {
+				return null;
+			}
+
+			try {
+				return CavanAccessibilityHelper.getNodeText(node);
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				node.recycle();
+			}
+
+			return null;
+		}
+
 		@Override
 		public boolean isWebviewUi() {
 			return isCurrentPackage();
@@ -950,6 +969,44 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		protected boolean doActionHome(AccessibilityNodeInfo root) {
 			mHomePending = doActionBack(root);
 			return mHomePending;
+		}
+
+		@Override
+		protected boolean doSignin(AccessibilityNodeInfo root) {
+			mSigninPending = false;
+
+			String title = getTitle(root);
+			if (title == null) {
+				return false;
+			}
+
+			AccessibilityNodeInfo node;
+
+			if (title.contains("穿越火线")) {
+				node = CavanAccessibilityHelper.getChildRecursive(root, 0, 0, 0, 0, 0, 2, 1);
+				if (node == null) {
+					return false;
+				}
+			} else {
+				return false;
+			}
+
+			try {
+				return CavanAccessibilityHelper.performClick(node);
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				node.recycle();
+			}
+
+			return false;
+		}
+
+		@Override
+		protected void onEnter(AccessibilityNodeInfo root) {
+			if (mSigninPending) {
+				doSignin(root);
+			}
 		}
 	}
 
