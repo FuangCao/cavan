@@ -7,10 +7,12 @@ import android.app.Notification;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Parcelable;
+import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.SystemProperties;
 import com.cavan.java.CavanString;
 
 public class CavanAccessibilityPackage {
@@ -411,6 +413,20 @@ public class CavanAccessibilityPackage {
 			if (mWindow != null) {
 				mWindow.onViewClicked(event);
 			}
+
+			int dump = SystemProperties.getInt("debug.cavan.dump.click", 0);
+			if (dump > 0) {
+				CavanAndroid.dLog("event = " + event);
+
+				if (dump > 1) {
+					AccessibilityNodeInfo source = event.getSource();
+					CavanAndroid.dLog("source = " + source);
+
+					if (source != null) {
+						source.recycle();
+					}
+				}
+			}
 			break;
 
 		case AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED:
@@ -425,6 +441,12 @@ public class CavanAccessibilityPackage {
 				onNotificationStateChanged((Notification) data);
 			}
 			break;
+		}
+	}
+
+	protected void onKeyEvent(CavanAccessibilityPackage pkg, AccessibilityNodeInfo root, KeyEvent event) {
+		if (mWindow != null) {
+			mWindow.onKeyEvent(root, event);
 		}
 	}
 

@@ -1,7 +1,6 @@
 package com.cavan.accessibility;
 
-import com.cavan.android.CavanAndroid;
-
+import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -141,9 +140,22 @@ public class CavanAccessibilityWindow {
 	protected void onWindowContentChanged(AccessibilityEvent event) {}
 	protected void onViewClicked(AccessibilityEvent event) {}
 	protected void onViewTextChanged(AccessibilityEvent event) {}
+	protected void onKeyDown(AccessibilityNodeInfo root, int keyCode) {}
+	protected void onKeyUp(AccessibilityNodeInfo root, int keyCode) {}
+
+	protected void onKeyEvent(AccessibilityNodeInfo root, KeyEvent event) {
+		switch (event.getAction()) {
+		case KeyEvent.ACTION_DOWN:
+			onKeyDown(root, event.getKeyCode());
+			break;
+
+		case KeyEvent.ACTION_UP:
+			onKeyUp(root, event.getKeyCode());
+			break;
+		}
+	}
 
 	protected boolean onWindowContentReady(int times) {
-		CavanAndroid.pLog();
 		return true;
 	}
 

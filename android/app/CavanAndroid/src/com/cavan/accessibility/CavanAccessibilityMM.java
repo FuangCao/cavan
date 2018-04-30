@@ -1,10 +1,12 @@
 package com.cavan.accessibility;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
 import android.app.Notification;
+import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Button;
@@ -20,6 +22,7 @@ import com.cavan.java.CavanString;
 
 public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
+	private HashMap<String, String> mAnswerMap = new HashMap<String, String>();
 	private HashSet<Integer> mFinishNodes = new HashSet<Integer>();
 	private String mMenuItem;
 
@@ -995,6 +998,287 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 	}
 
+	public class AppBrandAnswer {
+
+		private AccessibilityNodeInfo mNode;
+		private String mText;
+
+		public AppBrandAnswer(AccessibilityNodeInfo node) {
+			mNode = node;
+
+			String text = CavanAccessibilityHelper.getChildText(node, -1);
+			if (text != null) {
+				int index = text.indexOf('.');
+				if (index > 0) {
+					mText = text.substring(index + 1).trim();
+				}
+			}
+		}
+
+		public String getText() {
+			return mText;
+		}
+
+		public void recycle() {
+			if (mNode != null) {
+				mNode.recycle();
+				mNode = null;
+			}
+		}
+
+		public boolean isHashEquals(int hashCode) {
+			return (mNode != null && mNode.hashCode() == hashCode);
+		}
+
+		public boolean click() {
+			if (mNode != null) {
+				return CavanAccessibilityHelper.performClick(mNode);
+			}
+
+			return false;
+		}
+	}
+
+	public class AppBrandAnswers {
+
+		private AccessibilityNodeInfo mNode;
+		private AppBrandAnswer[] mAnswers;
+
+		public AppBrandAnswers(AccessibilityNodeInfo node) {
+			mNode = node;
+
+			AccessibilityNodeInfo[] childs = CavanAccessibilityHelper.getChilds(node);
+			if (childs != null) {
+				mAnswers = new AppBrandAnswer[childs.length];
+				for (int i = 0; i < childs.length; i++) {
+					mAnswers[i] = new AppBrandAnswer(childs[i]);
+				}
+			}
+		}
+
+		public void recycle() {
+			for (AppBrandAnswer answer : mAnswers) {
+				answer.recycle();
+			}
+
+			if (mNode != null) {
+				mNode.recycle();
+				mNode = null;
+			}
+		}
+
+		public AppBrandAnswer getAnswer(AccessibilityNodeInfo node) {
+			for (AppBrandAnswer answer : mAnswers) {
+				if (answer.isHashEquals(node.hashCode())) {
+					return answer;
+				}
+			}
+
+			return null;
+		}
+
+		public AppBrandAnswer getAnswer(String text) {
+			for (AppBrandAnswer answer : mAnswers) {
+				if (text.equals(answer.getText())) {
+					return answer;
+				}
+			}
+
+			return null;
+		}
+
+		public boolean isValid() {
+			if (mAnswers == null || mAnswers.length < 2) {
+				return false;
+			}
+
+			return true;
+		}
+
+		public void dump() {
+			for (int i = 0; i < mAnswers.length; i++) {
+				CavanAndroid.dLog("answer" + i + ". " + mAnswers[i].getText());
+			}
+		}
+	}
+
+	public class AppBrandSubject {
+
+		private AccessibilityNodeInfo mNode;
+		private AccessibilityNodeInfo mClicked;
+		private String mQuestion;
+		private AppBrandAnswers mAnswers;
+
+		public AppBrandSubject(AccessibilityNodeInfo node) {
+			mNode = node;
+
+			String question = CavanAccessibilityHelper.getChildText(node, 0);
+			if (question != null) {
+				int index = question.indexOf('.');
+				if (index > 0) {
+					mQuestion = question.substring(index + 1).trim();
+				}
+			}
+
+			AccessibilityNodeInfo answer = CavanAccessibilityHelper.getChild(node, 1);
+			if (answer != null) {
+				mAnswers = new AppBrandAnswers(answer);
+			}
+		}
+
+		public void setClicked(AccessibilityNodeInfo source) {
+			mClicked = source;
+		}
+
+		public void recycle() {
+			if (mAnswers != null) {
+				mAnswers.recycle();
+				mAnswers = null;
+			}
+
+			if (mClicked != null) {
+				mClicked.recycle();
+				mClicked = null;
+			}
+
+			if (mNode != null) {
+				mNode.recycle();
+				mNode = null;
+			}
+		}
+
+		public void save() {
+			if (mQuestion != null && mClicked != null) {
+				AppBrandAnswer answer = mAnswers.getAnswer(mClicked);
+				if (answer != null) {
+					CavanAndroid.dLog(mQuestion + " <= " + answer.getText());
+					mAnswerMap.put(mQuestion, answer.getText());
+				}
+			}
+		}
+
+		public AppBrandAnswer getAnswer() {
+			if (mQuestion == null) {
+				return null;
+			}
+
+			String answer = mAnswerMap.get(mQuestion);
+			if (answer == null) {
+				return null;
+			}
+
+			CavanAndroid.dLog(mQuestion + " => " + answer);
+
+			return mAnswers.getAnswer(answer);
+		}
+
+		public boolean isValid() {
+			return (mAnswers != null && mAnswers.isValid());
+		}
+
+		public void dump() {
+			CavanAndroid.dLog("question. " + mQuestion);
+			mAnswers.dump();
+		}
+	};
+
+	public class AppBrandWindow extends BaseWindow {
+
+		private AppBrandSubject mSubject;
+
+		public AppBrandWindow(String name) {
+			super(name);
+		}
+
+		public String getTitle(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 0, 0);
+			if (node == null) {
+				return null;
+			}
+
+			try {
+				return CavanAccessibilityHelper.getNodeText(node);
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				node.recycle();
+			}
+
+			return null;
+		}
+
+		public boolean setSubject(AppBrandSubject subject) {
+			if (subject != null && subject.isValid()) {
+				if (mSubject != null) {
+					mSubject.save();
+					mSubject.recycle();
+					mSubject = null;
+				}
+
+				AppBrandAnswer answer = subject.getAnswer();
+				if (answer != null) {
+					answer.click();
+				}
+
+				mSubject = subject;
+
+				return true;
+			}
+
+			if (mSubject != null) {
+				mSubject.recycle();
+			}
+
+			if (subject != null) {
+				subject.recycle();
+			}
+
+			return false;
+		}
+
+		@Override
+		protected void onViewClicked(AccessibilityEvent event) {
+			if (mSubject != null) {
+				mSubject.setClicked(event.getSource());
+			}
+		}
+
+		@Override
+		protected void onKeyDown(AccessibilityNodeInfo root, int keyCode) {
+			if (keyCode != KeyEvent.KEYCODE_VOLUME_UP) {
+				return;
+			}
+
+			String title = getTitle(root);
+			if (title == null) {
+				return;
+			}
+
+			if (!title.equals("争分夺金")) {
+				return;
+			}
+
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, -1, 0, 0, -1);
+			if (node != null) {
+				AppBrandSubject subject = new AppBrandSubject(node);
+				setSubject(subject);
+				subject.dump();
+			} else {
+				setSubject(null);
+			}
+		}
+
+		@Override
+		protected void onEnter() {
+			setSubject(null);
+		}
+
+		@Override
+		protected void onLeave() {
+			setSubject(null);
+		}
+	};
+
 	public CavanAccessibilityMM(CavanAccessibilityService service) {
 		super(service, CavanPackageName.MM);
 	}
@@ -1048,6 +1332,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(new LoginWindow("com.tencent.mm.plugin.account.ui.LoginUI"));
 		addWindow(new LoginWindow("com.tencent.mm.plugin.account.ui.SimpleLoginUI"));
 		addWindow(new LoginPasswordWindow("com.tencent.mm.plugin.account.ui.LoginPasswordUI"));
+
+		addWindow(new AppBrandWindow("com.tencent.mm.plugin.appbrand.ui.AppBrandUI"));
+		addWindow(new AppBrandWindow("com.tencent.mm.plugin.appbrand.ui.AppBrandUI1"));
 	}
 
 	@Override

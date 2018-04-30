@@ -432,15 +432,28 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return null;
 	}
 
+	public synchronized CavanAccessibilityPackage getCurrentPackage(String name) {
+		synchronized (mPackages) {
+			return mPackages.get(name);
+		}
+	}
+
+	public synchronized CavanAccessibilityPackage getCurrentPackage(AccessibilityNodeInfo root) {
+		CharSequence name = root.getPackageName();
+		if (name == null) {
+			return null;
+		}
+
+		return getCurrentPackage(name.toString());
+	}
+
 	public CavanAccessibilityPackage getCurrentPackage() {
 		String name = getCurrntPacketName();
 		if (name == null) {
 			return null;
 		}
 
-		synchronized (mPackages) {
-			return mPackages.get(name);
-		}
+		return getCurrentPackage(name);
 	}
 
 	public CavanWakeLock getWakeLock() {
@@ -755,6 +768,18 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 					root.recycle();
 				}
+			}
+		}
+
+		AccessibilityNodeInfo root = getRootInActiveWindow();
+		if (root != null) {
+			try {
+				CavanAccessibilityPackage pkg = getCurrentPackage(root);
+				pkg.onKeyEvent(pkg, root, event);
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				root.recycle();
 			}
 		}
 

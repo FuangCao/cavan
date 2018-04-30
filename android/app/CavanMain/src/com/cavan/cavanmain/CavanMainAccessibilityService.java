@@ -35,7 +35,7 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 
 	@Override
 	public int getEventTypes() {
-		return AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED | AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED;
+		return AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED | AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED | AccessibilityEvent.TYPE_VIEW_CLICKED;
 	}
 
 	@Override
