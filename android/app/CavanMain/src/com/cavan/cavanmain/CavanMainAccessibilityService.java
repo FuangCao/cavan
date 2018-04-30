@@ -11,6 +11,7 @@ import com.cavan.accessibility.CavanAccessibilityAlipay;
 import com.cavan.accessibility.CavanAccessibilityPackage;
 import com.cavan.accessibility.CavanAccessibilityService;
 import com.cavan.accessibility.CavanKeyguardActivity;
+import com.cavan.accessibility.CavanRedPacket;
 import com.cavan.android.CavanAndroid;
 
 public class CavanMainAccessibilityService extends CavanAccessibilityService {
@@ -87,6 +88,18 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 		dialog.show();
 
 		return true;
+	}
+
+	@Override
+	public synchronized void showCountDownView(CavanRedPacket packet) {
+		FloatMessageService service = FloatMessageService.instance;
+		if (service != null) {
+			if (packet != null) {
+				service.setCountDownTime(packet.getUnpackTime());
+			} else {
+				service.setCountDownTime(0);
+			}
+		}
 	}
 
 	@Override

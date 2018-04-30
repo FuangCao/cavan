@@ -196,7 +196,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 		CavanRedPacketAlipay packet = CavanRedPacketAlipay.get(code, true, report);
 		if (report) {
-			packet.setSendEnable(false);
+			packet.setSendEnable(true);
 		}
 
 		CavanNotification notification = new CavanNotification(getPackageName(), type, code, false);
