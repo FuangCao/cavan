@@ -709,6 +709,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return sendCommand(CavanAccessibilityPackage.CMD_SIGNIN);
 	}
 
+	public boolean follow() {
+		return sendCommand(CavanAccessibilityPackage.CMD_FOLLOW);
+	}
+
 	public boolean unfollow() {
 		return sendCommand(CavanAccessibilityPackage.CMD_UNFOLLOW);
 	}
@@ -743,39 +747,41 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	@Override
 	public void onAccessibilityEvent(AccessibilityEvent event) {
-		try {
-			CavanAccessibilityPackage pkg = getPackage(event.getPackageName());
-			if (pkg != null) {
-				pkg.onAccessibilityEvent(event);
+		AccessibilityNodeInfo root = getRootInActiveWindow();
+		if (root != null) {
+			try {
+				CavanAccessibilityPackage pkg = getPackage(root.getPackageName());
+				if (pkg != null) {
+					pkg.onAccessibilityEvent(root, event);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				root.recycle();
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 
 	@Override
 	protected boolean onKeyEvent(KeyEvent event) {
-		if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP && event.getAction() == KeyEvent.ACTION_UP) {
-			int dump = SystemProperties.getInt("debug.cavan.dump.node", 0);
-			if (dump > 0) {
-				AccessibilityNodeInfo root = getRootInActiveWindow();
-				if (root != null) {
-					if (dump > 1) {
-						CavanAccessibilityHelper.dumpNode(root);
-					} else {
-						CavanAccessibilityHelper.dumpNodeSimple(root);
-					}
-
-					root.recycle();
-				}
-			}
-		}
-
 		AccessibilityNodeInfo root = getRootInActiveWindow();
 		if (root != null) {
 			try {
+				if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP && event.getAction() == KeyEvent.ACTION_UP) {
+					int dump = SystemProperties.getInt("debug.cavan.dump.node", 0);
+					if (dump > 0) {
+						if (dump > 1) {
+							CavanAccessibilityHelper.dumpNode(root);
+						} else {
+							CavanAccessibilityHelper.dumpNodeSimple(root);
+						}
+					}
+				}
+
 				CavanAccessibilityPackage pkg = getCurrentPackage(root);
-				pkg.onKeyEvent(pkg, root, event);
+				if (pkg != null) {
+					pkg.onKeyEvent(pkg, root, event);
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {

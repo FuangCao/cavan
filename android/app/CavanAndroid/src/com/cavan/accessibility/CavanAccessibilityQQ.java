@@ -472,7 +472,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 	}
 
 	@Override
-	public void onNotificationStateChanged(Notification notification) {
+	public void onNotificationStateChanged(AccessibilityNodeInfo root, Notification notification) {
 		CavanNotificationQQ packet = new CavanNotificationQQ(notification);
 		if (packet.isRedPacket()) {
 			addPacket(packet);

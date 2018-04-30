@@ -305,6 +305,7 @@ static bool cavan_http_sender_is_completed(struct cavan_http_sender *sender, int
 		"\u592a\u5feb", // 太快
 		"\u9891\u7e41", // 频繁
 		"\u9886\u53d6\u8fc7", // 领取过
+		"\u7b7e\u5230\u8fc7", // 签到过
 	};
 
 	length = cavan_http_sender_find_errdesc(body, errdesc, sizeof(errdesc));

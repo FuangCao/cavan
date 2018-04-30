@@ -21,9 +21,10 @@ public class CavanAccessibilityPackage {
 	public static final int CMD_LOGIN = 2;
 	public static final int CMD_REFRESH = 3;
 	public static final int CMD_SIGNIN = 4;
-	public static final int CMD_UNFOLLOW = 5;
-	public static final int CMD_BACK = 6;
-	public static final int CMD_HOME = 7;
+	public static final int CMD_FOLLOW = 5;
+	public static final int CMD_UNFOLLOW = 6;
+	public static final int CMD_BACK = 7;
+	public static final int CMD_HOME = 8;
 
 	public static int WAIT_DELAY = 500;
 	public static int BACK_DELAY = 5000;
@@ -299,7 +300,7 @@ public class CavanAccessibilityPackage {
 		}
 
 		try {
-			return isCurrentPackage(getRootInActiveWindow());
+			return isCurrentPackage(root);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -348,7 +349,7 @@ public class CavanAccessibilityPackage {
 		onPackageUpdated();
 	}
 
-	protected synchronized CavanAccessibilityWindow onWindowStateChanged(AccessibilityEvent event) {
+	protected synchronized CavanAccessibilityWindow onWindowStateChanged(AccessibilityNodeInfo root, AccessibilityEvent event) {
 		String name = CavanString.fromCharSequence(event.getClassName(), null);
 		if (name == null) {
 			return null;
@@ -378,13 +379,13 @@ public class CavanAccessibilityPackage {
 			}
 
 			if (mWindow != null) {
-				mWindow.onLeave();
+				mWindow.onLeave(root);
 			}
 
 			mWindow = win;
 
 			if (win != null) {
-				win.onEnter();
+				win.onEnter(root);
 				resetTimes();
 			}
 		}
@@ -396,22 +397,22 @@ public class CavanAccessibilityPackage {
 		return win;
 	}
 
-	public synchronized void onAccessibilityEvent(AccessibilityEvent event) {
+	public synchronized void onAccessibilityEvent(AccessibilityNodeInfo root, AccessibilityEvent event) {
 		switch (event.getEventType()) {
 		case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
 			mService.setPackage(this);
-			onWindowStateChanged(event);
+			onWindowStateChanged(root, event);
 			break;
 
 		case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
 			if (mWindow != null) {
-				mWindow.onWindowContentChanged(event);
+				mWindow.onWindowContentChanged(root, event);
 			}
 			break;
 
 		case AccessibilityEvent.TYPE_VIEW_CLICKED:
 			if (mWindow != null) {
-				mWindow.onViewClicked(event);
+				mWindow.onViewClicked(root, event);
 			}
 
 			int dump = SystemProperties.getInt("debug.cavan.dump.click", 0);
@@ -431,14 +432,14 @@ public class CavanAccessibilityPackage {
 
 		case AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED:
 			if (mWindow != null) {
-				mWindow.onViewTextChanged(event);
+				mWindow.onViewTextChanged(root, event);
 			}
 			break;
 
 		case AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED:
 			Parcelable data = event.getParcelableData();
 			if (data instanceof Notification) {
-				onNotificationStateChanged((Notification) data);
+				onNotificationStateChanged(root, (Notification) data);
 			}
 			break;
 		}
@@ -450,7 +451,7 @@ public class CavanAccessibilityPackage {
 		}
 	}
 
-	public synchronized void onNotificationStateChanged(Notification data) {}
+	public synchronized void onNotificationStateChanged(AccessibilityNodeInfo root, Notification data) {}
 
 	public synchronized long poll(CavanRedPacket packet, AccessibilityNodeInfo root) {
 		CavanAndroid.dLog("package = " + mName);
@@ -553,6 +554,10 @@ public class CavanAccessibilityPackage {
 		case CMD_SIGNIN:
 			CavanAndroid.dLog("CMD_SIGNIN");
 			return win.doSignin(root);
+
+		case CMD_FOLLOW:
+			CavanAndroid.dLog("CMD_FOLLOW");
+			return win.doFollow(root);
 
 		case CMD_UNFOLLOW:
 			CavanAndroid.dLog("CMD_UNFOLLOW");

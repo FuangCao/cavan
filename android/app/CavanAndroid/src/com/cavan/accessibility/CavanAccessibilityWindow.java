@@ -120,6 +120,10 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
+	protected boolean doFollow(AccessibilityNodeInfo root) {
+		return false;
+	}
+
 	protected boolean doUnfollow(AccessibilityNodeInfo root) {
 		return false;
 	}
@@ -132,14 +136,14 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
-	protected void onEnter() {}
-	protected void onLeave() {}
 	protected void onPackageUpdated() {}
 	protected void onProgress(String name) {}
 	protected void onAndroidWidget(String name) {}
-	protected void onWindowContentChanged(AccessibilityEvent event) {}
-	protected void onViewClicked(AccessibilityEvent event) {}
-	protected void onViewTextChanged(AccessibilityEvent event) {}
+	protected void onEnter(AccessibilityNodeInfo root) {}
+	protected void onLeave(AccessibilityNodeInfo root) {}
+	protected void onWindowContentChanged(AccessibilityNodeInfo root, AccessibilityEvent event) {}
+	protected void onViewClicked(AccessibilityNodeInfo root, AccessibilityEvent event) {}
+	protected void onViewTextChanged(AccessibilityNodeInfo root, AccessibilityEvent event) {}
 	protected void onKeyDown(AccessibilityNodeInfo root, int keyCode) {}
 	protected void onKeyUp(AccessibilityNodeInfo root, int keyCode) {}
 
