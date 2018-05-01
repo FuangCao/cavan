@@ -10,6 +10,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
@@ -555,6 +556,39 @@ public class CavanAccessibilityService extends AccessibilityService {
 	public synchronized void showCountDownView(CavanRedPacket packet) {
 		Message message = mHandler.obtainMessage(MSG_SHOW_COUNT_DOWN, packet);
 		message.sendToTarget();
+	}
+
+	public boolean doShellCommand(String command) {
+		return false;
+	}
+
+	public boolean doShellCommandF(String format, Object... args) {
+		return doShellCommand(String.format(format, args));
+	}
+
+	public boolean doInputTap(int x, int y) {
+		return doShellCommandF("input tap %d %d", x, y);
+	}
+
+	public boolean doInputTap(AccessibilityNodeInfo node) {
+		Rect bounds = new Rect();
+		node.getBoundsInScreen(bounds);
+		CavanAndroid.dLog("bounds = " + bounds);
+		return doInputTap(bounds.centerX(), bounds.centerY());
+	}
+
+	public boolean doInputTapAndRecycle(AccessibilityNodeInfo node) {
+		boolean success = doInputTap(node);
+		node.recycle();
+		return success;
+	}
+
+	public boolean doInputText(String text) {
+		return doShellCommandF("input text '%s'", text);
+	}
+
+	public boolean doInputKeyEvent(int code) {
+		return doShellCommand("input keyevent " + code);
 	}
 
 	public boolean addPacket(CavanAccessibilityPackage pkg, CavanRedPacket packet) {

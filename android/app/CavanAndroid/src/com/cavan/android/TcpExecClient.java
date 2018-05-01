@@ -24,35 +24,41 @@ import android.net.LocalSocketAddress;
 	}
 
 	public boolean runCommand(String command) {
+		CavanAndroid.dLog("runCommand: " + command);
+
 		if (!connectSync()) {
 			return false;
 		}
 
-		TcpDdExecReq req = new TcpDdExecReq(command);
-		if (!sendPackage(req)) {
-			return false;
-		}
-
-		TcpDdResponse response = new TcpDdResponse();
-		if (!recvPackage(response)) {
-			return false;
-		}
-
-		if (response.getCode() < 0) {
-			return false;
-		}
-
-		while (true) {
-			byte[] data = new byte[1024];
-			int length = recvData(data);
-			if (length <= 0) {
-				break;
+		try {
+			TcpDdExecReq req = new TcpDdExecReq(command);
+			if (!sendPackage(req)) {
+				return false;
 			}
 
-			dLog(new String(data, 0, length));
-		}
+			TcpDdResponse response = new TcpDdResponse();
+			if (!recvPackage(response)) {
+				return false;
+			}
 
-		disconnect();
+			if (response.getCode() < 0) {
+				return false;
+			}
+
+			while (true) {
+				byte[] data = new byte[1024];
+				int length = recvData(data);
+				if (length <= 0) {
+					break;
+				}
+
+				dLog(new String(data, 0, length));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			disconnect();
+		}
 
 		return true;
 	}

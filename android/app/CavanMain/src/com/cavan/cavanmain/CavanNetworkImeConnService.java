@@ -367,6 +367,17 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 			}
 			break;
 
+		case "TAP":
+			if (args.length > 1 && accessibility != null) {
+				String[] params = args[1].split("\\s+");
+				if (params.length > 1) {
+					int x = CavanJava.parseInt(params[0]);
+					int y = CavanJava.parseInt(params[1]);
+					accessibility.doInputTap(x, y);
+				}
+			}
+			break;
+
 		case "IME":
 			mInputMethodManager.showInputMethodPicker();
 			break;

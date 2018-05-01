@@ -1,9 +1,12 @@
 package com.cavan.cavanmain;
 
+import java.net.InetAddress;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.os.Message;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 
@@ -13,10 +16,14 @@ import com.cavan.accessibility.CavanAccessibilityService;
 import com.cavan.accessibility.CavanKeyguardActivity;
 import com.cavan.accessibility.CavanRedPacket;
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanThreadedHandler;
+import com.cavan.android.TcpExecClient;
 
 public class CavanMainAccessibilityService extends CavanAccessibilityService {
 
 	public static CavanMainAccessibilityService instance;
+
+	private static final int MSG_SHELL_COMMAND = 1;
 
 	public static boolean checkAndOpenSettingsActivity(Context context) {
         if (instance != null) {
@@ -27,6 +34,24 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 
         return false;
     }
+
+	private CavanThreadedHandler mThreadedHandler = new CavanThreadedHandler(CavanMainAccessibilityService.class) {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case MSG_SHELL_COMMAND:
+				try {
+					InetAddress address = InetAddress.getByAddress(new byte[] { 127, 0, 0, 1 });
+					TcpExecClient client = new TcpExecClient(address, 8888);
+					client.runCommand((String) msg.obj);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				break;
+			}
+		}
+	};
 
 	public CavanMainAccessibilityService() {
 		addPackage(new CavanMainAccessibilityMM(this));
@@ -100,6 +125,12 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 				service.setCountDownTime(0);
 			}
 		}
+	}
+
+	@Override
+	public boolean doShellCommand(String command) {
+		mThreadedHandler.obtainMessage(MSG_SHELL_COMMAND, command).sendToTarget();
+		return true;
 	}
 
 	@Override

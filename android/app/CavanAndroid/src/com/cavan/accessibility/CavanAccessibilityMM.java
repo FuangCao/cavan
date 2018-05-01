@@ -1309,7 +1309,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		public boolean click() {
 			if (mNode != null) {
-				return CavanAccessibilityHelper.performClick(mNode);
+				return mService.doInputTap(mNode);
 			}
 
 			return false;

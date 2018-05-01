@@ -4,16 +4,17 @@ import com.cavan.java.CavanByteCache;
 
 
 class TcpDdExecReq extends TcpDdPackage {
+
 	private short mLines;
 	private short mColumns;
-	private String mCommand;
+	private byte[] mCommand;
 
 	public TcpDdExecReq(int lines, int columns, String command) {
 		super(TcpDdClient.TCP_DD_EXEC);
 
 		mLines = (short) lines;
 		mColumns = (short) columns;
-		mCommand = command;
+		mCommand = command.getBytes();
 	}
 
 	public TcpDdExecReq(String command) {
@@ -41,8 +42,13 @@ class TcpDdExecReq extends TcpDdPackage {
 			return false;
 		}
 
-		if (!cache.writeBytes(mCommand.getBytes())) {
+		if (!cache.writeBytes(mCommand)) {
 			CavanAndroid.dLog("Failed to writeBytes(mCommand)");
+			return false;
+		}
+
+		if (!cache.writeValue8((byte) 0)) {
+			CavanAndroid.dLog("Failed to writeValue8(0)");
 			return false;
 		}
 
@@ -51,6 +57,6 @@ class TcpDdExecReq extends TcpDdPackage {
 
 	@Override
 	public byte[] encode() {
-		return encode(8 + mCommand.getBytes().length);
+		return encode(8 + mCommand.length + 1);
 	}
 }

@@ -3,6 +3,8 @@ package com.cavan.cavanjni;
 import java.io.File;
 import java.util.HashMap;
 
+import android.os.Environment;
+
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanAndroidFile;
 import com.cavan.service.CavanServiceState;
@@ -11,6 +13,7 @@ import com.cavan.service.CavanServiceState;
 public class TcpDdService extends CavanNativeService {
 
 	public static final String NAME = "TCP_DD";
+	public static final String CMD_NAME = "cavan-main";
 	private static final HashMap<String, Integer> mResourceMap = new HashMap<String, Integer>();
 
 	static {
@@ -55,10 +58,20 @@ public class TcpDdService extends CavanNativeService {
 			if (dir != null) {
 				int id = getResourceByAbi();
 				if (id > 0) {
-					CavanAndroidFile file = new CavanAndroidFile(dir, "cavan-main");
-					if (file.copyFrom(getResources(), id)) {
-						file.setExecutable(true);
-						CavanJni.appendPathEnv(dir.getPath());
+					CavanAndroidFile[] files = {
+						new CavanAndroidFile(dir, CMD_NAME),
+						new CavanAndroidFile(Environment.getExternalStorageDirectory(), CMD_NAME),
+					};
+
+					for (CavanAndroidFile file : files) {
+						CavanAndroid.dLog("copy file: " + file);
+
+						if (file.copyFrom(getResources(), id)) {
+							file.setExecutable(true);
+							CavanJni.appendPathEnv(dir.getPath());
+						} else {
+							CavanAndroid.eLog("Failed to copy file: " + file);
+						}
 					}
 				}
 			}
