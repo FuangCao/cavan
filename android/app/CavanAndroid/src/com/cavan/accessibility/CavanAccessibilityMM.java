@@ -1283,7 +1283,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		public AppBrandAnswer(AccessibilityNodeInfo node) {
 			mNode = node;
 
-			String text = CavanAccessibilityHelper.getChildText(node, -1);
+			String text = CavanAccessibilityHelper.getChildDesction(node, -1);
 			if (text != null) {
 				int index = text.indexOf('.');
 				if (index > 0) {
@@ -1334,8 +1334,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		public void recycle() {
-			for (AppBrandAnswer answer : mAnswers) {
-				answer.recycle();
+			if (mAnswers != null) {
+				for (AppBrandAnswer answer : mAnswers) {
+					answer.recycle();
+				}
+
+				mAnswers = null;
 			}
 
 			if (mNode != null) {
@@ -1345,6 +1349,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		public AppBrandAnswer getAnswer(AccessibilityNodeInfo node) {
+			if (mAnswers == null) {
+				return null;
+			}
+
 			for (AppBrandAnswer answer : mAnswers) {
 				if (answer.isHashEquals(node.hashCode())) {
 					return answer;
@@ -1389,7 +1397,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		public AppBrandSubject(AccessibilityNodeInfo node) {
 			mNode = node;
 
-			String question = CavanAccessibilityHelper.getChildText(node, 0);
+			String question = CavanAccessibilityHelper.getChildDesction(node, 0);
 			if (question != null) {
 				int index = question.indexOf('.');
 				if (index > 0) {
@@ -1401,6 +1409,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			if (answer != null) {
 				mAnswers = new AppBrandAnswers(answer);
 			}
+		}
+
+		public String getQuestion() {
+			return mQuestion;
 		}
 
 		public void setClicked(AccessibilityNodeInfo source) {
@@ -1425,7 +1437,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		public void save() {
-			if (mQuestion != null && mClicked != null) {
+			if (mQuestion != null && mClicked != null && mAnswers != null) {
 				AppBrandAnswer answer = mAnswers.getAnswer(mClicked);
 				if (answer != null) {
 					CavanAndroid.dLog(mQuestion + " <= " + answer.getText());
@@ -1457,6 +1469,19 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			CavanAndroid.dLog("question. " + mQuestion);
 			mAnswers.dump();
 		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o instanceof AppBrandSubject) {
+				AppBrandSubject subject = (AppBrandSubject) o;
+				String question = subject.getQuestion();
+				if (question != null) {
+					return question.equals(mQuestion);
+				}
+			}
+
+			return false;
+		}
 	};
 
 	public class AppBrandWindow extends BaseWindow {
@@ -1487,6 +1512,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		public boolean setSubject(AppBrandSubject subject) {
 			if (subject != null && subject.isValid()) {
 				if (mSubject != null) {
+					if (subject.equals(mSubject)) {
+						return false;
+					}
+
 					mSubject.save();
 					mSubject.recycle();
 					mSubject = null;
@@ -1504,6 +1533,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 			if (mSubject != null) {
 				mSubject.recycle();
+				mSubject = null;
 			}
 
 			if (subject != null) {
@@ -1522,7 +1552,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected void onKeyDown(AccessibilityNodeInfo root, int keyCode) {
-			if (keyCode != KeyEvent.KEYCODE_VOLUME_UP) {
+			if (keyCode != KeyEvent.KEYCODE_VOLUME_DOWN) {
 				return;
 			}
 

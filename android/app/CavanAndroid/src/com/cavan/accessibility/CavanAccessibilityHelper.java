@@ -367,15 +367,34 @@ public class CavanAccessibilityHelper {
 	}
 
 	public static String getChildText(AccessibilityNodeInfo parent, int index) {
+		AccessibilityNodeInfo child = getChild(parent, index);
+		if (child == null) {
+			return null;
+		}
+
 		try {
-			if (index < parent.getChildCount()) {
-				AccessibilityNodeInfo child = parent.getChild(index);
-				String text = getNodeText(child);
-				child.recycle();
-				return text;
-			}
+			return getNodeText(child);
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			child.recycle();
+		}
+
+		return null;
+	}
+
+	public static String getChildDesction(AccessibilityNodeInfo parent, int index) {
+		AccessibilityNodeInfo child = getChild(parent, index);
+		if (child == null) {
+			return null;
+		}
+
+		try {
+			return getNodeDescription(child);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			child.recycle();
 		}
 
 		return null;
