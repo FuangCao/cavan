@@ -831,3 +831,364 @@ int cavan_input_type2value(const char *name)
 
 	return 0;
 }
+
+// ================================================================================
+
+static struct cavan_input_proxy_device *cavan_input_proxy_device_open(const char *pathname, const char *filename)
+{
+	struct cavan_input_proxy_device *device;
+	int ret;
+	int fd;
+
+	fd = open(pathname, O_WRONLY);
+	if (fd < 0) {
+		pr_err_info("open: %s", pathname);
+		return NULL;
+	}
+
+	device = malloc(sizeof(struct cavan_input_proxy_device));
+	if (device == NULL) {
+		pr_err_info("malloc");
+		goto out_close_fd;
+	}
+
+	ret = cavan_event_get_devname(fd, device->name, sizeof(device->name));
+	if (ret < 0) {
+		pr_error_info("cavan_event_get_devname");
+		goto out_free_device;
+	}
+
+	ret = cavan_event_get_abs_bitmask(fd, device->abs_bitmask);
+	if (ret < 0) {
+		pr_error_info("cavan_event_get_abs_bitmask");
+		goto out_free_device;
+	}
+
+	ret = cavan_event_get_key_bitmask(fd, device->key_bitmask);
+	if (ret < 0) {
+		pr_error_info("cavan_event_get_key_bitmask");
+		goto out_free_device;
+	}
+
+	ret = cavan_event_get_rel_bitmask(fd, device->rel_bitmask);
+	if (ret < 0) {
+		pr_error_info("cavan_event_get_rel_bitmask");
+		goto out_free_device;
+	}
+
+	strcpy(device->filename, filename);
+	device->fd = fd;
+
+	println("%s <= %s", pathname, device->name);
+
+	return device;
+
+out_free_device:
+	free(device);
+out_close_fd:
+	close(fd);
+	return NULL;
+}
+
+static void cavan_input_proxy_device_close(struct cavan_input_proxy_device *device)
+{
+	close(device->fd);
+	free(device);
+}
+
+static ssize_t cavan_input_proxy_device_write(struct cavan_input_proxy_device *device, const struct input_event *events, int count)
+{
+	return ffile_write(device->fd, events, sizeof(struct input_event) * count);
+}
+
+static bool cavan_input_proxy_device_contains(struct cavan_input_proxy_device *head, const char *filename)
+{
+	struct cavan_input_proxy_device *device = head;
+
+	if (device == NULL) {
+		return false;
+	}
+
+	while (1) {
+		if (strcmp(device->filename, filename) == 0) {
+			return true;
+		}
+
+		device = device->next;
+
+		if (device == head) {
+			break;
+		}
+	}
+
+	return false;
+}
+
+static struct cavan_input_proxy_device *cavan_input_proxy_device_add(struct cavan_input_proxy_device *head, struct cavan_input_proxy_device *device)
+{
+	if (head == NULL) {
+		device->prev = device->next = device;
+		return device;
+	}
+
+	device->prev = head->prev;
+	head->prev->next = device;
+	device->next = head;
+	head->prev = device;
+
+	return head;
+}
+
+static struct cavan_input_proxy_device *cavan_input_proxy_device_remove(struct cavan_input_proxy_device *head, struct cavan_input_proxy_device *device)
+{
+	struct cavan_input_proxy_device *next = device->next;
+
+	if (next == device) {
+		return NULL;
+	}
+
+	next->prev = device->prev;
+	device->prev->next = next;
+
+	if (device == head) {
+		return next;
+	}
+
+	return head;
+}
+
+static struct cavan_input_proxy_device *cavan_input_proxy_device_find_keypad(struct cavan_input_proxy_device *head, int code)
+{
+	struct cavan_input_proxy_device *device = head;
+
+	if (device == NULL) {
+		return NULL;
+	}
+
+	while (1) {
+		if (test_bit(code, device->key_bitmask)) {
+			return device;
+		}
+
+		device = device->next;
+		if (device == head) {
+			break;
+		}
+	}
+
+	return NULL;
+}
+
+static struct cavan_input_proxy_device *cavan_input_proxy_device_find_touchscreen(struct cavan_input_proxy_device *head)
+{
+	struct cavan_input_proxy_device *device = head;
+
+	if (device == NULL) {
+		return NULL;
+	}
+
+	while (1) {
+		if (test_bit(ABS_MT_POSITION_X, device->abs_bitmask) && test_bit(ABS_MT_POSITION_Y, device->abs_bitmask)) {
+			return device;
+		}
+
+		device = device->next;
+		if (device == head) {
+			break;
+		}
+	}
+
+	return NULL;
+}
+
+static int cavan_input_proxy_device_scan(struct cavan_input_proxy *proxy)
+{
+	DIR *dp;
+	char *filename;
+	char pathname[1024];
+	struct dirent *entry;
+
+	filename = text_copy(pathname, "/dev/input/");
+
+	dp = opendir(pathname);
+	if (dp == NULL) {
+		pr_err_info("opendir");
+		return -ENOENT;
+	}
+
+	while ((entry = readdir(dp))) {
+		const char *name = entry->d_name;
+		struct cavan_input_proxy_device *device;
+
+		if (cavan_path_is_dot_name(name)) {
+			continue;
+		}
+
+		if (cavan_input_proxy_device_contains(proxy->devices, name)) {
+			continue;
+		}
+
+		strcpy(filename, name);
+
+		device = cavan_input_proxy_device_open(pathname, filename);
+		if (device != NULL) {
+			proxy->devices = cavan_input_proxy_device_add(proxy->devices, device);
+		}
+	}
+
+	closedir(dp);
+
+	return 0;
+}
+
+static int input_proxy_start_handler(struct cavan_dynamic_service *service)
+{
+	struct cavan_input_proxy *proxy = cavan_dynamic_service_get_data(service);
+
+	return network_service_open(&proxy->service, &proxy->url, 0);
+}
+
+static void input_proxy_stop_handler(struct cavan_dynamic_service *service)
+{
+	struct cavan_input_proxy *proxy = cavan_dynamic_service_get_data(service);
+
+	network_service_close(&proxy->service);
+}
+
+static int input_proxy_open_connect(struct cavan_dynamic_service *service, void *conn)
+{
+	struct cavan_input_proxy *proxy = cavan_dynamic_service_get_data(service);
+
+	return network_service_accept(&proxy->service, conn, CAVAN_NET_FLAG_NODELAY);
+}
+
+static bool input_proxy_close_connect(struct cavan_dynamic_service *service, void *conn)
+{
+	network_client_close(conn);
+	return false;
+}
+
+static bool input_proxy_send_events(struct cavan_input_proxy *proxy, struct cavan_input_proxy_device *device, const struct input_event *events, int count)
+{
+	ssize_t wrlen;
+
+	wrlen = cavan_input_proxy_device_write(device, events, count);
+	if (wrlen < 0) {
+		proxy->devices = cavan_input_proxy_device_remove(proxy->devices, device);
+		cavan_input_proxy_device_close(device);
+		return false;
+	}
+
+	return true;
+}
+
+static bool input_proxy_send_tap(struct cavan_input_proxy *proxy, int argc, char *argv[])
+{
+	struct cavan_input_proxy_device *device;
+	struct input_event events[7];
+	int x, y;
+
+	if (argc < 3) {
+		return false;
+	}
+
+	device = cavan_input_proxy_device_find_touchscreen(proxy->devices);
+	if (device == NULL) {
+		pr_red_info("cavan_input_proxy_device_find_touchscreen");
+		return false;
+	}
+
+	x = text2value_unsigned(argv[1], NULL, 10);
+	y = text2value_unsigned(argv[2], NULL, 10);
+
+	cavan_input_event_setup_abs(events, ABS_MT_TRACKING_ID, 0);
+	cavan_input_event_setup_abs(events + 1, ABS_MT_POSITION_X, x);
+	cavan_input_event_setup_abs(events + 2, ABS_MT_POSITION_Y, y);
+	cavan_input_event_setup_abs(events + 3, ABS_MT_PRESSURE, 1);
+	cavan_input_event_setup_syn_report(events + 4);
+	cavan_input_event_setup_abs(events + 5, ABS_MT_TRACKING_ID, -1);
+	cavan_input_event_setup_syn_report(events + 6);
+
+	return input_proxy_send_events(proxy, device, events, NELEM(events));
+}
+
+static bool input_proxy_send_key(struct cavan_input_proxy *proxy, int argc, char *argv[])
+{
+	struct cavan_input_proxy_device *device;
+	struct input_event events[4];
+	int code;
+
+	if (argc < 2) {
+		return false;
+	}
+
+	code = text2value_unsigned(argv[1], NULL, 10);
+
+	device = cavan_input_proxy_device_find_keypad(proxy->devices, code);
+	if (device == NULL) {
+		pr_red_info("cavan_input_proxy_device_find_keypad");
+		return false;
+	}
+
+	cavan_input_event_setup_key_report(events, code, 1);
+	cavan_input_event_setup_key_report(events + 2, code, 0);
+
+	return input_proxy_send_events(proxy, device, events, NELEM(events));
+}
+
+static int input_proxy_run_handler(struct cavan_dynamic_service *service, void *conn)
+{
+	struct cavan_input_proxy *proxy = cavan_dynamic_service_get_data(service);
+	struct network_client *client = (struct network_client *) conn;
+
+	cavan_dynamic_service_lock(service);
+	cavan_input_proxy_device_scan(proxy);
+	cavan_dynamic_service_unlock(service);
+
+	while (1) {
+		const char *command;
+		char cmdline[1024];
+		ssize_t rdlen;
+		char *argv[20];
+		int argc;
+
+		rdlen = network_client_recv_packet(client, cmdline, sizeof(cmdline));
+		if (rdlen < 0) {
+			break;
+		}
+
+		cmdline[rdlen] = 0;
+
+		argc = text_split_by_space(cmdline, argv, NELEM(argv));
+		if (argc < 1) {
+			continue;
+		}
+
+		command = argv[0];
+
+		cavan_dynamic_service_lock(service);
+
+		if (strcmp(command, "TAP") == 0) {
+			input_proxy_send_tap(proxy, argc, argv);
+		} else if (strcmp(command, "KEY") == 0) {
+			input_proxy_send_key(proxy, argc, argv);
+		}
+
+		cavan_dynamic_service_unlock(service);
+	}
+
+	return 0;
+}
+
+int cavan_input_proxy_run(struct cavan_dynamic_service *service)
+{
+	service->name = "INPUT_PROXY";
+	service->conn_size = sizeof(struct network_client);
+	service->start = input_proxy_start_handler;
+	service->stop = input_proxy_stop_handler;
+	service->run = input_proxy_run_handler;
+	service->open_connect = input_proxy_open_connect;
+	service->close_connect = input_proxy_close_connect;
+
+	return cavan_dynamic_service_run(service);
+}

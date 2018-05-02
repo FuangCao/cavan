@@ -4,6 +4,23 @@
 #include <cavan/event.h>
 #include <cavan/input.h>
 
+void cavan_input_event_setup(struct input_event *event, int type, int code, int value)
+{
+	struct timespec time;
+
+	if (clock_gettime_real(&time) < 0) {
+		event->time.tv_sec = 0;
+		event->time.tv_usec = 0;
+	} else {
+		event->time.tv_sec = time.tv_sec;
+		event->time.tv_usec = time.tv_nsec / 1000;
+	}
+
+	event->type = type;
+	event->code = code;
+	event->value = value;
+}
+
 const char *cavan_event_key_code_tostring(int code)
 {
 	switch (code) {

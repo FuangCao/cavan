@@ -18,6 +18,8 @@
 #pragma once
 
 #include <cavan.h>
+#include <cavan/network.h>
+#include <cavan/service.h>
 #include <cavan/event.h>
 #include <cavan/timer.h>
 #include <cavan/queue.h>
@@ -522,7 +524,6 @@
 #define BTN_TRIGGER_HAPPY40		0x2e7
 #endif
 
-
 typedef enum cavan_input_message_type {
 	CAVAN_INPUT_MESSAGE_KEY,
 	CAVAN_INPUT_MESSAGE_MOVE,
@@ -610,6 +611,24 @@ struct cavan_input_service {
 	void (*handler)(cavan_input_message_t *message, void *data);
 };
 
+struct cavan_input_proxy_device {
+	int fd;
+	char name[128];
+	char filename[256];
+	uint8_t abs_bitmask[ABS_BITMASK_SIZE];
+	uint8_t key_bitmask[KEY_BITMASK_SIZE];
+	uint8_t rel_bitmask[REL_BITMASK_SIZE];
+
+	struct cavan_input_proxy_device *prev;
+	struct cavan_input_proxy_device *next;
+};
+
+struct cavan_input_proxy {
+	struct network_service service;
+	struct network_url url;
+	struct cavan_input_proxy_device *devices;
+};
+
 void cavan_input_service_init(struct cavan_input_service *service, bool (*matcher)(struct cavan_event_matcher *, void *));
 int cavan_input_service_start(struct cavan_input_service *service, void *data);
 void cavan_input_service_stop(struct cavan_input_service *service);
@@ -625,6 +644,8 @@ int cavan_input_event(int fd, const struct input_event *events, size_t count);
 int cavan_input_event2(int fd, int type, int code, int value);
 struct cavan_input_key *cavan_input_find_key(const char *name);
 int cavan_input_type2value(const char *name);
+
+int cavan_input_proxy_run(struct cavan_dynamic_service *service);
 
 static inline int cavan_input_service_join(struct cavan_input_service *service)
 {

@@ -94,6 +94,7 @@ struct cavan_event_service {
 	bool (*event_handler)(struct cavan_event_device *dev, struct input_event *event, void *data);
 };
 
+void cavan_input_event_setup(struct input_event *event, int type, int code, int value);
 struct cavan_virtual_key *cavan_event_find_virtual_key(struct cavan_event_device *dev, int x, int y);
 const char *cavan_event_find_key_name_by_keylayout_base(struct single_link *link, int code);
 const char *cavan_event_find_key_name_base(struct single_link *link, int code);
@@ -108,6 +109,37 @@ bool cavan_event_name_matcher(const char *devname, ...);
 int cavan_event_get_absinfo(int fd, int axis, int *min, int *max);
 const char *cavan_event_key_code_tostring(int code);
 char *cavan_event_tostring(struct cavan_event_device *dev, struct input_event *event, char *text);
+
+static inline void cavan_input_event_setup_syn_report(struct input_event *event)
+{
+	cavan_input_event_setup(event, EV_SYN, SYN_REPORT, 0);
+}
+
+static inline void cavan_input_event_setup_syn_mt_report(struct input_event *event)
+{
+	cavan_input_event_setup(event, EV_SYN, SYN_MT_REPORT, 0);
+}
+
+static inline void cavan_input_event_setup_key(struct input_event *event, int code, int value)
+{
+	cavan_input_event_setup(event, EV_KEY, code, value);
+}
+
+static inline void cavan_input_event_setup_key_report(struct input_event *events, int code, int value)
+{
+	cavan_input_event_setup(events, EV_KEY, code, value);
+	cavan_input_event_setup_syn_report(events + 1);
+}
+
+static inline void cavan_input_event_setup_abs(struct input_event *event, int code, int value)
+{
+	cavan_input_event_setup(event, EV_ABS, code, value);
+}
+
+static inline void cavan_input_event_setup_rel(struct input_event *event, int code, int value)
+{
+	cavan_input_event_setup(event, EV_REL, code, value);
+}
 
 static inline char *cavan_event_tostring_simple(struct input_event *event, char *text)
 {
