@@ -331,6 +331,13 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doInput(JNIEnv *env, jclass c
 	return CavanMainExecute(env, "input", async, args, do_cavan_input);
 }
 
+extern int do_cavan_input_server(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doInputServer(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "input_server", async, args, do_cavan_input_server);
+}
+
 extern int do_cavan_jw650_lcd(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doJw650Lcd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)

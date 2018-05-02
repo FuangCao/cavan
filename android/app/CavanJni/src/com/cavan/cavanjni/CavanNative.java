@@ -380,6 +380,14 @@ class CavanCommandInput extends CavanNativeCommand {
 	}
 }
 
+class CavanCommandInputServer extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doInputServer(async, args);
+	}
+}
+
 class CavanCommandJw650Lcd extends CavanNativeCommand {
 
 	@Override
@@ -1122,6 +1130,7 @@ public class CavanNative {
 		sHashMap.put("image_dd", new CavanCommandImageDd());
 		sHashMap.put("inotify", new CavanCommandInotify());
 		sHashMap.put("input", new CavanCommandInput());
+		sHashMap.put("input_server", new CavanCommandInputServer());
 		sHashMap.put("jw650_lcd", new CavanCommandJw650Lcd());
 		sHashMap.put("jwp_udp", new CavanCommandJwpUdp());
 		sHashMap.put("lm49350_clock", new CavanCommandLm49350Clock());
@@ -1257,6 +1266,7 @@ public class CavanNative {
 	public static native int doImageDd(boolean async, String... args);
 	public static native int doInotify(boolean async, String... args);
 	public static native int doInput(boolean async, String... args);
+	public static native int doInputServer(boolean async, String... args);
 	public static native int doJw650Lcd(boolean async, String... args);
 	public static native int doJwpUdp(boolean async, String... args);
 	public static native int doLm49350Clock(boolean async, String... args);

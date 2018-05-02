@@ -840,6 +840,8 @@ static struct cavan_input_proxy_device *cavan_input_proxy_device_open(const char
 	int ret;
 	int fd;
 
+	pr_info("pathname = %s", pathname);
+
 	fd = open(pathname, O_WRONLY);
 	if (fd < 0) {
 		pr_err_info("open: %s", pathname);
@@ -857,6 +859,8 @@ static struct cavan_input_proxy_device *cavan_input_proxy_device_open(const char
 		pr_error_info("cavan_event_get_devname");
 		goto out_free_device;
 	}
+
+	pr_info("name = %s", device->name);
 
 	ret = cavan_event_get_abs_bitmask(fd, device->abs_bitmask);
 	if (ret < 0) {
@@ -876,10 +880,28 @@ static struct cavan_input_proxy_device *cavan_input_proxy_device_open(const char
 		goto out_free_device;
 	}
 
+	ret = cavan_event_get_absinfo(fd, ABS_MT_POSITION_X, &device->xmin, &device->xres);
+	if (ret < 0) {
+		device->xmin = device->xres = 0;
+	} else {
+		device->xres -= device->xmin;
+	}
+
+	pr_info("xmin = %d, xres = %d", device->xmin, device->xres);
+
+	ret = cavan_event_get_absinfo(fd, ABS_MT_POSITION_Y, &device->ymin, &device->yres);
+	if (ret < 0) {
+		device->ymin = device->yres = 0;
+	} else {
+		device->yres -= device->ymin;
+	}
+
+	pr_info("ymin = %d, yres = %d", device->ymin, device->yres);
+
 	strcpy(device->filename, filename);
 	device->fd = fd;
 
-	println("%s <= %s", pathname, device->name);
+	pr_info("%s <= %s", pathname, device->name);
 
 	return device;
 
@@ -1098,8 +1120,10 @@ static bool input_proxy_send_tap(struct cavan_input_proxy *proxy, int argc, char
 		return false;
 	}
 
-	x = text2value_unsigned(argv[1], NULL, 10);
-	y = text2value_unsigned(argv[2], NULL, 10);
+	x = device->xmin + atof(argv[1]) * device->xres;
+	y = device->ymin + atof(argv[2]) * device->yres;
+
+	pr_info("TAP (%d, %d)", x, y);
 
 	cavan_input_event_setup_abs(events, ABS_MT_TRACKING_ID, 0);
 	cavan_input_event_setup_abs(events + 1, ABS_MT_POSITION_X, x);
@@ -1123,6 +1147,8 @@ static bool input_proxy_send_key(struct cavan_input_proxy *proxy, int argc, char
 	}
 
 	code = text2value_unsigned(argv[1], NULL, 10);
+
+	pr_info("KEY %d", code);
 
 	device = cavan_input_proxy_device_find_keypad(proxy->devices, code);
 	if (device == NULL) {

@@ -613,6 +613,8 @@ struct cavan_input_service {
 
 struct cavan_input_proxy_device {
 	int fd;
+	int xmin, xres;
+	int ymin, yres;
 	char name[128];
 	char filename[256];
 	uint8_t abs_bitmask[ABS_BITMASK_SIZE];
@@ -646,6 +648,37 @@ struct cavan_input_key *cavan_input_find_key(const char *name);
 int cavan_input_type2value(const char *name);
 
 int cavan_input_proxy_run(struct cavan_dynamic_service *service);
+
+static inline void cavan_input_event_setup_syn_report(struct input_event *event)
+{
+	cavan_input_event_setup(event, EV_SYN, SYN_REPORT, 0);
+}
+
+static inline void cavan_input_event_setup_syn_mt_report(struct input_event *event)
+{
+	cavan_input_event_setup(event, EV_SYN, SYN_MT_REPORT, 0);
+}
+
+static inline void cavan_input_event_setup_key(struct input_event *event, int code, int value)
+{
+	cavan_input_event_setup(event, EV_KEY, code, value);
+}
+
+static inline void cavan_input_event_setup_key_report(struct input_event *events, int code, int value)
+{
+	cavan_input_event_setup(events, EV_KEY, code, value);
+	cavan_input_event_setup_syn_report(events + 1);
+}
+
+static inline void cavan_input_event_setup_abs(struct input_event *event, int code, int value)
+{
+	cavan_input_event_setup(event, EV_ABS, code, value);
+}
+
+static inline void cavan_input_event_setup_rel(struct input_event *event, int code, int value)
+{
+	cavan_input_event_setup(event, EV_REL, code, value);
+}
 
 static inline int cavan_input_service_join(struct cavan_input_service *service)
 {

@@ -1947,7 +1947,7 @@ int cavan_event_get_absinfo(int fd, int axis, int *min, int *max)
 
 	ret = ioctl(fd, EVIOCGABS(axis), &info);
 	if (ret < 0) {
-		pr_error_info("ioctl EVIOCGABS");
+		// pr_error_info("ioctl EVIOCGABS");
 		return ret;
 	}
 
