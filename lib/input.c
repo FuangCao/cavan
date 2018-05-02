@@ -884,7 +884,7 @@ static struct cavan_input_proxy_device *cavan_input_proxy_device_open(const char
 	if (ret < 0) {
 		device->xmin = device->xres = 0;
 	} else {
-		device->xres -= device->xmin;
+		device->xres = device->xres - device->xmin + 1;
 	}
 
 	pr_info("xmin = %d, xres = %d", device->xmin, device->xres);
@@ -893,7 +893,7 @@ static struct cavan_input_proxy_device *cavan_input_proxy_device_open(const char
 	if (ret < 0) {
 		device->ymin = device->yres = 0;
 	} else {
-		device->yres -= device->ymin;
+		device->yres = device->yres - device->ymin + 1;
 	}
 
 	pr_info("ymin = %d, yres = %d", device->ymin, device->yres);
@@ -1123,7 +1123,7 @@ static bool input_proxy_send_tap(struct cavan_input_proxy *proxy, int argc, char
 	x = device->xmin + atof(argv[1]) * device->xres;
 	y = device->ymin + atof(argv[2]) * device->yres;
 
-	pr_info("TAP (%d, %d)", x, y);
+	pr_info("TOUCH %d %d", x, y);
 
 	cavan_input_event_setup_abs(events, ABS_MT_TRACKING_ID, 0);
 	cavan_input_event_setup_abs(events + 1, ABS_MT_POSITION_X, x);
@@ -1184,6 +1184,7 @@ static int input_proxy_run_handler(struct cavan_dynamic_service *service, void *
 		}
 
 		cmdline[rdlen] = 0;
+		pr_info("cmdline = %s", cmdline);
 
 		argc = text_split_by_space(cmdline, argv, NELEM(argv));
 		if (argc < 1) {

@@ -10,11 +10,14 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
+import android.view.Display;
 import android.view.KeyEvent;
+import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -50,6 +53,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private CavanWakeLock mWakeLock = new CavanWakeLock(true);
 	private CavanRedPacket mPacketDummy = new CavanRedPacket();
 	private CavanCountDownDialogBase mCountDownDialog;
+
+	private int mDisplayWidth = 1080;
+	private int mDisplayHeight = 1920;
 
 	private Thread mPollThread = new Thread() {
 
@@ -457,6 +463,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return getCurrentPackage(name);
 	}
 
+	public int getDisplayWidth() {
+		return mDisplayWidth;
+	}
+
+	public int getDisplayHeight() {
+		return mDisplayHeight;
+	}
+
 	public CavanWakeLock getWakeLock() {
 		return mWakeLock;
 	}
@@ -834,6 +848,21 @@ public class CavanAccessibilityService extends AccessibilityService {
 	@Override
 	public void onCreate() {
 		super.onCreate();
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+			WindowManager manager = (WindowManager) getSystemService(WINDOW_SERVICE);
+			if (manager != null) {
+				Display display = manager.getDefaultDisplay();
+				Point point = new Point();
+
+				display.getRealSize(point);
+				mDisplayWidth = point.x;
+				mDisplayHeight = point.y;
+			}
+		}
+
+		CavanAndroid.dLog("mDisplayWidth = " + mDisplayWidth);
+		CavanAndroid.dLog("mDisplayHeight = " + mDisplayHeight);
 
 		for (CavanAccessibilityPackage pkg : mPackages.values()) {
 			pkg.onCreate();

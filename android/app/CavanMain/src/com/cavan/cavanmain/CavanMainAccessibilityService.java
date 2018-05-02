@@ -1,6 +1,8 @@
 package com.cavan.cavanmain;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -18,12 +20,14 @@ import com.cavan.accessibility.CavanRedPacket;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanThreadedHandler;
 import com.cavan.android.TcpExecClient;
+import com.cavan.java.CavanTcpPacketClient;
 
 public class CavanMainAccessibilityService extends CavanAccessibilityService {
 
 	public static CavanMainAccessibilityService instance;
 
 	private static final int MSG_SHELL_COMMAND = 1;
+	private static final int MSG_INPUT_PROXY = 2;
 
 	public static boolean checkAndOpenSettingsActivity(Context context) {
         if (instance != null) {
@@ -34,6 +38,26 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 
         return false;
     }
+
+	private CavanTcpPacketClient mInputProxy = new CavanTcpPacketClient() {
+
+		@Override
+		protected boolean onPacketReceived(byte[] bytes, int length) {
+			CavanAndroid.dLog("onPacketReceived: " + length);
+			return true;
+		}
+
+		@Override
+		protected boolean onTcpConnected(Socket socket) {
+			CavanAndroid.dLog("onTcpConnected");
+			return true;
+		}
+
+		@Override
+		protected void onTcpDisconnected() {
+			CavanAndroid.dLog("onTcpDisconnected");
+		}
+	};
 
 	private CavanThreadedHandler mThreadedHandler = new CavanThreadedHandler(CavanMainAccessibilityService.class) {
 
@@ -49,6 +73,10 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 					e.printStackTrace();
 				}
 				break;
+
+			case MSG_INPUT_PROXY:
+				mInputProxy.send((String) msg.obj);
+				break;
 			}
 		}
 	};
@@ -57,6 +85,8 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 		addPackage(new CavanMainAccessibilityMM(this));
 		addPackage(new CavanMainAccessibilityQQ(this));
 		addPackage(new CavanAccessibilityAlipay(this));
+		mInputProxy.addAddresses(new InetSocketAddress("127.0.0.1", 9981));
+		mInputProxy.connect();
 	}
 
 	@Override
@@ -131,6 +161,23 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 	public boolean doShellCommand(String command) {
 		mThreadedHandler.obtainMessage(MSG_SHELL_COMMAND, command).sendToTarget();
 		return true;
+	}
+
+	public boolean doInputProxy(String command) {
+		mThreadedHandler.obtainMessage(MSG_INPUT_PROXY, command).sendToTarget();
+		return true;
+	}
+
+	@Override
+	public boolean doInputTap(int x, int y) {
+		if (mInputProxy.isConnected()) {
+			float xaxis = ((float) x) / getDisplayWidth();
+			float yaxis = ((float) y) / getDisplayHeight();
+			String command = String.format("TAP %f %f", xaxis, yaxis);
+			return doInputProxy(command);
+		}
+
+		return super.doInputTap(x, y);
 	}
 
 	@Override
