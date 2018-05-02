@@ -1314,6 +1314,15 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 			return false;
 		}
+
+		@Override
+		public String toString() {
+			if (mText != null) {
+				return mText;
+			}
+
+			return "none";
+		}
 	}
 
 	public class AppBrandAnswers {
@@ -1381,9 +1390,37 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		public void dump() {
-			for (int i = 0; i < mAnswers.length; i++) {
-				CavanAndroid.dLog("answer" + i + ". " + mAnswers[i].getText());
+			AppBrandAnswer[] answers = mAnswers;
+			if (answers != null) {
+				for (int i = 0; i < answers.length; i++) {
+					CavanAndroid.dLog("answer" + i + ". " + answers[i].getText());
+				}
 			}
+		}
+
+		public StringBuilder toString(StringBuilder builder) {
+			AppBrandAnswer[] answers = mAnswers;
+
+			builder.append("[ ");
+
+			if (answers != null) {
+				for (int i = 0; i < answers.length; i++) {
+					if (i > 0) {
+						builder.append(", ");
+					}
+
+					builder.append(answers[i].getText());
+				}
+			}
+
+			builder.append(" ]");
+
+			return builder;
+		}
+
+		@Override
+		public String toString() {
+			return toString(new StringBuilder()).toString();
 		}
 	}
 
@@ -1392,6 +1429,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		private AccessibilityNodeInfo mNode;
 		private AccessibilityNodeInfo mClicked;
 		private String mQuestion;
+		private AppBrandAnswer mAnswer;
 		private AppBrandAnswers mAnswers;
 
 		public AppBrandSubject(AccessibilityNodeInfo node) {
@@ -1437,12 +1475,23 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		public void save() {
+			CavanAndroid.dLog("mQuestion = " + mQuestion);
+			CavanAndroid.dLog("mAnswers = " + mAnswers);
+			CavanAndroid.dLog("mClicked = " + mClicked);
+
 			if (mQuestion != null && mClicked != null && mAnswers != null) {
 				AppBrandAnswer answer = mAnswers.getAnswer(mClicked);
 				if (answer != null) {
 					CavanAndroid.dLog(mQuestion + " <= " + answer.getText());
 					mAnswerMap.put(mQuestion, answer.getText());
 				}
+			}
+		}
+
+		public void remove() {
+			if (mQuestion != null && mAnswer != null) {
+				CavanAndroid.dLog("remove: " + mQuestion);
+				mAnswerMap.remove(mQuestion);
 			}
 		}
 
@@ -1461,6 +1510,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			return mAnswers.getAnswer(answer);
 		}
 
+		public void setAnswer(AppBrandAnswer answer) {
+			mAnswer = answer;
+			answer.click();
+		}
+
 		public boolean isValid() {
 			return (mAnswers != null && mAnswers.isValid());
 		}
@@ -1468,6 +1522,23 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		public void dump() {
 			CavanAndroid.dLog("question. " + mQuestion);
 			mAnswers.dump();
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+
+			if (mQuestion != null) {
+				builder.append(mQuestion);
+			}
+
+			builder.append('@');
+
+			if (mAnswers != null) {
+				mAnswers.toString(builder);
+			}
+
+			return builder.toString();
 		}
 
 		@Override
@@ -1509,7 +1580,29 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			return null;
 		}
 
-		public boolean setSubject(AppBrandSubject subject) {
+		public boolean isAnswerCorrect(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 3, 0, 0, 1, 2);
+			if (node == null) {
+				return false;
+			}
+
+			try {
+				String text = CavanAccessibilityHelper.getNodeDescription(node);
+				CavanAndroid.dLog("text = " + text);
+
+				if (text != null && text.contains("秒")) {
+					return true;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				node.recycle();
+			}
+
+			return false;
+		}
+
+		public boolean setSubject(AccessibilityNodeInfo root, AppBrandSubject subject) {
 			if (subject != null && subject.isValid()) {
 				if (mSubject != null) {
 					if (subject.equals(mSubject)) {
@@ -1523,7 +1616,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 				AppBrandAnswer answer = subject.getAnswer();
 				if (answer != null) {
-					answer.click();
+					subject.setAnswer(answer);
 				}
 
 				mSubject = subject;
@@ -1532,6 +1625,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			}
 
 			if (mSubject != null) {
+				if (isAnswerCorrect(root)) {
+					mSubject.save();
+				} else {
+					mSubject.remove();
+				}
+
 				mSubject.recycle();
 				mSubject = null;
 			}
@@ -1568,21 +1667,21 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, -1, 0, 0, -1);
 			if (node != null) {
 				AppBrandSubject subject = new AppBrandSubject(node);
-				setSubject(subject);
+				setSubject(root, subject);
 				subject.dump();
 			} else {
-				setSubject(null);
+				setSubject(root, null);
 			}
 		}
 
 		@Override
 		protected void onEnter(AccessibilityNodeInfo root) {
-			setSubject(null);
+			setSubject(root, null);
 		}
 
 		@Override
 		protected void onLeave(AccessibilityNodeInfo root) {
-			setSubject(null);
+			setSubject(root, null);
 		}
 	};
 
