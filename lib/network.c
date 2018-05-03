@@ -2693,6 +2693,36 @@ static int network_client_adb_open(struct network_client *client, const struct n
 	return 0;
 }
 
+static int network_client_adb_mask_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
+{
+	int ret = network_client_adb_open(client, url, port, flags);
+
+	if (ret < 0) {
+		pr_red_info("network_client_adb_open");
+		return ret;
+	}
+
+	client->send = network_client_send_masked;
+	client->recv = network_client_recv_masked;
+
+	return 0;
+}
+
+static int network_client_adb_pack_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
+{
+	int ret = network_client_adb_open(client, url, port, flags);
+
+	if (ret < 0) {
+		pr_red_info("network_client_adb_open");
+		return ret;
+	}
+
+	client->send = network_client_send_packed;
+	client->recv = network_client_recv_packed;
+
+	return 0;
+}
+
 static int network_client_icmp_open(struct network_client *client, const struct network_url *url, u16 port, int flags)
 {
 	int ret;
@@ -3824,13 +3854,13 @@ static const struct network_protocol_desc protocol_descs[] = {
 	},
 	[NETWORK_PROTOCOL_TCP_MASK] = {
 		.name = "tcp-mask",
-		.type = NETWORK_PROTOCOL_TCP,
+		.type = NETWORK_PROTOCOL_TCP_MASK,
 		.open_service = network_service_tcp_mask_open,
 		.open_client = network_client_tcp_mask_open,
 	},
 	[NETWORK_PROTOCOL_TCP_PACK] = {
 		.name = "tcp-pack",
-		.type = NETWORK_PROTOCOL_TCP,
+		.type = NETWORK_PROTOCOL_TCP_PACK,
 		.open_service = network_service_tcp_pack_open,
 		.open_client = network_client_tcp_pack_open,
 	},
@@ -3845,6 +3875,18 @@ static const struct network_protocol_desc protocol_descs[] = {
 		.type = NETWORK_PROTOCOL_ADB,
 		.open_service = network_service_tcp_open,
 		.open_client = network_client_adb_open,
+	},
+	[NETWORK_PROTOCOL_ADB_MASK] = {
+		.name = "adb-mask",
+		.type = NETWORK_PROTOCOL_ADB_MASK,
+		.open_service = network_service_tcp_mask_open,
+		.open_client = network_client_adb_mask_open,
+	},
+	[NETWORK_PROTOCOL_ADB_PACK] = {
+		.name = "adb-pack",
+		.type = NETWORK_PROTOCOL_ADB_PACK,
+		.open_service = network_service_tcp_pack_open,
+		.open_client = network_client_adb_pack_open,
 	},
 	[NETWORK_PROTOCOL_ICMP] = {
 		.name = "icmp",
@@ -3962,8 +4004,19 @@ network_protocol_t network_protocol_parse(const char *name)
 		break;
 
 	case 'a':
-		if (text_cmp(name + 1, "db") == 0) {
-			return NETWORK_PROTOCOL_ADB;
+		if (text_lhcmp("db", name + 1) == 0) {
+			if (name[3] != '-') {
+				if (name[3] == 0) {
+					return NETWORK_PROTOCOL_ADB;
+				}
+				break;
+			}
+
+			if (text_cmp(name + 4, "mask") == 0) {
+				return NETWORK_PROTOCOL_ADB_MASK;
+			} else if (strcmp(name + 4, "pack") == 0) {
+				return NETWORK_PROTOCOL_ADB_PACK;
+			}
 		}
 		break;
 

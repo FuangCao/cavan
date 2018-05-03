@@ -18,6 +18,7 @@
 #include <cavan/input.h>
 #include <cavan/mouse.h>
 #include <cavan/keypad.h>
+#include <cavan/android.h>
 #include <cavan/gsensor.h>
 #include <cavan/touchpad.h>
 #include <cavan/touchscreen.h>
@@ -313,6 +314,243 @@ static struct cavan_input_key cavan_input_keymap[] = {
 	{ "wimax", KEY_WIMAX },
 	{ "rfkill", KEY_RFKILL },
 	{ "micmute", KEY_MICMUTE },
+};
+
+static struct cavan_input_key cavan_input_keymap_android[] = {
+	// { "SOFT_LEFT", KEY_SOFT_LEFT },
+	// { "SOFT_RIGHT", KEY_SOFT_RIGHT },
+	{ "HOME", KEY_HOME },
+	{ "BACK", KEY_BACK },
+#if 0
+	{ "CALL", KEY_CALL },
+	{ "ENDCALL", KEY_ENDCALL },
+#endif
+	{ "KEYCODE_0", KEY_0 },
+	{ "KEYCODE_1", KEY_1 },
+	{ "KEYCODE_2", KEY_2 },
+	{ "KEYCODE_3", KEY_3 },
+	{ "KEYCODE_4", KEY_4 },
+	{ "KEYCODE_5", KEY_5 },
+	{ "KEYCODE_6", KEY_6 },
+	{ "KEYCODE_7", KEY_7 },
+	{ "KEYCODE_8", KEY_8 },
+	{ "KEYCODE_9", KEY_9 },
+#if 0
+	{ "STAR", KEY_STAR },
+	{ "POUND", KEY_POUND },
+#endif
+	{ "DPAD_UP", KEY_UP },
+	{ "DPAD_DOWN", KEY_DOWN },
+	{ "DPAD_LEFT", KEY_LEFT },
+	{ "DPAD_RIGHT", KEY_RIGHT },
+	{ "DPAD_CENTER", KEY_OK },
+	{ "VOLUME_UP", KEY_VOLUMEUP },
+	{ "VOLUME_DOWN", KEY_VOLUMEDOWN },
+	{ "POWER", KEY_POWER },
+	{ "CAMERA", KEY_CAMERA },
+	{ "CLEAR", KEY_CLEAR },
+	{ "A", KEY_A },
+	{ "B", KEY_B },
+	{ "C", KEY_C },
+	{ "D", KEY_D },
+	{ "E", KEY_E },
+	{ "F", KEY_F },
+	{ "G", KEY_G },
+	{ "H", KEY_H },
+	{ "I", KEY_I },
+	{ "J", KEY_J },
+	{ "K", KEY_K },
+	{ "L", KEY_L },
+	{ "M", KEY_M },
+	{ "N", KEY_N },
+	{ "O", KEY_O },
+	{ "P", KEY_P },
+	{ "Q", KEY_Q },
+	{ "R", KEY_R },
+	{ "S", KEY_S },
+	{ "T", KEY_T },
+	{ "U", KEY_U },
+	{ "V", KEY_V },
+	{ "W", KEY_W },
+	{ "X", KEY_X },
+	{ "Y", KEY_Y },
+	{ "Z", KEY_Z },
+	{ "COMMA", KEY_COMMA },
+	{ "PERIOD", KEY_DOT },
+	{ "ALT_LEFT", KEY_LEFTALT},
+	{ "ALT_RIGHT", KEY_RIGHTALT},
+	{ "SHIFT_LEFT", KEY_LEFTSHIFT},
+	{ "SHIFT_RIGHT", KEY_RIGHTSHIFT },
+	{ "TAB", KEY_TAB },
+	{ "SPACE", KEY_SPACE },
+#if 0
+	{ "SYM", KEY_SYM },
+	{ "EXPLORER", KEY_EXPLORER },
+	{ "ENVELOPE", KEY_ENVELOPE },
+#endif
+	{ "ENTER", KEY_ENTER },
+	{ "DEL", KEY_DELETE},
+	{ "GRAVE", KEY_GRAVE },
+	{ "MINUS", KEY_MINUS },
+	{ "EQUALS", KEY_EQUAL },
+	{ "LEFT_BRACKET", KEY_LEFTBRACE },
+	{ "RIGHT_BRACKET", KEY_RIGHTBRACE },
+	{ "BACKSLASH", KEY_BACKSLASH },
+	{ "SEMICOLON", KEY_SEMICOLON },
+	{ "APOSTROPHE", KEY_APOSTROPHE },
+	{ "SLASH", KEY_SLASH },
+#if 0
+	{ "AT", KEY_AT },
+	{ "NUM", KEY_NUM },
+	{ "HEADSETHOOK", KEY_HEADSETHOOK },
+	{ "FOCUS", KEY_FOCUS },
+	{ "PLUS", KEY_PLUS },
+#endif
+	{ "MENU", KEY_MENU },
+	// { "NOTIFICATION", KEY_NOTIFICATION },
+	{ "SEARCH", KEY_SEARCH },
+	{ "MEDIA_PLAY_PAUSE", KEY_PLAYPAUSE},
+	{ "MEDIA_STOP", KEY_STOPCD },
+	{ "MEDIA_NEXT", KEY_NEXTSONG},
+	{ "MEDIA_PREVIOUS", KEY_PREVIOUSSONG},
+	{ "MEDIA_REWIND", KEY_REWIND },
+	{ "MEDIA_FAST_FORWARD", KEY_FASTFORWARD },
+	{ "MUTE", KEY_MUTE },
+	{ "PAGE_UP", KEY_PAGEUP },
+	{ "PAGE_DOWN", KEY_PAGEDOWN },
+	// { "PICTSYMBOLS", KEY_PICTSYMBOLS },
+	// { "SWITCH_CHARSET", KEY_SWITCH_CHARSET },
+	{ "BUTTON_A", BTN_A },
+	{ "BUTTON_B", BTN_B },
+	{ "BUTTON_C", BTN_C },
+	{ "BUTTON_X", BTN_X },
+	{ "BUTTON_Y", BTN_Y },
+	{ "BUTTON_Z", BTN_Z },
+	{ "BUTTON_L1", BTN_TL },
+	{ "BUTTON_R1", BTN_TR },
+	{ "BUTTON_L2", BTN_TL2 },
+	{ "BUTTON_R2", BTN_TR2 },
+	{ "BUTTON_THUMBL", BTN_THUMBL },
+	{ "BUTTON_THUMBR", BTN_THUMBR },
+	{ "BUTTON_START", BTN_START },
+	{ "BUTTON_SELECT", BTN_SELECT },
+	{ "BUTTON_MODE", BTN_MODE },
+	{ "ESCAPE", KEY_ESC },
+	{ "FORWARD_DEL", KEY_BACKSPACE },
+	{ "CTRL_LEFT", KEY_LEFTCTRL },
+	{ "CTRL_RIGHT", KEY_RIGHTCTRL },
+	{ "CAPS_LOCK", KEY_CAPSLOCK },
+	{ "SCROLL_LOCK", KEY_SCROLLLOCK },
+	{ "META_LEFT", KEY_LEFTMETA },
+	{ "META_RIGHT", KEY_RIGHTMETA },
+	// { "FUNCTION", KEY_FUNCTION },
+	{ "SYSRQ", KEY_SYSRQ },
+	{ "BREAK", KEY_BREAK },
+	// { "MOVE_HOME", KEY_MOVE_HOME },
+	// { "MOVE_END", KEY_MOVE_END },
+	{ "INSERT", KEY_INSERT },
+	{ "FORWARD", KEY_FORWARD },
+	{ "MEDIA_PLAY", KEY_PLAYCD },
+	{ "MEDIA_PAUSE", KEY_PAUSECD },
+	{ "MEDIA_CLOSE", KEY_EJECTCLOSECD },
+	{ "MEDIA_EJECT", KEY_EJECTCD},
+	{ "MEDIA_RECORD", KEY_RECORD },
+	{ "F1", KEY_F1 },
+	{ "F2", KEY_F2 },
+	{ "F3", KEY_F3 },
+	{ "F4", KEY_F4 },
+	{ "F5", KEY_F5 },
+	{ "F6", KEY_F6 },
+	{ "F7", KEY_F7 },
+	{ "F8", KEY_F8 },
+	{ "F9", KEY_F9 },
+	{ "F10", KEY_F10 },
+	{ "F11", KEY_F11 },
+	{ "F12", KEY_F12 },
+	{ "NUM_LOCK", KEY_NUMLOCK },
+	{ "NUMPAD_0", KEY_KP0 },
+	{ "NUMPAD_1", KEY_KP1 },
+	{ "NUMPAD_2", KEY_KP2 },
+	{ "NUMPAD_3", KEY_KP3 },
+	{ "NUMPAD_4", KEY_KP4 },
+	{ "NUMPAD_5", KEY_KP5 },
+	{ "NUMPAD_6", KEY_KP6 },
+	{ "NUMPAD_7", KEY_KP7 },
+	{ "NUMPAD_8", KEY_KP8 },
+	{ "NUMPAD_9", KEY_KP9 },
+	{ "NUMPAD_DIVIDE", KEY_KPSLASH },
+	{ "NUMPAD_MULTIPLY", KEY_KPASTERISK },
+	{ "NUMPAD_SUBTRACT", KEY_KPMINUS },
+	{ "NUMPAD_ADD", KEY_KPPLUS },
+	{ "NUMPAD_DOT", KEY_KPDOT },
+	{ "NUMPAD_COMMA", KEY_KPCOMMA },
+	{ "NUMPAD_ENTER", KEY_KPENTER },
+	{ "NUMPAD_EQUALS", KEY_KPEQUAL },
+	{ "NUMPAD_LEFT_PAREN", KEY_KPLEFTPAREN },
+	{ "NUMPAD_RIGHT_PAREN", KEY_KPRIGHTPAREN },
+	{ "VOLUME_MUTE", KEY_MUTE },
+	{ "INFO", KEY_INFO },
+	{ "CHANNEL_UP", KEY_CHANNELUP },
+	{ "CHANNEL_DOWN", KEY_CHANNELDOWN },
+	{ "ZOOM_IN", KEY_ZOOMIN },
+	{ "ZOOM_OUT", KEY_ZOOMOUT },
+	{ "TV", KEY_TV },
+	{ "WINDOW", KEY_LEFTMETA },
+#if 0
+	{ "GUIDE", KEY_GUIDE },
+	{ "DVR", KEY_DVR },
+	{ "BOOKMARK", KEY_BOOKMARK },
+	{ "CAPTIONS", KEY_CAPTIONS },
+	{ "SETTINGS", KEY_SETTINGS },
+	{ "TV_POWER", KEY_TV_POWER },
+	{ "TV_INPUT", KEY_TV_INPUT },
+	{ "STB_INPUT", KEY_STB_INPUT },
+	{ "STB_POWER", KEY_STB_POWER },
+	{ "AVR_POWER", KEY_AVR_POWER },
+	{ "AVR_INPUT", KEY_AVR_INPUT },
+	{ "PROG_RED", KEY_PROG_RED },
+	{ "PROG_GREEN", KEY_PROG_GREEN },
+	{ "PROG_YELLOW", KEY_PROG_YELLOW },
+	{ "PROG_BLUE", KEY_PROG_BLUE },
+	{ "APP_SWITCH", KEY_APP_SWITCH },
+#endif
+	{ "BUTTON_1", BTN_1 },
+	{ "BUTTON_2", BTN_2 },
+	{ "BUTTON_3", BTN_3 },
+	{ "BUTTON_4", BTN_4 },
+	{ "BUTTON_5", BTN_5 },
+	{ "BUTTON_6", BTN_6 },
+	{ "BUTTON_7", BTN_7 },
+	{ "BUTTON_8", BTN_8 },
+	{ "BUTTON_9", BTN_9 },
+#if 0
+	{ "BUTTON_10", KEY_BUTTON_10 },
+	{ "BUTTON_11", KEY_BUTTON_11 },
+	{ "BUTTON_12", KEY_BUTTON_12 },
+	{ "BUTTON_13", KEY_BUTTON_13 },
+	{ "BUTTON_14", KEY_BUTTON_14 },
+	{ "BUTTON_15", KEY_BUTTON_15 },
+	{ "BUTTON_16", KEY_BUTTON_16 },
+	{ "LANGUAGE_SWITCH", KEY_LANGUAGE_SWITCH },
+	{ "MANNER_MODE", KEY_MANNER_MODE },
+	{ "3D_MODE", KEY_3D_MODE },
+#endif
+	// { "CONTACTS", KEY_CONTACTS },
+	{ "CALENDAR", KEY_CALENDAR },
+	{ "MUSIC", KEY_AUDIO },
+	{ "CALCULATOR", KEY_CALC },
+	{ "ZENKAKU_HANKAKU", KEY_ZENKAKUHANKAKU },
+	// { "EISU", KEY_EISU },
+	{ "MUHENKAN", KEY_MUHENKAN },
+	{ "HENKAN", KEY_HENKAN },
+	{ "KATAKANA_HIRAGANA", KEY_KATAKANAHIRAGANA },
+	{ "YEN", KEY_YEN },
+	{ "RO", KEY_RO },
+	// { "KANA", KEY_KANA },
+	// { "ASSIST", KEY_ASSIST },
+	{ "BRIGHTNESS_DOWN", KEY_BRIGHTNESSDOWN },
+	{ "BRIGHTNESS_UP", KEY_BRIGHTNESSUP },
+	// { "MEDIA_AUDIO_TRACK", KEY_MEDIA_AUDIO_TRACK },
 };
 
 static struct cavan_input_device *cavan_input_device_create(uint8_t *key_bitmask, uint8_t *abs_bitmask, uint8_t *rel_bitmask)
@@ -802,17 +1040,72 @@ int cavan_input_event2(int fd, int type, int code, int value)
 	return cavan_input_event(fd, &event, 1);
 }
 
-struct cavan_input_key *cavan_input_find_key(const char *name)
+struct cavan_input_key *cavan_input_find_key_by_name_base(struct cavan_input_key *keys, int count, const char *name)
 {
-	struct cavan_input_key *p, *p_end;
+	struct cavan_input_key *key_end;
 
-	for (p = cavan_input_keymap, p_end = p + NELEM(cavan_input_keymap); p < p_end; p++) {
-		if (strcmp(p->name, name) == 0) {
-			return p;
+	for (key_end = keys + count; keys < key_end; keys++) {
+		if (strcmp(keys->name, name) == 0) {
+			return keys;
 		}
 	}
 
 	return NULL;
+}
+
+struct cavan_input_key *cavan_input_find_key_by_code_base(struct cavan_input_key *keys, int count, int code)
+{
+	struct cavan_input_key *key_end;
+
+	for (key_end = keys + count; keys < key_end; keys++) {
+		if (keys->code == code) {
+			return keys;
+		}
+	}
+
+	return NULL;
+}
+
+struct cavan_input_key *cavan_input_find_key_by_name(const char *name)
+{
+	return cavan_input_find_key_by_name_base(ARRAY_PAIR(cavan_input_keymap), name);
+}
+
+struct cavan_input_key *cavan_input_find_key_by_code(int code)
+{
+	return cavan_input_find_key_by_code_base(ARRAY_PAIR(cavan_input_keymap), code);
+}
+
+struct cavan_input_key *cavan_input_find_key_by_name_android(const char *name)
+{
+	return cavan_input_find_key_by_name_base(ARRAY_PAIR(cavan_input_keymap_android), name);
+}
+
+struct cavan_input_key *cavan_input_find_key_by_code_android(int code)
+{
+	return cavan_input_find_key_by_code_base(ARRAY_PAIR(cavan_input_keymap_android), code);
+}
+
+int cavan_input_find_key_code(const char *name)
+{
+	struct cavan_input_key *key = cavan_input_find_key_by_name(name);
+
+	if (key == NULL) {
+		return -1;
+	}
+
+	return key->code;
+}
+
+const char *cavan_input_find_key_name(int code)
+{
+	struct cavan_input_key *key = cavan_input_find_key_by_code(code);
+
+	if (key == NULL) {
+		return NULL;
+	}
+
+	return key->name;
 }
 
 int cavan_input_type2value(const char *name)
@@ -1114,16 +1407,27 @@ static bool input_proxy_send_tap(struct cavan_input_proxy *proxy, int argc, char
 		return false;
 	}
 
+	x = atoi(argv[1]);
+	y = atoi(argv[2]);
+
 	device = cavan_input_proxy_device_find_touchscreen(proxy->devices);
 	if (device == NULL) {
 		pr_red_info("cavan_input_proxy_device_find_touchscreen");
-		return false;
+		return android_input_tap(x, y);
 	}
 
-	x = device->xmin + atof(argv[1]) * device->xres;
-	y = device->ymin + atof(argv[2]) * device->yres;
+	if (argc > 4) {
+		int width = atoi(argv[3]);
+		int height = atoi(argv[4]);
 
-	pr_info("TOUCH %d %d", x, y);
+		pr_info("width = %d", width);
+		pr_info("height = %d", height);
+
+		x = x * device->xres / width + device->xmin;
+		y = y * device->yres / height + device->ymin;
+	}
+
+	pr_info("TOUCH: (%d, %d)", x, y);
 
 	cavan_input_event_setup_abs(events, ABS_MT_TRACKING_ID, 0);
 	cavan_input_event_setup_abs(events + 1, ABS_MT_POSITION_X, x);
@@ -1147,13 +1451,28 @@ static bool input_proxy_send_key(struct cavan_input_proxy *proxy, int argc, char
 	}
 
 	code = text2value_unsigned(argv[1], NULL, 10);
+	if (code == 0) {
+		struct cavan_input_key *key = cavan_input_find_key_by_name(argv[1]);
 
-	pr_info("KEY %d", code);
+		if (key == NULL) {
+			return android_input_key(argv[1]);
+		}
+
+		code = key->code;
+	}
+
+	pr_info("KEY: %d", code);
 
 	device = cavan_input_proxy_device_find_keypad(proxy->devices, code);
 	if (device == NULL) {
-		pr_red_info("cavan_input_proxy_device_find_keypad");
-		return false;
+		struct cavan_input_key *key = cavan_input_find_key_by_code_android(code);
+
+		if (key == NULL) {
+			pr_red_info("Invalid key: %s", argv[1]);
+			return false;
+		}
+
+		return android_input_key(key->name);
 	}
 
 	cavan_input_event_setup_key_report(events, code, 1);

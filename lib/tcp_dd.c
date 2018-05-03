@@ -1920,7 +1920,7 @@ int tcp_dd_keypad_client_run(struct network_url *url, int flags)
 			} else {
 				struct cavan_input_key *key;
 
-				key = cavan_input_find_key(name);
+				key = cavan_input_find_key_by_name(name);
 				if (key == NULL) {
 					pr_red_info("key %s not found", name);
 					continue;

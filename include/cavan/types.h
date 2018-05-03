@@ -41,6 +41,12 @@
 #define BIT64(offset) \
 	(((u64) 1) << (offset))
 
+#define TEXT_PAIR(text) \
+	text, (sizeof(text) - 1)
+
+#define ARRAY_PAIR(array) \
+	array, NELEM(array)
+
 typedef uint64_t u64, dword;
 typedef int64_t s64;
 

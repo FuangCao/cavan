@@ -21,6 +21,7 @@
 
 #include <cavan.h>
 #include <cavan/file.h>
+#include <cavan/command.h>
 
 #define ANDROID_CMD_GETPROP		"/system/bin/getprop"
 #define ANDROID_CMD_SETPROP		"/system/bin/setprop"
@@ -75,6 +76,17 @@ static inline int android_get_wifi_mask(char *buff, size_t size)
 #ifdef CONFIG_ANDROID
 int android_getprop(const char *name, char *buff, size_t size);
 int android_setprop(const char *name, const char *value);
+
+static inline bool android_input_tap(int x, int y)
+{
+	return (cavan_system2("input tap %d %d", x, y) == 0);
+}
+
+static inline bool android_input_key(const char *name)
+{
+	pr_info("KEY: %s", name);
+	return (cavan_system2("input keyevent %s", name) == 0);
+}
 #else
 static inline int android_getprop(const char *name, char *buff, size_t size)
 {
@@ -84,6 +96,16 @@ static inline int android_getprop(const char *name, char *buff, size_t size)
 static inline int android_setprop(const char *name, const char *value)
 {
 	return android_setprop_command(name, value);
+}
+
+static inline bool android_input_tap(int x, int y)
+{
+	return false;
+}
+
+static inline bool android_input_key(const char *name)
+{
+	return false;
 }
 #endif
 

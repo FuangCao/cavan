@@ -18,7 +18,6 @@
  */
 
 #include <cavan.h>
-#include <cavan/command.h>
 #include <cavan/android.h>
 #include <cavan/calculator.h>
 

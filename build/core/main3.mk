@@ -139,6 +139,7 @@ include $(BUILD_CORE_PATH)/defines3.mk
 $(foreach path,$(OUT_LIB) $(OUT_BIN),$(shell [ -d $(path) ] || $(MKDIR) $(path)))
 
 all: all-modules
+
 jni:
 	@+make -C "${ROOT_PATH}/android/app/CavanJni/jni"
 

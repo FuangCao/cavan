@@ -644,7 +644,14 @@ int cavan_uinput_open(int flags);
 int cavan_uinput_create(const char *name, int (*init)(struct uinput_user_dev *dev, int fd, void *data), void *data);
 int cavan_input_event(int fd, const struct input_event *events, size_t count);
 int cavan_input_event2(int fd, int type, int code, int value);
-struct cavan_input_key *cavan_input_find_key(const char *name);
+struct cavan_input_key *cavan_input_find_key_by_name_base(struct cavan_input_key *keys, int count, const char *name);
+struct cavan_input_key *cavan_input_find_key_by_code_base(struct cavan_input_key *keys, int count, int code);
+struct cavan_input_key *cavan_input_find_key_by_name(const char *name);
+struct cavan_input_key *cavan_input_find_key_by_code(int code);
+struct cavan_input_key *cavan_input_find_key_by_name_android(const char *name);
+struct cavan_input_key *cavan_input_find_key_by_code_android(int code);
+int cavan_input_find_key_code(const char *name);
+const char *cavan_input_find_key_name(int code);
 int cavan_input_type2value(const char *name);
 
 int cavan_input_proxy_run(struct cavan_dynamic_service *service);
