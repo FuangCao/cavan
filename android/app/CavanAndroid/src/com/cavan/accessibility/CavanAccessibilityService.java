@@ -17,6 +17,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.Display;
 import android.view.KeyEvent;
+import android.view.Surface;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -865,11 +866,21 @@ public class CavanAccessibilityService extends AccessibilityService {
 			WindowManager manager = (WindowManager) getSystemService(WINDOW_SERVICE);
 			if (manager != null) {
 				Display display = manager.getDefaultDisplay();
+				int rotation = display.getRotation();
 				Point point = new Point();
 
 				display.getRealSize(point);
-				mDisplayWidth = point.x;
-				mDisplayHeight = point.y;
+
+				CavanAndroid.dLog("rotation = " + rotation);
+				CavanAndroid.dLog("size = " + point);
+
+				if (rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) {
+					mDisplayWidth = point.x;
+					mDisplayHeight = point.y;
+				} else {
+					mDisplayWidth = point.y;
+					mDisplayHeight = point.x;
+				}
 			}
 		}
 

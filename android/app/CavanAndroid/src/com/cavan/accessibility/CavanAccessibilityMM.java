@@ -31,6 +31,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 	private boolean mFollowPending;
 	private boolean mUnfollowPending;
 	private boolean mHomePending;
+	private boolean mAutoAnswerEnabled;
 
 	public static CavanAccessibilityMM instance;
 
@@ -600,6 +601,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		protected boolean doFollow(AccessibilityNodeInfo root) {
 			mFollowPending = clickOfficialAccounts(root);
 			return mFollowPending;
+		}
+
+		@Override
+		protected boolean doActionHome(AccessibilityNodeInfo root) {
+			mHomePending = false;
+			return true;
 		}
 	}
 
@@ -1542,7 +1549,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		public void setAnswer(AppBrandAnswer answer) {
 			mAnswer = answer;
-			answer.click();
+
+			if (mAutoAnswerEnabled) {
+				answer.click();
+			}
 		}
 
 		public boolean isValid() {
@@ -1742,20 +1752,21 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		@Override
 		protected void onKeyDown(AccessibilityNodeInfo root, int keyCode) {
 			if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+				mAutoAnswerEnabled = true;
 				post(mRunnableAutoAnswer);
 			}
 		}
 
 		@Override
 		protected void onEnter(AccessibilityNodeInfo root) {
+			mAutoAnswerEnabled = false;
 			cancel(mRunnableAutoAnswer);
 			setSubject(root, null);
 		}
 
 		@Override
 		protected void onLeave(AccessibilityNodeInfo root) {
-			cancel(mRunnableAutoAnswer);
-			setSubject(root, null);
+			onEnter(root);
 		}
 	};
 

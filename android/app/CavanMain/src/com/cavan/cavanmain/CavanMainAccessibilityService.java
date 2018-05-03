@@ -172,9 +172,7 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 	@Override
 	public boolean doInputTap(int x, int y) {
 		if (mInputProxy.isConnected()) {
-			float xaxis = ((float) x) / getDisplayWidth();
-			float yaxis = ((float) y) / getDisplayHeight();
-			String command = String.format("TAP %f %f", xaxis, yaxis);
+			String command = String.format("TAP %d %d %d %d", x, y, getDisplayWidth(), getDisplayHeight());
 			return doInputProxy(command);
 		}
 

@@ -1420,9 +1420,6 @@ static bool input_proxy_send_tap(struct cavan_input_proxy *proxy, int argc, char
 		int width = atoi(argv[3]);
 		int height = atoi(argv[4]);
 
-		pr_info("width = %d", width);
-		pr_info("height = %d", height);
-
 		x = x * device->xres / width + device->xmin;
 		y = y * device->yres / height + device->ymin;
 	}
