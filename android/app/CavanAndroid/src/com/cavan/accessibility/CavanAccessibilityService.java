@@ -605,6 +605,18 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return doShellCommand("input keyevent " + code);
 	}
 
+	public boolean doSaveSubject(String question, String answer) {
+		return false;
+	}
+
+	public boolean doRemoveSubject(String question) {
+		return false;
+	}
+
+	public boolean doLoadSubjects(HashMap<String, String> subjects) {
+		return false;
+	}
+
 	public boolean addPacket(CavanAccessibilityPackage pkg, CavanRedPacket packet) {
 		acquireWakeLock(2000);
 

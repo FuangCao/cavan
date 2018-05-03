@@ -122,8 +122,8 @@ public class CavanUserInfo {
 		StringBuilder builder = new StringBuilder();
 
 		builder.append('[');
-		builder.append(KEY_PACKAGE).append(':').append(mPackage).append(',');
-		builder.append(KEY_ACCOUNT).append(':').append(mAccount).append(',');
+		builder.append(KEY_PACKAGE).append(':').append(mPackage).append(", ");
+		builder.append(KEY_ACCOUNT).append(':').append(mAccount).append(", ");
 		builder.append(KEY_PASSWORD).append(':').append(mPassword);
 		builder.append(']');
 

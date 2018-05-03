@@ -23,8 +23,9 @@ import com.cavan.java.CavanString;
 
 public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
-	private HashMap<String, String> mAnswerMap = new HashMap<String, String>();
+	private HashMap<String, String> mSubjects = new HashMap<String, String>();
 	private HashSet<Integer> mFinishNodes = new HashSet<Integer>();
+	private AppBrandSubject mSubject;
 	private String mMenuItem;
 	private boolean mSigninPending;
 	private boolean mFollowPending;
@@ -32,6 +33,21 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 	private boolean mHomePending;
 
 	public static CavanAccessibilityMM instance;
+
+	private Runnable mRunnableAutoAnswer = new Runnable() {
+
+		@Override
+		public void run() {
+			boolean pending = doAutoAnswer();
+			CavanAndroid.dLog("doAutoAnswer: pending = " + pending);
+
+			cancel(this);
+
+			if (pending) {
+				postDelayed(this, 200);
+			}
+		}
+	};
 
 	public class BaseWindow extends CavanAccessibilityWindow {
 
@@ -1483,7 +1499,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				AppBrandAnswer answer = mAnswers.getAnswer(mClicked);
 				if (answer != null) {
 					CavanAndroid.dLog(mQuestion + " <= " + answer.getText());
-					mAnswerMap.put(mQuestion, answer.getText());
+
+					synchronized (mSubjects) {
+						mSubjects.put(mQuestion, answer.getText());
+					}
+
+					mService.doSaveSubject(mQuestion, answer.getText());
 				}
 			}
 		}
@@ -1491,7 +1512,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		public void remove() {
 			if (mQuestion != null && mAnswer != null) {
 				CavanAndroid.dLog("remove: " + mQuestion);
-				mAnswerMap.remove(mQuestion);
+
+				synchronized (mSubjects) {
+					mSubjects.remove(mQuestion);
+				}
+
+				mService.doRemoveSubject(mQuestion);
 			}
 		}
 
@@ -1500,9 +1526,13 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				return null;
 			}
 
-			String answer = mAnswerMap.get(mQuestion);
-			if (answer == null) {
-				return null;
+			String answer;
+
+			synchronized (mSubjects) {
+				answer = mSubjects.get(mQuestion);
+				if (answer == null) {
+					return null;
+				}
 			}
 
 			CavanAndroid.dLog(mQuestion + " => " + answer);
@@ -1555,132 +1585,176 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 	};
 
-	public class AppBrandWindow extends BaseWindow {
-
-		private AppBrandSubject mSubject;
-
-		public AppBrandWindow(String name) {
-			super(name);
-		}
-
-		public String getTitle(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 0, 0);
-			if (node == null) {
-				return null;
-			}
-
-			try {
-				return CavanAccessibilityHelper.getNodeText(node);
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				node.recycle();
-			}
-
+	public String getAppBrandTitle(AccessibilityNodeInfo root) {
+		AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 0, 0);
+		if (node == null) {
 			return null;
 		}
 
-		public boolean isAnswerCorrect(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 3, 0, 0, 1, 2);
-			if (node == null) {
-				return false;
-			}
+		try {
+			return CavanAccessibilityHelper.getNodeText(node);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			node.recycle();
+		}
 
-			try {
-				String text = CavanAccessibilityHelper.getNodeDescription(node);
-				CavanAndroid.dLog("text = " + text);
+		return null;
+	}
 
-				if (text != null && text.contains("秒")) {
-					return true;
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				node.recycle();
-			}
-
+	public boolean isAnswerCorrect(AccessibilityNodeInfo root) {
+		AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 3, 0, 0, 1, 2);
+		if (node == null) {
 			return false;
 		}
 
-		public boolean setSubject(AccessibilityNodeInfo root, AppBrandSubject subject) {
-			if (subject != null && subject.isValid()) {
-				if (mSubject != null) {
-					if (subject.equals(mSubject)) {
-						return false;
-					}
+		try {
+			String text = CavanAccessibilityHelper.getNodeDescription(node);
+			CavanAndroid.dLog("text = " + text);
 
-					mSubject.save();
-					mSubject.recycle();
-					mSubject = null;
-				}
-
-				AppBrandAnswer answer = subject.getAnswer();
-				if (answer != null) {
-					subject.setAnswer(answer);
-				}
-
-				mSubject = subject;
-
+			if (text != null && text.contains("秒")) {
 				return true;
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			node.recycle();
+		}
 
+		return false;
+	}
+
+	public boolean setSubject(AccessibilityNodeInfo root, AppBrandSubject subject) {
+		if (subject != null && subject.isValid()) {
 			if (mSubject != null) {
-				if (isAnswerCorrect(root)) {
-					mSubject.save();
-				} else {
-					mSubject.remove();
+				if (subject.equals(mSubject)) {
+					return false;
 				}
 
+				mSubject.save();
 				mSubject.recycle();
 				mSubject = null;
 			}
 
-			if (subject != null) {
-				subject.recycle();
+			AppBrandAnswer answer = subject.getAnswer();
+			if (answer != null) {
+				subject.setAnswer(answer);
 			}
 
+			mSubject = subject;
+
+			return true;
+		}
+
+		if (mSubject != null) {
+			if (isAnswerCorrect(root)) {
+				mSubject.save();
+			} else {
+				mSubject.remove();
+			}
+
+			mSubject.recycle();
+			mSubject = null;
+		}
+
+		if (subject != null) {
+			subject.recycle();
+		}
+
+		return false;
+	}
+
+	public boolean isAnswerCompleted(AccessibilityNodeInfo root) {
+		AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 3, 0, 0, 10, 0);
+		if (node == null) {
 			return false;
+		}
+
+		try {
+			return "再次答题".equals(CavanAccessibilityHelper.getNodeDescription(node));
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			node.recycle();
+		}
+
+		return false;
+	}
+
+	public boolean doAutoAnswer(AccessibilityNodeInfo root) {
+		String title = getAppBrandTitle(root);
+		if (title == null) {
+			return false;
+		}
+
+		if (!title.equals("争分夺金")) {
+			return false;
+		}
+
+		AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, -1, 0, 0, -1);
+		if (node != null) {
+			AppBrandSubject subject = new AppBrandSubject(node);
+			setSubject(root, subject);
+			subject.dump();
+			return false;
+		}
+
+		if (isAnswerCompleted(root)) {
+			setSubject(root, null);
+			return false;
+		}
+
+		return true;
+	}
+
+	public boolean doAutoAnswer() {
+		AccessibilityNodeInfo root = getRootInActiveWindow();
+		if (root == null) {
+			return false;
+		}
+
+		try {
+			return doAutoAnswer(root);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			root.recycle();
+		}
+
+		return false;
+	}
+
+	public class AppBrandWindow extends BaseWindow {
+
+		public AppBrandWindow(String name) {
+			super(name);
 		}
 
 		@Override
 		protected void onViewClicked(AccessibilityNodeInfo root, AccessibilityEvent event) {
 			if (mSubject != null) {
 				mSubject.setClicked(event.getSource());
+				cancel(mRunnableAutoAnswer);
+				postDelayed(mRunnableAutoAnswer, 500);
 			}
 		}
 
 		@Override
 		protected void onKeyDown(AccessibilityNodeInfo root, int keyCode) {
-			if (keyCode != KeyEvent.KEYCODE_VOLUME_DOWN) {
-				return;
-			}
-
-			String title = getTitle(root);
-			if (title == null) {
-				return;
-			}
-
-			if (!title.equals("争分夺金")) {
-				return;
-			}
-
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, -1, 0, 0, -1);
-			if (node != null) {
-				AppBrandSubject subject = new AppBrandSubject(node);
-				setSubject(root, subject);
-				subject.dump();
-			} else {
-				setSubject(root, null);
+			if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+				post(mRunnableAutoAnswer);
 			}
 		}
 
 		@Override
 		protected void onEnter(AccessibilityNodeInfo root) {
+			cancel(mRunnableAutoAnswer);
 			setSubject(root, null);
 		}
 
 		@Override
 		protected void onLeave(AccessibilityNodeInfo root) {
+			cancel(mRunnableAutoAnswer);
 			setSubject(root, null);
 		}
 	};
@@ -1788,6 +1862,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 	protected void onCreate() {
 		super.onCreate();
 		instance = this;
+
+		synchronized (mSubjects) {
+			mService.doLoadSubjects(mSubjects);
+		}
 	}
 
 	@Override

@@ -3,6 +3,7 @@ package com.cavan.cavanmain;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.HashMap;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -178,6 +179,32 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 		}
 
 		return super.doInputTap(x, y);
+	}
+
+	@Override
+	public boolean doSaveSubject(String question, String answer) {
+		CavanSubjectInfo subject = new CavanSubjectInfo(question, answer);
+		return (subject.save(getContentResolver()) != null);
+	}
+
+	@Override
+	public boolean doRemoveSubject(String question) {
+		return (CavanSubjectInfo.delete(getContentResolver(), question) > 0);
+	}
+
+	@Override
+	public boolean doLoadSubjects(HashMap<String, String> subjects) {
+		CavanSubjectInfo[] infos = CavanSubjectInfo.query(getContentResolver());
+		if (infos == null) {
+			return false;
+		}
+
+		for (CavanSubjectInfo info : infos) {
+			CavanAndroid.dLog("info = " + info);
+			subjects.put(info.getQuestion(), info.getAnswer());
+		}
+
+		return true;
 	}
 
 	@Override
