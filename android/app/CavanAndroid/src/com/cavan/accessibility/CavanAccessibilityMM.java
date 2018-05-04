@@ -31,7 +31,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 	private boolean mFollowPending;
 	private boolean mUnfollowPending;
 	private boolean mHomePending;
-	private boolean mAutoAnswerEnabled;
+	private boolean mAutoAnswer;
+	private long mAnswerTime;
+	private int mAnswerTimes;
 
 	public static CavanAccessibilityMM instance;
 
@@ -39,13 +41,18 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		public void run() {
-			boolean pending = doAutoAnswer();
-			CavanAndroid.dLog("doAutoAnswer: pending = " + pending);
+			long time = System.currentTimeMillis();
+			if (time < mAnswerTime) {
+				postDelayed(this, mAnswerTime - time);
+			} else if (mAnswerTimes < 3) {
+				boolean pending = doAutoAnswer();
+				CavanAndroid.dLog("doAutoAnswer: times = " + mAnswerTimes + ", pending = " + pending);
 
-			cancel(this);
-
-			if (pending) {
-				postDelayed(this, 200);
+				if (pending) {
+					postAutoAnswer(200, 0);
+				} else {
+					postAutoAnswer(200, mAnswerTimes + 1);
+				}
 			}
 		}
 	};
@@ -1450,10 +1457,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 	public class AppBrandSubject {
 
 		private AccessibilityNodeInfo mNode;
-		private AccessibilityNodeInfo mClicked;
 		private String mQuestion;
-		private AppBrandAnswer mAnswer;
 		private AppBrandAnswers mAnswers;
+		private AppBrandAnswer mAnswer;
+		private AppBrandAnswer mAnswerCurr;
 
 		public AppBrandSubject(AccessibilityNodeInfo node) {
 			mNode = node;
@@ -1476,19 +1483,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			return mQuestion;
 		}
 
-		public void setClicked(AccessibilityNodeInfo source) {
-			mClicked = source;
-		}
-
 		public void recycle() {
 			if (mAnswers != null) {
 				mAnswers.recycle();
 				mAnswers = null;
-			}
-
-			if (mClicked != null) {
-				mClicked.recycle();
-				mClicked = null;
 			}
 
 			if (mNode != null) {
@@ -1497,27 +1495,31 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			}
 		}
 
+		public void setCurrentAnswer(AccessibilityNodeInfo source) {
+			mAnswerCurr = mAnswers.getAnswer(source);
+		}
+
+		public AppBrandAnswer getCurrentAnswer() {
+			return mAnswerCurr;
+		}
+
 		public void save() {
-			CavanAndroid.dLog("mQuestion = " + mQuestion);
-			CavanAndroid.dLog("mAnswers = " + mAnswers);
-			CavanAndroid.dLog("mClicked = " + mClicked);
+			AppBrandAnswer answer = getCurrentAnswer();
+			if (answer != null && mQuestion != null) {
+				CavanAndroid.dLog(mQuestion + " <= " + answer.getText());
 
-			if (mQuestion != null && mClicked != null && mAnswers != null) {
-				AppBrandAnswer answer = mAnswers.getAnswer(mClicked);
-				if (answer != null) {
-					CavanAndroid.dLog(mQuestion + " <= " + answer.getText());
-
-					synchronized (mSubjects) {
-						mSubjects.put(mQuestion, answer.getText());
-					}
-
-					mService.doSaveSubject(mQuestion, answer.getText());
+				synchronized (mSubjects) {
+					mSubjects.put(mQuestion, answer.getText());
 				}
+
+				mService.doSaveSubject(mQuestion, answer.getText());
 			}
 		}
 
 		public void remove() {
-			if (mQuestion != null && mAnswer != null) {
+			AppBrandAnswer answer = getCurrentAnswer();
+
+			if (answer == mAnswer && mQuestion != null) {
 				CavanAndroid.dLog("remove: " + mQuestion);
 
 				synchronized (mSubjects) {
@@ -1548,9 +1550,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		public void setAnswer(AppBrandAnswer answer) {
+			CavanAndroid.dLog("mAutoAnswer = " + mAutoAnswer);
+
 			mAnswer = answer;
 
-			if (mAutoAnswerEnabled) {
+			if (mAutoAnswer) {
 				answer.click();
 			}
 		}
@@ -1734,6 +1738,23 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		return false;
 	}
 
+	public void postAutoAnswer(long delay, int times) {
+		mAnswerTime = System.currentTimeMillis() + delay;
+		mAnswerTimes = times;
+
+		if (delay > 0) {
+			postDelayed(mRunnableAutoAnswer, delay);
+		} else {
+			post(mRunnableAutoAnswer);
+		}
+	}
+
+	public void cancelAutoAnswer(AccessibilityNodeInfo root) {
+		cancel(mRunnableAutoAnswer);
+		setSubject(root, null);
+		mAutoAnswer = false;
+	}
+
 	public class AppBrandWindow extends BaseWindow {
 
 		public AppBrandWindow(String name) {
@@ -1743,30 +1764,37 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		@Override
 		protected void onViewClicked(AccessibilityNodeInfo root, AccessibilityEvent event) {
 			if (mSubject != null) {
-				mSubject.setClicked(event.getSource());
-				cancel(mRunnableAutoAnswer);
-				postDelayed(mRunnableAutoAnswer, 500);
+				AccessibilityNodeInfo source = event.getSource();
+				if (source != null) {
+					try {
+						mSubject.setCurrentAnswer(source);
+					} catch (Exception e) {
+						e.printStackTrace();
+					} finally {
+						source.recycle();
+					}
+				}
+
+				postAutoAnswer(1200, 0);
 			}
 		}
 
 		@Override
 		protected void onKeyDown(AccessibilityNodeInfo root, int keyCode) {
 			if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
-				mAutoAnswerEnabled = true;
-				post(mRunnableAutoAnswer);
+				mAutoAnswer = true;
+				postAutoAnswer(0, 0);
 			}
 		}
 
 		@Override
 		protected void onEnter(AccessibilityNodeInfo root) {
-			mAutoAnswerEnabled = false;
-			cancel(mRunnableAutoAnswer);
-			setSubject(root, null);
+			cancelAutoAnswer(root);
 		}
 
 		@Override
 		protected void onLeave(AccessibilityNodeInfo root) {
-			onEnter(root);
+			cancelAutoAnswer(root);
 		}
 	};
 
