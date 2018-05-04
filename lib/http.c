@@ -43,8 +43,12 @@ const cavan_string_t http_header_names[HTTP_HEADER_COUNT] = {
 };
 
 const struct cavan_http_signin_info http_signin_infos[] = {
-	{ "baidu", "http://www.baidu.com" },
-	{ "hao123", "http://www.hao123.com" },
+	{ "XJXQY", "http://jxqy.qq.com/act/agile/48347/index.html?appid=wxacbfe7e1bb3e800f&logtype=wx" },
+	{ "RXCQ", "http://mir.qq.com/act/a20150729cdkey/m/wx.htm" },
+	{ "CQBY", "http://shuang.qq.com/cp/a20171122cdkm/index.shtml" },
+	{ "CYHX", "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx58164a91f1821369&redirect_uri=https%3A%2F%2Fcfm.qq.com%2Fcp%2Fa20160728qiandao%2Findex.htm&response_type=code&scope=snsapi_base&state=1|1|wx58164a91f1821369|2#wechat_redirect" },
+	{ "ZTSJB", "http://zt.qq.com/act/agile2.0/47886/zt.html" },
+	{ "JDQS-QJCJ", "https://pubgm.qq.com/act/agile2_136573/index.html" },
 };
 
 int cavan_http_get_header_type(const char *name, int length)
