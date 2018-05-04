@@ -652,7 +652,7 @@ int cavan_http_open_html_file(const char *title, char *pathname)
 #endif
 
 	ffile_puts(fd, "<!-- This file is automatic generate by Fuang.Cao -->\r\n\r\n");
-	ffile_printf(fd, "<html>\r\n\t<head>\r\n\t\t<meta http-equiv=\"content-type\" content=\"%s;charset=utf-8\">\r\n", http_mime_type_html);
+	ffile_printf(fd, "<html>\r\n\t<head>\r\n\t\t<meta http-equiv=\"content-type\" content=\"%s;charset=utf-8\" />\r\n", http_mime_type_html);
 	ffile_printf(fd, "\t\t<title>%s</title>\r\n\t</head>\r\n\t<body>\r\n", title);
 
 	return fd;
@@ -995,12 +995,12 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 		filter = text_fixup_empty_simple(filter);
 
 		ret |= ffile_printf(fd, "\t\t<form enctype=\"multipart/form-data\" onsubmit=\"return onUploadSubmit(this)\" action=\"%s\" method=\"post\">\r\n", dirname);
-		ret |= ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"Upload\">\r\n");
-		ret |= ffile_puts(fd, "\t\t\t<input id=\"upload\" name=\"pathname\" type=\"file\">\r\n");
+		ret |= ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"Upload\" />\r\n");
+		ret |= ffile_puts(fd, "\t\t\t<input id=\"upload\" name=\"pathname\" type=\"file\" />\r\n");
 		ret |= ffile_puts(fd, "\t\t</form>\r\n");
 		ret |= ffile_puts(fd, "\t\t<form method=\"get\">\r\n");
-		ret |= ffile_printf(fd, "\t\t\t<input name=\"filter\" type=\"text\" value=\"%s\">\r\n", text_fixup_null_simple(filter));
-		ret |= ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"Search\">\r\n");
+		ret |= ffile_printf(fd, "\t\t\t<input name=\"filter\" type=\"text\" value=\"%s\" />\r\n", text_fixup_null_simple(filter));
+		ret |= ffile_puts(fd, "\t\t\t<input type=\"submit\" value=\"Search\" />\r\n");
 		ret |= ffile_puts(fd, "\t\t</form>\r\n");
 		ret |= ffile_puts(fd, "\t\t<table id=\"dirlisting\" summary=\"Directory Listing\">\r\n");
 		ret |= ffile_puts(fd, "\t\t\t<tr><td><b>type</b></td><td><b>filename</b></td><td><b>size</b></td><td><b>date</b></td></tr>\r\n");
