@@ -129,6 +129,7 @@ typedef struct {
 
 #define ARRAY_SIZE(a)				(sizeof(a) / sizeof((a)[0]))
 #define NELEM(a)					((int) ARRAY_SIZE(a))
+#define LAST_ELEM(a)				((a) + NELEM(a) - 1)
 #define MOFS(type, member)			MEMBER_OFFSET(type, member)
 
 #define BUILD_MASK(type, count) \

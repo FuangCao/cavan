@@ -42,6 +42,11 @@ const cavan_string_t http_header_names[HTTP_HEADER_COUNT] = {
 	CAVAN_STRING_INITIALIZER("Transfer-Encoding"),
 };
 
+const struct cavan_http_signin_info http_signin_infos[] = {
+	{ "baidu", "http://www.baidu.com" },
+	{ "hao123", "http://www.hao123.com" },
+};
+
 int cavan_http_get_header_type(const char *name, int length)
 {
 	const cavan_string_t *p, *p_end;
@@ -651,8 +656,10 @@ int cavan_http_open_html_file(const char *title, char *pathname)
 	pd_info("pathname = %s, title = %s", pathname, title);
 #endif
 
+
 	ffile_puts(fd, "<!-- This file is automatic generate by Fuang.Cao -->\r\n\r\n");
 	ffile_printf(fd, "<html>\r\n\t<head>\r\n\t\t<meta http-equiv=\"content-type\" content=\"%s;charset=utf-8\" />\r\n", http_mime_type_html);
+	ffile_puts(fd, "\t\t<meta name=\"viewport\" content=\"initial-scale=1\" />\r\n");
 	ffile_printf(fd, "\t\t<title>%s</title>\r\n\t</head>\r\n\t<body>\r\n", title);
 
 	return fd;
@@ -1103,7 +1110,7 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 
 	ret = cavan_http_send_html(client, fd);
 	if (ret < 0) {
-		pr_red_info("stat");
+		pr_red_info("cavan_http_send_html");
 	}
 
 out_free_entries:
@@ -1146,6 +1153,93 @@ int cavan_http_process_get(struct network_client *client, struct cavan_http_requ
 		cavan_http_send_reply(client, 403, "Invalid file type");
 		return -EINVAL;
 	}
+}
+
+static const struct cavan_http_signin_info *cavan_http_signin_find(const char *app)
+{
+	const struct cavan_http_signin_info *info;
+
+	for (info = LAST_ELEM(http_signin_infos); info >= http_signin_infos; info--) {
+		if (strcmp(info->app, app) == 0) {
+			return info;
+		}
+	}
+
+	return NULL;
+}
+
+static u32 cavan_http_signin_get_delay(void)
+{
+	u64 time = clock_gettime_real_ms();
+
+	return (time / 3600000 + 1) * 3600000 - time;
+}
+
+static int cavan_http_process_signin(struct network_client *client, struct cavan_http_request *req)
+{
+	const char *app = cavan_http_request_find_param_simple(req, "app");
+	const struct cavan_http_signin_info *info;
+	int ret;
+	int fd;
+
+	if (app == NULL) {
+		cavan_http_send_reply(client, 404, "App not set");
+		return -ENOENT;
+	}
+
+	info = cavan_http_signin_find(app);
+	if (info == NULL) {
+		cavan_http_send_reply(client, 404, "App not found: %s", app);
+		return -ENOENT;
+	}
+
+	fd = cavan_http_open_html_file(app, NULL);
+	if (fd < 0) {
+		pr_red_info("web_proxy_open_html_file");
+		return fd;
+	}
+
+	ret = ffile_puts(fd, "\t\t<script type=\"text/javascript\">\r\n");
+	ret |= ffile_printf(fd, "\t\t\tvar delay = %d;\r\n", cavan_http_signin_get_delay());
+	ret |= ffile_puts(fd, "\t\t\tfunction doSignin() {\r\n");
+	ret |= ffile_printf(fd, "\t\t\t\twindow.location = \"%s\";\r\n", info->url);
+	ret |= ffile_puts(fd, "\t\t\t}\r\n");
+	ret |= ffile_puts(fd, "\t\t\tfunction showDelay() {\r\n");
+	ret |= ffile_puts(fd, "\t\t\t\tvar date = new Date();\r\n");
+	ret |= ffile_puts(fd, "\t\t\t\tdocument.all.time.innerHTML = \"Time: \" + date.toTimeString();\r\n");
+	ret |= ffile_puts(fd, "\t\t\t\tdocument.all.message.innerHTML = \"Delay: \" + delay + \" (ms)\";\r\n");
+	ret |= ffile_puts(fd, "\t\t\t\tif (delay > 1000) {\r\n");
+	ret |= ffile_puts(fd, "\t\t\t\t\tdelay -= 1000;\r\n");
+	ret |= ffile_puts(fd, "\t\t\t\t} else {\r\n");
+	ret |= ffile_puts(fd, "\t\t\t\t\tdelay = 0;\r\n");
+	ret |= ffile_puts(fd, "\t\t\t\t}\r\n");
+	ret |= ffile_puts(fd, "\t\t\t}\r\n");
+	ret |= ffile_puts(fd, "\t\t\tsetTimeout(\"doSignin()\", delay);\r\n");
+	ret |= ffile_puts(fd, "\t\t\tsetInterval(\"showDelay()\", 1000);\r\n");
+	ret |= ffile_puts(fd, "\t\t</script>\r\n");
+	ret |= ffile_puts(fd, "\t\t<h5 id=\"time\"></h5>\r\n");
+	ret |= ffile_puts(fd, "\t\t<h5 id=\"message\"></h5>\r\n");
+	ret |= ffile_printf(fd, "\t\t<button onclick=\"doSignin();\">Immediate Execution (%s)</button>\r\n", app);
+
+	if (ret < 0) {
+		pr_red_info("ffile_puts");
+		goto out_close_fd;
+	}
+
+	ret = cavan_http_flush_html_file(fd);
+	if (ret < 0) {
+		pr_red_info("cavan_http_flush_html_file: %d", ret);
+		goto out_close_fd;
+	}
+
+	ret = cavan_http_send_html(client, fd);
+	if (ret < 0) {
+		pr_red_info("cavan_http_send_html");
+	}
+
+out_close_fd:
+	close(fd);
+	return ret;
 }
 
 int cavan_http_read_multiform_header(struct cavan_fifo *fifo, struct cavan_http_request *header, const char *boundary)
@@ -1509,6 +1603,11 @@ static int cavan_http_service_run_handler(struct cavan_dynamic_service *service,
 		type = cavan_http_get_request_type2(req->type);
 		switch (type) {
 		case HTTP_REQ_GET:
+			if (text_lhcmp("/action/signin", req->url) == 0) {
+				cavan_http_process_signin(client, req);
+				break;
+			}
+
 			cavan_http_process_get(client, req);
 			break;
 

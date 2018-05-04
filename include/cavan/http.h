@@ -99,6 +99,11 @@ struct cavan_http_stream {
 	size_t used;
 };
 
+struct cavan_http_signin_info {
+	const char *app;
+	const char *url;
+};
+
 extern const char *http_mime_type_bin;
 extern const char *http_mime_type_txt;
 extern const char *http_mime_type_html;
