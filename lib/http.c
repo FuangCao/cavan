@@ -45,8 +45,12 @@ const cavan_string_t http_header_names[HTTP_HEADER_COUNT] = {
 const struct cavan_http_signin_info http_signin_infos[] = {
 	{ "XJXQY", "http://jxqy.qq.com/act/agile/48347/index.html?appid=wxacbfe7e1bb3e800f&logtype=wx" },
 	{ "RXCQ", "http://mir.qq.com/act/a20150729cdkey/m/wx.htm" },
+	{ "XYCQ", "https://xycq.qq.com/act/agile2_62354/index_2.html" },
 	{ "CQBY", "http://shuang.qq.com/cp/a20171122cdkm/index.shtml" },
-	{ "CYHX", "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx58164a91f1821369&redirect_uri=https%3A%2F%2Fcfm.qq.com%2Fcp%2Fa20160728qiandao%2Findex.htm&response_type=code&scope=snsapi_base&state=1|1|wx58164a91f1821369|2#wechat_redirect" },
+	{ "CYHX", "http://open.weixin.qq.com/connect/oauth2/authorize?appid=wx58164a91f1821369&redirect_uri=http%3A%2F%2Fcfm.qq.com%2Fcp%2Fa20151125king%2Fwxcdkey.htm%3Facctype%3Dwx%26appid%3Dwx58164a91f1821369&response_type=code&scope=snsapi_userinfo&state=STATE&version=62060028" },
+	{ "XXSY", "http://xxsy.qq.com/act/a20170303cdkm/index.html" },
+	{ "TLBB", "http://tlbb.qq.com/act/agile/108149/index.html?appid=wx44b60f3ea0534cd7&logtype=wx" },
+	{ "ZTJSY", "http://ztj.qq.com/act/agile2_117540/index.html" },
 	{ "ZTSJB", "http://zt.qq.com/act/agile2.0/47886/zt.html" },
 	{ "JDQS-QJCJ", "https://pubgm.qq.com/act/agile2_136573/index.html" },
 };
