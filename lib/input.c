@@ -1216,6 +1216,16 @@ static ssize_t cavan_input_proxy_device_write(struct cavan_input_proxy_device *d
 	return ffile_write(device->fd, events, sizeof(struct input_event) * count);
 }
 
+static bool cavan_input_proxy_device_support_key(struct cavan_input_proxy_device *device, int code)
+{
+	return test_bit(code, device->key_bitmask);
+}
+
+static bool cavan_input_proxy_device_support_abs(struct cavan_input_proxy_device *device, int code)
+{
+	return test_bit(code, device->abs_bitmask);
+}
+
 static bool cavan_input_proxy_device_contains(struct cavan_input_proxy_device *head, const char *filename)
 {
 	struct cavan_input_proxy_device *device = head;
@@ -1281,7 +1291,7 @@ static struct cavan_input_proxy_device *cavan_input_proxy_device_find_keypad(str
 	}
 
 	while (1) {
-		if (test_bit(code, device->key_bitmask)) {
+		if (cavan_input_proxy_device_support_key(device, code)) {
 			return device;
 		}
 
@@ -1303,7 +1313,7 @@ static struct cavan_input_proxy_device *cavan_input_proxy_device_find_touchscree
 	}
 
 	while (1) {
-		if (test_bit(ABS_MT_POSITION_X, device->abs_bitmask) && test_bit(ABS_MT_POSITION_Y, device->abs_bitmask)) {
+		if (cavan_input_proxy_device_support_abs(device, ABS_MT_POSITION_X) && cavan_input_proxy_device_support_abs(device, ABS_MT_POSITION_Y)) {
 			return device;
 		}
 
@@ -1400,7 +1410,10 @@ static bool input_proxy_send_events(struct cavan_input_proxy *proxy, struct cava
 static bool input_proxy_send_tap(struct cavan_input_proxy *proxy, int argc, char *argv[])
 {
 	struct cavan_input_proxy_device *device;
-	struct input_event events[7];
+	struct input_event events[10];
+	struct input_event *event;
+	bool support_tracking_id;
+	bool support_touch;
 	int x, y;
 
 	if (argc < 3) {
@@ -1426,15 +1439,46 @@ static bool input_proxy_send_tap(struct cavan_input_proxy *proxy, int argc, char
 
 	pr_info("TOUCH: (%d, %d)", x, y);
 
-	cavan_input_event_setup_abs(events, ABS_MT_TRACKING_ID, 0);
-	cavan_input_event_setup_abs(events + 1, ABS_MT_POSITION_X, x);
-	cavan_input_event_setup_abs(events + 2, ABS_MT_POSITION_Y, y);
-	cavan_input_event_setup_abs(events + 3, ABS_MT_PRESSURE, 1);
-	cavan_input_event_setup_syn_report(events + 4);
-	cavan_input_event_setup_abs(events + 5, ABS_MT_TRACKING_ID, -1);
-	cavan_input_event_setup_syn_report(events + 6);
+	support_tracking_id = cavan_input_proxy_device_support_abs(device, ABS_MT_TRACKING_ID);
+	support_touch = cavan_input_proxy_device_support_key(device, BTN_TOUCH);
+	event = events;
 
-	return input_proxy_send_events(proxy, device, events, NELEM(events));
+	if (cavan_input_proxy_device_support_abs(device, ABS_MT_SLOT)) {
+		cavan_input_event_setup_abs(event++, ABS_MT_SLOT, 0);
+	}
+
+	if (cavan_input_proxy_device_support_abs(device, ABS_MT_PRESSURE)) {
+		cavan_input_event_setup_abs(event++, ABS_MT_PRESSURE, 1);
+	}
+
+	cavan_input_event_setup_abs(event++, ABS_MT_POSITION_X, x);
+	cavan_input_event_setup_abs(event++, ABS_MT_POSITION_Y, y);
+
+	if (support_tracking_id) {
+		cavan_input_event_setup_abs(event++, ABS_MT_TRACKING_ID, 0);
+	}
+
+	// cavan_input_event_setup_syn_mt_report(event++);
+
+	if (support_touch) {
+		cavan_input_event_setup_key(event++, BTN_TOUCH, 1);
+	}
+
+	cavan_input_event_setup_syn_report(event++);
+
+	if (support_tracking_id) {
+		cavan_input_event_setup_abs(event++, ABS_MT_TRACKING_ID, -1);
+	}
+
+	// cavan_input_event_setup_syn_mt_report(event++);
+
+	if (support_touch) {
+		cavan_input_event_setup_key(event++, BTN_TOUCH, 0);
+	}
+
+	cavan_input_event_setup_syn_report(event++);
+
+	return input_proxy_send_events(proxy, device, events, event - events);
 }
 
 static bool input_proxy_send_key(struct cavan_input_proxy *proxy, int argc, char *argv[])
