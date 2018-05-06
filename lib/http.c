@@ -623,23 +623,22 @@ int cavan_http_read_request(struct cavan_fifo *fifo, struct cavan_http_request *
 
 int cavan_http_send_reply(struct network_client *client, int code, const char *format, ...)
 {
+	char buff[1024];
 	va_list ap;
-	char buff[2048];
-	char *p = buff, *p_end = p + sizeof(buff);
-
-	p += snprintf(p, p_end - p,
-		"HTTP/1.1 %d None\r\n"
-		"Connection: keep-alive\r\n\r\n", code);
+	int length;
+	int ret;
 
 	va_start(ap, format);
-	p += vsnprintf(p, p_end - p, format, ap);
+	length = vsnprintf(buff, sizeof(buff), format, ap);
 	va_end(ap);
 
-#if CAVAN_HTTP_DEBUG
-	pd_info("reply[%" PRINT_FORMAT_SIZE "]:\n%s", p - buff, buff);
-#endif
+	ret = network_client_printf(client, "HTTP/1.1 %d None\r\n"
+		"Connection: keep-alive\r\nContent-Length: %d\r\n\r\n", code, length);
+	if (ret < 0) {
+		return ret;
+	}
 
-	return network_client_send(client, buff, p - buff);
+	return network_client_send(client, buff, length);
 }
 
 int cavan_http_open_html_file(const char *title, char *pathname)
@@ -1165,11 +1164,11 @@ int cavan_http_process_get(struct network_client *client, struct cavan_http_requ
 
 static const struct cavan_http_signin_info *cavan_http_signin_find(const char *app)
 {
-	const struct cavan_http_signin_info *info;
+	const struct cavan_http_signin_info *p, *p_end;
 
-	for (info = LAST_ELEM(http_signin_infos); info >= http_signin_infos; info--) {
-		if (strcmp(info->app, app) == 0) {
-			return info;
+	for (p = http_signin_infos, p_end = p + NELEM(http_signin_infos); p < p_end; p++) {
+		if (strcasecmp(p->app, app) == 0) {
+			return p;
 		}
 	}
 
@@ -1183,21 +1182,23 @@ static u32 cavan_http_signin_get_delay(void)
 	return (time / 3600000 + 1) * 3600000 - time;
 }
 
-static int cavan_http_process_signin(struct network_client *client, struct cavan_http_request *req)
+static int cavan_http_process_signin(struct network_client *client, struct cavan_http_request *req, const char *app)
 {
-	const char *app = cavan_http_request_find_param_simple(req, "app");
 	const struct cavan_http_signin_info *info;
 	int ret;
 	int fd;
 
 	if (app == NULL) {
-		cavan_http_send_reply(client, 404, "App not set");
-		return -ENOENT;
+		app = cavan_http_request_find_param_simple(req, "app");
+		if (app == NULL) {
+			cavan_http_send_reply(client, 403, "App not set");
+			return -ENOENT;
+		}
 	}
 
 	info = cavan_http_signin_find(app);
 	if (info == NULL) {
-		cavan_http_send_reply(client, 404, "App not found: %s", app);
+		cavan_http_send_reply(client, 403, "App not found: %s", app);
 		return -ENOENT;
 	}
 
@@ -1222,8 +1223,13 @@ static int cavan_http_process_signin(struct network_client *client, struct cavan
 	ret |= ffile_puts(fd, "\t\t\t\t\tdelay = 0;\r\n");
 	ret |= ffile_puts(fd, "\t\t\t\t}\r\n");
 	ret |= ffile_puts(fd, "\t\t\t}\r\n");
-	ret |= ffile_puts(fd, "\t\t\tsetTimeout(\"doSignin()\", delay);\r\n");
-	ret |= ffile_puts(fd, "\t\t\tsetInterval(\"showDelay()\", 1000);\r\n");
+	ret |= ffile_puts(fd, "\t\t\tvar date = new Date()\r\n");
+	ret |= ffile_puts(fd, "\t\t\tif (date.getHours() < 23) {\r\n");
+	ret |= ffile_puts(fd, "\t\t\t\tdoSignin()\r\n");
+	ret |= ffile_puts(fd, "\t\t\t} else {\r\n");
+	ret |= ffile_puts(fd, "\t\t\t\tsetTimeout(\"doSignin()\", delay);\r\n");
+	ret |= ffile_puts(fd, "\t\t\t\tsetInterval(\"showDelay()\", 1000);\r\n");
+	ret |= ffile_puts(fd, "\t\t\t}\r\n");
 	ret |= ffile_puts(fd, "\t\t</script>\r\n");
 	ret |= ffile_puts(fd, "\t\t<h5 id=\"time\"></h5>\r\n");
 	ret |= ffile_puts(fd, "\t\t<h5 id=\"message\"></h5>\r\n");
@@ -1248,6 +1254,21 @@ static int cavan_http_process_signin(struct network_client *client, struct cavan
 out_close_fd:
 	close(fd);
 	return ret;
+}
+
+static int cavan_http_process_action(struct network_client *client, struct cavan_http_request *req, const char *action)
+{
+	if (text_lhcmp("signin", action) == 0) {
+		if (action[6] == 0) {
+			return cavan_http_process_signin(client, req, NULL);
+		} else if (action[6] == '/') {
+			return cavan_http_process_signin(client, req, action + 7);
+		}
+	}
+
+	cavan_http_send_reply(client, 403, "Invalid action: %s", action);
+
+	return -EINVAL;
 }
 
 int cavan_http_read_multiform_header(struct cavan_fifo *fifo, struct cavan_http_request *header, const char *boundary)
@@ -1611,8 +1632,8 @@ static int cavan_http_service_run_handler(struct cavan_dynamic_service *service,
 		type = cavan_http_get_request_type2(req->type);
 		switch (type) {
 		case HTTP_REQ_GET:
-			if (text_lhcmp("/action/signin", req->url) == 0) {
-				cavan_http_process_signin(client, req);
+			if (text_lhcmp("/action/", req->url) == 0) {
+				cavan_http_process_action(client, req, req->url + 8);
 				break;
 			}
 
