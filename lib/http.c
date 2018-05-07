@@ -1293,6 +1293,8 @@ static int cavan_http_process_action(struct network_client *client, struct cavan
 		length = strftime(buff, sizeof(buff), "%Y-%m-%d %T", time);
 
 		return cavan_http_send_reply(client, 200, buff, length);
+	} else if (strcmp("delay", action) == 0) {
+		return cavan_http_send_replyf(client, 200, "%d", cavan_http_signin_get_delay());
 	} else if (strcmp("timestamp", action) == 0) {
 		return cavan_http_send_replyf(client, 200, "%" PRINT_FORMAT_INT64, clock_gettime_real_ms());
 	}
