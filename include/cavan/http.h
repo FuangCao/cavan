@@ -137,6 +137,7 @@ size_t cavan_http_parse_url(char *url, struct cavan_http_prop *props, size_t siz
 char *cavan_http_get_boundary(struct cavan_http_prop *props, size_t size);
 
 int cavan_http_send_reply(struct network_client *client, int code, const char *format, ...);
+int cavan_http_send_redirect(struct network_client *client, const char *pathname);
 int cavan_http_open_html_file(const char *title, char *pathname);
 int cavan_http_flush_html_file(int fd);
 const char *cavan_http_get_mime_type(const char *pathname);

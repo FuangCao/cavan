@@ -641,6 +641,11 @@ int cavan_http_send_reply(struct network_client *client, int code, const char *f
 	return network_client_send(client, buff, length);
 }
 
+int cavan_http_send_redirect(struct network_client *client, const char *pathname)
+{
+	return network_client_printf(client, "HTTP/1.1 301 Permanently Moved\r\nConnection: keep-alive\r\nContent-Length: 0\r\nLocation: %s\r\n\r\n", pathname);
+}
+
 int cavan_http_open_html_file(const char *title, char *pathname)
 {
 	int fd;
@@ -916,6 +921,11 @@ int cavan_http_list_directory(struct network_client *client, const char *dirname
 	char *filename;
 	char pathname[1024];
 	struct dirent **entries;
+
+	if (text_get_char(dirname, -1) != '/') {
+		cavan_path_copy(pathname, sizeof(pathname), dirname, true);
+		return cavan_http_send_redirect(client, pathname);
+	}
 
 #if CAVAN_HTTP_DEBUG
 	println("filter = %s", filter);
