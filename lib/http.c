@@ -621,16 +621,9 @@ int cavan_http_read_request(struct cavan_fifo *fifo, struct cavan_http_request *
 	return 0;
 }
 
-int cavan_http_send_reply(struct network_client *client, int code, const char *format, ...)
+int cavan_http_send_reply(struct network_client *client, int code, const char *body, int length)
 {
-	char buff[1024];
-	va_list ap;
-	int length;
 	int ret;
-
-	va_start(ap, format);
-	length = vsnprintf(buff, sizeof(buff), format, ap);
-	va_end(ap);
 
 	ret = network_client_printf(client, "HTTP/1.1 %d None\r\n"
 		"Connection: keep-alive\r\nContent-Length: %d\r\n\r\n", code, length);
@@ -638,7 +631,20 @@ int cavan_http_send_reply(struct network_client *client, int code, const char *f
 		return ret;
 	}
 
-	return network_client_send(client, buff, length);
+	return network_client_send(client, body, length);
+}
+
+int cavan_http_send_replyf(struct network_client *client, int code, const char *format, ...)
+{
+	char buff[1024];
+	va_list ap;
+	int length;
+
+	va_start(ap, format);
+	length = vsnprintf(buff, sizeof(buff), format, ap);
+	va_end(ap);
+
+	return cavan_http_send_reply(client, code, buff, length);
 }
 
 int cavan_http_send_redirect(struct network_client *client, const char *pathname)
@@ -667,7 +673,6 @@ int cavan_http_open_html_file(const char *title, char *pathname)
 #if CAVAN_HTTP_DEBUG
 	pd_info("pathname = %s, title = %s", pathname, title);
 #endif
-
 
 	ffile_puts(fd, "<!-- This file is automatic generate by Fuang.Cao -->\r\n\r\n");
 	ffile_printf(fd, "<html>\r\n\t<head>\r\n\t\t<meta http-equiv=\"content-type\" content=\"%s;charset=utf-8\" />\r\n", http_mime_type_html);
@@ -1152,7 +1157,7 @@ int cavan_http_process_get(struct network_client *client, struct cavan_http_requ
 	ret = file_stat(req->url, &st);
 	if (ret < 0) {
 		if (errno == ENOENT) {
-			cavan_http_send_reply(client, 404, "File not found: %s", req->url);
+			cavan_http_send_replyf(client, 404, "File not found: %s", req->url);
 			return ret;
 		}
 
@@ -1167,7 +1172,7 @@ int cavan_http_process_get(struct network_client *client, struct cavan_http_requ
 		return cavan_http_list_directory(client, req->url, cavan_http_request_find_param_simple(req, "filter"));
 
 	default:
-		cavan_http_send_reply(client, 403, "Invalid file type");
+		cavan_http_send_reply(client, 403, TEXT_PAIR("Invalid file type"));
 		return -EINVAL;
 	}
 }
@@ -1201,14 +1206,14 @@ static int cavan_http_process_signin(struct network_client *client, struct cavan
 	if (app == NULL) {
 		app = cavan_http_request_find_param_simple(req, "app");
 		if (app == NULL) {
-			cavan_http_send_reply(client, 403, "App not set");
+			cavan_http_send_reply(client, 403, TEXT_PAIR("App not set"));
 			return -ENOENT;
 		}
 	}
 
 	info = cavan_http_signin_find(app);
 	if (info == NULL) {
-		cavan_http_send_reply(client, 403, "App not found: %s", app);
+		cavan_http_send_replyf(client, 403, "App not found: %s", app);
 		return -ENOENT;
 	}
 
@@ -1274,9 +1279,25 @@ static int cavan_http_process_action(struct network_client *client, struct cavan
 		} else if (action[6] == '/') {
 			return cavan_http_process_signin(client, req, action + 7);
 		}
+	} else if (strcmp("time", action) == 0) {
+		time_t timstamp = time(NULL);
+		struct tm *time;
+		char buff[1024];
+		int length;
+
+		time = localtime(&timstamp);
+		if (time == NULL) {
+			return cavan_http_send_reply(client, 403, TEXT_PAIR("Failed to get localtime"));
+		}
+
+		length = strftime(buff, sizeof(buff), "%Y-%m-%d %T", time);
+
+		return cavan_http_send_reply(client, 200, buff, length);
+	} else if (strcmp("timestamp", action) == 0) {
+		return cavan_http_send_replyf(client, 200, "%" PRINT_FORMAT_INT64, clock_gettime_real_ms());
 	}
 
-	cavan_http_send_reply(client, 403, "Invalid action: %s", action);
+	cavan_http_send_replyf(client, 403, "Invalid action: %s", action);
 
 	return -EINVAL;
 }
@@ -1498,7 +1519,7 @@ int cavan_http_process_post(struct cavan_fifo *fifo, struct cavan_http_request *
 	const char *boundary = cavan_http_get_boundary(req->props, req->prop_used);
 
 	if (boundary == NULL) {
-		cavan_http_send_reply(fifo->private_data, 403, "boundary not found");
+		cavan_http_send_reply(fifo->private_data, 403, TEXT_PAIR("boundary not found"));
 		return -EINVAL;
 	}
 
@@ -1518,7 +1539,7 @@ int cavan_http_process_post(struct cavan_fifo *fifo, struct cavan_http_request *
 	while (1) {
 		ret = cavan_http_receive_file(fifo, header, req->url, boundary);
 		if (ret < 0) {
-			cavan_http_send_reply(fifo->private_data, 403, "Failed to upload: %d", ret);
+			cavan_http_send_replyf(fifo->private_data, 403, "Failed to upload: %d", ret);
 			goto out_cavan_http_request_free;
 		}
 
@@ -1543,9 +1564,9 @@ int cavan_http_process_post(struct cavan_fifo *fifo, struct cavan_http_request *
 		p = mem_time_tostring_ms(time_consume, p, p_end - p);
 		p = text_ncopy(p, ")", p_end - p);
 
-		ret = cavan_http_send_reply(fifo->private_data, 200, "Upload successfull: %s", speed_buff);
+		ret = cavan_http_send_replyf(fifo->private_data, 200, "Upload successfull: %s", speed_buff);
 	} else {
-		ret = cavan_http_send_reply(fifo->private_data, 200, "Upload successfull");
+		ret = cavan_http_send_replyf(fifo->private_data, 200, "Upload successfull");
 	}
 
 out_cavan_http_request_free:
