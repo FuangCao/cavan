@@ -16,7 +16,7 @@ FILE_GIT_DAEMON_RUN="/etc/sv/git-daemon/run"
 FILE_GRUB_LINUX="/etc/grub.d/10_linux"
 FILE_GRUB_CAVAN="/etc/grub.d/80_cavan"
 FILE_APP_FEILED="/tmp/cavan-app-failed.txt"
-DIR_SYSTEMD_CONFIG="/etc/systemd/system/multi-user.target.wants"
+DIR_SYSTEMD_CONFIG="/lib/systemd/system"
 DIR_SOURCES_LIST="/etc/apt/sources.list.d"
 
 CAVAN_HOME="/cavan"
@@ -550,6 +550,12 @@ function config_systemd()
 	done
 
 	systemctl daemon-reload
+
+	for fn in *.service
+	do
+		systemctl enable "${fn}" || return 1
+		systemctl start "${fn}" || return 1
+	done
 
 	return 0
 }
