@@ -7,21 +7,76 @@
 		<title>自动签到</title>
 	</head>
 	<body>
-		<form action="/action/signin" method="get">
-			<h3><input type="radio" name="app" value="XJXQY"><a href="/action/signin/XJXQY">新剑侠情缘手游</a></input></h3>
-			<h3><input type="radio" name="app" value="RXCQ"><a href="/action/signin/RXCQ">热血传奇手游</a></input></h3>
-			<h3><input type="radio" name="app" value="CQBY"><a href="/action/signin/CQBY">传奇霸业手游 (手机登录)</a></input></h3>
-			<h3><input type="radio" name="app" value="JDQS-QJCJ"><a href="/action/signin/JDQS-QJCJ">绝地求生全军出击</a></input></h3>
-			<h3><input type="radio" name="app" value="CYHX"><a href="/action/signin/CYHX">穿越火线官方FPS手游</a></input></h3>
-			<h3><input type="radio" name="app" value="ZTSJB"><a href="/action/signin/ZTSJB">征途手机版</a></input></h3>
-			<h3><input type="radio" name="app" value="XYCQ"><a href="/action/signin/XYCQ">轩辕传奇手游</a></input></h3>
-			<h3><input type="radio" name="app" value="XXSY"><a href="/action/signin/XXSY">寻仙手游</a></input></h3>
-			<h3><input type="radio" name="app" value="TLBB"><a href="/action/signin/TLBB">天龙八部手游 (手机登录)</a></input></h3>
-			<h3><input type="radio" name="app" value="ZTJSY"><a href="/action/signin/ZTJSY">择天记手游</a></input></h3>
-			<h3>
-				<input type="text" name="delay" value="0" />
-				<input type="submit" value="开始" />
-			</h3>
-		</form>
+	<script type="text/javascript">
+
+		var mTime;
+		var mUrl;
+
+		function doRedirect() {
+			window.location = mUrl;
+		}
+
+		function toTimeString(value) {
+			if (value < 10) {
+				return "0" + value;
+			}
+
+			return value;
+		}
+
+		function showDelay() {
+			var date = new Date();
+			var delay = mTime - date.getTime();
+
+			if (delay > 0) {
+				setTimeout("showDelay()", delay % 1001);
+				var hour = toTimeString(parseInt(delay / 3600000));
+				var minute = toTimeString(parseInt(delay % 3600000 / 60000));
+				var second = toTimeString(delay % 60000 / 1000);
+				document.all.delay.innerHTML = "Delay: " + hour + ":" + minute + ":" + second;
+			}
+
+			document.all.time.innerHTML = "Time: " + date.toTimeString();
+		}
+
+		function onButtonClick(self) {
+			var date = new Date();
+			if (date.getHours() < 23) {
+				return true;
+			}
+
+			mUrl = self.href;
+
+			document.body.innerHTML = "<h3><a href=\"" + mUrl +  "\">" + self.text + "</a></h3><h3 id=\"time\"></h3><h3 id=\"delay\"></h3>";
+
+			var ajax = new XMLHttpRequest();
+
+			ajax.open("GET", "/action/delay", true);
+
+			ajax.onreadystatechange = function() {
+				if (ajax.readyState == 4) {
+					var delay = parseInt(ajax.responseText);
+					setTimeout("doRedirect()", delay);
+
+					mTime = new Date().getTime() + delay;
+					showDelay();
+				}
+			}
+
+			ajax.send();
+
+			return false
+		}
+		</script>
+		<h3><a onclick="return onButtonClick(this)" href="http://jxqy.qq.com/act/agile/48347/index.html?appid=wxacbfe7e1bb3e800f&logtype=wx">新剑侠情缘手游</a></h3>
+		<h3><a onclick="return onButtonClick(this)" href="http://mir.qq.com/act/a20150729cdkey/m/wx.htm">热血传奇手游</a></h3>
+		<h3><a onclick="return onButtonClick(this)" href="http://shuang.qq.com/cp/a20171122cdkm/index.shtml">传奇霸业手游 (手机登录)</a></h3>
+		<h3><a onclick="return onButtonClick(this)" href="https://pubgm.qq.com/act/agile2_136573/index.html">绝地求生全军出击</a></h3>
+		<h3><a onclick="return onButtonClick(this)" href="http://open.weixin.qq.com/connect/oauth2/authorize?appid=wx58164a91f1821369&redirect_uri=http%3A%2F%2Fcfm.qq.com%2Fcp%2Fa20151125king%2Fwxcdkey.htm%3Facctype%3Dwx%26appid%3Dwx58164a91f1821369&response_type=code&scope=snsapi_userinfo&state=STATE&version=62060028">穿越火线官方FPS手游</a></h3>
+		<h3><a onclick="return onButtonClick(this)" href="http://zt.qq.com/act/agile2.0/47886/zt.html">征途手机版</a></h3>
+		<h3><a onclick="return onButtonClick(this)" href="https://xycq.qq.com/act/agile2_62354/index_2.html">轩辕传奇手游</a></h3>
+		<h3><a onclick="return onButtonClick(this)" href="http://xxsy.qq.com/act/a20170303cdkm/index.html">寻仙手游</a></input></h3>
+		<h3><a onclick="return onButtonClick(this)" href="http://tlbb.qq.com/act/agile/108149/index.html?appid=wx44b60f3ea0534cd7&logtype=wx">天龙八部手游 (手机登录)</a></input></h3>
+		<h3><a onclick="return onButtonClick(this)" href="http://ztj.qq.com/act/agile2_117540/index.html">择天记手游</a></input></h3>
 	</body>
 </html>
