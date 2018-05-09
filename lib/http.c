@@ -1297,6 +1297,8 @@ static int cavan_http_process_action(struct network_client *client, struct cavan
 		return cavan_http_send_replyf(client, 200, "%d", cavan_http_signin_get_delay());
 	} else if (strcmp("timestamp", action) == 0) {
 		return cavan_http_send_replyf(client, 200, "%" PRINT_FORMAT_INT64, clock_gettime_real_ms());
+	} else if (strcmp("test", action) == 0) {
+		return network_client_send_text(client, "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n");
 	}
 
 	cavan_http_send_replyf(client, 403, "Invalid action: %s", action);

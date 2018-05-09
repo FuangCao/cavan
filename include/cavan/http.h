@@ -58,6 +58,11 @@ struct cavan_http_header {
 	u16 length;
 };
 
+struct cavan_http_status {
+	int code;
+	const char *desc;
+};
+
 struct cavan_http_packet {
 	struct cavan_http_header headers[HTTP_HEADER_COUNT];
 	cavan_string_t header;
