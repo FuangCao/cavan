@@ -1683,6 +1683,10 @@ static int cavan_http_service_run_handler(struct cavan_dynamic_service *service,
 			cavan_http_process_propfind(&fifo, req);
 			break;
 
+		case HTTP_REQ_HEAD:
+			network_client_send_text(client, "HTTP/1.1 200 OK\r\n\r\n");
+			goto out_cavan_fifo_deinit;
+
 		default:
 			goto out_cavan_fifo_deinit;
 		}
