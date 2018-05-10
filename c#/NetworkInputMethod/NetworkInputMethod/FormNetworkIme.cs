@@ -424,28 +424,24 @@ namespace NetworkInputMethod
 
         private void buttonOpen_Click(object sender, EventArgs e)
         {
-            if (mFormOpenApp == null || mFormOpenApp.IsDisposed)
+            if (mFormOpenApp != null)
             {
-                mFormOpenApp = new FormOpenApp(this);
-                mFormOpenApp.Show();
+                mFormOpenApp.Dispose();
             }
-            else
-            {
-                mFormOpenApp.WindowState = FormWindowState.Normal;
-            }
+
+            mFormOpenApp = new FormOpenApp(this);
+            mFormOpenApp.Show();
         }
 
         private void buttonSelect_Click(object sender, EventArgs e)
         {
-            if (mFormSelect == null || mFormSelect.IsDisposed)
+            if (mFormSelect != null)
             {
-                mFormSelect = new FormSelect(this);
-                mFormSelect.Show();
+                mFormSelect.Dispose();
             }
-            else
-            {
-                mFormSelect.WindowState = FormWindowState.Normal;
-            }
+
+            mFormSelect = new FormSelect(this);
+            mFormSelect.Show();
         }
 
         private void buttonIme_Click(object sender, EventArgs e)

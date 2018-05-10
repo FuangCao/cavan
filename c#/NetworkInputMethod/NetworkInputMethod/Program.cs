@@ -2,6 +2,7 @@
 using System.Windows.Forms;
 using System.Reflection;
 using NetworkInputMethod.Properties;
+using System.Threading;
 
 namespace NetworkInputMethod
 {
@@ -13,10 +14,23 @@ namespace NetworkInputMethod
         [STAThread]
         static void Main()
         {
-            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new FormNetworkIme());
+            bool createdNew;
+            Mutex mutex = new Mutex(true, Application.ProductName, out createdNew);
+
+            if (createdNew)
+            {
+                AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new FormNetworkIme());
+
+                mutex.ReleaseMutex();
+            }
+            else
+            {
+                MessageBox.Show("本程序已经在运行了，不要同时打开多个哦！");
+                Application.Exit();
+            }
         }
 
         private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
