@@ -67,6 +67,8 @@ public class CavanTcpPacketClient extends CavanTcpClient {
 				}
 			}
 
+			setRecvTime();
+
 			if (!onPacketReceived(mBytes, length)) {
 				break;
 			}

@@ -1,7 +1,5 @@
 package com.cavan.java;
 
-import android.annotation.SuppressLint;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -20,6 +18,7 @@ public class CavanTcpClient {
 		void onTcpDisconnected();
 		boolean onTcpConnFailed(int times);
 		boolean onDataReceived(byte[] bytes, int length);
+		void onTcpRecvTimeout();
 	}
 
 	private Socket mSocket;
@@ -29,6 +28,9 @@ public class CavanTcpClient {
 	private InetSocketAddress mCurrAddress;
 	private CavanTcpClientListener mTcpClientListener;
 	private List<InetSocketAddress> mAddresses = new ArrayList<InetSocketAddress>();
+
+	private long mRecvTime;
+	private int mRecvTimeout;
 
 	private boolean mConnEnabled;
 	private boolean mConnected;
@@ -82,6 +84,24 @@ public class CavanTcpClient {
 			}
 		}
 	};
+
+	public synchronized void setRecvTimeout(int timeout) {
+		mRecvTimeout = timeout;
+	}
+
+	public synchronized int getRecvTimeout() {
+		return mRecvTimeout;
+	}
+
+	public synchronized void setRecvTime(long time) {
+		mRecvTime = time;
+	}
+
+	public synchronized void setRecvTime() {
+		if (mRecvTimeout > 0) {
+			setRecvTime(System.currentTimeMillis());
+		}
+	}
 
 	public synchronized Socket getSocket() {
 		return mSocket;
@@ -140,7 +160,6 @@ public class CavanTcpClient {
 		return mCurrAddress;
 	}
 
-	@SuppressLint("NewApi")
 	public synchronized String getCurrentAddressString() {
 		InetSocketAddress address = mCurrAddress;
 		if (address == null) {
@@ -413,12 +432,35 @@ public class CavanTcpClient {
 			if (success) {
 				mRecvThread.wakeup();
 
-				while (isConnected() && isConnEnabled()) {
-					synchronized (mConnThread) {
-						try {
-							mConnThread.wait();
-						} catch (InterruptedException e) {
-							e.printStackTrace();
+				if (mRecvTimeout > 0) {
+					mRecvTime = System.currentTimeMillis();
+
+					while (isConnected() && isConnEnabled()) {
+						long overtime = System.currentTimeMillis() - mRecvTime;
+
+						if (overtime < mRecvTimeout) {
+							long delay = mRecvTimeout - overtime;
+
+							synchronized (mConnThread) {
+								try {
+									mConnThread.wait(delay);
+								} catch (InterruptedException e) {
+									e.printStackTrace();
+								}
+							}
+						} else {
+							onTcpRecvTimeout();
+							break;
+						}
+					}
+				} else {
+					while (isConnected() && isConnEnabled()) {
+						synchronized (mConnThread) {
+							try {
+								mConnThread.wait();
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
 						}
 					}
 				}
@@ -471,12 +513,13 @@ public class CavanTcpClient {
 			try {
 				int length = stream.read(bytes);
 				if (length > 0) {
+					setRecvTime();
 					onDataReceived(bytes, length);
 				} else {
 					break;
 				}
 			} catch (IOException e) {
-				e.printStackTrace();
+				// e.printStackTrace();
 				break;
 			}
 		}
@@ -545,6 +588,15 @@ public class CavanTcpClient {
 		return true;
 	}
 
+	protected void onTcpRecvTimeout() {
+		CavanTcpClientListener listener = getTcpClientListener();
+		if (listener != null) {
+			listener.onTcpRecvTimeout();
+		} else {
+			CavanJava.dLog("onTcpRecvTimeout");
+		}
+	}
+
 	protected boolean onDataReceived(byte[] bytes, int length) {
 		CavanTcpClientListener listener = getTcpClientListener();
 		if (listener != null) {
@@ -572,6 +624,7 @@ public class CavanTcpClient {
 			}
 		};
 
+		tcp.setRecvTimeout(10000);
 		tcp.connect("127.0.0.1", 9901);
 	}
 }

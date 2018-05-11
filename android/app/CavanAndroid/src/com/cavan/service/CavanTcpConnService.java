@@ -203,4 +203,8 @@ public abstract class CavanTcpConnService extends Service implements CavanTcpCli
 	public boolean onDataReceived(byte[] bytes, int length) {
 		return false;
 	}
+
+	@Override
+	public void onTcpRecvTimeout() {
+	}
 }
