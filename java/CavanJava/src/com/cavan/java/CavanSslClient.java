@@ -28,18 +28,18 @@ public class CavanSslClient extends CavanTcpClient {
 
 				@Override
 				public X509Certificate[] getAcceptedIssuers() {
-					CavanJava.dLog("getAcceptedIssuers");
+					prDbgInfo("getAcceptedIssuers");
 					return null;
 				}
 
 				@Override
 				public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-					CavanJava.dLog("checkServerTrusted");
+					prDbgInfo("checkServerTrusted");
 				}
 
 				@Override
 				public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-					CavanJava.dLog("checkClientTrusted");
+					prDbgInfo("checkClientTrusted");
 				}
 			};
 
@@ -63,7 +63,7 @@ public class CavanSslClient extends CavanTcpClient {
 	protected Socket createSocket() {
 		SSLContext context = getSslContext();
 		if (context == null) {
-			CavanJava.eLog("getSslContext");
+			prErrInfo("getSslContext");
 			return null;
 		}
 
@@ -89,7 +89,7 @@ public class CavanSslClient extends CavanTcpClient {
 
 			@Override
 			protected boolean onDataReceived(byte[] bytes, int length) {
-				CavanJava.dLog("onDataReceived: " + new String(bytes, 0, length));
+				prDbgInfo("onDataReceived: " + new String(bytes, 0, length));
 				return true;
 			}
 		};

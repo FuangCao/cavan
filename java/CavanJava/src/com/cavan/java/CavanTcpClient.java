@@ -87,6 +87,7 @@ public class CavanTcpClient {
 
 	public synchronized void setRecvTimeout(int timeout) {
 		mRecvTimeout = timeout;
+		mConnThread.wakeup();
 	}
 
 	public synchronized int getRecvTimeout() {
@@ -301,13 +302,12 @@ public class CavanTcpClient {
 	}
 
 	private boolean openSocket(InetSocketAddress address) {
-		CavanJava.dLog("openSocket: " + address);
+		prDbgInfo("openSocket: " + address);
 
 		closeSocket();
 
 		Socket socket = createSocket();
 		if (socket == null) {
-			CavanJava.eLog("createSocket");
 			return false;
 		}
 
@@ -486,7 +486,7 @@ public class CavanTcpClient {
 						delay = 1 << 15;
 					}
 
-					CavanJava.dLog("delay = " + delay);
+					prDbgInfo("delay = " + delay);
 
 					synchronized (mConnThread) {
 						try {
@@ -530,12 +530,24 @@ public class CavanTcpClient {
 		}
 	}
 
+	public void prDbgInfo(String message) {
+		CavanJava.dLog(message);
+	}
+
+	public void prWarnInfo(String message) {
+		CavanJava.wLog(message);
+	}
+
+	public void prErrInfo(String message) {
+		CavanJava.eLog(message);
+	}
+
 	protected void onTcpClientRunning() {
 		CavanTcpClientListener listener = getTcpClientListener();
 		if (listener != null) {
 			listener.onTcpClientRunning();
 		} else {
-			CavanJava.dLog("onTcpClientRunning");
+			prDbgInfo("onTcpClientRunning");
 		}
 	}
 
@@ -544,7 +556,7 @@ public class CavanTcpClient {
 		if (listener != null) {
 			listener.onTcpClientStopped();
 		} else {
-			CavanJava.dLog("onTcpClientStopped");
+			prDbgInfo("onTcpClientStopped");
 		}
 	}
 
@@ -553,7 +565,7 @@ public class CavanTcpClient {
 		if (listener != null) {
 			listener.onTcpConnecting(address);
 		} else {
-			CavanJava.dLog("onTcpClientRunning");
+			prDbgInfo("onTcpClientRunning");
 		}
 	}
 
@@ -563,7 +575,7 @@ public class CavanTcpClient {
 			return listener.onTcpConnected(socket);
 		}
 
-		CavanJava.dLog("onTcpConnected");
+		prDbgInfo("onTcpConnected");
 
 		return true;
 	}
@@ -573,7 +585,7 @@ public class CavanTcpClient {
 		if (listener != null) {
 			listener.onTcpDisconnected();
 		} else {
-			CavanJava.dLog("onTcpDisconnected");
+			prDbgInfo("onTcpDisconnected");
 		}
 	}
 
@@ -583,7 +595,7 @@ public class CavanTcpClient {
 			return listener.onTcpConnFailed(times);
 		}
 
-		CavanJava.dLog("onTcpConnFailed");
+		prDbgInfo("onTcpConnFailed");
 
 		return true;
 	}
@@ -593,7 +605,7 @@ public class CavanTcpClient {
 		if (listener != null) {
 			listener.onTcpRecvTimeout();
 		} else {
-			CavanJava.dLog("onTcpRecvTimeout");
+			prDbgInfo("onTcpRecvTimeout");
 		}
 	}
 
@@ -603,7 +615,7 @@ public class CavanTcpClient {
 			return listener.onDataReceived(bytes, length);
 		}
 
-		CavanJava.dLog("onDataReceived");
+		prDbgInfo("onDataReceived");
 
 		return true;
 	}
@@ -619,7 +631,7 @@ public class CavanTcpClient {
 
 			@Override
 			protected boolean onDataReceived(byte[] bytes, int length) {
-				CavanJava.dLog("onDataReceived: " + new String(bytes, 0, length));
+				prDbgInfo("onDataReceived: " + new String(bytes, 0, length));
 				return true;
 			}
 		};

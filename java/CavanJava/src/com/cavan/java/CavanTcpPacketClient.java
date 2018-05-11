@@ -90,7 +90,7 @@ public class CavanTcpPacketClient extends CavanTcpClient {
 			@Override
 			protected boolean onPacketReceived(byte[] bytes, int length) {
 				String text = new String(bytes, 0, length);
-				CavanJava.dLog("onPacketReceived: " + text);
+				prDbgInfo("onPacketReceived: " + text);
 				return true;
 			}
 
