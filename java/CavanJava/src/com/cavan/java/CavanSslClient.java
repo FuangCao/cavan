@@ -2,9 +2,13 @@ package com.cavan.java;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 public class CavanSslClient extends CavanTcpClient {
 
@@ -19,6 +23,35 @@ public class CavanSslClient extends CavanTcpClient {
 	}
 
 	public synchronized SSLContext getSslContext() {
+		if (mSslContext == null) {
+			TrustManager manager = new X509TrustManager() {
+
+				@Override
+				public X509Certificate[] getAcceptedIssuers() {
+					CavanJava.dLog("getAcceptedIssuers");
+					return null;
+				}
+
+				@Override
+				public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+					CavanJava.dLog("checkServerTrusted");
+				}
+
+				@Override
+				public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+					CavanJava.dLog("checkClientTrusted");
+				}
+			};
+
+			try {
+				SSLContext context = SSLContext.getInstance("TLS");
+				context.init(null, new TrustManager[] { manager }, null);
+				mSslContext = context;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
 		return mSslContext;
 	}
 
@@ -47,20 +80,20 @@ public class CavanSslClient extends CavanTcpClient {
 	}
 
 	public static void main(String[] args) {
-		CavanSslContextBuilder builder = new CavanSslContextBuilder("/cavan/config/ssl/cert.jks");
-		CavanTcpClient tcp = new CavanSslClient(builder.build());
+		CavanTcpClient tcp = new CavanSslClient() {
 
-		if (tcp.connect("127.0.0.1", 9901)) {
-			tcp.send("123456\n".getBytes());
-
-			byte[] bytes = new byte[1024];
-			int length = tcp.read(bytes);
-
-			CavanJava.dLog("length = " + length);
-
-			if (length > 0) {
-				CavanJava.dLog("read: " + new String(bytes));
+			@Override
+			protected boolean onTcpConnected(Socket socket) {
+				return send("123456\n".getBytes());
 			}
-		}
+
+			@Override
+			protected boolean onDataReceived(byte[] bytes, int length) {
+				CavanJava.dLog("onDataReceived: " + new String(bytes, 0, length));
+				return true;
+			}
+		};
+
+		tcp.connect("127.0.0.1", 9901);
 	}
 }

@@ -73,10 +73,7 @@ public class LocationServiceView extends RelativeLayout implements OnClickListen
 			}
 		}
 
-		if (client.isConnDisabled()) {
-			mButtonConn.setText(R.string.connect);
-			mButtonConn.setTextColor(Color.BLACK);
-		} else {
+		if (client.isConnEnabled()) {
 			mButtonConn.setText(R.string.disconnect);
 
 			if (client.isConnected()) {
@@ -84,6 +81,9 @@ public class LocationServiceView extends RelativeLayout implements OnClickListen
 			} else {
 				mButtonConn.setTextColor(Color.RED);
 			}
+		} else {
+			mButtonConn.setText(R.string.connect);
+			mButtonConn.setTextColor(Color.BLACK);
 		}
 
 		mButtonConn.setEnabled(!client.isBusy());
@@ -106,12 +106,12 @@ public class LocationServiceView extends RelativeLayout implements OnClickListen
 				mButtonConn.setEnabled(false);
 				mLocationClient.setBusy(true);
 
-				if (mLocationClient.isConnDisabled()) {
+				if (mLocationClient.isConnEnabled()) {
+					mActivity.disconnect(mLocationClient);
+				} else {
 					int port = CavanJava.parseInt(mEditTextPort.getText().toString());
 					String host = mEditTextHost.getText().toString();
 					mActivity.connect(mLocationClient, host, port);
-				} else {
-					mActivity.disconnect(mLocationClient);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

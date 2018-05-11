@@ -435,20 +435,5 @@ public class MockLocationActivity extends Activity implements OnClickListener {
 			mIsBusy = false;
 			mListViewServers.post(mRunnableNotifyDataSetChanged);
 		}
-
-		@Override
-		public void prErrInfo(String message) {
-			CavanAndroid.eLog(message);
-		}
-
-		@Override
-		public void prWarnInfo(String message) {
-			CavanAndroid.dLog(message);
-		}
-
-		@Override
-		public void prDbgInfo(String message) {
-			CavanAndroid.dLog(message);
-		}
 	}
 }

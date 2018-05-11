@@ -51,7 +51,7 @@ public class CavanTcpPacketClient extends CavanTcpClient {
 	}
 
 	@Override
-	protected void mainLoop(InputStream stream) {
+	protected void runRecvThread(InputStream stream) {
 		byte[] header = new byte[2];
 
 		while (CavanArray.fill(stream, header, 0, 2)) {

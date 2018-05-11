@@ -105,7 +105,8 @@ public abstract class CavanTcpConnService extends Service implements CavanTcpCli
 
 		@Override
 		public boolean connect() throws RemoteException {
-			return mTcpClient.connect();
+			mTcpClient.connect();
+			return true;
 		}
 
 		@Override
@@ -143,10 +144,6 @@ public abstract class CavanTcpConnService extends Service implements CavanTcpCli
 
 	protected void setServiceState(int state) {
 		synchronized (this) {
-			if (state == mState) {
-				return;
-			}
-
 			mState = state;
 		}
 
