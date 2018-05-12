@@ -10,6 +10,7 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.resource.JwaooToyActivity;
@@ -18,6 +19,7 @@ import com.jwaoo.android.JwaooBleToy;
 @SuppressLint("HandlerLeak")
 public class MotoActivity extends JwaooToyActivity implements OnItemSelectedListener, OnSeekBarChangeListener {
 
+	private TextView mTextViewStatus;
 	private Spinner mSpinnerMotoMode;
 	private SeekBar mSeekBarStep;
 	private SeekBar mSeekBarAddDelay;
@@ -36,6 +38,8 @@ public class MotoActivity extends JwaooToyActivity implements OnItemSelectedList
 	@Override
 	protected void onCreateBle(Bundle savedInstanceState) {
 		setContentView(R.layout.activity_moto);
+
+		mTextViewStatus = (TextView) findViewById(R.id.textViewStatus);
 
 		mSpinnerMotoMode = (Spinner) findViewById(R.id.spinnerMotoMode);
 		mSpinnerMotoMode.setOnItemSelectedListener(this);
@@ -67,15 +71,26 @@ public class MotoActivity extends JwaooToyActivity implements OnItemSelectedList
 		int min = mSeekBarMinSpeed.getProgress();
 		int max = mSeekBarMaxSpeed.getProgress();
 		int step = mSeekBarStep.getProgress() + 1;
+
+		if (step < 18) {
+			mSeekBarAddDelay.setMax(9);
+			mSeekBarSubDelay.setMax(9);
+		} else {
+			mSeekBarAddDelay.setMax(254);
+			mSeekBarSubDelay.setMax(254);
+		}
+
 		int add_delay = mSeekBarAddDelay.getProgress() + 1;
 		int sub_delay = mSeekBarSubDelay.getProgress() + 1;
 
-		CavanAndroid.dLog("mode = " + mode);
-		CavanAndroid.dLog("min = " + min);
-		CavanAndroid.dLog("max = " + max);
-		CavanAndroid.dLog("step = " + step);
-		CavanAndroid.dLog("add_delay = " + add_delay);
-		CavanAndroid.dLog("sub_delay = " + sub_delay);
+		StringBuilder builder = new StringBuilder();
+		builder.append("mode = ").append(mode).append(", ");
+		builder.append("min = ").append(min).append(", ");
+		builder.append("max = ").append(max).append(", \n");
+		builder.append("step = ").append(step).append(", ");
+		builder.append("add_delay = ").append(add_delay).append(", ");
+		builder.append("sub_delay = ").append(sub_delay);
+		mTextViewStatus.setText(builder.toString());
 
 		try {
 			return mBleToy.setMotoMode(mode, min, max, step, add_delay, sub_delay);
