@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">井蛙天线测试</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="start">开始</string>
+    <string name="stop">停止</string>
+    <string name="please_press_start">请点击开始</string>
+
+</resources>
