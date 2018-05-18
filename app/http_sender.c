@@ -320,9 +320,11 @@ static bool cavan_http_sender_is_completed(struct cavan_http_sender *sender, int
 		}
 	}
 
+#if 0
 	if (strstr(errdesc, "\u9519\u8bef")) { // ´íÎó
 		sender->send_counts[index]--;
 	}
+#endif
 
 	return false;
 }
