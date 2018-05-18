@@ -29,7 +29,17 @@
 			var delay = mTime - date.getTime();
 
 			if (delay > 0) {
-				setTimeout("showDelay()", delay % 1001);
+				var wait = delay % 1000;
+				if (wait > 100) {
+					wait = 100;
+				} else if (wait < 50) {
+					wait = 980;
+				} else {
+					wait = 1000;
+				}
+
+				setTimeout("showDelay()", wait);
+
 				var hour = toTimeString(parseInt(delay / 3600000));
 				var minute = toTimeString(parseInt(delay % 3600000 / 60000));
 				var second = toTimeString(delay % 60000 / 1000);
@@ -40,10 +50,10 @@
 		}
 
 		function onButtonClick(self) {
-			var date = new Date();
+			/* var date = new Date();
 			if (date.getHours() < 23) {
 				return true;
-			}
+			} */
 
 			mUrl = self.href;
 
