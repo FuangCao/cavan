@@ -1017,8 +1017,34 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			AccessibilityNodeInfo node;
 
 			if (title.contains("穿越火线")) {
-				node = CavanAccessibilityHelper.getChildRecursive(root, 0, 0, 0, 0, 0, 2, 1);
-				if (node == null) {
+				while (true) {
+					node = CavanAccessibilityHelper.getChildRecursive(root, 0, 0, 0, 0, 0, 2, 1);
+					if (node == null) {
+						return false;
+					}
+
+					String desc = CavanAccessibilityHelper.getNodeDescription(node);
+					CavanAndroid.dLog("desc = " + desc);
+					if (desc.contains("登录")) {
+						break;
+					}
+
+					node.recycle();
+
+					node = CavanAccessibilityHelper.getChildRecursive(root, 0, 0, 0, 0, 0, 2, 3);
+					if (node == null) {
+						return false;
+					}
+
+					desc = CavanAccessibilityHelper.getNodeDescription(node);
+					CavanAndroid.dLog("desc = " + desc);
+					if (desc.contains("注销")) {
+						mService.postCommand(200, 3, CMD_SIGNIN);
+						break;
+					}
+
+					node.recycle();
+
 					return false;
 				}
 			} else {
@@ -1039,7 +1065,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		@Override
 		protected void onEnter(AccessibilityNodeInfo root) {
 			if (mSigninPending) {
-				doSignin(root);
+				mService.postCommand(1500, 5, CMD_SIGNIN);
 			}
 		}
 	}

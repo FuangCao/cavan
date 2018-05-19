@@ -40,6 +40,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private static final int MSG_SHOW_COUNT_DOWN = 2;
 	private static final int MSG_UPDATE_COUNT_DOWN = 3;
 	private static final int MSG_SHOW_LOGIN_DIALOG = 4;
+	private static final int MSG_SEND_COMMAND = 5;
 
 	public static CavanAccessibilityService instance;
 
@@ -250,6 +251,16 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 			case MSG_SHOW_LOGIN_DIALOG:
 				onShowLoginDialog((CavanAccessibilityPackage) msg.obj);
+				break;
+
+			case MSG_SEND_COMMAND:
+				if (sendCommand(msg.arg1, (Object[]) msg.obj)) {
+					break;
+				}
+
+				if (msg.arg2 > 0) {
+					postCommand(500, msg.arg2 - 1, msg.arg1, (Object[]) msg.obj);
+				}
 				break;
 			}
 		}
@@ -732,6 +743,11 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	protected String getInputMethodName() {
 		return null;
+	}
+
+	public void postCommand(long delay, int retry, int command, Object... args) {
+		Message message = mHandler.obtainMessage(MSG_SEND_COMMAND, command, retry, args);
+		mHandler.sendMessageDelayed(message, delay);
 	}
 
 	public boolean sendCommand(int command, Object... args) {
