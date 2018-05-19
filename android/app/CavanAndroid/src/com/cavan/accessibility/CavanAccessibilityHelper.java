@@ -653,6 +653,10 @@ public class CavanAccessibilityHelper {
 		return node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
 	}
 
+	public static boolean performLongClick(AccessibilityNodeInfo node) {
+		return node.performAction(AccessibilityNodeInfo.ACTION_LONG_CLICK);
+	}
+
 	public static boolean performFocus(AccessibilityNodeInfo node) {
 		return node.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
 	}
@@ -770,6 +774,10 @@ public class CavanAccessibilityHelper {
 
 	public static boolean performClickAndRecycle(AccessibilityNodeInfo node) {
 		return performActionAndRecycle(node, AccessibilityNodeInfo.ACTION_CLICK);
+	}
+
+	public static boolean performLongClickAndRecycle(AccessibilityNodeInfo node) {
+		return performActionAndRecycle(node, AccessibilityNodeInfo.ACTION_LONG_CLICK);
 	}
 
 	public static boolean performClickParent(AccessibilityNodeInfo node) {

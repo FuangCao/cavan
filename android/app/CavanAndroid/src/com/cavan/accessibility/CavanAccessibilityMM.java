@@ -1987,6 +1987,29 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 	}
 
+	public class BrandServiceIndexWindow extends BaseWindow {
+
+		public BrandServiceIndexWindow(String name) {
+			super(name);
+		}
+
+		@Override
+		protected boolean doUnfollow(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 4, 0);
+			if (node == null) {
+				return false;
+			}
+
+			mUnfollowPending = CavanAccessibilityHelper.performLongClickAndRecycle(node);
+			if (mUnfollowPending) {
+				mMenuItem = "取消关注";
+				return true;
+			}
+
+			return false;
+		}
+	}
+
 	public CavanAccessibilityMM(CavanAccessibilityService service) {
 		super(service, CavanPackageName.MM);
 	}
@@ -2045,6 +2068,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(new AppBrandWindow("com.tencent.mm.plugin.appbrand.ui.AppBrandUI1"));
 		addWindow(new ContactInfoWindow("com.tencent.mm.plugin.profile.ui.ContactInfoUI"));
 		addWindow(new DialogWindow("com.tencent.mm.ui.base.i"));
+		addWindow(new BrandServiceIndexWindow("com.tencent.mm.plugin.brandservice.ui.BrandServiceIndexUI"));
 	}
 
 	@Override
