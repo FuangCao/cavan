@@ -53,6 +53,8 @@
 #define CAVAN_NET_FLAG_SYNC			(1 << 1)
 #define CAVAN_NET_FLAG_WAIT			(1 << 2)
 #define CAVAN_NET_FLAG_NODELAY		(1 << 3)
+#define CAVAN_NET_FLAG_MASK			(1 << 4)
+#define CAVAN_NET_FLAG_PACK			(1 << 5)
 
 #ifndef SO_REUSEPORT
 #define SO_REUSEPORT				15
@@ -221,6 +223,8 @@ typedef enum {
 	NETWORK_PROTOCOL_HTTP,
 	NETWORK_PROTOCOL_HTTPS,
 	NETWORK_PROTOCOL_SSL,
+	NETWORK_PROTOCOL_SSL_MASK,
+	NETWORK_PROTOCOL_SSL_PACK,
 	NETWORK_PROTOCOL_TCP,
 	NETWORK_PROTOCOL_TCP_MASK,
 	NETWORK_PROTOCOL_TCP_PACK,
@@ -279,6 +283,8 @@ struct network_client {
 
 	void (*close)(struct network_client *client);
 	void (*shutdown)(struct network_client *client);
+	ssize_t (*send_raw)(struct network_client *client, const void *buff, size_t size);
+	ssize_t (*recv_raw)(struct network_client *client, void *buff, size_t size);
 	ssize_t (*send)(struct network_client *client, const void *buff, size_t size);
 	ssize_t (*recv)(struct network_client *client, void *buff, size_t size);
 	ssize_t (*sendto)(struct network_client *client, const void *buff, size_t size, const struct sockaddr *addr);
@@ -324,6 +330,7 @@ struct network_service {
 
 	ssize_t (*sendto)(struct network_service *service, const void *buff, size_t size, const struct sockaddr *addr);
 	ssize_t (*recvfrom)(struct network_service *service, void *buff, size_t size, struct sockaddr *addr);
+	int (*accept_raw)(struct network_service *service, struct network_client *conn, int flags);
 	int (*accept)(struct network_service *service, struct network_client *conn, int flags);
 	void (*close)(struct network_service *service);
 };
@@ -366,6 +373,7 @@ struct network_file_request {
 
 struct network_protocol_desc {
 	const char *name;
+	int flags;
 	u16 port;
 	network_protocol_t type;
 
@@ -504,7 +512,7 @@ int network_client_get_local_port(struct network_client *client);
 int network_client_get_remote_port(struct network_client *client);
 int network_client_get_local_ip(struct network_client *client, struct in_addr *sin_addr);
 int network_client_get_remote_ip(struct network_client *client, struct in_addr *sin_addr);
-bool network_client_fill(struct network_client *client, char *buff, size_t size);
+int network_client_fill(struct network_client *client, char *buff, size_t size);
 ssize_t network_client_send_packet(struct network_client *client, const void *buff, size_t size);
 ssize_t network_client_recv_packet(struct network_client *client, void *buff, size_t size);
 int network_client_fifo_init(struct cavan_fifo *fifo, size_t size, struct network_client *client);
