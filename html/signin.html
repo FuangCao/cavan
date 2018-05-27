@@ -44,9 +44,8 @@
 				var minute = toTimeString(parseInt(delay % 3600000 / 60000));
 				var second = toTimeString(delay % 60000 / 1000);
 				document.all.delay.innerHTML = "Delay: " + hour + ":" + minute + ":" + second;
+				document.all.time.innerHTML = "Time: " + date.toTimeString();
 			}
-
-			document.all.time.innerHTML = "Time: " + date.toTimeString();
 		}
 
 		function onButtonClick(self) {
