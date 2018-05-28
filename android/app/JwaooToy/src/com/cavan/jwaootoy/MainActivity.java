@@ -454,6 +454,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 			CavanAndroid.dLog("Failed to setSensorEnable");
 		}
 
+		CavanAndroid.dLog("getMotoSpeedMin = " + mBleToy.getMotoSpeedMin());
+		mBleToy.setMotoSpeedMin(5);
+		CavanAndroid.dLog("getMotoSpeedMin = " + mBleToy.getMotoSpeedMin());
+
 		mHandler.sendEmptyMessage(EVENT_INIT_COMPLETE);
 
 		return true;

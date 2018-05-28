@@ -146,6 +146,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_MOTO_GET_MODE = 81;
 	public static final byte JWAOO_TOY_CMD_MOTO_EVENT_ENABLE = 82;
 	public static final byte JWAOO_TOY_CMD_MOTO_SPEED_TABLE = 83;
+	public static final byte JWAOO_TOY_CMD_MOTO_SPEED_MIN = 85;
 	public static final byte JWAOO_TOY_CMD_KEY_CLICK_ENABLE = 90;
 	public static final byte JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE = 91;
 	public static final byte JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE = 92;
@@ -781,6 +782,14 @@ public class JwaooBleToy extends CavanBleGatt {
 	public boolean setMotoMode(int mode, int min, int max, int step, int add_delay, int sub_delay) throws Exception {
 		byte[] command = { JWAOO_TOY_CMD_MOTO_SET_MODE, (byte) mode, (byte) max, (byte) step, (byte) min, (byte) add_delay, (byte) sub_delay};
 		return mCommand.readBool(command);
+	}
+
+	public int getMotoSpeedMin() throws Exception {
+		return mCommand.readValue8(JWAOO_TOY_CMD_MOTO_SPEED_MIN, (byte) -1);
+	}
+
+	public boolean setMotoSpeedMin(int speed) throws Exception {
+		return mCommand.readBool(JWAOO_TOY_CMD_MOTO_SPEED_MIN, (byte) speed);
 	}
 
 	public JwaooToyMotoMode getMotoMode() throws Exception {
