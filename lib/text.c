@@ -3013,6 +3013,24 @@ char *time2text_msec(u64 msec, char *buff, size_t size)
 	return buff;
 }
 
+char *time2text_sec(u32 msec, char *buff, size_t size)
+{
+	char *buff_end = buff + size;
+
+	if (msec >= 86400) {
+		buff += snprintf(buff, buff_end - buff, "%dD ", msec / 86400);
+		msec %= 86400;
+	}
+
+	buff += snprintf(buff, buff_end - buff, "%02d:", msec / 3600);
+	msec %= 3600;
+	buff += snprintf(buff, buff_end - buff, "%02d:", msec / 60);
+	msec %= 60;
+	buff += snprintf(buff, buff_end - buff, "%02d", msec);
+
+	return buff;
+}
+
 int cavan_string_init(cavan_string_t *str, const char *text, int length)
 {
 	if (text == NULL) {

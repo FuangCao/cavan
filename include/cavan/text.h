@@ -274,6 +274,7 @@ u32 frequency_unit2value(const char *text, const char *text_end);
 double text2frequency(const char *text, const char *text_end, const char **last);
 
 char *time2text_msec(u64 msec, char *buff, size_t size);
+char *time2text_sec(u32 msec, char *buff, size_t size);
 
 int cavan_string_init(cavan_string_t *str, const char *text, int length);
 void cavan_string_deinit(cavan_string_t *str);

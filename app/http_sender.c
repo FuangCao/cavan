@@ -593,6 +593,31 @@ out_cavan_http_sender_close:
 	return 0;
 }
 
+static int cavan_http_sender_check_file_time(const char *pathname)
+{
+	char buff[1024];
+	struct stat sb;
+	int overtime;
+	int ret;
+
+	ret = stat(pathname, &sb);
+	if (ret < 0) {
+		pr_err_info("stat: %s", pathname);
+		return ret;
+	}
+
+	overtime = time(NULL) - sb.st_atime;
+	time2text_sec(overtime, buff, sizeof(buff));
+
+	println("overtime = %s", buff);
+
+	if (overtime > 36000) {
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static void cavan_http_sender_show_usage(const char *command)
 {
 	println("Usage:");
@@ -741,7 +766,14 @@ int main(int argc, char *argv[])
 	sender.time += delay;
 
 	for (i = optind; i < argc; i++) {
-		ret = cavan_http_packet_parse_file(argv[i], packets + count, NELEM(packets) - count);
+		const char *pathname = argv[i];
+
+		ret = cavan_http_sender_check_file_time(pathname);
+		if (ret < 0) {
+			pr_warn_info("cavan_http_sender_check_file_time");
+		}
+
+		ret = cavan_http_packet_parse_file(pathname, packets + count, NELEM(packets) - count);
 		if (ret < 0) {
 			pr_red_info("cavan_http_sender_load_file");
 		} else if (ret > 0) {
