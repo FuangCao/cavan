@@ -115,6 +115,56 @@ static int app_network_client_main(int argc, char *argv[])
 	return ret;
 }
 
+static int app_network_test_main(int argc, char *argv[])
+{
+	struct network_client client;
+	pthread_t thread;
+	int count;
+	int ret;
+	int i;
+
+	assert(argc > 1);
+
+	ret = network_client_open2(&client, argv[1], CAVAN_NET_FLAG_WAIT);
+	if (ret < 0) {
+		pr_red_info("network_client_open2");
+		return ret;
+	}
+
+	if (argc > 2) {
+		count = atoi(argv[2]);
+	} else {
+		count = 10000;
+	}
+
+	println("count = %d", count);
+
+	ret = cavan_pthread_create(&thread, app_network_receive_thread, &client, false);
+	if (ret < 0) {
+		pr_err_info("cavan_pthread_create: %d", ret);
+		return ret;
+	}
+
+	for (i = 0; i < count; i++) {
+		char buff[1024];
+		int length;
+
+		length = snprintf(buff, sizeof(buff), "text-%08d\n", i);
+		if (network_client_send(&client, buff, length) < length) {
+			break;
+		}
+	}
+
+	while (1) {
+		println("send completed");
+		msleep(2000);
+	}
+
+	network_client_close(&client);
+
+	return ret;
+}
+
 static int app_network_start_handler(struct cavan_dynamic_service *service)
 {
 	struct app_network_service *app_service = cavan_dynamic_service_get_data(service);
@@ -193,4 +243,5 @@ out_cavan_dynamic_service_destroy:
 CAVAN_COMMAND_MAP_START {
 	{ "client", app_network_client_main },
 	{ "service", app_network_service_main },
+	{ "test", app_network_test_main },
 } CAVAN_COMMAND_MAP_END;
