@@ -327,6 +327,10 @@ static bool cavan_http_sender_is_completed(struct cavan_http_sender *sender, str
 		"\u9886\u5b8c", // 领完
 		"\u7b7e\u5230\u8fc7", // 签到过
 	};
+	const char *texts3[] = {
+		"\u4e0d\u8db3", // 不足
+		"\u672a\u767b\u5f55", // 未登录
+	};
 
 	length = cavan_http_sender_find_errdesc(body, errdesc, sizeof(errdesc));
 	if (length < 0) {
@@ -353,11 +357,15 @@ static bool cavan_http_sender_is_completed(struct cavan_http_sender *sender, str
 		}
 	}
 
-#if 0
-	if (strstr(errdesc, "\u9519\u8bef")) { // 错误
-		sender->send_counts[index]--;
+	for (i = 0; i < NELEM(texts3); i++) {
+		if (strstr(errdesc, texts3[i])) {
+			cavan_http_sender_unlock(sender);
+			println("Wait: %s", texts3[i]);
+			msleep(500);
+			cavan_http_sender_lock(sender);
+			return false;
+		}
 	}
-#endif
 
 	return false;
 }
