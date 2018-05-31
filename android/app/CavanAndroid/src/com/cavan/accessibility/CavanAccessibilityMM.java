@@ -396,6 +396,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				doClickMenuItem(root, "神都福利", "CDK兑换");
 				break;
 
+			case "QQ飞车手游":
+				doClickMenuItem(root, "橘子有礼", "CDK兑换");
+				break;
+
 			case "穿越火线官方FPS手游":
 				mSigninPending = doClickMenuItem(root, "官网", "CDK兑换");
 				break;
