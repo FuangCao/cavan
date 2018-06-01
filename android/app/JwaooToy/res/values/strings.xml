@@ -33,13 +33,27 @@
     <string-array name="moto_modes">
         <item>停止震动</item>
         <item>持续震动</item>
-        <item>强弱交替（慢速）</item>
-        <item>强弱交替（快速）</item>
-        <item>间歇交替（慢速）</item>
-        <item>间歇交替（快速）</item>
-        <item>无序震动</item>
         <item>持续震动（主马达）</item>
         <item>持续震动（副马达）</item>
+        <item>强弱交替（慢速）</item>
+        <item>强弱交替（快速）</item>
+        <item>逐渐增强（慢速）</item>
+        <item>逐渐增强（快速）</item>
+        <item>逐渐减弱（慢速）</item>
+        <item>逐渐减弱（快速）</item>
+        <item>间歇交替（慢速）</item>
+        <item>间歇交替（快速）</item>
+        <item>间歇交替（强慢速）</item>
+        <item>间歇交替（强快速）</item>
+        <item>间歇交替（弱慢速）</item>
+        <item>间歇交替（弱快速）</item>
+        <item>震动棒模式1</item>
+        <item>震动棒模式2</item>
+        <item>震动棒模式3</item>
+        <item>震动棒模式4</item>
+        <item>震动棒模式5</item>
+        <item>震动棒模式6</item>
+        <item>无序震动</item>
     </string-array>
 
     <string-array name="moto_user_modes">

@@ -74,6 +74,20 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final int MOTO_MODE_USER_MAIN = 10;
 	public static final int MOTO_MODE_USER_AUX = 11;
 	public static final int MOTO_MODE_USER_SYNC = 12;
+	public static final int MOTO_MODE_SAWTOOTH_RISE = 20;
+	public static final int MOTO_MODE_SAWTOOTH_RISE_FAST = 21;
+	public static final int MOTO_MODE_SAWTOOTH_FALL = 22;
+	public static final int MOTO_MODE_SAWTOOTH_FALL_FAST = 23;
+	public static final int MOTO_MODE_SQUARE_MORE = 24;
+	public static final int MOTO_MODE_SQUARE_MORE_FAST = 25;
+	public static final int MOTO_MODE_SQUARE_FEW = 26;
+	public static final int MOTO_MODE_SQUARE_FEW_FAST = 27;
+	public static final int MOTO_MODE_T01 = 30;
+	public static final int MOTO_MODE_T02 = 31;
+	public static final int MOTO_MODE_T03 = 32;
+	public static final int MOTO_MODE_T04 = 33;
+	public static final int MOTO_MODE_T05 = 34;
+	public static final int MOTO_MODE_T06 = 35;
 
 	public static final String DEVICE_NAME_COMMON = "JwaooToy";
 	public static final String DEVICE_NAME_K100 = "K100";

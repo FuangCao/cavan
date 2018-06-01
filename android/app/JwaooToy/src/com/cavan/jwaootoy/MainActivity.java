@@ -45,6 +45,32 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private static final int EVENT_MOTO_RAND = 12;
 	private static final int EVENT_UPDATE_SPEED = 13;
 
+	private static final int MOTO_MODE_TABLE[] = {
+		JwaooBleToy.MOTO_MODE_IDLE,
+		JwaooBleToy.MOTO_MODE_LINE,
+		JwaooBleToy.MOTO_MODE_LINE_MAIN,
+		JwaooBleToy.MOTO_MODE_LINE_AUX,
+		JwaooBleToy.MOTO_MODE_SAWTOOTH,
+		JwaooBleToy.MOTO_MODE_SAWTOOTH_FAST,
+		JwaooBleToy.MOTO_MODE_SAWTOOTH_RISE,
+		JwaooBleToy.MOTO_MODE_SAWTOOTH_RISE_FAST,
+		JwaooBleToy.MOTO_MODE_SAWTOOTH_FALL,
+		JwaooBleToy.MOTO_MODE_SAWTOOTH_FALL_FAST,
+		JwaooBleToy.MOTO_MODE_SQUARE,
+		JwaooBleToy.MOTO_MODE_SQUARE_FAST,
+		JwaooBleToy.MOTO_MODE_SQUARE_MORE,
+		JwaooBleToy.MOTO_MODE_SQUARE_MORE_FAST,
+		JwaooBleToy.MOTO_MODE_SQUARE_FEW,
+		JwaooBleToy.MOTO_MODE_SQUARE_FAST,
+		JwaooBleToy.MOTO_MODE_T01,
+		JwaooBleToy.MOTO_MODE_T02,
+		JwaooBleToy.MOTO_MODE_T03,
+		JwaooBleToy.MOTO_MODE_T04,
+		JwaooBleToy.MOTO_MODE_T05,
+		JwaooBleToy.MOTO_MODE_T06,
+		JwaooBleToy.MOTO_MODE_RAND,
+	};
+
 	private boolean mOtaBusy;
 	private int mDataCount;
 
@@ -132,7 +158,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 				if (mCheckBoxMotoRand.isChecked() && mBleToy != null) {
 					while (true) {
-						int mode = (int) (Math.random() * 100 % 6 + 1);
+						int mode = MOTO_MODE_TABLE[(int) (Math.random() * MOTO_MODE_TABLE.length)];
 						if (mode != mMotoMode) {
 							mMotoMode = mode;
 							break;
@@ -227,7 +253,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-				mMotoMode = position;
+				mMotoMode = MOTO_MODE_TABLE[position];
 
 				try {
 					setMotoMode();
