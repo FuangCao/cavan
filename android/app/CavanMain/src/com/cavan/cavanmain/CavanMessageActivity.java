@@ -91,6 +91,8 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	public static final String KEY_REPEAT_DELAY = "repeat_delay";
 	public static final String KEY_NOTIFY_AUTO_CLEAR = "notify_auto_clear";
 	public static final String KEY_AUTO_CHECK_PERMISSION = "auto_check_permission";
+	public static final String KEY_INFORMATION_NOTIFY = "information_notify";
+	public static final String KEY_INFORMATION_GROUPS = "information_groups";
 
 	public static CavanMessageActivity instance;
 
@@ -320,6 +322,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	private EditTextPreference mPreferenceTcpBridgeSetting;
 	private CheckBoxPreference mPreferenceOnTimeMute;
 	private ListPreference mPreferenceMuteTimeSetting;
+	private EditableMultiSelectListPreference mPreferenceInformationGroups;
 
 	private IFloatMessageService mFloatMessageService;
 	private ServiceConnection mFloatMessageConnection = new ServiceConnection() {
@@ -391,6 +394,23 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		if (index >= 0) {
 			preference.setSummary(preference.getEntries()[index]);
 		}
+	}
+
+	public boolean addInformationGroups() {
+		RedPacketListenerService instance = RedPacketListenerService.instance;
+		if (instance == null) {
+			return false;
+		}
+
+		Set<String> groups = instance.getGroups();
+		if (groups.isEmpty()) {
+			return false;
+		}
+
+		String[] array = new String[groups.size()];
+		groups.toArray(array);
+
+		return mPreferenceInformationGroups.addKeywords(false, array);
 	}
 
 	@SuppressWarnings("deprecation")
@@ -493,6 +513,10 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 
 		mPreferenceMuteTimeSetting = findListPreference(KEY_MUTE_TIME_SETTING);
 		mPreferenceMuteTimeSetting.setOnPreferenceChangeListener(this);
+
+		mPreferenceInformationGroups = (EditableMultiSelectListPreference) findPreference(KEY_INFORMATION_GROUPS);
+		mPreferenceInformationGroups.setSaveWhenEnabled();
+		addInformationGroups();
 
 		findListPreference(KEY_THANKS_NOTIFY);
 		findListPreference(KEY_AUTO_COMMIT);

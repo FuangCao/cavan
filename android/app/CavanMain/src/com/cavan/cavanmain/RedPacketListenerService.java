@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -57,9 +59,12 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	private ClipboardManager mClipboardManager;
 	private NotificationManager mNotificationManager;
 	private HashSet<String> mKeywords = new HashSet<String>();
+	private HashSet<String> mInformations = new HashSet<String>();
+	private HashSet<String> mInformationGroups = new HashSet<String>();
 	private HashMap<String, ThanksNode> mThanks = new HashMap<String, ThanksNode>();
 	private CavanIndexGenerator mGeneratorRequestCode = new CavanIndexGenerator();
 	private CavanIndexGenerator mGeneratorNotificationId = new CavanIndexGenerator();
+	private HashMap<String, Long> mGroups = new HashMap<String, Long>();
 
 	private Handler mHandler = new Handler() {
 
@@ -109,6 +114,23 @@ public class RedPacketListenerService extends NotificationListenerService implem
 					RedPacketNotification rpn = new RedPacketNotification(RedPacketListenerService.this, notification);
 					rpn.sendRedPacketNotifyAuto();
 					rpn.insert(getContentResolver());
+
+					String group = notification.getGroupName();
+					if (group != null && group.length() > 0 && mGroups.put(group, System.currentTimeMillis()) == null) {
+						while (mGroups.size() > 20) {
+							Iterator<Entry<String, Long>> iterator = mGroups.entrySet().iterator();
+							Entry<String, Long> entry = iterator.next();
+
+							while (iterator.hasNext()) {
+								Entry<String, Long> node = iterator.next();
+								if (node.getValue() < entry.getValue()) {
+									entry  = node;
+								}
+							}
+
+							mGroups.remove(entry.getKey());
+						}
+					}
 				}
 				break;
 
@@ -182,6 +204,10 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			mFloatMessageService = IFloatMessageService.Stub.asInterface(arg1);
 		}
 	};
+
+	public Set<String> getGroups() {
+		return mGroups.keySet();
+	}
 
 	public CharSequence getClipText() {
 		return mClipText;
@@ -330,69 +356,96 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		return CavanAndroid.startActivity(context, CavanPackageName.TMALL);
 	}
 
-	private void loadKeywords(SharedPreferences preferences) {
-		mKeywords.clear();
+	private void loadKeywords(SharedPreferences preferences, String key, HashSet<String> set) {
+		set.clear();
 
-		ArrayList<String> keywords = EditableMultiSelectListPreference.load(preferences, CavanMessageActivity.KEY_KEYWORD_NOTIFY);
+		ArrayList<String> keywords = EditableMultiSelectListPreference.load(preferences, key);
 		if (keywords != null) {
 			for (String keyword : keywords) {
-				mKeywords.add(keyword);
+				set.add(keyword);
 			}
 		}
+	}
 
+	private void loadKeywords(SharedPreferences preferences) {
+		loadKeywords(preferences, CavanMessageActivity.KEY_KEYWORD_NOTIFY, mKeywords);
 		mKeywords.add("你收到一个红包");
 		mKeywords.add("商家付款入账通知");
-
 		CavanAndroid.dLog("mKeywords = " + mKeywords);
 	}
 
-	public String getKeyword(RedPacketFinder finder) {
+	private void loadInformations(SharedPreferences preferences) {
+		loadKeywords(preferences, CavanMessageActivity.KEY_INFORMATION_NOTIFY, mInformations);
+		CavanAndroid.dLog("mInformations = " + mInformations);
+	}
+
+	private void loadInformationGroups(SharedPreferences preferences) {
+		loadKeywords(preferences, CavanMessageActivity.KEY_INFORMATION_GROUPS, mInformationGroups);
+		CavanAndroid.dLog("mInformationGroups = " + mInformationGroups);
+	}
+
+	public String getKeyword(String group, RedPacketFinder finder) {
+		String content = finder.getJoinedLines();
+		if (content == null || content.isEmpty()) {
+			return null;
+		}
+
 		for (String keyword : mKeywords) {
-			if (finder.contains(keyword)) {
+			if (content.contains(keyword)) {
 				return keyword;
 			}
 		}
 
-		int times = CavanMessageActivity.getThanksNotify(this);
-		if (times > 0) {
-			Iterator<ThanksNode> iterator = mThanks.values().iterator();
-			long time = System.currentTimeMillis();
-
-			while (iterator.hasNext()) {
-				ThanksNode node = iterator.next();
-				long interval = time - node.getTime();
-
-				if (interval > THANKS_SHORT_OVERTIME) {
-					if (interval > THANKS_LONG_OVERTIME || node.getCount() < times) {
-						iterator.remove();
+		if (mInformationGroups.contains(group)) {
+			if (content.charAt(0) != '@') {
+				for (String keyword : mInformations) {
+					if (content.contains(keyword)) {
+						return keyword;
 					}
 				}
-			}
+			} else {
+				int times = CavanMessageActivity.getThanksNotify(this);
+				if (times > 0) {
+					Iterator<ThanksNode> iterator = mThanks.values().iterator();
+					long time = System.currentTimeMillis();
 
-			String thanks = finder.getThanks();
-			if (thanks != null) {
-				ThanksNode node = mThanks.get(thanks);
-				if (node == null) {
-					node = new ThanksNode();
-					mThanks.put(thanks, node);
-				}
+					while (iterator.hasNext()) {
+						ThanksNode node = iterator.next();
+						long interval = time - node.getTime();
 
-				if (node.increase(time) == times) {
-					String message = thanks + " 大水";
-
-					if (CavanMessageActivity.isThanksShareEnabled(this)) {
-						try {
-							mFloatMessageService.sendTcpCommand(FloatMessageService.NET_CMD_NOTIFY + message);
-						} catch (RemoteException e) {
-							e.printStackTrace();
+						if (interval > THANKS_SHORT_OVERTIME) {
+							if (interval > THANKS_LONG_OVERTIME || node.getCount() < times) {
+								iterator.remove();
+							}
 						}
 					}
 
-					return message;
+					String thanks = finder.getThanks();
+					if (thanks != null) {
+						ThanksNode node = mThanks.get(thanks);
+						if (node == null) {
+							node = new ThanksNode();
+							mThanks.put(thanks, node);
+						}
+
+						if (node.increase(time) == times) {
+							String message = thanks + " 大水";
+
+							if (CavanMessageActivity.isThanksShareEnabled(this)) {
+								try {
+									mFloatMessageService.sendTcpCommand(FloatMessageService.NET_CMD_NOTIFY + message);
+								} catch (RemoteException e) {
+									e.printStackTrace();
+								}
+							}
+
+							return message;
+						}
+					}
+				} else {
+					mThanks.clear();
 				}
 			}
-		} else {
-			mThanks.clear();
 		}
 
 		return null;
@@ -413,6 +466,8 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 		if (preferences != null) {
 			loadKeywords(preferences);
+			loadInformations(preferences);
+			loadInformationGroups(preferences);
 			preferences.registerOnSharedPreferenceChangeListener(this);
 		}
 
@@ -477,8 +532,18 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 	@Override
 	public void onSharedPreferenceChanged(SharedPreferences preferences, String key) {
-		if (CavanMessageActivity.KEY_KEYWORD_NOTIFY.equals(key)) {
+		switch (key) {
+		case CavanMessageActivity.KEY_KEYWORD_NOTIFY:
 			loadKeywords(preferences);
+			break;
+
+		case CavanMessageActivity.KEY_INFORMATION_NOTIFY:
+			loadInformations(preferences);
+			break;
+
+		case CavanMessageActivity.KEY_INFORMATION_GROUPS:
+			loadInformationGroups(preferences);
+			break;
 		}
 	}
 

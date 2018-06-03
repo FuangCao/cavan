@@ -115,25 +115,27 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 		public boolean onMenuItemClick(MenuItem item) {
 			int id = item.getItemId();
 
-			if (id == R.id.action_edit) {
-				mEditTextKeyword.setText(mKeyword);
-			} else if (id == R.id.action_move_up) {
-				CavanLinkedList<Entry>.LinkNode node = mEntries.findNode(this);
-				if (node != null && node.isNotFirstNode()) {
-					node.shiftLeft();
+			synchronized (mEntries) {
+				if (id == R.id.action_edit) {
+					mEditTextKeyword.setText(mKeyword);
+				} else if (id == R.id.action_move_up) {
+					CavanLinkedList<Entry>.LinkNode node = mEntries.findNode(this);
+					if (node != null && node.isNotFirstNode()) {
+						node.shiftLeft();
+						mAdapter.notifyDataSetChanged();
+					}
+				} else if (id == R.id.action_move_down) {
+					CavanLinkedList<Entry>.LinkNode node = mEntries.findNode(this);
+					if (node != null && node.isNotLastNode()) {
+						node.shiftRight();
+						mAdapter.notifyDataSetChanged();
+					}
+				} else if (id == R.id.action_remove) {
+					mEntries.remove(this);
 					mAdapter.notifyDataSetChanged();
+				} else {
+					return false;
 				}
-			} else if (id == R.id.action_move_down) {
-				CavanLinkedList<Entry>.LinkNode node = mEntries.findNode(this);
-				if (node != null && node.isNotLastNode()) {
-					node.shiftRight();
-					mAdapter.notifyDataSetChanged();
-				}
-			} else if (id == R.id.action_remove) {
-				mEntries.remove(this);
-				mAdapter.notifyDataSetChanged();
-			} else {
-				return false;
 			}
 
 			return true;
@@ -145,6 +147,7 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 	private EditText mEditTextKeyword;
 	private ListView mListViewKeywords;
 	private CavanCheckBox mCheckBoxSelectAll;
+	private boolean mSaveWhenEnabled;
 
 	private CavanLinkedList<Entry> mEntries = new CavanLinkedList<Entry>();
 	private BaseAdapter mAdapter = new BaseAdapter() {
@@ -197,7 +200,10 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 
 		@Override
 		public void notifyDataSetChanged() {
-			mEntryArray = mEntries.toArray(mEntryArray);
+			synchronized (mEntries) {
+				mEntryArray = mEntries.toArray(mEntryArray);
+			}
+
 			super.notifyDataSetChanged();
 		}
 	};
@@ -216,6 +222,14 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 
 	public EditableMultiSelectListPreference(Context context) {
 		super(context);
+	}
+
+	public boolean isSaveWhenEnabled() {
+		return mSaveWhenEnabled;
+	}
+
+	public void setSaveWhenEnabled() {
+		mSaveWhenEnabled = true;
 	}
 
 	private static String[] loadPrivate(SharedPreferences preferences, String key) {
@@ -294,7 +308,7 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 		return addresses;
 	}
 
-	private boolean addEntry(String keyword, boolean enabled) {
+	public boolean addEntry(String keyword, boolean enabled) {
 		int length = keyword.length();
 		if (length > 0) {
 			if (keyword.charAt(0) == '!') {
@@ -309,23 +323,42 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 			return false;
 		}
 
-		for (Entry entry : mEntries) {
-			if (entry.getKeyword().equals(keyword)) {
-				return false;
+		synchronized (mEntries) {
+			for (Entry entry : mEntries) {
+				if (entry.getKeyword().equals(keyword)) {
+					return false;
+				}
+			}
+
+			Entry entry;
+
+			if (CavanAndroid.SDK_VERSION < CavanAndroid.SDK_VERSION_40) {
+				entry = new Entry(keyword, enabled);
+			} else {
+				entry = new MenuEntry(keyword, enabled);
+			}
+
+			mEntries.add(entry);
+		}
+
+		return true;
+	}
+
+	public boolean addKeywords(boolean enabled, String... keywords) {
+		boolean changed = false;
+
+		for (String keyword : keywords) {
+			if (addEntry(keyword, enabled)) {
+				changed = true;
 			}
 		}
 
-		Entry entry;
-
-		if (CavanAndroid.SDK_VERSION < CavanAndroid.SDK_VERSION_40) {
-			entry = new Entry(keyword, enabled);
-		} else {
-			entry = new MenuEntry(keyword, enabled);
+		if (changed) {
+			mAdapter.notifyDataSetChanged();
+			return true;
 		}
 
-		mEntries.add(entry);
-
-		return true;
+		return false;
 	}
 
 	private boolean load() {
@@ -339,15 +372,15 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 			return false;
 		}
 
-		mEntries.clear();
+		synchronized (mEntries) {
+			mEntries.clear();
 
-		for (String line : lines) {
-			if (line.length() > 0) {
-				addEntry(line, line.charAt(0) != '!');
+			for (String line : lines) {
+				if (line.length() > 0) {
+					addEntry(line, line.charAt(0) != '!');
+				}
 			}
 		}
-
-		mAdapter.notifyDataSetChanged();
 
 		return true;
 	}
@@ -369,12 +402,26 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 	private boolean save() {
 		StringBuilder builder = new StringBuilder();
 
-		for (Entry entry : mEntries) {
-			if (builder.length() > 0) {
-				builder.append('|');
-			}
+		synchronized (mEntries) {
+			if (mSaveWhenEnabled) {
+				for (Entry entry : mEntries) {
+					if (entry.isEnabled()) {
+						if (builder.length() > 0) {
+							builder.append('|');
+						}
 
-			builder.append(entry.toString());
+						builder.append(entry.getKeyword());
+					}
+				}
+			} else {
+				for (Entry entry : mEntries) {
+					if (builder.length() > 0) {
+						builder.append('|');
+					}
+
+					builder.append(entry.toString());
+				}
+			}
 		}
 
 		return save(builder.toString());
@@ -394,12 +441,14 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 	private int remove() {
 		int count = 0;
 
-		Iterator<Entry> iterator = mEntries.iterator();
-		while (iterator.hasNext()) {
-			Entry entry = iterator.next();
-			if (entry.isEnabled()) {
-				iterator.remove();
-				count++;
+		synchronized (mEntries) {
+			Iterator<Entry> iterator = mEntries.iterator();
+			while (iterator.hasNext()) {
+				Entry entry = iterator.next();
+				if (entry.isEnabled()) {
+					iterator.remove();
+					count++;
+				}
 			}
 		}
 
@@ -411,9 +460,11 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 	}
 
 	private boolean isAllEnabled() {
-		for (Entry entry : mEntries) {
-			if (!entry.isEnabled()) {
-				return false;
+		synchronized (mEntries) {
+			for (Entry entry : mEntries) {
+				if (!entry.isEnabled()) {
+					return false;
+				}
 			}
 		}
 
@@ -451,8 +502,10 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 		if (positiveResult) {
 			add();
 
-			if (callChangeListener(mEntries)) {
-				save();
+			synchronized (mEntries) {
+				if (callChangeListener(mEntries)) {
+					save();
+				}
 			}
 		} else {
 			load();
@@ -481,10 +534,10 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 				for (String text : value.split("\\s*\\|\\s*")) {
 					addEntry(text, true);
 				}
-
-				mAdapter.notifyDataSetChanged();
 			}
 		}
+
+		mAdapter.notifyDataSetChanged();
 	}
 
 	@Override
@@ -498,8 +551,10 @@ public class EditableMultiSelectListPreference extends DialogPreference implemen
 
 	@Override
 	public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-		for (Entry entry : mEntries) {
-			entry.setEnable(isChecked);
+		synchronized (mEntries) {
+			for (Entry entry : mEntries) {
+				entry.setEnable(isChecked);
+			}
 		}
 
 		mAdapter.notifyDataSetChanged();

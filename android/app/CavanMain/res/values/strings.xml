@@ -819,5 +819,7 @@
 	<string name="account_manage">账号管理</string>
 	<string name="add_success">添加成功</string>
 	<string name="add_failed">添加失败</string>
+	<string name="information_notify">线报提醒</string>
+	<string name="information_group_setting">线报群设置</string>
 
 </resources>

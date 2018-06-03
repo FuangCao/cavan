@@ -8,6 +8,16 @@
 	    android:title="@string/message_show" />
 
 	<com.cavan.resource.EditableMultiSelectListPreference
+	    android:key="information_notify"
+	    android:persistent="true"
+	    android:title="@string/information_notify"/>
+
+	<com.cavan.resource.EditableMultiSelectListPreference
+	    android:key="information_groups"
+	    android:persistent="true"
+	    android:title="@string/information_group_setting"/>
+
+	<com.cavan.resource.EditableMultiSelectListPreference
 	    android:key="keyword_notify"
 	    android:persistent="true"
 	    android:title="@string/keyword_notify"/>

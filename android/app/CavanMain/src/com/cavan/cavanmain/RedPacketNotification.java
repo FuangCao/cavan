@@ -246,7 +246,7 @@ public class RedPacketNotification extends CavanNotificationTable {
 	}
 
 	public boolean sendKeyword(RedPacketFinder finder) {
-		String keyword = mService.getKeyword(finder);
+		String keyword = mService.getKeyword(mNotification.getGroupName(), finder);
 		if (keyword != null) {
 			String message = getUserDescription() + ": " + keyword;
 			if (CavanMessageActivity.isKeywordNotifyOnly(mService)) {
