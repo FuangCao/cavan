@@ -74,6 +74,10 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final int MOTO_MODE_USER_MAIN = 10;
 	public static final int MOTO_MODE_USER_AUX = 11;
 	public static final int MOTO_MODE_USER_SYNC = 12;
+	public static final int MOTO_MODE_PROG = 13;
+	public static final int MOTO_MODE_PROG_MAIN = 14;
+	public static final int MOTO_MODE_PROG_AUX = 15;
+	public static final int MOTO_MODE_PROG_SYNC = 16;
 	public static final int MOTO_MODE_SAWTOOTH_RISE = 20;
 	public static final int MOTO_MODE_SAWTOOTH_RISE_FAST = 21;
 	public static final int MOTO_MODE_SAWTOOTH_FALL = 22;
@@ -88,6 +92,12 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final int MOTO_MODE_T04 = 33;
 	public static final int MOTO_MODE_T05 = 34;
 	public static final int MOTO_MODE_T06 = 35;
+
+	public static final int MOTO_PROG_SET = 0;
+	public static final int MOTO_PROG_RISE = 1;
+	public static final int MOTO_PROG_FALL = 2;
+	public static final int MOTO_PROG_STEP_RISE = 3;
+	public static final int MOTO_PROG_STEP_FALL = 4;
 
 	public static final String DEVICE_NAME_COMMON = "JwaooToy";
 	public static final String DEVICE_NAME_K100 = "K100";
@@ -161,6 +171,7 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte JWAOO_TOY_CMD_MOTO_EVENT_ENABLE = 82;
 	public static final byte JWAOO_TOY_CMD_MOTO_SPEED_TABLE = 83;
 	public static final byte JWAOO_TOY_CMD_MOTO_SPEED_MIN = 85;
+	public static final byte JWAOO_TOY_CMD_MOTO_PROG = 86;
 	public static final byte JWAOO_TOY_CMD_KEY_CLICK_ENABLE = 90;
 	public static final byte JWAOO_TOY_CMD_KEY_LONG_CLICK_ENABLE = 91;
 	public static final byte JWAOO_TOY_CMD_KEY_MULTI_CLICK_ENABLE = 92;
@@ -796,6 +807,17 @@ public class JwaooBleToy extends CavanBleGatt {
 	public boolean setMotoMode(int mode, int min, int max, int step, int add_delay, int sub_delay) throws Exception {
 		byte[] command = { JWAOO_TOY_CMD_MOTO_SET_MODE, (byte) mode, (byte) max, (byte) step, (byte) min, (byte) add_delay, (byte) sub_delay};
 		return mCommand.readBool(command);
+	}
+
+	public boolean setMotoProg(byte[] bytes) throws Exception {
+		byte[] command = new byte[bytes.length + 1];
+		command[0] = JWAOO_TOY_CMD_MOTO_PROG;
+		System.arraycopy(bytes, 0, command, 1, bytes.length);
+		return mCommand.readBool(command);
+	}
+
+	public static byte buildMotoProg(int prog, int param) {
+		return (byte) (param << 5 | prog);
 	}
 
 	public int getMotoSpeedMin() throws Exception {

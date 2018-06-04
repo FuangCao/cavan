@@ -69,6 +69,14 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		JwaooBleToy.MOTO_MODE_T05,
 		JwaooBleToy.MOTO_MODE_T06,
 		JwaooBleToy.MOTO_MODE_RAND,
+		JwaooBleToy.MOTO_MODE_USER,
+		JwaooBleToy.MOTO_MODE_USER_MAIN,
+		JwaooBleToy.MOTO_MODE_USER_AUX,
+		JwaooBleToy.MOTO_MODE_USER_SYNC,
+		JwaooBleToy.MOTO_MODE_PROG,
+		JwaooBleToy.MOTO_MODE_PROG_MAIN,
+		JwaooBleToy.MOTO_MODE_PROG_AUX,
+		JwaooBleToy.MOTO_MODE_PROG_SYNC,
 	};
 
 	private boolean mOtaBusy;
@@ -256,6 +264,29 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 				mMotoMode = MOTO_MODE_TABLE[position];
 
 				try {
+					if (mMotoMode >= JwaooBleToy.MOTO_MODE_PROG || mMotoMode <= JwaooBleToy.MOTO_MODE_PROG_SYNC) {
+						byte[] bytes = {
+							JwaooBleToy.buildMotoProg(JwaooBleToy.MOTO_PROG_SET, 1),
+							(byte) 20,
+							JwaooBleToy.buildMotoProg(JwaooBleToy.MOTO_PROG_SET, 0),
+							(byte) 20,
+							JwaooBleToy.buildMotoProg(JwaooBleToy.MOTO_PROG_SET, 1),
+							(byte) 20,
+							JwaooBleToy.buildMotoProg(JwaooBleToy.MOTO_PROG_SET, 0),
+							(byte) 20,
+							JwaooBleToy.buildMotoProg(JwaooBleToy.MOTO_PROG_SET, 1),
+							(byte) 20,
+							JwaooBleToy.buildMotoProg(JwaooBleToy.MOTO_PROG_SET, 0),
+							(byte) 20,
+							JwaooBleToy.buildMotoProg(JwaooBleToy.MOTO_PROG_SET, 3),
+							(byte) 10,
+							JwaooBleToy.buildMotoProg(JwaooBleToy.MOTO_PROG_SET, 0),
+							(byte) 20,
+						};
+
+						mBleToy.setMotoProg(bytes);
+					}
+
 					setMotoMode();
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -307,12 +338,22 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 
 	private boolean setMotoMode() throws Exception {
 		if (mBleToy != null && mBleToy.isConnected()) {
-			if (mBleToy.setMotoMode(mMotoMode, mMotoLevel)) {
-				CavanAndroid.dLog("Moto: mode = " + mMotoMode + ", level = " + mMotoLevel);
-				return true;
-			} else {
-				CavanAndroid.dLog("Failed to setMotoMode");
-				CavanAndroid.dumpstack();
+			switch (mMotoMode) {
+			case JwaooBleToy.MOTO_MODE_USER:
+			case JwaooBleToy.MOTO_MODE_USER_MAIN:
+			case JwaooBleToy.MOTO_MODE_USER_AUX:
+			case JwaooBleToy.MOTO_MODE_USER_SYNC:
+				mBleToy.setMotoMode(mMotoMode, 0, 18, 1, 2, 0);
+				break;
+
+			default:
+				if (mBleToy.setMotoMode(mMotoMode, mMotoLevel)) {
+					CavanAndroid.dLog("Moto: mode = " + mMotoMode + ", level = " + mMotoLevel);
+					return true;
+				} else {
+					CavanAndroid.dLog("Failed to setMotoMode");
+					CavanAndroid.dumpstack();
+				}
 			}
 		}
 

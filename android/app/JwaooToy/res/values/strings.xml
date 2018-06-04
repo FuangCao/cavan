@@ -54,6 +54,14 @@
         <item>震动棒模式5</item>
         <item>震动棒模式6</item>
         <item>无序震动</item>
+        <item>用户模式（对称）</item>
+        <item>用户模式（主）</item>
+        <item>用户模式（副）</item>
+        <item>用户模式（同步）</item>
+        <item>编程模式（对称）</item>
+        <item>编程模式（主）</item>
+        <item>编程模式（副）</item>
+        <item>编程模式（同步）</item>
     </string-array>
 
     <string-array name="moto_user_modes">
