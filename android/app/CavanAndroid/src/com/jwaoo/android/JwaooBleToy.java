@@ -93,11 +93,15 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final int MOTO_MODE_T05 = 34;
 	public static final int MOTO_MODE_T06 = 35;
 
-	public static final int MOTO_PROG_SET = 0;
-	public static final int MOTO_PROG_RISE = 1;
-	public static final int MOTO_PROG_FALL = 2;
-	public static final int MOTO_PROG_STEP_RISE = 3;
-	public static final int MOTO_PROG_STEP_FALL = 4;
+	public static final byte MOTO_CMD_SET = 0;
+	public static final byte MOTO_CMD_ADD = 2;
+	public static final byte MOTO_CMD_SUB = 4;
+	public static final byte MOTO_CMD_RISE = 6;
+	public static final byte MOTO_CMD_FALL = 7;
+	public static final byte MOTO_CMD_RISE_STEP = 8;
+	public static final byte MOTO_CMD_FALL_STEP = 9;
+	public static final byte MOTO_CMD_DELAY_ADD = 10;
+	public static final byte MOTO_CMD_DELAY_SUB = 11;
 
 	public static final String DEVICE_NAME_COMMON = "JwaooToy";
 	public static final String DEVICE_NAME_K100 = "K100";
@@ -810,14 +814,33 @@ public class JwaooBleToy extends CavanBleGatt {
 	}
 
 	public boolean setMotoProg(byte[] bytes) throws Exception {
-		byte[] command = new byte[bytes.length + 1];
-		command[0] = JWAOO_TOY_CMD_MOTO_PROG;
-		System.arraycopy(bytes, 0, command, 1, bytes.length);
-		return mCommand.readBool(command);
+		int offset = 0;
+
+		while (offset < bytes.length) {
+			int length = bytes.length - offset;
+			if (length > 18) {
+				length = 18;
+			}
+
+			CavanAndroid.dLog("offset = " + offset + ", length = " + length);
+
+			byte[] command = new byte[length + 2];
+			command[0] = JWAOO_TOY_CMD_MOTO_PROG;
+			command[1] = (byte) offset;
+			System.arraycopy(bytes, offset, command, 2, length);
+
+			if (!mCommand.readBool(command)) {
+				return false;
+			}
+
+			offset += length;
+		}
+
+		return true;
 	}
 
-	public static byte buildMotoProg(int prog, int param) {
-		return (byte) (param << 5 | prog);
+	public static byte buildMotoCmd(int cmd, int arg) {
+		return (byte) (cmd << 4 | arg);
 	}
 
 	public int getMotoSpeedMin() throws Exception {

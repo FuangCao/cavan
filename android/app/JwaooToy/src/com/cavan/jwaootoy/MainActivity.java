@@ -45,6 +45,23 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private static final int EVENT_MOTO_RAND = 12;
 	private static final int EVENT_UPDATE_SPEED = 13;
 
+	private static final byte[] MOTO_PROG = {
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_RISE, 0),
+		(byte) 100,
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_FALL, 0),
+		(byte) 100,
+		1,
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_RISE, 0),
+		(byte) 50,
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_FALL, 0),
+		(byte) 50,
+		1,
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_ADD, 0),
+		(byte) 20,
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_SET, 0),
+		(byte) 20,
+	};
+
 	private static final int MOTO_MODE_TABLE[] = {
 		JwaooBleToy.MOTO_MODE_IDLE,
 		JwaooBleToy.MOTO_MODE_LINE,
@@ -264,29 +281,6 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 				mMotoMode = MOTO_MODE_TABLE[position];
 
 				try {
-					if (mMotoMode >= JwaooBleToy.MOTO_MODE_PROG || mMotoMode <= JwaooBleToy.MOTO_MODE_PROG_SYNC) {
-						byte[] bytes = {
-							JwaooBleToy.buildMotoProg(JwaooBleToy.MOTO_PROG_SET, 1),
-							(byte) 20,
-							JwaooBleToy.buildMotoProg(JwaooBleToy.MOTO_PROG_SET, 0),
-							(byte) 20,
-							JwaooBleToy.buildMotoProg(JwaooBleToy.MOTO_PROG_SET, 1),
-							(byte) 20,
-							JwaooBleToy.buildMotoProg(JwaooBleToy.MOTO_PROG_SET, 0),
-							(byte) 20,
-							JwaooBleToy.buildMotoProg(JwaooBleToy.MOTO_PROG_SET, 1),
-							(byte) 20,
-							JwaooBleToy.buildMotoProg(JwaooBleToy.MOTO_PROG_SET, 0),
-							(byte) 20,
-							JwaooBleToy.buildMotoProg(JwaooBleToy.MOTO_PROG_SET, 3),
-							(byte) 10,
-							JwaooBleToy.buildMotoProg(JwaooBleToy.MOTO_PROG_SET, 0),
-							(byte) 20,
-						};
-
-						mBleToy.setMotoProg(bytes);
-					}
-
 					setMotoMode();
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -522,8 +516,10 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		}
 
 		CavanAndroid.dLog("getMotoSpeedMin = " + mBleToy.getMotoSpeedMin());
-		mBleToy.setMotoSpeedMin(5);
-		CavanAndroid.dLog("getMotoSpeedMin = " + mBleToy.getMotoSpeedMin());
+		// mBleToy.setMotoSpeedMin(5);
+		// CavanAndroid.dLog("getMotoSpeedMin = " + mBleToy.getMotoSpeedMin());
+
+		mBleToy.setMotoProg(MOTO_PROG);
 
 		mHandler.sendEmptyMessage(EVENT_INIT_COMPLETE);
 
