@@ -95,13 +95,13 @@ public class JwaooBleToy extends CavanBleGatt {
 
 	public static final byte MOTO_CMD_SET = 0;
 	public static final byte MOTO_CMD_ADD = 2;
-	public static final byte MOTO_CMD_SUB = 4;
-	public static final byte MOTO_CMD_RISE = 6;
-	public static final byte MOTO_CMD_FALL = 7;
-	public static final byte MOTO_CMD_RISE_STEP = 8;
-	public static final byte MOTO_CMD_FALL_STEP = 9;
-	public static final byte MOTO_CMD_DELAY_ADD = 10;
-	public static final byte MOTO_CMD_DELAY_SUB = 11;
+	public static final byte MOTO_CMD_SUB = 3;
+	public static final byte MOTO_CMD_RISE = 4;
+	public static final byte MOTO_CMD_FALL = 5;
+	public static final byte MOTO_CMD_RISE_STEP = 6;
+	public static final byte MOTO_CMD_FALL_STEP = 7;
+	public static final byte MOTO_CMD_DELAY_ADD = 8;
+	public static final byte MOTO_CMD_DELAY_SUB = 9;
 
 	public static final String DEVICE_NAME_COMMON = "JwaooToy";
 	public static final String DEVICE_NAME_K100 = "K100";
@@ -830,6 +830,7 @@ public class JwaooBleToy extends CavanBleGatt {
 			System.arraycopy(bytes, offset, command, 2, length);
 
 			if (!mCommand.readBool(command)) {
+				CavanAndroid.eLog("Failed to send command: " + command[0]);
 				return false;
 			}
 
