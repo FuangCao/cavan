@@ -106,13 +106,11 @@ public class CavanBleChar {
 
 					CavanAndroid.eLog("Failed to writeCharacteristic" + i + ": status = " + mWriteStatus);
 				} else {
-					CavanAndroid.eLog("Failed to writeCharacteristic");
-
 					if (i > 0) {
 						break;
 					}
 
-					return false;
+					throw new TimeoutException("Failed to writeCharacteristic");
 				}
 			}
 
