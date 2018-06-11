@@ -81,9 +81,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 					int speed = random.nextInt(JwaooBleToy.MOTO_LEVEL_MAX) + 1;
 
 					try {
-						if (!mBleToy.setMotoMode(JwaooBleToy.MOTO_MODE_LINE, speed)) {
-							break;
-						}
+						mBleToy.setMotoMode(JwaooBleToy.MOTO_MODE_LINE, speed);
 					} catch (Exception e) {
 						e.printStackTrace();
 						break;
@@ -91,6 +89,9 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener {
 
 					mSendTimes++;
 				}
+
+				mEnabled = false;
+				mHandler.sendEmptyMessage(MSG_UPDATE_SETTINGS);
 
 				try {
 					mBleToy.setMotoMode(JwaooBleToy.MOTO_MODE_IDLE, 0);

@@ -46,45 +46,12 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private static final int EVENT_UPDATE_SPEED = 13;
 
 	private static final byte[] MOTO_PROG = {
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_RISE, 0),
-		(byte) 100,
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_FALL, 0),
-		(byte) 100,
-		(byte) 1,
-
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_DELAY_SUB, 0),
-		(byte) 20,
-		(byte) 2,
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_DELAY_ADD, 0),
-		(byte) 3,
-		(byte) 20,
-
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_SET, 1),
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_SET, 0),
 		(byte) 0,
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_RISE_STEP, 0),
-		(byte) 20,
-		(byte) 20,
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_FALL_STEP, 0),
-		(byte) 20,
-		(byte) 20,
-		(byte) 1,
-
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_ADD, 0),
-		(byte) 20,
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_SET, 0),
-		(byte) 20,
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_ADD, 0),
-		(byte) 20,
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_SET, 0),
-		(byte) 20,
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_ADD, 0),
-		(byte) 20,
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_SET, 0),
-		(byte) 20,
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_ADD, 5),
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_RISE_STEP, 1 << 3),
+		(byte) (2 << 6 | 10),
 		(byte) 10,
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_SET, 0),
-		(byte) 20,
+		(byte) 50,
 	};
 
 	private static final int MOTO_MODE_TABLE[] = {
