@@ -94,14 +94,24 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final int MOTO_MODE_T06 = 35;
 
 	public static final byte MOTO_CMD_SET = 0;
-	public static final byte MOTO_CMD_ADD = 2;
-	public static final byte MOTO_CMD_SUB = 3;
-	public static final byte MOTO_CMD_RISE = 4;
-	public static final byte MOTO_CMD_FALL = 5;
-	public static final byte MOTO_CMD_RISE_STEP = 6;
-	public static final byte MOTO_CMD_FALL_STEP = 7;
-	public static final byte MOTO_CMD_DELAY_ADD = 8;
-	public static final byte MOTO_CMD_DELAY_SUB = 9;
+	public static final byte MOTO_CMD_LOOP = 2;
+	public static final byte MOTO_CMD_COMMIT = 4;
+	public static final byte MOTO_CMD_ABS_ADD = 5;
+	public static final byte MOTO_CMD_ABS_SUB = 6;
+	public static final byte MOTO_CMD_REL_ADD = 7;
+	public static final byte MOTO_CMD_REL_SUB = 8;
+	public static final byte MOTO_CMD_DELAY_SET = 9;
+	public static final byte MOTO_CMD_DELAY_ADD = 10;
+	public static final byte MOTO_CMD_DELAY_SUB = 11;
+
+	public static final byte MOTO_COMMIT_NORMAL = 0;
+	public static final byte MOTO_COMMIT_OPEN = 1;
+	public static final byte MOTO_COMMIT_CLOSE = 2;
+	public static final byte MOTO_COMMIT_MAX = 3;
+	public static final byte MOTO_COMMIT_SET = 4;
+	public static final byte MOTO_COMMIT_ADD = 5;
+	public static final byte MOTO_COMMIT_SUB = 6;
+	public static final byte MOTO_COMMIT_DELAY = 0x08;
 
 	public static final String DEVICE_NAME_COMMON = "JwaooToy";
 	public static final String DEVICE_NAME_K100 = "K100";

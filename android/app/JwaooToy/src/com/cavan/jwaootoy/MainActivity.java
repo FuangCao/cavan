@@ -46,12 +46,13 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private static final int EVENT_UPDATE_SPEED = 13;
 
 	private static final byte[] MOTO_PROG = {
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_SET, 0),
-		(byte) 0,
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_RISE_STEP, 1 << 3),
-		(byte) (2 << 6 | 10),
-		(byte) 10,
-		(byte) 50,
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_DELAY_SET, 0),
+		(byte) 20,
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_COMMIT, JwaooBleToy.MOTO_COMMIT_OPEN),
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_COMMIT, JwaooBleToy.MOTO_COMMIT_CLOSE),
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_COMMIT, JwaooBleToy.MOTO_COMMIT_SUB),
+		(byte) 3,
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_COMMIT, JwaooBleToy.MOTO_COMMIT_CLOSE),
 	};
 
 	private static final int MOTO_MODE_TABLE[] = {
