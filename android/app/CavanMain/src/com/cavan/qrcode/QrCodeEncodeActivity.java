@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -37,7 +38,19 @@ public class QrCodeEncodeActivity extends Activity implements TextWatcher, OnCli
 				return;
 			}
 
-			mBitmap = CavanQrCode.encodeBitmap(mEditTextQrCode.getText().toString(), mImageViewQrCode.getWidth(), mImageViewQrCode.getHeight());
+			Point point = new Point();
+			getWindowManager().getDefaultDisplay().getSize(point);
+
+			int width = point.x;
+			int height = point.y;
+
+			if (width < height) {
+				width /= 2;
+			} else {
+				width = height / 2;
+			}
+
+			mBitmap = CavanQrCode.encodeBitmap(mEditTextQrCode.getText().toString(), width, width);
 			if (mBitmap != null) {
 				mImageViewQrCode.setImageBitmap(mBitmap);
 				mImageViewQrCode.setVisibility(View.VISIBLE);
@@ -59,6 +72,11 @@ public class QrCodeEncodeActivity extends Activity implements TextWatcher, OnCli
 
 		mImageViewQrCode = (ImageView) findViewById(R.id.imageViewQrCode);
 		mImageViewQrCode.setOnClickListener(this);
+
+		String text = CavanAndroid.getClipboardText(this);
+		if (text != null) {
+			mEditTextQrCode.setText(text);
+		}
 	}
 
 	@Override
