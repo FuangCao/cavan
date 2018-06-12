@@ -48,10 +48,15 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 	private static final byte[] MOTO_PROG = {
 		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_DELAY_SET, 0),
 		(byte) 20,
+
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_LOOP, 2),
+		(byte) 3,
 		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_COMMIT, JwaooBleToy.MOTO_COMMIT_OPEN),
 		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_COMMIT, JwaooBleToy.MOTO_COMMIT_CLOSE),
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_COMMIT, JwaooBleToy.MOTO_COMMIT_SUB),
-		(byte) 3,
+
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_COMMIT, JwaooBleToy.MOTO_COMMIT_DELAY | JwaooBleToy.MOTO_COMMIT_OPEN),
+		// (byte) 5,
+		(byte) 50,
 		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_COMMIT, JwaooBleToy.MOTO_COMMIT_CLOSE),
 	};
 
