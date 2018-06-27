@@ -49,15 +49,37 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_DELAY_SET, 0),
 		(byte) 20,
 
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_LOOP, 2),
-		(byte) 3,
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_LOOP, 4),
+		(byte) 50,
 		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_COMMIT, JwaooBleToy.MOTO_COMMIT_OPEN),
 		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_COMMIT, JwaooBleToy.MOTO_COMMIT_CLOSE),
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_DELAY_SUB, JwaooBleToy.MOTO_OPT_BREAK),
+		(byte) 1,
 
-		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_COMMIT, JwaooBleToy.MOTO_COMMIT_DELAY | JwaooBleToy.MOTO_COMMIT_OPEN),
-		// (byte) 5,
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_LOOP, 4),
 		(byte) 50,
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_COMMIT, JwaooBleToy.MOTO_COMMIT_OPEN),
 		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_COMMIT, JwaooBleToy.MOTO_COMMIT_CLOSE),
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_DELAY_ADD, JwaooBleToy.MOTO_OPT_BREAK),
+		(byte) 20,
+
+		/* JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_COMMIT, JwaooBleToy.MOTO_OPT_DELAY | JwaooBleToy.MOTO_COMMIT_ADD),
+		(byte) 3,
+		(byte) 10,
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_COMMIT, JwaooBleToy.MOTO_COMMIT_CLOSE), */
+
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_LOOP, 3),
+		(byte) 18,
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_REL_ADD, JwaooBleToy.MOTO_OPT_CYCLE | JwaooBleToy.MOTO_OPT_BREAK),
+		(byte) 100,
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_COMMIT, JwaooBleToy.MOTO_COMMIT_NORMAL),
+
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_LOOP, 4),
+		(byte) 18,
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_REL_SUB, JwaooBleToy.MOTO_OPT_CYCLE | JwaooBleToy.MOTO_OPT_BREAK),
+		(byte) 1,
+		(byte) 100,
+		JwaooBleToy.buildMotoCmd(JwaooBleToy.MOTO_CMD_COMMIT, JwaooBleToy.MOTO_COMMIT_NORMAL),
 	};
 
 	private static final int MOTO_MODE_TABLE[] = {

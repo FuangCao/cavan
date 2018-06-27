@@ -111,7 +111,10 @@ public class JwaooBleToy extends CavanBleGatt {
 	public static final byte MOTO_COMMIT_SET = 4;
 	public static final byte MOTO_COMMIT_ADD = 5;
 	public static final byte MOTO_COMMIT_SUB = 6;
-	public static final byte MOTO_COMMIT_DELAY = 0x08;
+
+	public static final byte MOTO_OPT_DELAY = 0x08;
+	public static final byte MOTO_OPT_BREAK = 0x08;
+	public static final byte MOTO_OPT_CYCLE = 0x04;
 
 	public static final String DEVICE_NAME_COMMON = "JwaooToy";
 	public static final String DEVICE_NAME_K100 = "K100";
