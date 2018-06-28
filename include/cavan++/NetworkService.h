@@ -45,7 +45,7 @@ private:
 	NetworkService *mService;
 
 public:
-	NetworkEpollService(NetworkService *service = NULL) : mService(service) {}
+	NetworkEpollService(NetworkService *service) : EpollClient(this), mService(service) {}
 	virtual ~NetworkEpollService() {}
 
 public:

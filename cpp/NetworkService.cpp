@@ -35,6 +35,8 @@ int NetworkEpollService::onEpollIn(EpollService *service)
 		goto out_delete_client;
 	}
 
+	client->setBlockEnable(false);
+
 	epoll = newEpollClient(client);
 	if (epoll == NULL) {
 		goto out_delete_client;

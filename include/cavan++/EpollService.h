@@ -27,38 +27,38 @@
 #define EPOLL_DAEMON_MAX		200
 #define EPOLL_SERVICE_DEBUG		0
 
-class EpollDaemon : public SimpleThread, public SimpleLink<EpollDaemon> {
-private:
-	EpollService *mService;
-
-public:
-	EpollDaemon(EpollService *service) : mService(service) {}
-	virtual ~EpollDaemon() {}
-
-protected:
-	virtual void run(void);
-};
-
 class EpollService : public SimpleThread {
-	friend class EpollDaemon;
-	friend class EpollClient;
-	friend class EpollClientQueue;
+friend class EpollDaemon;
+friend class EpollClient;
 
 private:
 	int mEpollFd;
-	u16 mDaemons;
-	u16 mIdleDaemons;
+	u16 mDaemonMax;
+	u16 mDaemonMin;
+	u16 mDaemonTotal;
+	u16 mDaemonReady;
 	ThreadLock mLock;
-	EpollClientQueue mClientQueue;
-	SimpleLinkQueue<EpollDaemon> mDaemonQueue;
+	Condition mCond;
+	EpollClient *mEpollHead;
+	EpollClient *mEpollTail;
+	SimpleLinkQueue<EpollClient> mClientQueue;
+
+	static void *EpollDaemonHandler(void *data) {
+		static_cast<EpollService *>(data)->runEpollDaemon();
+		return NULL;
+	}
 
 public:
-	EpollService(void) : mEpollFd(-1), mDaemons(0), mIdleDaemons(0) {}
+	EpollService(u16 max = 200, u16 min = 20) : mEpollFd(-1), mDaemonMax(max), mDaemonMin(min), mDaemonTotal(0), mDaemonReady(0) {
+		doEpollCreate();
+	}
+
 	virtual ~EpollService() {}
 
 public:
-	virtual int startEpollDaemon(void);
+	virtual int doEpollCreate(void);
 	virtual int doEpollCtrl(int op, int fd, u32 events, EpollClient *client);
+	virtual void postEpollClient(EpollClient *client, u32 events);
 
 	virtual int addEpollClient(int fd, u32 events, EpollClient *client) {
 		return doEpollCtrl(EPOLL_CTL_ADD, fd, events, client);
@@ -69,18 +69,7 @@ public:
 	}
 
 	virtual int removeEpollClient(int fd, EpollClient *client) {
-		int ret = doEpollCtrl(EPOLL_CTL_DEL, fd, 0, NULL);
-		mClientQueue.remove(client);
-		return ret;
-	}
-
-	virtual void enqueueEpollClient(EpollClient *client) {
-		if (mClientQueue.enqueue(client)) {
-			AutoLock lock(mLock);
-			if (mIdleDaemons == 0 && mDaemons < EPOLL_DAEMON_MAX) {
-				startEpollDaemon();
-			}
-		}
+		return doEpollCtrl(EPOLL_CTL_DEL, fd, 0, NULL);
 	}
 
 protected:
@@ -88,51 +77,9 @@ protected:
 		return 0;
 	}
 
-	virtual void onEpollDaemonStarted(EpollDaemon *daemon) {
-		AutoLock lock(mLock);
-		mDaemons++;
-
-#if EPOLL_SERVICE_DEBUG
-		println("onEpollDaemonStarted: %d", mDaemons);
-#endif
-	}
-
-	virtual void onEpollDaemonStopped(EpollDaemon *daemon) {
-		AutoLock lock(mLock);
-		mDaemons--;
-
-#if EPOLL_SERVICE_DEBUG
-		println("onEpollDaemonStopped: %d", mDaemons);
-#endif
-	}
-
-	virtual bool onEpollDaemonReady(EpollDaemon *daemon) {
-		AutoLock lock(mLock);
-
-		if (mIdleDaemons > EPOLL_DAEMON_MIN) {
-			return true;
-		}
-
-		mIdleDaemons++;
-
-#if EPOLL_SERVICE_DEBUG
-		println("onEpollDaemonReady: %d", mIdleDaemons);
-#endif
-
-		return false;
-	}
-
-	virtual void onEpollDaemonBusy(EpollDaemon *daemon) {
-		AutoLock lock(mLock);
-		mIdleDaemons--;
-
-#if EPOLL_SERVICE_DEBUG
-		println("onEpollDaemonBusy: %d", mIdleDaemons);
-#endif
-	}
-
 	virtual void onEpollStopped(void) {}
 
 	virtual void run(void);
-	virtual void runEpollDaemon(EpollDaemon *daemon);
+	virtual void runEpollDaemon(void);
+	virtual void onEpollEvent(EpollClient *client, u32 events);
 };

@@ -34,7 +34,9 @@ public:
 	NetworkBase(void) : mSockfd(INVALID_SOCKET) {}
 
 	virtual ~NetworkBase() {
-		// close();
+		if (mSockfd != INVALID_SOCKET) {
+			closeSocket(mSockfd, true);
+		}
 	}
 
 	virtual void setSockfd(int sockfd) {
@@ -106,6 +108,7 @@ public:
 #endif
 	}
 
+	virtual bool setBlockEnable(bool enable);
 	virtual int open(NetworkUrl *url) = 0;
 	virtual void close(void) = 0;
 };

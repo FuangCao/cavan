@@ -107,26 +107,8 @@ public:
 
 	virtual void dump(void);
 	virtual void reset(void);
-	virtual int write(const void *buff, u16 length);
+	virtual int write(const void *buff, u16 length, bool &completed);
 	virtual u16 getLength(void);
-};
-
-class HttpPacket : public EpollPacket {
-private:
-	HttpHeader *mHeader;
-
-public:
-	HttpPacket(HttpHeader *header) : EpollPacket(header->getLength()) {
-		mHeader = header;
-	}
-
-	virtual ~HttpPacket() {
-		delete mHeader;
-	}
-
-	virtual HttpHeader *getHeader(void) {
-		return mHeader;
-	}
 };
 
 class HttpResponse : public EpollPacket {
@@ -138,31 +120,9 @@ public:
 	virtual ~HttpResponse() {}
 };
 
-class HttpClient : public NetworkEpollClientBase {
-private:
-	HttpHeader *mHeader;
-
+class HttpClient : public NetworkEpollClient<HttpHeader> {
 public:
-	HttpClient(NetworkClient *client) : NetworkEpollClientBase(client), mHeader(NULL) {}
+	HttpClient(EpollService *service, NetworkClient *client) : NetworkEpollClient(service, client) {}
 
-	virtual ~HttpClient() {
-		if (mHeader != NULL) {
-			delete mHeader;
-		}
-	}
-
-	virtual int onHttpPacketReceived(HttpPacket *packet) = 0;
-	virtual EpollPacket *onEpollHeaderReceived(EpollBuffer *header);
-
-	virtual int onEpollPacketReceived(EpollPacket *packet) {
-		return onHttpPacketReceived((HttpPacket *) packet);
-	}
-
-	virtual EpollBuffer *getEpollHeader(void) {
-		if (mHeader == NULL) {
-			mHeader = new HttpHeader();
-		}
-
-		return mHeader;
-	}
+	virtual ~HttpClient() {}
 };

@@ -50,7 +50,6 @@ int HttpHeader::getHeaderType(const char *name)
 void HttpHeader::reset(void)
 {
 	EpollBuffer::reset();
-	mCompleted = false;
 	mInvalid = false;
 	mLineNo = 0;
 	mValue = 0;
@@ -73,7 +72,7 @@ void HttpHeader::dump(void)
 	}
 }
 
-int HttpHeader::write(const void *buff, u16 length)
+int HttpHeader::write(const void *buff, u16 length, bool &completed)
 {
 	const char *p, *p_end;
 	int ret;
@@ -90,7 +89,7 @@ int HttpHeader::write(const void *buff, u16 length)
 			}
 
 			if (mName == mOffset) {
-				mCompleted = true;
+				completed = true;
 				return p - (char *) buff + 1;
 			}
 
@@ -126,7 +125,7 @@ int HttpHeader::write(const void *buff, u16 length)
 					mValue = mName;
 				}
 
-				setOffset(mName);
+				seek(mName);
 			} else {
 				ret = putchar(':');
 				if (ret < 0) {
@@ -176,14 +175,4 @@ u16 HttpHeader::getLength(void)
 	}
 
 	return atoi(content_length);
-}
-
-EpollPacket *HttpClient::onEpollHeaderReceived(EpollBuffer *header)
-{
-	HttpPacket *packet = new HttpPacket(mHeader);
-	if (packet != NULL) {
-		mHeader = NULL;
-	}
-
-	return packet;
 }

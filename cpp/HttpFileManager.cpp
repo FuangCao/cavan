@@ -20,10 +20,9 @@
 #include <cavan.h>
 #include <cavan++/HttpFileManager.h>
 
-int HttpFileClient::onHttpPacketReceived(HttpPacket *packet)
+int HttpFileClient::onEpollPackReceived(EpollPacket *packet)
 {
-	HttpHeader *header = packet->getHeader();
-	const char *type = header->getType();
+	const char *type = mHeader.getType();
 
 	if (strcmp(type, "GET") == 0) {
 	} else if (strcmp(type, "POST") == 0) {

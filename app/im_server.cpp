@@ -24,14 +24,21 @@
 
 class TestEpollClient : public NetworkEpollClient<EpollBufferU16> {
 public:
-	TestEpollClient(NetworkClient *client) : NetworkEpollClient(client) {}
+	TestEpollClient(EpollService *service, NetworkClient *client) : NetworkEpollClient(service, client) {}
 
 protected:
-	virtual int onEpollPacketReceived(EpollPacket *packet) {
-		println("onEpollPacketReceived[%d]: %s", packet->getLength(), packet->getData());
-		pr_warn_info("wait");
-		msleep(10000);
-		pr_warn_info("wakeup");
+	virtual int onEpollPackReceived(EpollPacket *packet) {
+		println("onEpollPackReceived[%d]: %s", packet->getLength(), packet->getData());
+		u16 length = packet->getLength();
+		bool completed = false;
+
+		for (int i = 0; i < 2000000; i++) {
+			EpollPacket *writer = new EpollPacket(length + 2);
+			writer->write(&length, sizeof(length), completed);
+			writer->write(packet->getData(), length, completed);
+			sendEpollPacket(writer);
+		}
+
 		return 0;
 	}
 };
@@ -42,7 +49,7 @@ public:
 
 protected:
 	EpollClient *newEpollClient(NetworkClient *client) {
-		return new TestEpollClient(client);
+		return new TestEpollClient(this, client);
 	}
 };
 

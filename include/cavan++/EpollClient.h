@@ -24,7 +24,6 @@
 #include <cavan++/Link.h>
 
 class EpollService;
-class EpollDaemon;
 class EpollClient;
 
 class EpollBuffer {
@@ -43,7 +42,7 @@ public:
 	virtual char *getData(void) = 0;
 
 	virtual int writeTo(EpollClient *client);
-	virtual int write(const void *buff, u16 length);
+	virtual int write(const void *buff, u16 length, bool &completed);
 
 	virtual void reset(void) {
 		mOffset = 0;
@@ -61,16 +60,12 @@ public:
 		return mOffset;
 	}
 
-	virtual void setOffset(u16 offset) {
+	virtual void seek(u16 offset) {
 		mOffset = offset;
 	}
 
 	virtual u16 getRemain(void) {
 		return getSize() - mOffset;
-	}
-
-	virtual bool isCompleted(void) {
-		return (mOffset >= getSize());
 	}
 };
 
@@ -96,10 +91,9 @@ class EpollBufferAuto : public EpollBuffer {
 protected:
 	char *mData;
 	u16 mSize;
-	bool mCompleted;
 
 public:
-	EpollBufferAuto(void) : mData(NULL), mSize(0), mCompleted(false) {}
+	EpollBufferAuto(void) : mData(NULL), mSize(0) {}
 
 	virtual ~EpollBufferAuto() {
 		if (mData != NULL) {
@@ -109,7 +103,7 @@ public:
 
 	virtual int alloc(u16 length);
 	virtual int write(char c);
-	virtual int write(const void *buff, u16 length);
+	virtual int write(const void *buff, u16 length, bool &completed);
 
 	virtual u16 getSize(void) {
 		return mSize;
@@ -118,20 +112,15 @@ public:
 	virtual char *getData(void) {
 		return mData;
 	}
-
-	virtual bool isCompleted(void) {
-		return mCompleted;
-	}
-
-	virtual void setCompleted(bool completed) {
-		mCompleted = completed;
-	}
 };
 
-class EpollPacket : public EpollBuffer, public SimpleLink<EpollPacket> {
+class EpollPacket : public EpollBuffer {
+friend EpollClient;
+
 protected:
 	char *mData;
 	u16 mLength;
+	EpollPacket *mNext;
 
 public:
 	EpollPacket(u16 length = 0) : mLength(length) {
@@ -158,41 +147,50 @@ public:
 };
 
 class EpollClient : public SimpleLink<EpollClient> {
-	friend class EpollBuffer;
-	friend class EpollPacket;
-	friend class EpollService;
-	friend class EpollClientQueue;
+friend class EpollBuffer;
+friend class EpollService;
 
 private:
-	SimpleLinkQueue<EpollPacket> mWrQueue;
-	SimpleLinkQueue<EpollPacket> mRdQueue;
-	EpollPacket *mWrPacket;
-	EpollPacket *mRdPacket;
+	EpollPacket *mWrHead;
+	EpollPacket *mWrTail;
+	ThreadLock mWrLock;
+	u32 mEpollEvents;
+
+protected:
+	EpollService *mEpollService;
+	EpollClient *mEpollNext;
 
 public:
-	EpollClient(void) {
-		mWrPacket = NULL;
-		mRdPacket = NULL;
+	EpollClient(EpollService *service) : mEpollService(service) {
+		mEpollNext = this;
+		mEpollEvents = 0;
+		mWrHead = NULL;
 	}
 
-	virtual ~EpollClient() {}
+	virtual ~EpollClient() {
+		EpollPacket *pack = mWrHead;
+
+		while (pack != NULL) {
+			EpollPacket *next = pack->mNext;
+			delete pack;
+			pack = next;
+		}
+	}
+
+	virtual u32 getEpollEvents(void) {
+		return mEpollEvents;
+	}
+
+	virtual void setEpollEvents(u32 events) {
+		mEpollEvents |= events;
+	}
+
 	virtual int addEpollTo(EpollService *service);
 	virtual int removeEpollFrom(EpollService *service);
-	virtual int setEpollReadonly(EpollService *service);
-	virtual int setEpollReadWrite(EpollService *service);
-	virtual int sendEpollPacket(EpollPacket *packet);
-
-	virtual EpollPacket *dequeueEpollPacket(void) {
-		return mRdQueue.dequeue();
-	}
+	virtual void sendEpollPacket(EpollPacket *packet);
 
 protected:
 	virtual int getEpollFd(void) = 0;
-
-	virtual EpollBuffer *getEpollHeader(void) {
-		pr_red_info("getEpollHeader no implement!");
-		return NULL;
-	}
 
 	virtual int doEpollRead(void *buff, int size) {
 		pr_red_info("doEpollRead no implement!");
@@ -204,43 +202,78 @@ protected:
 		return -ENOENT;
 	}
 
-	virtual int onEpollPacketReceived(EpollPacket *packet) {
-		pr_red_info("onEpollPacketReceived no implement!");
-		return -ENOENT;
-	}
-
-	virtual u32 getEpollEventsRO(void) {
-		return EPOLLIN | EPOLLERR | EPOLLHUP;
-	}
-
-	virtual u32 getEpollEventsRW(void) {
-		return getEpollEventsRO() | EPOLLOUT;
-	}
-
 protected:
+	virtual bool onEpollEvent(EpollService *service);
 	virtual int onEpollIn(EpollService *service);
-	virtual int onEpollDataReceived(EpollService *service, const void *buff, int size);
-	virtual EpollPacket *onEpollHeaderReceived(EpollBuffer *header);
-	virtual void onEpollEvent(EpollService *service, u32 events);
 	virtual int onEpollOut(EpollService *service);
-	virtual void onEpollError(EpollService *service);
+	virtual void onEpollErr(EpollService *service);
+
+	virtual int onEpollDataReceived(EpollService *service, const void *buff, int size) {
+		println("onEpollDataReceived[%d]: %s", size, (const char *) buff);
+		return size;
+	}
 };
 
-class EpollClientQueue {
-private:
-	EpollClient *mHead;
-	ThreadLock mLock;
-	Condition mCond;
+template <class T>
+class EpollPackClient : public EpollClient {
+protected:
+	T mHeader;
+	EpollPacket *mWrPacket;
 
 public:
-	EpollClientQueue(void) : mHead(NULL) {}
-	virtual ~EpollClientQueue() {}
+	EpollPackClient(EpollService *service) : EpollClient(service), mWrPacket(NULL) {}
 
-public:
-	virtual bool enqueue(EpollClient *client);
-	virtual EpollClient *dequeueLocked(void);
-	virtual EpollClient *dequeue(void);
-	virtual void removeLocked(EpollClient *client);
-	virtual void remove(EpollClient *client);
-	virtual void processPackets(EpollService *service, EpollDaemon *daemon);
+protected:
+	virtual int onEpollDataReceived(EpollService *service, const void *buff, int size) {
+		bool completed = false;
+		int wrlen;
+
+		if (mWrPacket != NULL) {
+			wrlen = mWrPacket->write(buff, size, completed);
+			if (wrlen < 0) {
+				return wrlen;
+			}
+
+			if (completed) {
+				int ret = onEpollPackReceived(mWrPacket);
+				if (ret < 0) {
+					return ret;
+				}
+
+				delete mWrPacket;
+				mWrPacket = NULL;
+				mHeader.seek(0);
+			}
+		} else {
+			wrlen = mHeader.write(buff, size, completed);
+			if (wrlen < 0) {
+				return wrlen;
+			}
+
+			if (completed) {
+				u16 length = mHeader.getLength();
+
+				println("length = %d", length);
+
+				if (length > 0) {
+					mWrPacket = new EpollPacket(length);
+					if (mWrPacket == NULL) {
+						return -ENOMEM;
+					}
+				} else {
+					int ret = onEpollPackReceived(NULL);
+					if (ret < 0) {
+						return ret;
+					}
+				}
+			}
+		}
+
+		return wrlen;
+	}
+
+	virtual int onEpollPackReceived(EpollPacket *packet) {
+		println("onEpollPackReceived");
+		return 0;
+	}
 };

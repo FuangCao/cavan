@@ -19,3 +19,29 @@
 
 #include <cavan.h>
 #include <cavan++/NetworkBase.h>
+
+bool NetworkBase::setBlockEnable(bool enable)
+{
+	int flags = fcntl(mSockfd, F_GETFL);
+	if (flags == -1) {
+		pr_err_info("fcntl F_GETFL");
+		return false;
+	}
+
+	int newFlags;
+
+	if (enable) {
+		newFlags = flags & (~(O_NONBLOCK));
+	} else {
+		newFlags = flags | O_NONBLOCK;
+	}
+
+	if (flags != newFlags && fcntl(mSockfd, F_SETFL, newFlags)) {
+		pr_err_info("fcntl F_SETFL");
+		return false;
+	}
+
+	pd_info("setBlockEnable: %d", enable);
+
+	return true;
+}

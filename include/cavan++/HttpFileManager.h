@@ -24,16 +24,16 @@
 
 class HttpFileClient : public HttpClient {
 public:
-	HttpFileClient(NetworkClient *client) : HttpClient(client) {}
+	HttpFileClient(EpollService *service, NetworkClient *client) : HttpClient(service, client) {}
 	virtual ~HttpFileClient() {}
 
 protected:
-	virtual int onHttpPacketReceived(HttpPacket *packet);
+	virtual int onEpollPackReceived(EpollPacket *packet);
 };
 
 class HttpFileService : public HttpService {
 protected:
 	virtual EpollClient *newEpollClient(NetworkClient *client) {
-		return new HttpFileClient(client);
+		return new HttpFileClient(this, client);
 	}
 };

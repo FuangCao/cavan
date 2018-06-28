@@ -20,16 +20,22 @@
 #include <cavan.h>
 #include <cavan++/EpollService.h>
 
-void EpollDaemon::run(void)
+int EpollService::doEpollCreate(void)
 {
-	mService->runEpollDaemon(this);
+	AutoLock lock(mLock);
+
+	if (mEpollFd < 0) {
+		mEpollFd = epoll_create(0xFFFF);
+	}
+
+	return mEpollFd;
 }
 
 int EpollService::doEpollCtrl(int op, int fd, u32 events, EpollClient *client)
 {
 	struct epoll_event event;
 
-	event.events = events;
+	event.events = events | EPOLLHUP | EPOLLERR | EPOLLET;
 	event.data.ptr = client;
 
 	AutoLock lock(mLock);
@@ -37,34 +43,38 @@ int EpollService::doEpollCtrl(int op, int fd, u32 events, EpollClient *client)
 	return epoll_ctl(mEpollFd, op, fd, &event);
 }
 
-int EpollService::startEpollDaemon(void)
+void EpollService::postEpollClient(EpollClient *client, u32 events)
 {
-	EpollDaemon *daemon = new EpollDaemon(this);
-	if (daemon == NULL) {
-		return -ENOMEM;
+	AutoLock lock(mLock);
+
+	client->setEpollEvents(events);
+
+	if (client->mEpollNext == client) {
+		client->mEpollNext = NULL;
+
+		if (mEpollHead == NULL) {
+			mEpollHead = client;
+			mCond.notify();
+		} else {
+			mEpollTail->mEpollNext = client;
+		}
+
+		mEpollTail = client;
+
+		if (mDaemonReady == 0 && mDaemonTotal < mDaemonMax) {
+			cavan_pthread_run(EpollDaemonHandler, this);
+		}
 	}
-
-	int ret = daemon->start();
-	if (ret < 0) {
-		delete daemon;
-		return ret;
-	}
-
-	mDaemonQueue.enqueue(daemon);
-
-	return 0;
 }
 
 void EpollService::run(void)
 {
 	int fd;
 
-	while ((fd = epoll_create(0xFFFF)) < 0) {
+	while ((fd = doEpollCreate()) < 0) {
 		pr_err_info("epoll_create: %d", fd);
 		msleep(2000);
 	}
-
-	mEpollFd = fd;
 
 	if (onEpollStarted() < 0) {
 		goto out_exit;
@@ -87,8 +97,7 @@ void EpollService::run(void)
 		}
 
 		for (p = events, p_end = p + count; p < p_end; p++) {
-			EpollClient *client = (EpollClient *) p->data.ptr;
-			client->onEpollEvent(this, p->events);
+			onEpollEvent((EpollClient *) p->data.ptr, p->events);
 		}
 	}
 
@@ -103,9 +112,61 @@ out_exit:
 	pr_red_info("epoll thread exit!");
 }
 
-void EpollService::runEpollDaemon(EpollDaemon *daemon)
+void EpollService::runEpollDaemon(void)
 {
-	onEpollDaemonStarted(daemon);
-	mClientQueue.processPackets(this, daemon);
-	onEpollDaemonStopped(daemon);
+	mLock.acquire();
+
+	mDaemonTotal++;
+
+	println("started (%d/%d)", mDaemonTotal - mDaemonReady, mDaemonTotal);
+
+	while (1) {
+		EpollClient *client = mEpollHead;
+
+		if (client == NULL) {
+			if (mDaemonReady > mDaemonMin) {
+				break;
+			}
+
+			mDaemonReady++;
+			println("ready (%d/%d)", mDaemonTotal - mDaemonReady, mDaemonTotal);
+
+			mCond.waitLocked(mLock);
+
+			mDaemonReady--;
+			println("busy (%d/%d)", mDaemonTotal - mDaemonReady, mDaemonTotal);
+			continue;
+		}
+
+		mEpollHead = client->mEpollNext;
+
+		mLock.release();
+		bool pending = client->onEpollEvent(this);
+		mLock.acquire();
+
+		if (pending) {
+			if (mEpollHead == NULL) {
+				mEpollHead = client;
+			} else {
+				mEpollTail->mEpollNext = client;
+			}
+
+			mEpollTail = client;
+			client->mEpollNext = NULL;
+		} else {
+			client->mEpollNext = client;
+		}
+	}
+
+	mDaemonTotal--;
+
+	println("stopped (%d/%d)", mDaemonTotal - mDaemonReady, mDaemonTotal);
+
+	mLock.release();
+}
+
+void EpollService::onEpollEvent(EpollClient *client, u32 events)
+{
+	println("onEpollEvent: %08x", events);
+	postEpollClient(client, events);
 }

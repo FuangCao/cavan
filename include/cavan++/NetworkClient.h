@@ -23,11 +23,8 @@
 #include <cavan++/NetworkBase.h>
 #include <cavan++/EpollClient.h>
 
-class NetworkEpollClientBase;
-
 class NetworkClient : public NetworkBase {
-	friend class NetworkEpollClientBase;
-	friend class NetworkEpollService;
+friend class NetworkEpollService;
 
 public:
 	virtual ~NetworkClient() {}
@@ -77,7 +74,6 @@ public:
 	virtual ssize_t sendMasked(const void *buff, size_t size);
 	virtual ssize_t recvMasked(void *buff, size_t size);
 
-protected:
 	virtual int onConnected(void) {
 		return 0;
 	}
@@ -85,12 +81,13 @@ protected:
 	virtual void onDisconnected(void) {}
 };
 
-class NetworkEpollClientBase : public EpollClient {
+template <class T>
+class NetworkEpollClient : public EpollPackClient<T> {
 protected:
 	NetworkClient *mClient;
 
 public:
-	NetworkEpollClientBase(NetworkClient *client) : mClient(client) {}
+	NetworkEpollClient(EpollService *service, NetworkClient *client) : EpollPackClient<T>(service), mClient(client) {}
 
 protected:
 	virtual int getEpollFd(void) {
@@ -105,24 +102,10 @@ protected:
 		return mClient->sendraw(buff, size);
 	}
 
-	virtual void onEpollError(EpollService *service) {
-		EpollClient::onEpollError(service);
+	virtual void onEpollErr(EpollService *service) {
+		EpollClient::onEpollErr(service);
 		mClient->onDisconnected();
 		delete mClient;
 		delete this;
-	}
-};
-
-template <class T>
-class NetworkEpollClient : public NetworkEpollClientBase {
-private:
-	T mHeader;
-
-public:
-	NetworkEpollClient(NetworkClient *client) : NetworkEpollClientBase(client) {}
-
-protected:
-	virtual EpollBuffer *getEpollHeader(void) {
-		return &mHeader;
 	}
 };
