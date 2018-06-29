@@ -82,12 +82,13 @@ public:
 };
 
 template <class T>
-class NetworkEpollClient : public EpollPackClient<T> {
+class NetworkEpollClient : public EpollClientPacked {
 protected:
 	NetworkClient *mClient;
+	T mHeader;
 
 public:
-	NetworkEpollClient(EpollService *service, NetworkClient *client) : EpollPackClient<T>(service), mClient(client) {}
+	NetworkEpollClient(EpollService *service, NetworkClient *client) : EpollClientPacked(service), mClient(client) {}
 
 protected:
 	virtual int getEpollFd(void) {
@@ -107,5 +108,9 @@ protected:
 		mClient->onDisconnected();
 		delete mClient;
 		delete this;
+	}
+
+	virtual EpollBuffer *getEpollHeader(void) {
+		return &mHeader;
 	}
 };

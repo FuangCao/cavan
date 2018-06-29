@@ -20,7 +20,7 @@
 #include <cavan.h>
 #include <cavan++/HttpFileManager.h>
 
-int HttpFileClient::onEpollPackReceived(EpollPacket *packet)
+int HttpFileClient::onEpollPackReceived(char *buff, u16 size)
 {
 	const char *type = mHeader.getType();
 

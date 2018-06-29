@@ -27,16 +27,11 @@ public:
 	TestEpollClient(EpollService *service, NetworkClient *client) : NetworkEpollClient(service, client) {}
 
 protected:
-	virtual int onEpollPackReceived(EpollPacket *packet) {
-		println("onEpollPackReceived[%d]: %s", packet->getLength(), packet->getData());
-		u16 length = packet->getLength();
-		bool completed = false;
-
-		EpollPacket *writer = new EpollPacket(length + 2);
-		writer->write(&length, sizeof(length), completed);
-		writer->write(packet->getData(), length, completed);
+	virtual int onEpollPackReceived(char *buff, u16 size) {
+		EpollPacket *writer = new EpollPacket(size + 2);
+		writer->write(&size, sizeof(size));
+		writer->write(buff, size);
 		sendEpollPacket(writer);
-
 		return 0;
 	}
 };

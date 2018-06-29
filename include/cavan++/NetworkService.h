@@ -63,4 +63,9 @@ protected:
 	virtual int onEpollStarted(void) {
 		return addEpollTo(this);
 	}
+
+	virtual int onEpollDataReceived(EpollService *service, const void *buff, u16 size) {
+		pr_warn_info("onEpollDataReceived: %d", size);
+		return size;
+	}
 };

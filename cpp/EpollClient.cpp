@@ -153,7 +153,7 @@ void EpollClient::sendEpollPacket(EpollPacket *packet)
 bool EpollClient::onEpollEvent(EpollService *service)
 {
 	while ((mEpollEvents & (EPOLLERR | EPOLLHUP)) == 0) {
-		int count = 0;
+		bool pending = false;
 
 		if (mEpollEvents & EPOLLIN) {
 			int ret = onEpollIn(service);
@@ -162,7 +162,7 @@ bool EpollClient::onEpollEvent(EpollService *service)
 			}
 
 			if (ret > 0) {
-				count++;
+				pending = true;
 			}
 		}
 
@@ -173,11 +173,11 @@ bool EpollClient::onEpollEvent(EpollService *service)
 			}
 
 			if (ret > 0) {
-				count++;
+				pending = true;
 			}
 		}
 
-		return (count > 0);
+		return pending;
 	}
 
 	onEpollErr(service);
@@ -235,7 +235,6 @@ int EpollClient::onEpollOut(EpollService *service)
 	}
 
 	int ret = head->writeTo(this);
-
 	if (ret > 0) {
 		mWrHead = head->mNext;
 		delete head;
@@ -256,4 +255,73 @@ int EpollClient::onEpollOut(EpollService *service)
 void EpollClient::onEpollErr(EpollService *service)
 {
 	removeEpollFrom(service);
+}
+
+void EpollClientPacked::cleanup(void)
+{
+	EpollClient::cleanup();
+
+	if (mData != NULL) {
+		delete mData;
+		mData = NULL;
+		mSize = 0;
+	}
+}
+
+int EpollClientPacked::onEpollDataReceived(EpollService *service, const void *buff, u16 size)
+{
+	if (mLength > 0) {
+		u16 remain = mLength - mOffset;
+
+		if (size < remain) {
+			memcpy(mData + mOffset, buff, size);
+			mOffset += size;
+			return size;
+		}
+
+		memcpy(mData + mOffset, buff, remain);
+
+		int ret = onEpollPackReceived(mData, mLength);
+		if (ret < 0) {
+			return ret;
+		}
+
+		mLength = 0;
+
+		return remain;
+	}
+
+	bool completed = false;
+	EpollBuffer *header = getEpollHeader();
+	int wrlen = header->write(buff, size, completed);
+
+	if (completed) {
+		mLength = header->getLength();
+
+		if (mLength > 0) {
+			if (mLength > mSize) {
+				if (mData != NULL) {
+					delete mData;
+				}
+
+				for (mSize = 32; mSize < mLength; mSize <<= 1);
+
+				mData = new char[mSize];
+				if (mData == NULL) {
+					return -ENOMEM;
+				}
+			}
+
+			mOffset = 0;
+		} else {
+			int ret = onEpollPackReceived(mData, 0);
+			if (ret < 0) {
+				return ret;
+			}
+		}
+
+		header->seek(0);
+	}
+
+	return wrlen;
 }

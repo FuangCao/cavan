@@ -44,6 +44,12 @@ public:
 	virtual int writeTo(EpollClient *client);
 	virtual int write(const void *buff, u16 length, bool &completed);
 
+	virtual bool write(const void *buff, u16 length) {
+		bool completed = false;
+		write(buff, length, completed);
+		return completed;
+	}
+
 	virtual void reset(void) {
 		mOffset = 0;
 	}
@@ -203,81 +209,44 @@ protected:
 	virtual int onEpollOut(EpollService *service);
 	virtual void onEpollErr(EpollService *service);
 
-	virtual int onEpollDataReceived(EpollService *service, const void *buff, int size) {
-		println("onEpollDataReceived[%d]: %s", size, (const char *) buff);
-		return size;
-	}
+	virtual int onEpollDataReceived(EpollService *service, const void *buff, u16 size) = 0;
 };
 
-template <class T>
-class EpollPackClient : public EpollClient {
-protected:
-	T mHeader;
-	EpollPacket *mWrPacket;
+class EpollClientPacked : public EpollClient {
+private:
+	u16 mSize;
+	u16 mLength;
+	u16 mOffset;
+	char *mData;
 
 public:
-	EpollPackClient(EpollService *service) : EpollClient(service), mWrPacket(NULL) {}
-
-	virtual void cleanup(void) {
-		EpollClient::cleanup();
-
-		if (mWrPacket != NULL) {
-			delete mWrPacket;
-			mWrPacket = NULL;
-		}
+	EpollClientPacked(EpollService *service) : EpollClient(service) {
+		mData = NULL;
+		mLength = 0;
+		mSize = 0;
 	}
+
+	virtual u16 getSize(void) {
+		return mSize;
+	}
+
+	virtual u16 getLength(void) {
+		return mLength;
+	}
+
+	virtual u16 getOffset(void) {
+		return mOffset;
+	}
+
+	virtual char *getData(void) {
+		return mData;
+	}
+
+	virtual void cleanup(void);
 
 protected:
-	virtual int onEpollDataReceived(EpollService *service, const void *buff, int size) {
-		bool completed = false;
-		int wrlen;
+	virtual int onEpollDataReceived(EpollService *service, const void *buff, u16 size);
 
-		if (mWrPacket != NULL) {
-			wrlen = mWrPacket->write(buff, size, completed);
-			if (wrlen < 0) {
-				return wrlen;
-			}
-
-			if (completed) {
-				int ret = onEpollPackReceived(mWrPacket);
-				if (ret < 0) {
-					return ret;
-				}
-
-				delete mWrPacket;
-				mWrPacket = NULL;
-				mHeader.seek(0);
-			}
-		} else {
-			wrlen = mHeader.write(buff, size, completed);
-			if (wrlen < 0) {
-				return wrlen;
-			}
-
-			if (completed) {
-				u16 length = mHeader.getLength();
-
-				println("length = %d", length);
-
-				if (length > 0) {
-					mWrPacket = new EpollPacket(length);
-					if (mWrPacket == NULL) {
-						return -ENOMEM;
-					}
-				} else {
-					int ret = onEpollPackReceived(NULL);
-					if (ret < 0) {
-						return ret;
-					}
-				}
-			}
-		}
-
-		return wrlen;
-	}
-
-	virtual int onEpollPackReceived(EpollPacket *packet) {
-		println("onEpollPackReceived");
-		return 0;
-	}
+	virtual EpollBuffer *getEpollHeader(void) = 0;
+	virtual int onEpollPackReceived(char *buff, u16 size) = 0;
 };

@@ -28,7 +28,7 @@ public:
 	virtual ~HttpFileClient() {}
 
 protected:
-	virtual int onEpollPackReceived(EpollPacket *packet);
+	virtual int onEpollPackReceived(char *buff, u16 size);
 };
 
 class HttpFileService : public HttpService {
