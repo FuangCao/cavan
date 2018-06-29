@@ -109,6 +109,20 @@ int EpollBufferAuto::write(const void *buff, u16 length, bool &completed)
 
 // ================================================================================
 
+void EpollClient::cleanup(void)
+{
+	EpollPacket *pack;
+
+	pack = mWrHead;
+	mWrHead = NULL;
+
+	while (pack != NULL) {
+		EpollPacket *next = pack->mNext;
+		delete pack;
+		pack = next;
+	}
+}
+
 int EpollClient::addEpollTo(EpollService *service)
 {
 	return service->addEpollClient(getEpollFd(), EPOLLIN | EPOLLOUT, this);

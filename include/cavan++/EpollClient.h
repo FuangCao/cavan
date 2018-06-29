@@ -168,13 +168,7 @@ public:
 	}
 
 	virtual ~EpollClient() {
-		EpollPacket *pack = mWrHead;
-
-		while (pack != NULL) {
-			EpollPacket *next = pack->mNext;
-			delete pack;
-			pack = next;
-		}
+		cleanup();
 	}
 
 	virtual u32 getEpollEvents(void) {
@@ -185,6 +179,7 @@ public:
 		mEpollEvents |= events;
 	}
 
+	virtual void cleanup(void);
 	virtual int addEpollTo(EpollService *service);
 	virtual int removeEpollFrom(EpollService *service);
 	virtual void sendEpollPacket(EpollPacket *packet);
@@ -222,6 +217,15 @@ protected:
 
 public:
 	EpollPackClient(EpollService *service) : EpollClient(service), mWrPacket(NULL) {}
+
+	virtual void cleanup(void) {
+		EpollClient::cleanup();
+
+		if (mWrPacket != NULL) {
+			delete mWrPacket;
+			mWrPacket = NULL;
+		}
+	}
 
 protected:
 	virtual int onEpollDataReceived(EpollService *service, const void *buff, int size) {

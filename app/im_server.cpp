@@ -32,12 +32,10 @@ protected:
 		u16 length = packet->getLength();
 		bool completed = false;
 
-		for (int i = 0; i < 2000000; i++) {
-			EpollPacket *writer = new EpollPacket(length + 2);
-			writer->write(&length, sizeof(length), completed);
-			writer->write(packet->getData(), length, completed);
-			sendEpollPacket(writer);
-		}
+		EpollPacket *writer = new EpollPacket(length + 2);
+		writer->write(&length, sizeof(length), completed);
+		writer->write(packet->getData(), length, completed);
+		sendEpollPacket(writer);
 
 		return 0;
 	}
