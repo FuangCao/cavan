@@ -21,7 +21,7 @@
 #include <cavan++/NetworkClient.h>
 #include <cavan++/NetworkService.h>
 
-int NetworkEpollService::onEpollIn(EpollService *service)
+int NetworkEpollService::onEpollIn(void)
 {
 	NetworkClient *client;
 	EpollClient *epoll;
@@ -42,7 +42,7 @@ int NetworkEpollService::onEpollIn(EpollService *service)
 		goto out_delete_client;
 	}
 
-	if (epoll->addEpollTo(this) < 0) {
+	if (epoll->addToEpoll() < 0) {
 		goto out_delete_epoll;
 	}
 

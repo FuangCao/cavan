@@ -152,9 +152,9 @@ void EpollService::runEpollDaemon(void)
 
 		mLock.release();
 
-		int ret = client->onEpollEvent(this);
+		int ret = client->onEpollEvent();
 		if (ret < 0) {
-			client->onEpollErr(this);
+			client->onEpollErr();
 			mLock.acquire();
 		} else {
 			mLock.acquire();

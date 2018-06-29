@@ -103,8 +103,8 @@ protected:
 		return mClient->sendraw(buff, size);
 	}
 
-	virtual void onEpollErr(EpollService *service) {
-		EpollClient::onEpollErr(service);
+	virtual void onEpollErr(void) {
+		EpollClient::onEpollErr();
 		mClient->onDisconnected();
 		delete mClient;
 		delete this;

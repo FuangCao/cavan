@@ -54,17 +54,17 @@ public:
 
 protected:
 	virtual EpollClient *newEpollClient(NetworkClient *client) = 0;
-	virtual int onEpollIn(EpollService *service);
+	virtual int onEpollIn(void);
 
 	virtual int getEpollFd(void) {
 		return mService->getSockfd();
 	}
 
 	virtual int onEpollStarted(void) {
-		return addEpollTo(this);
+		return addToEpoll();
 	}
 
-	virtual int onEpollDataReceived(EpollService *service, const void *buff, u16 size) {
+	virtual int onEpollDataReceived(const void *buff, u16 size) {
 		pr_warn_info("onEpollDataReceived: %d", size);
 		return size;
 	}

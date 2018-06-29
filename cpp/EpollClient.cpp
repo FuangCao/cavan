@@ -123,14 +123,14 @@ void EpollClient::cleanup(void)
 	}
 }
 
-int EpollClient::addEpollTo(EpollService *service)
+int EpollClient::addToEpoll(void)
 {
-	return service->addEpollClient(getEpollFd(), EPOLLIN | EPOLLOUT, this);
+	return mEpollService->addEpollClient(getEpollFd(), EPOLLIN | EPOLLOUT, this);
 }
 
-int EpollClient::removeEpollFrom(EpollService *service)
+int EpollClient::removeFromEpoll(void)
 {
-	return service->removeEpollClient(getEpollFd(), this);
+	return mEpollService->removeEpollClient(getEpollFd(), this);
 }
 
 void EpollClient::sendEpollPacket(EpollPacket *packet)
@@ -153,36 +153,28 @@ void EpollClient::sendEpollPacket(EpollPacket *packet)
 	mWrTail = packet;
 }
 
-int EpollClient::onEpollEvent(EpollService *service)
+int EpollClient::onEpollEvent(void)
 {
 	if (mEpollEvents & (EPOLLERR | EPOLLHUP)) {
 		return -ENOTCONN;
 	}
 
-	bool pending = false;
+	int pending;
 
 	if (mEpollEvents & EPOLLIN) {
-		int ret = onEpollIn(service);
-		if (ret < 0) {
-			return ret;
-		}
-
-		if (ret > 0) {
-			pending = true;
-		}
+		pending = onEpollIn();
+	} else {
+		pending = 0;
 	}
 
 	if (mEpollEvents & EPOLLOUT) {
-		int ret = onEpollOut(service);
-		if (ret < 0) {
-			return ret;
-		}
+		pending |= onEpollOut();
 	}
 
 	return pending;
 }
 
-int EpollClient::onEpollIn(EpollService *service)
+int EpollClient::onEpollIn(void)
 {
 	char buff[4096];
 	int rdlen;
@@ -192,7 +184,7 @@ int EpollClient::onEpollIn(EpollService *service)
 		char *p = buff;
 
 		while (1) {
-			int wrlen = onEpollDataReceived(service, p, rdlen);
+			int wrlen = onEpollDataReceived(p, rdlen);
 
 			if (wrlen < rdlen) {
 				if (wrlen < 0) {
@@ -222,7 +214,7 @@ int EpollClient::onEpollIn(EpollService *service)
 	return -EFAULT;
 }
 
-int EpollClient::onEpollOut(EpollService *service)
+int EpollClient::onEpollOut(void)
 {
 	AutoLock lock(mWrLock);
 
@@ -252,11 +244,6 @@ int EpollClient::onEpollOut(EpollService *service)
 	return 0;
 }
 
-void EpollClient::onEpollErr(EpollService *service)
-{
-	removeEpollFrom(service);
-}
-
 void EpollClientPacked::cleanup(void)
 {
 	EpollClient::cleanup();
@@ -268,7 +255,7 @@ void EpollClientPacked::cleanup(void)
 	}
 }
 
-int EpollClientPacked::onEpollDataReceived(EpollService *service, const void *buff, u16 size)
+int EpollClientPacked::onEpollDataReceived(const void *buff, u16 size)
 {
 	if (mLength > 0) {
 		u16 remain = mLength - mOffset;

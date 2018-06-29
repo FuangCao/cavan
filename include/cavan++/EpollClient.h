@@ -196,8 +196,8 @@ public:
 	}
 
 	virtual void cleanup(void);
-	virtual int addEpollTo(EpollService *service);
-	virtual int removeEpollFrom(EpollService *service);
+	virtual int addToEpoll(void);
+	virtual int removeFromEpoll(void);
 	virtual void sendEpollPacket(EpollPacket *packet);
 
 protected:
@@ -214,12 +214,15 @@ protected:
 	}
 
 protected:
-	virtual int onEpollEvent(EpollService *service);
-	virtual int onEpollIn(EpollService *service);
-	virtual int onEpollOut(EpollService *service);
-	virtual void onEpollErr(EpollService *service);
+	virtual int onEpollEvent(void);
+	virtual int onEpollIn(void);
+	virtual int onEpollOut(void);
 
-	virtual int onEpollDataReceived(EpollService *service, const void *buff, u16 size) = 0;
+	virtual void onEpollErr(void) {
+		removeFromEpoll();
+	}
+
+	virtual int onEpollDataReceived(const void *buff, u16 size) = 0;
 };
 
 class EpollClientPacked : public EpollClient {
@@ -255,7 +258,7 @@ public:
 	virtual void cleanup(void);
 
 protected:
-	virtual int onEpollDataReceived(EpollService *service, const void *buff, u16 size);
+	virtual int onEpollDataReceived(const void *buff, u16 size);
 
 	virtual EpollBuffer *getEpollHeader(void) = 0;
 	virtual int onEpollPackReceived(char *buff, u16 size) = 0;
