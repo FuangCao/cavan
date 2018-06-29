@@ -118,7 +118,9 @@ void EpollService::runEpollDaemon(void)
 
 	mDaemonTotal++;
 
+#if EPOLL_SERVICE_DEBUG
 	println("started (%d/%d)", mDaemonTotal - mDaemonReady, mDaemonTotal);
+#endif
 
 	while (1) {
 		EpollClient *client = mEpollHead;
@@ -129,44 +131,63 @@ void EpollService::runEpollDaemon(void)
 			}
 
 			mDaemonReady++;
+
+#if EPOLL_SERVICE_DEBUG
 			println("ready (%d/%d)", mDaemonTotal - mDaemonReady, mDaemonTotal);
+#endif
 
 			mCond.waitLocked(mLock);
 
 			mDaemonReady--;
+
+#if EPOLL_SERVICE_DEBUG
 			println("busy (%d/%d)", mDaemonTotal - mDaemonReady, mDaemonTotal);
+#endif
+
 			continue;
 		}
 
 		mEpollHead = client->mEpollNext;
+		client->setEpollPending(false);
 
 		mLock.release();
-		bool pending = client->onEpollEvent(this);
-		mLock.acquire();
 
-		if (pending) {
-			if (mEpollHead == NULL) {
-				mEpollHead = client;
-			} else {
-				mEpollTail->mEpollNext = client;
-			}
-
-			mEpollTail = client;
-			client->mEpollNext = NULL;
+		int ret = client->onEpollEvent(this);
+		if (ret < 0) {
+			client->onEpollErr(this);
+			mLock.acquire();
 		} else {
-			client->mEpollNext = client;
+			mLock.acquire();
+
+			if (ret > 0 || client->isEpollPending()) {
+				if (mEpollHead == NULL) {
+					mEpollHead = client;
+				} else {
+					mEpollTail->mEpollNext = client;
+				}
+
+				mEpollTail = client;
+				client->mEpollNext = NULL;
+			} else {
+				client->mEpollNext = client;
+			}
 		}
 	}
 
 	mDaemonTotal--;
 
+#if EPOLL_SERVICE_DEBUG
 	println("stopped (%d/%d)", mDaemonTotal - mDaemonReady, mDaemonTotal);
+#endif
 
 	mLock.release();
 }
 
 void EpollService::onEpollEvent(EpollClient *client, u32 events)
 {
+#if EPOLL_SERVICE_DEBUG
 	println("onEpollEvent: %08x", events);
+#endif
+
 	postEpollClient(client, events);
 }

@@ -142,7 +142,10 @@ void EpollClient::sendEpollPacket(EpollPacket *packet)
 
 	if (mWrHead == NULL) {
 		mWrHead = packet;
-		mEpollService->postEpollClient(this, 0);
+
+		if (mEpollEvents & EPOLLOUT) {
+			mEpollService->postEpollClient(this, 0);
+		}
 	} else {
 		mWrTail->mNext = packet;
 	}
@@ -150,39 +153,33 @@ void EpollClient::sendEpollPacket(EpollPacket *packet)
 	mWrTail = packet;
 }
 
-bool EpollClient::onEpollEvent(EpollService *service)
+int EpollClient::onEpollEvent(EpollService *service)
 {
-	while ((mEpollEvents & (EPOLLERR | EPOLLHUP)) == 0) {
-		bool pending = false;
-
-		if (mEpollEvents & EPOLLIN) {
-			int ret = onEpollIn(service);
-			if (ret < 0) {
-				break;
-			}
-
-			if (ret > 0) {
-				pending = true;
-			}
-		}
-
-		if (mEpollEvents & EPOLLOUT) {
-			int ret = onEpollOut(service);
-			if (ret < 0) {
-				break;
-			}
-
-			if (ret > 0) {
-				pending = true;
-			}
-		}
-
-		return pending;
+	if (mEpollEvents & (EPOLLERR | EPOLLHUP)) {
+		return -ENOTCONN;
 	}
 
-	onEpollErr(service);
+	bool pending = false;
 
-	return false;
+	if (mEpollEvents & EPOLLIN) {
+		int ret = onEpollIn(service);
+		if (ret < 0) {
+			return ret;
+		}
+
+		if (ret > 0) {
+			pending = true;
+		}
+	}
+
+	if (mEpollEvents & EPOLLOUT) {
+		int ret = onEpollOut(service);
+		if (ret < 0) {
+			return ret;
+		}
+	}
+
+	return pending;
 }
 
 int EpollClient::onEpollIn(EpollService *service)
@@ -229,24 +226,27 @@ int EpollClient::onEpollOut(EpollService *service)
 {
 	AutoLock lock(mWrLock);
 
-	EpollPacket *head = mWrHead;
-	if (head == NULL) {
-		return 0;
-	}
-
-	int ret = head->writeTo(this);
-	if (ret > 0) {
-		mWrHead = head->mNext;
-		delete head;
-		return ret;
-	}
-
-	if (ret < 0) {
-		if (ERRNO_NOT_RETRY()) {
-			return ret;
+	while (1) {
+		EpollPacket *head = mWrHead;
+		if (head == NULL) {
+			break;
 		}
 
-		mEpollEvents &= ~EPOLLOUT;
+		int ret = head->writeTo(this);
+		if (ret > 0) {
+			mWrHead = head->mNext;
+			delete head;
+		} else {
+			if (ret < 0) {
+				if (ERRNO_NOT_RETRY()) {
+					return ret;
+				}
+
+				mEpollEvents &= ~EPOLLOUT;
+			}
+
+			break;
+		}
 	}
 
 	return 0;

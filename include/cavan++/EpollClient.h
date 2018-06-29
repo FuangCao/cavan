@@ -160,6 +160,7 @@ private:
 	EpollPacket *mWrHead;
 	EpollPacket *mWrTail;
 	ThreadLock mWrLock;
+	bool mEpollPending;
 	u32 mEpollEvents;
 
 protected:
@@ -177,12 +178,21 @@ public:
 		cleanup();
 	}
 
+	virtual bool isEpollPending(void) {
+		return mEpollPending;
+	}
+
+	virtual void setEpollPending(bool pending) {
+		mEpollPending = pending;
+	}
+
 	virtual u32 getEpollEvents(void) {
 		return mEpollEvents;
 	}
 
 	virtual void setEpollEvents(u32 events) {
 		mEpollEvents |= events;
+		mEpollPending = true;
 	}
 
 	virtual void cleanup(void);
@@ -204,7 +214,7 @@ protected:
 	}
 
 protected:
-	virtual bool onEpollEvent(EpollService *service);
+	virtual int onEpollEvent(EpollService *service);
 	virtual int onEpollIn(EpollService *service);
 	virtual int onEpollOut(EpollService *service);
 	virtual void onEpollErr(EpollService *service);
