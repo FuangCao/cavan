@@ -61,6 +61,11 @@ protected:
 	}
 
 	virtual int onEpollStarted(void) {
+		int ret = mService->setBlockEnable(false);
+		if (ret < 0) {
+			return ret;
+		}
+
 		return addToEpoll();
 	}
 

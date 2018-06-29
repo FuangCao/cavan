@@ -63,7 +63,7 @@ NetworkClient *TcpService::accept(void)
 
 	sockfd = NetworkService::accept(&addr);
 	if (sockfd < 0) {
-		pr_err_info("accept: %d", sockfd);
+		// pr_err_info("accept: %d", sockfd);
 		return NULL;
 	}
 

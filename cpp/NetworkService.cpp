@@ -28,6 +28,10 @@ int NetworkEpollService::onEpollIn(void)
 
 	client = mService->accept();
 	if (client == NULL) {
+		if (ERRNO_NEED_RETRY()) {
+			return 0;
+		}
+
 		return -EFAULT;
 	}
 
@@ -46,13 +50,13 @@ int NetworkEpollService::onEpollIn(void)
 		goto out_delete_epoll;
 	}
 
-	return 0;
+	return 1;
 
 out_delete_epoll:
 	delete epoll;
 out_delete_client:
 	delete client;
-	return -EFAULT;
+	return 1;
 }
 
 int NetworkEpollService::open(NetworkUrl *url)
