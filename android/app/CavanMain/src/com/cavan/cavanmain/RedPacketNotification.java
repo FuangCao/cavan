@@ -197,7 +197,7 @@ public class RedPacketNotification extends CavanNotificationTable {
 		if (notification != null) {
 			packet.setUnpackTime(time);
 			String code = packet.getCode();
-			mService.sendNotification(notification, "支付宝@" + getUserDescription() + ": " + code, null, code);
+			mService.sendNotification(notification, "支付宝@" + getUserDescription() + ": " + code, null, code, FloatMessageService.AUTO_UNLOCK_RED_PACKET);
 		}
 
 		return true;
@@ -220,7 +220,7 @@ public class RedPacketNotification extends CavanNotificationTable {
 		return count;
 	}
 
-	public boolean sendRedPacketNotifyNormal(String content, String message, String pkg) {
+	public boolean sendRedPacketNotifyNormal(String content, String message, String pkg, int level) {
 		Notification notification = mNotification.getNotification();
 		PendingIntent intent;
 
@@ -231,7 +231,7 @@ public class RedPacketNotification extends CavanNotificationTable {
 		}
 
 		notification = buildNotification(content, intent);
-		mService.sendNotification(notification, message, pkg, null);
+		mService.sendNotification(notification, message, pkg, null, level);
 
 		return true;
 	}
@@ -242,21 +242,39 @@ public class RedPacketNotification extends CavanNotificationTable {
 			return false;
 		}
 
-		return sendRedPacketNotifyNormal(code, code + "@" + getUserDescription(), null);
+		return sendRedPacketNotifyNormal(code, code + "@" + getUserDescription(), null, FloatMessageService.AUTO_UNLOCK_INFOMATION);
 	}
 
 	public boolean sendKeyword(RedPacketFinder finder) {
 		String keyword = mService.getKeyword(mNotification.getGroupName(), finder);
-		if (keyword != null) {
-			String message = getUserDescription() + ": " + keyword;
-			if (CavanMessageActivity.isKeywordNotifyOnly(mService)) {
-				FloatMessageService.showNotify(message);
-			} else {
-				return sendRedPacketNotifyNormal(keyword, "关键字@" + message, null);
-			}
+		if (keyword == null) {
+			return false;
 		}
 
-		return false;
+		String message = getUserDescription() + ": " + keyword;
+		if (CavanMessageActivity.isKeywordNotifyOnly(mService)) {
+			FloatMessageService.showNotify(message);
+		} else {
+			return sendRedPacketNotifyNormal(keyword, "关键字@" + message, null, FloatMessageService.AUTO_UNLOCK_KEY_WORD);
+		}
+
+		return true;
+	}
+
+	public boolean sendInformation(RedPacketFinder finder) {
+		String keyword = mService.getInFormation(mNotification.getGroupName(), finder);
+		if (keyword == null) {
+			return false;
+		}
+
+		String message = getUserDescription() + ": " + keyword;
+		if (CavanMessageActivity.isKeywordNotifyOnly(mService)) {
+			FloatMessageService.showNotify(message);
+		} else {
+			return sendRedPacketNotifyNormal(keyword, "线报@" + message, null, FloatMessageService.AUTO_UNLOCK_INFOMATION);
+		}
+
+		return true;
 	}
 
 	public String getRedPacketCodeNormal(RedPacketFinder finder, String user) {
@@ -278,7 +296,7 @@ public class RedPacketNotification extends CavanNotificationTable {
 			return false;
 		}
 
-		return sendRedPacketNotifyNormal(code + "红包", code + "@" + user, mNotification.getPackageName());
+		return sendRedPacketNotifyNormal(code + "红包", code + "@" + user, mNotification.getPackageName(), FloatMessageService.AUTO_UNLOCK_RED_PACKET);
 	}
 
 	public boolean sendRedPacketNotifyAuto() {
@@ -297,6 +315,10 @@ public class RedPacketNotification extends CavanNotificationTable {
 		}
 
 		if (sendKeyword(finder)) {
+			return true;
+		}
+
+		if (sendInformation(finder)) {
 			return true;
 		}
 

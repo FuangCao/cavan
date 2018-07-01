@@ -75,9 +75,11 @@
 		android:defaultValue="0"
 	    android:title="@string/notify_auto_clear" />
 
-	<CheckBoxPreference android:key="auto_unlock"
+	<ListPreference android:key="auto_unlock_level"
 	    android:persistent="true"
-	    android:defaultValue="true"
+		android:entries="@array/auto_unlock_entries"
+		android:entryValues="@array/auto_unlock_values"
+		android:defaultValue="3"
 	    android:title="@string/auto_unlock" />
 
 	<CheckBoxPreference android:key="disable_suspend"

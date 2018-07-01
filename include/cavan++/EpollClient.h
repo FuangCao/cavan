@@ -121,7 +121,7 @@ public:
 };
 
 class EpollPacket : public EpollBuffer {
-friend EpollClient;
+friend class EpollClient;
 
 protected:
 	char *mData;

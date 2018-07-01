@@ -803,6 +803,20 @@
 	    <item >420</item>
 	    <item >480</item>
 	</string-array>
+	<string-array name="auto_unlock_entries">
+	    <item >不自动解锁</item>
+	    <item >收到红包时</item>
+	    <item >收到线报时</item>
+	    <item >收到关键字时</item>
+	    <item >屏幕点亮亮时</item>
+	</string-array>
+	<string-array name="auto_unlock_values">
+	    <item >0</item>
+	    <item >1</item>
+	    <item >2</item>
+	    <item >3</item>
+	    <item >4</item>
+	</string-array>
 	<string name="media_volume_changed">音量更改：<xliff:g>%1$d</xliff:g></string>
 	<string name="command_service">命令服务</string>
 	<string name="role_change_client">内网穿透客户端</string>

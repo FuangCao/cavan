@@ -292,7 +292,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		return 0;
 	}
 
-	public void sendNotification(Notification notification, String message, String pkg, String code) {
+	public void sendNotification(Notification notification, String message, String pkg, String code, int level) {
 		if (mNotificationManager != null) {
 			int id = createNotificationId();
 
@@ -317,7 +317,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 		if (mFloatMessageService != null) {
 			try {
-				mFloatMessageService.addMessage(message, code);
+				mFloatMessageService.addMessage(message, code, level);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -394,6 +394,15 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			if (content.contains(keyword)) {
 				return keyword;
 			}
+		}
+
+		return null;
+	}
+
+	public String getInFormation(String group, RedPacketFinder finder) {
+		String content = finder.getJoinedLines();
+		if (content == null || content.isEmpty()) {
+			return null;
 		}
 
 		if (mInformationGroups.contains(group)) {

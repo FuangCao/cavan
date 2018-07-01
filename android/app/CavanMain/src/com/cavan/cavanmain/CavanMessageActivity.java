@@ -40,7 +40,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	public static final String ACTION_ON_TIME_NOTIFY = "com.cavan.intent.ACTION_ON_TIME_NOTIFY";
 	public static final String ACTION_ON_TIME_MUTE = "com.cavan.intent.ACTION_ON_TIME_MUTE";
 
-	public static final String KEY_AUTO_UNLOCK = "auto_unlock";
+	public static final String KEY_AUTO_UNLOCK_LEVEL = "auto_unlock_level";
 	public static final String KEY_AUTO_COMMIT = "auto_commit";
 	public static final String KEY_AUTO_UNPACK = "auto_unpack";
 	public static final String KEY_LISTEN_CLIP = "listen_clip";
@@ -150,8 +150,13 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		return CavanAndroid.isPreferenceEnabled(context, KEY_DISABLE_KEYGUARD);
 	}
 
-	public static boolean isAutoUnlockEnabled(Context context) {
-		return CavanAndroid.isPreferenceEnabled(context, KEY_AUTO_UNLOCK);
+	public static int getAutoUnlockLevel(Context context) {
+		return CavanAndroid.getPreferenceInt(context, KEY_AUTO_UNLOCK_LEVEL, 0);
+	}
+
+	public static boolean isAutoUnlockEnabled(Context context, int level) {
+		CavanAndroid.dLog("level = " + level);
+		return (getAutoUnlockLevel(context) >= level);
 	}
 
 	public static boolean isAutoUnpackEnabled(Context context) {
@@ -298,7 +303,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	private Preference mPreferenceRedPacketClear;
 	private Preference mPreferenceInputMethodSelect;
 	private CheckBoxPreference mPreferenceFloatTime;
-	private CheckBoxPreference mPreferenceAutoUnlock;
+	private ListPreference mPreferenceAutoUnlock;
 	private Preference mPreferencePermissionSettings;
 	private Preference mPreferenceMessageShow;
 	private Preference mPreferenceRedPacketEdit;
@@ -439,7 +444,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		mPreferenceAutoOpenApp = (CheckBoxPreference) findPreference(KEY_AUTO_OPEN_APP);
 		mPreferenceAutoOpenAlipay = (CheckBoxPreference) findPreference(KEY_AUTO_OPEN_ALIPAY);
 
-		mPreferenceAutoUnlock = (CheckBoxPreference) findPreference(KEY_AUTO_UNLOCK);
+		mPreferenceAutoUnlock = findListPreference(KEY_AUTO_UNLOCK_LEVEL);
 		mPreferenceAutoUnlock.setOnPreferenceChangeListener(this);
 
 		mPreferenceMessageShow = findPreference(KEY_MESSAGE_SHOW);
@@ -722,9 +727,8 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 				}
 			}
 		} else if (preference == mPreferenceAutoUnlock) {
-			if ((boolean) object) {
-				CavanAndroid.setLockScreenEnable(this, true);
-			}
+			CavanAndroid.setLockScreenEnable(this, true);
+			updateListPreferenceSummary((ListPreference) preference, (String) object);
 		} else if (preference == mPreferenceDisableSuspend) {
 			if (mFloatMessageService != null) {
 				try {

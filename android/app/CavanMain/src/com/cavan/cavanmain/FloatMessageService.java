@@ -58,6 +58,12 @@ public class FloatMessageService extends FloatWindowService {
 	public static final String NET_CMD_CLIPBOARD = "Clipboard: ";
 	public static final String NET_CMD_NOTIFY = "Notify: ";
 
+	public static final int AUTO_UNLOCK_CLOSE = 0;
+	public static final int AUTO_UNLOCK_RED_PACKET = 1;
+	public static final int AUTO_UNLOCK_INFOMATION = 2;
+	public static final int AUTO_UNLOCK_KEY_WORD = 3;
+	public static final int AUTO_UNLOCK_SCREEN_ON = 4;
+
 	public static final String PATH_QQ_IMAGES = Environment.getExternalStorageDirectory().getPath() + "/Tencent/QQ_Images";
 
 	public static final int UDP_PORT = 9898;
@@ -90,6 +96,7 @@ public class FloatMessageService extends FloatWindowService {
 
 	private long mCountDownTime;
 	private boolean mScreenClosed;
+	private int mAutoUnlockLevel;
 	private TextView mTextViewTime;
 	private TextView mTextViewToast;
 	private TextView mTextViewNotify;
@@ -211,7 +218,7 @@ public class FloatMessageService extends FloatWindowService {
 				} else {
 					CavanAndroid.dLog("MSG_SHOW_NOTIFY");
 					view = mTextViewNotify;
-					setLockScreenEnable(false);
+					setAutoUnlockLevel(AUTO_UNLOCK_KEY_WORD);
 					CavanAndroid.acquireWakeupLock(getApplicationContext(), 20000);
 				}
 
@@ -297,10 +304,13 @@ public class FloatMessageService extends FloatWindowService {
 			switch (action) {
 			case Intent.ACTION_SCREEN_OFF:
 				setLockScreenEnable(true);
+				mAutoUnlockLevel = AUTO_UNLOCK_SCREEN_ON;
 
 				synchronized (mHandler) {
 					mScreenClosed = true;
 				}
+
+				CavanAndroid.releaseWakeLock();
 				break;
 
 			case Intent.ACTION_SCREEN_ON:
@@ -309,15 +319,11 @@ public class FloatMessageService extends FloatWindowService {
 					mHandler.sendEmptyMessage(MSG_UPDATE_TIME);
 				}
 
-				if (getTextCount() > 0 || CavanMessageActivity.isAutoUnlockEnabled(getApplicationContext())) {
+				if (isAutoUnlockEnabled()) {
 					setLockScreenEnable(false);
 				}
 
 				mTextViewTime.setBackgroundResource(R.drawable.desktop_timer_unlock_bg);
-
-				if (CavanMessageActivity.isAutoUnlockEnabled(getApplicationContext())) {
-					mHandler.sendEmptyMessage(MSG_CHECK_KEYGUARD);
-				}
 				break;
 
 			case ConnectivityManager.CONNECTIVITY_ACTION:
@@ -375,8 +381,8 @@ public class FloatMessageService extends FloatWindowService {
 		}
 
 		@Override
-		public int addMessage(CharSequence message, String code) throws RemoteException {
-			setLockScreenEnable(false);
+		public int addMessage(CharSequence message, String code, int level) throws RemoteException {
+			setAutoUnlockLevel(level);
 			CavanAndroid.acquireWakeupLock(getApplicationContext(), 20000);
 
 			if (code != null) {
@@ -527,6 +533,24 @@ public class FloatMessageService extends FloatWindowService {
 		Intent intent = buildIntent(context);
 		context.startService(intent);
 		return intent;
+	}
+
+	public int getAutoUnlockLevel() {
+		return mAutoUnlockLevel;
+	}
+
+	public void setAutoUnlockLevel(int level) {
+		if (level < mAutoUnlockLevel) {
+			mAutoUnlockLevel = level;
+		}
+
+		if (isAutoUnlockEnabled()) {
+			setLockScreenEnable(false);
+		}
+	}
+
+	public boolean isAutoUnlockEnabled() {
+		return CavanMessageActivity.isAutoUnlockEnabled(getApplicationContext(), mAutoUnlockLevel);
 	}
 
 	public void setCountDownTime(long time) {
