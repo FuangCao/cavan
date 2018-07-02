@@ -29,10 +29,21 @@ public:
 protected:
 	virtual int onEpollPackReceived(char *buff, u16 size) {
 		EpollPacket *writer = new EpollPacket(size + 2);
-		writer->write(&size, sizeof(size));
+		writer->write(&size, 2);
 		writer->write(buff, size);
 		sendEpollPacket(writer);
 		return 0;
+	}
+
+	virtual bool onEpollKeepAlive(void) {
+		char buff[1024];
+		u16 size = snprintf(buff, sizeof(buff), "KeepAlive: %d\n", getKeepAliveTimes());
+
+		EpollPacket *writer = new EpollPacket(size + 2);
+		writer->write(&size, 2);
+		writer->write(buff, size);
+		sendEpollPacket(writer);
+		return true;
 	}
 };
 

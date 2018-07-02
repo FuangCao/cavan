@@ -41,7 +41,7 @@ bool NetworkBase::setBlockEnable(bool enable)
 		return false;
 	}
 
-	pd_info("setBlockEnable: %d", enable);
+	// pd_info("setBlockEnable: %d", enable);
 
 	return true;
 }

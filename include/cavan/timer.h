@@ -70,6 +70,7 @@ int clock_gettime_safe(clockid_t clk, struct timespec *spec);
 u64 clock_gettime_ns(clockid_t clk);
 u64 clock_gettime_us(clockid_t clk);
 u64 clock_gettime_ms(clockid_t clk);
+u32 clock_gettime_ss(clockid_t clk);
 
 int cavan_timespec_cmp(const struct timespec *t1, const struct timespec *t2);
 s64 cavan_timespec_sub_ms(const struct timespec *t1, const struct timespec *t2);
@@ -157,6 +158,11 @@ static inline u64 clock_gettime_mono_ms(void)
 	return clock_gettime_ms(CLOCK_MONOTONIC);
 }
 
+static inline u32 clock_gettime_mono_ss(void)
+{
+	return clock_gettime_ss(CLOCK_MONOTONIC);
+}
+
 static inline int clock_gettime_real(struct timespec *time)
 {
 	return clock_gettime_safe(CLOCK_REALTIME, time);
@@ -175,6 +181,11 @@ static inline u64 clock_gettime_real_us(void)
 static inline u64 clock_gettime_real_ms(void)
 {
 	return clock_gettime_ms(CLOCK_REALTIME);
+}
+
+static inline u32 clock_gettime_real_ss(void)
+{
+	return clock_gettime_ss(CLOCK_REALTIME);
 }
 
 __END_DECLS;

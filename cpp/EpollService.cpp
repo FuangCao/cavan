@@ -43,7 +43,7 @@ int EpollService::doEpollCtrl(int op, int fd, u32 events, EpollClient *client)
 	return epoll_ctl(mEpollFd, op, fd, &event);
 }
 
-void EpollService::postEpollClient(EpollClient *client, u32 events)
+void EpollService::postEpollEvent(EpollClient *client, u32 events)
 {
 	AutoLock lock(mLock);
 
@@ -69,6 +69,7 @@ void EpollService::postEpollClient(EpollClient *client, u32 events)
 
 void EpollService::run(void)
 {
+	u32 overtime = 0;
 	int fd;
 
 	while ((fd = doEpollCreate()) < 0) {
@@ -84,8 +85,19 @@ void EpollService::run(void)
 		struct epoll_event *p, *p_end;
 		struct epoll_event events[10];
 		int count;
+		u32 delay;
+		u32 time;
 
-		count = epoll_wait(fd, events, NELEM(events), -1);
+		time = clock_gettime_mono_ss();
+		if (time < overtime) {
+			delay = (overtime - time) * 1000;
+		} else {
+			overtime = time + EPOLL_KEEP_ALIVE_DELAY;
+			delay = EPOLL_KEEP_ALIVE_DELAY * 1000;
+			onEpollFire();
+		}
+
+		count = epoll_wait(fd, events, NELEM(events), delay);
 		if (count < 0) {
 			pr_err_info("epoll_wait: %d", count);
 
@@ -189,5 +201,31 @@ void EpollService::onEpollEvent(EpollClient *client, u32 events)
 	println("onEpollEvent: %08x", events);
 #endif
 
-	postEpollClient(client, events);
+	postEpollEvent(client, events);
+}
+
+void EpollService::onEpollFire(void)
+{
+	SimpleLink<EpollClient> *head = mGarbageCollector.swap();
+	EpollClient *client = head->getNext();
+
+	while (client != head) {
+		EpollClient *next = client->getNext();
+		delete client;
+		client = next;
+	}
+
+	mKeepAliveQueue.lock();
+
+	client = mKeepAliveQueue.getFirst();
+
+	while (mKeepAliveQueue.hasNext(client)) {
+		if (!client->doEpollKeepAlive()) {
+			postEpollEvent(client, EPOLLERR);
+		}
+
+		client = client->getNext();
+	}
+
+	mKeepAliveQueue.unlock();
 }

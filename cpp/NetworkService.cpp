@@ -35,18 +35,20 @@ int NetworkEpollService::onEpollIn(void)
 		return -EFAULT;
 	}
 
-	if (client->onConnected() < 0) {
+	if (!client->setBlockEnable(false)) {
 		goto out_delete_client;
 	}
 
-	client->setBlockEnable(false);
+	if (client->onConnected() < 0) {
+		goto out_delete_client;
+	}
 
 	epoll = newEpollClient(client);
 	if (epoll == NULL) {
 		goto out_delete_client;
 	}
 
-	if (epoll->addToEpoll() < 0) {
+	if (epoll->addToEpoll(true) < 0) {
 		goto out_delete_epoll;
 	}
 

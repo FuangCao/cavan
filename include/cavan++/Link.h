@@ -269,10 +269,8 @@ class SimpleLinkQueue {
 protected:
 	SimpleLink<T> mHead;
 	ThreadLock mLock;
-	u32 mCount;
 
 public:
-	SimpleLinkQueue(void) : mCount(0) {}
 	virtual ~SimpleLinkQueue() {}
 
 	virtual ILock &getLock(void) {
@@ -287,15 +285,9 @@ public:
 		mLock.release();
 	}
 
-	virtual u32 getCount(void) {
-		AutoLock lock(mLock);
-		return mCount;
-	}
-
 	virtual void enqueue(T *node) {
 		AutoLock lock(mLock);
 		mHead.append(node);
-		mCount++;
 	}
 
 	virtual T *dequeue(void) {
@@ -306,9 +298,24 @@ public:
 			return NULL;
 		}
 
-		mCount--;
-
 		return node;
+	}
+
+	virtual void remove(T *node) {
+		AutoLock lock(mLock);
+		node->remove();
+	}
+
+	virtual T *getFirst(void) {
+		return mHead.getNext();
+	}
+
+	virtual T *getLast(void) {
+		return mHead.getPrev();
+	}
+
+	virtual bool hasNext(T *node) {
+		return (node != &mHead);
 	}
 };
 
@@ -360,5 +367,28 @@ public:
 
 			mCond.waitLocked(mLock);
 		}
+	}
+};
+
+template <class T, int SIZE>
+class MultiBufferQueue {
+private:
+	SimpleLink<T> mHeads[SIZE];
+	ThreadLock mLock;
+	u8 mIndex;
+
+public:
+	MultiBufferQueue(void) : mIndex(0) {}
+	virtual ~MultiBufferQueue() {}
+
+	SimpleLink<T> *swap(void) {
+		AutoLock lock(mLock);
+		mIndex = (mIndex + 1) % SIZE;
+		return mHeads + (mIndex + 1) % SIZE;
+	}
+
+	void enqueue(T *node) {
+		AutoLock lock(mLock);
+		mHeads[mIndex].append(node);
 	}
 };

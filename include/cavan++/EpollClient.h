@@ -23,6 +23,8 @@
 #include <cavan++/Lock.h>
 #include <cavan++/Link.h>
 
+#define EPOLL_KEEP_ALIVE_TIMES	5
+
 class EpollService;
 class EpollClient;
 
@@ -162,15 +164,16 @@ private:
 	ThreadLock mWrLock;
 	bool mEpollPending;
 	u32 mEpollEvents;
+	u8 mKeepAlive;
 
 protected:
 	EpollService *mEpollService;
 	EpollClient *mEpollNext;
 
 public:
-	EpollClient(EpollService *service) : mEpollService(service) {
+	EpollClient(EpollService *service) : mKeepAlive(0), mEpollService(service) {
+		mEpollEvents = EPOLLOUT;
 		mEpollNext = this;
-		mEpollEvents = 0;
 		mWrHead = NULL;
 	}
 
@@ -195,9 +198,13 @@ public:
 		mEpollPending = true;
 	}
 
+	virtual u8 getKeepAliveTimes(void) {
+		return mKeepAlive;
+	}
+
 	virtual void cleanup(void);
-	virtual int addToEpoll(void);
-	virtual int removeFromEpoll(void);
+	virtual int addToEpoll(bool keepalive);
+	virtual int removeFromEpoll(bool keepalive);
 	virtual void sendEpollPacket(EpollPacket *packet);
 
 protected:
@@ -214,12 +221,18 @@ protected:
 	}
 
 protected:
+	virtual bool doEpollKeepAlive(void);
+
+	virtual	bool onEpollKeepAlive(void) {
+		return true;
+	}
+
 	virtual int onEpollEvent(void);
 	virtual int onEpollIn(void);
 	virtual int onEpollOut(void);
 
 	virtual void onEpollErr(void) {
-		removeFromEpoll();
+		removeFromEpoll(true);
 	}
 
 	virtual int onEpollDataReceived(const void *buff, u16 size) = 0;

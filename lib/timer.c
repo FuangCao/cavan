@@ -59,6 +59,20 @@ u64 clock_gettime_ms(clockid_t clk)
 	return cavan_timespec_mseconds(&time);
 }
 
+u32 clock_gettime_ss(clockid_t clk)
+{
+	int ret;
+	struct timespec time;
+
+	ret = clock_gettime_safe(clk, &time);
+	if (ret < 0) {
+		pr_error_info("clock_gettime_safe");
+		return ret;
+	}
+
+	return time.tv_sec;
+}
+
 int cavan_timespec_cmp(const struct timespec *t1, const struct timespec *t2)
 {
 	if (t1->tv_sec > t2->tv_sec) {

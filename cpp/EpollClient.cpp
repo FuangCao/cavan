@@ -123,14 +123,14 @@ void EpollClient::cleanup(void)
 	}
 }
 
-int EpollClient::addToEpoll(void)
+int EpollClient::addToEpoll(bool keepalive)
 {
-	return mEpollService->addEpollClient(getEpollFd(), EPOLLIN | EPOLLOUT, this);
+	return mEpollService->addEpollClient(getEpollFd(), EPOLLIN | EPOLLOUT, this, keepalive);
 }
 
-int EpollClient::removeFromEpoll(void)
+int EpollClient::removeFromEpoll(bool keepalive)
 {
-	return mEpollService->removeEpollClient(getEpollFd(), this);
+	return mEpollService->removeEpollClient(getEpollFd(), this, keepalive);
 }
 
 void EpollClient::sendEpollPacket(EpollPacket *packet)
@@ -144,7 +144,7 @@ void EpollClient::sendEpollPacket(EpollPacket *packet)
 		mWrHead = packet;
 
 		if (mEpollEvents & EPOLLOUT) {
-			mEpollService->postEpollClient(this, 0);
+			mEpollService->postEpollEvent(this, 0);
 		}
 	} else {
 		mWrTail->mNext = packet;
@@ -178,6 +178,8 @@ int EpollClient::onEpollIn(void)
 {
 	char buff[4096];
 	int rdlen;
+
+	mKeepAlive = 0;
 
 	rdlen = doEpollRead(buff, sizeof(buff));
 	if (rdlen > 0) {
@@ -242,6 +244,16 @@ int EpollClient::onEpollOut(void)
 	}
 
 	return 0;
+}
+
+bool EpollClient::doEpollKeepAlive(void)
+{
+	if (mKeepAlive < EPOLL_KEEP_ALIVE_TIMES && onEpollKeepAlive()) {
+		mKeepAlive++;
+		return true;
+	}
+
+	return false;
 }
 
 void EpollClientPacked::cleanup(void)

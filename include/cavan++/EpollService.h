@@ -26,9 +26,9 @@
 #define EPOLL_DAEMON_MIN		20
 #define EPOLL_DAEMON_MAX		200
 #define EPOLL_SERVICE_DEBUG		0
+#define EPOLL_KEEP_ALIVE_DELAY	2
 
 class EpollService : public SimpleThread {
-friend class EpollDaemon;
 friend class EpollClient;
 
 private:
@@ -41,7 +41,8 @@ private:
 	Condition mCond;
 	EpollClient *mEpollHead;
 	EpollClient *mEpollTail;
-	SimpleLinkQueue<EpollClient> mClientQueue;
+	SimpleLinkQueue<EpollClient> mKeepAliveQueue;
+	MultiBufferQueue<EpollClient, 3> mGarbageCollector;
 
 	static void *EpollDaemonHandler(void *data) {
 		static_cast<EpollService *>(data)->runEpollDaemon();
@@ -56,20 +57,42 @@ public:
 	virtual ~EpollService() {}
 
 public:
+	virtual void recycle(EpollClient *client) {
+		mGarbageCollector.enqueue(client);
+	}
+
 	virtual int doEpollCreate(void);
 	virtual int doEpollCtrl(int op, int fd, u32 events, EpollClient *client);
-	virtual void postEpollClient(EpollClient *client, u32 events);
+	virtual void postEpollEvent(EpollClient *client, u32 events);
 
-	virtual int addEpollClient(int fd, u32 events, EpollClient *client) {
-		return doEpollCtrl(EPOLL_CTL_ADD, fd, events, client);
+	virtual int addEpollClient(int fd, u32 events, EpollClient *client, bool keepalive) {
+		int ret = doEpollCtrl(EPOLL_CTL_ADD, fd, events, client);
+		if (ret < 0) {
+			return ret;
+		}
+
+		if (keepalive) {
+			mKeepAliveQueue.enqueue(client);
+		}
+
+		return 0;
 	}
 
 	virtual int modifyEpollClient(int fd, u32 events, EpollClient *client) {
 		return doEpollCtrl(EPOLL_CTL_MOD, fd, events, client);
 	}
 
-	virtual int removeEpollClient(int fd, EpollClient *client) {
-		return doEpollCtrl(EPOLL_CTL_DEL, fd, 0, NULL);
+	virtual int removeEpollClient(int fd, EpollClient *client, bool keepalive) {
+		int ret = doEpollCtrl(EPOLL_CTL_DEL, fd, 0, client);
+		if (ret < 0) {
+			return ret;
+		}
+
+		if (keepalive) {
+			mKeepAliveQueue.remove(client);
+		}
+
+		return 0;
 	}
 
 protected:
@@ -81,5 +104,6 @@ protected:
 
 	virtual void run(void);
 	virtual void runEpollDaemon(void);
+	virtual void onEpollFire(void);
 	virtual void onEpollEvent(EpollClient *client, u32 events);
 };
