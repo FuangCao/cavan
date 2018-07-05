@@ -25,11 +25,11 @@
 #include <cavan/network.h>
 
 #define HTTP_SENDER_AHEAD			10000
-#define HTTP_SENDER_DELAY			(-200)
+#define HTTP_SENDER_DELAY			(-100)
 #define HTTP_SENDER_HOST			"game.weixin.qq.com"
 #define HTTP_SENDER_SEND_COUNT		10
 #define HTTP_SENDER_CONN_COUNT		20
-#define HTTP_SENDER_QUEUE_SIZE		4
+#define HTTP_SENDER_QUEUE_SIZE		2
 #define HTTP_SENDER_PACKAGES		200
 
 struct cavan_http_sender;
@@ -317,10 +317,13 @@ static bool cavan_http_sender_is_completed(struct cavan_http_sender *sender, str
 	int length;
 	char errdesc[1024];
 	const char *texts1[] = {
+		"\u5143", // 元
 		"\u4e0a\u9650", // 上限
 		"\u7528\u5b8c", // 用完
 		"\u592a\u5feb", // 太快
 		"\u9891\u7e41", // 频繁
+		"\u73b0\u91d1", // 现金
+		"\u53d1\u653e", // 发放
 		"\u9886\u53d6\u8fc7", // 领取过
 	};
 	const char *texts2[] = {
@@ -329,6 +332,7 @@ static bool cavan_http_sender_is_completed(struct cavan_http_sender *sender, str
 	};
 	const char *texts3[] = {
 		"\u4e0d\u8db3", // 不足
+		"\u4e0d\u6ee1\u8db3", // 不满足
 		"\u672a\u767b\u5f55", // 未登录
 	};
 
