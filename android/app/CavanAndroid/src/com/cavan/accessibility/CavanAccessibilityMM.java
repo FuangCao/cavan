@@ -34,6 +34,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 	private boolean mAutoAnswer;
 	private long mAnswerTime;
 	private int mAnswerTimes;
+	private BrandServiceIndexWindow mBrandServiceIndexWindow;
 
 	public static CavanAccessibilityMM instance;
 
@@ -2011,14 +2012,18 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doUnfollow(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "不再关注");
-			if (node != null) {
-				mUnfollowPending = CavanAccessibilityHelper.performClickAndRecycle(node);
-			} else {
-				mUnfollowPending = false;
+			for (int  i = 0; i < 3; i++) {
+				AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "不再关注");
+				if (node != null) {
+					mUnfollowPending = CavanAccessibilityHelper.performClickAndRecycle(node);
+					return mUnfollowPending;
+				}
+
+				CavanAndroid.dLog("retry = " + i);
+				CavanJava.msleep(100);
 			}
 
-			return mUnfollowPending;
+			return mBrandServiceIndexWindow.doUnfollow(root);
 		}
 
 		@Override
@@ -2085,6 +2090,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 	@Override
 	public void initWindows() {
+		mBrandServiceIndexWindow = new BrandServiceIndexWindow("com.tencent.mm.plugin.brandservice.ui.BrandServiceIndexUI");
+		addWindow(mBrandServiceIndexWindow);
+
 		addWindow(new LauncherWindow("com.tencent.mm.ui.LauncherUI"));
 		addWindow(new ChattingWindow("com.tencent.mm.ui.chatting.ChattingUI"));
 		addWindow(new ChattingWindow("com.tencent.mm.ui.conversation.BizConversationUI"));
@@ -2111,7 +2119,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(new ContactInfoWindow("com.tencent.mm.plugin.profile.ui.ContactInfoUI"));
 		addWindow(new DialogWindow("com.tencent.mm.ui.base.i"));
 		addWindow(new DialogWindow("com.tencent.mm.ui.widget.a.c"));
-		addWindow(new BrandServiceIndexWindow("com.tencent.mm.plugin.brandservice.ui.BrandServiceIndexUI"));
 	}
 
 	@Override

@@ -25,6 +25,7 @@ import android.view.inputmethod.InputMethodManager;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanKeyguardLock;
+import com.cavan.android.CavanThreadedHandler;
 import com.cavan.android.CavanWakeLock;
 import com.cavan.android.SystemProperties;
 import com.cavan.java.CavanJava;
@@ -252,7 +253,17 @@ public class CavanAccessibilityService extends AccessibilityService {
 			case MSG_SHOW_LOGIN_DIALOG:
 				onShowLoginDialog((CavanAccessibilityPackage) msg.obj);
 				break;
+			}
+		}
+	};
 
+	private CavanThreadedHandler mThreadedHandler = new CavanThreadedHandler(CavanAccessibilityService.class) {
+
+		@Override
+		public void handleMessage(Message msg) {
+			removeMessages(msg.what);
+
+			switch (msg.what) {
 			case MSG_SEND_COMMAND:
 				if (sendCommand(msg.arg1, (Object[]) msg.obj)) {
 					break;
@@ -746,8 +757,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public void postCommand(long delay, int retry, int command, Object... args) {
-		Message message = mHandler.obtainMessage(MSG_SEND_COMMAND, command, retry, args);
-		mHandler.sendMessageDelayed(message, delay);
+		Message message = mThreadedHandler.obtainMessage(MSG_SEND_COMMAND, command, retry, args);
+		mThreadedHandler.sendMessageDelayed(message, delay);
 	}
 
 	public boolean sendCommand(int command, Object... args) {
