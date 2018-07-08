@@ -632,6 +632,25 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		public boolean enterOfficialAccounts(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, -1, 2, 0);
+			if (node != null) {
+				String text = CavanAccessibilityHelper.getNodeText(node);
+
+				try {
+					if (CavanString.mach(text, "关注", "发消息", "进入公众号", "关注公众号")) {
+						if (CavanAccessibilityHelper.performClick(node)) {
+							return true;
+						}
+
+						return CavanAccessibilityHelper.performClickParent(node);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				} finally {
+					node.recycle();
+				}
+			}
+
 			AccessibilityNodeInfo listView = CavanAccessibilityHelper.getChildRecursive(root, 0, -1);
 			if (listView == null) {
 				return false;
@@ -639,10 +658,16 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 			try {
 				for (int i = 0; i < 3; i++) {
-					List<AccessibilityNodeInfo> nodes = CavanAccessibilityHelper.findNodesByTexts(listView, "进入公众号", "关注");
+					List<AccessibilityNodeInfo> nodes = CavanAccessibilityHelper.findNodesByTexts(listView, "关注", "进入公众号", "发消息");
 					if (nodes != null && nodes.size() > 0) {
 						try {
-							return CavanAccessibilityHelper.performClickParent(nodes.get(nodes.size() - 1));
+							node = nodes.get(nodes.size() - 1);
+
+							if (CavanAccessibilityHelper.performClick(node)) {
+								return true;
+							}
+
+							return CavanAccessibilityHelper.performClickParent(node);
 						} catch (Exception e) {
 							e.printStackTrace();
 						} finally {
@@ -676,16 +701,29 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doUnfollow(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 2);
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, -1, 2, 1);
+			if (node != null) {
+				String text = CavanAccessibilityHelper.getNodeText(node);
+
+				try {
+					if (CavanString.mach(text, "取消关注")) {
+						return CavanAccessibilityHelper.performClick(node);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				} finally {
+					node.recycle();
+				}
+			}
+
+			node = CavanAccessibilityHelper.getChildRecursive(root, 0, 2);
 			if (node == null) {
 				return false;
 			}
 
 			try {
-				if ("更多".equals(CavanAccessibilityHelper.getNodeDescription(node))) {
-					mUnfollowPending = CavanAccessibilityHelper.performClick(node);
-					return mUnfollowPending;
-				}
+				mUnfollowPending = CavanAccessibilityHelper.performClick(node);
+				return mUnfollowPending;
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
@@ -2072,6 +2110,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(new AppBrandWindow("com.tencent.mm.plugin.appbrand.ui.AppBrandUI1"));
 		addWindow(new ContactInfoWindow("com.tencent.mm.plugin.profile.ui.ContactInfoUI"));
 		addWindow(new DialogWindow("com.tencent.mm.ui.base.i"));
+		addWindow(new DialogWindow("com.tencent.mm.ui.widget.a.c"));
 		addWindow(new BrandServiceIndexWindow("com.tencent.mm.plugin.brandservice.ui.BrandServiceIndexUI"));
 	}
 

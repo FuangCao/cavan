@@ -209,6 +209,16 @@ public class CavanString {
 		return fromCharSequence(sequence, EMPTY_STRING);
 	}
 
+	public static boolean mach(String text, String... texts) {
+		for (String node : texts) {
+			if (node.equals(text)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public boolean hasChineseChar() {
 		return hasChineseChar(mContent);
 	}
