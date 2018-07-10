@@ -341,6 +341,11 @@ static bool cavan_http_sender_is_completed(struct cavan_http_sender *sender, str
 		return false;
 	}
 
+	if (length == 0) {
+		println("Successfull");
+		return true;
+	}
+
 	for (i = 0; i < NELEM(texts1); i++) {
 		if (strstr(errdesc, texts1[i])) {
 			println("Found: %s", texts1[i]);
