@@ -465,19 +465,37 @@ static struct cavan_http_sender_packet *cavan_http_sender_get_packet(struct cava
 {
 	int i;
 
-	for (i = index; i < count; i++) {
-		struct cavan_http_sender_packet *packet = sender->packets + i;
+	while (1) {
+		bool pending = false;
 
-		if (cavan_http_sender_is_send_enabled(sender, packet)) {
-			return packet;
+		for (i = index; i < count; i++) {
+			struct cavan_http_sender_packet *packet = sender->packets + i;
+
+			if (cavan_http_sender_is_send_enabled(sender, packet)) {
+				if (packet->recv_times < packet->send_times) {
+					pending = true;
+				} else {
+					return packet;
+				}
+			}
 		}
-	}
 
-	for (i = 0; i < index; i++) {
-		struct cavan_http_sender_packet *packet = sender->packets + i;
+		for (i = 0; i < index; i++) {
+			struct cavan_http_sender_packet *packet = sender->packets + i;
 
-		if (cavan_http_sender_is_send_enabled(sender, packet)) {
-			return packet;
+			if (cavan_http_sender_is_send_enabled(sender, packet)) {
+				if (packet->recv_times < packet->send_times) {
+					pending = true;
+				} else {
+					return packet;
+				}
+			}
+		}
+
+		if (pending) {
+			cavan_http_sender_wait(sender, &sender->cond_write);
+		} else {
+			break;
 		}
 	}
 
