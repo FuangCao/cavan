@@ -240,8 +240,41 @@ out_cavan_dynamic_service_destroy:
 	return ret;
 }
 
+static int app_network_link_main(int argc, char *argv[])
+{
+	struct network_url url;
+	int count = 0;
+
+	assert(argc > 1);
+
+	if (network_url_parse(&url, argv[1]) == NULL) {
+		return -EINVAL;
+	}
+
+	while (1) {
+		struct network_client *client;
+
+		client = malloc(sizeof(struct network_client));
+		if (client == NULL) {
+			pr_err_info("malloc");
+			break;
+		}
+
+		while (network_client_open(client, &url, 0) < 0) {
+			pr_err_info("network_client_open");
+			msleep(500);
+		}
+
+		count++;
+		println("opened links: %d", count);
+	}
+
+	return 0;
+}
+
 CAVAN_COMMAND_MAP_START {
 	{ "client", app_network_client_main },
 	{ "service", app_network_service_main },
 	{ "test", app_network_test_main },
+	{ "link", app_network_link_main },
 } CAVAN_COMMAND_MAP_END;
