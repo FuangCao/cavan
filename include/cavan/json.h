@@ -48,8 +48,10 @@ struct cavan_json_document {
 	struct cavan_json_node *nodes;
 };
 
-int cavan_json_document_init(struct cavan_json_document *doc);
-void cavan_json_document_deinit(struct cavan_json_document *doc);
-int cavan_json_document_parse(struct cavan_json_document *doc, char *text, size_t size);
-int cavan_json_document_parse_file(struct cavan_json_document *doc, const char *pathname);
+void cavan_json_document_free(struct cavan_json_document *doc);
+struct cavan_json_document *cavan_json_document_parse(char *text, size_t size);
+struct cavan_json_document *cavan_json_document_parse_file(const char *pathname);
 int cavan_json_document_tostring(const struct cavan_json_document *doc, char *buff, size_t size);
+const struct cavan_json_node *cavan_json_node_find(const struct cavan_json_node *node, const char *name);
+const struct cavan_json_node *cavan_json_node_get_child(const struct cavan_json_node *node, int index);
+const struct cavan_json_node *cavan_json_document_find(const struct cavan_json_document *doc, ...);

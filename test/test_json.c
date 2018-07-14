@@ -22,29 +22,32 @@
 
 int main(int argc, char *argv[])
 {
-	struct cavan_json_document doc;
+	const struct cavan_json_node *node;
+	struct cavan_json_document *doc;
 	char buff[4096];
 	int length;
-	int ret;
 
 	assert(argc > 1);
 
-	ret = cavan_json_document_init(&doc);
-	if (ret < 0) {
-		pr_err_info("cavan_json_document_init");
-		return ret;
+	doc = cavan_json_document_parse_file(argv[1]);
+	if (doc == NULL) {
+		return -ENOENT;
 	}
 
-	ret = cavan_json_document_parse_file(&doc, argv[1]);
-	if (ret < 0) {
-		pr_err_info("cavan_json_document_parse_file");
-		goto out_cavan_json_document_deinit;
-	}
-
-	length = cavan_json_document_tostring(&doc, buff, sizeof(buff));
+	length = cavan_json_document_tostring(doc, buff, sizeof(buff));
 	print_ntext(buff, length);
+	print_char('\n');
 
-out_cavan_json_document_deinit:
-	cavan_json_document_deinit(&doc);
-	return ret;
+	node = cavan_json_document_find(doc, "data", "todo", "list", "action", NULL);
+	println("node = %p", node);
+
+	if (node != NULL) {
+		println("type = %d", node->type->type);
+		println("name = %s", node->name);
+		println("value = %s", node->value);
+	}
+
+	cavan_json_document_free(doc);
+
+	return 0;
 }

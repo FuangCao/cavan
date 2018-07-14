@@ -71,14 +71,7 @@ static struct cavan_json_node *cavan_json_node_alloc(char *name, cavan_json_type
 	return node;
 }
 
-int cavan_json_document_init(struct cavan_json_document *doc)
-{
-	doc->memory = NULL;
-	doc->nodes = NULL;
-	return 0;
-}
-
-void cavan_json_document_deinit(struct cavan_json_document *doc)
+void cavan_json_document_free(struct cavan_json_document *doc)
 {
 	if (doc->nodes != NULL) {
 		cavan_json_node_free(doc->nodes);
@@ -87,14 +80,22 @@ void cavan_json_document_deinit(struct cavan_json_document *doc)
 	if (doc->memory != NULL) {
 		free(doc->memory);
 	}
+
+	free(doc);
 }
 
-int cavan_json_document_parse(struct cavan_json_document *doc, char *text, size_t size)
+struct cavan_json_document *cavan_json_document_parse(char *text, size_t size)
 {
 	cavan_json_type_t type = CAVAN_JSON_VALUE;
 	struct cavan_json_node *node, *child;
+	struct cavan_json_document *doc;
 	char *text_end = text + size;
 	char *p, *name, *value;
+
+	doc = cavan_malloc_type(struct cavan_json_document);
+	if (doc == NULL) {
+		return NULL;
+	}
 
 	node = child = NULL;
 	name = p = text;
@@ -190,27 +191,27 @@ int cavan_json_document_parse(struct cavan_json_document *doc, char *text, size_
 		doc->nodes = node;
 	}
 
-	return 0;
+	return doc;
 }
 
-int cavan_json_document_parse_file(struct cavan_json_document *doc, const char *pathname)
+struct cavan_json_document *cavan_json_document_parse_file(const char *pathname)
 {
-	int ret;
 	size_t size = 0;
+	struct cavan_json_document *doc;
 	char *mem = file_read_all_text(pathname, &size);
 
 	if (mem == NULL) {
-		return -EFAULT;
+		return NULL;
 	}
 
-	ret = cavan_json_document_parse(doc, mem, size);
-	if (ret < 0) {
+	doc = cavan_json_document_parse(mem, size);
+	if (doc == NULL) {
 		free(mem);
 	} else {
 		doc->memory = mem;
 	}
 
-	return ret;
+	return doc;
 }
 
 static char *cavan_json_node_tostring(const struct cavan_json_node *node, char *buff, char *buff_end)
@@ -267,4 +268,56 @@ int cavan_json_document_tostring(const struct cavan_json_document *doc, char *bu
 	}
 
 	return p - buff;
+}
+
+const struct cavan_json_node *cavan_json_node_find(const struct cavan_json_node *node, const char *name)
+{
+	const struct cavan_json_node *child = node->childs;
+
+	while (child != NULL) {
+		if (child->name != NULL && strcmp(child->name, name) == 0) {
+			break;
+		}
+
+		child = child->next;
+	}
+
+	return child;
+}
+
+const struct cavan_json_node *cavan_json_node_get_child(const struct cavan_json_node *node, int index)
+{
+	const struct cavan_json_node *child = node->childs;
+
+	while (index > 0 && child != NULL) {
+		child = child->next;
+		index--;
+	}
+
+	return child;
+}
+
+const struct cavan_json_node *cavan_json_document_find(const struct cavan_json_document *doc, ...)
+{
+	const struct cavan_json_node *node = doc->nodes;
+	va_list ap;
+
+	va_start(ap, doc);
+
+	while (node != NULL) {
+		const char *name = va_arg(ap, const char *);
+		if (name == NULL) {
+			break;
+		}
+
+		while (node->type->type == CAVAN_JSON_ARRAY && node->childs != NULL) {
+			node = node->childs;
+		}
+
+		node = cavan_json_node_find(node, name);
+	}
+
+	va_end(ap);
+
+	return node;
 }
