@@ -289,6 +289,9 @@ typedef volatile uint32_t cavan_spinlock_t;
 #define cavan_spinlock_unlock(lock) \
 	cavan_atomic_set(lock, 0)
 
+#define cavan_malloc_type(type) \
+	(type *) malloc(sizeof(type))
+
 static inline u64 SWAP64(u64 value)
 {
 	u32 H = value >> 32;
