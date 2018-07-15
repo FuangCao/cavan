@@ -66,6 +66,7 @@ struct cavan_http_sender {
 	bool running;
 	bool verbose;
 	bool daemon;
+	bool force;
 	bool http;
 	u64 time;
 };
@@ -338,6 +339,10 @@ static bool cavan_http_sender_is_completed(struct cavan_http_sender *sender, str
 		"\u4e0d\u6ee1\u8db3", // ²»Âú×ã
 		"\u672a\u767b\u5f55", // Î´µÇÂ¼
 	};
+
+	if (sender->force) {
+		return false;
+	}
 
 	length = cavan_http_sender_find_errdesc(body, errdesc, sizeof(errdesc));
 	if (length < 0) {
@@ -671,6 +676,7 @@ static void cavan_http_sender_show_usage(const char *command)
 	println("-N, -n, --now\t\t%s", cavan_help_message_current_time);
 	println("-C, -c, --count\t\tsend count");
 	println("--daemon\t\t%s", cavan_help_message_daemon);
+	println("--force\t\tforce send");
 }
 
 int main(int argc, char *argv[])
@@ -731,6 +737,11 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_DAEMON,
 		}, {
+			.name = "force",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_FORCE,
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -787,6 +798,10 @@ int main(int argc, char *argv[])
 
 		case CAVAN_COMMAND_OPTION_DAEMON:
 			sender.daemon = true;
+			break;
+
+		case CAVAN_COMMAND_OPTION_FORCE:
+			sender.force = true;
 			break;
 
 		default:
