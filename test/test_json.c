@@ -22,7 +22,6 @@
 
 int main(int argc, char *argv[])
 {
-	const struct cavan_json_node *node;
 	struct cavan_json_document *doc;
 	char buff[4096];
 	int length;
@@ -34,18 +33,9 @@ int main(int argc, char *argv[])
 		return -ENOENT;
 	}
 
-	length = cavan_json_document_tostring(doc, buff, sizeof(buff));
+	length = cavan_json_document_tostring(doc, buff, sizeof(buff), true);
 	print_ntext(buff, length);
 	print_char('\n');
-
-	node = cavan_json_document_find(doc, "data", "todo", "list", "action", NULL);
-	println("node = %p", node);
-
-	if (node != NULL) {
-		println("type = %d", node->type->type);
-		println("name = %s", node->name);
-		println("value = %s", node->value);
-	}
 
 	cavan_json_document_free(doc);
 

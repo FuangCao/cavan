@@ -86,10 +86,10 @@ void cavan_json_document_free(struct cavan_json_document *doc)
 
 struct cavan_json_document *cavan_json_document_parse(char *text, size_t size)
 {
-	cavan_json_type_t type = CAVAN_JSON_VALUE;
 	struct cavan_json_node *node, *child;
 	struct cavan_json_document *doc;
 	char *text_end = text + size;
+	cavan_json_type_t type;
 	char *p, *name, *value;
 
 	doc = cavan_malloc_type(struct cavan_json_document);
@@ -97,6 +97,7 @@ struct cavan_json_document *cavan_json_document_parse(char *text, size_t size)
 		return NULL;
 	}
 
+	type = CAVAN_JSON_VALUE;
 	node = child = NULL;
 	name = p = text;
 	value = NULL;
@@ -107,35 +108,29 @@ struct cavan_json_document *cavan_json_document_parse(char *text, size_t size)
 			type = CAVAN_JSON_VALUE;
 			*p++ = 0;
 			value = p;
-			text++;
 			break;
 
 		case '{':
-			if (name == p) {
-				name = NULL;
-			}
-
-			child = cavan_json_node_alloc(name, CAVAN_JSON_OBJECT, node);
-			node = child;
-			name = p;
-			text++;
-			break;
-
 		case '[':
 			if (name == p) {
 				name = NULL;
 			}
 
-			child = cavan_json_node_alloc(name, CAVAN_JSON_ARRAY, node);
+			if (*text == '{') {
+				type = CAVAN_JSON_OBJECT;
+			} else {
+				type = CAVAN_JSON_ARRAY;
+			}
+
+			child = cavan_json_node_alloc(name, type, node);
 			node = child;
 			name = p;
-			text++;
 			break;
 
 		case '}':
 		case ']':
 		case ',':
-			if (value != NULL) {
+			if (p > name && value != NULL) {
 				*p++ = 0;
 				child = cavan_json_node_alloc(name, type, node);
 				child->value = value;
@@ -147,40 +142,37 @@ struct cavan_json_document *cavan_json_document_parse(char *text, size_t size)
 			}
 
 			name = p;
-			text++;
 			break;
 
 		case '"':
 			type = CAVAN_JSON_TEXT;
 
 			while (++text < text_end) {
-				char c = *text;
-				if (c == '"') {
-					text++;
+				if (*text == '"') {
 					break;
 				}
 
-				if (c == '\\') {
-					*p++ = *++text;
-
-				} else {
-					*p++ = c;
+				if (*text == '\\') {
+					text++;
 				}
+
+				*p++ = *text;
 			}
 			break;
 
+		case ' ':
 		case '\r':
 		case '\n':
 		case '\f':
 		case '\t':
-		case ' ':
-			text++;
 			break;
 
 		default:
-			*p++ = *text++;
+			*p++ = *text;
 			break;
 		}
+
+		text++;
 	}
 
 	if (node != NULL) {
@@ -253,14 +245,88 @@ static char *cavan_json_node_tostring(const struct cavan_json_node *node, char *
 	return buff;
 }
 
-int cavan_json_document_tostring(const struct cavan_json_document *doc, char *buff, size_t size)
+static char *cavan_json_node_append_line(char *buff, char *buff_end, int level)
+{
+	if (buff < buff_end) {
+		*buff++ = '\n';
+	}
+
+	while (level > 0 && buff < buff_end) {
+		*buff++ = '\t';
+		level--;
+	}
+
+	return buff;
+}
+
+static char *cavan_json_node_tostring_human(const struct cavan_json_node *node, char *buff, char *buff_end, int level)
+{
+	const struct cavan_json_type *type = node->type;
+
+	if (node->name != NULL) {
+		buff += snprintf(buff, buff_end - buff, "\"%s\":", node->name);
+	}
+
+	if (node->childs != NULL) {
+		if (type->prefix) {
+			if (node->name != NULL && buff < buff_end) {
+				buff = cavan_json_node_append_line(buff, buff_end, level);
+			}
+
+			if (buff < buff_end) {
+				*buff++ = type->prefix;
+			}
+
+			buff = cavan_json_node_append_line(buff, buff_end, level + 1);
+		}
+
+		buff = cavan_json_node_tostring_human(node->childs, buff, buff_end, level + 1);
+
+		if (type->suffix) {
+			buff = cavan_json_node_append_line(buff, buff_end, level);
+
+			if (buff < buff_end) {
+				*buff++ = type->suffix;
+			}
+		}
+	} else {
+		const char *value = node->value;
+		if (value == NULL) {
+			value = "null";
+		}
+
+		if (buff < buff_end) {
+			*buff++ = ' ';
+		}
+
+		if (type->type == CAVAN_JSON_TEXT) {
+			buff += snprintf(buff, buff_end - buff, "\"%s\"", value);
+		} else {
+			buff = text_ncopy(buff, value, buff_end - buff);
+		}
+	}
+
+	if (node->next != NULL && buff + 1 < buff_end) {
+		*buff++ = ',';
+		buff = cavan_json_node_append_line(buff, buff_end, level);
+		buff = cavan_json_node_tostring_human(node->next, buff, buff_end, level);
+	}
+
+	return buff;
+}
+
+int cavan_json_document_tostring(const struct cavan_json_document *doc, char *buff, size_t size, bool human)
 {
 	const struct cavan_json_node *nodes = doc->nodes;
 	char *buff_end = buff + size;
 	char *p = buff;
 
 	if (nodes != NULL) {
-		p = cavan_json_node_tostring(nodes, p, buff_end);
+		if (human) {
+			p = cavan_json_node_tostring_human(nodes, p, buff_end, 0);
+		} else {
+			p = cavan_json_node_tostring(nodes, p, buff_end);
+		}
 	}
 
 	if (p < buff_end) {
