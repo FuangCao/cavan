@@ -20,6 +20,7 @@
 #include <cavan.h>
 #include <cavan/file.h>
 #include <cavan/http.h>
+#include <cavan/json.h>
 #include <cavan/timer.h>
 #include <cavan/thread.h>
 #include <cavan/network.h>
@@ -279,35 +280,37 @@ static int cavan_http_sender_get_client(struct cavan_http_sender *sender, int in
 #if CONFIG_CAVAN_C99
 static int cavan_http_sender_find_errdesc(cavan_string_t *body, char *buff, int size)
 {
-	const char *errdesc, *end;
+	const struct cavan_json_node *node;
+	struct cavan_json_document *doc;
 	int length;
 
-	errdesc = strstr(body->text, "\"errdesc\":");
-	if (errdesc == NULL) {
-		return -ENOENT;
-	}
-
-	errdesc += 10;
-
-	if (*errdesc != '"') {
+	doc = cavan_json_document_parse(body->text, body->length);
+	if (doc == NULL) {
+		pr_err_info("cavan_json_document_parse");
 		return -EINVAL;
 	}
 
-	errdesc++;
-
-	end = strchr(errdesc, '"');
-	if (end == NULL) {
-		return -EINVAL;
+	node = cavan_json_document_find(doc, "ret", NULL);
+	if (node == NULL || node->value == NULL) {
+		length = -EINVAL;
+		goto out_cavan_json_document_free;
 	}
 
-	length = end - errdesc;
-	if (length >= size) {
-		length = size - 1;
+	if (strcmp(node->value, "0") == 0) {
+		length = 0;
+		goto out_cavan_json_document_free;
 	}
 
-	memcpy(buff, errdesc, length);
-	buff[length] = 0;
+	node = cavan_json_document_find(doc, "data", "errdesc", NULL);
+	if (node == NULL || node->value == NULL) {
+		length = -EINVAL;
+		goto out_cavan_json_document_free;
+	}
 
+	length = text_ncopy(buff, node->value, size) - buff;
+
+out_cavan_json_document_free:
+	cavan_json_document_free(doc);
 	return length;
 }
 
@@ -344,6 +347,10 @@ static bool cavan_http_sender_is_completed(struct cavan_http_sender *sender, str
 	if (length == 0) {
 		println("Successfull");
 		return true;
+	}
+
+	if (sender->verbose) {
+		println("errdesc = %s", errdesc);
 	}
 
 	for (i = 0; i < NELEM(texts1); i++) {

@@ -183,6 +183,8 @@ struct cavan_json_document *cavan_json_document_parse(char *text, size_t size)
 		doc->nodes = node;
 	}
 
+	doc->memory = NULL;
+
 	return doc;
 }
 
