@@ -18,6 +18,7 @@
  */
 
 #include <cavan.h>
+#include <cavan/timer.h>
 #include <cavan/network.h>
 #include <cavan/service.h>
 
@@ -240,7 +241,7 @@ out_cavan_dynamic_service_destroy:
 	return ret;
 }
 
-static int app_network_link_main(int argc, char *argv[])
+static int app_network_test_max_links_main(int argc, char *argv[])
 {
 	struct network_url url;
 	int count = 0;
@@ -272,9 +273,94 @@ static int app_network_link_main(int argc, char *argv[])
 	return 0;
 }
 
+static void *app_network_test_relink_thread(void *data)
+{
+	static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+	static u32 delay_min = 0xFFFFFFFF;
+	static u32 delay_max;
+	static u64 delay_sum;
+	static int invalid;
+	static int count;
+
+	struct network_url *url = (struct network_url *) data;
+	struct network_client client;
+
+	while (1) {
+		u64 time_start = clock_gettime_mono_ms();
+		u32 delay;
+
+		int ret = network_client_open(&client, url, 0);
+		if (ret < 0) {
+			pr_err_info("network_client_open");
+			msleep(500);
+			continue;
+		}
+
+		delay = clock_gettime_mono_ms() - time_start;
+
+		pthread_mutex_lock(&lock);
+
+		println("====================");
+
+		println("delay = %d", delay);
+
+		count++;
+		println("count = %d", count);
+
+		delay_sum += delay;
+
+		if (delay < delay_min) {
+			delay_min = delay;
+		}
+
+		if (delay > delay_max) {
+			delay_max = delay;
+		}
+
+		println("delay_min = %d", delay_min);
+		println("delay_max = %d", delay_max);
+		println("delay_avg = %d", (u32) (delay_sum / count));
+
+		if (delay > 3000) {
+			invalid++;
+		}
+
+		println("invalid = %d", invalid);
+
+		pthread_mutex_unlock(&lock);
+
+		network_client_close(&client);
+	}
+
+	return NULL;
+}
+
+static int app_network_test_relink_main(int argc, char *argv[])
+{
+	struct network_url url;
+	int i;
+
+	assert(argc > 1);
+
+	if (network_url_parse(&url, argv[1]) == NULL) {
+		return -EINVAL;
+	}
+
+	for (i = 0; i < 100; i++) {
+		cavan_pthread_run(app_network_test_relink_thread, &url);
+	}
+
+	while (1) {
+		msleep(2000);
+	}
+
+	return 0;
+}
+
 CAVAN_COMMAND_MAP_START {
 	{ "client", app_network_client_main },
 	{ "service", app_network_service_main },
 	{ "test", app_network_test_main },
-	{ "link", app_network_link_main },
+	{ "test-max-links", app_network_test_max_links_main },
+	{ "test-relink", app_network_test_relink_main },
 } CAVAN_COMMAND_MAP_END;
