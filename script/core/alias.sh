@@ -70,6 +70,9 @@ CMD_ARM_CAVAN_MAIN="${CAVAN_OUT_ARM}/cavan-main"
 CMD_DATA_CAVAN_MAIN="/data/internal_memory/cavan-main"
 CMD_SYSTEM_CAVAN_MAIN="/system/bin/cavan-main"
 
+[ -z "${JWAOO_IM_HOST}" ] && JWAOO_IM_HOST="127.0.0.1"
+[ -z "${JWAOO_IM_PORT}" ] && JWAOO_IM_PORT="8802"
+
 function cavan-make2()
 {
 	[ -f "[Mm]akefile" ] ||
@@ -302,4 +305,23 @@ function cavan-set-proxy-env()
 		unset HTTP_PROXY
 		unset HTTPS_PROXY
 	fi
+}
+
+function jwaoo-im-java()
+{
+	local url uid
+
+	if [ "$2" ]
+	then
+		url="$1"
+		uid="$2"
+	else
+		url="${JWAOO_IM_HOST}:${JWAOO_IM_PORT}"
+		uid="${1-11}"
+	fi
+
+	echo "url = ${url}"
+	echo "uid = ${uid}"
+
+	java -jar /tools/jar/libjwaooim.jar ${url} ${uid}
 }
