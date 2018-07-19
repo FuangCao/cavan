@@ -54,8 +54,8 @@ struct cavan_http_sender {
 	pthread_cond_t cond_write;
 	struct network_url url;
 	pthread_mutex_t lock;
-	int send_count;
-	int conn_count;
+	int send_max;
+	int conn_max;
 	bool running;
 	bool verbose;
 	bool daemon;
@@ -196,10 +196,6 @@ static void cavan_http_sender_init(struct cavan_http_sender *sender)
 static int cavan_http_sender_open(struct cavan_http_sender *sender, struct cavan_http_packet *packets[], int count)
 {
 	int i;
-
-	if (count > HTTP_SENDER_CONN_COUNT) {
-		count = HTTP_SENDER_CONN_COUNT;
-	}
 
 	for (i = 0; i < count; i++) {
 		int ret;
@@ -380,7 +376,7 @@ static void *cavan_http_sender_receive_thread(void *data)
 		while (client->running) {
 			int count;
 
-			if (client->send_times < sender->send_count) {
+			if (client->send_times < sender->send_max) {
 				cavan_http_sender_enqueue(sender, client);
 			} else {
 				goto out_unlock;
@@ -420,7 +416,7 @@ out_fifo_deinit:
 out_pthread_cond_signal:
 	cavan_http_sender_lock(sender);
 	client->running = false;
-	sender->conn_count--;
+	sender->conn_max--;
 	cavan_http_sender_post(&client->cond_exit);
 	cavan_http_sender_post(&sender->cond_write);
 	cavan_http_sender_unlock(sender);
@@ -454,9 +450,9 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 	}
 
 	cavan_http_sender_open(sender, packets, count);
-	sender->conn_count = count;
+	sender->conn_max = count;
 
-	while (sender->conn_count > 0) {
+	while (sender->conn_max > 0) {
 		u64 time = clock_gettime_real_ms();
 
 		if (time < sender->time) {
@@ -476,7 +472,7 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 
 	cavan_http_sender_lock(sender);
 
-	while (sender->conn_count > 0) {
+	while (sender->conn_max > 0) {
 		struct cavan_http_client *client;
 		cavan_string_t *header;
 		int ret;
@@ -487,7 +483,7 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 				break;
 			}
 
-			if (sender->conn_count <= 0) {
+			if (sender->conn_max <= 0) {
 				goto out_cavan_http_sender_close;
 			}
 
@@ -626,7 +622,7 @@ int main(int argc, char *argv[])
 
 	cavan_http_sender_init(&sender);
 
-	sender.send_count = HTTP_SENDER_SEND_COUNT;
+	sender.send_max = HTTP_SENDER_SEND_COUNT;
 	sender.time = ((clock_gettime_real_ms() + 3600000 - 1) / 3600000) * 3600000;
 
 	while ((c = getopt_long(argc, argv, "vVhHd:D:tc:C:TnN", long_option, &option_index)) != EOF) {
@@ -671,7 +667,7 @@ int main(int argc, char *argv[])
 		case 'c':
 		case 'C':
 		case CAVAN_COMMAND_OPTION_COUNT:
-			sender.send_count = text2value_unsigned(optarg, NULL, 10);
+			sender.send_max = text2value_unsigned(optarg, NULL, 10);
 			break;
 
 		case CAVAN_COMMAND_OPTION_DAEMON:
@@ -696,7 +692,7 @@ int main(int argc, char *argv[])
 #endif
 
 	println("delay = %d", delay);
-	println("send_count = %d", sender.send_count);
+	println("send_max = %d", sender.send_max);
 
 	sender.time += delay;
 
