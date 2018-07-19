@@ -332,6 +332,7 @@ static bool cavan_http_sender_is_completed(struct cavan_http_sender *sender, str
 		"\u9891\u7e41", // 频繁
 		"\u73b0\u91d1", // 现金
 		"\u53d1\u653e", // 发放
+		"\u9519\u8bef", // 错误
 		"\u9886\u53d6\u8fc7", // 领取过
 	};
 	const char *texts2[] = {
