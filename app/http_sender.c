@@ -205,6 +205,8 @@ static int cavan_http_sender_open(struct cavan_http_sender *sender, struct cavan
 			pr_red_info("cavan_http_client_open");
 			break;
 		}
+
+		msleep(200);
 	}
 
 	return i;
@@ -269,7 +271,7 @@ static bool cavan_http_sender_is_completed(struct cavan_http_sender *sender, str
 		"\u9891\u7e41", // 频繁
 		"\u73b0\u91d1", // 现金
 		"\u53d1\u653e", // 发放
-		"\u9519\u8bef", // 错误
+		// "\u9519\u8bef", // 错误
 		"\u9886\u53d6\u8fc7", // 领取过
 	};
 	const char *texts2[] = {
@@ -475,7 +477,6 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 	while (sender->conn_max > 0) {
 		struct cavan_http_client *client;
 		cavan_string_t *header;
-		int ret;
 
 		while (1) {
 			client = cavan_http_sender_dequeue(sender);
@@ -499,13 +500,9 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 
 		cavan_http_sender_unlock(sender);
 		client->time = time(NULL);
-		ret = network_client_send(&client->client, header->text, header->length);
+		network_client_send(&client->client, header->text, header->length);
+		msleep(200);
 		cavan_http_sender_lock(sender);
-
-		if (ret < 0) {
-			pr_red_info("cavan_http_sender_send_packet");
-			cavan_http_client_close(client);
-		}
 	}
 
 out_cavan_http_sender_close:
