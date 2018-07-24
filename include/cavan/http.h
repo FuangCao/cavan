@@ -67,6 +67,7 @@ struct cavan_http_packet {
 	struct cavan_http_header headers[HTTP_HEADER_COUNT];
 	cavan_string_t header;
 	cavan_string_t body;
+	int group;
 	int lines;
 };
 

@@ -2018,6 +2018,7 @@ int cavan_http_packet_add_linef(struct cavan_http_packet *packet, const char *fo
 int cavan_http_packet_parse_file(const char *pathname, struct cavan_http_packet *packets[], int size)
 {
 	int ret;
+	int group;
 	int count;
 	size_t length;
 	char *mem, *p, *p_end;
@@ -2037,6 +2038,7 @@ int cavan_http_packet_parse_file(const char *pathname, struct cavan_http_packet 
 		goto out_free_mem;
 	}
 
+	group = 0;
 	count = 0;
 	line = mem;
 	line_end = NULL;
@@ -2067,6 +2069,7 @@ int cavan_http_packet_parse_file(const char *pathname, struct cavan_http_packet 
 					goto out_free_packets;
 				}
 
+				packet->group = group;
 				packets[count++] = packet;
 
 				packet = cavan_http_packet_alloc();
@@ -2075,6 +2078,8 @@ int cavan_http_packet_parse_file(const char *pathname, struct cavan_http_packet 
 					ret = -ENOMEM;
 					goto out_free_packets;
 				}
+			} else {
+				group++;
 			}
 
 			line_end = NULL;
@@ -2090,6 +2095,7 @@ int cavan_http_packet_parse_file(const char *pathname, struct cavan_http_packet 
 			goto out_free_packets;
 		}
 
+		packet->group = group;
 		packets[count++] = packet;
 	} else {
 		cavan_http_packet_free(packet);
