@@ -31,6 +31,7 @@
 #define HTTP_SENDER_SEND_COUNT		10
 #define HTTP_SENDER_CONN_COUNT		50
 #define HTTP_SENDER_GROUP_COUNT		20
+#define HTTP_SENDER_SUCCESS_MAX		2
 #define HTTP_SENDER_PACKAGES		200
 
 struct cavan_http_sender;
@@ -53,7 +54,9 @@ struct cavan_http_group {
 	struct cavan_http_client *head;
 	struct cavan_http_group *next;
 	pthread_cond_t cond_exit;
+	bool completed;
 	bool running;
+	int success;
 	int count;
 };
 
@@ -210,6 +213,8 @@ static void cavan_http_group_close(struct cavan_http_group *group)
 
 		cavan_http_sender_wait(group->sender, &group->cond_exit);
 	}
+
+	group->head = NULL;
 }
 
 static void cavan_http_group_init(struct cavan_http_group *group)
@@ -221,15 +226,9 @@ static void cavan_http_group_init(struct cavan_http_group *group)
 
 static void cavan_http_sender_init(struct cavan_http_sender *sender)
 {
-	int i;
-
 	memset(sender, 0x00, sizeof(*sender));
 	pthread_mutex_init(&sender->lock, NULL);
 	pthread_cond_init(&sender->cond_write, NULL);
-
-	for (i = 0; i < HTTP_SENDER_GROUP_COUNT; i++) {
-		cavan_http_group_init(sender->groups + i);
-	}
 }
 
 static void cavan_http_sender_open(struct cavan_http_sender *sender, struct cavan_http_packet *packets[], int count)
@@ -237,6 +236,12 @@ static void cavan_http_sender_open(struct cavan_http_sender *sender, struct cava
 	struct cavan_http_group *group = sender->groups;
 	int index = 0;
 	int i;
+
+	sender->head = sender->tail = NULL;
+
+	for (i = 0; i < HTTP_SENDER_GROUP_COUNT; i++) {
+		cavan_http_group_init(sender->groups + i);
+	}
 
 	for (i = 0; i < count; i++) {
 		struct cavan_http_client *client = sender->clients + i;
@@ -339,20 +344,22 @@ out_cavan_json_document_free:
 	return length;
 }
 
-static bool cavan_http_sender_is_completed(struct cavan_http_sender *sender, struct cavan_http_client *client, cavan_string_t *body)
+static bool cavan_http_sender_is_completed(struct cavan_http_group *group, struct cavan_http_client *client, cavan_string_t *body)
 {
 	int i;
 	int length;
 	char errdesc[1024];
-	const char *texts1[] = {
-		"\u5143", // 元
+	const char *texts0[] = {
 		"\u4e0a\u9650", // 上限
-		"\u7528\u5b8c", // 用完
 		"\u592a\u5feb", // 太快
 		"\u9891\u7e41", // 频繁
+	};
+	const char *texts1[] = {
+		"\u5143", // 元
+		"\u7528\u5b8c", // 用完
 		"\u73b0\u91d1", // 现金
 		"\u53d1\u653e", // 发放
-		// "\u9519\u8bef", // 错误
+		"\u9519\u8bef", // 错误
 		"\u9886\u53d6\u8fc7", // 领取过
 	};
 	const char *texts2[] = {
@@ -365,7 +372,7 @@ static bool cavan_http_sender_is_completed(struct cavan_http_sender *sender, str
 		"\u672a\u767b\u5f55", // 未登录
 	};
 
-	if (sender->force) {
+	if (group->sender->force) {
 		return false;
 	}
 
@@ -375,15 +382,25 @@ static bool cavan_http_sender_is_completed(struct cavan_http_sender *sender, str
 	}
 
 	if (length == 0) {
-		println("Successfull");
-		cavan_http_sender_unlock(sender);
+		group->success++;
+		println("Successfull: %d", group->success);
+
+		cavan_http_sender_unlock(group->sender);
 		msleep(300);
-		cavan_http_sender_lock(sender);
+		cavan_http_sender_lock(group->sender);
 		return true;
 	}
 
-	if (sender->verbose) {
+	if (group->sender->verbose) {
 		println("errdesc = %s", errdesc);
+	}
+
+	for (i = 0; i < NELEM(texts0); i++) {
+		if (strstr(errdesc, texts0[i])) {
+			println("Found: %s", texts0[i]);
+			group->completed = true;
+			return true;
+		}
 	}
 
 	for (i = 0; i < NELEM(texts1); i++) {
@@ -408,10 +425,10 @@ static bool cavan_http_sender_is_completed(struct cavan_http_sender *sender, str
 
 	for (i = 0; i < NELEM(texts3); i++) {
 		if (strstr(errdesc, texts3[i])) {
-			cavan_http_sender_unlock(sender);
+			cavan_http_sender_unlock(group->sender);
 			println("Wait: %s", texts3[i]);
 			msleep(500);
-			cavan_http_sender_lock(sender);
+			cavan_http_sender_lock(group->sender);
 			return false;
 		}
 	}
@@ -428,7 +445,9 @@ static void *cavan_http_sender_receive_thread(void *data)
 	cavan_string_t *body;
 	int ret;
 
+	group->completed = false;
 	group->running = true;
+	group->success = 0;
 
 	cavan_http_sender_lock(sender);
 
@@ -440,7 +459,7 @@ static void *cavan_http_sender_receive_thread(void *data)
 
 	body = &rsp->body;
 
-	while (1) {
+	while (group->success < HTTP_SENDER_SUCCESS_MAX) {
 		struct cavan_http_client *client;
 		int count;
 
@@ -492,10 +511,15 @@ static void *cavan_http_sender_receive_thread(void *data)
 		}
 
 #if CONFIG_CAVAN_C99
-		if (cavan_http_sender_is_completed(sender, client, body)) {
+		if (cavan_http_sender_is_completed(group, client, body)) {
 			cavan_http_group_remove(group, client);
 		}
 #endif
+
+		if (group->completed) {
+			println("completed");
+			break;
+		}
 	}
 
 out_unlock:
