@@ -196,7 +196,6 @@ static bool cavan_http_sender_url_init(struct cavan_http_sender *sender, char *h
 
 static int cavan_http_group_open(struct cavan_http_group *group)
 {
-	pthread_cond_init(&group->cond_exit, NULL);
 	return cavan_pthread_run(cavan_http_sender_receive_thread, group);
 }
 
@@ -219,6 +218,7 @@ static void cavan_http_group_close(struct cavan_http_group *group)
 
 static void cavan_http_group_init(struct cavan_http_group *group)
 {
+	pthread_cond_init(&group->cond_exit, NULL);
 	group->running = false;
 	group->head = NULL;
 	group->count = 0;
@@ -382,12 +382,24 @@ static bool cavan_http_sender_is_completed(struct cavan_http_group *group, struc
 	}
 
 	if (length == 0) {
+		u32 delay;
+
 		group->success++;
 		println("Successfull: %d", group->success);
 
 		cavan_http_sender_unlock(group->sender);
-		msleep(300);
+
+		if (group->success < HTTP_SENDER_SUCCESS_MAX) {
+			delay = 200;
+		} else {
+			delay = 500;
+		}
+
+		println("Delay: %d", delay);
+		msleep(delay);
+
 		cavan_http_sender_lock(group->sender);
+
 		return true;
 	}
 
@@ -459,7 +471,7 @@ static void *cavan_http_sender_receive_thread(void *data)
 
 	body = &rsp->body;
 
-	while (group->success < HTTP_SENDER_SUCCESS_MAX) {
+	while (1) {
 		struct cavan_http_client *client;
 		int count;
 
@@ -513,6 +525,7 @@ static void *cavan_http_sender_receive_thread(void *data)
 #if CONFIG_CAVAN_C99
 		if (cavan_http_sender_is_completed(group, client, body)) {
 			cavan_http_group_remove(group, client);
+			network_client_close(&client->client);
 		}
 #endif
 
