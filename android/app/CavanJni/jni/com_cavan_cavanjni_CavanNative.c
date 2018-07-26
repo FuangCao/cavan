@@ -23,6 +23,13 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doAlc5671Clock(JNIEnv *env, j
 	return CavanMainExecute(env, "alc5671_clock", async, args, do_cavan_alc5671_clock);
 }
 
+extern int do_cavan_ascii(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doAscii(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "ascii", async, args, do_cavan_ascii);
+}
+
 extern int do_cavan_auto_dd(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doAutoDd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)

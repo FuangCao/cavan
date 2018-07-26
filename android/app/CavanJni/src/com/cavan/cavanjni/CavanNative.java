@@ -28,6 +28,14 @@ class CavanCommandAlc5671Clock extends CavanNativeCommand {
 	}
 }
 
+class CavanCommandAscii extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doAscii(async, args);
+	}
+}
+
 class CavanCommandAutoDd extends CavanNativeCommand {
 
 	@Override
@@ -1086,6 +1094,7 @@ public class CavanNative {
 		sHashMap.put("abspath", new CavanCommandAbspath());
 		sHashMap.put("alarm", new CavanCommandAlarm());
 		sHashMap.put("alc5671_clock", new CavanCommandAlc5671Clock());
+		sHashMap.put("ascii", new CavanCommandAscii());
 		sHashMap.put("auto_dd", new CavanCommandAutoDd());
 		sHashMap.put("auto_input", new CavanCommandAutoInput());
 		sHashMap.put("auto_mount", new CavanCommandAutoMount());
@@ -1222,6 +1231,7 @@ public class CavanNative {
 	public static native int doAbspath(boolean async, String... args);
 	public static native int doAlarm(boolean async, String... args);
 	public static native int doAlc5671Clock(boolean async, String... args);
+	public static native int doAscii(boolean async, String... args);
 	public static native int doAutoDd(boolean async, String... args);
 	public static native int doAutoInput(boolean async, String... args);
 	public static native int doAutoMount(boolean async, String... args);
