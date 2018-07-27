@@ -316,10 +316,10 @@ static char *role_change_service_list_clients(struct role_change_service *servic
 	return buff;
 }
 
-static struct role_change_service_conn *role_change_service_find_client(struct cavan_dynamic_service *service, struct role_change_service *role, const char *command, const char *name, const char *url, int retry)
+static struct role_change_service_conn *role_change_service_find_client(struct cavan_dynamic_service *service, struct role_change_service *role, const char *command, const char *name, const char *url, const struct sockaddr_in *peer_addr, int retry)
 {
-	struct in_addr addr;
 	struct role_change_service_conn *result = NULL;
+	struct in_addr addr;
 
 	if (cavan_inet_aton(name, &addr) < 0) {
 		addr.s_addr = 0;
@@ -348,6 +348,7 @@ static struct role_change_service_conn *role_change_service_find_client(struct c
 
 			while (line) {
 				struct role_change_service_conn *conn;
+				int ret;
 
 				conn = line;
 				line = line->next;
@@ -362,7 +363,14 @@ static struct role_change_service_conn *role_change_service_find_client(struct c
 
 				role_change_service_remove_client_locked(service, role, conn);
 
-				if (role_change_send_command(&conn->conn.client, "%s %s", command, url) < 0) {
+				if (peer_addr != NULL) {
+					ret = role_change_send_command(&conn->conn.client, "%s %s %s:%d",
+						command, url, inet_ntoa(peer_addr->sin_addr), ntohs(peer_addr->sin_port));
+				} else {
+					ret = role_change_send_command(&conn->conn.client, "%s %s", command, url);
+				}
+
+				if (ret < 0) {
 					role_change_service_free_client(conn);
 				} else {
 					result = conn;
@@ -433,7 +441,7 @@ static int role_change_service_process_command(struct cavan_dynamic_service *ser
 		if (conn->conn.argc > 2) {
 			struct role_change_service_conn *remote;
 
-			remote = role_change_service_find_client(service, role, command, conn->conn.argv[1], conn->conn.argv[2], 10);
+			remote = role_change_service_find_client(service, role, command, conn->conn.argv[1], conn->conn.argv[2], NULL, 10);
 			if (remote == NULL) {
 				pr_red_info("role_change_service_find_client");
 				return -EINVAL;
@@ -462,7 +470,13 @@ static int role_change_service_process_command(struct cavan_dynamic_service *ser
 		struct role_change_service_conn *remote;
 		struct sockaddr_in addr;
 
-		remote = role_change_service_find_client(service, role, command, conn->conn.argv[1], conn->conn.argv[2], 10);
+		ret = network_client_get_remote_addr(&conn->conn.client, (struct sockaddr *) &addr, sizeof(addr));
+		if (ret < 0) {
+			pr_red_info("role_change_service_find_client");
+			return ret;
+		}
+
+		remote = role_change_service_find_client(service, role, command, conn->conn.argv[1], conn->conn.argv[2], &addr, 10);
 		if (remote == NULL) {
 			pr_red_info("role_change_service_find_client");
 			return -EINVAL;
@@ -471,22 +485,10 @@ static int role_change_service_process_command(struct cavan_dynamic_service *ser
 		ret = network_client_get_remote_addr(&remote->conn.client, (struct sockaddr *) &addr, sizeof(addr));
 		if (ret < 0) {
 			pr_red_info("role_change_service_find_client");
-			return ret;
+			goto out_role_change_service_free_client;
 		}
 
 		ret = role_change_send_command(&conn->conn.client, "%s:%d", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
-		if (ret < 0) {
-			pr_red_info("role_change_send_command");
-			return ret;
-		}
-
-		ret = network_client_get_remote_addr(&conn->conn.client, (struct sockaddr *) &addr, sizeof(addr));
-		if (ret < 0) {
-			pr_red_info("role_change_service_find_client");
-			return ret;
-		}
-
-		ret = role_change_send_command(&remote->conn.client, "%s:%d", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
 		if (ret < 0) {
 			pr_red_info("role_change_send_command");
 			goto out_role_change_service_free_client;
