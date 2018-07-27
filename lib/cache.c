@@ -752,9 +752,15 @@ out_pthread_mutex_destroy:
 
 void cavan_fifo_deinit(struct cavan_fifo *fifo)
 {
-	free(fifo->mem);
-	cavan_string_clear(&fifo->line, true);
-	pthread_mutex_destroy(&fifo->lock);
+	char *mem = fifo->mem;
+
+	fifo->mem = NULL;
+
+	if (mem != NULL) {
+		free(mem);
+		cavan_string_clear(&fifo->line, true);
+		pthread_mutex_destroy(&fifo->lock);
+	}
 }
 
 static ssize_t cavan_fifo_read_cache_locked(struct cavan_fifo *fifo, void *buff, size_t size)
