@@ -479,7 +479,7 @@ static void *cavan_http_sender_receive_thread(void *data)
 		do {
 			cavan_http_client_open(client, &sender->url);
 			client = client->next;
-		} while (client == group->head);
+		} while (client != group->head);
 	}
 
 	cavan_http_sender_lock(sender);
