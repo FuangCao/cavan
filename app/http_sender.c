@@ -33,6 +33,7 @@
 #define HTTP_SENDER_GROUP_COUNT		20
 #define HTTP_SENDER_SUCCESS_MAX		2
 #define HTTP_SENDER_PACKAGES		200
+#define HTTP_SENDER_DELAY_ENABLE	0
 
 struct cavan_http_sender;
 
@@ -394,11 +395,14 @@ static bool cavan_http_sender_is_completed(struct cavan_http_group *group, struc
 	}
 
 	if (length == 0) {
+#if HTTP_SENDER_DELAY_ENABLE
 		u32 delay;
+#endif
 
 		group->success++;
 		println("Successfull: %d", group->success);
 
+#if HTTP_SENDER_DELAY_ENABLE
 		cavan_http_sender_unlock(group->sender);
 
 		if (group->success < HTTP_SENDER_SUCCESS_MAX) {
@@ -411,6 +415,7 @@ static bool cavan_http_sender_is_completed(struct cavan_http_group *group, struc
 		msleep(delay);
 
 		cavan_http_sender_lock(group->sender);
+#endif
 
 		return true;
 	}
