@@ -474,15 +474,30 @@ static int role_change_service_process_command(struct cavan_dynamic_service *ser
 			return ret;
 		}
 
-		ret = role_change_send_command(&conn->conn.client, "burrow %s:%d", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+		ret = role_change_send_command(&conn->conn.client, "%s:%d", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
 		if (ret < 0) {
 			pr_red_info("role_change_send_command");
-		} else {
-			msleep(20000);
+			return ret;
 		}
 
-		role_change_service_free_client(remote);
+		ret = network_client_get_remote_addr(&conn->conn.client, (struct sockaddr *) &addr, sizeof(addr));
+		if (ret < 0) {
+			pr_red_info("role_change_service_find_client");
+			return ret;
+		}
 
+		ret = role_change_send_command(&remote->conn.client, "%s:%d", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+		if (ret < 0) {
+			pr_red_info("role_change_send_command");
+			goto out_role_change_service_free_client;
+		}
+
+		pr_pos_info();
+		msleep(20000);
+		pr_pos_info();
+
+out_role_change_service_free_client:
+		role_change_service_free_client(remote);
 		return ret;
 	} else if (strcmp(command, "login") == 0) {
 		if (conn->conn.argc > 1) {
