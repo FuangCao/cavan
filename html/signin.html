@@ -64,7 +64,7 @@
 
 			ajax.onreadystatechange = function() {
 				if (ajax.readyState == 4) {
-					var delay = parseInt(ajax.responseText);
+					var delay = parseInt(ajax.responseText) + 200;
 					setTimeout("doRedirect()", delay);
 
 					mTime = new Date().getTime() + delay;
