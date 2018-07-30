@@ -69,6 +69,7 @@ struct cavan_http_sender {
 	pthread_cond_t cond_write;
 	struct network_url url;
 	pthread_mutex_t lock;
+	int group_active;
 	int group_count;
 	int conn_count;
 	int send_max;
@@ -303,6 +304,8 @@ static void cavan_http_sender_open(struct cavan_http_sender *sender, struct cava
 {
 	int i;
 
+	sender->group_active = sender->group_count;
+
 	for (i = 0; i < sender->group_count; i++) {
 		cavan_http_group_open(sender->groups + i, sender);
 	}
@@ -312,7 +315,7 @@ static void cavan_http_sender_close(struct cavan_http_sender *sender, int count)
 {
 	int i;
 
-	for (i = 0; i < HTTP_SENDER_GROUP_COUNT; i++) {
+	for (i = 0; i < sender->group_count; i++) {
 		cavan_http_group_close(sender->groups + i);
 	}
 
@@ -567,7 +570,7 @@ static void *cavan_http_sender_receive_thread(void *data)
 out_unlock:
 	cavan_http_packet_free(rsp);
 out_exit:
-	sender->group_count--;
+	sender->group_active--;
 	group->running = false;
 	cavan_http_sender_post(&group->cond_exit);
 	cavan_http_sender_post(&sender->cond_write);
@@ -609,7 +612,7 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 	println("conn_count = %d", sender->conn_count);
 	println("group_count = %d", sender->group_count);
 
-	while (sender->group_count > 0) {
+	while (sender->group_active > 0) {
 		u64 time = clock_gettime_real_ms();
 
 		if (time < sender->time) {
@@ -629,7 +632,7 @@ static int cavan_http_sender_main_loop(struct cavan_http_sender *sender, struct 
 
 	cavan_http_sender_lock(sender);
 
-	while (sender->group_count > 0) {
+	while (sender->group_active > 0) {
 		struct cavan_http_client *client;
 		struct cavan_http_group *group;
 		cavan_string_t *header;
