@@ -97,8 +97,9 @@ struct cavan_json_document *cavan_json_document_parse(char *text, size_t size)
 		return NULL;
 	}
 
-	type = CAVAN_JSON_VALUE;
+	doc->nodes = NULL;
 	node = child = NULL;
+	type = CAVAN_JSON_VALUE;
 	name = p = text;
 	value = NULL;
 
@@ -175,14 +176,9 @@ struct cavan_json_document *cavan_json_document_parse(char *text, size_t size)
 		text++;
 	}
 
-	if (node != NULL) {
-		while (node->parent != NULL) {
-			node = node->parent;
-		}
-
+	while (node != NULL) {
 		doc->nodes = node;
-	} else {
-		doc->nodes = NULL;
+		node = node->parent;
 	}
 
 	doc->memory = NULL;

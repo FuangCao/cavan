@@ -75,6 +75,7 @@ struct cavan_http_sender {
 	bool running;
 	bool verbose;
 	bool daemon;
+	bool strict;
 	bool force;
 	bool http;
 	u64 time;
@@ -529,7 +530,11 @@ static void *cavan_http_sender_receive_thread(void *data)
 		ret = cavan_http_packet_read(rsp, &client->fifo);
 		cavan_http_sender_lock(sender);
 
-		if (group->head != NULL) {
+		if (group->head == NULL) {
+			break;
+		}
+
+		if (!sender->strict) {
 			group->head = client->next;
 		}
 
@@ -694,7 +699,8 @@ static void cavan_http_sender_show_usage(const char *command)
 	println("-N, -n, --now\t\t%s", cavan_help_message_current_time);
 	println("-C, -c, --count\t\tsend count");
 	println("--daemon\t\t%s", cavan_help_message_daemon);
-	println("--force\t\tforce send");
+	println("--strict\t\t%s", cavan_help_message_strict);
+	println("--force\t\t\tforce send");
 }
 
 int main(int argc, char *argv[])
@@ -754,6 +760,11 @@ int main(int argc, char *argv[])
 			.has_arg = no_argument,
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_DAEMON,
+		}, {
+			.name = "strict",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_STRICT,
 		}, {
 			.name = "force",
 			.has_arg = no_argument,
@@ -818,6 +829,10 @@ int main(int argc, char *argv[])
 			sender.daemon = true;
 			break;
 
+		case CAVAN_COMMAND_OPTION_STRICT:
+			sender.strict = true;
+			break;
+
 		case CAVAN_COMMAND_OPTION_FORCE:
 			sender.force = true;
 			break;
@@ -836,6 +851,7 @@ int main(int argc, char *argv[])
 #endif
 
 	println("delay = %d", delay);
+	println("strict = %d", sender.strict);
 	println("send_max = %d", sender.send_max);
 
 	sender.time += delay;

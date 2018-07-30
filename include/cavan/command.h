@@ -127,6 +127,7 @@ typedef enum {
 	CAVAN_COMMAND_OPTION_SHELL,
 	CAVAN_COMMAND_OPTION_SIZE,
 	CAVAN_COMMAND_OPTION_START,
+	CAVAN_COMMAND_OPTION_STRICT,
 	CAVAN_COMMAND_OPTION_STOP,
 	CAVAN_COMMAND_OPTION_SUPER,
 	CAVAN_COMMAND_OPTION_TCP,
@@ -303,6 +304,7 @@ extern const char *cavan_help_message_delay_time;
 extern const char *cavan_help_message_current_time;
 extern const char *cavan_help_message_monitor_mode;
 extern const char *cavan_help_message_repeat;
+extern const char *cavan_help_message_strict;
 
 // ============================================================
 
