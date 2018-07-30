@@ -181,6 +181,8 @@ struct cavan_json_document *cavan_json_document_parse(char *text, size_t size)
 		}
 
 		doc->nodes = node;
+	} else {
+		doc->nodes = NULL;
 	}
 
 	doc->memory = NULL;
