@@ -984,6 +984,60 @@ int inet_bind_rand(int sockfd, int retry)
 	return (int) ntohs(addr.sin_port);
 }
 
+int inet_bind_dup(int sockfd, int type)
+{
+	struct sockaddr_in addr;
+	int ret;
+
+	ret = setsockopt_reuse_addr(sockfd);
+	if (ret < 0) {
+		pr_err_info("setsockopt_reuse_addr");
+		return ret;
+	}
+
+	ret = setsockopt_reuse_port(sockfd);
+	if (ret < 0) {
+		pr_err_info("setsockopt_reuse_port");
+		return ret;
+	}
+
+	ret = inet_getsockname(sockfd, &addr);
+	if (ret < 0) {
+		pr_err_info("inet_getsockname");
+		return ret;
+	}
+
+	sockfd = inet_socket(type);
+	if (sockfd < 0) {
+		pr_err_info("inet_socket");
+		return sockfd;
+	}
+
+	ret = setsockopt_reuse_port(sockfd);
+	if (ret < 0) {
+		pr_err_info("setsockopt_reuse_port");
+		goto out_close_sockfd;
+	}
+
+	ret = inet_getsockname(sockfd, &addr);
+	if (ret < 0) {
+		pr_err_info("inet_getsockname");
+		goto out_close_sockfd;
+	}
+
+	ret = inet_bind(sockfd, &addr);
+	if (ret < 0) {
+		pr_err_info("inet_bind");
+		goto out_close_sockfd;
+	}
+
+	return sockfd;
+
+out_close_sockfd:
+	close(sockfd);
+	return ret;
+}
+
 ssize_t inet_send(int sockfd, const char *buff, size_t size)
 {
 #if 0
@@ -1286,31 +1340,40 @@ int inet_hostname2sockaddr(const char *hostname, struct sockaddr_in *addr)
 	return 0;
 }
 
-int inet_create_link(const struct sockaddr_in *addr, int socktype, int protocol)
+int inet_create_link(int sockfd, const struct sockaddr_in *addr, int socktype, int protocol)
 {
 	int ret;
-	int sockfd;
+	bool need_close;
 
-	sockfd = socket(PF_INET, socktype, protocol);
 	if (sockfd < 0) {
-		pr_error_info("socket");
-		return sockfd;
+		sockfd = socket(PF_INET, socktype, protocol);
+		if (sockfd < 0) {
+			pr_error_info("socket");
+			return sockfd;
+		}
+
+		need_close = true;
+	} else {
+		need_close = false;
 	}
 
 	ret = inet_connect(sockfd, addr);
 	if (ret < 0) {
 		pr_error_info("inet_connect");
-		close(sockfd);
+
+		if (need_close) {
+			close(sockfd);
+		}
+
 		return ret;
 	}
 
 	return sockfd;
 }
 
-int network_create_link(const char *hostname, u16 port, int socktype, int protocol)
+int network_create_link(int sockfd, const char *hostname, u16 port, int socktype, int protocol)
 {
 	int ret;
-	int sockfd;
 	char buff[64];
 	struct addrinfo hints;
 	struct addrinfo *res, *p;
@@ -1334,13 +1397,21 @@ int network_create_link(const char *hostname, u16 port, int socktype, int protoc
 
 		addr.sin_port = htons(port);
 
-		return inet_create_link(&addr, socktype, protocol);
+		return inet_create_link(sockfd, &addr, socktype, protocol);
 	}
 
 	for (p = res; p; p = p->ai_next) {
-		sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+		bool need_close;
+
 		if (sockfd < 0) {
-			continue;
+			sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+			if (sockfd < 0) {
+				continue;
+			}
+
+			need_close = true;
+		} else {
+			need_close = false;
 		}
 
 		if (p->ai_family == AF_INET && port != NETWORK_PORT_INVALID) {
@@ -1351,7 +1422,10 @@ int network_create_link(const char *hostname, u16 port, int socktype, int protoc
 
 		ret = connect(sockfd, p->ai_addr, p->ai_addrlen);
 		if (ret < 0) {
-			close(sockfd);
+			if (need_close) {
+				close(sockfd);
+				sockfd = INVALID_SOCKET;
+			}
 		} else {
 #if CAVAN_NETWORK_DEBUG
 			pr_info("HOST = %s, %s", hostname, network_sockaddr_tostring(p->ai_addr, NULL, 0));
@@ -2635,12 +2709,22 @@ static int network_client_tcp_open(struct network_client *client, const struct n
 {
 	int sockfd;
 
-	sockfd = network_create_link(url->hostname, port, SOCK_STREAM, 0);
-	if (sockfd < 0) {
+	if (flags & CAVAN_NET_FLAG_LINKED) {
+		sockfd = client->sockfd;
+	} else {
+		if (flags & CAVAN_NET_FLAG_BOUND) {
+			sockfd = client->sockfd;
+		} else {
+			sockfd = INVALID_SOCKET;
+		}
+
+		sockfd = network_create_link(sockfd, url->hostname, port, SOCK_STREAM, 0);
+		if (sockfd < 0) {
 #if CAVAN_NETWORK_DEBUG
-		pr_err_info("inet_socket");
+			pr_err_info("inet_socket");
 #endif
-		return sockfd;
+			return sockfd;
+		}
 	}
 
 	if ((flags & CAVAN_NET_FLAG_NODELAY)) {
@@ -2741,7 +2825,7 @@ static int network_client_icmp_open(struct network_client *client, const struct 
 	int ret;
 	int sockfd;
 
-	sockfd = network_create_link(url->hostname, port, SOCK_RAW, IPPROTO_ICMP);
+	sockfd = network_create_link(INVALID_SOCKET, url->hostname, port, SOCK_RAW, IPPROTO_ICMP);
 	if (sockfd < 0) {
 		pr_error_info("inet_socket");
 		return sockfd;
@@ -2768,7 +2852,7 @@ static int network_client_ip_open(struct network_client *client, const struct ne
 	int ret;
 	int sockfd;
 
-	sockfd = network_create_link(url->hostname, port, SOCK_RAW, IPPROTO_ICMP);
+	sockfd = network_create_link(INVALID_SOCKET, url->hostname, port, SOCK_RAW, IPPROTO_ICMP);
 	if (sockfd < 0) {
 		pr_error_info("inet_socket");
 		return sockfd;
@@ -3444,10 +3528,17 @@ static int network_service_udp_open(struct network_service *service, const struc
 
 static int network_service_tcp_open(struct network_service *service, const struct network_url *url, u16 port, int flags)
 {
-	service->sockfd = inet_create_tcp_service(port);
-	if (service->sockfd < 0) {
-		pr_red_info("inet_create_tcp_service");
-		return service->sockfd;
+	if (flags & CAVAN_NET_FLAG_BOUND) {
+		int ret = inet_listen(service->sockfd);
+		if (ret < 0) {
+			return ret;
+		}
+	} else {
+		service->sockfd = inet_create_tcp_service(port);
+		if (service->sockfd < 0) {
+			pr_red_info("inet_create_tcp_service");
+			return service->sockfd;
+		}
 	}
 
 	service->addrlen = sizeof(struct sockaddr_in);

@@ -55,6 +55,8 @@
 #define CAVAN_NET_FLAG_NODELAY		(1 << 3)
 #define CAVAN_NET_FLAG_MASK			(1 << 4)
 #define CAVAN_NET_FLAG_PACK			(1 << 5)
+#define CAVAN_NET_FLAG_BOUND		(1 << 6)
+#define CAVAN_NET_FLAG_LINKED		(1 << 7)
 
 #ifndef SO_REUSEPORT
 #define SO_REUSEPORT				15
@@ -453,6 +455,7 @@ ssize_t inet_tcp_sendto(struct sockaddr_in *addr, const void *buff, size_t size)
 
 u32 get_rand_value(void);
 int inet_bind_rand(int sockfd, int retry);
+int inet_bind_dup(int sockfd, int type);
 
 ssize_t inet_send(int sockfd, const char *buff, size_t size);
 ssize_t inet_recv(int sockfd, char *buff, size_t size);
@@ -469,8 +472,8 @@ int inet_get_devname(int sockfd, int index, char *devname);
 int inet_tcp_transmit_loop(int src_sockfd, int dest_sockfd);
 int inet_hostname2sockaddr(const char *host, struct sockaddr_in *addr);
 
-int inet_create_link(const struct sockaddr_in *addr, int socktype, int protocol);
-int network_create_link(const char *hostname, u16 port, int socktype, int protocol);
+int inet_create_link(int sockfd, const struct sockaddr_in *addr, int socktype, int protocol);
+int network_create_link(int sockfd, const char *hostname, u16 port, int socktype, int protocol);
 
 char *network_sockaddr_tostring(const struct sockaddr *addr, char *buff, size_t size);
 void network_url_init(struct network_url *url, const char *protocol, const char *hostname, u16 port, const char *pathname);
