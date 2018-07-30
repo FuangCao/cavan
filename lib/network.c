@@ -1013,16 +1013,16 @@ int inet_bind_dup(int sockfd, int type)
 		return sockfd;
 	}
 
+	ret = setsockopt_reuse_addr(sockfd);
+	if (ret < 0) {
+		pr_err_info("setsockopt_reuse_addr");
+		return ret;
+	}
+
 	ret = setsockopt_reuse_port(sockfd);
 	if (ret < 0) {
 		pr_err_info("setsockopt_reuse_port");
-		goto out_close_sockfd;
-	}
-
-	ret = inet_getsockname(sockfd, &addr);
-	if (ret < 0) {
-		pr_err_info("inet_getsockname");
-		goto out_close_sockfd;
+		return ret;
 	}
 
 	ret = inet_bind(sockfd, &addr);

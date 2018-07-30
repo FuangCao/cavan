@@ -550,6 +550,12 @@ static inline int setsockopt_uint(int sockfd, int level, int optname, uint value
 	return setsockopt(sockfd, level, optname, (void *) &value, sizeof(value));
 }
 
+static inline int setsockopt_timeval(int sockfd, int level, int optname, uint value)
+{
+	struct timeval time = { value / 1000, value % 1000 * 1000 };
+	return setsockopt(sockfd, level, optname, (void *) &time, sizeof(time));
+}
+
 static inline int setsockopt_reuse_addr(int sockfd)
 {
 	return setsockopt_uint(sockfd, SOL_SOCKET, SO_REUSEADDR, 1);
@@ -568,6 +574,16 @@ static inline int setsockopt_keepalive(int sockfd)
 static inline int setsockopt_tcp_nodelay(int sockfd)
 {
 	return setsockopt_uint(sockfd, IPPROTO_TCP, TCP_NODELAY, 1);
+}
+
+static inline int setsockopt_send_timeout(int sockfd, u32 mseconds)
+{
+	return setsockopt_timeval(sockfd, SOL_SOCKET, SO_SNDTIMEO, mseconds);
+}
+
+static inline int setsockopt_recv_timeout(int sockfd, u32 mseconds)
+{
+	return setsockopt_timeval(sockfd, SOL_SOCKET, SO_RCVTIMEO, mseconds);
 }
 
 static inline int inet_socket(int type)
@@ -834,4 +850,14 @@ static inline int network_client_send_file3(struct network_client *client, const
 {
 	size64_t size = file_get_size(pathname);
 	return network_client_send_file2(client, pathname, size);
+}
+
+static inline bool network_client_readable(struct network_client *client)
+{
+	return file_poll_input(client->sockfd, 0);
+}
+
+static inline bool network_service_readable(struct network_service *service)
+{
+	return file_poll_input(service->sockfd, 0);
 }
