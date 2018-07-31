@@ -414,7 +414,7 @@ bool inet_addr_is_broadcast(struct sockaddr_in *addr);
 const char *inet_get_special_address(const char *hostname);
 const char *inet_check_hostname(const char *hostname, char *buff, size_t size);
 ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const struct sockaddr_in *remote_addr);
-ssize_t sendto_receive(int sockfd, long timeout, int retry, const void *send_buff, ssize_t sendlen, void *recv_buff, ssize_t recvlen, struct sockaddr_in *remote_addr, socklen_t *addr_len);
+ssize_t sendto_receive(int sockfd, long timeout, int retry, const void *send_buff, ssize_t sendlen, void *recv_buff, ssize_t recvlen, struct sockaddr_in *remote_addr);
 
 const char *mac_protocol_type_tostring(int type);
 const char *ip_protocol_type_tostring(int type);
@@ -439,7 +439,8 @@ int cavan_route_table_delete_by_ip(struct cavan_route_table *table, u32 ip);
 
 u16 udp_checksum(struct ip_header *ip_hdr);
 
-void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip, u16 port);
+void inet_sockaddr_init(struct sockaddr_in *addr, const char *host, u16 port);
+void inet_sockaddr_init_url(struct sockaddr_in *addr, const char *url);
 int inet_create_tcp_link1(const struct sockaddr_in *addr);
 int inet_create_tcp_link2(const char *hostname, u16 port);
 int inet_create_tcp_link_by_addrinfo(struct addrinfo *info, u16 port, struct sockaddr_in *addr);
@@ -628,11 +629,10 @@ static inline ssize_t inet_sendto(int sockfd, const void *buff, size_t size, con
 	return sendto(sockfd, buff, size, 0, (const struct sockaddr *) addr, sizeof(*addr));
 }
 
-static inline ssize_t inet_recvfrom(int sockfd, void *buff, size_t size, struct sockaddr_in *addr, socklen_t *addrlen)
+static inline ssize_t inet_recvfrom(int sockfd, void *buff, size_t size, struct sockaddr_in *addr)
 {
-	*addrlen = sizeof(struct sockaddr_in);
-
-	return recvfrom(sockfd, buff, size, 0, (struct sockaddr *) addr, addrlen);
+	socklen_t addrlen = sizeof(*addr);
+	return recvfrom(sockfd, buff, size, 0, (struct sockaddr *) addr, &addrlen);
 }
 
 static inline int inet_create_udp_service(u16 port)
@@ -674,10 +674,10 @@ static inline ssize_t inet_recv_timeout(int sockfd, void *buff, size_t size, int
 	return -ETIMEDOUT;
 }
 
-static inline ssize_t inet_recvfrom_timeout(int sockfd, void *buff, size_t size, struct sockaddr_in *addr, socklen_t *addrlen, int timeout_ms)
+static inline ssize_t inet_recvfrom_timeout(int sockfd, void *buff, size_t size, struct sockaddr_in *addr, int timeout_ms)
 {
 	if (file_poll_input(sockfd, timeout_ms)) {
-		return inet_recvfrom(sockfd, (char *) buff, size, addr, addrlen);
+		return inet_recvfrom(sockfd, (char *) buff, size, addr);
 	}
 
 	return -ETIMEDOUT;

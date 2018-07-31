@@ -245,7 +245,7 @@ ssize_t sendto_select(int sockfd, int retry, const void *buff, size_t len, const
 	return -ETIMEDOUT;
 }
 
-ssize_t sendto_receive(int sockfd, long timeout, int retry, const void *send_buff, ssize_t sendlen, void *recv_buff, ssize_t recvlen, struct sockaddr_in *remote_addr, socklen_t *addr_len)
+ssize_t sendto_receive(int sockfd, long timeout, int retry, const void *send_buff, ssize_t sendlen, void *recv_buff, ssize_t recvlen, struct sockaddr_in *remote_addr)
 {
 	sendlen = sendto_select(sockfd, retry, send_buff, sendlen, remote_addr);
 	if (sendlen < 0) {
@@ -253,7 +253,7 @@ ssize_t sendto_receive(int sockfd, long timeout, int retry, const void *send_buf
 		return sendlen;
 	}
 
-	return inet_recvfrom(sockfd, recv_buff, recvlen, remote_addr, addr_len);
+	return inet_recvfrom(sockfd, recv_buff, recvlen, remote_addr);
 }
 
 const char *mac_protocol_type_tostring(int type)
@@ -654,13 +654,32 @@ u16 udp_checksum(struct ip_header *ip_hdr)
 	return ~((checksum + (checksum >> 16)) & 0xFFFF);
 }
 
-void inet_sockaddr_init(struct sockaddr_in *addr, const char *ip, u16 port)
+void inet_sockaddr_init(struct sockaddr_in *addr, const char *host, u16 port)
 {
-	pd_bold_info("IP = %s, PORT = %d", ip ? ip : "INADDR_ANY", port);
+	pd_bold_info("IP = %s, PORT = %d", host ? host : "INADDR_ANY", port);
 
 	addr->sin_family = AF_INET;
 	addr->sin_port = htons(port);
-	addr->sin_addr.s_addr = ip ? inet_addr(ip) : htonl(INADDR_ANY);
+	addr->sin_addr.s_addr = host ? inet_addr(host) : htonl(INADDR_ANY);
+}
+
+void inet_sockaddr_init_url(struct sockaddr_in *addr, const char *url)
+{
+	char buff[1024];
+	char *p = buff;
+
+	while (*url != 0) {
+		if (*url == ':') {
+			url++;
+			break;
+		}
+
+		*p++ = *url++;
+	}
+
+	*p = 0;
+
+	inet_sockaddr_init(addr, buff, atoi(url));
 }
 
 void unix_sockaddr_init(struct sockaddr_un *addr, const char *pathname)

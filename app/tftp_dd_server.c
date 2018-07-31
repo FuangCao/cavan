@@ -47,9 +47,8 @@ static int service_handle(struct cavan_service_description *service, int index, 
 	struct tftp_request_pkg *req_pkg_p = (void *) &pkg;
 	struct tftp_dd_request_pkg *dd_req_pkg_p = (void *) &pkg;
 	struct tftp_request req;
-	socklen_t addr_len = sizeof(struct sockaddr_in);
 
-	ret = inet_recvfrom(sockfd, req_pkg_p, sizeof(*req_pkg_p), &req.client_addr, &addr_len);
+	ret = inet_recvfrom(sockfd, req_pkg_p, sizeof(*req_pkg_p), &req.client_addr);
 	if (ret < 0) {
 		pr_err_info("Receive request failed");
 		return ret;

@@ -26,7 +26,7 @@ static jwp_size_t jwp_udp_hw_read(struct jwp_desc *jwp, void *buff, jwp_size_t s
 	ssize_t rdlen;
 	struct jwp_udp_desc *udp = (struct jwp_udp_desc *) jwp;
 
-	rdlen = inet_recvfrom(udp->sockfd, buff, size, &udp->addr, &udp->addrlen);
+	rdlen = inet_recvfrom(udp->sockfd, buff, size, &udp->addr);
 	if (rdlen < 0) {
 		pr_error_info("network_client_recv");
 		return 0;

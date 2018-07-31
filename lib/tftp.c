@@ -133,7 +133,6 @@ int send_mkdir_request(const char *ip, u16 port, const char *pathname, mode_t mo
 	union tftp_pkg pkg;
 	ssize_t recvlen;
 	struct sockaddr_in remote_addr;
-	socklen_t remote_addr_len;
 
 	sockfd = inet_socket(SOCK_DGRAM);
 	if (sockfd < 0) {
@@ -147,7 +146,7 @@ int send_mkdir_request(const char *ip, u16 port, const char *pathname, mode_t mo
 
 	inet_sockaddr_init(&remote_addr, ip, port);
 
-	recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 1, &pkg, strlen(pathname) + 1 + MEMBER_OFFSET(struct tftp_mkdir_pkg, pathname), &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
+	recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 1, &pkg, strlen(pathname) + 1 + MEMBER_OFFSET(struct tftp_mkdir_pkg, pathname), &pkg, sizeof(pkg), &remote_addr);
 	if (recvlen < 0) {
 		ret = recvlen;
 		goto out_close_socket;
@@ -168,7 +167,6 @@ int vsend_command_request(const char *ip, u16 port, const char *command, va_list
 	union tftp_pkg pkg;
 	ssize_t recvlen;
 	struct sockaddr_in remote_addr;
-	socklen_t remote_addr_len;
 
 	sockfd = inet_socket(SOCK_DGRAM);
 	if (sockfd < 0) {
@@ -183,7 +181,7 @@ int vsend_command_request(const char *ip, u16 port, const char *command, va_list
 
 	println("Send command \"%s\"", pkg.command.command);
 
-	recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 1, &pkg, strlen(pkg.command.command) + 1 + MEMBER_OFFSET(struct tftp_command_pkg, command), &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
+	recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 1, &pkg, strlen(pkg.command.command) + 1 + MEMBER_OFFSET(struct tftp_command_pkg, command), &pkg, sizeof(pkg), &remote_addr);
 	if (recvlen < 0) {
 		ret = recvlen;
 		goto out_close_socket;
@@ -194,7 +192,7 @@ int vsend_command_request(const char *ip, u16 port, const char *command, va_list
 		goto out_close_socket;
 	}
 
-	ret = inet_recvfrom_timeout(sockfd, &pkg, sizeof(pkg), &remote_addr, &remote_addr_len, TFTP_COMMAND_EXEC_TIME);
+	ret = inet_recvfrom_timeout(sockfd, &pkg, sizeof(pkg), &remote_addr, TFTP_COMMAND_EXEC_TIME);
 	if (ret < 0) {
 		goto out_close_socket;
 	}
@@ -251,7 +249,6 @@ int send_mknode_request(const char *ip, u16 port, const char *pathname, mode_t m
 	union tftp_pkg pkg;
 	ssize_t recvlen;
 	struct sockaddr_in remote_addr;
-	socklen_t remote_addr_len;
 
 	sockfd = inet_socket(SOCK_DGRAM);
 	if (sockfd < 0) {
@@ -268,7 +265,7 @@ int send_mknode_request(const char *ip, u16 port, const char *pathname, mode_t m
 
 	println("Request mknode %s", pathname);
 
-	recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 1, &pkg, strlen(pathname) + 1 + MEMBER_OFFSET(struct tftp_mknode_pkg, pathname), &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
+	recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 1, &pkg, strlen(pathname) + 1 + MEMBER_OFFSET(struct tftp_mknode_pkg, pathname), &pkg, sizeof(pkg), &remote_addr);
 	if (recvlen < 0) {
 		ret = recvlen;
 		goto out_close_socket;
@@ -290,7 +287,6 @@ int send_symlink_request(const char *ip, u16 port, const char *file_in, const ch
 	int oldpath_len, newpath_len;
 	ssize_t recvlen;
 	struct sockaddr_in remote_addr;
-	socklen_t remote_addr_len;
 	char *link;
 
 	oldpath_len = strlen(file_out);
@@ -316,7 +312,7 @@ int send_symlink_request(const char *ip, u16 port, const char *file_in, const ch
 
 	inet_sockaddr_init(&remote_addr, ip, port);
 
-	recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 1, &pkg, oldpath_len + newpath_len + 2 + MEMBER_OFFSET(struct tftp_symlink_pkg, pathname), &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
+	recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 1, &pkg, oldpath_len + newpath_len + 2 + MEMBER_OFFSET(struct tftp_symlink_pkg, pathname), &pkg, sizeof(pkg), &remote_addr);
 	if (recvlen < 0) {
 		ret = recvlen;
 		goto out_close_socket;
@@ -336,7 +332,6 @@ int tftp_client_receive_file(const char *ip, u16 port, const char *file_in, cons
 	int ret;
 	ssize_t sendlen, recvlen, writelen;
 	struct sockaddr_in remote_addr;
-	socklen_t remote_addr_len;
 	union tftp_pkg pkg;
 	u16 blk_num;
 
@@ -383,7 +378,7 @@ int tftp_client_receive_file(const char *ip, u16 port, const char *file_in, cons
 	blk_num = 1;
 
 	while (1) {
-		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
+		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), &remote_addr);
 		if (recvlen < 0) {
 			pr_err_info("receive data timeout");
 			ret = recvlen;
@@ -467,7 +462,6 @@ int tftp_client_send_file(const char *ip, u16 port, const char *file_in, const c
 	int ret;
 	ssize_t readlen, recvlen, sendlen;
 	struct sockaddr_in remote_addr;
-	socklen_t remote_addr_len;
 	union tftp_pkg pkg;
 	struct tftp_data_pkg data_pkg;
 	u16 blk_num;
@@ -533,11 +527,10 @@ int tftp_client_send_file(const char *ip, u16 port, const char *file_in, const c
 
 	blk_num = 0;
 	readlen = TFTP_DATA_LEN;
-	remote_addr_len = sizeof(remote_addr);
 	progress_bar_init(&bar, size, 0, PROGRESS_BAR_TYPE_DATA);
 
 	while (1) {
-		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), &remote_addr, &remote_addr_len);
+		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), &remote_addr);
 		if (recvlen < 0) {
 			pr_err_info("receive data failed");
 			ret = recvlen;
@@ -704,7 +697,6 @@ int tftp_service_receive_data(const char *file_out, u32 offset_out, const char *
 	ssize_t writelen, sendlen, recvlen;
 	u16 blk_num;
 	union tftp_pkg pkg;
-	socklen_t remote_addr_len;
 
 	println("Handle write request filename = %s, mode = %s", file_out, file_mode);
 
@@ -739,7 +731,6 @@ int tftp_service_receive_data(const char *file_out, u32 offset_out, const char *
 	}
 
 	blk_num = 0;
-	remote_addr_len = sizeof(*remote_addr);
 	goto lable_send_ack;
 
 	while (1) {
@@ -758,7 +749,7 @@ lable_send_ack:
 			goto out_close_fd;
 		}
 
-		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), remote_addr, &remote_addr_len);
+		recvlen = inet_recvfrom(sockfd, &pkg, sizeof(pkg), remote_addr);
 		if (recvlen < 0) {
 			pr_err_info("receive data failed");
 			ret = recvlen;
@@ -817,7 +808,6 @@ int tftp_service_send_data(const char *file_in, u32 offset_in, u32 size, const c
 	union tftp_pkg pkg;
 	struct stat st;
 	struct progress_bar bar;
-	socklen_t remote_addr_len;
 
 	println("Handle read request filename = %s, mode = %s", file_in, file_mode);
 
@@ -867,7 +857,6 @@ int tftp_service_send_data(const char *file_in, u32 offset_in, u32 size, const c
 	println("size = %s", size2text(size));
 
 	blk_num = 1;
-	remote_addr_len = sizeof(*remote_addr);
 	progress_bar_init(&bar, size, 0, PROGRESS_BAR_TYPE_DATA);
 
 	while (1) {
@@ -883,7 +872,7 @@ int tftp_service_send_data(const char *file_in, u32 offset_in, u32 size, const c
 		data_pkg.blk_num = htons(blk_num);
 
 lable_send_data:
-		recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 5, &data_pkg, readlen + 4, &pkg, sizeof(pkg), remote_addr, &remote_addr_len);
+		recvlen = sendto_receive(sockfd, TFTP_TIMEOUT_VALUE, 5, &data_pkg, readlen + 4, &pkg, sizeof(pkg), remote_addr);
 		if (recvlen < 0) {
 			pr_err_info("timeout_senddata falied");
 			ret = recvlen;
