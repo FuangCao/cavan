@@ -663,23 +663,40 @@ void inet_sockaddr_init(struct sockaddr_in *addr, const char *host, u16 port)
 	addr->sin_addr.s_addr = host ? inet_addr(host) : htonl(INADDR_ANY);
 }
 
-void inet_sockaddr_init_url(struct sockaddr_in *addr, const char *url)
+int inet_sockaddr_init_url(struct sockaddr_in *addr, const char *url)
 {
 	char buff[1024];
 	char *p = buff;
+	int port;
 
-	while (*url != 0) {
-		if (*url == ':') {
+	while (1) {
+		if (*url == 0) {
+			return -EINVAL;
+		}
+
+		if (*url != ':') {
+			*p++ = *url++;
+		} else {
 			url++;
 			break;
 		}
-
-		*p++ = *url++;
 	}
 
-	*p = 0;
+	port = atoi(url);
+	if (port <= 0) {
+		return -EINVAL;
+	}
 
-	inet_sockaddr_init(addr, buff, atoi(url));
+	if (p > buff) {
+		*p = 0;
+		p = buff;
+	} else {
+		p = NULL;
+	}
+
+	inet_sockaddr_init(addr, p, port);
+
+	return 0;
 }
 
 void unix_sockaddr_init(struct sockaddr_un *addr, const char *pathname)

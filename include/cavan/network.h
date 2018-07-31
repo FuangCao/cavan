@@ -337,6 +337,12 @@ struct network_service {
 	void (*close)(struct network_service *service);
 };
 
+struct cavan_udp_client {
+	int sockfd;
+	struct sockaddr_in addr;
+	u32 sequence;
+};
+
 struct udp_discovery_service {
 	cavan_thread_t thread;
 	struct network_service service;
@@ -440,7 +446,7 @@ int cavan_route_table_delete_by_ip(struct cavan_route_table *table, u32 ip);
 u16 udp_checksum(struct ip_header *ip_hdr);
 
 void inet_sockaddr_init(struct sockaddr_in *addr, const char *host, u16 port);
-void inet_sockaddr_init_url(struct sockaddr_in *addr, const char *url);
+int inet_sockaddr_init_url(struct sockaddr_in *addr, const char *url);
 int inet_create_tcp_link1(const struct sockaddr_in *addr);
 int inet_create_tcp_link2(const char *hostname, u16 port);
 int inet_create_tcp_link_by_addrinfo(struct addrinfo *info, u16 port, struct sockaddr_in *addr);
@@ -679,6 +685,8 @@ static inline ssize_t inet_recvfrom_timeout(int sockfd, void *buff, size_t size,
 	if (file_poll_input(sockfd, timeout_ms)) {
 		return inet_recvfrom(sockfd, (char *) buff, size, addr);
 	}
+
+	errno = ETIMEDOUT;
 
 	return -ETIMEDOUT;
 }

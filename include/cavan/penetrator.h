@@ -22,8 +22,17 @@
 #include <cavan.h>
 #include <cavan/network.h>
 
+struct cavan_penetrate_conn {
+	char *name;
+	time_t time;
+	struct sockaddr_in addr;
+	struct cavan_penetrate_conn *prev;
+	struct cavan_penetrate_conn *next;
+};
+
 struct cavan_penetrate_service {
-	struct network_service service;
+	int sockfd;
+	struct cavan_penetrate_conn *head;
 };
 
 struct cavan_penetrate_client {
@@ -34,7 +43,8 @@ struct cavan_penetrate_proxy {
 	struct network_client client;
 };
 
-int cavan_penetrate_service_init(struct cavan_penetrate_service *service);
+int cavan_penetrate_service_init(struct cavan_penetrate_service *service, u16 port);
+void cavan_penetrate_service_run(struct cavan_penetrate_service *service);
 void cavan_penetrate_service_deinit(struct cavan_penetrate_service *service);
 int cavan_penetrate_client_init(struct cavan_penetrate_client *client);
 void cavan_penetrate_client_deinit(struct cavan_penetrate_client *client);

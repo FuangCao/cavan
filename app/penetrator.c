@@ -23,54 +23,20 @@
 
 static int cavan_penetrate_service_main(int argc, char *argv[])
 {
-	struct sockaddr_in addr;
-	int sockfd;
-	u16 port;
+	struct cavan_penetrate_service service;
 	int ret;
 
 	assert(argc > 1);
 
-	port = atoi(argv[1]);
-
-	sockfd = inet_socket(SOCK_DGRAM);
-	if (sockfd < 0) {
-		pr_err_info("inet_socket");
-		return sockfd;
-	}
-
-	inet_sockaddr_init(&addr, NULL, port);
-
-	ret = inet_bind(sockfd, &addr);
+	ret = cavan_penetrate_service_init(&service, atoi(argv[1]));
 	if (ret < 0) {
-		pr_err_info("inet_bind");
-		goto out_close_sockfd;
+		pr_red_info("cavan_penetrate_service_init");
+		return ret;
 	}
 
-	while (1) {
-		char buff[1024];
-		int rdlen;
-		int wrlen;
+	cavan_penetrate_service_run(&service);
+	cavan_penetrate_service_deinit(&service);
 
-		rdlen = inet_recvfrom(sockfd, buff, sizeof(buff), &addr);
-		if (rdlen < 0) {
-			pr_err_info("inet_recvfrom");
-			break;
-		}
-
-		inet_show_sockaddr(&addr);
-
-		buff[rdlen] = 0;
-		println("buff[%d] = %s", rdlen, buff);
-
-		wrlen = inet_sendto(sockfd, buff, rdlen, &addr);
-		if (wrlen < 0) {
-			pr_err_info("inet_recvfrom");
-			break;
-		}
-	}
-
-out_close_sockfd:
-	close(sockfd);
 	return 0;
 }
 
@@ -90,7 +56,6 @@ static int cavan_penetrate_client_main(int argc, char *argv[])
 	inet_sockaddr_init_url(&addr, argv[1]);
 
 	while (1) {
-		struct sockaddr_in rd_addr;
 		char buff[1024];
 		int wrlen;
 		int rdlen;
@@ -99,21 +64,28 @@ static int cavan_penetrate_client_main(int argc, char *argv[])
 			break;
 		}
 
-		wrlen = inet_sendto(sockfd, buff, strlen(buff), &addr);
-		if (wrlen < 0) {
-			pr_err_info("inet_sendto");
-			break;
+		rdlen = strlen(buff);
+		if (rdlen > 0) {
+			println("send[%d] = %s", rdlen, buff);
+
+			wrlen = inet_sendto(sockfd, buff, rdlen, &addr);
+			if (wrlen < 0) {
+				pr_err_info("inet_sendto");
+				break;
+			}
 		}
 
-		rdlen = inet_recvfrom(sockfd, buff, sizeof(buff), &rd_addr);
+		rdlen = inet_recvfrom_timeout(sockfd, buff, sizeof(buff), &addr, 1000);
 		if (rdlen < 0) {
 			pr_err_info("inet_sendto");
-			break;
+			if (errno != ETIMEDOUT) {
+				break;
+			}
+		} else {
+			inet_show_sockaddr(&addr);
+			buff[rdlen] = 0;
+			println("recv[%d] = %s", rdlen, buff);
 		}
-
-		inet_show_sockaddr(&rd_addr);
-
-		println("buff[%d] = %s", rdlen, buff);
 	}
 
 	close(sockfd);
