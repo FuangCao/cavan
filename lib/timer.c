@@ -109,6 +109,27 @@ s64 cavan_timespec_sub_ns(const struct timespec *t1, const struct timespec *t2)
 	return ((s64) (t1->tv_sec - t2->tv_sec)) * 1000000000 + (t1->tv_nsec - t2->tv_nsec);
 }
 
+void cavan_timespec_add_ms(struct timespec *time, u32 msec)
+{
+	msec += time->tv_nsec / 1000000UL;
+	time->tv_sec += msec / 1000UL;
+	time->tv_nsec = msec % 1000UL * 1000000UL;
+}
+
+void cavan_timespec_add_us(struct timespec *time, u64 usec)
+{
+	usec += time->tv_nsec / 1000UL;
+	time->tv_sec += usec / 1000000UL;
+	time->tv_nsec = usec % 1000000UL * 1000UL;
+}
+
+void cavan_timespec_add_ns(struct timespec *time, u64 nsec)
+{
+	nsec += time->tv_nsec;
+	time->tv_sec += nsec / 1000000000UL;
+	time->tv_nsec = nsec % 1000000000UL;
+}
+
 s64 cavan_real_timespec_diff_ms(const struct timespec *time)
 {
 	struct timespec curr_time;

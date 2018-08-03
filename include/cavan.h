@@ -35,7 +35,7 @@ extern int pipe2(int *, int);
 #define ERROR_RETURN(en) \
 	do { \
 		errno = en; \
-		return -errno; \
+		return -en; \
 	} while (0)
 
 #define ERRNO_NEED_RETRY() \
