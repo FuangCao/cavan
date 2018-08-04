@@ -367,12 +367,12 @@ static bool cavan_http_sender_is_completed(struct cavan_http_group *group, struc
 	int length;
 	char errdesc[1024];
 	const char *texts0[] = {
-		"\u4e0a\u9650", // 上限
 		"\u592a\u5feb", // 太快
 		"\u9891\u7e41", // 频繁
 	};
 	const char *texts1[] = {
 		"\u5143", // 元
+		"\u4e0a\u9650", // 上限
 		"\u7528\u5b8c", // 用完
 		"\u73b0\u91d1", // 现金
 		"\u53d1\u653e", // 发放
