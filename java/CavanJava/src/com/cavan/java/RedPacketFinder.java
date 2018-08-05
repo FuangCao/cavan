@@ -582,6 +582,14 @@ public class RedPacketFinder {
 		return null;
 	}
 
+	public String getLine(int index) {
+		if (index < mLines.size()) {
+			return mLines.get(index);
+		}
+
+		return null;
+	}
+
 	public ArrayList<String> getLines() {
 		return mLines;
 	}

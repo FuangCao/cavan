@@ -267,11 +267,11 @@ public class RedPacketNotification extends CavanNotificationTable {
 			return false;
 		}
 
-		String message = getUserDescription() + ": " + keyword;
+		String message = keyword + "@" + getUserDescription() + ": " + finder.getLine(0);
 		if (CavanMessageActivity.isKeywordNotifyOnly(mService)) {
 			FloatMessageService.showNotify(message);
 		} else {
-			return sendRedPacketNotifyNormal(keyword, "线报@" + message, null, FloatMessageService.AUTO_UNLOCK_INFOMATION);
+			return sendRedPacketNotifyNormal(keyword, message, null, FloatMessageService.AUTO_UNLOCK_INFOMATION);
 		}
 
 		return true;
