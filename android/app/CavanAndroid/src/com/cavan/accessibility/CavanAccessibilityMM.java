@@ -522,6 +522,27 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			super(name);
 		}
 
+		@Override
+		public String getChattingName(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 0, 0, 1);
+			if (node == null) {
+				return null;
+			}
+
+			try {
+				CharSequence text = node.getText();
+				if (text != null) {
+					text.toString();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				node.recycle();
+			}
+
+			return null;
+		}
+
 		public boolean isRedPacketLayout(AccessibilityNodeInfo node) {
 			AccessibilityNodeInfo parent = node.getParent();
 			if (parent == null) {

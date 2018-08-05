@@ -376,7 +376,6 @@ static bool cavan_http_sender_is_completed(struct cavan_http_group *group, struc
 		"\u7528\u5b8c", // 用完
 		"\u73b0\u91d1", // 现金
 		"\u53d1\u653e", // 发放
-		// "\u9519\u8bef", // 错误
 		"\u9886\u53d6\u8fc7", // 领取过
 	};
 	const char *texts2[] = {
@@ -384,6 +383,7 @@ static bool cavan_http_sender_is_completed(struct cavan_http_group *group, struc
 		"\u7b7e\u5230\u8fc7", // 签到过
 	};
 	const char *texts3[] = {
+		"\u9519\u8bef", // 错误
 		"\u4e0d\u8db3", // 不足
 		"\u4e0d\u6ee1\u8db3", // 不满足
 		"\u672a\u767b\u5f55", // 未登录
@@ -447,7 +447,7 @@ static bool cavan_http_sender_is_completed(struct cavan_http_group *group, struc
 		if (strstr(errdesc, texts2[i])) {
 			struct tm *time = localtime(&client->time.tv_sec);
 
-			if (time->tm_min < 59 && time->tm_sec > 0) {
+			if (time->tm_min < 59 && (time->tm_sec > 0 || client->time.tv_nsec > 300000000L)) {
 				println("Found: %s", texts2[i]);
 				return true;
 			}
