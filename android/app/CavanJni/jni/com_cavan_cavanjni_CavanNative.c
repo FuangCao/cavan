@@ -478,6 +478,13 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doPartTable(JNIEnv *env, jcla
 	return CavanMainExecute(env, "part_table", async, args, do_cavan_part_table);
 }
 
+extern int do_cavan_penetrator(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doPenetrator(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "penetrator", async, args, do_cavan_penetrator);
+}
+
 extern int do_cavan_ping(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doPing(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)

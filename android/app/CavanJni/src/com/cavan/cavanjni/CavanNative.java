@@ -548,6 +548,14 @@ class CavanCommandPartTable extends CavanNativeCommand {
 	}
 }
 
+class CavanCommandPenetrator extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doPenetrator(async, args);
+	}
+}
+
 class CavanCommandPing extends CavanNativeCommand {
 
 	@Override
@@ -1159,6 +1167,7 @@ public class CavanNative {
 		sHashMap.put("part_probe", new CavanCommandPartProbe());
 		sHashMap.put("part_show", new CavanCommandPartShow());
 		sHashMap.put("part_table", new CavanCommandPartTable());
+		sHashMap.put("penetrator", new CavanCommandPenetrator());
 		sHashMap.put("ping", new CavanCommandPing());
 		sHashMap.put("poll_event", new CavanCommandPollEvent());
 		sHashMap.put("poll_input", new CavanCommandPollInput());
@@ -1296,6 +1305,7 @@ public class CavanNative {
 	public static native int doPartProbe(boolean async, String... args);
 	public static native int doPartShow(boolean async, String... args);
 	public static native int doPartTable(boolean async, String... args);
+	public static native int doPenetrator(boolean async, String... args);
 	public static native int doPing(boolean async, String... args);
 	public static native int doPollEvent(boolean async, String... args);
 	public static native int doPollInput(boolean async, String... args);

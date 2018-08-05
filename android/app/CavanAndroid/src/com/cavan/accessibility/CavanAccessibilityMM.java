@@ -10,6 +10,7 @@ import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -579,6 +580,36 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			return false;
 		}
 
+		public boolean isLauncherUI(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, -1, 0, -1);
+			if (node == null) {
+				return false;
+			}
+
+			try {
+				if (CavanAccessibilityHelper.isNodeClassEquals(node, FrameLayout.class)) {
+					return false;
+				}
+
+				AccessibilityNodeInfo child = CavanAccessibilityHelper.getChildRecursive(node, 0, 0, 0);
+				if (child != null) {
+					String desc = CavanAccessibilityHelper.getNodeDescription(child);
+
+					child.recycle();
+
+					if ("服务按钮".equals(desc)) {
+						return false;
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				node.recycle();
+			}
+
+			return true;
+		}
+
 		@Override
 		public void onEnter(AccessibilityNodeInfo root) {
 			int hashCode = root.hashCode();
@@ -596,7 +627,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		public void onWindowContentChanged(AccessibilityNodeInfo root, AccessibilityEvent event) {
 			AccessibilityNodeInfo source = event.getSource();
 			if (source != null) {
-				if (CavanAccessibilityHelper.isNodeClassEquals(source, RelativeLayout.class)) {
+				if (CavanAccessibilityHelper.isNodeClassEquals(source, RelativeLayout.class) && isLauncherUI(root)) {
 					synchronized (mChangedNodes) {
 						mChangedNodes.add(source);
 					}
