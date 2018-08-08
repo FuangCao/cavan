@@ -16,7 +16,7 @@ public class CavanTcpClient {
 		void onTcpConnecting(InetSocketAddress address);
 		boolean onTcpConnected(Socket socket);
 		void onTcpDisconnected();
-		boolean onTcpConnFailed(int times);
+		long onTcpConnFailed(int times);
 		boolean onDataReceived(byte[] bytes, int length);
 		void onTcpRecvTimeout();
 	}
@@ -477,27 +477,23 @@ public class CavanTcpClient {
 					break;
 				}
 
-				if (onTcpConnFailed(++mConnTimes)) {
-					int delay;
-
-					if (mConnTimes < 15) {
-						delay = 1 << mConnTimes;
-					} else {
-						delay = 1 << 15;
-					}
-
-					prDbgInfo("delay = " + delay);
-
-					synchronized (mConnThread) {
-						try {
-							mConnThread.wait(delay);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					}
-
-				} else {
+				long delay = onTcpConnFailed(++mConnTimes);
+				if (delay < 0) {
 					break;
+				}
+
+				if (delay == 0) {
+					delay = getConnDelay(mConnTimes);
+				}
+
+				prDbgInfo("delay = " + delay);
+
+				synchronized (mConnThread) {
+					try {
+						mConnThread.wait(delay);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		}
@@ -589,15 +585,27 @@ public class CavanTcpClient {
 		}
 	}
 
-	protected boolean onTcpConnFailed(int times) {
+	protected long getConnDelay(int times) {
+		if (times < 12) {
+			return (1 << times);
+		}
+
+		return (1 << 12);
+	}
+
+	protected long onTcpConnFailed(int times) {
 		CavanTcpClientListener listener = getTcpClientListener();
 		if (listener != null) {
 			return listener.onTcpConnFailed(times);
 		}
 
+		if (times > 20) {
+			return -1;
+		}
+
 		prDbgInfo("onTcpConnFailed");
 
-		return true;
+		return 0;
 	}
 
 	protected void onTcpRecvTimeout() {

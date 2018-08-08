@@ -195,8 +195,8 @@ public abstract class CavanTcpConnService extends Service implements CavanTcpCli
 	}
 
 	@Override
-	public boolean onTcpConnFailed(int times) {
-		return true;
+	public long onTcpConnFailed(int times) {
+		return 0;
 	}
 
 	@Override

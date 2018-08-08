@@ -36,6 +36,7 @@ static void *cavan_test_udp_recv_thread(void *data)
 static int cavan_test_udp_client(int argc, char *argv[])
 {
 	struct cavan_udp_sock sock;
+	char buff[1024];
 	int channel;
 	int ret;
 
@@ -56,10 +57,13 @@ static int cavan_test_udp_client(int argc, char *argv[])
 		return channel;
 	}
 
+	memset(buff, 'A', sizeof(buff));
+
 	while (1) {
-		pr_pos_info();
-		cavan_udp_sock_send(&sock, channel, "1234567890", 10);
-		msleep(2000);
+		if (cavan_udp_sock_send(&sock, channel, buff, sizeof(buff)) < 0) {
+			// pr_err_info("cavan_udp_sock_send");
+			// msleep(200);
+		}
 	}
 
 	return 0;
