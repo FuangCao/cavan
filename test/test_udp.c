@@ -21,6 +21,8 @@
 #include <cavan/network.h>
 #include <cavan/command.h>
 
+static struct cavan_udp_sock *g_udp_sock;
+
 static void *cavan_test_udp_send_thread(void *data)
 {
 	cavan_udp_sock_send_loop((struct cavan_udp_sock *) data);
@@ -33,14 +35,49 @@ static void *cavan_test_udp_recv_thread(void *data)
 	return NULL;
 }
 
+static void *cavan_test_udp_recv_loop(void *data)
+{
+	u16 channel = *(u16 *) data;
+
+	pr_pos_info();
+
+	while (1) {
+		char buff[1024];
+		int length;
+
+		length = cavan_udp_sock_recv(g_udp_sock, channel, buff, sizeof(buff), false);
+		if (length < 0) {
+			break;
+		}
+
+		buff[length] = 0;
+
+		println("buff[%d] = %s", length, buff);
+		// msleep(500);
+	}
+
+	pr_pos_info();
+
+	return NULL;
+}
+
+static void cavan_test_udp_on_connected(struct cavan_udp_sock *sock, u16 channel)
+{
+	pr_pos_info();
+	cavan_pthread_run(cavan_test_udp_recv_loop, &channel);
+}
+
 static int cavan_test_udp_client(int argc, char *argv[])
 {
 	struct cavan_udp_sock sock;
 	char buff[1024];
 	int channel;
+	u32 count;
 	int ret;
 
 	assert(argc > 1);
+
+	g_udp_sock = &sock;
 
 	ret = cavan_udp_sock_open(&sock, 0);
 	if (ret < 0) {
@@ -57,13 +94,19 @@ static int cavan_test_udp_client(int argc, char *argv[])
 		return channel;
 	}
 
-	memset(buff, 'A', sizeof(buff));
+	count = 0;
 
 	while (1) {
-		if (cavan_udp_sock_send(&sock, channel, buff, sizeof(buff)) < 0) {
+		int length = snprintf(buff, sizeof(buff), "message: %d", count + 1);
+
+		while (cavan_udp_sock_send(&sock, channel, buff, length) < 0) {
 			// pr_err_info("cavan_udp_sock_send");
 			// msleep(200);
+			// msleep(10);
 		}
+
+		// msleep(100);
+		count++;
 	}
 
 	return 0;
@@ -75,6 +118,9 @@ static int cavan_test_udp_service(int argc, char *argv[])
 	int ret;
 
 	assert(argc > 1);
+
+	g_udp_sock = &sock;
+	sock.on_connected = cavan_test_udp_on_connected;
 
 	ret = cavan_udp_sock_open(&sock, atoi(argv[1]));
 	if (ret < 0) {

@@ -58,7 +58,7 @@
 #define CAVAN_NET_FLAG_BOUND		(1 << 6)
 #define CAVAN_NET_FLAG_LINKED		(1 << 7)
 
-#define CAVAN_UDP_WIN_SIZE			50
+#define CAVAN_UDP_WIN_SIZE			64
 
 #ifndef SO_REUSEPORT
 #define SO_REUSEPORT				15
@@ -456,6 +456,7 @@ struct cavan_udp_link {
 	struct sockaddr_in addr;
 	pthread_mutex_t lock;
 	pthread_cond_t cond;
+	u16 sequence;
 	u16 channel;
 	struct cavan_udp_win send_win;
 	struct cavan_udp_win recv_win;
@@ -469,7 +470,7 @@ struct cavan_udp_sock {
 	int index;
 	struct cavan_udp_pack *head;
 
-	void (*on_data_received)(struct cavan_udp_sock *sock, struct cavan_udp_link *link);
+	void (*on_connected)(struct cavan_udp_sock *sock, u16 channel);
 };
 
 const char *network_get_socket_pathname(void);
@@ -618,7 +619,7 @@ void cavan_udp_sock_recv_loop(struct cavan_udp_sock *sock);
 int cavan_udp_channel_alloc(struct cavan_udp_sock *sock);
 void cavan_udp_channel_free(struct cavan_udp_sock *sock, u16 channel);
 ssize_t cavan_udp_sock_send(struct cavan_udp_sock *sock, u16 channel, const void *buff, size_t size);
-ssize_t cavan_udp_sock_recv(struct cavan_udp_sock *sock, u16 channel, void *buff, size_t size);
+ssize_t cavan_udp_sock_recv(struct cavan_udp_sock *sock, u16 channel, void *buff, size_t size, bool nonblock);
 int cavan_udp_sock_shutdown(struct cavan_udp_sock *sock);
 int cavan_udp_sock_accept(struct cavan_udp_sock *sock);
 int cavan_udp_sock_connect(struct cavan_udp_sock *sock, const char *url);

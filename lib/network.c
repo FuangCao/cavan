@@ -5306,13 +5306,36 @@ static void cavan_udp_win_destroy(struct cavan_udp_win *win)
 	}
 }
 
+static void cavan_udp_sock_send_locked(struct cavan_udp_sock *sock, struct cavan_udp_pack *pack);
+
+static int cavan_udp_win_flush(struct cavan_udp_win *win, struct cavan_udp_sock *sock, u16 seqence)
+{
+	u16 end = win->index + win->length;
+	int count = 0;
+
+	cavan_udp_sock_lock(sock);
+
+	while (win->ready != seqence && win->ready != end) {
+		u16 index = win->ready % NELEM(win->packs);
+		struct cavan_udp_pack *pack = win->packs[index];
+		println("flush: %d", cavan_udp_pack_get_header(pack)->sequence);
+		cavan_udp_sock_send_locked(sock, pack);
+		win->ready++;
+		count++;
+	}
+
+	cavan_udp_sock_unlock(sock);
+
+	return count;
+}
+
 static bool cavan_udp_win_enqueue(struct cavan_udp_win *win, struct cavan_udp_pack *pack)
 {
 	if (win->length < NELEM(win->packs)) {
 		struct cavan_udp_header *header = cavan_udp_pack_get_header(pack);
-		u16 seqence = win->index + win->length;
-		int index = seqence % NELEM(win->packs);
-		header->sequence = seqence;
+		u16 sequence = win->index + win->length;
+		int index = sequence % NELEM(win->packs);
+		header->sequence = sequence;
 		win->packs[index] = pack;
 		win->length++;
 		return true;
@@ -5337,14 +5360,14 @@ static struct cavan_udp_pack *cavan_udp_win_dequeue(struct cavan_udp_win *win)
 	return NULL;
 }
 
-static int cavan_udp_win_receive(struct cavan_udp_win *win, struct cavan_udp_header *header, u16 length)
+static int cavan_udp_win_receive(struct cavan_udp_win *win, struct cavan_udp_link *link, struct cavan_udp_header *header, u16 length)
 {
 	struct cavan_udp_pack *pack;
 	int count;
 	u16 index;
 
 	if (!cavan_udp_win_valid(win, header->sequence)) {
-		return -1;
+		return -EINVAL;
 	}
 
 	index = header->sequence % NELEM(win->packs);
@@ -5354,38 +5377,48 @@ static int cavan_udp_win_receive(struct cavan_udp_win *win, struct cavan_udp_hea
 
 	pack = malloc(sizeof(struct cavan_udp_pack) + length);
 	if (pack == NULL) {
-		return 0;
+		return -ENOMEM;
 	}
 
 	memcpy(pack->data, (void *) (header + 1), length);
 	pack->length = length;
 	win->packs[index] = pack;
 
-	for (count = 0; win->packs[win->ready % NELEM(win->packs)]; count++) {
+	for (count = 0; win->packs[win->ready % NELEM(win->packs)] && win->length < NELEM(win->packs); count++) {
 		println("recv: %d, length = %d", win->ready, win->length);
+
 		win->length++;
+
+		if (win->length == 1) {
+			cavan_udp_link_wakeup(link);
+		}
+
 		win->ready++;
 	}
 
 	return count;
 }
 
-static void cavan_udp_win_setup_ack(struct cavan_udp_win *win, struct cavan_udp_header *header)
+static void cavan_udp_win_setup_ack(struct cavan_udp_win *win, struct cavan_udp_header *header, u16 sequence)
 {
-	header->win = NELEM(win->packs) - win->length;
+	header->win = win->index + NELEM(win->packs) - sequence;
+	header->sequence = sequence;
 }
 
-static int cavan_udp_win_ack(struct cavan_udp_win *win, u16 sequence)
+static int cavan_udp_win_ack(struct cavan_udp_win *win, struct cavan_udp_link *link, struct cavan_udp_sock *sock, struct cavan_udp_header *header)
 {
 	int count;
 	u16 index;
 
-	if (!cavan_udp_win_valid(win, sequence)) {
+	if (!cavan_udp_win_valid(win, header->sequence)) {
 		pr_pos_info();
 		return -1;
 	}
 
-	index = sequence % NELEM(win->packs);
+	index = header->sequence % NELEM(win->packs);
+	link->sequence = header->sequence + header->win;
+	println("win = %d", link->sequence);
+	cavan_udp_win_flush(win, sock, link->sequence);
 
 	if (win->packs[index] == NULL) {
 		pr_pos_info();
@@ -5393,6 +5426,7 @@ static int cavan_udp_win_ack(struct cavan_udp_win *win, u16 sequence)
 	}
 
 	// free(win->packs[index]);
+	win->packs[index]->time = 0;
 	win->packs[index] = NULL;
 
 	for (count = 0; win->length > 0 && win->packs[win->index % NELEM(win->packs)] == NULL; count++) {
@@ -5410,7 +5444,9 @@ static void cavan_udp_link_init(struct cavan_udp_link *link, u16 channel)
 
 	cavan_udp_win_init(&link->send_win);
 	cavan_udp_win_init(&link->recv_win);
+
 	link->channel = channel;
+	link->sequence = 1;
 }
 
 static void cavan_udp_link_deinit(struct cavan_udp_link *link)
@@ -5497,16 +5533,10 @@ static bool cavan_udp_sock_send_pack(struct cavan_udp_sock *sock, struct cavan_u
 
 	cavan_udp_link_lock(link);
 	success = cavan_udp_win_enqueue(&link->send_win, pack);
+	cavan_udp_win_flush(&link->send_win, sock, link->sequence);
 	cavan_udp_link_unlock(link);
 
-	if (success) {
-		cavan_udp_sock_lock(sock);
-		cavan_udp_sock_send_locked(sock, pack);
-		cavan_udp_sock_unlock(sock);
-		return true;
-	}
-
-	return false;
+	return success;
 }
 
 void cavan_udp_sock_send_loop(struct cavan_udp_sock *sock)
@@ -5514,11 +5544,13 @@ void cavan_udp_sock_send_loop(struct cavan_udp_sock *sock)
 	cavan_udp_sock_lock(sock);
 
 	while (1) {
+		struct cavan_udp_pack *pack;
 		struct timespec time;
 		u64 mseconds;
 		int wrlen;
 
-		struct cavan_udp_pack *pack = sock->head;
+		pack = sock->head;
+		println("pack = %p", pack);
 		if (pack == NULL) {
 			println("cavan_udp_sock_wait");
 			cavan_udp_sock_wait(sock);
@@ -5546,9 +5578,10 @@ void cavan_udp_sock_send_loop(struct cavan_udp_sock *sock)
 		cavan_udp_sock_lock(sock);
 
 		if (wrlen == 0) {
+			println("free: %d", cavan_udp_pack_get_header(pack)->sequence);
 			free(pack);
 		} else if (wrlen > 0) {
-			pack->time = mseconds + 500;
+			pack->time = mseconds + 200;
 			cavan_udp_sock_send_locked(sock, pack);
 		} else {
 			break;
@@ -5606,6 +5639,10 @@ void cavan_udp_sock_recv_loop(struct cavan_udp_sock *sock)
 
 				cavan_udp_link_unlock(link);
 
+				if (sock->on_connected) {
+					sock->on_connected(sock, channel);
+				}
+
 				println("channel = %d", link->channel);
 
 				response = cavan_udp_pack_get_header(pack);
@@ -5627,7 +5664,7 @@ void cavan_udp_sock_recv_loop(struct cavan_udp_sock *sock)
 
 				cavan_udp_link_lock(link);
 				link->channel = header->src_channel;
-				count = cavan_udp_win_ack(&link->send_win, 0);
+				count = cavan_udp_win_ack(&link->send_win, link, sock, header);
 				println("cavan_udp_win_ack: count = %d", count);
 				cavan_udp_link_wakeup(link);
 				cavan_udp_link_unlock(link);
@@ -5645,7 +5682,7 @@ void cavan_udp_sock_recv_loop(struct cavan_udp_sock *sock)
 			link = sock->links[header->dest_channel];
 			if (link != NULL) {
 				cavan_udp_link_lock(link);
-				cavan_udp_win_ack(&link->send_win, 0);
+				cavan_udp_win_ack(&link->send_win, link, sock, header);
 				cavan_udp_link_unlock(link);
 			}
 			break;
@@ -5659,27 +5696,14 @@ void cavan_udp_sock_recv_loop(struct cavan_udp_sock *sock)
 				int count;
 
 				cavan_udp_link_lock(link);
-				count = cavan_udp_win_receive(&link->recv_win, header, rdlen - sizeof(struct cavan_udp_header));
-				cavan_udp_win_setup_ack(&link->recv_win, &response);
-				response.sequence = header->sequence;
+				count = cavan_udp_win_receive(&link->recv_win, link, header, rdlen - sizeof(struct cavan_udp_header));
+				cavan_udp_win_setup_ack(&link->recv_win, &response, header->sequence);
 				cavan_udp_link_unlock(link);
 
-				if (count > 0) {
-					char data[1024];
-					int length;
+				println("cavan_udp_win_receive: %d", count);
 
-					// cavan_udp_link_wakeup(link);
-
-					while (1) {
-						length = cavan_udp_sock_recv(sock, header->dest_channel, data, sizeof(data));
-						if (length < 0) {
-							break;
-						}
-
-						data[length] = 0;
-						println("data[%d] = %s", length, data);
-						msleep(100);
-					}
+				if (count < 0) {
+					break;
 				}
 
 				response.dest_channel = header->src_channel;
@@ -5703,7 +5727,7 @@ void cavan_udp_sock_recv_loop(struct cavan_udp_sock *sock)
 			link = sock->links[header->dest_channel];
 			if (link != NULL) {
 				cavan_udp_link_lock(link);
-				cavan_udp_win_ack(&link->send_win, header->sequence);
+				cavan_udp_win_ack(&link->send_win, link, sock, header);
 				cavan_udp_link_unlock(link);
 			}
 			break;
@@ -5800,7 +5824,7 @@ ssize_t cavan_udp_sock_send(struct cavan_udp_sock *sock, u16 channel, const void
 	ERROR_RETURN(EAGAIN);
 }
 
-ssize_t cavan_udp_sock_recv(struct cavan_udp_sock *sock, u16 channel, void *buff, size_t size)
+ssize_t cavan_udp_sock_recv(struct cavan_udp_sock *sock, u16 channel, void *buff, size_t size, bool nonblock)
 {
 	struct cavan_udp_link *link = sock->links[channel];
 	struct cavan_udp_pack *pack;
@@ -5810,7 +5834,16 @@ ssize_t cavan_udp_sock_recv(struct cavan_udp_sock *sock, u16 channel, void *buff
 	}
 
 	cavan_udp_link_lock(link);
-	pack = cavan_udp_win_dequeue(&link->recv_win);
+
+	while (1) {
+		pack = cavan_udp_win_dequeue(&link->recv_win);
+		if (nonblock || pack != NULL) {
+			break;
+		}
+
+		cavan_udp_link_wait(link);
+	}
+
 	cavan_udp_link_unlock(link);
 
 	if (pack == NULL) {
