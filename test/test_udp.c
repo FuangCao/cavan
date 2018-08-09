@@ -53,7 +53,7 @@ static void *cavan_test_udp_recv_loop(void *data)
 		buff[length] = 0;
 
 		println("buff[%d] = %s", length, buff);
-		// msleep(500);
+		// msleep(100);
 	}
 
 	pr_pos_info();
@@ -105,7 +105,7 @@ static int cavan_test_udp_client(int argc, char *argv[])
 			// msleep(10);
 		}
 
-		// msleep(100);
+		// msleep(1);
 		count++;
 	}
 

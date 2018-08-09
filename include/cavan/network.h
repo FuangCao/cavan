@@ -70,11 +70,14 @@
 struct tcp_discovery_client;
 
 typedef enum {
+	CAVAN_UDP_TEST = 0,
 	CAVAN_UDP_SYNC = 1,
 	CAVAN_UDP_SYNC_ACK1,
 	CAVAN_UDP_SYNC_ACK2,
 	CAVAN_UDP_DATA,
 	CAVAN_UDP_DATA_ACK,
+	CAVAN_UDP_PING,
+	CAVAN_UDP_PONG,
 	CAVAN_UDP_ERROR,
 } cavan_udp_pack_t;
 
@@ -204,6 +207,7 @@ struct cavan_udp_header {
 	u16	sequence;
 	u8 type;
 	u8 win;
+	u8 data[0];
 };
 #pragma pack()
 
@@ -433,10 +437,10 @@ struct cavan_inet_route {
 };
 
 struct cavan_udp_pack {
-	struct cavan_udp_pack *next;
 	u64 time;
 	u16 length;
-	char data[0];
+	struct cavan_udp_pack *next;
+	struct cavan_udp_header header;
 };
 
 struct cavan_udp_queue {
@@ -450,6 +454,7 @@ struct cavan_udp_win {
 	u16 length;
 	u16 index;
 	u16 ready;
+	bool full;
 };
 
 struct cavan_udp_link {
