@@ -623,7 +623,7 @@ void cavan_udp_sock_send_loop(struct cavan_udp_sock *sock);
 void cavan_udp_sock_recv_loop(struct cavan_udp_sock *sock);
 int cavan_udp_channel_alloc(struct cavan_udp_sock *sock);
 void cavan_udp_channel_free(struct cavan_udp_sock *sock, u16 channel);
-ssize_t cavan_udp_sock_send(struct cavan_udp_sock *sock, u16 channel, const void *buff, size_t size);
+ssize_t cavan_udp_sock_send(struct cavan_udp_sock *sock, u16 channel, const void *buff, size_t size, bool nonblock);
 ssize_t cavan_udp_sock_recv(struct cavan_udp_sock *sock, u16 channel, void *buff, size_t size, bool nonblock);
 int cavan_udp_sock_shutdown(struct cavan_udp_sock *sock);
 int cavan_udp_sock_accept(struct cavan_udp_sock *sock);

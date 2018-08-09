@@ -99,10 +99,8 @@ static int cavan_test_udp_client(int argc, char *argv[])
 	while (1) {
 		int length = snprintf(buff, sizeof(buff), "message: %d", count + 1);
 
-		while (cavan_udp_sock_send(&sock, channel, buff, length) < 0) {
-			// pr_err_info("cavan_udp_sock_send");
-			// msleep(200);
-			// msleep(10);
+		if (cavan_udp_sock_send(&sock, channel, buff, length, false) < 0) {
+			break;
 		}
 
 		// msleep(1);
