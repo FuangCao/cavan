@@ -38,12 +38,14 @@ static void *cavan_test_udp_recv_thread(void *data)
 static void *cavan_test_udp_recv_loop(void *data)
 {
 	u16 channel = (u16)(long) data;
+	int index = 1;
 
 	pr_pos_info();
 
 	while (1) {
 		char buff[1024];
 		int length;
+		int value;
 
 		length = cavan_udp_sock_recv(g_udp_sock, channel, buff, sizeof(buff), false);
 		if (length < 0) {
@@ -54,7 +56,18 @@ static void *cavan_test_udp_recv_loop(void *data)
 		buff[length] = 0;
 
 		println("buff[%d] = %s", length, buff);
-		// msleep(100);
+
+		if (sscanf(buff, "message: %d", &value) != 1) {
+			pr_red_info("invalid message");
+			break;
+		}
+
+		if (value != index) {
+			pr_red_info("invalid message");
+			break;
+		}
+
+		index++;
 	}
 
 	pr_pos_info();
