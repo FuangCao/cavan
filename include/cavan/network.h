@@ -451,6 +451,7 @@ struct cavan_udp_queue {
 
 struct cavan_udp_win {
 	struct cavan_udp_pack *packs[CAVAN_UDP_WIN_SIZE];
+	pthread_cond_t cond;
 	u16 length;
 	u16 index;
 	u16 ready;
@@ -460,7 +461,6 @@ struct cavan_udp_win {
 struct cavan_udp_link {
 	struct sockaddr_in addr;
 	pthread_mutex_t lock;
-	pthread_cond_t cond;
 	u16 sequence;
 	u16 channel;
 	struct cavan_udp_win send_win;

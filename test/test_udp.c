@@ -37,7 +37,7 @@ static void *cavan_test_udp_recv_thread(void *data)
 
 static void *cavan_test_udp_recv_loop(void *data)
 {
-	u16 channel = *(u16 *) data;
+	u16 channel = (u16)(long) data;
 
 	pr_pos_info();
 
@@ -47,6 +47,7 @@ static void *cavan_test_udp_recv_loop(void *data)
 
 		length = cavan_udp_sock_recv(g_udp_sock, channel, buff, sizeof(buff), false);
 		if (length < 0) {
+			pr_red_info("cavan_udp_sock_recv: %d", length);
 			break;
 		}
 
@@ -63,8 +64,7 @@ static void *cavan_test_udp_recv_loop(void *data)
 
 static void cavan_test_udp_on_connected(struct cavan_udp_sock *sock, u16 channel)
 {
-	pr_pos_info();
-	cavan_pthread_run(cavan_test_udp_recv_loop, &channel);
+	cavan_pthread_run(cavan_test_udp_recv_loop, (void *)(long) channel);
 }
 
 static int cavan_test_udp_client(int argc, char *argv[])
