@@ -76,6 +76,8 @@ typedef enum {
 	CAVAN_UDP_SYNC_ACK2,
 	CAVAN_UDP_DATA,
 	CAVAN_UDP_DATA_ACK,
+	CAVAN_UDP_WIND,
+	CAVAN_UDP_WIND_ACK,
 	CAVAN_UDP_PING,
 	CAVAN_UDP_PONG,
 	CAVAN_UDP_ERROR,
@@ -463,6 +465,7 @@ struct cavan_udp_link {
 	pthread_mutex_t lock;
 	u16 sequence;
 	u16 channel;
+	struct cavan_udp_pack *wind;
 	struct cavan_udp_win send_win;
 	struct cavan_udp_win recv_win;
 };
