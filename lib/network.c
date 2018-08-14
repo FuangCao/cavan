@@ -5425,7 +5425,7 @@ static int cavan_udp_win_receive(struct cavan_udp_win *win, struct cavan_udp_lin
 	u16 index;
 
 	if (cavan_udp_win_invalid(win, header->sequence)) {
-		return -EINVAL;
+		return 0; // -EINVAL;
 	}
 
 	index = header->sequence % NELEM(win->packs);
