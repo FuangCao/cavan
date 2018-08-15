@@ -466,9 +466,9 @@ struct cavan_udp_link {
 	pthread_mutex_t lock;
 	u16 sequence;
 	u16 channel;
-	u8 ssthresh;
-	u8 cwnd;
-	u8 acks;
+	u16 ssthresh;
+	u16 cwnd;
+	u16 acks;
 	struct cavan_udp_pack *wind;
 	struct cavan_udp_win send_win;
 	struct cavan_udp_win recv_win;

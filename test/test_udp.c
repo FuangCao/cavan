@@ -90,6 +90,8 @@ static int cavan_test_udp_client(int argc, char *argv[])
 
 	assert(argc > 1);
 
+	catch_sigsegv();
+
 	g_udp_sock = &sock;
 
 	ret = cavan_udp_sock_open(&sock, 0);
@@ -129,6 +131,8 @@ static int cavan_test_udp_service(int argc, char *argv[])
 	int ret;
 
 	assert(argc > 1);
+
+	catch_sigsegv();
 
 	g_udp_sock = &sock;
 	sock.on_connected = cavan_test_udp_on_connected;
