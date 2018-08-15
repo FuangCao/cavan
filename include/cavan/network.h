@@ -440,6 +440,7 @@ struct cavan_inet_route {
 
 struct cavan_udp_pack {
 	u64 time;
+	u16 times;
 	u16 length;
 	struct cavan_udp_pack *next;
 	struct cavan_udp_header header;
@@ -465,6 +466,9 @@ struct cavan_udp_link {
 	pthread_mutex_t lock;
 	u16 sequence;
 	u16 channel;
+	u8 ssthresh;
+	u8 cwnd;
+	u8 acks;
 	struct cavan_udp_pack *wind;
 	struct cavan_udp_win send_win;
 	struct cavan_udp_win recv_win;

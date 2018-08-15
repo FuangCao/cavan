@@ -3,6 +3,7 @@
 #include <cavan.h>
 #include <cavan/adb.h>
 #include <cavan/file.h>
+#include <cavan/math.h>
 #include <cavan/timer.h>
 #include <cavan/command.h>
 #include <cavan/android.h>
@@ -5242,6 +5243,8 @@ static struct cavan_udp_pack *cavan_udp_pack_alloc(u16 length)
 	}
 
 	pack->length = length;
+	pack->times = 0;
+	pack->time = clock_gettime_real_ms();
 
 	return pack;
 }
@@ -5276,6 +5279,13 @@ static int cavan_udp_pack_flush(struct cavan_udp_sock *sock, struct cavan_udp_pa
 		if (cavan_udp_win_invalid(&link->send_win, header->sequence) || cavan_udp_win_get_pack(&link->send_win, header->sequence) == NULL) {
 			delay = 0;
 		} else {
+			if (++pack->times > 1) {
+				link->ssthresh = link->cwnd / 2;
+				link->cwnd = 1;
+			}
+
+			println("times = %d", pack->times);
+
 			delay = 200;
 		}
 		break;
@@ -5342,7 +5352,7 @@ static void cavan_udp_sock_enqueue_locked(struct cavan_udp_sock *sock, struct ca
 
 static int cavan_udp_win_flush(struct cavan_udp_win *win, struct cavan_udp_link *link, struct cavan_udp_sock *sock)
 {
-	u16 end = win->index + win->length;
+	u16 end = win->index + MIN(win->length, link->cwnd);
 	u16 sequence = link->sequence;
 	int count;
 
@@ -5384,7 +5394,6 @@ static bool cavan_udp_win_enqueue(struct cavan_udp_win *win, struct cavan_udp_pa
 		struct cavan_udp_header *header = &pack->header;
 		u16 sequence = win->index + win->length;
 		int index = sequence % NELEM(win->packs);
-		pack->time = clock_gettime_real_ms();
 		header->sequence = sequence;
 		win->packs[index] = pack;
 		win->length++;
@@ -5486,6 +5495,18 @@ static int cavan_udp_win_ack(struct cavan_udp_win *win, struct cavan_udp_link *l
 	win->packs[index]->time = 0;
 	win->packs[index] = NULL;
 
+	if (link->cwnd < link->ssthresh || link->acks > link->cwnd) {
+		if (link->cwnd < NELEM(win->packs)) {
+			link->cwnd++;
+		}
+
+		link->acks = 0;
+	} else {
+		link->acks++;
+	}
+
+	println("cwnd = %d, ssthresh = %d, acks = %d", link->cwnd, link->ssthresh, link->acks);
+
 	for (count = 0; win->length > 0 && win->packs[win->index % NELEM(win->packs)] == NULL; count++) {
 		win->length--;
 		win->index++;
@@ -5511,6 +5532,9 @@ static void cavan_udp_link_init(struct cavan_udp_link *link, u16 channel)
 	link->channel = channel;
 	link->sequence = 1;
 	link->wind = NULL;
+	link->cwnd = 1;
+	link->acks = 0;
+	link->ssthresh = 16;
 }
 
 static void cavan_udp_link_deinit(struct cavan_udp_link *link)
