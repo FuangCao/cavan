@@ -49,7 +49,7 @@ static void *cavan_test_udp_recv_loop(void *data)
 
 		length = cavan_udp_sock_recv(g_udp_sock, channel, buff, sizeof(buff), false);
 		if (length < 0) {
-			pr_red_info("cavan_udp_sock_recv: %d", length);
+			pr_err_info("cavan_udp_sock_recv: %d", length);
 			break;
 		}
 

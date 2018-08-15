@@ -5788,20 +5788,14 @@ void cavan_udp_sock_recv_loop(struct cavan_udp_sock *sock)
 
 				link->recv_win.index = 1;
 				link->recv_win.ready = 1;
-
-				link->channel = header->src_channel;
 				memcpy(&link->addr, &addr, sizeof(addr));
 
 				cavan_udp_link_unlock(link);
 
-				if (sock->on_connected) {
-					sock->on_connected(sock, channel);
-				}
-
 				println("channel = %d", link->channel);
 
 				response = &pack->header;
-				response->dest_channel = link->channel;
+				response->dest_channel = header->src_channel;
 				response->src_channel = channel;
 				response->type = CAVAN_UDP_SYNC_ACK1;
 				cavan_udp_win_setup_ack(&link->recv_win, response, 1);
@@ -5820,7 +5814,7 @@ void cavan_udp_sock_recv_loop(struct cavan_udp_sock *sock)
 
 				cavan_udp_link_lock(link);
 
-				if (link->channel == 0) {
+				if (link->channel == 0 || link->channel == header->src_channel) {
 					link->channel = header->src_channel;
 					count = cavan_udp_win_ack(&link->send_win, link, sock, header);
 					println("cavan_udp_win_ack: count = %d", count);
@@ -5828,6 +5822,7 @@ void cavan_udp_sock_recv_loop(struct cavan_udp_sock *sock)
 					response.type = CAVAN_UDP_SYNC_ACK2;
 				} else {
 					response.type = CAVAN_UDP_ERROR;
+					println("linked: %d <> %d", link->channel, header->src_channel);
 				}
 
 				cavan_udp_link_unlock(link);
@@ -5842,10 +5837,16 @@ void cavan_udp_sock_recv_loop(struct cavan_udp_sock *sock)
 		case CAVAN_UDP_SYNC_ACK2:
 			println("CAVAN_UDP_SYNC_ACK2: %d", header->dest_channel);
 			link = sock->links[header->dest_channel];
-			if (link != NULL) {
+			if (link != NULL && link->channel == 0) {
+				link->channel = header->src_channel;
+
 				cavan_udp_link_lock(link);
 				cavan_udp_win_ack(&link->send_win, link, sock, header);
 				cavan_udp_link_unlock(link);
+
+				if (sock->on_connected) {
+					sock->on_connected(sock, channel);
+				}
 			}
 			break;
 
@@ -5901,7 +5902,7 @@ void cavan_udp_sock_recv_loop(struct cavan_udp_sock *sock)
 				struct cavan_udp_header response;
 
 				response.dest_channel = header->src_channel;
-				response.src_channel = link->channel;
+				response.src_channel = header->dest_channel;
 				response.type = CAVAN_UDP_WIND_ACK;
 
 				inet_sendto(sock->sockfd, &response, sizeof(response), &addr);
