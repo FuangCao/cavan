@@ -58,8 +58,6 @@
 #define CAVAN_NET_FLAG_BOUND		(1 << 6)
 #define CAVAN_NET_FLAG_LINKED		(1 << 7)
 
-#define CAVAN_UDP_WIN_SIZE			64
-
 #ifndef SO_REUSEPORT
 #define SO_REUSEPORT				15
 #endif
@@ -68,20 +66,6 @@
 	((uint32_t) ((a) << 24 | (b) << 16 | (c) << 8 | (d)))
 
 struct tcp_discovery_client;
-
-typedef enum {
-	CAVAN_UDP_TEST = 0,
-	CAVAN_UDP_SYNC = 1,
-	CAVAN_UDP_SYNC_ACK1,
-	CAVAN_UDP_SYNC_ACK2,
-	CAVAN_UDP_DATA,
-	CAVAN_UDP_DATA_ACK,
-	CAVAN_UDP_WIND,
-	CAVAN_UDP_WIND_ACK,
-	CAVAN_UDP_PING,
-	CAVAN_UDP_PONG,
-	CAVAN_UDP_ERROR,
-} cavan_udp_pack_t;
 
 #pragma pack(1)
 struct mac_header {
@@ -201,15 +185,6 @@ struct udp_pseudo_header {
 	u8 zero;
 	u8 protocol;
 	u16 udp_length;
-};
-
-struct cavan_udp_header {
-	u16 dest_channel;
-	u16 src_channel;
-	u16	sequence;
-	u8 type;
-	u8 win;
-	u8 data[0];
 };
 #pragma pack()
 
@@ -438,53 +413,6 @@ struct cavan_inet_route {
 	unsigned int irtt;
 };
 
-struct cavan_udp_pack {
-	u64 time;
-	u16 times;
-	u16 length;
-	struct cavan_udp_pack *next;
-	struct cavan_udp_header header;
-};
-
-struct cavan_udp_queue {
-	struct cavan_udp_pack *head;
-	struct cavan_udp_pack *tail;
-	u16 size;
-};
-
-struct cavan_udp_win {
-	struct cavan_udp_pack *packs[CAVAN_UDP_WIN_SIZE];
-	pthread_cond_t cond;
-	u16 length;
-	u16 index;
-	u16 ready;
-	bool full;
-};
-
-struct cavan_udp_link {
-	struct sockaddr_in addr;
-	pthread_mutex_t lock;
-	u16 sequence;
-	u16 channel;
-	u16 ssthresh;
-	u16 cwnd;
-	u16 acks;
-	struct cavan_udp_pack *wind;
-	struct cavan_udp_win send_win;
-	struct cavan_udp_win recv_win;
-};
-
-struct cavan_udp_sock {
-	struct cavan_udp_link *links[0xFFFF];
-	pthread_mutex_t lock;
-	pthread_cond_t cond;
-	int sockfd;
-	int index;
-	struct cavan_udp_pack *head;
-
-	void (*on_connected)(struct cavan_udp_sock *sock, u16 channel);
-};
-
 const char *network_get_socket_pathname(void);
 char *network_get_hostname(char *buff, size_t size);
 int cavan_inet_aton(const char *text, struct in_addr *addr);
@@ -623,18 +551,6 @@ int udp_discovery_service_start(struct udp_discovery_service *service, const cha
 void udp_discovery_service_stop(struct udp_discovery_service *service);
 int udp_discovery_client_run(u16 port, void *data, void (*handler)(int index, const char *command, struct sockaddr_in *addr, void *data));
 int tcp_discovery_client_run(struct tcp_discovery_client *client, void *data);
-
-int cavan_udp_sock_open(struct cavan_udp_sock *sock, u16 port);
-void cavan_udp_sock_close(struct cavan_udp_sock *sock);
-void cavan_udp_sock_send_loop(struct cavan_udp_sock *sock);
-void cavan_udp_sock_recv_loop(struct cavan_udp_sock *sock);
-int cavan_udp_channel_alloc(struct cavan_udp_sock *sock);
-void cavan_udp_channel_free(struct cavan_udp_sock *sock, u16 channel);
-ssize_t cavan_udp_sock_send(struct cavan_udp_sock *sock, u16 channel, const void *buff, size_t size, bool nonblock);
-ssize_t cavan_udp_sock_recv(struct cavan_udp_sock *sock, u16 channel, void *buff, size_t size, bool nonblock);
-int cavan_udp_sock_shutdown(struct cavan_udp_sock *sock);
-int cavan_udp_sock_accept(struct cavan_udp_sock *sock);
-int cavan_udp_sock_connect(struct cavan_udp_sock *sock, const char *url);
 
 static inline int setsockopt_uint(int sockfd, int level, int optname, uint value)
 {

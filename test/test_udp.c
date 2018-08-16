@@ -18,7 +18,7 @@
  */
 
 #include <cavan.h>
-#include <cavan/network.h>
+#include <cavan/udp.h>
 #include <cavan/command.h>
 
 static struct cavan_udp_sock *g_udp_sock;
@@ -37,7 +37,8 @@ static void *cavan_test_udp_recv_thread(void *data)
 
 static void *cavan_test_udp_recv_loop(void *data)
 {
-	u16 channel = (u16)(long) data;
+	struct cavan_udp_link *link = (struct cavan_udp_link *) data;
+	u16 channel = link->local_channel;
 	int index = 1;
 
 	pr_pos_info();
@@ -75,9 +76,9 @@ static void *cavan_test_udp_recv_loop(void *data)
 	return NULL;
 }
 
-static void cavan_test_udp_on_connected(struct cavan_udp_sock *sock, u16 channel)
+static void cavan_test_udp_on_connected(struct cavan_udp_sock *sock, struct cavan_udp_link *link)
 {
-	cavan_pthread_run(cavan_test_udp_recv_loop, (void *)(long) channel);
+	cavan_pthread_run(cavan_test_udp_recv_loop, link);
 }
 
 static int cavan_test_udp_client(int argc, char *argv[])
