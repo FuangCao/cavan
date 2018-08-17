@@ -331,8 +331,9 @@ static int cavan_udp_win_flush(struct cavan_udp_win *win, struct cavan_udp_link 
 static bool cavan_udp_win_resend(struct cavan_udp_win *win, struct cavan_udp_link *link, struct cavan_udp_sock *sock, u64 time)
 {
 	u16 index = win->index;
+	u16 end;
 
-	for (u16 end = index + MIN(win->length, link->cwnd); index != end && index != win->ready; index++) {
+	for (end = index + MIN(win->length, link->cwnd); index != end && index != win->ready; index++) {
 		struct cavan_udp_pack *pack = win->packs[index % NELEM(win->packs)];
 
 		if (pack != NULL) {

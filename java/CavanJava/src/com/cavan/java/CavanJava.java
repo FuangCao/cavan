@@ -2,11 +2,9 @@ package com.cavan.java;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -180,7 +178,7 @@ public class CavanJava {
 
 		try {
 			return Integer.parseInt(text);
-		} catch (NumberFormatException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
@@ -198,7 +196,7 @@ public class CavanJava {
 	public static Method getMethod(Class<?> cls, String name, Class<?>... parameters) throws NoSuchMethodException {
 		try {
 			return cls.getDeclaredMethod(name, parameters);
-		} catch (NoSuchMethodException e) {
+		} catch (Exception e) {
 			return cls.getMethod(name, parameters);
 		}
 	}
@@ -207,13 +205,7 @@ public class CavanJava {
 		try {
 			Method method = getMethod(cls, name, types);
 			return method.invoke(object, parameters);
-		} catch (NoSuchMethodException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (InvocationTargetException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
@@ -224,7 +216,7 @@ public class CavanJava {
 		try {
 			Class<?> cls = Class.forName(className);
 			return invokeMethodTyped(cls, object, name, types, parameters);
-		} catch (ClassNotFoundException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
@@ -246,8 +238,14 @@ public class CavanJava {
 	public static Class<?>[] buildTypeArray(Object[] values) {
 		Class<?>[] types = new Class<?>[values.length];
 
-		for (int i = types.length - 1; i >= 0; i--) {
-			types[i] = values[i].getClass();
+		for (int i = 0; i < values.length; i++) {
+			if (values[i] != null) {
+				types[i] = values[i].getClass();
+			} else if (i > 0) {
+				types[i] = types[i - 1];
+			} else {
+				types[i] = Object.class;
+			}
 		}
 
 		return types;
@@ -401,7 +399,7 @@ public class CavanJava {
 			if (enNetIf == null) {
 				return addresses;
 			}
-		} catch (SocketException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			return addresses;
 		}
@@ -465,7 +463,7 @@ public class CavanJava {
 	public static void msleep(long millis) {
 		try {
 			Thread.sleep(millis);
-		} catch (InterruptedException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -473,7 +471,7 @@ public class CavanJava {
 	public static void msleep(long millis, int nanos) {
 		try {
 			Thread.sleep(millis, nanos);
-		} catch (InterruptedException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -507,7 +505,7 @@ public class CavanJava {
 	public static int parseInt(String text) {
 		try {
 			return Integer.parseInt(text);
-		} catch (NumberFormatException e) {
+		} catch (Exception e) {
 			return 0;
 		}
 	}
@@ -515,7 +513,7 @@ public class CavanJava {
 	public static short parseShort(String text) {
 		try {
 			return Short.parseShort(text);
-		} catch (NumberFormatException e) {
+		} catch (Exception e) {
 			return 0;
 		}
 	}
@@ -523,7 +521,7 @@ public class CavanJava {
 	public static long parseLong(String text) {
 		try {
 			return Long.parseLong(text);
-		} catch (NumberFormatException e) {
+		} catch (Exception e) {
 			return 0;
 		}
 	}
@@ -531,7 +529,7 @@ public class CavanJava {
 	public static float parseFloat(String text) {
 		try {
 			return Float.parseFloat(text);
-		} catch (NumberFormatException e) {
+		} catch (Exception e) {
 			return 0;
 		}
 	}
@@ -539,7 +537,7 @@ public class CavanJava {
 	public static double parseDouble(String text) {
 		try {
 			return Double.parseDouble(text);
-		} catch (NumberFormatException e) {
+		} catch (Exception e) {
 			return 0;
 		}
 	}

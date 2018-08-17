@@ -16,7 +16,6 @@ import android.view.inputmethod.InputMethodManager;
 import com.cavan.accessibility.CavanAccessibilityService;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanThreadedHandler;
-import com.cavan.android.SystemProperties;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
 import com.cavan.java.CavanTcpClient;
@@ -120,7 +119,9 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 
 		@Override
 		protected boolean onTcpConnected(Socket socket) {
-			String hostname = SystemProperties.get("net.hostname");
+			String hostname = CavanAndroid.getDeviceName();
+			CavanAndroid.dLog("hostname = " + hostname);
+
 			if (hostname != null) {
 				send("USER " + hostname);
 			}

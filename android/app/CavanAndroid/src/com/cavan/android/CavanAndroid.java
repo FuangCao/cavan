@@ -1000,4 +1000,8 @@ public class CavanAndroid {
 		context.startService(service);
 		return context.bindService(service, conn, 0);
 	}
+
+	public static String getDeviceName() {
+		return SystemProperties.get("ro.product.model");
+	}
 }
