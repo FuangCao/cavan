@@ -22,6 +22,8 @@
 #include <cavan/network.h>
 
 #define CAVAN_UDP_WIN_SIZE			64
+#define CAVAN_UDP_CWND				16
+#define CAVAN_UDP_OVERTIME			200
 
 typedef enum {
 	CAVAN_UDP_TEST = 0,
