@@ -560,7 +560,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public int getEventTypes() {
-		return 0;
+		return AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED;
 	}
 
 	public AccessibilityNodeInfo getRootInActiveWindow(int retry) {
@@ -683,7 +683,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS |
 				AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
 
-		info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED | getEventTypes();
+		info.eventTypes = getEventTypes();
 	}
 
 	public boolean setInputMethod(String name) {
@@ -819,6 +819,14 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	public Class<?> getBroadcastReceiverClass() {
 		return mBroadcastReceiver.getClass();
+	}
+
+	public void setEventTypes(int types) {
+		AccessibilityServiceInfo info = getServiceInfo();
+		if (info != null && info.eventTypes != types) {
+			info.eventTypes = types;
+			setServiceInfo(info);
+		}
 	}
 
 	@Override

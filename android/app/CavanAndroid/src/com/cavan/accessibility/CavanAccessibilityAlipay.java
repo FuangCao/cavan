@@ -210,6 +210,11 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 		public boolean isHomePage() {
 			return true;
 		}
+
+		@Override
+		public int getEventTypes(CavanAccessibilityPackage pkg) {
+			return super.getEventTypes(pkg) | AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED;
+		}
 	}
 
 	public class CouponDetailActivity extends BaseWindow {

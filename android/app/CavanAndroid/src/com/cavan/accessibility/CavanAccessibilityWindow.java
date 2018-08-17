@@ -179,4 +179,8 @@ public class CavanAccessibilityWindow {
 	public String toString() {
 		return mName;
 	}
+
+	public int getEventTypes(CavanAccessibilityPackage pkg) {
+		return pkg.getEventTypes();
+	}
 }

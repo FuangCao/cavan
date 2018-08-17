@@ -11,7 +11,6 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Message;
 import android.view.WindowManager;
-import android.view.accessibility.AccessibilityEvent;
 
 import com.cavan.accessibility.CavanAccessibilityAlipay;
 import com.cavan.accessibility.CavanAccessibilityPackage;
@@ -88,11 +87,6 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 		addPackage(new CavanAccessibilityAlipay(this));
 		mInputProxy.addAddresses(new InetSocketAddress("127.0.0.1", 9981));
 		mInputProxy.connect();
-	}
-
-	@Override
-	public int getEventTypes() {
-		return AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED | AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED | AccessibilityEvent.TYPE_VIEW_CLICKED;
 	}
 
 	@Override

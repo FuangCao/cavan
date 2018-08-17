@@ -320,6 +320,10 @@ public class CavanAccessibilityPackage {
 		return bounds.left > 0 || bounds.top > 0;
 	}
 
+	public int getEventTypes() {
+		return mService.getEventTypes();
+	}
+
 	public boolean tryCloseDialog(AccessibilityNodeInfo root) {
 		if (isDialog(root)) {
 			AccessibilityNodeInfo child = CavanAccessibilityHelper.getChild(root, -1);
@@ -385,6 +389,8 @@ public class CavanAccessibilityPackage {
 			mWindow = win;
 
 			if (win != null) {
+				int types = win.getEventTypes(this);
+				mService.setEventTypes(types);
 				win.onEnter(root);
 				resetTimes();
 			}

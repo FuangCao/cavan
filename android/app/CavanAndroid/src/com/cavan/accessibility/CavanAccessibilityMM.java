@@ -676,6 +676,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			mHomePending = false;
 			return true;
 		}
+
+		@Override
+		public int getEventTypes(CavanAccessibilityPackage pkg) {
+			return super.getEventTypes(pkg) | AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED;
+		}
 	}
 
 	public class ContactInfoWindow extends BaseWindow {
@@ -2053,6 +2058,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		@Override
 		protected void onLeave(AccessibilityNodeInfo root) {
 			cancelAutoAnswer(root);
+		}
+
+		@Override
+		public int getEventTypes(CavanAccessibilityPackage pkg) {
+			return super.getEventTypes(pkg) | AccessibilityEvent.TYPE_VIEW_CLICKED;
 		}
 	};
 
