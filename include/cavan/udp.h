@@ -31,11 +31,9 @@ typedef enum {
 	CAVAN_UDP_SYNC_ACK1,
 	CAVAN_UDP_SYNC_ACK2,
 	CAVAN_UDP_DATA,
-	CAVAN_UDP_DATA_ACK,
 	CAVAN_UDP_WIND,
-	CAVAN_UDP_WIND_ACK,
 	CAVAN_UDP_PING,
-	CAVAN_UDP_PONG,
+	CAVAN_UDP_DATA_ACK,
 	CAVAN_UDP_ERROR,
 } cavan_udp_pack_t;
 
@@ -46,7 +44,13 @@ struct cavan_udp_header {
 	u16	sequence;
 	u8 type;
 	u8 win;
-	u8 data[0];
+
+	union {
+		u8 data[0];
+		u16 data16[0];
+		u32 data32[0];
+		u64 data64[0];
+	};
 };
 #pragma pack()
 
@@ -83,7 +87,6 @@ struct cavan_udp_link {
 	u16 cwnd;
 	u16 acks;
 	u64 time;
-	u64 wtime;
 	struct cavan_udp_link *prev;
 	struct cavan_udp_link *next;
 	struct cavan_udp_win send_win;
@@ -112,4 +115,3 @@ ssize_t cavan_udp_sock_recv(struct cavan_udp_sock *sock, u16 channel, void *buff
 int cavan_udp_sock_shutdown(struct cavan_udp_sock *sock);
 int cavan_udp_sock_accept(struct cavan_udp_sock *sock);
 int cavan_udp_sock_connect(struct cavan_udp_sock *sock, const char *url);
-

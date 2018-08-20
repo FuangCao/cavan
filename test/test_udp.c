@@ -41,8 +41,6 @@ static void *cavan_test_udp_recv_loop(void *data)
 	u16 channel = link->local_channel;
 	int index = 1;
 
-	pr_pos_info();
-
 	while (1) {
 		char buff[1024];
 		int length;
@@ -109,6 +107,8 @@ static int cavan_test_udp_client(int argc, char *argv[])
 		pr_red_info("cavan_udp_sock_connect");
 		return channel;
 	}
+
+	cavan_pthread_run(cavan_test_udp_recv_loop, sock.links[channel]);
 
 	count = 0;
 
