@@ -17,6 +17,9 @@
 #define ABS(a) \
 	(((a) < 0) ? -(a) : (a))
 
+#define RANG(a, b) \
+	((a) > (b) ? (a) - (b) : (b) - (a))
+
 #define DIV_CEIL(a, b) \
 	(((a) + (b) - 1) / (b))
 

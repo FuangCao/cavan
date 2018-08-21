@@ -22,8 +22,11 @@
 #include <cavan/network.h>
 
 #define CAVAN_UDP_WIN_SIZE			64
-#define CAVAN_UDP_CWND				16
-#define CAVAN_UDP_OVERTIME			200
+#define CAVAN_UDP_CWND				8
+#define CAVAN_UDP_MAX_SEND			20
+#define CAVAN_UDP_RTO_DEF			500
+#define CAVAN_UDP_RTO_MIN			10
+#define CAVAN_UDP_RTO_MAX			5000
 
 typedef enum {
 	CAVAN_UDP_TEST = 0,
@@ -83,9 +86,11 @@ struct cavan_udp_link {
 	u16 remote_channel;
 	u16 local_channel;
 	u16 sequence;
-	u16 ssthresh;
 	u16 cwnd;
 	u16 acks;
+	u32 rto;
+	u32 rtts;
+	u32 rttd;
 	u64 time;
 	struct cavan_udp_link *prev;
 	struct cavan_udp_link *next;
