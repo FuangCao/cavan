@@ -510,6 +510,15 @@ namespace NetworkInputMethod
         {
             sendCommand("UNFOLLOW", false);
         }
+
+        private void timerClock_Tick(object sender, EventArgs e)
+        {
+            DateTime date = DateTime.Now;
+            int mseconds = date.Millisecond;
+
+            timerClock.Interval = 1000 - mseconds;
+            textBoxClock.Text = string.Format("{0:F}.{1:D3}", date, mseconds);
+        }
     }
 
     public class NetworkImeClient : CavanTcpPacketClient
