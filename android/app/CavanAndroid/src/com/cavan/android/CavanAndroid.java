@@ -61,6 +61,9 @@ public class CavanAndroid {
 	public static boolean ELOG_ENABLE = true;
 	public static boolean PLOG_ENABLE = true;
 
+	public static final String CLIENT_ID_HUAWEI = "android-huawei";
+	public static final String CLIENT_ID_LENOVO = "android-lenovo";
+
 	public static CavanAndroidLogger sLogger = new CavanAndroidLogger();
 
 	public static final int SDK_VERSION = Build.VERSION.SDK_INT;
@@ -543,9 +546,24 @@ public class CavanAndroid {
 		}
 	}
 
+	public static String getClientIdBase() {
+		return SystemProperties.getClientIdBase();
+	}
+
+	public static boolean isHuaweiPhone(String id) {
+		return CLIENT_ID_HUAWEI.equals(id);
+	}
+
 	public static boolean isHuaweiPhone() {
-		String id = SystemProperties.getClientIdBase();
-		return (id != null && id.contains("huawei"));
+		return isHuaweiPhone(getClientIdBase());
+	}
+
+	public static boolean isLenovoPhone(String id) {
+		return CLIENT_ID_LENOVO.equals(id);
+	}
+
+	public static boolean isLenovoPhone() {
+		return isLenovoPhone(getClientIdBase());
 	}
 
 	public static String getDefaultInputMethod(Context context) {

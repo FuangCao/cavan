@@ -32,6 +32,9 @@
 	    android:defaultValue="支付宝红包口令：12345678"
 	    android:title="@string/red_packet_notify_test" />
 
+	<Preference android:key="permission_settings"
+	    android:title="@string/permission_settings" />
+
 	<Preference android:key="red_packet_edit"
 	    android:title="@string/red_packet_edit" />
 
@@ -101,9 +104,6 @@
 	    android:persistent="true"
 	    android:defaultValue="false"
 	    android:title="@string/clipboard_share" />
-
-	<Preference android:key="permission_settings"
-	    android:title="@string/permission_settings" />
 
 	<CheckBoxPreference android:key="auto_check_permission"
 	    android:persistent="true"

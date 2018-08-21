@@ -44,6 +44,17 @@
         android:windowSoftInputMode="adjustPan" >
 
         <activity
+            android:name="com.cavan.cavanmain.CavanMessageActivity"
+            android:label="@string/my_message"
+            android:launchMode="singleTask" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name="CavanApplicationActivity"
             android:label="@string/my_application"
             android:launchMode="singleTask" >
@@ -57,17 +68,6 @@
         <activity
             android:name="com.cavan.cavanmain.CavanServiceActivity"
             android:label="@string/my_service"
-            android:launchMode="singleTask" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name="com.cavan.cavanmain.CavanMessageActivity"
-            android:label="@string/my_message"
             android:launchMode="singleTask" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

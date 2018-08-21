@@ -680,8 +680,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 				}
 			}
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
-			if (!CavanAndroid.isNotificationListenerEnabled(this, RedPacketListenerService.class)) {
-				PermissionSettingsActivity.startNotificationListenerSettingsActivity(this);
+			if (!RedPacketListenerService.checkAndOpenSettingsActivity(this)) {
 				FloatMessageService.showToast("请打开通知读取权限");
 			} else if (!CavanMainAccessibilityService.checkAndOpenSettingsActivity(this)) {
 				FloatMessageService.showToast("请打开辅助功能");

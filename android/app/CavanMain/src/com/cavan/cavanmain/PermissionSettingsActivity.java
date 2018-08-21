@@ -42,10 +42,15 @@ public class PermissionSettingsActivity extends PreferenceActivity {
 		mPreferenceNotificationAccess.setIntent(getNotificationAccessIntent());
 		mPreferenceAccessibilitySettings.setIntent(getAccessibilitySettingsIntent());
 
-		if (CavanAndroid.isHuaweiPhone()) {
+		String id = CavanAndroid.getClientIdBase();
+
+		if (CavanAndroid.isHuaweiPhone(id)) {
 			mPreferenceProtectedApps.setIntent(new Intent(ACTION_HSM_PROTECTED_APPS));
 			mPreferencePermissionManager.setIntent(new Intent(ACTION_HSM_PERMISSION_MANAGER));
 			mPreferenceNotificationManager.setIntent(new Intent(ACTION_NOTIFICATIONMANAGER));
+		} else if (CavanAndroid.isLenovoPhone(id)) {
+			Intent intent = new Intent().setClassName("com.zui.safecenter", "com.lenovo.xuipermissionmanager.XuiPermissionManager");
+			mPreferencePermissionManager.setIntent(intent);
 		}
 	}
 

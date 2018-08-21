@@ -557,7 +557,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	}
 
 	public static boolean checkAndOpenSettingsActivity(Context context) {
-		if (CavanAndroid.isNotificationListenerEnabled(context, RedPacketListenerService.class)) {
+		if (instance != null) {
 			return true;
 		}
 
