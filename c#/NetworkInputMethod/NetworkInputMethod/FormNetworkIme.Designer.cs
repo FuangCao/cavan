@@ -69,7 +69,6 @@
             this.buttonRefresh = new System.Windows.Forms.Button();
             this.buttonSignin = new System.Windows.Forms.Button();
             this.buttonUnfollow = new System.Windows.Forms.Button();
-            this.timerClock = new System.Windows.Forms.Timer(this.components);
             this.textBoxClock = new System.Windows.Forms.TextBox();
             this.groupBoxMode.SuspendLayout();
             this.contextMenuStrip.SuspendLayout();
@@ -449,12 +448,6 @@
             this.buttonUnfollow.UseVisualStyleBackColor = true;
             this.buttonUnfollow.Click += new System.EventHandler(this.buttonUnfollow_Click);
             // 
-            // timerClock
-            // 
-            this.timerClock.Enabled = true;
-            this.timerClock.Interval = 1000;
-            this.timerClock.Tick += new System.EventHandler(this.timerClock_Tick);
-            // 
             // textBoxClock
             // 
             this.textBoxClock.Location = new System.Drawing.Point(12, 14);
@@ -553,7 +546,6 @@
         private System.Windows.Forms.Button buttonRefresh;
         private System.Windows.Forms.Button buttonSignin;
         private System.Windows.Forms.Button buttonUnfollow;
-        private System.Windows.Forms.Timer timerClock;
         private System.Windows.Forms.TextBox textBoxClock;
     }
 }
