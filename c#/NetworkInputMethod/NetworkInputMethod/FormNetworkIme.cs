@@ -31,8 +31,10 @@ namespace NetworkInputMethod
         private NetworkImeService mService;
         private IntPtr mNextClipboardViewer;
         private CavanBusyLock mBusyLock = new CavanBusyLock();
+        private Thread mClockThread;
 
         delegate void SimpleDelegate(Object obj);
+        delegate void UpdateClockdelegate(DateTime date);
 
         public FormNetworkIme()
         {
@@ -40,6 +42,38 @@ namespace NetworkInputMethod
 
             mService = new NetworkImeService(this);
             buttonStart_Click(buttonStart, null);
+
+            mClockThread = new Thread(new ThreadStart(ClockThreadHandler));
+            mClockThread.Start();
+        }
+
+        private void UpdateClock(DateTime date)
+        {
+            textBoxClock.Text = string.Format("{0:F}.{1:D3}", date, date.Millisecond);
+        }
+
+        private void ClockThreadHandler()
+        {
+            int second = -1;
+
+            while (true)
+            {
+                DateTime date = DateTime.Now;
+
+                if (date.Second != second)
+                {
+                    var method = new UpdateClockdelegate(UpdateClock);
+                    textBoxClock.Invoke(method, date);
+                    second = date.Second;
+                }
+
+                Thread.Sleep(1000 - date.Millisecond);
+
+                if (IsDisposed)
+                {
+                    break;
+                }
+            }
         }
 
         public void SetClipboardViewer()

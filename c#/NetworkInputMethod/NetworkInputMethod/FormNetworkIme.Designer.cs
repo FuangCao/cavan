@@ -30,7 +30,6 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormNetworkIme));
-            this.labelPort = new System.Windows.Forms.Label();
             this.textBoxPort = new System.Windows.Forms.TextBox();
             this.buttonStart = new System.Windows.Forms.Button();
             this.checkedListBoxClients = new System.Windows.Forms.CheckedListBox();
@@ -70,30 +69,22 @@
             this.buttonRefresh = new System.Windows.Forms.Button();
             this.buttonSignin = new System.Windows.Forms.Button();
             this.buttonUnfollow = new System.Windows.Forms.Button();
+            this.textBoxClock = new System.Windows.Forms.TextBox();
             this.groupBoxMode.SuspendLayout();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
-            // labelPort
-            // 
-            this.labelPort.AutoSize = true;
-            this.labelPort.Location = new System.Drawing.Point(12, 16);
-            this.labelPort.Name = "labelPort";
-            this.labelPort.Size = new System.Drawing.Size(53, 12);
-            this.labelPort.TabIndex = 0;
-            this.labelPort.Text = "端口号：";
-            // 
             // textBoxPort
             // 
-            this.textBoxPort.Location = new System.Drawing.Point(71, 12);
+            this.textBoxPort.Location = new System.Drawing.Point(255, 14);
             this.textBoxPort.Name = "textBoxPort";
-            this.textBoxPort.Size = new System.Drawing.Size(259, 21);
+            this.textBoxPort.Size = new System.Drawing.Size(75, 21);
             this.textBoxPort.TabIndex = 1;
             this.textBoxPort.Text = "8865";
             // 
             // buttonStart
             // 
-            this.buttonStart.Location = new System.Drawing.Point(336, 10);
+            this.buttonStart.Location = new System.Drawing.Point(336, 12);
             this.buttonStart.Name = "buttonStart";
             this.buttonStart.Size = new System.Drawing.Size(75, 23);
             this.buttonStart.TabIndex = 2;
@@ -105,7 +96,7 @@
             // 
             this.checkedListBoxClients.CheckOnClick = true;
             this.checkedListBoxClients.FormattingEnabled = true;
-            this.checkedListBoxClients.Location = new System.Drawing.Point(13, 39);
+            this.checkedListBoxClients.Location = new System.Drawing.Point(12, 39);
             this.checkedListBoxClients.Name = "checkedListBoxClients";
             this.checkedListBoxClients.Size = new System.Drawing.Size(398, 132);
             this.checkedListBoxClients.TabIndex = 4;
@@ -457,12 +448,21 @@
             this.buttonUnfollow.UseVisualStyleBackColor = true;
             this.buttonUnfollow.Click += new System.EventHandler(this.buttonUnfollow_Click);
             // 
+            // textBoxClock
+            // 
+            this.textBoxClock.Location = new System.Drawing.Point(12, 14);
+            this.textBoxClock.Name = "textBoxClock";
+            this.textBoxClock.ReadOnly = true;
+            this.textBoxClock.Size = new System.Drawing.Size(237, 21);
+            this.textBoxClock.TabIndex = 46;
+            // 
             // FormNetworkIme
             // 
             this.AcceptButton = this.buttonStart;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(423, 456);
+            this.Controls.Add(this.textBoxClock);
             this.Controls.Add(this.buttonUnfollow);
             this.Controls.Add(this.buttonSignin);
             this.Controls.Add(this.buttonRefresh);
@@ -491,7 +491,6 @@
             this.Controls.Add(this.checkedListBoxClients);
             this.Controls.Add(this.buttonStart);
             this.Controls.Add(this.textBoxPort);
-            this.Controls.Add(this.labelPort);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
@@ -508,8 +507,6 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.Label labelPort;
         private System.Windows.Forms.TextBox textBoxPort;
         private System.Windows.Forms.Button buttonStart;
         private System.Windows.Forms.CheckedListBox checkedListBoxClients;
@@ -549,6 +546,7 @@
         private System.Windows.Forms.Button buttonRefresh;
         private System.Windows.Forms.Button buttonSignin;
         private System.Windows.Forms.Button buttonUnfollow;
+        private System.Windows.Forms.TextBox textBoxClock;
     }
 }
 
