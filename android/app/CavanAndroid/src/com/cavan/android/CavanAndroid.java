@@ -1020,6 +1020,25 @@ public class CavanAndroid {
 	}
 
 	public static String getDeviceName() {
-		return SystemProperties.get("ro.product.model");
+		return SystemProperties.getByKeys("ro.product.name", "ro.product.model");
+	}
+
+	public static String getHostName() {
+		String hostname = System.getenv("HOSTNAME");
+		if (hostname != null) {
+			return hostname;
+		}
+
+		hostname = SystemProperties.get("net.hostname");
+		if (hostname != null) {
+			return hostname;
+		}
+
+		hostname = getDeviceName();
+		if (hostname != null) {
+			return hostname.replaceAll("\\s+", "-");
+		}
+
+		return null;
 	}
 }

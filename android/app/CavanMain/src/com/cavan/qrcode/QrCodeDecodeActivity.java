@@ -4,9 +4,14 @@ import java.io.IOException;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.Editable;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
@@ -30,6 +35,7 @@ public class QrCodeDecodeActivity extends Activity implements OnClickListener, C
 	private SurfaceView mSurface;
 	private SurfaceHolder mHolder;
 	private CavanQrCodeView mQrCodeView;
+	private boolean mPreviewEnabled = true;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +43,6 @@ public class QrCodeDecodeActivity extends Activity implements OnClickListener, C
 		setContentView(R.layout.qrcode_decoder);
 
 		mQrCodeView = (CavanQrCodeView) findViewById(R.id.qrCodeView);
-		mQrCodeView.setOnClickListener(this);
 		mQrCodeView.setEventListener(this);
 
 		mButton = (Button) findViewById(R.id.buttonQrCodeCopy);
@@ -51,14 +56,50 @@ public class QrCodeDecodeActivity extends Activity implements OnClickListener, C
 	}
 
 	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.qrcode_decoder, menu);
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.action_message_open:
+			mPreviewEnabled = false;
+			mQrCodeView.stopPreview();
+			mEditText.getEditableText().clear();
+			Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+			startActivityForResult(intent, 0);
+			break;
+
+		case R.id.action_message_scan:
+			mPreviewEnabled = true;
+			mQrCodeView.startPreview();
+			break;
+		}
+
+		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
 	public void onClick(View v) {
 		if (v == mButton) {
 			Editable text = mEditText.getText();
 			if (text != null && text.length() > 0) {
 				CavanAndroid.postClipboardText(this, text.toString());
 			}
-		} else {
-			mQrCodeView.startPreview();
+		}
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		CavanAndroid.dLog("onActivityResult: requestCode = " + requestCode + ", resultCode = " + requestCode + ", data = " + data);
+
+		try {
+			Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getData());
+			mQrCodeView.setBitmap(bitmap);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -119,10 +160,12 @@ public class QrCodeDecodeActivity extends Activity implements OnClickListener, C
 
 	@Override
 	public void onCameraOpened(Camera camera) {
-		if (camera != null) {
-			mQrCodeView.startPreview();
-		} else {
-			CavanAndroid.showToast(this, R.string.open_camera_failed);
+		if (mPreviewEnabled) {
+			if (camera != null) {
+				mQrCodeView.startPreview();
+			} else {
+				CavanAndroid.showToast(this, R.string.open_camera_failed);
+			}
 		}
 	}
 }

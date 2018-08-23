@@ -23,6 +23,17 @@ public class SystemProperties {
 		return (String) invokeMethod("get", key, def);
 	}
 
+	public static String getByKeys(String... keys) {
+		for (String key : keys) {
+			String value = get(key);
+			if (value != null) {
+				return value;
+			}
+		}
+
+		return null;
+	}
+
 	public static int getInt(String key, int def) {
 		try {
 			String value = get(key);

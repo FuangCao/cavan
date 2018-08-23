@@ -835,5 +835,6 @@
 	<string name="add_failed">添加失败</string>
 	<string name="information_notify">线报提醒</string>
 	<string name="information_group_setting">线报群设置</string>
+	<string name="scan">扫描</string>
 
 </resources>

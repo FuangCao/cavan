@@ -119,7 +119,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 
 		@Override
 		protected boolean onTcpConnected(Socket socket) {
-			String hostname = CavanAndroid.getDeviceName();
+			String hostname = CavanAndroid.getHostName();
 			CavanAndroid.dLog("hostname = " + hostname);
 
 			if (hostname != null) {
