@@ -35,6 +35,8 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiConfiguration.AuthAlgorithm;
 import android.net.wifi.WifiConfiguration.KeyMgmt;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -1088,5 +1090,83 @@ public class CavanAndroid {
 		}
 
 		return config;
+	}
+
+	public static WifiConfiguration getWifiConfiguration(WifiManager manager) {
+		WifiInfo info = manager.getConnectionInfo();
+		if (info == null) {
+			return null;
+		}
+
+		List<WifiConfiguration> configs = manager.getConfiguredNetworks();
+		if (configs == null) {
+			return null;
+		}
+
+		int id = info.getNetworkId();
+
+		for (WifiConfiguration config : configs) {
+			if (config.networkId == id) {
+				return config;
+			}
+		}
+
+		return null;
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static boolean setHttpProxy(Context context, String host, int port) {
+		WifiManager manager = (WifiManager) getSystemServiceCached(context, Context.WIFI_SERVICE);
+		if (manager == null) {
+			return false;
+		}
+
+		WifiConfiguration config = getWifiConfiguration(manager);
+		if (config == null) {
+			return false;
+		}
+
+		try {
+			Object linkProperties = config.getClass().getField("linkProperties").get(config);
+			if (linkProperties != null) {
+				String type;
+
+				if (host != null && port > 0) {
+					Class<?> ProxyProperties = Class.forName("android.net.ProxyProperties");
+					Object properties = ProxyProperties.getConstructor(String.class, int.class, String.class).newInstance(host, port, null);
+					CavanJava.invokeMethod(linkProperties, "setHttpProxy", properties);
+					type = "STATIC";
+				} else {
+					type = "NONE";
+				}
+
+				Field field = config.getClass().getField("proxySettings");
+				field.set(config, Enum.valueOf((Class<Enum>) field.getType(), type));
+				return true;
+			}
+		} catch (NoSuchFieldException e) {
+			try {
+				String type;
+
+				if (host != null && port > 0) {
+					Class<?> ProxyInfo = Class.forName("android.net.ProxyInfo");
+					Object info = ProxyInfo.getConstructor(String.class, int.class, List.class);
+					CavanJava.invokeMethod(config, "setHttpProxy", info);
+					type = "STATIC";
+				} else {
+					type = "NONE";
+				}
+
+				Class<?> ProxySettings = Class.forName("android.net.IpConfiguration.ProxySettings");
+				CavanJava.invokeMethod(config, "setProxySettings", Enum.valueOf((Class<Enum>) ProxySettings, type));
+				return true;
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return false;
 	}
 }

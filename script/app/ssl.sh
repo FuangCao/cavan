@@ -5,7 +5,7 @@ function cavan-openssl-create()
 	[ "$1" = "all" ] &&
 	{
 		echo "generate key.pem"
-		openssl genrsa -out key.pem 1024/2038 || return 1
+		openssl genrsa -out key.pem 1024 || return 1
 
 		echo "generate cert.csr"
 		openssl req -new -key key.pem -out cert.csr || return 1
