@@ -32,6 +32,9 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiConfiguration.AuthAlgorithm;
+import android.net.wifi.WifiConfiguration.KeyMgmt;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -1040,5 +1043,50 @@ public class CavanAndroid {
 		}
 
 		return null;
+	}
+
+	public static WifiConfiguration createWifiConfiguration(String ssid) {
+		WifiConfiguration config = new WifiConfiguration();
+		config.SSID = "\"" + ssid + "\"";
+		return config;
+	}
+
+	public static WifiConfiguration initWifiConfigurationNone(WifiConfiguration config) {
+		config.allowedKeyManagement.set(KeyMgmt.NONE);
+		return config;
+	}
+
+	public static WifiConfiguration initWifiConfigurationWep(WifiConfiguration config, String pass)
+	{
+		config.allowedKeyManagement.set(KeyMgmt.NONE);
+        config.allowedAuthAlgorithms.set(AuthAlgorithm.OPEN);
+        config.allowedAuthAlgorithms.set(AuthAlgorithm.SHARED);
+
+		if (pass != null && pass.length() != 0) {
+			int length = pass.length();
+			// WEP-40, WEP-104, and 256-bit WEP (WEP-232?)
+			if ((length == 10 || length == 26 || length == 58) && pass.matches("[0-9A-Fa-f]*")) {
+				config.wepKeys[0] = pass;
+			} else {
+				config.wepKeys[0] = '"' + pass + '"';
+			}
+		}
+
+		return config;
+	}
+
+	public static WifiConfiguration initWifiConfigurationWpa(WifiConfiguration config, String pass)
+	{
+		config.allowedKeyManagement.set(KeyMgmt.WPA_PSK);
+
+		if (pass != null && pass.length() != 0) {
+			if (pass.matches("[0-9A-Fa-f]{64}")) {
+				config.preSharedKey = pass;
+			} else {
+				config.preSharedKey = '"' + pass + '"';
+			}
+		}
+
+		return config;
 	}
 }

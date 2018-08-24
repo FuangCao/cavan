@@ -836,5 +836,12 @@
 	<string name="information_notify">线报提醒</string>
 	<string name="information_group_setting">线报群设置</string>
 	<string name="scan">扫描</string>
+	<string name="ssid">热点名称：</string>
+	<string name="encry_mode">加密方式：</string>
+	<string name="password">密码：</string>
+	<string name="cancel">取消</string>
+	<string name="connect_success">连接成功</string>
+	<string name="connect_failed">连接失败</string>
+	<string name="add_ssid_failed">添加热点失败</string>
 
 </resources>

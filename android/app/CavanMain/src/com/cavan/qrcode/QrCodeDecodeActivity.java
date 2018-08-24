@@ -25,6 +25,7 @@ import com.cavan.android.CavanAndroidListeners.CavanQrCodeViewListener;
 import com.cavan.android.CavanQrCodeCamera;
 import com.cavan.android.CavanQrCodeView;
 import com.cavan.cavanmain.R;
+import com.cavan.java.WifiQrCodeParser;
 import com.google.zxing.Result;
 
 @SuppressWarnings("deprecation")
@@ -137,7 +138,22 @@ public class QrCodeDecodeActivity extends Activity implements OnClickListener, C
 
 	@Override
 	public boolean onDecodeComplete(Result result) {
-		mEditText.setText(result.getText());
+		String text = result.getText();
+		if (text != null) {
+			mEditText.setText(text);
+
+			WifiQrCodeParser parser = new WifiQrCodeParser();
+			if (parser.parse(text)) {
+				String ssid = parser.getSsid();
+				String type = parser.getType();
+
+				if (type != null && ssid != null) {
+					WifiDialog dialog = new WifiDialog(this, ssid, type, parser.getPass());
+					dialog.show();
+				}
+			}
+		}
+
 		return true;
 	}
 
