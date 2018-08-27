@@ -5,14 +5,30 @@ import com.cavan.java.CavanString;
 
 public class SystemProperties {
 
-	public static String TARGET_CLASS_NAME = "android.os.SystemProperties";
+	public static Class<?> SystemPropertiesClass;
+
+	public static Class<?> getSystemPropertiesClass() throws ClassNotFoundException {
+		if (SystemPropertiesClass == null) {
+			SystemPropertiesClass = Class.forName("android.os.SystemProperties");
+		}
+
+		return SystemPropertiesClass;
+	}
 
 	public static Object invokeMethodTyped(String name, Class<?>[] types, Object... values) {
-		return CavanJava.invokeStaticMethodTyped(TARGET_CLASS_NAME, name, types, values);
+		try {
+			return CavanJava.invokeStaticMethodTyped(getSystemPropertiesClass(), name, types, values);
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 	public static Object invokeMethod(String name, Object... parameters) {
-		return CavanJava.invokeStaticMethod(TARGET_CLASS_NAME, name, parameters);
+		try {
+			return CavanJava.invokeStaticMethod(getSystemPropertiesClass(), name, parameters);
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 	public static String get(String key) {
