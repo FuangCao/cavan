@@ -26,7 +26,7 @@ public class SystemProperties {
 	public static String getByKeys(String... keys) {
 		for (String key : keys) {
 			String value = get(key);
-			if (value != null) {
+			if (value != null && value.length() > 0) {
 				return value;
 			}
 		}

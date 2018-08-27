@@ -1034,8 +1034,8 @@ public class CavanAndroid {
 			return hostname;
 		}
 
-		hostname = SystemProperties.get("net.hostname");
-		if (hostname != null) {
+		hostname = SystemProperties.get("net.hostname", null);
+		if (hostname != null && hostname.length() > 0) {
 			return hostname;
 		}
 
