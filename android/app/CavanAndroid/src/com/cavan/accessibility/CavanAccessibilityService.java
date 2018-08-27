@@ -786,7 +786,29 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public boolean sendText(String message, boolean commit) {
-		return sendCommand(CavanAccessibilityPackage.CMD_SEND_TEXT, message, commit);
+		if (sendCommand(CavanAccessibilityPackage.CMD_SEND_TEXT, message, commit)) {
+			return true;
+		}
+
+		AccessibilityNodeInfo root = getRootInActiveWindow();
+		if (root == null) {
+			return false;
+		}
+
+		try {
+			AccessibilityNodeInfo node = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
+			if (node != null) {
+				boolean success = (CavanAccessibilityHelper.setNodeText(this, node, message) != null);
+				node.recycle();
+				return success;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			root.recycle();
+		}
+
+		return false;
 	}
 
 	public boolean login(String username, String password) {
