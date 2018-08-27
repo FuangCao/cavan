@@ -1126,6 +1126,8 @@ public class CavanAndroid {
 			return false;
 		}
 
+		CavanAndroid.dLog("before: config = " + config);
+
 		try {
 			Object linkProperties = config.getClass().getField("linkProperties").get(config);
 			if (linkProperties != null) {
@@ -1142,7 +1144,6 @@ public class CavanAndroid {
 
 				Field field = config.getClass().getField("proxySettings");
 				field.set(config, Enum.valueOf((Class<Enum>) field.getType(), type));
-				return true;
 			}
 		} catch (NoSuchFieldException e) {
 			try {
@@ -1150,23 +1151,33 @@ public class CavanAndroid {
 
 				if (host != null && port > 0) {
 					Class<?> ProxyInfo = Class.forName("android.net.ProxyInfo");
-					Object info = ProxyInfo.getConstructor(String.class, int.class, List.class);
+					Object info = ProxyInfo.getConstructor(String.class, int.class, String.class).newInstance(host, port, null);
 					CavanJava.invokeMethod(config, "setHttpProxy", info);
 					type = "STATIC";
 				} else {
 					type = "NONE";
 				}
 
-				Class<?> ProxySettings = Class.forName("android.net.IpConfiguration.ProxySettings");
-				CavanJava.invokeMethod(config, "setProxySettings", Enum.valueOf((Class<Enum>) ProxySettings, type));
-				return true;
+				Object settings = CavanJava.invokeMethod(config, "getProxySettings");
+				CavanJava.invokeMethod(config, "setProxySettings", Enum.valueOf((Class<Enum>) settings.getClass(), type));
 			} catch (Exception e1) {
 				e1.printStackTrace();
+				return false;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+			return false;
 		}
 
-		return false;
+		CavanAndroid.dLog("after: config = " + config);
+
+		int id = manager.updateNetwork(config);
+		CavanAndroid.dLog("updateNetwork = " + id);
+
+		if (id < 0) {
+			return false;
+		}
+
+		return true;
 	}
 }
