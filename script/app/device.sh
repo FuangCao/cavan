@@ -41,3 +41,13 @@ function cavan-mount-disk()
 		sudo mount "${dev}" "${mpoint}" && echo "mount ${dev} successfull"
 	done
 }
+
+function cavan-readline()
+{
+	local line
+
+	while :;
+	do
+		read line && echo $line;
+	done
+}

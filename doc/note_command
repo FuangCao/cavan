@@ -29,3 +29,4 @@ htop
 free -h
 systemctl status tcp-dd.service
 journalctl -xe
+tail -f /var/log/test.log
