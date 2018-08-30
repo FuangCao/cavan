@@ -6,6 +6,7 @@ import java.util.List;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
+import android.app.Notification;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +16,7 @@ import android.graphics.Rect;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Parcelable;
 import android.view.Display;
 import android.view.KeyEvent;
 import android.view.Surface;
@@ -559,8 +561,27 @@ public class CavanAccessibilityService extends AccessibilityService {
 		mPollThread.start();
 	}
 
+	public String[] getPackageNames() {
+		String[] packages = new String[mPackages.size()];
+		mPackages.keySet().toArray(packages);
+		return packages;
+	}
+
 	public int getEventTypes() {
-		return AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED;
+		int types = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED;
+
+		if (SystemProperties.getInt("debug.cavan.dump.click", 0) > 0) {
+			types |= AccessibilityEvent.TYPE_VIEW_CLICKED;
+		}
+
+		return types;
+	}
+
+	public int getEventFlags() {
+		return AccessibilityServiceInfo.DEFAULT |
+			AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS |
+			AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS |
+			AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
 	}
 
 	public AccessibilityNodeInfo getRootInActiveWindow(int retry) {
@@ -670,20 +691,6 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 
 		return removePackets(pkg);
-	}
-
-	public void initServiceInfo(AccessibilityServiceInfo info) {
-		String[] packages = new String[mPackages.size()];
-		mPackages.keySet().toArray(packages);
-
-		info.packageNames = packages;
-
-		info.flags = AccessibilityServiceInfo.DEFAULT |
-				AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS |
-				AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS |
-				AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
-
-		info.eventTypes = getEventTypes();
 	}
 
 	public boolean setInputMethod(String name) {
@@ -855,7 +862,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 	protected void onServiceConnected() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
 			AccessibilityServiceInfo info = getServiceInfo();
-			initServiceInfo(info);
+			info.packageNames = getPackageNames();
+			info.eventTypes = getEventTypes();
+			info.flags = getEventFlags();
 			setServiceInfo(info);
 			CavanAndroid.dLog("info = " + getServiceInfo());
 		}
@@ -863,21 +872,86 @@ public class CavanAccessibilityService extends AccessibilityService {
 		super.onServiceConnected();
 	}
 
+	public void onAccessibilityEvent(AccessibilityEvent event, AccessibilityNodeInfo root) {
+		CavanAccessibilityPackage pkg = getPackage(event.getPackageName());
+		if (pkg != null) {
+			pkg.onAccessibilityEvent(root, event);
+		} else {
+			switch (event.getEventType()) {
+			case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
+				onWindowStateChanged(root, event);
+				break;
+
+			case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
+				onWindowContentChanged(root, event);
+				break;
+
+			case AccessibilityEvent.TYPE_VIEW_CLICKED:
+				onViewClicked(root, event);
+				break;
+
+			case AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED:
+				onViewTextChanged(root, event);
+				break;
+
+			case AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED:
+				Parcelable data = event.getParcelableData();
+				if (data instanceof Notification) {
+					onNotificationStateChanged(root, (Notification) data);
+				}
+				break;
+
+			default:
+				CavanAndroid.wLog("onAccessibilityEvent: " + event);
+			}
+		}
+	}
+
 	@Override
 	public void onAccessibilityEvent(AccessibilityEvent event) {
 		AccessibilityNodeInfo root = getRootInActiveWindow();
 		if (root != null) {
 			try {
-				CavanAccessibilityPackage pkg = getPackage(root.getPackageName());
-				if (pkg != null) {
-					pkg.onAccessibilityEvent(root, event);
-				}
+				onAccessibilityEvent(event, root);
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
 				root.recycle();
 			}
+		} else if (event.getEventType() == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED) {
+			try {
+				onAccessibilityEvent(event, null);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
+	}
+
+	protected void onWindowStateChanged(AccessibilityNodeInfo root, AccessibilityEvent event) {
+		CavanAndroid.dLog("onWindowStateChanged: " + event);
+	}
+
+	protected void onWindowContentChanged(AccessibilityNodeInfo root, AccessibilityEvent event) {
+		CavanAndroid.dLog("onWindowContentChanged: " + event);
+	}
+
+	protected void onViewClicked(AccessibilityNodeInfo root, AccessibilityEvent event) {
+		CavanAndroid.dLog("onViewClicked: " + event);
+
+		AccessibilityNodeInfo source = event.getSource();
+		CavanAndroid.dLog("source = " + source);
+
+		if (source != null) {
+			source.recycle();
+		}
+	}
+
+	protected void onViewTextChanged(AccessibilityNodeInfo root, AccessibilityEvent event) {
+		CavanAndroid.dLog("onViewTextChanged: " + event);
+	}
+
+	protected void onNotificationStateChanged(AccessibilityNodeInfo root, Notification data) {
+		CavanAndroid.dLog("onNotificationStateChanged: " + data);
 	}
 
 	@Override

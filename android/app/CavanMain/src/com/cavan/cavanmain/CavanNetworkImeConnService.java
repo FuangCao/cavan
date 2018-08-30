@@ -270,8 +270,9 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 
 		default:
 			CavanAndroid.eLog("Invalid command: " + args[0]);
-			return false;
 		}
+
+		return false;
 	}
 
 	protected void onTcpPacketReceived(String[] args) {
