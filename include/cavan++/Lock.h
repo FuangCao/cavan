@@ -46,11 +46,7 @@ public:
 		pthread_mutex_destroy(&mLock);
 	}
 
-	virtual pthread_mutex_t &getLock(void) {
-		return mLock;
-	}
-
-	virtual pthread_mutex_t *getLockPtr(void) {
+	virtual pthread_mutex_t *getLock(void) {
 		return &mLock;
 	}
 
@@ -79,15 +75,19 @@ protected:
 
 class AutoLock {
 private:
-	ILock &mLock;
+	ILock *mLock;
 
 public:
-	AutoLock(ILock &lock) : mLock(lock) {
-		mLock.acquire();
+	AutoLock(ILock *lock) : mLock(lock) {
+		lock->acquire();
+	}
+
+	AutoLock(ILock &lock) : mLock(&lock) {
+		lock.acquire();
 	}
 
 	virtual ~AutoLock() {
-		mLock.release();
+		mLock->release();
 	}
 };
 
@@ -120,25 +120,25 @@ public:
 		return broadcast();
 	}
 
-	virtual int waitLocked(ThreadLock &lock) {
-		return pthread_cond_wait(&mCond, lock.getLockPtr());
+	virtual int waitLocked(MutexLock *lock) {
+		return pthread_cond_wait(&mCond, lock->getLock());
 	}
 
-	virtual int wait(ThreadLock &lock) {
+	virtual int wait(MutexLock *lock) {
 		AutoLock alock(lock);
 		return waitLocked(lock);
 	}
 
-	virtual int waitLocked(const struct timespec *abstime, ThreadLock &lock) {
-		return pthread_cond_timedwait(&mCond, lock.getLockPtr(), abstime);
+	virtual int waitLocked(const struct timespec *abstime, MutexLock *lock) {
+		return pthread_cond_timedwait(&mCond, lock->getLock(), abstime);
 	}
 
-	virtual int wait(const struct timespec *abstime, ThreadLock &lock) {
+	virtual int wait(const struct timespec *abstime, MutexLock *lock) {
 		AutoLock alock(lock);
 		return waitLocked(abstime, lock);
 	}
 
-	virtual int wait(u32 ms, ThreadLock &lock) {
+	virtual int wait(u32 ms, MutexLock *lock) {
 		struct timespec abstime;
 		cavan_timer_set_timespec_ms(&abstime, ms);
 		return wait(&abstime, lock);

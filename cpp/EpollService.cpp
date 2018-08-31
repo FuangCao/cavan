@@ -148,7 +148,7 @@ void EpollService::runEpollDaemon(void)
 			println("ready (%d/%d)", mDaemonTotal - mDaemonReady, mDaemonTotal);
 #endif
 
-			mCond.waitLocked(mLock);
+			mCond.waitLocked(&mLock);
 
 			mDaemonReady--;
 

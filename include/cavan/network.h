@@ -413,6 +413,8 @@ struct cavan_inet_route {
 	unsigned int irtt;
 };
 
+__BEGIN_DECLS
+
 const char *network_get_socket_pathname(void);
 char *network_get_hostname(char *buff, size_t size);
 int cavan_inet_aton(const char *text, struct in_addr *addr);
@@ -869,3 +871,5 @@ static inline bool network_service_readable(struct network_service *service)
 {
 	return file_poll_input(service->sockfd, 0);
 }
+
+__END_DECLS
