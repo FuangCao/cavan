@@ -323,14 +323,16 @@ int UdpSock::open(u16 port)
 		return sockfd;
 	}
 
-	struct sockaddr_in addr;
+	if (port > 0) {
+		struct sockaddr_in addr;
 
-	inet_sockaddr_init(&addr, NULL, port);
+		inet_sockaddr_init(&addr, NULL, port);
 
-	int ret = inet_bind(sockfd, &addr);
-	if (ret < 0) {
-		close(sockfd);
-		return ret;
+		int ret = inet_bind(sockfd, &addr);
+		if (ret < 0) {
+			close(sockfd);
+			return ret;
+		}
 	}
 
 	mSockfd = sockfd;
