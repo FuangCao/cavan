@@ -23,7 +23,8 @@
 
 static void *cavan_udp_proxy_send_thread(void *data)
 {
-	((UdpSock *) data)->sendLoop();
+	UdpSock *sock = (UdpSock *) data;
+	sock->sendLoop();
 	return NULL;
 }
 
@@ -33,13 +34,23 @@ static int cavan_udp_proxy_client_main(int argc, char *argv[])
 
 	assert(argc > 1);
 
+	catch_sigsegv();
+
 	if (sock.open(0) < 0) {
 		return -EFAULT;
 	}
 
 	cavan_pthread_run(cavan_udp_proxy_send_thread, &sock);
+	pr_pos_info();
 	sock.connect(argv[1]);
+	pr_pos_info();
 	sock.recvLoop();
+	pr_pos_info();
+
+	while (1) {
+		pr_pos_info();
+		msleep(2000);
+	}
 
 	return 0;
 }
@@ -49,6 +60,8 @@ static int cavan_udp_proxy_service_main(int argc, char *argv[])
 	UdpSock sock;
 
 	assert(argc > 1);
+
+	catch_sigsegv();
 
 	if (sock.open(atoi(argv[1])) < 0) {
 		return -EFAULT;

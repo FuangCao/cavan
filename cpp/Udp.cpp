@@ -249,7 +249,13 @@ ssize_t UdpLink::send(const void *buff, size_t size, bool nonblock)
 bool UdpLink::send(UdpPack *pack, bool nonblock)
 {
 	AutoLock lock(mLock);
-	return mSendWin.enqueue(pack, &mLock, nonblock);
+
+	if (mSendWin.enqueue(pack, &mLock, nonblock)) {
+		mSock->post(this, 0);
+		return true;
+	}
+
+	return false;
 }
 
 ssize_t UdpLink::send(struct cavan_udp_header *header)
@@ -565,7 +571,7 @@ void UdpSock::post(UdpLink *link, u64 time)
 {
 	AutoLock lock(mLock);
 
-	if (link->next == link) {
+	if (link->next != link) {
 		return;
 	}
 
@@ -602,6 +608,7 @@ void UdpSock::sendLoop(void)
 	while (1) {
 		UdpLink *link = mHead;
 		if (link == NULL) {
+			println("wait");
 			mCond.waitLocked(&mLock);
 			continue;
 		}
@@ -615,8 +622,14 @@ void UdpSock::sendLoop(void)
 		if (link->time > mseconds) {
 			u32 delay = link->time - mseconds;
 			cavan_timespec_add_ms(&time, delay);
+			println("wait: %d", delay);
 			mCond.waitLocked(&time, &mLock);
 			continue;
+		}
+
+		mHead = link->next;
+		if (mHead == link) {
+			mHead = NULL;
 		}
 
 		link->next = link;
