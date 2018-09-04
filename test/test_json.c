@@ -38,6 +38,8 @@ int main(int argc, char *argv[])
 	if (mem != NULL) {
 		int length = cavan_json_document_tostring(doc, mem, DUMP_MEM_SIZE, true);
 		print_ntext(mem, length);
+		free(mem);
+
 		print_char('\n');
 	}
 
