@@ -669,7 +669,7 @@ public class FloatMessageService extends FloatWindowService {
 			view.setText(text);
 		}
 
-		view.setMaxLines(1);
+		// view.setMaxLines(1);
 		view.setTextSize(size);
 		view.setTextColor(color);
 		view.setPadding(TEXT_PADDING, 0, TEXT_PADDING, 0);
@@ -841,6 +841,9 @@ public class FloatMessageService extends FloatWindowService {
 		initTextView(mTextViewTime, TEXT_SIZE_TIME, TEXT_COLOR_TIME, getTimeText());
 		initTextView(mTextViewToast, TEXT_SIZE_TIME, TEXT_COLOR_MESSAGE, null);
 		initTextView(mTextViewNotify, TEXT_SIZE_TIME, TEXT_COLOR_MESSAGE, null);
+
+		mTextViewToast.setVisibility(View.GONE);
+		mTextViewNotify.setVisibility(View.GONE);
 
 		if (CavanMessageActivity.isFloatTimerEnabled(this)) {
 			setTimerEnable(true);

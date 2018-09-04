@@ -4,19 +4,12 @@
     android:layout_height="match_parent" >
 
     <TextView
-        android:id="@+id/textViewNotify"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:visibility="gone" />
-
-    <TextView
         android:id="@+id/textViewTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true" />
+        android:layout_alignParentTop="true"
+        android:text="time" />
 
     <TextView
         android:id="@+id/textViewToast"
@@ -24,16 +17,23 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_below="@+id/textViewTime"
-        android:visibility="gone" />
+        android:text="toast" />
+
+    <TextView
+        android:id="@+id/textViewNotify"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/textViewToast"
+        android:text="notify" />
 
     <LinearLayout
         android:id="@+id/layoutMessage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/textViewToast"
+        android:layout_below="@+id/textViewNotify"
         android:orientation="vertical" >
-
     </LinearLayout>
 
 </RelativeLayout>

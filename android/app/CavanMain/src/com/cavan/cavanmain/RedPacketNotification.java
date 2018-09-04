@@ -267,7 +267,7 @@ public class RedPacketNotification extends CavanNotificationTable {
 			return false;
 		}
 
-		String message = keyword + "@" + getUserDescription() + ": " + finder.getLine(0);
+		String message = keyword + "@" + getUserDescription() + ": " + mNotification.getContent();
 		if (CavanMessageActivity.isKeywordNotifyOnly(mService)) {
 			FloatMessageService.showNotify(message);
 		} else {
