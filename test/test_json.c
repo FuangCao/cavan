@@ -20,11 +20,12 @@
 #include <cavan.h>
 #include <cavan/json.h>
 
+#define DUMP_MEM_SIZE		MB(1)
+
 int main(int argc, char *argv[])
 {
 	struct cavan_json_document *doc;
-	char buff[4096];
-	int length;
+	char *mem;
 
 	assert(argc > 1);
 
@@ -33,9 +34,12 @@ int main(int argc, char *argv[])
 		return -ENOENT;
 	}
 
-	length = cavan_json_document_tostring(doc, buff, sizeof(buff), true);
-	print_ntext(buff, length);
-	print_char('\n');
+	mem = malloc(DUMP_MEM_SIZE);
+	if (mem != NULL) {
+		int length = cavan_json_document_tostring(doc, mem, DUMP_MEM_SIZE, true);
+		print_ntext(mem, length);
+		print_char('\n');
+	}
 
 	cavan_json_document_free(doc);
 

@@ -519,10 +519,17 @@ void UdpSock::recvLoop(void)
 	header = (struct cavan_udp_header *) buff;
 
 	while (1) {
-		ssize_t length = inet_recvfrom(mSockfd, buff, sizeof(buff), &addr);
+		int length = inet_recvfrom(mSockfd, buff, sizeof(buff), &addr);
 		if (length < 0) {
 			break;
 		}
+
+		println("inet_recvfrom: %d", length);
+		println("type = %d", header->type);
+		println("sequence = %d", header->sequence);
+		println("win = %d", header->win);
+		println("src = %d", header->src_channel);
+		println("dest = %d", header->dest_channel);
 
 		switch (header->type) {
 		case CAVAN_UDP_TEST:
@@ -570,6 +577,8 @@ void UdpSock::recvLoop(void)
 void UdpSock::post(UdpLink *link, u64 time)
 {
 	AutoLock lock(mLock);
+
+	pr_pos_info();
 
 	if (link->next != link) {
 		return;
@@ -626,6 +635,8 @@ void UdpSock::sendLoop(void)
 			mCond.waitLocked(&time, &mLock);
 			continue;
 		}
+
+		println("link = %p", link);
 
 		mHead = link->next;
 		if (mHead == link) {
