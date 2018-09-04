@@ -126,7 +126,8 @@ public:
 	UdpLink *next;
 
 public:
-	UdpLink(UdpSock *sock, u16 channel) : mSock(sock), mLocalChannel(channel) {
+	UdpLink(UdpSock *sock, const struct sockaddr_in *addr, u16 channel) : mSock(sock), mLocalChannel(channel) {
+		setSockAddr(addr);
 		mSequence = 1;
 		next = this;
 	}
@@ -155,6 +156,10 @@ public:
 
 	virtual struct sockaddr_in *getSockAddr(void) {
 		return &mAddr;
+	}
+
+	virtual void setSockAddr(const struct sockaddr_in *addr) {
+		memcpy(&mAddr, addr, sizeof(mAddr));
 	}
 
 	virtual u16 getReadSeq(void) {
@@ -203,7 +208,7 @@ public:
 
 public:
 	virtual int open(u16 port);
-	virtual UdpLink *alloc(void);
+	virtual UdpLink *alloc(const struct sockaddr_in *addr);
 	virtual void recycle(u16 channel);
 
 	virtual void recycle(UdpLink *link) {
@@ -215,6 +220,7 @@ public:
 	virtual void post(UdpLink *link, u64 time);
 
 	virtual ssize_t send(UdpLink *link, const void *buff, size_t size) {
+		println("send: %ld", size);
 		return inet_sendto(mSockfd, buff, size, link->getSockAddr());
 	}
 
@@ -227,7 +233,7 @@ public:
 
 protected:
 	virtual void onUdpTest(struct cavan_udp_header *header, u16 length);
-	virtual void onUdpSync(struct cavan_udp_header *header, u16 length);
+	virtual void onUdpSync(struct cavan_udp_header *header, u16 length, struct sockaddr_in *addr);
 	virtual void onUdpSyncAck1(struct cavan_udp_header *header, u16 length);
 	virtual void onUdpSyncAck2(struct cavan_udp_header *header, u16 length);
 	virtual void onUdpData(struct cavan_udp_header *header, u16 length);
@@ -236,7 +242,15 @@ protected:
 	virtual void onUdpDataAck(struct cavan_udp_header *header, u16 length);
 	virtual void onUdpError(struct cavan_udp_header *header, u16 length);
 
-	virtual void onUdpConnected(UdpLink *link) {}
-	virtual void onUdpAccepted(UdpLink *link) {}
-	virtual void onUdpDisconnected(UdpLink *link) {}
+	virtual void onUdpConnected(UdpLink *link) {
+		pr_pos_info();
+	}
+
+	virtual void onUdpAccepted(UdpLink *link) {
+		pr_pos_info();
+	}
+
+	virtual void onUdpDisconnected(UdpLink *link) {
+		pr_pos_info();
+	}
 };
