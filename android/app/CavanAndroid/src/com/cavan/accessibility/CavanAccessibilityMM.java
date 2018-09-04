@@ -2150,6 +2150,31 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		return win;
 	}
 
+	public class ExtDeviceWXLoginWindow extends BaseWindow {
+
+		public ExtDeviceWXLoginWindow(String name) {
+			super(name);
+		}
+
+		@Override
+		protected void onEnter(AccessibilityNodeInfo root) {
+			List<AccessibilityNodeInfo> nodes = CavanAccessibilityHelper.findNodesByText(root, "登录");
+			if (nodes != null) {
+				try {
+					for (AccessibilityNodeInfo node : nodes) {
+						if (CavanAccessibilityHelper.isButton(node)) {
+							CavanAccessibilityHelper.performClick(node);
+						}
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				} finally {
+					CavanAccessibilityHelper.recycleNodes(nodes);
+				}
+			}
+		}
+	};
+
 	@Override
 	public void initWindows() {
 		mBrandServiceIndexWindow = new BrandServiceIndexWindow("com.tencent.mm.plugin.brandservice.ui.BrandServiceIndexUI");
@@ -2175,6 +2200,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(new LoginWindow("com.tencent.mm.plugin.account.ui.LoginUI"));
 		addWindow(new LoginWindow("com.tencent.mm.plugin.account.ui.SimpleLoginUI"));
 		addWindow(new LoginPasswordWindow("com.tencent.mm.plugin.account.ui.LoginPasswordUI"));
+		addWindow(new ExtDeviceWXLoginWindow("com.tencent.mm.plugin.webwx.ui.ExtDeviceWXLoginUI"));
 
 		addWindow(new AppBrandWindow("com.tencent.mm.plugin.appbrand.ui.AppBrandUI"));
 		addWindow(new AppBrandWindow("com.tencent.mm.plugin.appbrand.ui.AppBrandUI1"));
