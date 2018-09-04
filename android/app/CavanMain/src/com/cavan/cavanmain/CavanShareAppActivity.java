@@ -57,6 +57,7 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 				view = (TextView) convertView;
 			} else {
 				view = new TextView(CavanShareAppActivity.this);
+				view.setPadding(20, 20, 20, 20);
 			}
 
 			view.setText(mPackageInfos.get(position).getApplicationName());

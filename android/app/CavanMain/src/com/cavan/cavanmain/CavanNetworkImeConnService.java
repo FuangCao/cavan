@@ -7,6 +7,7 @@ import android.accessibilityservice.AccessibilityService;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
@@ -119,7 +120,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 
 		@Override
 		protected boolean onTcpConnected(Socket socket) {
-			String hostname = CavanAndroid.getHostName();
+			String hostname = Build.MODEL.replaceAll("\\s+", "_");
 			CavanAndroid.dLog("hostname = " + hostname);
 
 			if (hostname != null) {

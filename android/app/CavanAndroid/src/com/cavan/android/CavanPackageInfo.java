@@ -8,7 +8,7 @@ import android.content.pm.PackageManager;
 
 import com.cavan.java.CavanFile;
 
-public class CavanPackageInfo {
+public class CavanPackageInfo implements Comparable<CavanPackageInfo> {
 
 	protected String mName;
 	protected PackageInfo mPackageInfo;
@@ -99,5 +99,10 @@ public class CavanPackageInfo {
 
 	public boolean isSystemApp() {
 		return (getFlags() & ApplicationInfo.FLAG_SYSTEM) != 0;
+	}
+
+	@Override
+	public int compareTo(CavanPackageInfo another) {
+		return mName.compareTo(another.getApplicationName());
 	}
 }
