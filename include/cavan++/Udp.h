@@ -28,7 +28,9 @@ class UdpLink;
 
 class UdpPack {
 private:
+	u64 mTime;
 	u16 mLength;
+	u16 mSendTimes;
 	struct cavan_udp_header *mHeader;
 
 public:
@@ -39,6 +41,7 @@ public:
 
 public:
 	UdpPack(struct cavan_udp_header *header, u16 length) : mLength(length), mHeader(header) {
+		mSendTimes = 0;
 		next = this;
 	}
 
@@ -60,6 +63,14 @@ public:
 		mHeader->dest_channel = dest;
 	}
 
+	virtual u8 *getData(void) {
+		return mHeader->data;
+	}
+
+	virtual u16 getLength(void) {
+		return mLength;
+	}
+
 	virtual u16 getSequence(void) {
 		return mHeader->sequence;
 	}
@@ -73,20 +84,29 @@ public:
 		mHeader->win = win;
 	}
 
+	virtual u64 getTime(void) {
+		return mTime;
+	}
+
+	virtual u16 getSendTimes(void) {
+		return mSendTimes;
+	}
+
 	virtual u16 write(const void *buff, u16 size);
 	virtual u16 read(void *buff, u16 size);
-	virtual ssize_t send(UdpLink *link);
+	virtual bool send(UdpLink *link, u64 time);
 };
 
 class UdpWin {
 private:
 	u16 mLength;
+	u16 mSendSeq;
 	u16 mSequence;
 	Condition mCond;
 	UdpPack *mPacks[CAVAN_UDP_WIN_SIZE];
 
 public:
-	UdpWin(void);
+	UdpWin(u16 sequence);
 	virtual ~UdpWin() {}
 
 	virtual u16 getLength(void) {
@@ -99,20 +119,27 @@ public:
 
 	virtual u8 getWin(u16 sequence);
 
+	virtual UdpPack *getFirstPack(void) {
+		return mPacks[mSequence % CAVAN_UDP_WIN_SIZE];
+	}
+
 public:
 	virtual bool invalid(u16 sequence);
 	virtual bool enqueue(UdpPack *pack, MutexLock *lock, bool nonblock);
 	virtual UdpPack *dequeue(MutexLock *lock, bool nonblock);
 	virtual int confirm(u16 sequence);
-	virtual int receive(const struct cavan_udp_header *header, u16 length);
-	virtual int flush(UdpLink *link, u16 sequence);
+	virtual bool receive(UdpLink *link, const struct cavan_udp_header *header, u16 length);
+	virtual int flush(UdpLink *link, u64 time);
+	virtual u64 resend(UdpLink *link, u64 time);
 };
 
 class UdpLink {
+friend class UdpWin;
 friend class UdpSock;
 
 private:
-	u16 mSequence;
+	u16 mAcks;
+	u16 mCwnd;
 	UdpSock *mSock;
 	UdpWin mSendWin;
 	UdpWin mRecvWin;
@@ -126,16 +153,26 @@ public:
 	UdpLink *next;
 
 public:
-	UdpLink(UdpSock *sock, const struct sockaddr_in *addr, u16 channel) : mSock(sock), mLocalChannel(channel) {
+	UdpLink(UdpSock *sock, const struct sockaddr_in *addr, u16 channel) : mSock(sock), mSendWin(0), mRecvWin(1), mLocalChannel(channel) {
 		setSockAddr(addr);
-		mSequence = 1;
 		next = this;
+		mAcks = 0;
+		mCwnd = 1;
 	}
 
 	virtual ~UdpLink() {}
 
 	virtual UdpSock *getSock(void) {
 		return mSock;
+	}
+
+	virtual u16 getCwnd(void) {
+		return mCwnd;
+	}
+
+	virtual void setCwnd(u16 cwnd) {
+		mCwnd = cwnd;
+		mAcks = 0;
 	}
 
 	virtual u16 getLocalChannel(void) {
@@ -171,17 +208,17 @@ public:
 	virtual bool send(UdpPack *pack, bool nonblock);
 	virtual ssize_t send(struct cavan_udp_header *header);
 	virtual ssize_t sendResponse(struct cavan_udp_header *header, cavan_udp_pack_t type);
-	virtual ssize_t recv(void *buff, size_t size, bool nonblock);
-
-	virtual int flush(void) {
-		return mSendWin.flush(this, mSequence);
-	}
+	virtual int flush(void);
 
 protected:
-	virtual void onUdpData(struct cavan_udp_header *header, u16 length);
-	virtual void onUdpWin(struct cavan_udp_header *header, u16 length);
-	virtual void onUdpPing(struct cavan_udp_header *header, u16 length);
-	virtual void onUdpDataAck(struct cavan_udp_header *header, u16 length);
+	virtual void onUdpPackData(struct cavan_udp_header *header, u16 length);
+	virtual void onUdpPackAck(struct cavan_udp_header *header, u16 length);
+	virtual void onTimerFire(u64 time);
+
+protected:
+	virtual void onUdpDataReceived(const void *buff, u16 length) {
+		send(buff, length, true);
+	}
 };
 
 class UdpSock {
@@ -215,8 +252,6 @@ public:
 		return recycle(link->getLocalChannel());
 	}
 
-	virtual ssize_t send(u16 channel, const void *buff, size_t size, bool nonblock);
-	virtual ssize_t recv(u16 channel, void *buff, size_t size, bool nonblock);
 	virtual void post(UdpLink *link, u64 time);
 
 	virtual ssize_t send(UdpLink *link, const void *buff, size_t size) {
@@ -232,21 +267,24 @@ public:
 	virtual void sendLoop(void);
 
 protected:
-	virtual void onUdpTest(struct cavan_udp_header *header, u16 length);
-	virtual void onUdpSync(struct cavan_udp_header *header, u16 length, struct sockaddr_in *addr);
-	virtual void onUdpSyncAck1(struct cavan_udp_header *header, u16 length);
-	virtual void onUdpSyncAck2(struct cavan_udp_header *header, u16 length);
-	virtual void onUdpData(struct cavan_udp_header *header, u16 length);
-	virtual void onUdpWin(struct cavan_udp_header *header, u16 length);
-	virtual void onUdpPing(struct cavan_udp_header *header, u16 length);
-	virtual void onUdpDataAck(struct cavan_udp_header *header, u16 length);
-	virtual void onUdpError(struct cavan_udp_header *header, u16 length);
+	virtual void onUdpPackTest(struct cavan_udp_header *header, u16 length);
+	virtual void onUdpPackSync(struct cavan_udp_header *header, u16 length, struct sockaddr_in *addr);
+	virtual void onUdpPackSyncAck1(struct cavan_udp_header *header, u16 length);
+	virtual void onUdpPackSyncAck2(struct cavan_udp_header *header, u16 length);
+	virtual void onUdpPackData(struct cavan_udp_header *header, u16 length);
+	virtual void onUdpPackDataAck(struct cavan_udp_header *header, u16 length);
+	virtual void onUdpPackError(struct cavan_udp_header *header, u16 length);
+
+	virtual UdpLink *newUdpLink(const struct sockaddr_in *addr, u16 channel) {
+		return new UdpLink(this, addr, channel);
+	}
 
 	virtual void onUdpConnected(UdpLink *link) {
 		pr_pos_info();
 	}
 
 	virtual void onUdpAccepted(UdpLink *link) {
+		link->send("0123456789", 10, true);
 		pr_pos_info();
 	}
 
