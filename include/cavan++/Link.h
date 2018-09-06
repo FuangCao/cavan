@@ -321,7 +321,6 @@ public:
 
 template <class T>
 class SimpleWaitQueue : public SimpleLinkQueue<T> {
-	using SimpleLinkQueue<T>::mCount;
 	using SimpleLinkQueue<T>::mLock;
 	using SimpleLinkQueue<T>::mHead;
 
@@ -332,7 +331,7 @@ private:
 	virtual void enqueueLocked(T *node) {
 		mHead.append(node);
 
-		if (++mCount == 1) {
+		if (mHead.getNext() == node) {
 			mCond.signal();
 		}
 	}
@@ -361,11 +360,10 @@ public:
 		while (1) {
 			T *node = mHead.removeFirst();
 			if (node != NULL) {
-				mCount--;
 				return node;
 			}
 
-			mCond.waitLocked(mLock);
+			mCond.waitLocked(&mLock);
 		}
 	}
 };

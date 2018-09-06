@@ -288,12 +288,22 @@ u64 UdpWin::resend(UdpLink *link, u64 time)
 UdpLink::UdpLink(UdpSock *sock, const struct sockaddr_in *addr, u16 channel) : mSock(sock), mSendWin(0), mRecvWin(1), mLocalChannel(channel)
 {
 	setSockAddr(addr);
-	next = this;
+	snext = this;
 	mAcks = 0;
 	mCwnd = 1;
 	mRttd = 0;
 	mRtts = CAVAN_UDP_RTO_DEF;
 	mRto = CAVAN_UDP_RTO_DEF;
+}
+
+void UdpLink::setSockAddr(const char *host, u16 port)
+{
+	inet_sockaddr_init(&mAddr, host, port);
+}
+
+void UdpLink::setSockAddr(const char *url)
+{
+	inet_sockaddr_init_url(&mAddr, url);
 }
 
 ssize_t UdpLink::send(const void *buff, size_t size, bool nonblock)
@@ -356,6 +366,25 @@ int UdpLink::flush(void)
 	}
 
 	return count;
+}
+
+bool UdpLink::connect(void)
+{
+	UdpPack *pack = UdpPack::alloc(NULL, 0);
+	if (pack == NULL) {
+		return false;
+	}
+
+	pack->setHeader(CAVAN_UDP_SYNC, getLocalChannel(), 0);
+	pack->setSequence(0, CAVAN_UDP_WIN_SIZE);
+
+	if (send(pack, true)) {
+		return true;
+	}
+
+	delete pack;
+
+	return false;
 }
 
 void UdpLink::processUdpPackData(struct cavan_udp_header *header, u16 length)
@@ -649,7 +678,7 @@ void UdpSock::post(UdpLink *link, u64 time)
 {
 	AutoLock lock(mLock);
 
-	if (link->next != link) {
+	if (link->snext != link) {
 		return;
 	}
 
@@ -659,16 +688,16 @@ void UdpSock::post(UdpLink *link, u64 time)
 		UdpLink *p = *pp;
 
 		if (p == NULL) {
-			link->next = NULL;
+			link->snext = NULL;
 			break;
 		}
 
 		if (p->time > time) {
-			link->next = p;
+			link->snext = p;
 			break;
 		}
 
-		pp = &p->next;
+		pp = &p->snext;
 	}
 
 	link->time = time;
@@ -707,12 +736,12 @@ void UdpSock::sendLoop(void)
 
 		println("link = %p", link);
 
-		mHead = link->next;
+		mHead = link->snext;
 		if (mHead == link) {
 			mHead = NULL;
 		}
 
-		link->next = link;
+		link->snext = link;
 
 		mLock.release();
 		link->onUdpTimerFire(mseconds);
@@ -722,33 +751,23 @@ void UdpSock::sendLoop(void)
 	mLock.release();
 }
 
-int UdpSock::connect(struct sockaddr_in *addr)
+UdpLink *UdpSock::connect(struct sockaddr_in *addr)
 {
 	UdpLink *link = alloc(addr);
 	if (link == NULL) {
-		return -ENOMEM;
+		return NULL;
 	}
 
-	UdpPack *pack = UdpPack::alloc(NULL, 0);
-	if (pack == NULL) {
-		goto out_recycle_link;
+	if (link->connect()) {
+		return link;
 	}
 
-	pack->setHeader(CAVAN_UDP_SYNC, link->getLocalChannel(), 0);
-	pack->setSequence(0, CAVAN_UDP_WIN_SIZE);
-
-	if (link->send(pack, true)) {
-		return 0;
-	}
-
-	delete pack;
-
-out_recycle_link:
 	recycle(link);
-	return -EFAULT;
+
+	return NULL;
 }
 
-int UdpSock::connect(const char *host, u16 port)
+UdpLink *UdpSock::connect(const char *host, u16 port)
 {
 	struct sockaddr_in addr;
 
@@ -757,11 +776,49 @@ int UdpSock::connect(const char *host, u16 port)
 	return connect(&addr);
 }
 
-int UdpSock::connect(const char *url)
+UdpLink *UdpSock::connect(const char *url)
 {
 	struct sockaddr_in addr;
 
 	inet_sockaddr_init_url(&addr, url);
 
 	return connect(&addr);
+}
+
+int UdpSock::start(void)
+{
+	int ret;
+
+	ret = cavan_pthread_create(&mSendThread, SendThread, this, true);
+	if (ret < 0) {
+		pr_err_info("cavan_pthread_create");
+		return ret;
+	}
+
+	ret = cavan_pthread_create(&mRecvThread, RecvThread, this, true);
+	if (ret < 0) {
+		pr_err_info("cavan_pthread_create");
+		return ret;
+	}
+
+	return 0;
+}
+
+int UdpSock::join(void)
+{
+	int ret;
+
+	ret = pthread_join(mSendThread, NULL);
+	if (ret < 0) {
+		pr_err_info("pthread_join");
+		return ret;
+	}
+
+	ret = pthread_join(mRecvThread, NULL);
+	if (ret < 0) {
+		pr_err_info("pthread_join");
+		return ret;
+	}
+
+	return 0;
 }

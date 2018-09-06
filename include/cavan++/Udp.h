@@ -21,6 +21,7 @@
 
 #include <cavan.h>
 #include <cavan/udp.h>
+#include <cavan++/Link.h>
 #include <cavan++/Thread.h>
 
 class UdpSock;
@@ -131,7 +132,7 @@ public:
 	virtual u64 resend(UdpLink *link, u64 time);
 };
 
-class UdpLink {
+class UdpLink : public SimpleLink<UdpLink> {
 friend class UdpWin;
 friend class UdpSock;
 
@@ -151,7 +152,7 @@ private:
 
 public:
 	u64 time;
-	UdpLink *next;
+	UdpLink *snext;
 
 public:
 	UdpLink(UdpSock *sock, const struct sockaddr_in *addr, u16 channel);
@@ -193,6 +194,9 @@ public:
 		memcpy(&mAddr, addr, sizeof(mAddr));
 	}
 
+	virtual void setSockAddr(const char *host, u16 port);
+	virtual void setSockAddr(const char *url);
+
 	virtual u16 getReadSeq(void) {
 		return mRecvWin.getSequence();
 	}
@@ -203,6 +207,7 @@ public:
 	virtual ssize_t send(struct cavan_udp_header *header);
 	virtual ssize_t sendResponse(struct cavan_udp_header *header, cavan_udp_pack_t type);
 	virtual int flush(void);
+	virtual bool connect(void);
 
 protected:
 	virtual void processUdpPackData(struct cavan_udp_header *header, u16 length);
@@ -215,7 +220,6 @@ protected:
 
 	virtual void onUdpAccepted(void) {
 		pr_pos_info();
-		send("0123456789", 10, true);
 	}
 
 	virtual void onUdpConnected(void) {
@@ -227,7 +231,7 @@ protected:
 	}
 
 	virtual void onUdpDataReceived(const void *buff, u16 length) {
-		send(buff, length, true);
+		pr_pos_info();
 	}
 };
 
@@ -235,10 +239,25 @@ class UdpSock {
 private:
 	int mSockfd;
 	u16 mChannel;
+	pthread_t mSendThread;
+	pthread_t mRecvThread;
 	Condition mCond;
 	ThreadLock mLock;
 	UdpLink *mLinks[0xFFFF];
 	UdpLink *mHead;
+	SimpleWaitQueue<UdpLink> mQueue;
+
+	static void *SendThread(void *data) {
+		UdpSock *sock = (UdpSock *) data;
+		sock->sendLoop();
+		return NULL;
+	}
+
+	static void *RecvThread(void *data) {
+		UdpSock *sock = (UdpSock *) data;
+		sock->recvLoop();
+		return NULL;
+	}
 
 public:
 	UdpSock(void);
@@ -262,16 +281,21 @@ public:
 		return recycle(link->getLocalChannel());
 	}
 
+	virtual int start(void);
+	virtual int join(void);
 	virtual void post(UdpLink *link, u64 time);
 
 	virtual ssize_t send(UdpLink *link, const void *buff, size_t size) {
-		println("send: %ld", size);
 		return inet_sendto(mSockfd, buff, size, link->getSockAddr());
 	}
 
-	virtual int connect(struct sockaddr_in *addr);
-	virtual int connect(const char *host, u16 port);
-	virtual int connect(const char *url);
+	virtual UdpLink *connect(struct sockaddr_in *addr);
+	virtual UdpLink *connect(const char *host, u16 port);
+	virtual UdpLink *connect(const char *url);
+
+	virtual UdpLink *accept(void) {
+		return mQueue.dequeue();
+	}
 
 	virtual void recvLoop(void);
 	virtual void sendLoop(void);
@@ -291,13 +315,26 @@ protected:
 
 	virtual void onUdpAccepted(UdpLink *link) {
 		link->onUdpAccepted();
+		mQueue.enqueue(link);
 	}
 
 	virtual void onUdpConnected(UdpLink *link) {
 		link->onUdpConnected();
+		mQueue.enqueue(link);
 	}
 
 	virtual void onUdpDisconnected(UdpLink *link) {
 		link->onUdpDisconnected();
+	}
+};
+
+template <class T>
+class UdpSockT : public UdpSock {
+public:
+	UdpSockT(void) : UdpSock() {}
+
+protected:
+	virtual UdpLink *newUdpLink(const struct sockaddr_in *addr, u16 channel) override {
+		return new T(this, addr, channel);
 	}
 };

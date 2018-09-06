@@ -668,35 +668,42 @@ void inet_sockaddr_init(struct sockaddr_in *addr, const char *host, u16 port)
 int inet_sockaddr_init_url(struct sockaddr_in *addr, const char *url)
 {
 	char buff[1024];
-	char *p = buff;
+	char *host;
 	int port;
 
-	while (1) {
-		if (*url == 0) {
-			return -EINVAL;
-		}
+	host = buff;
 
-		if (*url != ':') {
-			*p++ = *url++;
-		} else {
+	while (1) {
+		switch (*url) {
+		case 0:
+			*host = 0;
+			url = buff;
+			host = NULL;
+			goto out_completed;
+
+		case ':':
 			url++;
-			break;
+
+			if (host > buff) {
+				*host = 0;
+				host = buff;
+			} else {
+				host = NULL;
+			}
+			goto out_completed;
+
+		default:
+			*host++ = *url++;
 		}
 	}
 
+out_completed:
 	port = atoi(url);
 	if (port <= 0) {
 		return -EINVAL;
 	}
 
-	if (p > buff) {
-		*p = 0;
-		p = buff;
-	} else {
-		p = NULL;
-	}
-
-	inet_sockaddr_init(addr, p, port);
+	inet_sockaddr_init(addr, host, port);
 
 	return 0;
 }
