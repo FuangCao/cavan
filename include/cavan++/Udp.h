@@ -117,8 +117,6 @@ public:
 		return mSequence;
 	}
 
-	virtual u8 getWin(u16 sequence);
-
 	virtual UdpPack *getFirstPack(void) {
 		return mPacks[mSequence % CAVAN_UDP_WIN_SIZE];
 	}
@@ -127,7 +125,7 @@ public:
 	virtual bool invalid(u16 sequence);
 	virtual bool enqueue(UdpPack *pack, MutexLock *lock, bool nonblock);
 	virtual UdpPack *dequeue(MutexLock *lock, bool nonblock);
-	virtual int confirm(u16 sequence);
+	virtual int confirm(UdpLink *link, u16 sequence);
 	virtual bool receive(UdpLink *link, const struct cavan_udp_header *header, u16 length);
 	virtual int flush(UdpLink *link, u64 time);
 	virtual u64 resend(UdpLink *link, u64 time);
@@ -138,6 +136,9 @@ friend class UdpWin;
 friend class UdpSock;
 
 private:
+	u16 mRto;
+	u16 mRtts;
+	u16 mRttd;
 	u16 mAcks;
 	u16 mCwnd;
 	UdpSock *mSock;
@@ -153,26 +154,19 @@ public:
 	UdpLink *next;
 
 public:
-	UdpLink(UdpSock *sock, const struct sockaddr_in *addr, u16 channel) : mSock(sock), mSendWin(0), mRecvWin(1), mLocalChannel(channel) {
-		setSockAddr(addr);
-		next = this;
-		mAcks = 0;
-		mCwnd = 1;
-	}
-
+	UdpLink(UdpSock *sock, const struct sockaddr_in *addr, u16 channel);
 	virtual ~UdpLink() {}
 
 	virtual UdpSock *getSock(void) {
 		return mSock;
 	}
 
-	virtual u16 getCwnd(void) {
+	virtual u16 getUdpCwnd(void) {
 		return mCwnd;
 	}
 
-	virtual void setCwnd(u16 cwnd) {
-		mCwnd = cwnd;
-		mAcks = 0;
+	virtual u16 getUdpRto(void) {
+		return mRto;
 	}
 
 	virtual u16 getLocalChannel(void) {
@@ -211,11 +205,27 @@ public:
 	virtual int flush(void);
 
 protected:
-	virtual void onUdpPackData(struct cavan_udp_header *header, u16 length);
-	virtual void onUdpPackAck(struct cavan_udp_header *header, u16 length);
-	virtual void onTimerFire(u64 time);
+	virtual void processUdpPackData(struct cavan_udp_header *header, u16 length);
+	virtual void processUdpPackAck(struct cavan_udp_header *header, u16 length);
 
 protected:
+	virtual void onUdpTimerFire(u64 time);
+	virtual void onUdpPackLose(UdpPack *pack, u64 time);
+	virtual void onUdpPackSended(UdpPack *pack, u64 time);
+
+	virtual void onUdpAccepted(void) {
+		pr_pos_info();
+		send("0123456789", 10, true);
+	}
+
+	virtual void onUdpConnected(void) {
+		pr_pos_info();
+	}
+
+	virtual void onUdpDisconnected(void) {
+		pr_pos_info();
+	}
+
 	virtual void onUdpDataReceived(const void *buff, u16 length) {
 		send(buff, length, true);
 	}
@@ -267,28 +277,27 @@ public:
 	virtual void sendLoop(void);
 
 protected:
-	virtual void onUdpPackTest(struct cavan_udp_header *header, u16 length);
-	virtual void onUdpPackSync(struct cavan_udp_header *header, u16 length, struct sockaddr_in *addr);
-	virtual void onUdpPackSyncAck1(struct cavan_udp_header *header, u16 length);
-	virtual void onUdpPackSyncAck2(struct cavan_udp_header *header, u16 length);
-	virtual void onUdpPackData(struct cavan_udp_header *header, u16 length);
-	virtual void onUdpPackDataAck(struct cavan_udp_header *header, u16 length);
-	virtual void onUdpPackError(struct cavan_udp_header *header, u16 length);
+	virtual void processUdpPackTest(struct cavan_udp_header *header, u16 length);
+	virtual void processUdpPackSync(struct cavan_udp_header *header, u16 length, struct sockaddr_in *addr);
+	virtual void processUdpPackSyncAck1(struct cavan_udp_header *header, u16 length);
+	virtual void processUdpPackSyncAck2(struct cavan_udp_header *header, u16 length);
+	virtual void processUdpPackData(struct cavan_udp_header *header, u16 length);
+	virtual void processUdpPackDataAck(struct cavan_udp_header *header, u16 length);
+	virtual void processUdpPackError(struct cavan_udp_header *header, u16 length);
 
 	virtual UdpLink *newUdpLink(const struct sockaddr_in *addr, u16 channel) {
 		return new UdpLink(this, addr, channel);
 	}
 
-	virtual void onUdpConnected(UdpLink *link) {
-		pr_pos_info();
+	virtual void onUdpAccepted(UdpLink *link) {
+		link->onUdpAccepted();
 	}
 
-	virtual void onUdpAccepted(UdpLink *link) {
-		link->send("0123456789", 10, true);
-		pr_pos_info();
+	virtual void onUdpConnected(UdpLink *link) {
+		link->onUdpConnected();
 	}
 
 	virtual void onUdpDisconnected(UdpLink *link) {
-		pr_pos_info();
+		link->onUdpDisconnected();
 	}
 };
