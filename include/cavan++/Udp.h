@@ -41,10 +41,7 @@ public:
 	static UdpPack *alloc(const void *buff, u16 length);
 
 public:
-	UdpPack(struct cavan_udp_header *header, u16 length) : mLength(length), mHeader(header) {
-		mSendTimes = 0;
-		next = this;
-	}
+	UdpPack(struct cavan_udp_header *header, const void *data, u16 length);
 
 	virtual ~UdpPack() {
 		free(mHeader);
@@ -218,12 +215,12 @@ protected:
 	virtual void onUdpPackLose(UdpPack *pack, u64 time);
 	virtual void onUdpPackSended(UdpPack *pack, u64 time);
 
-	virtual void onUdpAccepted(void) {
-		pr_pos_info();
+	virtual bool onUdpAccepted(void) {
+		return false;
 	}
 
-	virtual void onUdpConnected(void) {
-		pr_pos_info();
+	virtual bool onUdpConnected(void) {
+		return false;
 	}
 
 	virtual void onUdpDisconnected(void) {
@@ -237,6 +234,7 @@ protected:
 
 class UdpSock {
 private:
+	u64 mTime;
 	int mSockfd;
 	u16 mChannel;
 	pthread_t mSendThread;
@@ -245,7 +243,8 @@ private:
 	ThreadLock mLock;
 	UdpLink *mLinks[0xFFFF];
 	UdpLink *mHead;
-	SimpleWaitQueue<UdpLink> mQueue;
+	SimpleWaitQueue<UdpLink> mQueueReady;
+	SimpleLinkQueue<UdpLink> mQueuePending;
 
 	static void *SendThread(void *data) {
 		UdpSock *sock = (UdpSock *) data;
@@ -294,7 +293,7 @@ public:
 	virtual UdpLink *connect(const char *url);
 
 	virtual UdpLink *accept(void) {
-		return mQueue.dequeue();
+		return mQueueReady.dequeue();
 	}
 
 	virtual void recvLoop(void);
@@ -314,18 +313,22 @@ protected:
 	}
 
 	virtual void onUdpAccepted(UdpLink *link) {
-		link->onUdpAccepted();
-		mQueue.enqueue(link);
+		if (!link->onUdpAccepted()) {
+			mQueueReady.enqueue(link);
+		}
 	}
 
 	virtual void onUdpConnected(UdpLink *link) {
-		link->onUdpConnected();
-		mQueue.enqueue(link);
+		if (!link->onUdpConnected()) {
+			mQueueReady.enqueue(link);
+		}
 	}
 
 	virtual void onUdpDisconnected(UdpLink *link) {
 		link->onUdpDisconnected();
 	}
+
+	virtual void onUdpKeepAlive(void);
 };
 
 template <class T>

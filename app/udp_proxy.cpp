@@ -54,12 +54,14 @@ public:
 		}
 
 	protected:
-		virtual void onUdpAccepted(void) {
+		virtual bool onUdpAccepted(void) override {
 			network_client_open2(&mClient, "127.0.0.1:1234", 0);
 			cavan_pthread_run(TcpReceiveThread, this);
+			return true;
 		}
 
-		virtual void onUdpDataReceived(const void * buff, u16 length) {
+		virtual void onUdpDataReceived(const void *buff, u16 length) override {
+			println("onUdpDataReceived: %d", length);
 			network_client_send(&mClient, buff, length);
 		}
 	};
@@ -92,6 +94,7 @@ public:
 
 	protected:
 		virtual void onUdpDataReceived(const void *buff, u16 length) {
+			println("onUdpDataReceived: %d", length);
 			mClient->send(mClient, buff, length);
 		}
 	};
