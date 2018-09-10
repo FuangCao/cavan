@@ -21,6 +21,8 @@
 #include <cavan/math.h>
 #include <cavan++/Udp.h>
 
+#define CAVAN_UDP_DEBUG		0
+
 UdpPack *UdpPack::alloc(const void *buff, u16 length)
 {
 	struct cavan_udp_header *header = (struct cavan_udp_header *) malloc(sizeof(struct cavan_udp_header) + length);
@@ -75,7 +77,9 @@ bool UdpPack::send(UdpLink *link, u64 time)
 {
 	u16 length = sizeof(struct cavan_udp_header) + mLength;
 
+#if CAVAN_UDP_DEBUG
 	println("send[%d]: %d", mHeader->sequence, length);
+#endif
 
 	mTime = time;
 	mSendTimes++;
@@ -203,7 +207,9 @@ bool UdpWin::receive(UdpLink *link, const struct cavan_udp_header *header, u16 l
 		return true;
 	}
 
+#if CAVAN_UDP_DEBUG
 	println("receive: %d <> %d", sequence, mSequence);
+#endif
 
 	length -= sizeof(struct cavan_udp_header);
 
@@ -228,7 +234,7 @@ bool UdpWin::receive(UdpLink *link, const struct cavan_udp_header *header, u16 l
 			break;
 		}
 
-		link->onUdpDataReceived(header->data, pack->getLength());
+		link->onUdpDataReceived(pack->getData(), pack->getLength());
 		mPacks[index] = NULL;
 		free(pack);
 	}
@@ -247,21 +253,16 @@ int UdpWin::flush(UdpLink *link, u64 time)
 
 		if (sequence < mSequence) {
 			if (seq < mSequence && seq > sequence) {
-				pr_pos_info();
 				return 0;
 			}
 		} else {
 			if (seq < mSequence || seq > sequence) {
-				pr_pos_info();
-				println("seq = %d, sequence: %d <> %d", seq, sequence, mSequence);
 				return 0;
 			}
 		}
 	} else {
 		cwnd = mLength;
 	}
-
-	println("cwnd = %d", cwnd);
 
 	for (u16 end = mSequence + cwnd; seq != end; seq++) {
 		UdpPack *pack = mPacks[seq % NELEM(mPacks)];
@@ -282,27 +283,23 @@ u64 UdpWin::resend(UdpLink *link, u64 time)
 {
 	UdpPack *pack = getFirstPack();
 	if (pack == NULL) {
-		pr_pos_info();
 		return 0;
 	}
 
 	u64 overtime = pack->getTime();
 	if (overtime == 0) {
-		pr_pos_info();
 		return 0;
 	}
 
 	overtime += link->getUdpRto();
 
 	if (time < overtime) {
-		pr_pos_info();
 		return overtime;
 	}
 
 	link->onUdpPackLose(pack, time);
 	pack->send(link, time);
 	mSendSeq = mSequence + 1;
-	pr_pos_info();
 
 	return time + link->getUdpRto();
 }
@@ -434,17 +431,11 @@ void UdpLink::processUdpPackAck(struct cavan_udp_header *header, u16 length)
 
 void UdpLink::onUdpTimerFire(u64 time)
 {
-	pr_pos_info();
 	AutoLock lock(mLock);
-	pr_pos_info();
 
 	time = mSendWin.resend(this, time);
-	println("time = %ld", time);
-	pr_pos_info();
 	if (time != 0) {
-		pr_pos_info();
 		mSock->post(this, time);
-		pr_pos_info();
 	}
 }
 
@@ -474,7 +465,9 @@ void UdpLink::onUdpPackSended(UdpPack *pack, u64 time)
 			mRto = CAVAN_UDP_RTO_MIN;
 		}
 
-		// println("RTT = %d, RTTS = %d, RTTD = %d, RTO = %d", rtt, mRtts, mRttd, mRto);
+#if CAVAN_UDP_DEBUG
+		println("RTT = %d, RTTS = %d, RTTD = %d, RTO = %d", rtt, mRtts, mRttd, mRto);
+#endif
 
 		if (mAcks < mCwnd) {
 			mAcks++;
@@ -486,7 +479,9 @@ void UdpLink::onUdpPackSended(UdpPack *pack, u64 time)
 			}
 		}
 
+#if CAVAN_UDP_DEBUG
 		println("cwnd = %d, acks = %d", mCwnd, mAcks);
+#endif
 	}
 }
 
@@ -699,19 +694,16 @@ void UdpSock::recvLoop(void)
 			break;
 
 		case CAVAN_UDP_DATA:
-			static int count = 0;
-			println("count = %d", count);
-			if (++count == 100) {
-				count = 0;
-				break;
-			}
-
+#if CAVAN_UDP_DEBUG
 			println("CAVAN_UDP_DATA[%d]", header->sequence);
+#endif
 			processUdpPackData(header, length);
 			break;
 
 		case CAVAN_UDP_DATA_ACK:
+#if CAVAN_UDP_DEBUG
 			println("CAVAN_UDP_DATA_ACK[%d]", header->sequence);
+#endif
 			processUdpPackDataAck(header, length);
 			break;
 

@@ -61,7 +61,7 @@ public:
 		}
 
 		virtual void onUdpDataReceived(const void *buff, u16 length) override {
-			println("onUdpDataReceived: %d", length);
+			// println("onUdpDataReceived: %d", length);
 			network_client_send(&mClient, buff, length);
 		}
 	};
@@ -94,7 +94,7 @@ public:
 
 	protected:
 		virtual void onUdpDataReceived(const void *buff, u16 length) {
-			println("onUdpDataReceived: %d", length);
+			// println("onUdpDataReceived: %d", length);
 			mClient->send(mClient, buff, length);
 		}
 	};
