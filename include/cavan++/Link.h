@@ -262,6 +262,18 @@ public:
 	virtual bool isNotEmpty(void) {
 		return (next != prev);
 	}
+
+	virtual void destroy(void) {
+		T *node = getNext();
+
+		while (node != this) {
+			T *next = node->getNext();
+			delete node;
+			node = next;
+		}
+
+		reset();
+	}
 };
 
 template <class T>

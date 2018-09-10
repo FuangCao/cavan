@@ -285,6 +285,11 @@ u64 UdpWin::resend(UdpLink *link, u64 time)
 		return 0;
 	}
 
+	if (pack->getTimes() > 10) {
+		link->onUdpError();
+		return 0;
+	}
+
 	u64 overtime = pack->getTime();
 	if (overtime == 0) {
 		return 0;
@@ -428,6 +433,11 @@ void UdpLink::processUdpPackAck(cavan_udp_header_t *header, u16 length)
 	flush();
 }
 
+void UdpLink::onUdpError(void)
+{
+	mSock->recycle(this);
+}
+
 void UdpLink::onUdpTimerFire(u64 time)
 {
 	AutoLock lock(mLock);
@@ -558,7 +568,9 @@ void UdpSock::recycle(u16 channel)
 	}
 
 	mLinks[channel] = NULL;
-	delete link;
+
+	link->onUdpRecycle();
+	mGarbageCollector.enqueue(link);
 }
 
 void UdpSock::processUdpPackTest(cavan_udp_header_t *header, u16 length)
@@ -881,5 +893,6 @@ int UdpSock::join(void)
 
 void UdpSock::onUdpKeepAlive(void)
 {
-	// pr_pos_info();
+	SimpleLink<UdpLink> *head = mGarbageCollector.swap();
+	head->destroy();
 }

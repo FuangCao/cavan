@@ -244,6 +244,11 @@ protected:
 	virtual void onUdpTimerFire(u64 time);
 	virtual void onUdpPackLose(UdpPack *pack, u64 time);
 	virtual void onUdpPackSended(UdpPack *pack, u64 time);
+	virtual void onUdpError(void);
+
+	virtual void onUdpRecycle(void) {
+		pr_pos_info();
+	}
 
 	virtual bool onUdpAccepted(void) {
 		return false;
@@ -275,6 +280,7 @@ private:
 	UdpLink *mHead;
 	SimpleWaitQueue<UdpLink> mQueueReady;
 	SimpleLinkQueue<UdpLink> mQueuePending;
+	MultiBufferQueue<UdpLink, 3> mGarbageCollector;
 
 	static void *SendThread(void *data) {
 		UdpSock *sock = (UdpSock *) data;
