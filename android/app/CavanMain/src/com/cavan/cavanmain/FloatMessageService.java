@@ -669,7 +669,7 @@ public class FloatMessageService extends FloatWindowService {
 			view.setText(text);
 		}
 
-		// view.setMaxLines(1);
+		view.setMaxLines(5);
 		view.setTextSize(size);
 		view.setTextColor(color);
 		view.setPadding(TEXT_PADDING, 0, TEXT_PADDING, 0);
