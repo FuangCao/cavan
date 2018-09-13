@@ -363,12 +363,12 @@ bool UdpLink::send(UdpPack *pack, bool nonblock)
 	return false;
 }
 
-ssize_t UdpLink::send(cavan_udp_header_t *header)
+ssize_t UdpLink::send(const cavan_udp_header_t *header)
 {
 	return mSock->send(this, header, sizeof(cavan_udp_header_t));
 }
 
-ssize_t UdpLink::sendResponse(cavan_udp_header_t *header, cavan_udp_pack_t type)
+ssize_t UdpLink::sendResponse(const cavan_udp_header_t *header, cavan_udp_pack_t type)
 {
 	cavan_udp_header_t response;
 	u16 sequence = header->sequence;
@@ -415,7 +415,7 @@ bool UdpLink::connect(void)
 	return false;
 }
 
-void UdpLink::processUdpPackData(cavan_udp_header_t *header, u16 length)
+void UdpLink::processUdpPackData(const cavan_udp_header_t *header, u16 length)
 {
 	AutoLock lock(mLock);
 
@@ -424,10 +424,10 @@ void UdpLink::processUdpPackData(cavan_udp_header_t *header, u16 length)
 	}
 }
 
-void UdpLink::processUdpPackAck(cavan_udp_header_t *header, u16 length)
+void UdpLink::confirm(u16 sequence)
 {
 	mLock.acquire();
-	mSendWin.confirm(this, header->sequence);
+	mSendWin.confirm(this, sequence);
 	mLock.release();
 
 	flush();
@@ -562,6 +562,8 @@ out_found:
 
 void UdpSock::recycle(u16 channel)
 {
+	AutoLock lock(mLock);
+
 	UdpLink *link = mLinks[channel];
 	if (link == NULL) {
 		return;
@@ -573,12 +575,24 @@ void UdpSock::recycle(u16 channel)
 	mGarbageCollector.enqueue(link);
 }
 
-void UdpSock::processUdpPackTest(cavan_udp_header_t *header, u16 length)
+ssize_t UdpSock::sendResponse(const cavan_udp_header_t *header, cavan_udp_pack_t type, const struct sockaddr_in *addr)
+{
+	cavan_udp_header_t response;
+
+	response.src_channel = header->dest_channel;
+	response.dest_channel = header->src_channel;
+	response.sequence = header->sequence;
+	response.type = type;
+
+	return inet_sendto(mSockfd, &response, sizeof(response), addr);
+}
+
+void UdpSock::processUdpPackTest(const cavan_udp_header_t *header)
 {
 	pr_pos_info();
 }
 
-void UdpSock::processUdpPackSync(cavan_udp_header_t *header, u16 length, struct sockaddr_in *addr)
+void UdpSock::processUdpPackSync(const cavan_udp_header_t *header, const struct sockaddr_in *addr)
 {
 	UdpLink *link = alloc(addr);
 	if (link == NULL) {
@@ -596,7 +610,7 @@ void UdpSock::processUdpPackSync(cavan_udp_header_t *header, u16 length, struct 
 	link->send(pack, false);
 }
 
-void UdpSock::processUdpPackSyncAck1(cavan_udp_header_t *header, u16 length)
+void UdpSock::processUdpPackSyncAck1(const cavan_udp_header_t *header)
 {
 	UdpLink *link = getLink(header);
 	if (link == NULL) {
@@ -608,14 +622,14 @@ void UdpSock::processUdpPackSyncAck1(cavan_udp_header_t *header, u16 length)
 	if (channel == 0 || header->src_channel == channel) {
 		link->setRemoteChannel(header->src_channel);
 		link->sendResponse(header, CAVAN_UDP_SYNC_ACK2);
-		link->processUdpPackAck(header, length);
+		link->confirm(header->sequence);
 		onUdpConnected(link);
 	} else {
 		link->sendResponse(header, CAVAN_UDP_ERROR);
 	}
 }
 
-void UdpSock::processUdpPackSyncAck2(cavan_udp_header_t *header, u16 length)
+void UdpSock::processUdpPackSyncAck2(const cavan_udp_header_t *header)
 {
 	UdpLink *link = getLink(header);
 	if (link == NULL) {
@@ -626,14 +640,14 @@ void UdpSock::processUdpPackSyncAck2(cavan_udp_header_t *header, u16 length)
 
 	if (channel == 0 || channel == header->src_channel) {
 		link->setRemoteChannel(header->src_channel);
-		link->processUdpPackAck(header, length);
+		link->confirm(header->sequence);
 		onUdpAccepted(link);
 	} else {
 		link->sendResponse(header, CAVAN_UDP_ERROR);
 	}
 }
 
-void UdpSock::processUdpPackData(cavan_udp_header_t *header, u16 length)
+void UdpSock::processUdpPackData(const cavan_udp_header_t *header, u16 length)
 {
 	UdpLink *link = getLink(header);
 	if (link != NULL) {
@@ -641,15 +655,44 @@ void UdpSock::processUdpPackData(cavan_udp_header_t *header, u16 length)
 	}
 }
 
-void UdpSock::processUdpPackDataAck(cavan_udp_header_t *header, u16 length)
+void UdpSock::processUdpPackDataAck(const cavan_udp_header_t *header)
 {
 	UdpLink *link = getLink(header);
 	if (link != NULL) {
-		link->processUdpPackAck(header, length);
+		link->confirm(header->sequence);
 	}
 }
 
-void UdpSock::processUdpPackError(cavan_udp_header_t *header, u16 length)
+void UdpSock::processUdpPackShut(const cavan_udp_header_t *header, const struct sockaddr_in *addr)
+{
+	UdpLink *link = getLink(header);
+	if (link != NULL) {
+		recycle(link);
+	}
+
+	sendResponse(header, CAVAN_UDP_SHUT_ACK, addr);
+}
+
+void UdpSock::processUdpPackShutAck(const cavan_udp_header_t *header)
+{
+	UdpLink *link = getLink(header);
+	if (link != NULL) {
+		link->confirm(header->sequence);
+		recycle(link);
+	}
+}
+
+void UdpSock::processUdpPackPing(const cavan_udp_header_t *header)
+{
+	pr_pos_info();
+}
+
+void UdpSock::processUdpPackPong(const cavan_udp_header_t *header)
+{
+	pr_pos_info();
+}
+
+void UdpSock::processUdpPackError(const cavan_udp_header_t *header)
 {
 	UdpLink *link = getLink(header);
 	if (link != NULL) {
@@ -686,22 +729,22 @@ void UdpSock::recvLoop(void)
 		switch (header->type) {
 		case CAVAN_UDP_TEST:
 			println("CAVAN_UDP_TEST");
-			processUdpPackTest(header, length);
+			processUdpPackTest(header);
 			break;
 
 		case CAVAN_UDP_SYNC:
 			println("CAVAN_UDP_SYNC");
-			processUdpPackSync(header, length, &addr);
+			processUdpPackSync(header, &addr);
 			break;
 
 		case CAVAN_UDP_SYNC_ACK1:
 			println("CAVAN_UDP_SYNC_ACK1");
-			processUdpPackSyncAck1(header, length);
+			processUdpPackSyncAck1(header);
 			break;
 
 		case CAVAN_UDP_SYNC_ACK2:
 			println("CAVAN_UDP_SYNC_ACK2");
-			processUdpPackSyncAck2(header, length);
+			processUdpPackSyncAck2(header);
 			break;
 
 		case CAVAN_UDP_DATA:
@@ -715,12 +758,30 @@ void UdpSock::recvLoop(void)
 #if CAVAN_UDP_DEBUG
 			println("CAVAN_UDP_DATA_ACK[%d]", header->sequence);
 #endif
-			processUdpPackDataAck(header, length);
+			processUdpPackDataAck(header);
+			break;
+
+		case CAVAN_UDP_SHUT:
+			println("CAVAN_UDP_SHUT");
+			processUdpPackShut(header, &addr);
+			break;
+
+		case CAVAN_UDP_SHUT_ACK:
+			println("CAVAN_UDP_SHUT_ACK");
+			processUdpPackShutAck(header);
+			break;
+
+		case CAVAN_UDP_PING:
+			processUdpPackPing(header);
+			break;
+
+		case CAVAN_UDP_PONG:
+			processUdpPackPong(header);
 			break;
 
 		case CAVAN_UDP_ERROR:
 			println("CAVAN_UDP_ERROR");
-			processUdpPackError(header, length);
+			processUdpPackError(header);
 			break;
 
 		default:
@@ -787,7 +848,7 @@ void UdpSock::sendLoop(void)
 
 			link = mHead;
 
-			if (link != NULL) {
+			if (link != NULL && mLinks[link->getLocalChannel()] == link) {
 				if (link->time <= mseconds) {
 					break;
 				}

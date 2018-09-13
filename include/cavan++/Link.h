@@ -177,8 +177,8 @@ public:
 template <class T>
 class SimpleLink {
 private:
-	SimpleLink<T> *prev;
-	SimpleLink<T> *next;
+	SimpleLink<T> *_simple_link_prev;
+	SimpleLink<T> *_simple_link_next;
 
 public:
 	SimpleLink(void) {
@@ -188,88 +188,88 @@ public:
 	virtual ~SimpleLink() {}
 
 	virtual T *getPrev(void) {
-		return (T *) prev;
+		return (T *) _simple_link_prev;
 	}
 
 	virtual T *getNext(void) {
-		return (T *) next;
+		return (T *) _simple_link_next;
 	}
 
 	virtual void reset(void) {
-		next = prev = this;
+		_simple_link_next = _simple_link_prev = this;
 	}
 
 	virtual void prepend(T *node) {
-		node->next = next;
-		node->prev = this;
-		next->prev = node;
-		next = node;
+		node->_simple_link_next = _simple_link_next;
+		node->_simple_link_prev = this;
+		_simple_link_next->_simple_link_prev = node;
+		_simple_link_next = node;
 	}
 
 	virtual void append(T *node) {
-		node->prev = prev;
-		node->next = this;
-		prev->next = node;
-		prev = node;
+		node->_simple_link_prev = _simple_link_prev;
+		node->_simple_link_next = this;
+		_simple_link_prev->_simple_link_next = node;
+		_simple_link_prev = node;
 	}
 
 	virtual void remove(void) {
-		prev->next = next;
-		next->prev = prev;
+		_simple_link_prev->_simple_link_next = _simple_link_next;
+		_simple_link_next->_simple_link_prev = _simple_link_prev;
 		reset();
 	}
 
 	virtual T *removeFirst(void) {
-		SimpleLink<T> *node = next;
+		SimpleLink<T> *node = _simple_link_next;
 
 		if (node == this) {
 			return NULL;
 		}
 
-		next = node->next;
-		next->prev = this;
+		_simple_link_next = node->_simple_link_next;
+		_simple_link_next->_simple_link_prev = this;
 		node->reset();
 
 		return (T *) node;
 	}
 
 	virtual T *removeLast(void) {
-		SimpleLink<T> *node = prev;
+		SimpleLink<T> *node = _simple_link_prev;
 
 		if (node == this) {
 			return NULL;
 		}
 
-		prev = node->prev;
-		prev->next = this;
+		_simple_link_prev = node->_simple_link_prev;
+		_simple_link_prev->_simple_link_next = this;
 		node->reset();
 
 		return (T *) node;
 	}
 
 	virtual bool isFree(void) {
-		return (next == prev);
+		return (_simple_link_next == _simple_link_prev);
 	}
 
 	virtual bool isUsed(void) {
-		return (next != prev);
+		return (_simple_link_next != _simple_link_prev);
 	}
 
 	virtual bool isEmpty(void) {
-		return (next == prev);
+		return (_simple_link_next == _simple_link_prev);
 	}
 
 	virtual bool isNotEmpty(void) {
-		return (next != prev);
+		return (_simple_link_next != _simple_link_prev);
 	}
 
 	virtual void destroy(void) {
 		T *node = getNext();
 
 		while (node != this) {
-			T *next = node->getNext();
+			T *_simple_link_next = node->getNext();
 			delete node;
-			node = next;
+			node = _simple_link_next;
 		}
 
 		reset();

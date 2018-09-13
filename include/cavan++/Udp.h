@@ -37,9 +37,11 @@ typedef enum {
 	CAVAN_UDP_SYNC_ACK1,
 	CAVAN_UDP_SYNC_ACK2,
 	CAVAN_UDP_DATA,
-	CAVAN_UDP_WIND,
-	CAVAN_UDP_PING,
 	CAVAN_UDP_DATA_ACK,
+	CAVAN_UDP_SHUT,
+	CAVAN_UDP_SHUT_ACK,
+	CAVAN_UDP_PING,
+	CAVAN_UDP_PONG,
 	CAVAN_UDP_ERROR,
 } cavan_udp_pack_t;
 
@@ -223,6 +225,7 @@ public:
 
 	virtual void setSockAddr(const char *host, u16 port);
 	virtual void setSockAddr(const char *url);
+	virtual void confirm(u16 sequence);
 
 	virtual u16 getReadSeq(void) {
 		return mRecvWin.getSequence();
@@ -231,14 +234,13 @@ public:
 public:
 	virtual ssize_t send(const void *buff, size_t size, bool nonblock);
 	virtual bool send(UdpPack *pack, bool nonblock);
-	virtual ssize_t send(cavan_udp_header_t *header);
-	virtual ssize_t sendResponse(cavan_udp_header_t *header, cavan_udp_pack_t type);
+	virtual ssize_t send(const cavan_udp_header_t *header);
+	virtual ssize_t sendResponse(const cavan_udp_header_t *header, cavan_udp_pack_t type);
 	virtual int flush(void);
 	virtual bool connect(void);
 
 protected:
-	virtual void processUdpPackData(cavan_udp_header_t *header, u16 length);
-	virtual void processUdpPackAck(cavan_udp_header_t *header, u16 length);
+	virtual void processUdpPackData(const cavan_udp_header_t *header, u16 length);
 
 protected:
 	virtual void onUdpTimerFire(u64 time);
@@ -303,7 +305,7 @@ public:
 		return mLinks[channel];
 	}
 
-	virtual UdpLink *getLink(cavan_udp_header_t *header) {
+	virtual UdpLink *getLink(const cavan_udp_header_t *header) {
 		return getLink(header->dest_channel);
 	}
 
@@ -324,6 +326,8 @@ public:
 		return inet_sendto(mSockfd, buff, size, link->getSockAddr());
 	}
 
+	virtual ssize_t sendResponse(const cavan_udp_header_t *header, cavan_udp_pack_t type, const struct sockaddr_in *addr);
+
 	virtual UdpLink *connect(struct sockaddr_in *addr);
 	virtual UdpLink *connect(const char *host, u16 port);
 	virtual UdpLink *connect(const char *url);
@@ -336,13 +340,17 @@ public:
 	virtual void sendLoop(void);
 
 protected:
-	virtual void processUdpPackTest(cavan_udp_header_t *header, u16 length);
-	virtual void processUdpPackSync(cavan_udp_header_t *header, u16 length, struct sockaddr_in *addr);
-	virtual void processUdpPackSyncAck1(cavan_udp_header_t *header, u16 length);
-	virtual void processUdpPackSyncAck2(cavan_udp_header_t *header, u16 length);
-	virtual void processUdpPackData(cavan_udp_header_t *header, u16 length);
-	virtual void processUdpPackDataAck(cavan_udp_header_t *header, u16 length);
-	virtual void processUdpPackError(cavan_udp_header_t *header, u16 length);
+	virtual void processUdpPackTest(const cavan_udp_header_t *header);
+	virtual void processUdpPackSync(const cavan_udp_header_t *header, const struct sockaddr_in *addr);
+	virtual void processUdpPackSyncAck1(const cavan_udp_header_t *header);
+	virtual void processUdpPackSyncAck2(const cavan_udp_header_t *header);
+	virtual void processUdpPackData(const cavan_udp_header_t *header, u16 length);
+	virtual void processUdpPackDataAck(const cavan_udp_header_t *header);
+	virtual void processUdpPackShut(const cavan_udp_header_t *header, const struct sockaddr_in *addr);
+	virtual void processUdpPackShutAck(const cavan_udp_header_t *header);
+	virtual void processUdpPackPing(const cavan_udp_header_t *header);
+	virtual void processUdpPackPong(const cavan_udp_header_t *header);
+	virtual void processUdpPackError(const cavan_udp_header_t *header);
 
 	virtual UdpLink *newUdpLink(const struct sockaddr_in *addr, u16 channel) {
 		return new UdpLink(this, addr, channel);
