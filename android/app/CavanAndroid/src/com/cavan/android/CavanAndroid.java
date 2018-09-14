@@ -97,6 +97,7 @@ public class CavanAndroid {
 	public static final int SDK_VERSION_60  = Build.VERSION_CODES.M;
 	public static final int SDK_VERSION_70  = 24;
 	public static final int SDK_VERSION_71  = 25;
+	public static final int SDK_VERSION_80  = 26;
 
 	public static final String CLIP_LABEL_DEFAULT = "Cavan";
 	public static final String CLIP_LABEL_TEMP = CLIP_LABEL_DEFAULT + "Temp";
@@ -1179,5 +1180,31 @@ public class CavanAndroid {
 		}
 
 		return true;
+	}
+
+	public static boolean requestDismissKeyguard(Activity activity) {
+		if (SDK_VERSION < SDK_VERSION_80) {
+			return true;
+		}
+
+		KeyguardManager manager = (KeyguardManager) activity.getSystemService(Context.KEYGUARD_SERVICE);
+		if (manager == null) {
+			return false;
+		}
+
+		try {
+			Class<?> KeyguardDismissCallback = Class.forName("android.app.KeyguardManager$KeyguardDismissCallback");
+			if (KeyguardDismissCallback == null) {
+				return false;
+			}
+
+			Class<?>[] types = { Activity.class, KeyguardDismissCallback };
+			CavanJava.invokeMethodTyped(manager, "requestDismissKeyguard", types, activity, null);
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return false;
 	}
 }

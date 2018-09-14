@@ -638,7 +638,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	@Override
 	public boolean onPreferenceChange(Preference preference, Object object) {
 		if (preference == mPreferenceFloatTime) {
-			return setDesktopFloatTimerEnable((boolean) object);
+			return setDesktopFloatTimerEnable((Boolean) object);
 		} else if (preference == mPreferenceRedPacketCodeSend) {
 			mPreferenceAutoOpenApp.setChecked(true);
 			mPreferenceAutoOpenAlipay.setChecked(true);
@@ -731,7 +731,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		} else if (preference == mPreferenceDisableSuspend) {
 			if (mFloatMessageService != null) {
 				try {
-					mFloatMessageService.setSuspendDisable((boolean) object);
+					mFloatMessageService.setSuspendDisable((Boolean) object);
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}
@@ -739,11 +739,11 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		} else if (preference == mPreferenceName || preference == mPreferencePhone) {
 			preference.setSummary((CharSequence) object);
 		} else if (preference == mPreferenceOnTimeNotify) {
-			if ((boolean) object) {
+			if ((Boolean) object) {
 				CavanBroadcastReceiver.setOnTimeNotifyAlarm(this);
 			}
 		} else if (preference == mPreferenceOnTimeMute) {
-			CavanBroadcastReceiver.setOnTimeMuteAlarm(this, (boolean) object, mPreferenceMuteTimeSetting.getValue());
+			CavanBroadcastReceiver.setOnTimeMuteAlarm(this, (Boolean) object, mPreferenceMuteTimeSetting.getValue());
 		} else if (preference == mPreferenceMuteTimeSetting) {
 			String value = (String) object;
 			CavanBroadcastReceiver.setOnTimeMuteAlarm(this, mPreferenceOnTimeMute.isChecked(), value);

@@ -39,6 +39,12 @@ public class CavanKeyguardActivity extends Activity implements OnClickListener {
 	}
 
 	@Override
+	protected void onResume() {
+		super.onResume();
+		CavanAndroid.requestDismissKeyguard(this);
+	}
+
+	@Override
 	public void onClick(View v) {
 		finish();
 	}

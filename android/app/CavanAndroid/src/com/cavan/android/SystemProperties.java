@@ -53,7 +53,7 @@ public class SystemProperties {
 	public static int getInt(String key, int def) {
 		try {
 			String value = get(key);
-			if (value != null) {
+			if (value != null && value.length() > 0) {
 				return Integer.parseInt(value);
 			}
 		} catch (Exception e) {
@@ -66,7 +66,7 @@ public class SystemProperties {
 	public static long getLong(String key, long def) {
 		try {
 			String value = get(key);
-			if (value != null) {
+			if (value != null && value.length() > 0) {
 				return Long.parseLong(value);
 			}
 		} catch (Exception e) {
@@ -78,7 +78,7 @@ public class SystemProperties {
 
 	public static boolean getBoolean(String key, boolean def) {
 		String value = get(key);
-		if (value == null) {
+		if (value == null || value.isEmpty()) {
 			return def;
 		}
 
@@ -88,7 +88,7 @@ public class SystemProperties {
 	public static float getFloat(String key, float def) {
 		try {
 			String value = get(key);
-			if (value != null) {
+			if (value != null && value.length() > 0) {
 				return Float.parseFloat(value);
 			}
 		} catch (Exception e) {
@@ -101,7 +101,7 @@ public class SystemProperties {
 	public static double getDouble(String key, double def) {
 		try {
 			String value = get(key);
-			if (value != null) {
+			if (value != null && value.length() > 0) {
 				return Double.parseDouble(value);
 			}
 		} catch (Exception e) {
