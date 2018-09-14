@@ -226,7 +226,7 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 		if (CavanMessageActivity.isDisableKeyguardEnabled(this)) {
 			CavanKeyguardActivity.show(this);
 		} else {
-			CavanAndroid.startLauncher(this);CavanAndroid.pLog();
+			CavanAndroid.startLauncher(this);
 		}
 	}
 }
