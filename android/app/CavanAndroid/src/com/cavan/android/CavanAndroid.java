@@ -1184,6 +1184,7 @@ public class CavanAndroid {
 
 	public static boolean requestDismissKeyguard(Activity activity) {
 		if (SDK_VERSION < SDK_VERSION_80) {
+			setLockScreenEnable(activity, false);
 			return true;
 		}
 

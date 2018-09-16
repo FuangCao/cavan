@@ -196,6 +196,17 @@
             </intent-filter>
         </activity>
         <activity
+            android:name="com.cavan.accessibility.CavanUnlockActivity"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTask"
+            android:showOnLockScreen="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name="RedPacketEditActivity"
             android:launchMode="singleTask"
             android:windowSoftInputMode="stateHidden" >

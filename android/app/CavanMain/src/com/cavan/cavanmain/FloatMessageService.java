@@ -37,6 +37,7 @@ import android.widget.TextView;
 import com.cavan.accessibility.CavanAccessibilityAlipay;
 import com.cavan.accessibility.CavanAccessibilityService;
 import com.cavan.accessibility.CavanRedPacketAlipay;
+import com.cavan.accessibility.CavanUnlockActivity;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanThreadedHandler;
 import com.cavan.android.CavanWakeLock;
@@ -632,7 +633,7 @@ public class FloatMessageService extends FloatWindowService {
 			enable = true;
 		}
 
-		CavanAndroid.setLockScreenEnable(this, enable);
+		CavanUnlockActivity.setLockScreenEnable(this, enable);
 
 		return true;
 	}
