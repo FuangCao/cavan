@@ -6,7 +6,7 @@ import android.os.Bundle;
 
 import com.cavan.android.CavanAndroid;
 
-public class CavanUnlockActivity extends Activity {
+public class CavanUnlockActivity extends Activity implements Runnable {
 
 	public static void setLockScreenEnable(Context context, boolean enable) {
 		if (enable || CavanAndroid.SDK_VERSION < CavanAndroid.SDK_VERSION_80) {
@@ -21,6 +21,11 @@ public class CavanUnlockActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		CavanAndroid.setActivityKeyguardEnable(this, false);
 		CavanAndroid.requestDismissKeyguard(this);
+		CavanAndroid.postRunnable(this);
+	}
+
+	@Override
+	public void run() {
 		finish();
 	}
 }
