@@ -404,55 +404,57 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			return null;
 		}
 
-		if (mInformationGroups.contains(group)) {
-			if (content.charAt(0) != '@') {
+		if (content.charAt(0) != '@') {
+			if (mInformationGroups.contains(group)) {
 				for (String keyword : mInformations) {
 					if (content.contains(keyword)) {
 						return keyword;
 					}
 				}
-			} else {
-				int times = CavanMessageActivity.getThanksNotify(this);
-				if (times > 0) {
-					Iterator<ThanksNode> iterator = mThanks.values().iterator();
-					long time = System.currentTimeMillis();
+			}
+		} else {
+			int times = CavanMessageActivity.getThanksNotify(this);
+			if (times > 0) {
+				Iterator<ThanksNode> iterator = mThanks.values().iterator();
+				long time = System.currentTimeMillis();
 
-					while (iterator.hasNext()) {
-						ThanksNode node = iterator.next();
-						long interval = time - node.getTime();
+				while (iterator.hasNext()) {
+					ThanksNode node = iterator.next();
+					long interval = time - node.getTime();
 
-						if (interval > THANKS_SHORT_OVERTIME) {
-							if (interval > THANKS_LONG_OVERTIME || node.getCount() < times) {
-								iterator.remove();
-							}
+					if (interval > THANKS_SHORT_OVERTIME) {
+						if (interval > THANKS_LONG_OVERTIME || node.getCount() < times) {
+							iterator.remove();
 						}
 					}
-
-					String thanks = finder.getThanks();
-					if (thanks != null) {
-						ThanksNode node = mThanks.get(thanks);
-						if (node == null) {
-							node = new ThanksNode();
-							mThanks.put(thanks, node);
-						}
-
-						if (node.increase(time) == times) {
-							String message = thanks + " 大水";
-
-							if (CavanMessageActivity.isThanksShareEnabled(this)) {
-								try {
-									mFloatMessageService.sendTcpCommand(FloatMessageService.NET_CMD_NOTIFY + message);
-								} catch (RemoteException e) {
-									e.printStackTrace();
-								}
-							}
-
-							return message;
-						}
-					}
-				} else {
-					mThanks.clear();
 				}
+
+				String thanks = finder.getThanks();
+				if (thanks != null) {
+					ThanksNode node = mThanks.get(thanks);
+					if (node == null) {
+						node = new ThanksNode();
+						mThanks.put(thanks, node);
+					}
+
+					if (node.increase(time) == times) {
+						String message = thanks + " 大水";
+
+						if (CavanMessageActivity.isThanksShareEnabled(this)) {
+							try {
+								mFloatMessageService.sendTcpCommand(FloatMessageService.NET_CMD_NOTIFY + message);
+							} catch (RemoteException e) {
+								e.printStackTrace();
+							}
+						}
+
+						mInformationGroups.add(group);
+
+						return message;
+					}
+				}
+			} else {
+				mThanks.clear();
 			}
 		}
 
@@ -525,7 +527,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				if (label.equals(CavanAndroid.CLIP_LABEL_TEMP)) {
 					return;
 				}
-			} else if (CavanMessageActivity.isClipboardShareEnabled(this)) {
+			} else if (CavanMessageActivity.isClipboardShareEnabled(this) && text.length() > 0) {
 				FloatEditorDialog dialog = FloatEditorDialog.getInstance(this, text, false, false);
 				dialog.show(6000);
 			}

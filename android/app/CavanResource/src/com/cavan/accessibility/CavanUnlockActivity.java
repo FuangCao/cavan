@@ -1,6 +1,7 @@
 package com.cavan.accessibility;
 
 import android.app.Activity;
+import android.app.KeyguardManager;
 import android.content.Context;
 import android.os.Bundle;
 
@@ -8,12 +9,26 @@ import com.cavan.android.CavanAndroid;
 
 public class CavanUnlockActivity extends Activity implements Runnable {
 
-	public static void setLockScreenEnable(Context context, boolean enable) {
-		if (enable || CavanAndroid.SDK_VERSION < CavanAndroid.SDK_VERSION_80) {
-			CavanAndroid.setLockScreenEnable(context, enable);
-		} else {
-			CavanAndroid.startActivity(context, CavanUnlockActivity.class);
+	public static boolean setLockScreenEnable(Context context, boolean enable) {
+		KeyguardManager manager = (KeyguardManager) CavanAndroid.getSystemServiceCached(context, KEYGUARD_SERVICE);
+		if (manager == null) {
+			return false;
 		}
+
+		boolean enabled = CavanAndroid.isLockScreenEnabled(manager);
+		CavanAndroid.dLog("isLockScreenEnabled: " + enabled);
+
+		if (enable == enabled) {
+			return true;
+		}
+
+		if (enable || CavanAndroid.SDK_VERSION < CavanAndroid.SDK_VERSION_80) {
+			return CavanAndroid.setLockScreenEnable(context, enable);
+		}
+
+		CavanAndroid.dLog("startActivity: " + CavanUnlockActivity.class);
+
+		return CavanAndroid.startActivity(context, CavanUnlockActivity.class);
 	}
 
 	@Override

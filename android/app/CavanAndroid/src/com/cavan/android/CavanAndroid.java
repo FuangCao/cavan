@@ -347,6 +347,14 @@ public class CavanAndroid {
 		return true;
 	}
 
+	public static boolean isLockScreenEnabled(KeyguardManager manager) {
+		if (SDK_VERSION < SDK_VERSION_41) {
+			return manager.inKeyguardRestrictedInputMode();
+		}
+
+		return manager.isKeyguardLocked();
+	}
+
 	public static void releaseWakeLock() {
 		CavanAndroid.dLog("releaseWakeLock");
 
