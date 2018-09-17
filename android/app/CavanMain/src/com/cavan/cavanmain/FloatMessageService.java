@@ -219,16 +219,23 @@ public class FloatMessageService extends FloatWindowService {
 				} else {
 					CavanAndroid.dLog("MSG_SHOW_NOTIFY");
 					view = mTextViewNotify;
-					setAutoUnlockLevel(AUTO_UNLOCK_KEY_WORD);
-					CavanAndroid.acquireWakeupLock(getApplicationContext(), 20000);
 				}
 
 				removeMessages(msg.what);
+
+				if (view == null) {
+					break;
+				}
 
 				if (msg.obj == null) {
 					view.setVisibility(View.GONE);
 				} else {
 					CharSequence message;
+
+					if (msg.what == MSG_SHOW_NOTIFY) {
+						CavanAndroid.acquireWakeupLock(getApplicationContext(), 20000);
+						setAutoUnlockLevel(AUTO_UNLOCK_KEY_WORD);
+					}
 
 					if (msg.obj instanceof CharSequence) {
 						message = (CharSequence) msg.obj;
@@ -240,7 +247,7 @@ public class FloatMessageService extends FloatWindowService {
 
 					view.setText(message);
 					view.setVisibility(View.VISIBLE);
-					sendEmptyMessageDelayed(msg.what, 8000);
+					sendEmptyMessageDelayed(msg.what, 10000);
 				}
 				break;
 
@@ -670,7 +677,7 @@ public class FloatMessageService extends FloatWindowService {
 			view.setText(text);
 		}
 
-		view.setMaxLines(5);
+		view.setMaxLines(3);
 		view.setTextSize(size);
 		view.setTextColor(color);
 		view.setPadding(TEXT_PADDING, 0, TEXT_PADDING, 0);

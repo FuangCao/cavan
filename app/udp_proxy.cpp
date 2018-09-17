@@ -54,13 +54,13 @@ public:
 		}
 
 	protected:
-		virtual bool onUdpAccepted(void) override {
+		virtual bool onUdpAccepted(void) __OVERRIDE {
 			network_client_open2(&mClient, "127.0.0.1:1234", 0);
 			cavan_pthread_run(TcpReceiveThread, this);
 			return true;
 		}
 
-		virtual void onUdpDataReceived(const void *buff, u16 length) override {
+		virtual void onUdpDataReceived(const void *buff, u16 length) __OVERRIDE {
 			// println("onUdpDataReceived: %d", length);
 			network_client_send(&mClient, buff, length);
 		}
@@ -163,7 +163,7 @@ protected:
 	}
 
 public:
-	virtual int start(void) override {
+	virtual int start(void) __OVERRIDE {
 		int ret;
 
 		ret = UdpSock::start();
@@ -174,7 +174,7 @@ public:
 		return cavan_pthread_create(&mAcceptThread, AcceptThread, this, true);
 	}
 
-	virtual int join(void) override {
+	virtual int join(void) __OVERRIDE {
 		int ret;
 
 		ret = UdpSock::join();

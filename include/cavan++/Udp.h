@@ -381,7 +381,7 @@ public:
 	UdpSockT(void) : UdpSock() {}
 
 protected:
-	virtual UdpLink *newUdpLink(const struct sockaddr_in *addr, u16 channel) override {
+	virtual UdpLink *newUdpLink(const struct sockaddr_in *addr, u16 channel) __OVERRIDE {
 		return new T(this, addr, channel);
 	}
 };

@@ -1092,6 +1092,14 @@ class CavanCommandImServer extends CavanNativeCommand {
 	}
 }
 
+class CavanCommandUdpProxy extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doUdpProxy(async, args);
+	}
+}
+
 public class CavanNative {
 
 	public static HashMap<String, CavanNativeCommand> sHashMap = new HashMap<String, CavanNativeCommand>();
@@ -1235,6 +1243,7 @@ public class CavanNative {
 		sHashMap.put("cpp_http_service", new CavanCommandCppHttpService());
 		sHashMap.put("im_client", new CavanCommandImClient());
 		sHashMap.put("im_server", new CavanCommandImServer());
+		sHashMap.put("udp_proxy", new CavanCommandUdpProxy());
 	}
 
 	public static native int doAbspath(boolean async, String... args);
@@ -1373,4 +1382,5 @@ public class CavanNative {
 	public static native int doCppHttpService(boolean async, String... args);
 	public static native int doImClient(boolean async, String... args);
 	public static native int doImServer(boolean async, String... args);
+	public static native int doUdpProxy(boolean async, String... args);
 }

@@ -4,11 +4,14 @@
 #include <stdarg.h>
 
 #ifdef __cplusplus
-#ifndef CONFIG_ANDROID
+#ifdef CONFIG_ANDROID
+#define __OVERRIDE
+#else
 #include <iostream>
-#endif
+#define __OVERRIDE			override
 
 using namespace std;
+#endif
 #endif
 
 #ifdef LOG_TAG

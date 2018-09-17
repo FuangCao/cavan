@@ -23,10 +23,8 @@ public class CavanUnlockActivity extends Activity implements Runnable {
 		}
 
 		if (enable || CavanAndroid.SDK_VERSION < CavanAndroid.SDK_VERSION_80) {
-			return CavanAndroid.setLockScreenEnable(context, enable);
+			return CavanAndroid.setLockScreenEnable(manager, enable);
 		}
-
-		CavanAndroid.dLog("startActivity: " + CavanUnlockActivity.class);
 
 		return CavanAndroid.startActivity(context, CavanUnlockActivity.class);
 	}

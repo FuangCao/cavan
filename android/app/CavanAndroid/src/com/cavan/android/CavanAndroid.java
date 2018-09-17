@@ -814,6 +814,7 @@ public class CavanAndroid {
 	public static boolean startActivity(Context context, Intent intent) {
 		try {
 			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+			CavanAndroid.dLog("startActivity: " + intent);
 			context.startActivity(intent);
 			return true;
 		} catch (Exception e) {

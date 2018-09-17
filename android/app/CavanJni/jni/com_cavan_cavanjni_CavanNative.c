@@ -953,3 +953,10 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doImServer(JNIEnv *env, jclas
 {
 	return CavanMainExecute(env, "im_server", async, args, do_cavan_im_server);
 }
+
+extern int do_cavan_udp_proxy(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doUdpProxy(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "udp_proxy", async, args, do_cavan_udp_proxy);
+}

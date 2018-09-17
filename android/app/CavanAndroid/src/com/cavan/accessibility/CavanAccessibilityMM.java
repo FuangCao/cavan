@@ -2188,6 +2188,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(new DetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI"));
 		addWindow(new DetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI"));
 		addWindow(new WebViewWindow("com.tencent.mm.plugin.webview.ui.tools.WebViewUI"));
+		addWindow(new WebViewWindow("com.tencent.mm.plugin.webview.ui.tools.WebviewMpUI"));
 		addWindow(new WebViewMenu("android.support.design.widget.c"));
 		addWindow(new ChattingMenu("android.widget.FrameLayout"));
 		addWindow(new MobileInputWindow("com.tencent.mm.ui.account.MobileInputUI"));
