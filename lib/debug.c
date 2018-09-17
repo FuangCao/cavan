@@ -23,6 +23,19 @@
 static const char *build_time_string = __DATE__ " " __TIME__;
 
 #ifndef CONFIG_ANDROID
+#ifdef CONFIG_OPENWRT
+char *dump_backtrace(char *buff, size_t size)
+{
+	*buff = 0;
+	return buff;
+}
+
+char *address_to_symbol(const void *addr, char *buff, size_t size)
+{
+	*buff = 0;
+	return buff;
+}
+#else
 #include <execinfo.h>
 
 char *dump_backtrace(char *buff, size_t size)
@@ -67,6 +80,7 @@ char *address_to_symbol(const void *addr, char *buff, size_t size)
 
 	return buff;
 }
+#endif
 #endif
 
 int dump_stack(void)

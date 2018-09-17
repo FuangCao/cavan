@@ -561,7 +561,7 @@ static inline int setsockopt_uint(int sockfd, int level, int optname, uint value
 
 static inline int setsockopt_timeval(int sockfd, int level, int optname, uint value)
 {
-	struct timeval time = { value / 1000, value % 1000 * 1000 };
+	struct timeval time = { (long int) (value / 1000), (long int) (value % 1000 * 1000) };
 	return setsockopt(sockfd, level, optname, (void *) &time, sizeof(time));
 }
 

@@ -150,6 +150,11 @@ typedef struct {
 #define OFFSETOF(type, member) \
 	MEMBER_OFFSET(type, member)
 
+#ifndef offsetof
+#define offsetof(type, member) \
+	MEMBER_OFFSET(type, member)
+#endif
+
 #define MEMBER_TO_STRUCT(addr, type, member) \
 	((type *) ((byte *) (addr) - MEMBER_OFFSET(type, member)))
 

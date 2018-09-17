@@ -1782,12 +1782,12 @@ void show_statfs(struct statfs *stfs)
 	println("f_bavail = %Ld", stfs->f_bavail);
 	println("f_bfree = %Ld", stfs->f_bfree);
 	println("f_blocks = %Ld", stfs->f_blocks);
-	println("f_bsize = %d", stfs->f_bsize);
+	println("f_bsize = %d", (int) stfs->f_bsize);
 	println("f_ffree = %Ld", stfs->f_ffree);
 	println("f_files = %Ld", stfs->f_files);
-	println("f_frsize = %d", stfs->f_frsize);
-	println("f_namelen = %d", stfs->f_namelen);
-	println("f_type = %d", stfs->f_type);
+	println("f_frsize = %d", (int) stfs->f_frsize);
+	println("f_namelen = %d", (int) stfs->f_namelen);
+	println("f_type = %d", (int) stfs->f_type);
 #endif
 }
 

@@ -1,5 +1,12 @@
 LOCAL_LIBRARY := libcavan
 
+ifeq ($(CONFIG_OPENWRT),true)
+LOCAL_SOURCE := $(call search_all_files,*.c)
+
+LOCAL_MODULE := main
+
+include $(BUILD_EXEC_PKG)
+else
 ifeq ($(BUILD_ENTRY),cavan)
 LOCAL_SOURCE := $(call search_all_files,*.c *.cc *.cpp *.cxx)
 
@@ -27,4 +34,5 @@ endif
 
 LOCAL_LIBRARY := libcavan++ $(LOCAL_LIBRARY)
 $(foreach fn,$(LOCAL_SOURCE),$(eval $(call build_as_execute,$(fn))))
+endif
 endif
