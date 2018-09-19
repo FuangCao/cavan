@@ -1,6 +1,6 @@
 LOCAL_LIBRARY := libcavan
 
-ifeq ($(CONFIG_OPENWRT),true)
+ifeq ($(ARCH),openwrt)
 LOCAL_SOURCE := $(call search_all_files,*.c)
 
 LOCAL_MODULE := main
@@ -15,6 +15,7 @@ LOCAL_SOURCE := $(LOCAL_SOURCE) $(call search_all_files,others/*.c others/*.cc o
 endif
 
 $(if $(filter %.cc %.cpp %.cxx,$(LOCAL_SOURCE)),$(eval LOCAL_LIBRARY := libcavan++ $(LOCAL_LIBRARY)))
+
 LOCAL_MODULE := main
 
 include $(BUILD_EXEC_PKG)
@@ -26,6 +27,7 @@ LOCAL_SOURCE := $(LOCAL_SOURCE) $(call search_all_files,others/*.c)
 endif
 
 $(foreach fn,$(LOCAL_SOURCE),$(eval $(call build_as_execute,$(fn))))
+
 LOCAL_SOURCE := $(call search_all_files,*.cc *.cpp *.cxx)
 
 ifeq ($(BUILD_OTHERS),true)

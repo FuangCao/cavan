@@ -7,7 +7,7 @@ APP_CORE_PATH = $(ROOT_PATH)/app/core
 INCLUDE_PATH = $(ROOT_PATH)/include
 SUB_DIRS = lib app
 
-ifneq ($(CONFIG_OPENWRT),true)
+ifneq ($(ARCH),openwrt)
 SUB_DIRS += cpp
 endif
 
@@ -38,12 +38,12 @@ CAVAN_OS_NAME = $(shell uname -s)
 
 CFLAGS += -DCAVAN_OS=\"$(CAVAN_OS_NAME)\"
 
-ifeq "${CAVAN_OS_NAME}" "Darwin"
+ifeq "$(CAVAN_OS_NAME)" "Darwin"
 CAVAN_OS_MAC = true
-CFLAGS += -DCAVAN_OS_MAC -I${INCLUDE_PATH}/mac
+CFLAGS += -DCAVAN_OS_MAC -I$(INCLUDE_PATH)/mac
 endif
 
-ifeq "${CAVAN_OS_NAME}" "Linux"
+ifeq "$(CAVAN_OS_NAME)" "Linux"
 CAVAN_OS_LINUX = true
 CFLAGS += -DCAVAN_OS_LINUX
 endif
@@ -61,16 +61,23 @@ CFLAGS +=	-Wall -Wundef -Wextra -Werror -Wsign-compare -Winit-self -Wpointer-ari
 
 CFLAGS += -DCAVAN_ARCH_$(shell echo $(ARCH) | tr '[a-z]' '[A-Z]')
 
-#ifeq (${CONFIG_OPENWRT},true)
+ifeq ($(ARCH),openwrt)
 CFLAGS += -DCONFIG_OPENWRT -muclibc
 LDFLAGS += -muclibc
-#endif
+STAGING_DIR ?= $(shell which $(CC) | sed 's/^\(.*\/staging_dir\/\).*$$/\1/g')
+LC_ALL ?= C
 
+$(info STAGING_DIR = $(STAGING_DIR))
+$(info LC_ALL = $(LC_ALL))
+
+export LC_ALL STAGING_DIR
+else
 ifeq ($(BUILD_TYPE),debug)
 CFLAGS += -DCAVAN_DEBUG
 
 ifneq ($(CAVAN_OS_MAC),true)
 CFLAGS += -rdynamic
+endif
 endif
 
 SUB_DIRS += test
@@ -83,6 +90,7 @@ endif
 CONFIG_CAVAN_SSL_CERT ?= $(ROOT_PATH)/config/ssl/cert.pem
 CONFIG_CAVAN_SSL_KEY ?= $(ROOT_PATH)/config/ssl/key.pem
 
+ifneq ($(ARCH),openwrt)
 ifeq ($(CONFIG_CAVAN_SSL),true)
 CFLAGS += -DCONFIG_CAVAN_SSL $(shell pkg-config --cflags libssl)
 CFLAGS += -DCONFIG_CAVAN_SSL_CERT=\"$(CONFIG_CAVAN_SSL_CERT)\"
@@ -111,6 +119,7 @@ endif
 ifeq ($(CONFIG_CAVAN_JPEG),true)
 CFLAGS += -DCONFIG_CAVAN_JPEG $(shell pkg-config --cflags libjpeg)
 LDFLAGS += $(shell pkg-config --libs libjpeg)
+endif
 endif
 
 ifneq ($(BUILD_ENTRY),cavan)
@@ -150,7 +159,7 @@ $(foreach path,$(OUT_LIB) $(OUT_BIN),$(shell [ -d $(path) ] || $(MKDIR) $(path))
 all: all-modules
 
 jni:
-	@+make -C "${ROOT_PATH}/android/app/CavanJni/jni"
+	@+make -C "$(ROOT_PATH)/android/app/CavanJni/jni"
 
 clean distclean:
 	@rm -rf "$(OUT_PATH)"

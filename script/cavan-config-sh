@@ -36,10 +36,17 @@ case "$1" in
 		BUILD_ENTRY="cavan"
 		BUILD_OTHERS="false"
 		;;
+	"openwrt")
+		ARCH="openwrt"
+		CROSS_COMPILE="mipsel-openwrt-linux-"
+		BUILD_TYPE="static"
+		BUILD_ENTRY="cavan"
+		BUILD_OTHERS="false"
+		;;
 	*)
-		read_select "Target Arch" host arm x86
+		read_select "Target Arch" host arm x86 openwrt
 		ARCH=${SELECT}
-		read_select "Toolchian prefix" none arm-linux- arm-cavan-linux-gnueabi- arm-none-linux-gnueabi-
+		read_select "Toolchian prefix" none arm-linux- arm-cavan-linux-gnueabi- arm-none-linux-gnueabi- mipsel-openwrt-linux-
 		CROSS_COMPILE=${SELECT}
 		read_select "Build type" debug release static
 		BUILD_TYPE=${SELECT}

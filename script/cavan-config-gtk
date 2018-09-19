@@ -31,6 +31,7 @@ class MainWin:
 		combo.append_text("host")
 		combo.append_text("arm")
 		combo.append_text("x86")
+		combo.append_text("openwrt")
 		combo.set_active(0)
 		combo.connect("changed", self.OnArchChanged)
 		table.attach(combo, 1, 2, 0, 1, combo_style, combo_style, 5, 5)
@@ -43,6 +44,7 @@ class MainWin:
 		combo.append_text("arm-linux")
 		combo.append_text("arm-cavan-linux-gnueabi")
 		combo.append_text("arm-none-linux-gnueabi")
+		combo.append_text("mipsel-openwrt-linux")
 		combo.set_active(0)
 		combo.connect("changed", self.OnCrossCompileChanged)
 		self.mComboCrossCompile = combo
