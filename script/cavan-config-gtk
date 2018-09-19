@@ -196,6 +196,10 @@ class MainWin:
 			toolchian = "arm-cavan-linux-gnueabi"
 			type = "static"
 			entry = "cavan"
+                elif arch == "openwrt":
+			toolchian = "mipsel-openwrt-linux"
+			type = "static"
+			entry = "cavan"
 		else:
 			toolchian = "none"
 			type = "debug"
