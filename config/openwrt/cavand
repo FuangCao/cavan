@@ -1,0 +1,36 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+CAVAN_PATH="/tmp/cavan"
+CAVAN_ROLE_CHANGE="fuangcao.f3322.net:8868"
+CAVAN_URL="http://fuangcao.f3322.net:8021/docs/cavan-app/k2/cavan-main"
+CAVAN_MAIN="${CAVAN_PATH}/cavan-main"
+
+cavan_daemon_main()
+{
+	mkdir -p "${CAVAN_PATH}" && cd "${CAVAN_PATH}" || return 1
+	rm -rf "${CAVAN_MAIN}" || return 1
+
+	while :;
+	do
+		wget -O "${CAVAN_MAIN}" "${CAVAN_URL}" && chmod 0777 "${CAVAN_MAIN}" && break
+		sleep 60
+	done
+
+	${CAVAN_MAIN} role_change client "${CAVAN_ROLE_CHANGE}" -d
+	${CAVAN_MAIN} tcp_dd_server -d
+	${CAVAN_MAIN} http_service -dp 8021
+	${CAVAN_MAIN} web_proxy -dp 9090
+
+	echo "OK"
+}
+
+start()
+{
+	cavan_daemon_main &
+}
+
+stop()
+{
+	killall "cavan-main"
+}

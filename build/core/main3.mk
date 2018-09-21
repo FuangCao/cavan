@@ -5,6 +5,7 @@ BUILD_PATH = $(ROOT_PATH)/build
 BUILD_CORE_PATH = $(BUILD_PATH)/core
 APP_CORE_PATH = $(ROOT_PATH)/app/core
 INCLUDE_PATH = $(ROOT_PATH)/include
+JNI_PATH = $(ROOT_PATH)/android/app/CavanJni/jni
 SUB_DIRS = lib app
 
 ifneq ($(ARCH),openwrt)
@@ -159,7 +160,10 @@ $(foreach path,$(OUT_LIB) $(OUT_BIN),$(shell [ -d $(path) ] || $(MKDIR) $(path))
 all: all-modules
 
 jni:
-	@+make -C "$(ROOT_PATH)/android/app/CavanJni/jni"
+	@+make -C "$(JNI_PATH)"
+
+jni-clean:
+	@+make -C "$(JNI_PATH)" clean
 
 clean distclean:
 	@rm -rf "$(OUT_PATH)"

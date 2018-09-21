@@ -291,7 +291,7 @@ static int cavan_builtin_command_shell(const struct cavan_builtin_command *desc,
 	CAVAN_TTY_SET_TITLE("%s@%s", username, hostname);
 #endif
 
-	return execlp(shell, desc->name, "-", NULL);
+	return execlp(shell, "sh", "-", NULL);
 }
 
 static int cavan_builtin_command_reboot_base(const struct cavan_builtin_command *desc, int argc, char *argv[], bool shutdown)
