@@ -305,6 +305,7 @@ extern const char *cavan_help_message_current_time;
 extern const char *cavan_help_message_monitor_mode;
 extern const char *cavan_help_message_repeat;
 extern const char *cavan_help_message_strict;
+extern const char *cavan_help_message_loop;
 
 // ============================================================
 

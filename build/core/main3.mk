@@ -6,11 +6,13 @@ BUILD_CORE_PATH = $(BUILD_PATH)/core
 APP_CORE_PATH = $(ROOT_PATH)/app/core
 INCLUDE_PATH = $(ROOT_PATH)/include
 JNI_PATH = $(ROOT_PATH)/android/app/CavanJni/jni
-SUB_DIRS = lib app
+SUB_DIRS = lib
 
 ifneq ($(ARCH),openwrt)
 SUB_DIRS += cpp
 endif
+
+SUB_DIRS += app
 
 APP_PREFIX = $(CAVAN_NAME)-
 MAKEFILE_CAVAN = $(CAVAN_NAME).mk
@@ -63,8 +65,7 @@ CFLAGS +=	-Wall -Wundef -Wextra -Werror -Wsign-compare -Winit-self -Wpointer-ari
 CFLAGS += -DCAVAN_ARCH_$(shell echo $(ARCH) | tr '[a-z]' '[A-Z]')
 
 ifeq ($(ARCH),openwrt)
-CFLAGS += -DCONFIG_OPENWRT -muclibc
-LDFLAGS += -muclibc
+CFLAGS += -DCONFIG_OPENWRT
 STAGING_DIR ?= $(shell which $(CC) | sed 's/^\(.*\/staging_dir\/\).*$$/\1/g')
 LC_ALL ?= C
 

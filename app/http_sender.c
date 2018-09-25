@@ -702,8 +702,8 @@ static void cavan_http_sender_show_usage(const char *command)
 	println("-N, -n, --now\t\t%s", cavan_help_message_current_time);
 	println("-C, -c, --count\t\tsend count");
 	println("--daemon\t\t%s", cavan_help_message_daemon);
-	println("--strict\t\t%s", cavan_help_message_strict);
-	println("--force\t\t\tforce send");
+	println("--strict, -S, -s\t\t%s", cavan_help_message_strict);
+	println("--force, -F, -f\t\t\tforce send");
 }
 
 int main(int argc, char *argv[])
@@ -783,7 +783,7 @@ int main(int argc, char *argv[])
 	sender.send_max = HTTP_SENDER_SEND_COUNT;
 	sender.time = ((clock_gettime_real_ms() + 3600000 - 1) / 3600000) * 3600000;
 
-	while ((c = getopt_long(argc, argv, "vVhHd:D:tc:C:TnN", long_option, &option_index)) != EOF) {
+	while ((c = getopt_long(argc, argv, "vVhHd:D:tc:C:TnNSsFf", long_option, &option_index)) != EOF) {
 		switch (c) {
 		case 'v':
 		case 'V':
@@ -832,10 +832,14 @@ int main(int argc, char *argv[])
 			sender.daemon = true;
 			break;
 
+		case 's':
+		case 'S':
 		case CAVAN_COMMAND_OPTION_STRICT:
 			sender.strict = true;
 			break;
 
+		case 'f':
+		case 'F':
 		case CAVAN_COMMAND_OPTION_FORCE:
 			sender.force = true;
 			break;
