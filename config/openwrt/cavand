@@ -3,6 +3,7 @@
 START=99
 CAVAN_PATH="/tmp/cavan"
 CAVAN_ROLE_CHANGE="fuangcao.f3322.net:8868"
+CAVAN_TCP_REPEATER="fuangcao.f3322.net:8864"
 CAVAN_URL="http://fuangcao.f3322.net:8021/docs/cavan-app/k2/cavan-main"
 CAVAN_MAIN="${CAVAN_PATH}/cavan-main"
 
@@ -21,6 +22,8 @@ cavan_daemon_main()
 	${CAVAN_MAIN} tcp_dd_server -d
 	${CAVAN_MAIN} http_service -dp 8021
 	${CAVAN_MAIN} web_proxy -dp 9090
+	${CAVAN_MAIN} tcp_repeater -dp 8864
+	${CAVAN_MAIN} tcp_bridge -d 8864 "${CAVAN_TCP_REPEATER}"
 
 	echo "OK"
 }
