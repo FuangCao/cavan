@@ -101,8 +101,16 @@ public class CavanPackageInfo implements Comparable<CavanPackageInfo> {
 		return (getFlags() & ApplicationInfo.FLAG_SYSTEM) != 0;
 	}
 
+	public long getLastUpdateTime() {
+		return mPackageInfo.lastUpdateTime;
+	}
+
+	public long getFirstInstallTime() {
+		return mPackageInfo.firstInstallTime;
+	}
+
 	@Override
 	public int compareTo(CavanPackageInfo another) {
-		return mName.compareTo(another.getApplicationName());
+		return (int) ((another.getLastUpdateTime() - getLastUpdateTime()) / 1000);
 	}
 }

@@ -13,6 +13,10 @@ import javax.crypto.Cipher;
 
 public class CavanJava {
 
+	public static long KB = 1 << 10;
+	public static long MB = 1 << 20;
+	public static long GB = 1 << 30;
+
 	public static CavanLogger sLogger = new CavanLogger();
 	public static CavanAesCipher sAesCipher = new CavanAesCipher();
 

@@ -576,6 +576,13 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSha1sum(JNIEnv *env, jclass
 	return CavanMainExecute(env, "sha1sum", async, args, do_cavan_sha1sum);
 }
 
+extern int do_cavan_show_args(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doShowArgs(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "show_args", async, args, do_cavan_show_args);
+}
+
 extern int do_cavan_show_file(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doShowFile(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
@@ -618,18 +625,18 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSshCopy(JNIEnv *env, jclass
 	return CavanMainExecute(env, "ssh_copy", async, args, do_cavan_ssh_copy);
 }
 
-extern int do_cavan_sshd(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSshd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "sshd", async, args, do_cavan_sshd);
-}
-
 extern int do_cavan_ssh_dd(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSshDd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
 {
 	return CavanMainExecute(env, "ssh_dd", async, args, do_cavan_ssh_dd);
+}
+
+extern int do_cavan_sshd(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSshd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "sshd", async, args, do_cavan_sshd);
 }
 
 extern int do_cavan_su(int argc, char *argv[]);

@@ -209,6 +209,25 @@ public class CavanString {
 		return fromCharSequence(sequence, EMPTY_STRING);
 	}
 
+	public static String fromStorageSize(double size) {
+		char unit;
+
+		if (size > CavanJava.GB) {
+			size /= CavanJava.GB;
+			unit = 'G';
+		} else if (size > CavanJava.MB) {
+			size /= CavanJava.MB;
+			unit = 'M';
+		} else if (size > CavanJava.KB) {
+			size /= CavanJava.KB;
+			unit = 'K';
+		} else {
+			unit = 'B';
+		}
+
+		return String.format("%.2f %c", size, unit);
+	}
+
 	public static boolean mach(String text, String... texts) {
 		for (String node : texts) {
 			if (node.equals(text)) {

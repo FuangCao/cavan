@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -15,6 +15,7 @@ import android.graphics.Point;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.format.Formatter;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -34,6 +35,7 @@ import com.cavan.android.CavanQrCode;
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.cavanjni.HttpService;
 import com.cavan.java.CavanFile;
+import com.cavan.java.CavanString;
 
 public class CavanShareAppActivity extends Activity implements OnItemClickListener, OnCheckedChangeListener {
 
@@ -45,7 +47,7 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 	private CheckBox mCheckBoxGameOnly;
 	private CheckBox mCheckBoxShowSysApp;
 
-	private List<CavanPackageInfo> mPackageInfos = new ArrayList<CavanPackageInfo>();
+	private CavanPackageInfo[] mPackageInfos = new CavanPackageInfo[0];
 
 	private BaseAdapter mAdapterApps = new BaseAdapter() {
 
@@ -60,7 +62,15 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 				view.setPadding(20, 20, 20, 20);
 			}
 
-			view.setText(mPackageInfos.get(position).getApplicationName());
+			CavanPackageInfo info = mPackageInfos[position];
+			StringBuilder builder = new StringBuilder();
+			long length = info.getSourceFile().length();
+
+			builder.append(info.getApplicationName());
+			builder.append(" - ").append(info.getPackageName()).append('\n');
+			builder.append(Formatter.formatFileSize(CavanShareAppActivity.this, length));
+
+			view.setText(builder);
 			view.setClickable(false);
 
 			return view;
@@ -73,12 +83,12 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 
 		@Override
 		public Object getItem(int position) {
-			return mPackageInfos.get(position);
+			return mPackageInfos[position];
 		}
 
 		@Override
 		public int getCount() {
-			return mPackageInfos.size();
+			return mPackageInfos.length;
 		}
 
 		@Override
@@ -106,7 +116,11 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 				}
 			}
 
-			mPackageInfos = list;
+			CavanPackageInfo[] array = new CavanPackageInfo[list.size()];
+			list.toArray(array);
+			Arrays.sort(array);
+
+			mPackageInfos = array;
 
 			super.notifyDataSetChanged();
 		}
@@ -154,7 +168,7 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 		CavanFile dir = HttpService.getSharedDir(this);
-		CavanFile file = CavanJni.symlinkApk(dir, mPackageInfos.get(position));
+		CavanFile file = CavanJni.symlinkApk(dir, mPackageInfos[position]);
 
 		try {
 			String url = mUrl + dir.getAbsolutePath() + File.separatorChar + URLEncoder.encode(file.getName(), "UTF-8");

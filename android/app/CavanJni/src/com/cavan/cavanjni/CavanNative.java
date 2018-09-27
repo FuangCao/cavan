@@ -660,6 +660,14 @@ class CavanCommandSha1sum extends CavanNativeCommand {
 	}
 }
 
+class CavanCommandShowArgs extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doShowArgs(async, args);
+	}
+}
+
 class CavanCommandShowFile extends CavanNativeCommand {
 
 	@Override
@@ -708,19 +716,19 @@ class CavanCommandSshCopy extends CavanNativeCommand {
 	}
 }
 
-class CavanCommandSshd extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doSshd(async, args);
-	}
-}
-
 class CavanCommandSshDd extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
 		return CavanNative.doSshDd(async, args);
+	}
+}
+
+class CavanCommandSshd extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doSshd(async, args);
 	}
 }
 
@@ -1189,14 +1197,15 @@ public class CavanNative {
 		sHashMap.put("service", new CavanCommandService());
 		sHashMap.put("service_manager", new CavanCommandServiceManager());
 		sHashMap.put("sha1sum", new CavanCommandSha1sum());
+		sHashMap.put("show_args", new CavanCommandShowArgs());
 		sHashMap.put("show_file", new CavanCommandShowFile());
 		sHashMap.put("shrink", new CavanCommandShrink());
 		sHashMap.put("sprd_at", new CavanCommandSprdAt());
 		sHashMap.put("sprd_write_imei", new CavanCommandSprdWriteImei());
 		sHashMap.put("ssh", new CavanCommandSsh());
 		sHashMap.put("ssh_copy", new CavanCommandSshCopy());
-		sHashMap.put("sshd", new CavanCommandSshd());
 		sHashMap.put("ssh_dd", new CavanCommandSshDd());
+		sHashMap.put("sshd", new CavanCommandSshd());
 		sHashMap.put("su", new CavanCommandSu());
 		sHashMap.put("sudo", new CavanCommandSudo());
 		sHashMap.put("super_upgrade", new CavanCommandSuperUpgrade());
@@ -1328,14 +1337,15 @@ public class CavanNative {
 	public static native int doService(boolean async, String... args);
 	public static native int doServiceManager(boolean async, String... args);
 	public static native int doSha1sum(boolean async, String... args);
+	public static native int doShowArgs(boolean async, String... args);
 	public static native int doShowFile(boolean async, String... args);
 	public static native int doShrink(boolean async, String... args);
 	public static native int doSprdAt(boolean async, String... args);
 	public static native int doSprdWriteImei(boolean async, String... args);
 	public static native int doSsh(boolean async, String... args);
 	public static native int doSshCopy(boolean async, String... args);
-	public static native int doSshd(boolean async, String... args);
 	public static native int doSshDd(boolean async, String... args);
+	public static native int doSshd(boolean async, String... args);
 	public static native int doSu(boolean async, String... args);
 	public static native int doSudo(boolean async, String... args);
 	public static native int doSuperUpgrade(boolean async, String... args);
