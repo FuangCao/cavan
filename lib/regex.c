@@ -50,11 +50,17 @@ const char *cavan_regex_code_tostring(cavan_regex_code_t code)
 	case CAVAN_RE_TIMES:
 		return "TIMES";
 
-	case CAVAN_RE_NUM:
-		return "NUM";
+	case CAVAN_RE_SPACE:
+		return "SPACE";
 
-	case CAVAN_RE_NOT_NUM:
-		return "NOT_NUM";
+	case CAVAN_RE_NOT_SPACE:
+		return "NOT_SPACE";
+
+	case CAVAN_RE_DIGIT:
+		return "DIGIT";
+
+	case CAVAN_RE_NOT_DIGIT:
+		return "NOT_DIGIT";
 
 	case CAVAN_RE_WORD:
 		return "WORD";
@@ -114,7 +120,25 @@ static cavan_regex_command_t *cavan_regex_build_times(cavan_regex_command_t *com
 	data[offset] = min;
 	data[offset + 1] = max;
 
-	return command + 1;
+	command += 2;
+	command->code = CAVAN_RE_NOOP;
+
+	return command;
+}
+
+static cavan_regex_command_t *cavan_regex_add_char(cavan_regex_command_t *command, char *data, u16 offset, char c)
+{
+	if (command->code != CAVAN_RE_TXT && command->code != CAVAN_RE_WORDS) {
+		command++;
+		command->code = CAVAN_RE_TXT;
+		command->data = offset;
+		command->length = 0;
+	}
+
+	command->length++;
+	data[offset] = c;
+
+	return command;
 }
 
 int cavan_regex_compile(cavan_regex_t *regex, const char *pattern)
@@ -170,18 +194,67 @@ int cavan_regex_compile(cavan_regex_t *regex, const char *pattern)
 			break;
 
 		case '\\':
+			switch (*++pattern) {
+			case 't':
+				command = cavan_regex_add_char(command, regex->data, data, '\t');
+				data++;
+				break;
+
+			case 'n':
+				command = cavan_regex_add_char(command, regex->data, data, '\n');
+				data++;
+				break;
+
+			case 'r':
+				command = cavan_regex_add_char(command, regex->data, data, '\r');
+				data++;
+				break;
+
+			case 'f':
+				command = cavan_regex_add_char(command, regex->data, data, '\f');
+				data++;
+				break;
+
+			case 's':
+				command++;
+				command->code = CAVAN_RE_SPACE;
+				break;
+
+			case 'S':
+				command++;
+				command->code = CAVAN_RE_NOT_SPACE;
+				break;
+
+			case 'd':
+				command++;
+				command->code = CAVAN_RE_DIGIT;
+				break;
+
+			case 'D':
+				command++;
+				command->code = CAVAN_RE_NOT_DIGIT;
+				break;
+
+			case 'w':
+				command++;
+				command->code = CAVAN_RE_WORD;
+				break;
+
+			case 'W':
+				command++;
+				command->code = CAVAN_RE_NOT_WORD;
+				break;
+
+			default:
+				command = cavan_regex_add_char(command, regex->data, data, *pattern);
+				data++;
+				break;
+			}
 			break;
 
 		default:
-			if (command->code != CAVAN_RE_TXT && command->code != CAVAN_RE_WORDS) {
-				command++;
-				command->code = CAVAN_RE_TXT;
-				command->data = data;
-				command->length = 0;
-			}
-
-			regex->data[data++] = *pattern;
-			command->length++;
+			command = cavan_regex_add_char(command, regex->data, data, *pattern);
+			data++;
 		}
 
 		pattern++;
@@ -199,6 +272,7 @@ static const char *cavan_regex_match_times(const cavan_regex_command_t *cmd, con
 {
 	u8 max = data[cmd->data + 1];
 	u8 min = data[cmd->data];
+	const char *matched;
 	u8 times = 0;
 
 	while (times < min) {
@@ -206,7 +280,11 @@ static const char *cavan_regex_match_times(const cavan_regex_command_t *cmd, con
 		if (text == NULL) {
 			return NULL;
 		}
+
+		times++;
 	}
+
+	matched = text;
 
 	while (times < max) {
 		const char *res = cavan_regex_match_base(cmd + 1, 1, data, text, text_end);
@@ -214,14 +292,15 @@ static const char *cavan_regex_match_times(const cavan_regex_command_t *cmd, con
 			break;
 		}
 
-		if (cavan_regex_match_base(cmd + 2, CAVAN_RE_CMD_MAX, data, res, text_end) == NULL) {
-			break;
+		if (cavan_regex_match_base(cmd + 2, CAVAN_RE_CMD_MAX, data, res, text_end) != NULL) {
+			matched = res;
 		}
 
 		text = res;
+		times++;
 	}
 
-	return text;
+	return matched;
 }
 
 static const char *cavan_regex_match_base(const cavan_regex_command_t *cmd, int count, const char *data, const char *text, const char *text_end)
@@ -231,6 +310,7 @@ static const char *cavan_regex_match_base(const cavan_regex_command_t *cmd, int 
 
 	for (cmd_end = cmd + count; cmd < cmd_end; cmd++) {
 		println("command = %s", cavan_regex_code_tostring(cmd->code));
+		println("text = %s", text);
 
 		switch (cmd->code) {
 		case CAVAN_RE_NOOP:
@@ -264,10 +344,14 @@ static const char *cavan_regex_match_base(const cavan_regex_command_t *cmd, int 
 				return NULL;
 			}
 
+			println("text = %s", text);
+
 			cmd++;
 			break;
 
 		case CAVAN_RE_TXT:
+			println("CAVAN_RE_TXT: %d", cmd->length);
+
 			if (text_end - text < cmd->length) {
 				return NULL;
 			}
@@ -277,6 +361,54 @@ static const char *cavan_regex_match_base(const cavan_regex_command_t *cmd, int 
 			}
 
 			text += cmd->length;
+			break;
+
+		case CAVAN_RE_SPACE:
+			if (cavan_isspace(*text)) {
+				text++;
+				break;
+			}
+
+			return NULL;
+
+		case CAVAN_RE_NOT_SPACE:
+			if (cavan_isspace(*text)) {
+				return NULL;
+			}
+
+			text++;
+			break;
+
+		case CAVAN_RE_DIGIT:
+			if (cavan_isdigit(*text)) {
+				text++;
+				break;
+			}
+
+			return NULL;
+
+		case CAVAN_RE_NOT_DIGIT:
+			if (cavan_isdigit(*text)) {
+				return NULL;
+			}
+
+			text++;
+			break;
+
+		case CAVAN_RE_WORD:
+			if (cavan_isletter(*text)) {
+				text++;
+				break;
+			}
+
+			return NULL;
+
+		case CAVAN_RE_NOT_WORD:
+			if (cavan_isletter(*text)) {
+				return NULL;
+			}
+
+			text++;
 			break;
 
 		default:
