@@ -41,8 +41,8 @@ typedef enum {
 	CAVAN_RE_NOT_DIGIT,
 	CAVAN_RE_WORD,
 	CAVAN_RE_NOT_WORD,
-	CAVAN_RE_WORDS,
-	CAVAN_RE_NOT_WORDS,
+	CAVAN_RE_ARRAY,
+	CAVAN_RE_NOT_ARRAY,
 } cavan_regex_code_t;
 
 typedef struct cavan_regex_command {
