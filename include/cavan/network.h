@@ -55,8 +55,9 @@
 #define CAVAN_NET_FLAG_NODELAY		(1 << 3)
 #define CAVAN_NET_FLAG_MASK			(1 << 4)
 #define CAVAN_NET_FLAG_PACK			(1 << 5)
-#define CAVAN_NET_FLAG_BOUND		(1 << 6)
-#define CAVAN_NET_FLAG_LINKED		(1 << 7)
+#define CAVAN_NET_FLAG_PACK2		(1 << 6)
+#define CAVAN_NET_FLAG_BOUND		(1 << 7)
+#define CAVAN_NET_FLAG_LINKED		(1 << 8)
 
 #ifndef SO_REUSEPORT
 #define SO_REUSEPORT				15
@@ -227,13 +228,16 @@ typedef enum {
 	NETWORK_PROTOCOL_SSL,
 	NETWORK_PROTOCOL_SSL_MASK,
 	NETWORK_PROTOCOL_SSL_PACK,
+	NETWORK_PROTOCOL_SSL_PACK2,
 	NETWORK_PROTOCOL_TCP,
 	NETWORK_PROTOCOL_TCP_MASK,
 	NETWORK_PROTOCOL_TCP_PACK,
+	NETWORK_PROTOCOL_TCP_PACK2,
 	NETWORK_PROTOCOL_UDP,
 	NETWORK_PROTOCOL_ADB,
 	NETWORK_PROTOCOL_ADB_MASK,
 	NETWORK_PROTOCOL_ADB_PACK,
+	NETWORK_PROTOCOL_ADB_PACK2,
 	NETWORK_PROTOCOL_ICMP,
 	NETWORK_PROTOCOL_IP,
 	NETWORK_PROTOCOL_MAC,
@@ -499,6 +503,7 @@ bool network_url_equals(const struct network_url *url1, const struct network_url
 int network_create_socket_mac(const char *if_name, int protocol);
 int network_create_socket_uevent(void);
 
+void network_protocol_dump(void);
 network_protocol_t network_protocol_parse(const char *name);
 const char *network_protocol_tostring(network_protocol_t type);
 

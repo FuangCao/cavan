@@ -69,18 +69,41 @@ struct cavan_dynamic_service {
 	int (*run)(struct cavan_dynamic_service *service, void *conn_data);
 };
 
+struct cavan_epoll_pack {
+	u16 offset;
+	struct cavan_epoll_pack *next;
+
+	union {
+		u16 length;
+		char data[0];
+	};
+
+	char body[0];
+};
+
 struct cavan_epoll_client {
 	int fd;
+	u32 events;
+	u32 pending;
+	struct cavan_epoll_service *service;
+	struct cavan_epoll_pack *wr_head;
+	struct cavan_epoll_pack *wr_tail;
+	struct cavan_epoll_pack *rd_pack;
+	struct cavan_epoll_pack header;
+	struct cavan_epoll_client *poll_next;
 
-	int (*on_read)(struct cavan_epoll_service *service, struct cavan_epoll_client *client);
-	void (*on_close)(struct cavan_epoll_service *service, struct cavan_epoll_client *client);
+	bool (*do_poll)(struct cavan_epoll_client *client);
+	int (*do_read)(struct cavan_epoll_client *client, void *buff, u16 size);
+	int (*do_write)(struct cavan_epoll_client *client, const void *buff, u16 size);
+	int (*on_received)(struct cavan_epoll_client *client, const void *buff, u16 size);
 };
 
 struct cavan_epoll_service {
 	const char *name;
 	int epoll_fd;
 	u32 index;
-	u32 max;
+	u16 min, max;
+	u16 count, used;
 	bool as_daemon;
 	bool verbose;
 	size_t conn_size;
@@ -90,6 +113,8 @@ struct cavan_epoll_service {
 	pthread_cond_t cond;
 	pthread_mutex_t lock;
 	const char *user, *group;
+	struct cavan_epoll_client *poll_head;
+	struct cavan_epoll_client *poll_tail;
 };
 
 // ================================================================================
@@ -127,6 +152,7 @@ void cavan_dynamic_service_scan(void *data, void (*handler)(struct cavan_dynamic
 
 // ================================================================================
 
+void cavan_epoll_client_init(struct cavan_epoll_client *client, int fd);
 int cavan_epoll_service_init(struct cavan_epoll_service *service);
 void cavan_epoll_service_deinit(struct cavan_epoll_service *service);
 int cavan_epoll_service_add(struct cavan_epoll_service *service, struct cavan_epoll_client *client);
@@ -165,6 +191,16 @@ static inline void cavan_epoll_service_lock(struct cavan_epoll_service *service)
 static inline void cavan_epoll_service_unlock(struct cavan_epoll_service *service)
 {
 	pthread_mutex_unlock(&service->lock);
+}
+
+static inline void cavan_epoll_service_wait(struct cavan_epoll_service *service)
+{
+	pthread_cond_wait(&service->cond, &service->lock);
+}
+
+static inline void cavan_epoll_service_wakeup(struct cavan_epoll_service *service)
+{
+	pthread_cond_signal(&service->cond);
 }
 
 static inline void *cavan_epoll_service_get_data(struct cavan_epoll_service *service)

@@ -1001,6 +1001,9 @@ int cavan_epoll_service_init(struct cavan_epoll_service *service)
 	}
 
 	service->epoll_fd = fd;
+	service->poll_head = NULL;
+	service->count = 0;
+	service->used = 0;
 
 	return 0;
 }
@@ -1013,9 +1016,18 @@ void cavan_epoll_service_deinit(struct cavan_epoll_service *service)
 int cavan_epoll_service_add(struct cavan_epoll_service *service, struct cavan_epoll_client *client)
 {
 	struct epoll_event event = {
-		.events = EPOLLIN,
+		.events = EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLHUP | EPOLLET,
 		.data.ptr = client,
 	};
+
+	client->wr_head = NULL;
+	client->wr_tail = NULL;
+	client->rd_pack = NULL;
+	client->header.offset = 0;
+	client->service = service;
+	client->poll_next = client;
+	client->events = EPOLLIN | EPOLLOUT;
+	client->pending = EPOLLIN | EPOLLERR | EPOLLHUP;
 
 	return epoll_ctl(service->epoll_fd, EPOLL_CTL_ADD, client->fd, &event);
 }
@@ -1025,33 +1037,331 @@ void cavan_epoll_service_remove(struct cavan_epoll_service *service, struct cava
 	epoll_ctl(service->epoll_fd, EPOLL_CTL_DEL, client->fd, NULL);
 }
 
-void cavan_epoll_service_run(struct cavan_epoll_service *service)
+static struct cavan_epoll_pack *cavan_epoll_pack_alloc(u16 length)
 {
-	int ret;
-	struct epoll_event events[10];
+	struct cavan_epoll_pack *pack = (struct cavan_epoll_pack *) malloc(sizeof(struct cavan_epoll_pack) + length - 2);
+	if (pack == NULL) {
+		return NULL;
+	}
+
+	pack->length = length;
+	pack->offset = 2;
+
+	return pack;
+}
+
+static void cavan_epoll_pack_free(struct cavan_epoll_pack *pack)
+{
+	free(pack);
+}
+
+static int cavan_epoll_pack_write(struct cavan_epoll_pack *pack, const void *buff, u16 length, u16 size)
+{
+	u16 remain = size - pack->offset;
+
+	println("remain = %d, length = %d, offset = %d", remain, length, pack->offset);
+
+	if (remain > length) {
+		remain = length;
+	}
+
+	memcpy(pack->data + pack->offset, buff, remain);
+	pack->offset += remain;
+
+	return remain;
+}
+
+static inline int cavan_epoll_pack_write_header(struct cavan_epoll_pack *pack, const void *buff, u16 length)
+{
+	pr_pos_info();
+	return cavan_epoll_pack_write(pack, buff, length, 2);
+}
+
+static inline int cavan_epoll_pack_write_body(struct cavan_epoll_pack *pack, const void *buff, u16 length)
+{
+	pr_pos_info();
+	return cavan_epoll_pack_write(pack, buff, length, pack->length);
+}
+
+static int cavan_epoll_client_on_read(struct cavan_epoll_client *client)
+{
+	char buff[4096];
+	int rdlen;
+
+	pr_pos_info();
+
+	rdlen = client->do_read(client, buff, sizeof(buff));
+	println("rdlen = %d", rdlen);
+
+	if (rdlen > 0) {
+		char *p = buff;
+
+		while (1) {
+			int wrlen;
+			struct cavan_epoll_pack *pack = client->rd_pack;
+			println("pack = %p", pack);
+
+			if (pack != NULL) {
+				wrlen = cavan_epoll_pack_write_body(pack, p, rdlen);
+				if (pack->offset == pack->length) {
+					int ret = client->on_received(client, pack->body, pack->length - 2);
+					if (ret < 0) {
+						return ret;
+					}
+
+					client->rd_pack = NULL;
+					cavan_epoll_pack_free(pack);
+				}
+			} else {
+				pack = &client->header;
+
+				wrlen = cavan_epoll_pack_write_header(pack, p, rdlen);
+				println("offset = %d", pack->offset);
+
+				if (pack->offset == 2) {
+					pack->offset = 0;
+
+					println("length = %d", pack->length);
+					if (pack->length > 2) {
+						pack = cavan_epoll_pack_alloc(pack->length);
+						if (pack == NULL) {
+							return -ENOMEM;
+						}
+
+						client->rd_pack = pack;
+					} else {
+						int ret = client->on_received(client, pack->body, 0);
+						if (ret < 0) {
+							return ret;
+						}
+					}
+				}
+			}
+
+			if (wrlen < rdlen) {
+				rdlen -= wrlen;
+				p += wrlen;
+			} else {
+				break;
+			}
+		}
+
+		return 1;
+	}
+
+	if (rdlen < 0 && ERRNO_NEED_RETRY()) {
+		return 0;
+	}
+
+	return -EIO;
+}
+
+static int cavan_epoll_client_on_write(struct cavan_epoll_client *client)
+{
+	struct cavan_epoll_pack *pack = client->wr_head;
+
+	pr_pos_info();
+
+	if (pack != NULL) {
+		u16 remain = pack->length - pack->offset;
+		int wrlen;
+
+		wrlen = client->do_write(client, pack->data + pack->offset, remain);
+		if (wrlen < remain) {
+			if (wrlen < 0) {
+				if (ERRNO_NEED_RETRY()) {
+					return 0;
+				}
+
+				return wrlen;
+			}
+
+			pack->offset += wrlen;
+		} else {
+			client->wr_head = pack->next;
+		}
+
+		return 1;
+	}
+
+	client->pending &= ~EPOLLOUT;
+
+	return 0;
+}
+
+static void cavan_epoll_client_on_error(struct cavan_epoll_client *client)
+{
+	pr_pos_info();
+	cavan_epoll_service_remove(client->service, client);
+}
+
+static bool cavan_epoll_client_do_poll(struct cavan_epoll_client *client)
+{
+	pr_pos_info();
+
+	if (client->events & (EPOLLERR | EPOLLHUP)) {
+		return false;
+	}
+
+	if (client->events & EPOLLOUT) {
+		int ret = cavan_epoll_client_on_write(client);
+		if (ret < 0) {
+			return false;
+		}
+
+		if (ret == 0) {
+			client->events &= ~EPOLLOUT;
+		}
+	}
+
+	if (client->events & EPOLLIN) {
+		int ret = cavan_epoll_client_on_read(client);
+		if (ret < 0) {
+			return false;
+		}
+
+		if (ret == 0) {
+			client->events &= ~EPOLLIN;
+		}
+	}
+
+	return true;
+}
+
+static int cavan_epoll_client_do_read(struct cavan_epoll_client *client, void *buff, u16 size)
+{
+	pr_pos_info();
+	return read(client->fd, buff, size);
+}
+
+static int cavan_epoll_client_do_write(struct cavan_epoll_client *client, const void *buff, u16 size)
+{
+	pr_pos_info();
+	return write(client->fd, buff, size);
+}
+
+static int cavan_epoll_client_on_received(struct cavan_epoll_client *client, const void *buff, u16 size)
+{
+	println("cavan_epoll_client_on_received[%d]: %s", size, (const char *) buff);
+	return 0;
+}
+
+void cavan_epoll_client_init(struct cavan_epoll_client *client, int fd)
+{
+	client->fd = fd;
+	client->do_poll = cavan_epoll_client_do_poll;
+	client->do_read = cavan_epoll_client_do_read;
+	client->do_write = cavan_epoll_client_do_write;
+	client->on_received = cavan_epoll_client_on_received;
+}
+
+static void *cavan_epoll_service_daemon(void *data)
+{
+	struct cavan_epoll_service *service = data;
+
+	cavan_epoll_service_lock(service);
+
+	service->count++;
+	println("daemon started %d/%d", service->used, service->count);
 
 	while (1) {
-		struct epoll_event *p;
-
-		ret = epoll_wait(service->epoll_fd, events, NELEM(events), -1);
-		if (ret <= 0) {
-			if (ret < 0) {
+		struct cavan_epoll_client *client = service->poll_head;
+		if (client == NULL) {
+			if (service->count - service->used > service->min) {
 				break;
 			}
 
-			continue;
+			println("daemon wait %d/%d", service->used, service->count);
+			cavan_epoll_service_wait(service);
+		} else {
+			println("daemon busy %d/%d", service->used, service->count);
+			service->poll_head = client->poll_next;
+			service->used++;
+
+			cavan_epoll_service_unlock(service);
+
+			if (client->do_poll(client)) {
+				cavan_epoll_service_lock(service);
+
+				if ((client->events & client->pending) != 0) {
+					if (service->poll_head == NULL) {
+						service->poll_head = client;
+					} else {
+						service->poll_tail->poll_next = client;
+					}
+
+					service->poll_tail = client;
+					client->poll_next = NULL;
+				} else {
+					client->poll_next = client;
+				}
+			} else {
+				cavan_epoll_client_on_error(client);
+				cavan_epoll_service_lock(service);
+			}
+
+			service->used--;
+		}
+	}
+
+	service->count--;
+	println("daemon stopped %d/%d", service->used, service->count);
+
+	cavan_epoll_service_unlock(service);
+
+	return NULL;
+}
+
+static void cavan_epoll_client_post_events(struct cavan_epoll_client *client, u32 events)
+{
+	struct cavan_epoll_service *service = client->service;
+
+	cavan_epoll_service_lock(service);
+
+	client->events = events;
+	println("events = %08x, pending = %08x", events, client->pending);
+
+	if (client->poll_next == client) {
+		if (service->poll_head == NULL) {
+			service->poll_head = client;
+		} else {
+			service->poll_tail->poll_next = client;
 		}
 
-		for (p = events + ret - 1; p >= events; p--) {
-			struct cavan_epoll_client *client = p->data.ptr;
+		service->poll_tail = client;
+		client->poll_next = NULL;
 
-			ret = client->on_read(service, client);
-			if (ret < 0) {
-				cavan_epoll_service_remove(service, client);
+		if (service->used < service->count) {
+			cavan_epoll_service_wakeup(service);
+		} else if (service->count < service->max) {
+			cavan_pthread_run(cavan_epoll_service_daemon, service);
+		}
+	}
 
-				if (client->on_close != NULL) {
-					client->on_close(service, client);
-				}
+	cavan_epoll_service_unlock(service);
+}
+
+void cavan_epoll_service_run(struct cavan_epoll_service *service)
+{
+	while (1) {
+		int count;
+		struct epoll_event events[10];
+
+		count = epoll_wait(service->epoll_fd, events, NELEM(events), -1);
+		println("count = %d", count);
+
+		if (count > 0) {
+			struct epoll_event *p;
+
+			for (p = events + count - 1; p >= events; p--) {
+				struct cavan_epoll_client *client = p->data.ptr;
+				cavan_epoll_client_post_events(client, p->events);
+			}
+		} else if (count < 0) {
+			if (ERRNO_NEED_RETRY()) {
+				msleep(200);
+			} else {
+				break;
 			}
 		}
 	}

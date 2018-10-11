@@ -2153,6 +2153,25 @@ static ssize_t network_client_send_packed(struct network_client *client, const v
 	return client->send_raw(client, buff, size);
 }
 
+static ssize_t network_client_send_packed2(struct network_client *client, const void *buff, size_t size)
+{
+	ssize_t wrlen;
+	u16 length;
+
+	if (size == 0) {
+		return 0;
+	}
+
+	length = size + 2;
+
+	wrlen = client->send_raw(client, (void *) &length, 2);
+	if (wrlen != 2) {
+		return -EIO;
+	}
+
+	return client->send_raw(client, buff, size);
+}
+
 static int network_client_fill_packed(struct network_client *client, char *buff, size_t size)
 {
 	while (size > 0) {
@@ -2181,6 +2200,38 @@ static ssize_t network_client_recv_packed(struct network_client *client, void *b
 	if (ret < 0) {
 		return ret;
 	}
+
+	if (size < length) {
+		return -ENOMEM;
+	}
+
+	if (length == 0) {
+		return 0;
+	}
+
+	ret = network_client_fill_packed(client, buff, length);
+	if (ret < 0) {
+		return ret;
+	}
+
+	return length;
+}
+
+static ssize_t network_client_recv_packed2(struct network_client *client, void *buff, size_t size)
+{
+	u16 length;
+	int ret;
+
+	ret = network_client_fill_packed(client, (void *) &length, 2);
+	if (ret < 0) {
+		return ret;
+	}
+
+	if (length < 2) {
+		return -EINVAL;
+	}
+
+	length -= 2;
 
 	if (size < length) {
 		return -ENOMEM;
@@ -2305,6 +2356,23 @@ static int network_service_accept_packed(struct network_service *service, struct
 	return 0;
 }
 
+static int network_service_accept_packed2(struct network_service *service, struct network_client *conn, int flags)
+{
+	int ret;
+
+	ret = service->accept_raw(service, conn, flags);
+	if (ret < 0) {
+		return ret;
+	}
+
+	conn->send_raw = conn->send;
+	conn->recv_raw = conn->recv;
+	conn->send = network_client_send_packed2;
+	conn->recv = network_client_recv_packed2;
+
+	return 0;
+}
+
 static int network_protocol_open_service(const struct network_protocol_desc *desc, struct network_service *service, const struct network_url *url, int flags)
 {
 	int ret;
@@ -2326,6 +2394,8 @@ static int network_protocol_open_service(const struct network_protocol_desc *des
 
 	if (flags & CAVAN_NET_FLAG_PACK) {
 		service->accept = network_service_accept_packed;
+	} else if (flags & CAVAN_NET_FLAG_PACK2) {
+		service->accept = network_service_accept_packed2;
 	} else if (flags & CAVAN_NET_FLAG_MASK) {
 		service->accept = network_service_accept_masked;
 	}
@@ -3951,6 +4021,13 @@ static const struct network_protocol_desc protocol_descs[] = {
 		.open_service = network_service_ssl_open,
 		.open_client = network_client_ssl_open,
 	},
+	[NETWORK_PROTOCOL_SSL_PACK2] = {
+		.name = "ssl-pack2",
+		.flags = CAVAN_NET_FLAG_PACK2,
+		.type = NETWORK_PROTOCOL_SSL_PACK2,
+		.open_service = network_service_ssl_open,
+		.open_client = network_client_ssl_open,
+	},
 	[NETWORK_PROTOCOL_TCP] = {
 		.name = "tcp",
 		.type = NETWORK_PROTOCOL_TCP,
@@ -3968,6 +4045,13 @@ static const struct network_protocol_desc protocol_descs[] = {
 		.name = "tcp-pack",
 		.flags = CAVAN_NET_FLAG_PACK,
 		.type = NETWORK_PROTOCOL_TCP_PACK,
+		.open_service = network_service_tcp_open,
+		.open_client = network_client_tcp_open,
+	},
+	[NETWORK_PROTOCOL_TCP_PACK2] = {
+		.name = "tcp-pack2",
+		.flags = CAVAN_NET_FLAG_PACK2,
+		.type = NETWORK_PROTOCOL_TCP_PACK2,
 		.open_service = network_service_tcp_open,
 		.open_client = network_client_tcp_open,
 	},
@@ -3994,6 +4078,13 @@ static const struct network_protocol_desc protocol_descs[] = {
 		.name = "adb-pack",
 		.flags = CAVAN_NET_FLAG_PACK,
 		.type = NETWORK_PROTOCOL_ADB_PACK,
+		.open_service = network_service_tcp_open,
+		.open_client = network_client_adb_open,
+	},
+	[NETWORK_PROTOCOL_ADB_PACK2] = {
+		.name = "adb-pack2",
+		.flags = CAVAN_NET_FLAG_PACK2,
+		.type = NETWORK_PROTOCOL_ADB_PACK2,
 		.open_service = network_service_tcp_open,
 		.open_client = network_client_adb_open,
 	},
@@ -4065,6 +4156,15 @@ static const struct network_protocol_desc protocol_descs[] = {
 	},
 };
 
+void network_protocol_dump(void)
+{
+	const struct network_protocol_desc *p, *p_end;
+
+	for (p = protocol_descs, p_end = p + NELEM(protocol_descs); p < p_end; p++) {
+		puts(p->name);
+	}
+}
+
 network_protocol_t network_protocol_parse(const char *name)
 {
 	const struct network_protocol_desc *p, *p_end;
@@ -4087,6 +4187,8 @@ network_protocol_t network_protocol_parse(const char *name)
 				return NETWORK_PROTOCOL_TCP_MASK;
 			} else if (strcmp(name + 4, "pack") == 0) {
 				return NETWORK_PROTOCOL_TCP_PACK;
+			} else if (strcmp(name + 4, "pack2") == 0) {
+				return NETWORK_PROTOCOL_TCP_PACK2;
 			}
 		}
 		break;
@@ -4125,6 +4227,8 @@ network_protocol_t network_protocol_parse(const char *name)
 				return NETWORK_PROTOCOL_ADB_MASK;
 			} else if (strcmp(name + 4, "pack") == 0) {
 				return NETWORK_PROTOCOL_ADB_PACK;
+			} else if (strcmp(name + 4, "pack2") == 0) {
+				return NETWORK_PROTOCOL_ADB_PACK2;
 			}
 		}
 		break;
@@ -4204,9 +4308,10 @@ network_protocol_t network_protocol_parse(const char *name)
 				return NETWORK_PROTOCOL_SSL_MASK;
 			} else if (strcmp(name + 4, "pack") == 0) {
 				return NETWORK_PROTOCOL_SSL_PACK;
+			} else if (strcmp(name + 4, "pack2") == 0) {
+				return NETWORK_PROTOCOL_SSL_PACK2;
 			}
 		}
-		break;
 		break;
 	}
 
@@ -4312,6 +4417,9 @@ int network_client_open(struct network_client *client, const struct network_url 
 	if (flags & CAVAN_NET_FLAG_PACK) {
 		client->send = network_client_send_packed;
 		client->recv = network_client_recv_packed;
+	} else if (flags & CAVAN_NET_FLAG_PACK2) {
+		client->send = network_client_send_packed2;
+		client->recv = network_client_recv_packed2;
 	} else if (flags & CAVAN_NET_FLAG_MASK) {
 		client->send = network_client_send_masked;
 		client->recv = network_client_recv_masked;

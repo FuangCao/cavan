@@ -91,6 +91,12 @@ static int app_network_cmdline(struct cavan_simple_cmdline *cmdline, struct netw
 	return 0;
 }
 
+static int app_network_dump_main(int argc, char *argv[])
+{
+	network_protocol_dump();
+	return 0;
+}
+
 static int app_network_client_main(int argc, char *argv[])
 {
 	struct cavan_simple_cmdline cmdline;
@@ -358,6 +364,7 @@ static int app_network_test_relink_main(int argc, char *argv[])
 }
 
 CAVAN_COMMAND_MAP_START {
+	{ "dump", app_network_dump_main },
 	{ "client", app_network_client_main },
 	{ "service", app_network_service_main },
 	{ "test", app_network_test_main },
