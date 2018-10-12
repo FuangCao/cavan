@@ -3435,3 +3435,39 @@ const char *cavan_file_get_extension(const char *pathname)
 		pathname++;
 	}
 }
+
+int cavan_file_flags_set(int fd, int flags)
+{
+	int value;
+
+	value = fcntl(fd, F_GETFL);
+	if (value < 0) {
+		return value;
+	}
+
+	flags |= value;
+
+	if (flags == value) {
+		return 0;
+	}
+
+	return fcntl(fd, F_SETFL, flags);
+}
+
+int cavan_file_flags_clear(int fd, int flags)
+{
+	int value;
+
+	value = fcntl(fd, F_GETFL);
+	if (value < 0) {
+		return value;
+	}
+
+	flags = value & (~flags);
+
+	if (flags == value) {
+		return 0;
+	}
+
+	return fcntl(fd, F_SETFL, flags);
+}

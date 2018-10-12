@@ -248,6 +248,8 @@ s64 file_read_s64(const char *pathname, s64 def_value);
 int cavan_symlink(const char *target, const char *linkpath);
 int cavan_rename_part(const char *pathname, const char *start, const char *end);
 const char *cavan_file_get_extension(const char *pathname);
+int cavan_file_flags_set(int fd, int flags);
+int cavan_file_flags_clear(int fd, int flags);
 
 static inline int cavan_rename_part2(const char *pathname, const char *start, size_t length)
 {
@@ -554,6 +556,16 @@ static inline int mkdir_hierarchy(const char *pathname, mode_t mode)
 static inline bool file_throw_all(int fd)
 {
 	return file_discard_all(fd);
+}
+
+static inline int cavan_file_nonblock_set(int fd)
+{
+	return cavan_file_flags_set(fd, O_NONBLOCK);
+}
+
+static inline int cavan_file_nonblock_clear(int fd)
+{
+	return cavan_file_flags_clear(fd, O_NONBLOCK);
 }
 
 __END_DECLS;

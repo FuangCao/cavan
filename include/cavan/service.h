@@ -85,6 +85,7 @@ struct cavan_epoll_client {
 	int fd;
 	u32 events;
 	u32 pending;
+	pthread_mutex_t lock;
 	struct cavan_epoll_service *service;
 	struct cavan_epoll_pack *wr_head;
 	struct cavan_epoll_pack *wr_tail;
@@ -153,6 +154,9 @@ void cavan_dynamic_service_scan(void *data, void (*handler)(struct cavan_dynamic
 // ================================================================================
 
 void cavan_epoll_client_init(struct cavan_epoll_client *client, int fd);
+void cavan_epoll_client_send_pack(struct cavan_epoll_client *client, struct cavan_epoll_pack *pack);
+int cavan_epoll_client_send_data(struct cavan_epoll_client *client, const void *buff, u16 length);
+
 int cavan_epoll_service_init(struct cavan_epoll_service *service);
 void cavan_epoll_service_deinit(struct cavan_epoll_service *service);
 int cavan_epoll_service_add(struct cavan_epoll_service *service, struct cavan_epoll_client *client);
@@ -211,4 +215,19 @@ static inline void *cavan_epoll_service_get_data(struct cavan_epoll_service *ser
 static inline void cavan_epoll_service_set_data(struct cavan_epoll_service *service, void *data)
 {
 	service->private_data = data;
+}
+
+static inline void cavan_epoll_client_lock(struct cavan_epoll_client *client)
+{
+	pthread_mutex_lock(&client->lock);
+}
+
+static inline void cavan_epoll_client_unlock(struct cavan_epoll_client *client)
+{
+	pthread_mutex_unlock(&client->lock);
+}
+
+static inline int cavan_epoll_client_send_text(struct cavan_epoll_client *client, const char *text)
+{
+	return cavan_epoll_client_send_data(client, text, strlen(text));
 }

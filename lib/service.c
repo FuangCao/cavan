@@ -1015,10 +1015,14 @@ void cavan_epoll_service_deinit(struct cavan_epoll_service *service)
 
 int cavan_epoll_service_add(struct cavan_epoll_service *service, struct cavan_epoll_client *client)
 {
-	struct epoll_event event = {
-		.events = EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLHUP | EPOLLET,
-		.data.ptr = client,
-	};
+	struct epoll_event event;
+	int ret;
+
+	ret = cavan_file_nonblock_set(client->fd);
+	if (ret < 0) {
+		pr_err_info("cavan_file_nonblock_set: %d", ret);
+		return ret;
+	}
 
 	client->wr_head = NULL;
 	client->wr_tail = NULL;
@@ -1028,6 +1032,9 @@ int cavan_epoll_service_add(struct cavan_epoll_service *service, struct cavan_ep
 	client->poll_next = client;
 	client->events = EPOLLIN | EPOLLOUT;
 	client->pending = EPOLLIN | EPOLLERR | EPOLLHUP;
+
+	event.events = EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLHUP | EPOLLET;
+	event.data.ptr = client;
 
 	return epoll_ctl(service->epoll_fd, EPOLL_CTL_ADD, client->fd, &event);
 }
@@ -1041,6 +1048,7 @@ static struct cavan_epoll_pack *cavan_epoll_pack_alloc(u16 length)
 {
 	struct cavan_epoll_pack *pack = (struct cavan_epoll_pack *) malloc(sizeof(struct cavan_epoll_pack) + length - 2);
 	if (pack == NULL) {
+		pr_err_info("malloc");
 		return NULL;
 	}
 
@@ -1062,6 +1070,10 @@ static int cavan_epoll_pack_write(struct cavan_epoll_pack *pack, const void *buf
 	println("remain = %d, length = %d, offset = %d", remain, length, pack->offset);
 
 	if (remain > length) {
+		if (length == 0) {
+			return 0;
+		}
+
 		remain = length;
 	}
 
@@ -1148,6 +1160,8 @@ static int cavan_epoll_client_on_read(struct cavan_epoll_client *client)
 
 		return 1;
 	}
+
+	pr_err_info("read: %d", rdlen);
 
 	if (rdlen < 0 && ERRNO_NEED_RETRY()) {
 		return 0;
@@ -1243,16 +1257,7 @@ static int cavan_epoll_client_do_write(struct cavan_epoll_client *client, const 
 static int cavan_epoll_client_on_received(struct cavan_epoll_client *client, const void *buff, u16 size)
 {
 	println("cavan_epoll_client_on_received[%d]: %s", size, (const char *) buff);
-	return 0;
-}
-
-void cavan_epoll_client_init(struct cavan_epoll_client *client, int fd)
-{
-	client->fd = fd;
-	client->do_poll = cavan_epoll_client_do_poll;
-	client->do_read = cavan_epoll_client_do_read;
-	client->do_write = cavan_epoll_client_do_write;
-	client->on_received = cavan_epoll_client_on_received;
+	return cavan_epoll_client_send_data(client, buff, size);
 }
 
 static void *cavan_epoll_service_daemon(void *data)
@@ -1274,9 +1279,10 @@ static void *cavan_epoll_service_daemon(void *data)
 			println("daemon wait %d/%d", service->used, service->count);
 			cavan_epoll_service_wait(service);
 		} else {
-			println("daemon busy %d/%d", service->used, service->count);
 			service->poll_head = client->poll_next;
 			service->used++;
+
+			println("daemon busy %d/%d", service->used, service->count);
 
 			cavan_epoll_service_unlock(service);
 
@@ -1318,7 +1324,7 @@ static void cavan_epoll_client_post_events(struct cavan_epoll_client *client, u3
 
 	cavan_epoll_service_lock(service);
 
-	client->events = events;
+	client->events |= events;
 	println("events = %08x, pending = %08x", events, client->pending);
 
 	if (client->poll_next == client) {
@@ -1339,6 +1345,53 @@ static void cavan_epoll_client_post_events(struct cavan_epoll_client *client, u3
 	}
 
 	cavan_epoll_service_unlock(service);
+}
+
+void cavan_epoll_client_init(struct cavan_epoll_client *client, int fd)
+{
+	pthread_mutex_init(&client->lock, NULL);
+
+	client->fd = fd;
+	client->do_poll = cavan_epoll_client_do_poll;
+	client->do_read = cavan_epoll_client_do_read;
+	client->do_write = cavan_epoll_client_do_write;
+	client->on_received = cavan_epoll_client_on_received;
+}
+
+void cavan_epoll_client_send_pack(struct cavan_epoll_client *client, struct cavan_epoll_pack *pack)
+{
+	pack->next = NULL;
+	pack->offset = 0;
+
+	cavan_epoll_client_lock(client);
+
+	if (client->wr_head == NULL) {
+		client->wr_head = pack;
+		client->pending |= EPOLLOUT;
+	} else {
+		client->wr_tail->next = pack;
+	}
+
+	client->wr_tail = pack;
+
+	cavan_epoll_client_unlock(client);
+
+	if ((client->events & EPOLLOUT) != 0) {
+		cavan_epoll_client_post_events(client, 0);
+	}
+}
+
+int cavan_epoll_client_send_data(struct cavan_epoll_client *client, const void *buff, u16 length)
+{
+	struct cavan_epoll_pack *pack = cavan_epoll_pack_alloc(length + 2);
+	if (pack == NULL) {
+		return -ENOMEM;
+	}
+
+	cavan_epoll_pack_write_body(pack, buff, length);
+	cavan_epoll_client_send_pack(client, pack);
+
+	return length;
 }
 
 void cavan_epoll_service_run(struct cavan_epoll_service *service)

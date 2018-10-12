@@ -32,6 +32,19 @@ struct network_epoll_client {
 	struct network_client net_client;
 };
 
+
+static int network_epoll_client_do_read(struct cavan_epoll_client *client, void *buff, u16 size)
+{
+	struct network_client *net_client = &((struct network_epoll_client *) client)->net_client;
+	return network_client_recv(net_client, buff, size);
+}
+
+static int network_epoll_client_do_write(struct cavan_epoll_client *client, const void *buff, u16 size)
+{
+	struct network_client *net_client = &((struct network_epoll_client *) client)->net_client;
+	return network_client_send(net_client, buff, size);
+}
+
 static bool network_epoll_service_do_poll(struct cavan_epoll_client *client)
 {
 	struct network_epoll_service *service = (struct network_epoll_service *) client;
@@ -52,7 +65,11 @@ static bool network_epoll_service_do_poll(struct cavan_epoll_client *client)
 	pr_pos_info();
 
 	cavan_epoll_client_init(&conn->ep_client, conn->net_client.sockfd);
+	conn->ep_client.do_read = network_epoll_client_do_read;
+	conn->ep_client.do_write = network_epoll_client_do_write;
 	pr_pos_info();
+
+	println("sockfd = %d", conn->net_client.sockfd);
 
 	if (cavan_epoll_service_add(&service->ep_service, &conn->ep_client) < 0) {
 		goto out_free_conn;
