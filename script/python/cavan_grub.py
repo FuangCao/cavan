@@ -37,18 +37,23 @@ class CavanGrub(CavanCommandBase):
 
 		return True
 
-	def scanUbuntuIsoDir(self, dev, dpath, hd):
+	def scanUbuntuIsoDir(self, dev, dpath, hd, depth):
+                if depth > 3:
+                    return
+
 		part = "(hd%d,msdos%s)" % (hd, dev[-1])
+
+                print >> sys.stderr, "Scan directory: %s:/%s" % (part, dpath)
 
 		for fn in os.listdir(dpath):
 			fpath = os.path.join(dpath, fn)
 			if os.path.isdir(fpath):
-				self.scanUbuntuIsoDir(dev, fpath, hd)
+				self.scanUbuntuIsoDir(dev, fpath, hd, depth + 1)
 			elif fn.startswith("ubuntu-") and fn.endswith(".iso"):
 				vmlinuz = self.globVmlinuz(dpath)
 				initrd = self.globInitrd(dpath)
 				if not vmlinuz or not initrd:
-					print >> sys.stderr, "Config ubuntu image: " + fpath
+					print >> sys.stderr, "Config ubuntu image:", fpath
 					names = os.path.splitext(fpath)
 					diso = names[0]
 
@@ -65,7 +70,7 @@ class CavanGrub(CavanCommandBase):
 				else:
 					fiso = fpath
 
-				print >> sys.stderr, "Found ubuntu image: " + fiso
+				print >> sys.stderr, "Found ubuntu image:", fiso
 
 				print "menuentry '" + fn + "' {"
 				print "\tset root='" + part + "'"
@@ -96,7 +101,7 @@ class CavanGrub(CavanCommandBase):
 				self.setRootPath(target)
 
 				if os.path.isdir(dpath):
-					self.scanUbuntuIsoDir(dev, dpath, hd)
+					self.scanUbuntuIsoDir(dev, dpath, hd, 1)
 
 if __name__ == "__main__":
 	grub = CavanGrub()
