@@ -18,6 +18,7 @@ namespace NetworkInputMethod
         private FormOpenApp mFormOpenApp;
         private FormSelect mFormSelect;
         private FormHttpSender mFormSender;
+        private FormPackBuilder mFormBuilder;
 
         //API declarations...
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -143,10 +144,17 @@ namespace NetworkInputMethod
             string text = Clipboard.GetText();
             Console.WriteLine("onClipboardChanged: " + text);
 
-            if (checkBoxShareClipboard.Checked && text != null && text.Length > 0)
+            if (mFormBuilder == null || mFormBuilder.IsDisposed)
             {
-                string command = "CLIPBOARD " + text;
-                sendCommand(command, true);
+                if (checkBoxShareClipboard.Checked && text != null && text.Length > 0)
+                {
+                    string command = "CLIPBOARD " + text;
+                    sendCommand(command, true);
+                }
+            }
+            else
+            {
+                mFormBuilder.postClipboard(text);
             }
         }
 
@@ -543,6 +551,19 @@ namespace NetworkInputMethod
         private void buttonUnfollow_Click(object sender, EventArgs e)
         {
             sendCommand("UNFOLLOW", false);
+        }
+
+        private void buttonBuildPack_Click(object sender, EventArgs e)
+        {
+            if (mFormBuilder == null || mFormBuilder.IsDisposed)
+            {
+                mFormBuilder = new FormPackBuilder();
+                mFormBuilder.Show();
+            }
+            else
+            {
+                mFormBuilder.WindowState = FormWindowState.Normal;
+            }
         }
     }
 

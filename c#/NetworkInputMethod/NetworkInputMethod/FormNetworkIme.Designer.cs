@@ -51,7 +51,6 @@
             this.buttonPaste = new System.Windows.Forms.Button();
             this.buttonComplete = new System.Windows.Forms.Button();
             this.buttonOpen = new System.Windows.Forms.Button();
-            this.buttonSelect = new System.Windows.Forms.Button();
             this.buttonBack = new System.Windows.Forms.Button();
             this.buttonVolumeDown = new System.Windows.Forms.Button();
             this.buttonVolumeUp = new System.Windows.Forms.Button();
@@ -70,6 +69,7 @@
             this.buttonSignin = new System.Windows.Forms.Button();
             this.buttonUnfollow = new System.Windows.Forms.Button();
             this.textBoxClock = new System.Windows.Forms.TextBox();
+            this.buttonBuildPack = new System.Windows.Forms.Button();
             this.groupBoxMode.SuspendLayout();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
@@ -287,16 +287,6 @@
             this.buttonOpen.UseVisualStyleBackColor = true;
             this.buttonOpen.Click += new System.EventHandler(this.buttonOpen_Click);
             // 
-            // buttonSelect
-            // 
-            this.buttonSelect.Location = new System.Drawing.Point(255, 332);
-            this.buttonSelect.Name = "buttonSelect";
-            this.buttonSelect.Size = new System.Drawing.Size(75, 23);
-            this.buttonSelect.TabIndex = 32;
-            this.buttonSelect.Text = "选择";
-            this.buttonSelect.UseVisualStyleBackColor = true;
-            this.buttonSelect.Click += new System.EventHandler(this.buttonSelect_Click);
-            // 
             // buttonBack
             // 
             this.buttonBack.Location = new System.Drawing.Point(12, 423);
@@ -456,12 +446,22 @@
             this.textBoxClock.Size = new System.Drawing.Size(237, 21);
             this.textBoxClock.TabIndex = 46;
             // 
+            // buttonBuildPack
+            // 
+            this.buttonBuildPack.Location = new System.Drawing.Point(255, 332);
+            this.buttonBuildPack.Name = "buttonBuildPack";
+            this.buttonBuildPack.Size = new System.Drawing.Size(75, 23);
+            this.buttonBuildPack.TabIndex = 47;
+            this.buttonBuildPack.Text = "组包";
+            this.buttonBuildPack.UseVisualStyleBackColor = true;
+            this.buttonBuildPack.Click += new System.EventHandler(this.buttonBuildPack_Click);
+            // 
             // FormNetworkIme
             // 
-            this.AcceptButton = this.buttonStart;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(423, 456);
+            this.Controls.Add(this.buttonBuildPack);
             this.Controls.Add(this.textBoxClock);
             this.Controls.Add(this.buttonUnfollow);
             this.Controls.Add(this.buttonSignin);
@@ -473,7 +473,6 @@
             this.Controls.Add(this.buttonVolumeUp);
             this.Controls.Add(this.buttonVolumeDown);
             this.Controls.Add(this.buttonBack);
-            this.Controls.Add(this.buttonSelect);
             this.Controls.Add(this.buttonOpen);
             this.Controls.Add(this.buttonComplete);
             this.Controls.Add(this.buttonPaste);
@@ -528,7 +527,6 @@
         private System.Windows.Forms.Button buttonPaste;
         private System.Windows.Forms.Button buttonComplete;
         private System.Windows.Forms.Button buttonOpen;
-        private System.Windows.Forms.Button buttonSelect;
         private System.Windows.Forms.Button buttonBack;
         private System.Windows.Forms.Button buttonVolumeDown;
         private System.Windows.Forms.Button buttonVolumeUp;
@@ -547,6 +545,7 @@
         private System.Windows.Forms.Button buttonSignin;
         private System.Windows.Forms.Button buttonUnfollow;
         private System.Windows.Forms.TextBox textBoxClock;
+        private System.Windows.Forms.Button buttonBuildPack;
     }
 }
 
