@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Net;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -123,10 +124,6 @@ namespace NetworkInputMethod
             }
 
             return builder.ToString();
-        }
-
-        public void parse()
-        {
         }
 
         public void save(JsonTextWriter writer)
@@ -296,6 +293,68 @@ namespace NetworkInputMethod
             return true;
         }
 
+        public bool upload(string url, string name, string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return false;
+            }
+
+            string timestamp = DateTime.Now.Ticks.ToString("x");
+
+            //根据uri创建HttpWebRequest对象
+            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(new Uri(url));
+            req.Method = "POST";
+            req.AllowWriteStreamBuffering = false; //对发送的数据不使用缓存
+            req.Timeout = 10000;  //设置获得响应的超时时间（20秒）
+            req.ContentType = "multipart/form-data; boundary=" + timestamp;
+
+            //头信息
+            string boundary = "--" + timestamp;
+            string header = string.Format(boundary + "\r\nContent-Disposition: form-data; name=\"{0}\";filename=\"{1}\"\r\nContent-Type:application/octet-stream\r\n\r\n", "file", name);
+            byte[] postHeaderBytes = Encoding.UTF8.GetBytes(header);
+            byte[] postBodyBytes = Encoding.UTF8.GetBytes(text);
+
+            //结束边界
+            byte[] boundaryBytes = Encoding.ASCII.GetBytes("\r\n--" + timestamp + "--\r\n");
+
+            long length = postBodyBytes.Length + postHeaderBytes.Length + boundaryBytes.Length;
+
+            req.ContentLength = length;//请求内容长度
+
+            try
+            {
+                Stream postStream = req.GetRequestStream();
+
+                //发送请求头部消息
+                postStream.Write(postHeaderBytes, 0, postHeaderBytes.Length);
+                postStream.Write(postBodyBytes, 0, postBodyBytes.Length);
+
+                //添加尾部边界
+                postStream.Write(boundaryBytes, 0, boundaryBytes.Length);
+                postStream.Close();
+
+                //获取服务器端的响应
+                using (HttpWebResponse response = (HttpWebResponse)req.GetResponse())
+                {
+                    Stream receiveStream = response.GetResponseStream();
+                    StreamReader readStream = new StreamReader(receiveStream, Encoding.UTF8);
+                    string returnValue = readStream.ReadToEnd();
+                    MessageBox.Show(returnValue);
+                    response.Close();
+                    readStream.Close();
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(url + "\r\n" + ex.ToString());
+            }
+
+            return false;
+        }
+
         private void buttonFile_Click(object sender, EventArgs e)
         {
             var server = treeView.SelectedNode;
@@ -380,13 +439,63 @@ namespace NetworkInputMethod
 
         private void buttonClear_Click(object sender, EventArgs e)
         {
+            if (MessageBox.Show("确定要清空吗？", "确认清空", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                foreach (TreeNode server in treeView.Nodes)
+                {
+                    foreach (TreeNode file in server.Nodes)
+                    {
+                        file.Nodes.Clear();
+                    }
+                }
+            }
+        }
+
+        private void contextMenuStrip_Opening(object sender, CancelEventArgs e)
+        {
+            var node = treeView.SelectedNode;
+            int level;
+
+            if (node == null)
+            {
+                deleteToolStripMenuItem.Enabled = false;
+                level = -1;
+            }
+            else
+            {
+                deleteToolStripMenuItem.Enabled = true;
+                level = node.Level;
+            }
+
+            addFileToolStripMenuItem.Enabled = (level == 0);
+            addAccountToolStripMenuItem.Enabled = (level == 1);
+        }
+
+        private void buttonUpload_Click(object sender, EventArgs e)
+        {
+            int success = 0;
+            int failed = 0;
+
             foreach (TreeNode server in treeView.Nodes)
             {
                 foreach (TreeNode file in server.Nodes)
                 {
-                    file.Nodes.Clear();
+                    var url = "http://" + server.Text + Path.GetDirectoryName(file.Text).Replace('\\', '/');
+                    var name = Path.GetFileName(file.Text);
+                    var text = build(file);
+
+                    if (upload(url, name, text))
+                    {
+                        success++;
+                    }
+                    else
+                    {
+                        failed++;
+                    }
                 }
             }
+
+            MessageBox.Show("成功：" + success + "， 失败：" + failed, "上传完成");
         }
     }
 }

@@ -30,7 +30,6 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormPackBuilder));
-            this.buttonAccount = new System.Windows.Forms.Button();
             this.buttonSave = new System.Windows.Forms.Button();
             this.treeView = new System.Windows.Forms.TreeView();
             this.imageList = new System.Windows.Forms.ImageList(this.components);
@@ -39,19 +38,19 @@
             this.buttonServer = new System.Windows.Forms.Button();
             this.buttonExport = new System.Windows.Forms.Button();
             this.folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
-            this.buttonDelete = new System.Windows.Forms.Button();
+            this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.addServerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.addFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.addAccountToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.clearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.buttonAccount = new System.Windows.Forms.Button();
             this.buttonClear = new System.Windows.Forms.Button();
+            this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.buttonUpload = new System.Windows.Forms.Button();
+            this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // buttonAccount
-            // 
-            this.buttonAccount.Location = new System.Drawing.Point(174, 472);
-            this.buttonAccount.Name = "buttonAccount";
-            this.buttonAccount.Size = new System.Drawing.Size(75, 23);
-            this.buttonAccount.TabIndex = 0;
-            this.buttonAccount.Text = "账号";
-            this.buttonAccount.UseVisualStyleBackColor = true;
-            this.buttonAccount.Click += new System.EventHandler(this.buttonAccount_Click);
             // 
             // buttonSave
             // 
@@ -65,6 +64,7 @@
             // 
             // treeView
             // 
+            this.treeView.ContextMenuStrip = this.contextMenuStrip;
             this.treeView.HideSelection = false;
             this.treeView.ImageIndex = 0;
             this.treeView.ImageList = this.imageList;
@@ -125,19 +125,75 @@
             // 
             this.folderBrowserDialog.RootFolder = System.Environment.SpecialFolder.MyComputer;
             // 
-            // buttonDelete
+            // contextMenuStrip
             // 
-            this.buttonDelete.Location = new System.Drawing.Point(255, 472);
-            this.buttonDelete.Name = "buttonDelete";
-            this.buttonDelete.Size = new System.Drawing.Size(75, 23);
-            this.buttonDelete.TabIndex = 6;
-            this.buttonDelete.Text = "删除";
-            this.buttonDelete.UseVisualStyleBackColor = true;
-            this.buttonDelete.Click += new System.EventHandler(this.buttonDelete_Click);
+            this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.addServerToolStripMenuItem,
+            this.addFileToolStripMenuItem,
+            this.addAccountToolStripMenuItem,
+            this.saveToolStripMenuItem,
+            this.exportToolStripMenuItem,
+            this.deleteToolStripMenuItem,
+            this.clearToolStripMenuItem});
+            this.contextMenuStrip.Name = "contextMenuStrip";
+            this.contextMenuStrip.Size = new System.Drawing.Size(137, 158);
+            this.contextMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip_Opening);
+            // 
+            // addServerToolStripMenuItem
+            // 
+            this.addServerToolStripMenuItem.Name = "addServerToolStripMenuItem";
+            this.addServerToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.addServerToolStripMenuItem.Text = "添加服务器";
+            this.addServerToolStripMenuItem.Click += new System.EventHandler(this.buttonServer_Click);
+            // 
+            // addFileToolStripMenuItem
+            // 
+            this.addFileToolStripMenuItem.Name = "addFileToolStripMenuItem";
+            this.addFileToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.addFileToolStripMenuItem.Text = "添加文件";
+            this.addFileToolStripMenuItem.Click += new System.EventHandler(this.buttonFile_Click);
+            // 
+            // addAccountToolStripMenuItem
+            // 
+            this.addAccountToolStripMenuItem.Name = "addAccountToolStripMenuItem";
+            this.addAccountToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.addAccountToolStripMenuItem.Text = "添加账号";
+            this.addAccountToolStripMenuItem.Click += new System.EventHandler(this.buttonAccount_Click);
+            // 
+            // deleteToolStripMenuItem
+            // 
+            this.deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
+            this.deleteToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.deleteToolStripMenuItem.Text = "删除";
+            this.deleteToolStripMenuItem.Click += new System.EventHandler(this.buttonDelete_Click);
+            // 
+            // clearToolStripMenuItem
+            // 
+            this.clearToolStripMenuItem.Name = "clearToolStripMenuItem";
+            this.clearToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.clearToolStripMenuItem.Text = "清空";
+            this.clearToolStripMenuItem.Click += new System.EventHandler(this.buttonClear_Click);
+            // 
+            // exportToolStripMenuItem
+            // 
+            this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
+            this.exportToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.exportToolStripMenuItem.Text = "导出";
+            this.exportToolStripMenuItem.Click += new System.EventHandler(this.buttonExport_Click);
+            // 
+            // buttonAccount
+            // 
+            this.buttonAccount.Location = new System.Drawing.Point(174, 472);
+            this.buttonAccount.Name = "buttonAccount";
+            this.buttonAccount.Size = new System.Drawing.Size(75, 23);
+            this.buttonAccount.TabIndex = 0;
+            this.buttonAccount.Text = "账号";
+            this.buttonAccount.UseVisualStyleBackColor = true;
+            this.buttonAccount.Click += new System.EventHandler(this.buttonAccount_Click);
             // 
             // buttonClear
             // 
-            this.buttonClear.Location = new System.Drawing.Point(336, 472);
+            this.buttonClear.Location = new System.Drawing.Point(255, 472);
             this.buttonClear.Name = "buttonClear";
             this.buttonClear.Size = new System.Drawing.Size(75, 23);
             this.buttonClear.TabIndex = 7;
@@ -145,13 +201,30 @@
             this.buttonClear.UseVisualStyleBackColor = true;
             this.buttonClear.Click += new System.EventHandler(this.buttonClear_Click);
             // 
+            // saveToolStripMenuItem
+            // 
+            this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.saveToolStripMenuItem.Text = "保存";
+            this.saveToolStripMenuItem.Click += new System.EventHandler(this.buttonSave_Click);
+            // 
+            // buttonUpload
+            // 
+            this.buttonUpload.Location = new System.Drawing.Point(395, 472);
+            this.buttonUpload.Name = "buttonUpload";
+            this.buttonUpload.Size = new System.Drawing.Size(75, 23);
+            this.buttonUpload.TabIndex = 9;
+            this.buttonUpload.Text = "上传";
+            this.buttonUpload.UseVisualStyleBackColor = true;
+            this.buttonUpload.Click += new System.EventHandler(this.buttonUpload_Click);
+            // 
             // FormPackBuilder
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(644, 507);
+            this.Controls.Add(this.buttonUpload);
             this.Controls.Add(this.buttonClear);
-            this.Controls.Add(this.buttonDelete);
             this.Controls.Add(this.buttonExport);
             this.Controls.Add(this.buttonServer);
             this.Controls.Add(this.buttonFile);
@@ -160,13 +233,12 @@
             this.Controls.Add(this.buttonAccount);
             this.Name = "FormPackBuilder";
             this.Text = "FormPackBuilder";
+            this.contextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
 
         #endregion
-
-        private System.Windows.Forms.Button buttonAccount;
         private System.Windows.Forms.Button buttonSave;
         private System.Windows.Forms.TreeView treeView;
         private System.Windows.Forms.Button buttonFile;
@@ -175,7 +247,16 @@
         private System.Windows.Forms.Button buttonServer;
         private System.Windows.Forms.Button buttonExport;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog;
-        private System.Windows.Forms.Button buttonDelete;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
+        private System.Windows.Forms.ToolStripMenuItem addServerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem addFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem addAccountToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem deleteToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem clearToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportToolStripMenuItem;
+        private System.Windows.Forms.Button buttonAccount;
         private System.Windows.Forms.Button buttonClear;
+        private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
+        private System.Windows.Forms.Button buttonUpload;
     }
 }
