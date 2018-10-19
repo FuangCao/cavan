@@ -34,6 +34,9 @@ namespace NetworkInputMethod
         private CavanBusyLock mBusyLock = new CavanBusyLock();
         private Thread mClockThread;
 
+        private string mClipboardText = string.Empty;
+        private long mClipboardTime;
+
         delegate void SimpleDelegate(Object obj);
         delegate void UpdateClockdelegate(DateTime date);
 
@@ -142,7 +145,22 @@ namespace NetworkInputMethod
         private void onClipboardChanged()
         {
             string text = Clipboard.GetText();
+            if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            var time = DateTime.Now.ToFileTimeUtc();
+
+            if (text.Equals(mClipboardText) && time - mClipboardTime < 10000000)
+            {
+                return;
+            }
+
             Console.WriteLine("onClipboardChanged: " + text);
+
+            mClipboardText = text;
+            mClipboardTime = time;
 
             if (mFormBuilder == null || mFormBuilder.IsDisposed)
             {
