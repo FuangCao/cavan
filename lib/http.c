@@ -1361,14 +1361,14 @@ char *cavan_http_basename(const char *pathname)
 	}
 }
 
-ssize_t cavan_http_receive_file(struct cavan_fifo *fifo, struct cavan_http_request *header, const char *dirname, const char *boundary)
+int cavan_http_receive_file(struct cavan_fifo *fifo, struct cavan_http_request *header, const char *dirname, const char *boundary)
 {
 	int fd;
 	int ret;
 	size_t total;
+	struct stat st;
 	char pathname[1024];
 	char *pathname_end;
-	const char *filename;
 	const char *mime_type;
 
 	ret = cavan_http_read_multiform_header(fifo, header, boundary);
@@ -1384,19 +1384,24 @@ ssize_t cavan_http_receive_file(struct cavan_fifo *fifo, struct cavan_http_reque
 	mime_type = cavan_http_request_find_prop_simple(header, "Content-Type");
 	println("mime_type = %s", mime_type);
 
-	filename = cavan_http_request_find_param_simple(header, "filename");
-	if (filename == NULL) {
-		pr_red_info("filename not found");
-		return -EINVAL;
+	if (stat(dirname, &st) == 0 && S_ISDIR(st.st_mode)) {
+		const char *filename = cavan_http_request_find_param_simple(header, "filename");
+		if (filename == NULL) {
+			pr_red_info("filename not found");
+			return -EINVAL;
+		}
+
+		filename = cavan_http_basename(filename);
+		if (filename[0] == 0) {
+			pr_red_info("filename is empty");
+			return -EINVAL;
+		}
+
+		pathname_end = cavan_path_cat(pathname, sizeof(pathname), dirname, filename, false);
+	} else {
+		pathname_end = cavan_path_copy(pathname, sizeof(pathname), dirname, false);
 	}
 
-	filename = cavan_http_basename(filename);
-	if (filename[0] == 0) {
-		pr_red_info("filename is empty");
-		return -EINVAL;
-	}
-
-	pathname_end = cavan_path_cat(pathname, sizeof(pathname), dirname, filename, false);
 	strcpy(pathname_end, ".cavan.cache");
 
 	pd_info("pathname = %s", pathname);
@@ -1476,6 +1481,47 @@ out_unlink_pathname:
 	return ret;
 }
 
+int cavan_http_receive_file_simple(struct cavan_fifo *fifo, const char *pathname)
+{
+	int ret;
+	int fd;
+
+	pd_info("pathname = %s", pathname);
+
+	fd = open(pathname, O_WRONLY | O_CREAT | O_TRUNC, 0777);
+	if (fd < 0) {
+		pr_err_info("open: %s", pathname);
+		return fd;
+	}
+
+	while (1) {
+		char buff[1024];
+		ssize_t rdlen;
+		ssize_t wrlen;
+
+		rdlen = cavan_fifo_read(fifo, buff, sizeof(buff));
+		if (unlikely(rdlen <= 0)) {
+			ret = rdlen;
+			break;
+		}
+
+		wrlen = ffile_write(fd, buff, rdlen);
+		if (wrlen < rdlen) {
+			if (wrlen < 0) {
+				ret = wrlen;
+			} else {
+				ret = -EFAULT;
+			}
+
+			break;
+		}
+	}
+
+	close(fd);
+
+	return ret;
+}
+
 char *cavan_http_get_boundary(struct cavan_http_prop *props, size_t size)
 {
 	int count;
@@ -1522,11 +1568,6 @@ int cavan_http_process_post(struct cavan_fifo *fifo, struct cavan_http_request *
 	struct cavan_http_request *header;
 	const char *boundary = cavan_http_get_boundary(req->props, req->prop_used);
 
-	if (boundary == NULL) {
-		cavan_http_send_reply(fifo->private_data, 403, TEXT_PAIR("boundary not found"));
-		return -EINVAL;
-	}
-
 	text = cavan_http_request_find_prop_simple(req, "Content-Length");
 	if (text != NULL) {
 		cavan_fifo_set_available(fifo, text2value_unsigned(text, NULL, 10));
@@ -1540,21 +1581,32 @@ int cavan_http_process_post(struct cavan_fifo *fifo, struct cavan_http_request *
 
 	time_start = clock_gettime_mono_ms();
 
-	while (1) {
-		ret = cavan_http_receive_file(fifo, header, req->url, boundary);
+	if (boundary == NULL) {
+		ret = cavan_http_receive_file_simple(fifo, req->url);
 		if (ret < 0) {
 			cavan_http_send_replyf(fifo->private_data, 403, "Failed to upload: %d", ret);
 			goto out_cavan_http_request_free;
 		}
+	} else {
+		while (1) {
+			ret = cavan_http_receive_file(fifo, header, req->url, boundary);
+			if (ret < 0) {
+				cavan_http_send_replyf(fifo->private_data, 403, "Failed to upload: %d", ret);
+				goto out_cavan_http_request_free;
+			}
 
-		if (cavan_fifo_get_remain(fifo) > 0) {
-			cavan_http_request_reset(header);
-		} else {
-			break;
+			if (cavan_fifo_get_remain(fifo) > 0) {
+				cavan_http_request_reset(header);
+			} else {
+				break;
+			}
 		}
 	}
 
 	time_consume = clock_gettime_mono_ms() - time_start;
+	if (time_consume == 0) {
+		time_consume = 1;
+	}
 
 	if (fifo->available) {
 		char speed_buff[128];
