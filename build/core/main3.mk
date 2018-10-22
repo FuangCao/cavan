@@ -132,7 +132,7 @@ ifneq ($(FRAME_SIZE),)
 CFLAGS += -Wframe-larger-than=$(FRAME_SIZE)
 endif
 
-CPPFLAGS := $(CPPFLAGS) $(CFLAGS)
+CPPFLAGS := $(CPPFLAGS) $(CFLAGS) -std=gnu++11
 CFLAGS += -Werror-implicit-function-declaration -Wstrict-prototypes
 CFLAGS += -std=gnu99 -DCONFIG_CAVAN_C99
 LDFLAGS += -lm -lrt -lpthread
