@@ -125,7 +125,7 @@ function cavan-wifi-reaver()
 	echo "args = $args"
 
 	mkdir -pv "${CAVAN_WIFI_PATH}"
-	reaver $args
+	sudo reaver $args
 }
 
 function cavan-wifi-reaver-daemon()
