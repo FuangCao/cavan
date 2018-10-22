@@ -144,7 +144,18 @@ namespace NetworkInputMethod
 
         private void onClipboardChanged()
         {
-            string text = Clipboard.GetText();
+            string text;
+
+            try
+            {
+                text = Clipboard.GetText();
+            }
+            catch (Exception err)
+            {
+                MessageBox.Show(err.ToString());
+                return;
+            }
+
             if (string.IsNullOrEmpty(text))
             {
                 return;

@@ -29,6 +29,7 @@ namespace NetworkInputMethod
         public FormPackBuilder()
         {
             InitializeComponent();
+            comboBoxReqCount.SelectedIndex = 0;
             load();
 
             if (treeView.Nodes.Count < 1)
@@ -54,16 +55,20 @@ namespace NetworkInputMethod
             return node;
         }
 
-        public void postClipboard(string text)
+        public bool postClipboard(string text)
         {
             var account = treeView.SelectedNode;
             if (account == null || account.Level < 1)
             {
                 MessageBox.Show("请选择一个账号！");
-                return;
+                return false;
             }
 
             text = text.Trim();
+            if (!text.StartsWith("GET"))
+            {
+                return false;
+            }
 
             if (account.Level < 2)
             {
@@ -82,14 +87,25 @@ namespace NetworkInputMethod
                 {
                     if (text.Equals(node.Text))
                     {
-                        return;
+                        return true;
                     }
+                }
+
+                var count = comboBoxReqCount.SelectedIndex;
+
+                if (count > 0 && account.Nodes.Count >= count)
+                {
+                    var node = createAccountNode(account.Parent);
+                    treeView.SelectedNode = node;
+                    account = node;
                 }
             }
 
             var child = account.Nodes.Add(text);
             child.ImageIndex = IMG_INDEX_ITEM;
             account.ExpandAll();
+
+            return true;
         }
 
         public string build(TreeNode file)
@@ -293,13 +309,14 @@ namespace NetworkInputMethod
             return true;
         }
 
-        public bool upload(string url, string name, string text)
+        public bool upload(string server, string pathname, string text)
         {
             if (string.IsNullOrEmpty(text))
             {
-                return false;
+                return true;
             }
 
+#if false
             string timestamp = DateTime.Now.Ticks.ToString("x");
 
             //根据uri创建HttpWebRequest对象
@@ -347,12 +364,51 @@ namespace NetworkInputMethod
 
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception err)
             {
-                MessageBox.Show(url + "\r\n" + ex.ToString());
+                MessageBox.Show(url + "\r\n" + err);
             }
+#else
+            var url = "http://" + server + pathname;
+            var client = new WebClient();
+
+            try
+            {
+                var response = client.UploadString(url, text);
+
+                if (response != null)
+                {
+                    MessageBox.Show(url + "\r\n" + response, "上传成功");
+                    return true;
+                }
+            }
+            catch (Exception err)
+            {
+                MessageBox.Show(url + "\r\n" + err, "上传失败");
+            }
+#endif
 
             return false;
+        }
+
+        public StringBuilder upload(StringBuilder builder, TreeNode server, TreeNode file)
+        {
+            var text = build(file);
+
+            builder.Append(server.Text).Append('@').Append(file.Text).Append(": ");
+
+            if (upload(server.Text, file.Text, text))
+            {
+                builder.Append("成功");
+            }
+            else
+            {
+                builder.Append("失败");
+            }
+
+            builder.AppendLine();
+
+            return builder;
         }
 
         private void buttonFile_Click(object sender, EventArgs e)
@@ -459,11 +515,13 @@ namespace NetworkInputMethod
             if (node == null)
             {
                 deleteToolStripMenuItem.Enabled = false;
+                uploadToolStripMenuItem.Enabled = false;
                 level = -1;
             }
             else
             {
                 deleteToolStripMenuItem.Enabled = true;
+                uploadToolStripMenuItem.Enabled = true;
                 level = node.Level;
             }
 
@@ -473,29 +531,45 @@ namespace NetworkInputMethod
 
         private void buttonUpload_Click(object sender, EventArgs e)
         {
-            int success = 0;
-            int failed = 0;
+            StringBuilder builder = new StringBuilder();
 
             foreach (TreeNode server in treeView.Nodes)
             {
                 foreach (TreeNode file in server.Nodes)
                 {
-                    var url = "http://" + server.Text + Path.GetDirectoryName(file.Text).Replace('\\', '/');
-                    var name = Path.GetFileName(file.Text);
-                    var text = build(file);
-
-                    if (upload(url, name, text))
-                    {
-                        success++;
-                    }
-                    else
-                    {
-                        failed++;
-                    }
+                    upload(builder, server, file);
                 }
             }
 
-            MessageBox.Show("成功：" + success + "， 失败：" + failed, "上传完成");
+            MessageBox.Show(builder.ToString());
+        }
+
+        private void uploadToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            TreeNode node = treeView.SelectedNode;
+            if (node != null)
+            {
+                var builder = new StringBuilder();
+
+                if (node.Level > 0)
+                {
+                    while (node.Level > 1)
+                    {
+                        node = node.Parent;
+                    }
+
+                    upload(builder, node.Parent, node);
+                }
+                else
+                {
+                    foreach (TreeNode file in node.Nodes)
+                    {
+                        upload(builder, node, file);
+                    }
+                }
+
+                MessageBox.Show(builder.ToString());
+            }
         }
     }
 }
