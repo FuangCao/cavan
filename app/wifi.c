@@ -52,16 +52,23 @@ static int cavan_wifi_number_main(int argc, char *argv[])
 
 static int cavan_wifi_phone_main(int argc, char *argv[])
 {
-	const char *zone = "\u4e0a\u6d77";
 	const char *pathname;
+	const char *zone;
 	char line[1024];
 	FILE *fp;
 
+#if CONFIG_CAVAN_C99
 	assert(argc > 1);
 
 	if (argc > 2) {
 		zone = argv[2];
+	} else {
+		zone = "\u4e0a\u6d77";
 	}
+#else
+	assert(argc > 1);
+	zone = argv[2];
+#endif
 
 	pathname = argv[1];
 
