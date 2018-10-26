@@ -18,8 +18,9 @@
  */
 
 #include <cavan.h>
+#include <cavan/command.h>
 
-int main(int argc, char *argv[])
+static int cavan_wifi_number_main(int argc, char *argv[])
 {
 	FILE *fp;
 	int i;
@@ -48,3 +49,49 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
+
+static int cavan_wifi_phone_main(int argc, char *argv[])
+{
+	const char *zone = "\u4e0a\u6d77";
+	const char *pathname;
+	char line[1024];
+	FILE *fp;
+
+	assert(argc > 1);
+
+	if (argc > 2) {
+		zone = argv[2];
+	}
+
+	pathname = argv[1];
+
+	fp = fopen(pathname, "r");
+	if (fp == NULL) {
+		pr_err_info("fopen: %s", pathname);
+		return -EINVAL;
+	}
+
+	while (fgets(line, sizeof(line), fp) != NULL) {
+		int prefix;
+		int suffix;
+
+		if (strstr(line, zone) == NULL) {
+			continue;
+		}
+
+		prefix = atoi(line);
+
+		for (suffix = 0; suffix < 10000; suffix++) {
+			printf("%d%04d\n", prefix, suffix);
+		}
+	}
+
+	fclose(fp);
+
+	return 0;
+}
+
+CAVAN_COMMAND_MAP_START {
+	{ "number", cavan_wifi_number_main },
+	{ "phone", cavan_wifi_phone_main },
+} CAVAN_COMMAND_MAP_END;

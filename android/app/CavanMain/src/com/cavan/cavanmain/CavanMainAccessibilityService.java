@@ -11,6 +11,7 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Message;
 import android.view.WindowManager;
+import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.cavan.accessibility.CavanAccessibilityAlipay;
 import com.cavan.accessibility.CavanAccessibilityPackage;
@@ -228,5 +229,10 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 		} else {
 			CavanAndroid.startLauncher(this);
 		}
+	}
+
+	@Override
+	protected void onCloseSystemDialogs(String reason) {
+		CavanAndroid.dLog("onCloseSystemDialogs: " + reason);
 	}
 }

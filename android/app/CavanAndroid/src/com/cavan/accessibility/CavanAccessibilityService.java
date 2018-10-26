@@ -316,6 +316,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				break;
 
 			case Intent.ACTION_CLOSE_SYSTEM_DIALOGS:
+				onCloseSystemDialogs(intent.getStringExtra("reason"));
 				setPackage(null);
 				break;
 			}
@@ -357,6 +358,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	protected void onUserOffline() {}
 	protected void onScreenOn() {}
 	protected void onScreenOff() {}
+	protected void onCloseSystemDialogs(String reason) {}
 
 	public Handler getHandler() {
 		return mHandler;

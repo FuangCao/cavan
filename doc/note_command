@@ -30,3 +30,4 @@ free -h
 systemctl status tcp-dd.service
 journalctl -xe
 tail -f /var/log/test.log
+iconv -f GBK -t UTF8 gbk.txt -o utf8.txt
