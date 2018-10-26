@@ -66,7 +66,7 @@ static int cavan_wifi_phone_main(int argc, char *argv[])
 		zone = "\u4e0a\u6d77";
 	}
 #else
-	assert(argc > 1);
+	assert(argc > 2);
 	zone = argv[2];
 #endif
 
