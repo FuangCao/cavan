@@ -571,5 +571,67 @@ namespace NetworkInputMethod
                 MessageBox.Show(builder.ToString());
             }
         }
+
+        private void treeView_ItemDrag(object sender, ItemDragEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left && e.Item is TreeNode)
+            {
+                var node = e.Item as TreeNode;
+                if (node.Level == 3)
+                {
+                    DoDragDrop(node, DragDropEffects.Move);
+                }
+            }
+        }
+
+        private void treeView_DragEnter(object sender, DragEventArgs e)
+        {
+            e.Effect = DragDropEffects.Move;
+        }
+
+        private void treeView_DragDrop(object sender, DragEventArgs e)
+        {
+            var node = e.Data.GetData("System.Windows.Forms.TreeNode") as TreeNode;
+            if (node == null)
+            {
+                return;
+            }
+
+            var point = treeView.PointToClient(new Point(e.X, e.Y));
+            var target = treeView.GetNodeAt(point);
+            if (target == null)
+            {
+                return;
+            }
+
+            TreeNode parent;
+            int index;
+
+            if (target.Level > 2)
+            {
+                parent = target.Parent;
+                index = target.Index + 1;
+            }
+            else if (target.Level > 1)
+            {
+                parent = target;
+                index = 0;
+            }
+            else if (target.Level > 0)
+            {
+                parent = createAccountNode(target);
+                index = 0;
+            }
+            else
+            {
+                return;
+            }
+
+            var nodeNew = node.Clone() as TreeNode;
+            parent.Nodes.Insert(index, nodeNew);
+            treeView.SelectedNode = nodeNew;
+            parent.Expand();
+            node.Remove();
+        }
     }
 }

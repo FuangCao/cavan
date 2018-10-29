@@ -61,6 +61,9 @@
     <Compile Include="CavanTcpClient.cs" />
     <Compile Include="CavanTcpPacketClient.cs" />
     <Compile Include="CavanThread.cs" />
+    <Compile Include="CavanTreeView.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="FormHttpSender.cs">
       <SubType>Form</SubType>
     </Compile>

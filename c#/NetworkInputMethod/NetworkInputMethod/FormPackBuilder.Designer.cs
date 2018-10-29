@@ -31,11 +31,11 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormPackBuilder));
             this.buttonSave = new System.Windows.Forms.Button();
-            this.treeView = new System.Windows.Forms.TreeView();
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.addServerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addAccountToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.uploadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -50,7 +50,7 @@
             this.buttonClear = new System.Windows.Forms.Button();
             this.buttonUpload = new System.Windows.Forms.Button();
             this.comboBoxReqCount = new System.Windows.Forms.ComboBox();
-            this.uploadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.treeView = new NetworkInputMethod.CavanTreeView();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -63,21 +63,6 @@
             this.buttonSave.Text = "保存";
             this.buttonSave.UseVisualStyleBackColor = true;
             this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
-            // 
-            // treeView
-            // 
-            this.treeView.ContextMenuStrip = this.contextMenuStrip;
-            this.treeView.HideSelection = false;
-            this.treeView.HotTracking = true;
-            this.treeView.ImageIndex = 0;
-            this.treeView.ImageList = this.imageList;
-            this.treeView.LabelEdit = true;
-            this.treeView.Location = new System.Drawing.Point(12, 38);
-            this.treeView.Name = "treeView";
-            this.treeView.SelectedImageIndex = 4;
-            this.treeView.ShowLines = false;
-            this.treeView.Size = new System.Drawing.Size(560, 482);
-            this.treeView.TabIndex = 2;
             // 
             // contextMenuStrip
             // 
@@ -97,49 +82,56 @@
             // addServerToolStripMenuItem
             // 
             this.addServerToolStripMenuItem.Name = "addServerToolStripMenuItem";
-            this.addServerToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.addServerToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
             this.addServerToolStripMenuItem.Text = "添加服务器";
             this.addServerToolStripMenuItem.Click += new System.EventHandler(this.buttonServer_Click);
             // 
             // addFileToolStripMenuItem
             // 
             this.addFileToolStripMenuItem.Name = "addFileToolStripMenuItem";
-            this.addFileToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.addFileToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
             this.addFileToolStripMenuItem.Text = "添加文件";
             this.addFileToolStripMenuItem.Click += new System.EventHandler(this.buttonFile_Click);
             // 
             // addAccountToolStripMenuItem
             // 
             this.addAccountToolStripMenuItem.Name = "addAccountToolStripMenuItem";
-            this.addAccountToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.addAccountToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
             this.addAccountToolStripMenuItem.Text = "添加账号";
             this.addAccountToolStripMenuItem.Click += new System.EventHandler(this.buttonAccount_Click);
+            // 
+            // uploadToolStripMenuItem
+            // 
+            this.uploadToolStripMenuItem.Name = "uploadToolStripMenuItem";
+            this.uploadToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.uploadToolStripMenuItem.Text = "上传";
+            this.uploadToolStripMenuItem.Click += new System.EventHandler(this.uploadToolStripMenuItem_Click);
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
             this.saveToolStripMenuItem.Text = "保存";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.buttonSave_Click);
             // 
             // exportToolStripMenuItem
             // 
             this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
-            this.exportToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exportToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
             this.exportToolStripMenuItem.Text = "导出";
             this.exportToolStripMenuItem.Click += new System.EventHandler(this.buttonExport_Click);
             // 
             // deleteToolStripMenuItem
             // 
             this.deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
-            this.deleteToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.deleteToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
             this.deleteToolStripMenuItem.Text = "删除";
             this.deleteToolStripMenuItem.Click += new System.EventHandler(this.buttonDelete_Click);
             // 
             // clearToolStripMenuItem
             // 
             this.clearToolStripMenuItem.Name = "clearToolStripMenuItem";
-            this.clearToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.clearToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
             this.clearToolStripMenuItem.Text = "清空";
             this.clearToolStripMenuItem.Click += new System.EventHandler(this.buttonClear_Click);
             // 
@@ -241,12 +233,23 @@
             this.comboBoxReqCount.Size = new System.Drawing.Size(121, 20);
             this.comboBoxReqCount.TabIndex = 10;
             // 
-            // uploadToolStripMenuItem
+            // treeView
             // 
-            this.uploadToolStripMenuItem.Name = "uploadToolStripMenuItem";
-            this.uploadToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.uploadToolStripMenuItem.Text = "上传";
-            this.uploadToolStripMenuItem.Click += new System.EventHandler(this.uploadToolStripMenuItem_Click);
+            this.treeView.AllowDrop = true;
+            this.treeView.ContextMenuStrip = this.contextMenuStrip;
+            this.treeView.HideSelection = false;
+            this.treeView.ImageIndex = 0;
+            this.treeView.ImageList = this.imageList;
+            this.treeView.LabelEdit = true;
+            this.treeView.Location = new System.Drawing.Point(12, 38);
+            this.treeView.Name = "treeView";
+            this.treeView.SelectedImageIndex = 4;
+            this.treeView.ShowLines = false;
+            this.treeView.Size = new System.Drawing.Size(560, 482);
+            this.treeView.TabIndex = 2;
+            this.treeView.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.treeView_ItemDrag);
+            this.treeView.DragDrop += new System.Windows.Forms.DragEventHandler(this.treeView_DragDrop);
+            this.treeView.DragEnter += new System.Windows.Forms.DragEventHandler(this.treeView_DragEnter);
             // 
             // FormPackBuilder
             // 
@@ -271,7 +274,6 @@
 
         #endregion
         private System.Windows.Forms.Button buttonSave;
-        private System.Windows.Forms.TreeView treeView;
         private System.Windows.Forms.Button buttonFile;
         private System.Windows.Forms.OpenFileDialog openFileDialog;
         private System.Windows.Forms.ImageList imageList;
@@ -291,5 +293,6 @@
         private System.Windows.Forms.Button buttonUpload;
         private System.Windows.Forms.ComboBox comboBoxReqCount;
         private System.Windows.Forms.ToolStripMenuItem uploadToolStripMenuItem;
+        private CavanTreeView treeView;
     }
 }
