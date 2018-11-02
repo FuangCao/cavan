@@ -537,7 +537,7 @@ static int ftp_service_cmdline(struct cavan_ftp_service *ftp_service, struct cav
 				} else {
 					struct tm ti;
 
-					if (localtime_r((time_t *) &st.st_atime, &ti) == NULL) {
+					if (localtime_r((time_t *) &st.st_mtime, &ti) == NULL) {
 						replen = snprintf(rep_buff, sizeof(rep_buff), "550 get localtime failed: %s.\r\n", strerror(errno));
 					} else {
 						replen = snprintf(rep_buff, sizeof(rep_buff), "213 %04d%02d%02d%02d%02d%02d\r\n", \

@@ -679,7 +679,7 @@ static int cavan_http_sender_check_file_time(const char *pathname)
 		return ret;
 	}
 
-	overtime = time(NULL) - sb.st_atime;
+	overtime = time(NULL) - sb.st_mtime;
 	time2text_sec(overtime, buff, sizeof(buff));
 
 	println("overtime = %s", buff);
