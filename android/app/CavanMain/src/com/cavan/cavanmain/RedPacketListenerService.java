@@ -54,7 +54,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 	public static RedPacketListenerService instance;
 
-	private CharSequence mClipText;
+	private String mClipText;
 	private ClipboardManager mClipboardManager;
 	private NotificationManager mNotificationManager;
 	private HashSet<String> mKeywords = new HashSet<String>();
@@ -208,12 +208,12 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		return mGroups.keySet();
 	}
 
-	public CharSequence getClipText() {
+	public String getClipText() {
 		return mClipText;
 	}
 
-	public void setClipText(CharSequence clipText) {
-		mClipText = clipText;
+	public void setClipText(String text) {
+		mClipText = text;
 	}
 
 	public void addRedPacketCode(String code, String type, boolean report) {
@@ -389,27 +389,18 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			return null;
 		}
 
-		for (String keyword : mKeywords) {
-			if (content.contains(keyword)) {
-				return keyword;
-			}
-		}
-
-		return null;
-	}
-
-	public String getInFormation(String group, RedPacketFinder finder) {
-		String content = finder.getJoinedLines();
-		if (content == null || content.isEmpty()) {
-			return null;
-		}
-
 		if (content.charAt(0) != '@') {
 			if (mInformationGroups.contains(group)) {
 				for (String keyword : mInformations) {
 					if (content.contains(keyword)) {
 						return keyword;
 					}
+				}
+			}
+
+			for (String keyword : mKeywords) {
+				if (content.contains(keyword)) {
+					return keyword;
 				}
 			}
 		} else {
@@ -515,8 +506,13 @@ public class RedPacketListenerService extends NotificationListenerService implem
 				return;
 			}
 
-			CharSequence text = clip.getItemAt(0).coerceToText(this);
-			if (text == null /* || text.equals(mClipText) */) {
+			CharSequence sequence = clip.getItemAt(0).coerceToText(this);
+			if (sequence == null /* || sequence.equals(mClipText) */) {
+				return;
+			}
+
+			String text = sequence.toString().trim();
+			if (text.isEmpty()) {
 				return;
 			}
 

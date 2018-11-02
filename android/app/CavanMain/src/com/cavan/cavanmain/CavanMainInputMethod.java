@@ -41,7 +41,8 @@ import com.cavan.service.ICavanTcpConnService;
 
 public class CavanMainInputMethod extends CavanInputMethodService implements OnKeyboardActionListener {
 
-	private static final int CODE_MAX_COLUMNS = 3;
+	private static final int CODE_MAX_COLUMNS = 5;
+	private static final int CODE_MAX_LINES = 1;
 	private static final int AUTO_COMMIT_DELAY = 100;
 
 	public static final int KEYCODE_SHIFT = -1;
@@ -814,8 +815,8 @@ public class CavanMainInputMethod extends CavanInputMethodService implements OnK
 					lines = (size + CODE_MAX_COLUMNS - 1) / CODE_MAX_COLUMNS;
 					columns = (size + lines - 1) / lines;
 
-					if (lines > 2) {
-						lines = 2;
+					if (lines > CODE_MAX_LINES) {
+						lines = CODE_MAX_LINES;
 					}
 				} else {
 					if (size > 0) {

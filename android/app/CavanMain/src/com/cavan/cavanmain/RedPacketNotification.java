@@ -251,22 +251,6 @@ public class RedPacketNotification extends CavanNotificationTable {
 			return false;
 		}
 
-		String message = getUserDescription() + ": " + keyword;
-		if (CavanMessageActivity.isKeywordNotifyOnly(mService)) {
-			FloatMessageService.showNotify(message);
-		} else {
-			return sendRedPacketNotifyNormal(keyword, "关键字@" + message, null, FloatMessageService.AUTO_UNLOCK_KEY_WORD);
-		}
-
-		return true;
-	}
-
-	public boolean sendInformation(RedPacketFinder finder) {
-		String keyword = mService.getInFormation(mNotification.getGroupName(), finder);
-		if (keyword == null) {
-			return false;
-		}
-
 		String message = keyword + "@" + getUserDescription() + ": " + mNotification.getContent();
 		if (CavanMessageActivity.isKeywordNotifyOnly(mService)) {
 			FloatMessageService.showNotify(message);
@@ -315,10 +299,6 @@ public class RedPacketNotification extends CavanNotificationTable {
 		}
 
 		if (sendKeyword(finder)) {
-			return true;
-		}
-
-		if (sendInformation(finder)) {
 			return true;
 		}
 

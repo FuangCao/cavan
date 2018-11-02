@@ -11,7 +11,6 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Message;
 import android.view.WindowManager;
-import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.cavan.accessibility.CavanAccessibilityAlipay;
 import com.cavan.accessibility.CavanAccessibilityPackage;

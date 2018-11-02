@@ -926,6 +926,13 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doWebProxy(JNIEnv *env, jclas
 	return CavanMainExecute(env, "web_proxy", async, args, do_cavan_web_proxy);
 }
 
+extern int do_cavan_wifi(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doWifi(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "wifi", async, args, do_cavan_wifi);
+}
+
 extern int do_cavan_mkfs(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMkfs(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)

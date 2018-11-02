@@ -35,7 +35,6 @@ import com.cavan.android.CavanQrCode;
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.cavanjni.HttpService;
 import com.cavan.java.CavanFile;
-import com.cavan.java.CavanString;
 
 public class CavanShareAppActivity extends Activity implements OnItemClickListener, OnCheckedChangeListener {
 

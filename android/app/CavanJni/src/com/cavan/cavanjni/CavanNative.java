@@ -1060,6 +1060,14 @@ class CavanCommandWebProxy extends CavanNativeCommand {
 	}
 }
 
+class CavanCommandWifi extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doWifi(async, args);
+	}
+}
+
 class CavanCommandMkfs extends CavanNativeCommand {
 
 	@Override
@@ -1247,6 +1255,7 @@ public class CavanNative {
 		sHashMap.put("usb_dd_server", new CavanCommandUsbDdServer());
 		sHashMap.put("vfat", new CavanCommandVfat());
 		sHashMap.put("web_proxy", new CavanCommandWebProxy());
+		sHashMap.put("wifi", new CavanCommandWifi());
 		sHashMap.put("mkfs", new CavanCommandMkfs());
 		sHashMap.put("cpp_calculator", new CavanCommandCppCalculator());
 		sHashMap.put("cpp_http_service", new CavanCommandCppHttpService());
@@ -1387,6 +1396,7 @@ public class CavanNative {
 	public static native int doUsbDdServer(boolean async, String... args);
 	public static native int doVfat(boolean async, String... args);
 	public static native int doWebProxy(boolean async, String... args);
+	public static native int doWifi(boolean async, String... args);
 	public static native int doMkfs(boolean async, String... args);
 	public static native int doCppCalculator(boolean async, String... args);
 	public static native int doCppHttpService(boolean async, String... args);
