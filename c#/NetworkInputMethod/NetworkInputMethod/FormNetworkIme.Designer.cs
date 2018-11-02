@@ -70,6 +70,7 @@
             this.buttonUnfollow = new System.Windows.Forms.Button();
             this.textBoxClock = new System.Windows.Forms.TextBox();
             this.buttonBuildPack = new System.Windows.Forms.Button();
+            this.comboBoxHistory = new System.Windows.Forms.ComboBox();
             this.groupBoxMode.SuspendLayout();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
@@ -96,18 +97,20 @@
             // 
             this.checkedListBoxClients.CheckOnClick = true;
             this.checkedListBoxClients.FormattingEnabled = true;
-            this.checkedListBoxClients.Location = new System.Drawing.Point(12, 39);
+            this.checkedListBoxClients.Location = new System.Drawing.Point(12, 41);
             this.checkedListBoxClients.Name = "checkedListBoxClients";
-            this.checkedListBoxClients.Size = new System.Drawing.Size(398, 132);
+            this.checkedListBoxClients.Size = new System.Drawing.Size(399, 100);
             this.checkedListBoxClients.TabIndex = 4;
             this.checkedListBoxClients.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedListBoxClients_ItemCheck);
             // 
             // textBoxContent
             // 
-            this.textBoxContent.Location = new System.Drawing.Point(13, 199);
+            this.textBoxContent.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
+            this.textBoxContent.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.HistoryList;
+            this.textBoxContent.Location = new System.Drawing.Point(12, 169);
             this.textBoxContent.Multiline = true;
             this.textBoxContent.Name = "textBoxContent";
-            this.textBoxContent.Size = new System.Drawing.Size(398, 95);
+            this.textBoxContent.Size = new System.Drawing.Size(398, 99);
             this.textBoxContent.TabIndex = 5;
             // 
             // buttonSend
@@ -189,7 +192,7 @@
             // labelStatus
             // 
             this.labelStatus.AutoSize = true;
-            this.labelStatus.Location = new System.Drawing.Point(13, 302);
+            this.labelStatus.Location = new System.Drawing.Point(12, 302);
             this.labelStatus.Name = "labelStatus";
             this.labelStatus.Size = new System.Drawing.Size(77, 12);
             this.labelStatus.TabIndex = 20;
@@ -198,7 +201,7 @@
             // checkBoxRepeat
             // 
             this.checkBoxRepeat.AutoSize = true;
-            this.checkBoxRepeat.Location = new System.Drawing.Point(339, 177);
+            this.checkBoxRepeat.Location = new System.Drawing.Point(337, 147);
             this.checkBoxRepeat.Name = "checkBoxRepeat";
             this.checkBoxRepeat.Size = new System.Drawing.Size(72, 16);
             this.checkBoxRepeat.TabIndex = 21;
@@ -229,7 +232,7 @@
             this.checkBoxShareClipboard.AutoSize = true;
             this.checkBoxShareClipboard.Checked = true;
             this.checkBoxShareClipboard.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxShareClipboard.Location = new System.Drawing.Point(249, 177);
+            this.checkBoxShareClipboard.Location = new System.Drawing.Point(247, 147);
             this.checkBoxShareClipboard.Name = "checkBoxShareClipboard";
             this.checkBoxShareClipboard.Size = new System.Drawing.Size(84, 16);
             this.checkBoxShareClipboard.TabIndex = 23;
@@ -239,7 +242,7 @@
             // checkBoxSelectAll
             // 
             this.checkBoxSelectAll.AutoSize = true;
-            this.checkBoxSelectAll.Location = new System.Drawing.Point(14, 177);
+            this.checkBoxSelectAll.Location = new System.Drawing.Point(12, 147);
             this.checkBoxSelectAll.Name = "checkBoxSelectAll";
             this.checkBoxSelectAll.Size = new System.Drawing.Size(48, 16);
             this.checkBoxSelectAll.TabIndex = 24;
@@ -456,11 +459,22 @@
             this.buttonBuildPack.UseVisualStyleBackColor = true;
             this.buttonBuildPack.Click += new System.EventHandler(this.buttonBuildPack_Click);
             // 
+            // comboBoxHistory
+            // 
+            this.comboBoxHistory.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxHistory.FormattingEnabled = true;
+            this.comboBoxHistory.Location = new System.Drawing.Point(12, 275);
+            this.comboBoxHistory.Name = "comboBoxHistory";
+            this.comboBoxHistory.Size = new System.Drawing.Size(399, 20);
+            this.comboBoxHistory.TabIndex = 48;
+            this.comboBoxHistory.TextChanged += new System.EventHandler(this.comboBoxHistory_TextChanged);
+            // 
             // FormNetworkIme
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(423, 456);
+            this.Controls.Add(this.comboBoxHistory);
             this.Controls.Add(this.buttonBuildPack);
             this.Controls.Add(this.textBoxClock);
             this.Controls.Add(this.buttonUnfollow);
@@ -546,6 +560,7 @@
         private System.Windows.Forms.Button buttonUnfollow;
         private System.Windows.Forms.TextBox textBoxClock;
         private System.Windows.Forms.Button buttonBuildPack;
+        private System.Windows.Forms.ComboBox comboBoxHistory;
     }
 }
 

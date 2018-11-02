@@ -156,7 +156,14 @@ namespace NetworkInputMethod
                 return;
             }
 
-            if (string.IsNullOrEmpty(text))
+            if (text == null)
+            {
+                return;
+            }
+
+            text = text.Trim();
+
+            if (text.Length <= 0)
             {
                 return;
             }
@@ -173,17 +180,13 @@ namespace NetworkInputMethod
             mClipboardText = text;
             mClipboardTime = time;
 
-            if (mFormBuilder == null || mFormBuilder.IsDisposed)
+            if (mFormBuilder == null || mFormBuilder.postClipboard(text) == false)
             {
                 if (checkBoxShareClipboard.Checked && text != null && text.Length > 0)
                 {
                     string command = "CLIPBOARD " + text;
                     sendCommand(command, true);
                 }
-            }
-            else
-            {
-                mFormBuilder.postClipboard(text);
             }
         }
 
@@ -282,6 +285,9 @@ namespace NetworkInputMethod
 
             if (text != null && text.Length > 0)
             {
+                var items = comboBoxHistory.Items;
+                items.Remove(text);
+                items.Insert(0, text);
                 command += " " + text;
             }
 
@@ -593,6 +599,11 @@ namespace NetworkInputMethod
             {
                 mFormBuilder.WindowState = FormWindowState.Normal;
             }
+        }
+
+        private void comboBoxHistory_TextChanged(object sender, EventArgs e)
+        {
+            textBoxContent.Text = comboBoxHistory.Text;
         }
     }
 

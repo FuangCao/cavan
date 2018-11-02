@@ -57,16 +57,20 @@ namespace NetworkInputMethod
 
         public bool postClipboard(string text)
         {
+            if (IsDisposed)
+            {
+                return false;
+            }
+
+            if (!text.StartsWith("GET"))
+            {
+                return false;
+            }
+
             var account = treeView.SelectedNode;
             if (account == null || account.Level < 1)
             {
                 MessageBox.Show("请选择一个账号！");
-                return false;
-            }
-
-            text = text.Trim();
-            if (!text.StartsWith("GET"))
-            {
                 return false;
             }
 
