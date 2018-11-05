@@ -265,6 +265,13 @@ namespace NetworkInputMethod
             checkedListBoxClients.Invalidate();
         }
 
+        private void addHistory(string text)
+        {
+            var items = comboBoxHistory.Items;
+            items.Remove(text);
+            items.Insert(0, text);
+        }
+
         private void buttonSend_Click(object sender, EventArgs e)
         {
             string text = textBoxContent.Text;
@@ -285,9 +292,7 @@ namespace NetworkInputMethod
 
             if (text != null && text.Length > 0)
             {
-                var items = comboBoxHistory.Items;
-                items.Remove(text);
-                items.Insert(0, text);
+                addHistory(text);
                 command += " " + text;
             }
 
@@ -603,6 +608,12 @@ namespace NetworkInputMethod
 
         private void comboBoxHistory_TextChanged(object sender, EventArgs e)
         {
+            var text = textBoxContent.Text;
+            if (text != null && text.Length > 0)
+            {
+                addHistory(text);
+            }
+
             textBoxContent.Text = comboBoxHistory.Text;
         }
     }
