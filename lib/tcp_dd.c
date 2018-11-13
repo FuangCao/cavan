@@ -40,7 +40,7 @@ static void tcp_dd_show_response(struct tcp_dd_response_package *res)
 			pd_red_info("%s", res->message);
 		}
 	} else {
-		pd_green_info("%s", res->message);
+		// pd_green_info("%s", res->message);
 	}
 }
 
@@ -395,7 +395,7 @@ static int tcp_dd_send_exec_request(struct network_client *client, int ttyfd, co
 
 	tty_get_win_size3(ttyfd, &pkg.exec_req.lines, &pkg.exec_req.columns);
 
-	pd_info("terminal size = %d x %d", pkg.exec_req.lines, pkg.exec_req.columns);
+	// pd_info("terminal size = %d x %d", pkg.exec_req.lines, pkg.exec_req.columns);
 
 	if (command) {
 		p = text_copy(pkg.exec_req.command, command);
@@ -552,7 +552,7 @@ static int tcp_dd_handle_write_request(struct cavan_tcp_dd_service *service, str
 		switch (mode & S_IFMT) {
 		case S_IFREG:
 			isfile = true;
-			if ((pkg->flags & TCP_DDF_BREAKPOINT_RESUME) == 0) {
+			if ((pkg->flags & TCP_DDF_BREAKPOINT_RESUME) == 0 || req->size < MB(200)) {
 				pd_info("remove regular file %s", pathname);
 				unlink(pathname);
 			}

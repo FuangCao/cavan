@@ -102,9 +102,14 @@ static const char *const cavan_exec_tty_prefix[3] = { "stdin", "stdout", "stderr
 static const int cavan_exec_tty_master_open_flags[3] = { O_RDONLY, O_WRONLY, O_WRONLY };
 static const int cavan_exec_tty_slave_open_flags[3] = { O_WRONLY, O_RDONLY, O_RDONLY };
 static const char *const cavan_exec_shell_list[] = {
-	"/bin/bash",
-	"/bin/sh",
+#ifdef CONFIG_ANDROID
 	"/system/bin/sh",
+#endif
+	"/bin/bash",
+	"/bin/dash",
+	"/bin/sh",
+	"/usr/bin/sh",
+	"/usr/local/bin/sh",
 };
 
 int print_command_table(const struct cavan_command_entry *p, const struct cavan_command_entry *p_end)
@@ -292,7 +297,9 @@ static int cavan_builtin_command_shell(const struct cavan_builtin_command *desc,
 	CAVAN_TTY_SET_TITLE("%s@%s", username, hostname);
 #endif
 
-	return execlp(shell, "sh", "-", NULL);
+	println("shell = %s", shell);
+
+	return execlp(shell, shell, "-", NULL);
 }
 
 static int cavan_builtin_command_reboot_base(const struct cavan_builtin_command *desc, int argc, char *argv[], bool shutdown)

@@ -29,7 +29,6 @@ static const char *cavan_locale_envs[] = {
 	"LC_NAME",
 	"LC_ALL",
 	"LANG",
-	"LANGUAGE",
 };
 
 static void *cavan_service_handler(void *data)
@@ -721,6 +720,9 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 	for (i = 0; i < NELEM(cavan_locale_envs); i++) {
 		setenv(cavan_locale_envs[i], "zh_CN.UTF-8", 1);
 	}
+
+	setenv("LANGUAGE", "zh_CN", 1);
+	setenv("LC_ALL", "C", 1);
 
 	service->count = 0;
 	service->used = 0;

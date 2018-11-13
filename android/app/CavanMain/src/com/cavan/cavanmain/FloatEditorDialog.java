@@ -197,7 +197,7 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 
 			FloatMessageService service = FloatMessageService.instance;
 			if (service != null) {
-				service.sendWanCommand(FloatMessageService.NET_CMD_CLIPBOARD + text);
+				service.sendWanCommand(FloatMessageService.NET_CMD_CLIPBOARD + text.replace('\n', ' '));
 			}
 
 			dismiss();
