@@ -33,7 +33,7 @@ FSLDROID_HOME="${PROJECT_HOME}/fsldroid"
 
 if [ "${JDK_VERSION}" ]
 then
-	[[ ${JDK_VERSION} = jdk* ]] || JDK_VERSION="jdk${JDK_VERSION}"
+	[[ ${JDK_VERSION} = [0-9]* ]] && JDK_VERSION="jdk${JDK_VERSION}"
 	JAVA_HOME="${TOOLS_HOME}/${JDK_VERSION}"
 else
 	JAVA_HOME="${TOOLS_HOME}/jdk"

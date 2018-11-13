@@ -31,6 +31,7 @@ alias cavan-apt-get-source-cn99="cavan-apt-get-source mirrors.cn99.com"
 alias cavan-apt-get-source-sohu="cavan-apt-get-source mirrors.sohu.com"
 alias cavan-apt-get-source-ustc="cavan-apt-get-source mirrors.ustc.edu.cn"
 alias cavan-apt-get-source-sjtu="cavan-apt-get-source ftp.sjtu.edu.cn"
+alias cavan-apt-get-source-us="cavan-apt-get-source us.archive.ubuntu.com"
 
 function cavan-nginx-restart()
 {

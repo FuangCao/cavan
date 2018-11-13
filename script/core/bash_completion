@@ -204,7 +204,7 @@ function _cavan_set_jdk_version()
 {
 	local jdk jdks
 
-	for fn in /tools/jdk*
+	for fn in /tools/jdk* /tools/java-se-*
 	do
 		[ -d "${fn}" ] || continue
 		jdk=$(basename ${fn})

@@ -108,6 +108,7 @@ alias cavan-lunch-rk3288="cavan-set-jdk-version 1.7 && cavan-android-lunch rk328
 alias cavan-lunch-ms600="cavan-set-jdk-version 1.6 && cavan-android-lunch imx6ms600-user"
 alias cavan-lunch-ococci="cavan-set-jdk-version 1.6 && cavan-android-lunch astar_ococci-eng && extract-bsp"
 alias cavan-lunch-kh106="cavan-set-jdk-version 1.6 && cavan-android-lunch full_kh106-userdebug"
+alias cavan-lunch-msm8916="cavan-set-jdk-version 1.7 && cavan-android-lunch msm8916_64-userdebug"
 
 function cavan-sign-update-zip()
 {
