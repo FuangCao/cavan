@@ -131,11 +131,11 @@ function cavan-set-jdk-version()
 {
 	[ "$1" ] || return 1
 
-	if [[ $1 = jdk* ]]
+	if [[ $1 = [0-9]* ]]
 	then
-		JDK_VERSION="$1"
-	else
 		JDK_VERSION="jdk$1"
+	else
+		JDK_VERSION="$1"
 	fi
 
 	[ -d "/tools/${JDK_VERSION}" ] || for fn in /tools/${JDK_VERSION}*
