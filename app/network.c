@@ -363,6 +363,41 @@ static int app_network_test_relink_main(int argc, char *argv[])
 	return 0;
 }
 
+static int app_network_test_dns_main(int argc, char *argv[])
+{
+	for (int i = 1; i < argc; i++) {
+		const char *hostname = argv[i];
+		struct addrinfo *info;
+		struct addrinfo hints;
+		int ret;
+
+		memset(&hints, 0, sizeof(hints));
+		hints.ai_family = AF_INET;
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_flags = 0;
+
+		ret = getaddrinfo(hostname, NULL, &hints, &info);
+		if (ret < 0 || info == NULL) {
+			pr_error_info("getaddrinfo: %s", gai_strerror(ret));
+		} else {
+			struct addrinfo *p = info;
+			int i;
+
+			for (i = 0; p != NULL; i++) {
+				char buff[1024];
+
+				network_sockaddr_tostring(p->ai_addr, buff, sizeof(buff));
+				println("%d. %s", i, buff);
+				p = p->ai_next;
+			}
+
+			freeaddrinfo(info);
+		}
+	}
+
+	return 0;
+}
+
 CAVAN_COMMAND_MAP_START {
 	{ "dump", app_network_dump_main },
 	{ "client", app_network_client_main },
@@ -370,4 +405,5 @@ CAVAN_COMMAND_MAP_START {
 	{ "test", app_network_test_main },
 	{ "test-max-links", app_network_test_max_links_main },
 	{ "test-relink", app_network_test_relink_main },
+	{ "test-dns", app_network_test_dns_main },
 } CAVAN_COMMAND_MAP_END;
