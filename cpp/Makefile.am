@@ -10,4 +10,4 @@ AM_CFLAGS = -I@top_srcdir@/include -include @top_srcdir@/include/cavan/config.h 
 AM_CPPFLAGS = $(AM_CFLAGS)
 
 lib_LTLIBRARIES = libcavanxx.la
-libcavanxx_la_SOURCES = BitMap.cpp Context.cpp Display.cpp Framebuffer.cpp Link.cpp List.cpp Lock.cpp Math.cpp Pool.cpp Stack.cpp Thread.cpp Window.cpp
+libcavanxx_la_SOURCES = BitMap.cpp Context.cpp Display.cpp EpollClient.cpp EpollService.cpp Framebuffer.cpp HttpClient.cpp HttpFileManager.cpp HttpService.cpp Link.cpp List.cpp Lock.cpp Math.cpp NetworkBase.cpp NetworkClient.cpp NetworkProtocol.cpp NetworkService.cpp NetworkUrl.cpp Pool.cpp Stack.cpp TcpClient.cpp TcpService.cpp Thread.cpp Udp.cpp Window.cpp

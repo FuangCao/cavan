@@ -6,4 +6,4 @@ MAINTAINERCLEANFILES = Makefile.am Makefile.in
 
 cavanincdir = $(includedir)/cavan++
 
-cavaninc_HEADERS = BitMap.h Context.h Display.h Framebuffer.h Link.h List.h Lock.h Math.h Pool.h Stack.h Thread.h Window.h
+cavaninc_HEADERS = BitMap.h Context.h Display.h EpollClient.h EpollService.h Framebuffer.h HttpClient.h HttpFileManager.h HttpService.h Link.h List.h Lock.h Math.h NetworkBase.h NetworkClient.h NetworkProtocol.h NetworkService.h NetworkUrl.h Pool.h Stack.h TcpClient.h TcpService.h Thread.h Udp.h Window.h
