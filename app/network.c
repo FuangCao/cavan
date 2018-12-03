@@ -365,7 +365,9 @@ static int app_network_test_relink_main(int argc, char *argv[])
 
 static int app_network_test_dns_main(int argc, char *argv[])
 {
-	for (int i = 1; i < argc; i++) {
+	int i;
+
+	for (i = 1; i < argc; i++) {
 		const char *hostname = argv[i];
 		struct addrinfo *info;
 		struct addrinfo hints;

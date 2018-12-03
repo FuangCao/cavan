@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Message;
+import android.telephony.TelephonyManager;
 import android.view.WindowManager;
 
 import com.cavan.accessibility.CavanAccessibilityAlipay;
@@ -38,6 +39,8 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 
         return false;
     }
+
+	private TelephonyManager mTelephonyManager;
 
 	private CavanTcpPacketClient mInputProxy = new CavanTcpPacketClient() {
 
@@ -212,6 +215,7 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		mTelephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
 		instance = this;
 	}
 
@@ -221,12 +225,27 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 		super.onDestroy();
 	}
 
+	public boolean isGotoIdleEnabled() {
+		if (mTelephonyManager != null) {
+			int state = mTelephonyManager.getCallState();
+			CavanAndroid.dLog("getCallState = " + state);
+
+			if (state != TelephonyManager.CALL_STATE_IDLE) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	@Override
 	protected void onScreenOff() {
-		if (CavanMessageActivity.isDisableKeyguardEnabled(this)) {
-			CavanKeyguardActivity.show(this);
-		} else {
-			CavanAndroid.startLauncher(this);
+		if (isGotoIdleEnabled()) {
+			if (CavanMessageActivity.isDisableKeyguardEnabled(this)) {
+				CavanKeyguardActivity.show(this);
+			} else {
+				CavanAndroid.startLauncher(this);
+			}
 		}
 	}
 
