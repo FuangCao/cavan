@@ -26,6 +26,8 @@ namespace NetworkInputMethod
         public static string[] DEF_SERVERS = { "fuangcao.f3322.net:8021", "fuangcao.f3322.net:8022", "192.168.88.140:8021" };
         public static string[] DEF_FILES = { "/temp/weixin/game-250.txt", "/temp/weixin/game-47.txt", "/temp/weixin/game-140.txt" };
 
+        private int mAccounts;
+
         public FormPackBuilder()
         {
             InitializeComponent();
@@ -49,7 +51,9 @@ namespace NetworkInputMethod
 
         public TreeNode createAccountNode(TreeNode parent)
         {
-            var node = parent.Nodes.Add("账号");
+            var node = parent.Nodes.Add("账号-" + mAccounts);
+            mAccounts++;
+
             node.ImageIndex = IMG_INDEX_ACCOUNT;
             parent.Expand();
             return node;
@@ -581,7 +585,7 @@ namespace NetworkInputMethod
             if (e.Button == MouseButtons.Left && e.Item is TreeNode)
             {
                 var node = e.Item as TreeNode;
-                if (node.Level == 3)
+                if (node.Level > 1)
                 {
                     DoDragDrop(node, DragDropEffects.Move);
                 }
@@ -611,24 +615,39 @@ namespace NetworkInputMethod
             TreeNode parent;
             int index;
 
-            if (target.Level > 2)
+            while (target.Level > node.Level)
             {
-                parent = target.Parent;
-                index = target.Index + 1;
+                target = target.Parent;
             }
-            else if (target.Level > 1)
+
+            if (target.Level < node.Level)
             {
-                parent = target;
-                index = 0;
-            }
-            else if (target.Level > 0)
-            {
-                parent = createAccountNode(target);
+                if (target.Level > 1)
+                {
+                    parent = target;
+                }
+                else if (target.Level > 0)
+                {
+                    if (node.Level > 2)
+                    {
+                        parent = createAccountNode(target);
+                    }
+                    else
+                    {
+                        parent = target;
+                    }
+                }
+                else
+                {
+                    return;
+                }
+
                 index = 0;
             }
             else
             {
-                return;
+                parent = target.Parent;
+                index = target.Index + 1;
             }
 
             var nodeNew = node.Clone() as TreeNode;
