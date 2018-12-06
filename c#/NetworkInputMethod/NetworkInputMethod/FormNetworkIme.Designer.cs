@@ -71,6 +71,7 @@
             this.textBoxClock = new System.Windows.Forms.TextBox();
             this.buttonBuildPack = new System.Windows.Forms.Button();
             this.comboBoxHistory = new System.Windows.Forms.ComboBox();
+            this.toolStripMenuItemPack = new System.Windows.Forms.ToolStripMenuItem();
             this.groupBoxMode.SuspendLayout();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
@@ -99,7 +100,7 @@
             this.checkedListBoxClients.FormattingEnabled = true;
             this.checkedListBoxClients.Location = new System.Drawing.Point(12, 41);
             this.checkedListBoxClients.Name = "checkedListBoxClients";
-            this.checkedListBoxClients.Size = new System.Drawing.Size(399, 100);
+            this.checkedListBoxClients.Size = new System.Drawing.Size(399, 132);
             this.checkedListBoxClients.TabIndex = 4;
             this.checkedListBoxClients.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedListBoxClients_ItemCheck);
             // 
@@ -107,10 +108,10 @@
             // 
             this.textBoxContent.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.textBoxContent.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.HistoryList;
-            this.textBoxContent.Location = new System.Drawing.Point(12, 169);
+            this.textBoxContent.Location = new System.Drawing.Point(12, 199);
             this.textBoxContent.Multiline = true;
             this.textBoxContent.Name = "textBoxContent";
-            this.textBoxContent.Size = new System.Drawing.Size(398, 99);
+            this.textBoxContent.Size = new System.Drawing.Size(398, 69);
             this.textBoxContent.TabIndex = 5;
             // 
             // buttonSend
@@ -201,7 +202,7 @@
             // checkBoxRepeat
             // 
             this.checkBoxRepeat.AutoSize = true;
-            this.checkBoxRepeat.Location = new System.Drawing.Point(337, 147);
+            this.checkBoxRepeat.Location = new System.Drawing.Point(336, 177);
             this.checkBoxRepeat.Name = "checkBoxRepeat";
             this.checkBoxRepeat.Size = new System.Drawing.Size(72, 16);
             this.checkBoxRepeat.TabIndex = 21;
@@ -232,7 +233,7 @@
             this.checkBoxShareClipboard.AutoSize = true;
             this.checkBoxShareClipboard.Checked = true;
             this.checkBoxShareClipboard.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxShareClipboard.Location = new System.Drawing.Point(247, 147);
+            this.checkBoxShareClipboard.Location = new System.Drawing.Point(246, 177);
             this.checkBoxShareClipboard.Name = "checkBoxShareClipboard";
             this.checkBoxShareClipboard.Size = new System.Drawing.Size(84, 16);
             this.checkBoxShareClipboard.TabIndex = 23;
@@ -242,7 +243,7 @@
             // checkBoxSelectAll
             // 
             this.checkBoxSelectAll.AutoSize = true;
-            this.checkBoxSelectAll.Location = new System.Drawing.Point(12, 147);
+            this.checkBoxSelectAll.Location = new System.Drawing.Point(11, 177);
             this.checkBoxSelectAll.Name = "checkBoxSelectAll";
             this.checkBoxSelectAll.Size = new System.Drawing.Size(48, 16);
             this.checkBoxSelectAll.TabIndex = 24;
@@ -366,38 +367,39 @@
             // contextMenuStrip
             // 
             this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItemPack,
             this.toolStripMenuItemOpen,
             this.toolStripMenuItemSelect,
             this.toolStripMenuItemRequest,
             this.toolStripMenuItemExit});
             this.contextMenuStrip.Name = "contextMenuStrip";
-            this.contextMenuStrip.Size = new System.Drawing.Size(101, 92);
+            this.contextMenuStrip.Size = new System.Drawing.Size(153, 136);
             // 
             // toolStripMenuItemOpen
             // 
             this.toolStripMenuItemOpen.Name = "toolStripMenuItemOpen";
-            this.toolStripMenuItemOpen.Size = new System.Drawing.Size(100, 22);
+            this.toolStripMenuItemOpen.Size = new System.Drawing.Size(152, 22);
             this.toolStripMenuItemOpen.Text = "打开";
             this.toolStripMenuItemOpen.Click += new System.EventHandler(this.buttonOpen_Click);
             // 
             // toolStripMenuItemSelect
             // 
             this.toolStripMenuItemSelect.Name = "toolStripMenuItemSelect";
-            this.toolStripMenuItemSelect.Size = new System.Drawing.Size(100, 22);
+            this.toolStripMenuItemSelect.Size = new System.Drawing.Size(152, 22);
             this.toolStripMenuItemSelect.Text = "选择";
             this.toolStripMenuItemSelect.Click += new System.EventHandler(this.buttonSelect_Click);
             // 
             // toolStripMenuItemRequest
             // 
             this.toolStripMenuItemRequest.Name = "toolStripMenuItemRequest";
-            this.toolStripMenuItemRequest.Size = new System.Drawing.Size(100, 22);
+            this.toolStripMenuItemRequest.Size = new System.Drawing.Size(152, 22);
             this.toolStripMenuItemRequest.Text = "请求";
             this.toolStripMenuItemRequest.Click += new System.EventHandler(this.buttonRequest_Click);
             // 
             // toolStripMenuItemExit
             // 
             this.toolStripMenuItemExit.Name = "toolStripMenuItemExit";
-            this.toolStripMenuItemExit.Size = new System.Drawing.Size(100, 22);
+            this.toolStripMenuItemExit.Size = new System.Drawing.Size(152, 22);
             this.toolStripMenuItemExit.Text = "退出";
             this.toolStripMenuItemExit.Click += new System.EventHandler(this.toolStripMenuItemExit_Click);
             // 
@@ -468,6 +470,13 @@
             this.comboBoxHistory.Size = new System.Drawing.Size(399, 20);
             this.comboBoxHistory.TabIndex = 48;
             this.comboBoxHistory.TextChanged += new System.EventHandler(this.comboBoxHistory_TextChanged);
+            // 
+            // toolStripMenuItemPack
+            // 
+            this.toolStripMenuItemPack.Name = "toolStripMenuItemPack";
+            this.toolStripMenuItemPack.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemPack.Text = "组包";
+            this.toolStripMenuItemPack.Click += new System.EventHandler(this.buttonBuildPack_Click);
             // 
             // FormNetworkIme
             // 
@@ -561,6 +570,7 @@
         private System.Windows.Forms.TextBox textBoxClock;
         private System.Windows.Forms.Button buttonBuildPack;
         private System.Windows.Forms.ComboBox comboBoxHistory;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemPack;
     }
 }
 
