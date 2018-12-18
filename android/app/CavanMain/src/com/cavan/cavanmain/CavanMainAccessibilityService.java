@@ -60,6 +60,15 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 		protected void onTcpDisconnected() {
 			CavanAndroid.dLog("onTcpDisconnected");
 		}
+
+		@Override
+		protected long onTcpConnFailed(int times) {
+			if (times < 2) {
+				return 0;
+			}
+
+			return -1;
+		}
 	};
 
 	private CavanThreadedHandler mThreadedHandler = new CavanThreadedHandler(CavanMainAccessibilityService.class) {
@@ -240,6 +249,8 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 
 	@Override
 	protected void onScreenOff() {
+		mInputProxy.setConnEnable(false);
+
 		if (isGotoIdleEnabled()) {
 			if (CavanMessageActivity.isDisableKeyguardEnabled(this)) {
 				CavanKeyguardActivity.show(this);
@@ -247,6 +258,11 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 				CavanAndroid.startLauncher(this);
 			}
 		}
+	}
+
+	@Override
+	protected void onScreenOn() {
+		mInputProxy.connect();
 	}
 
 	@Override

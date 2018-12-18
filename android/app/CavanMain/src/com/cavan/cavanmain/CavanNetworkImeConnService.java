@@ -21,12 +21,15 @@ import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
 import com.cavan.java.CavanTcpClient;
 import com.cavan.java.CavanTcpPacketClient;
+import com.cavan.service.CavanPowerStateListener;
 import com.cavan.service.CavanTcpConnService;
 
-public class CavanNetworkImeConnService extends CavanTcpConnService {
+public class CavanNetworkImeConnService extends CavanTcpConnService implements CavanPowerStateListener {
 
 	private static final int MSG_TCP_PACKET_RECEIVED = 1;
 	private static final int MSG_SHOW_MEDIA_VOLUME = 2;
+
+	public static CavanNetworkImeConnService instance;
 
 	private Handler mHandler = new Handler() {
 
@@ -444,10 +447,35 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
+
+		instance = this;
+		CavanMainApplication.gPowerStateWatcher.register(this);
+	}
+
+	@Override
+	public void onDestroy() {
+		instance = null;
+		super.onDestroy();
 	}
 
 	@Override
 	protected int getDefaultPort() {
 		return 8865;
 	}
+
+	@Override
+	public void onScreenOn() {
+		mTcpPacketClient.connect();
+	}
+
+	@Override
+	public void onScreenOff() {
+		mTcpPacketClient.setConnEnable(false);
+	}
+
+	@Override
+	public void onUserPresent() {}
+
+	@Override
+	public void onCloseSystemDialogs(String reason) {}
 }
