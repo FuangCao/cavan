@@ -46,8 +46,8 @@ public class CavanProtoBuff {
 		int length = bytes.length;
 		int size = 1;
 
-		if (length > 7) {
-			length >>= 10;
+		if (length > 15) {
+			length >>= 11;
 			size++;
 
 			while (length != 0) {
@@ -64,11 +64,13 @@ public class CavanProtoBuff {
 	}
 
 	public void write(boolean value) {
+		byte header = TYPE_BOOL << 5;
+
 		if (value) {
-			mBytes[mOffset++] = (byte) (TYPE_BOOL << 4 | 1);
-		} else {
-			mBytes[mOffset++] = (byte) (TYPE_BOOL << 4);
+			header |= 1;
 		}
+
+		mBytes[mOffset++] = header;
 	}
 
 	public void write(long value) {
@@ -81,18 +83,18 @@ public class CavanProtoBuff {
 			length++;
 		}
 
-		mBytes[mOffset] = (byte) (TYPE_VALUE << 4 | length);
+		mBytes[mOffset] = (byte) (TYPE_VALUE << 5 | length);
 		mOffset = offset;
 	}
 
 	public void write(byte[] bytes) {
 		int length = bytes.length;
 
-		if (length < 8) {
-			mBytes[mOffset++] = (byte) (TYPE_BYTES << 4 | length);
+		if (length < 16) {
+			mBytes[mOffset++] = (byte) (TYPE_BYTES << 5 | length);
 		} else {
-			mBytes[mOffset++] = (byte) (TYPE_BYTES << 4 | 1 << 3 | (length & 0x07));
-			length >>= 3;
+			mBytes[mOffset++] = (byte) (TYPE_BYTES << 5 | 1 << 4 | (length & 0x0F));
+			length >>= 4;
 
 			do {
 				mBytes[mOffset++] = (byte) (length & 0x7F);
@@ -111,11 +113,11 @@ public class CavanProtoBuff {
 	}
 
 	public int getType() {
-		return (mBytes[mOffset] >>> 4) & 0x0F;
+		return (mBytes[mOffset] >> 5) & 0x07;
 	}
 
 	public int getLength() {
-		return mBytes[mOffset] & 0x0F;
+		return mBytes[mOffset] & 0x1F;
 	}
 
 	public boolean isBool() {
@@ -168,10 +170,10 @@ public class CavanProtoBuff {
 		}
 
 		int length = readLength();
-		if (length > 7) {
-			int offset = 3;
+		if (length > 15) {
+			int offset = 4;
 
-			length &= 0x07;
+			length &= 0x0F;
 
 			while (true) {
 				byte value = mBytes[mOffset++];
