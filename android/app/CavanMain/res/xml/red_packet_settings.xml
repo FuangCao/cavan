@@ -49,7 +49,7 @@
 
 	<com.cavan.resource.EditableMultiSelectListPreference android:key="wan_server"
 	    android:persistent="true"
-	    android:defaultValue="192.168.88.88"
+	    android:defaultValue="fuangcao.f3322.net:8865"
 	    android:title="@string/wan_server" />
 
 	<CheckBoxPreference android:key="wan_receive"
@@ -75,7 +75,7 @@
 	    android:persistent="true"
 		android:entries="@array/auto_clear_entries"
 		android:entryValues="@array/auto_clear_values"
-		android:defaultValue="0"
+		android:defaultValue="1"
 	    android:title="@string/notify_auto_clear" />
 
 	<ListPreference android:key="auto_unlock_level"
@@ -102,8 +102,13 @@
 
 	<CheckBoxPreference android:key="clipboard_share"
 	    android:persistent="true"
-	    android:defaultValue="false"
+	    android:defaultValue="true"
 	    android:title="@string/clipboard_share" />
+
+	<CheckBoxPreference android:key="listen_clip"
+	    android:persistent="true"
+	    android:defaultValue="false"
+	    android:title="@string/listen_clip" />
 
 	<CheckBoxPreference android:key="auto_check_permission"
 	    android:persistent="true"
@@ -126,7 +131,7 @@
 	    android:persistent="true"
 		android:entries="@array/notify_entries"
 		android:entryValues="@array/notify_values"
-		android:defaultValue="3"
+		android:defaultValue="0"
 	    android:title="@string/red_packet_notify_setting" />
 
 	<EditTextPreference android:key="red_packet_code_recognize"
@@ -200,7 +205,7 @@
 	    android:persistent="true"
 		android:entries="@array/repeat_delay_entries"
 		android:entryValues="@array/repeat_delay_values"
-		android:defaultValue="300"
+		android:defaultValue="600"
 	    android:title="@string/repeat_send_delay" />
 
 	<ListPreference android:key="commit_ahead"
@@ -226,11 +231,6 @@
 	    android:persistent="true"
 	    android:defaultValue="true"
 	    android:title="@string/listen_click" />
-
-	<CheckBoxPreference android:key="listen_clip"
-	    android:persistent="true"
-	    android:defaultValue="true"
-	    android:title="@string/listen_clip" />
 
 	<CheckBoxPreference android:key="float_timer"
 	    android:persistent="true"

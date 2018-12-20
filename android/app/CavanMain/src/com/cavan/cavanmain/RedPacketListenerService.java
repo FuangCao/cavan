@@ -500,36 +500,40 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 	@Override
 	public void onPrimaryClipChanged() {
+		ClipData clip = mClipboardManager.getPrimaryClip();
+		if (clip == null || clip.getItemCount() <= 0) {
+			return;
+		}
+
+		CharSequence sequence = clip.getItemAt(0).coerceToText(this);
+		if (sequence == null) {
+			return;
+		}
+
+		String label = CavanAndroid.getClipboardLabel(clip);
+		if (label != null && label.equals(CavanAndroid.CLIP_LABEL_TEMP)) {
+			return;
+		}
+
+		String text = sequence.toString().trim();
+		if (text.isEmpty()) {
+			return;
+		}
+
+		CavanAndroid.dLog("clip = " + text);
+
+		if (CavanMessageActivity.isClipboardShareEnabled(this)) {
+			FloatEditorDialog dialog = FloatEditorDialog.getInstance(this, text, false, false);
+			dialog.show(6000);
+		}
+
+		if (text.equals(mClipText)) {
+			return;
+		}
+
+		mClipText = text;
+
 		if (CavanMessageActivity.isListenClipEnabled(this)) {
-			ClipData clip = mClipboardManager.getPrimaryClip();
-			if (clip == null || clip.getItemCount() <= 0) {
-				return;
-			}
-
-			CharSequence sequence = clip.getItemAt(0).coerceToText(this);
-			if (sequence == null /* || sequence.equals(mClipText) */) {
-				return;
-			}
-
-			String text = sequence.toString().trim();
-			if (text.isEmpty()) {
-				return;
-			}
-
-			mClipText = text;
-
-			String label = CavanAndroid.getClipboardLabel(clip);
-			if (label != null && label.startsWith(CavanAndroid.CLIP_LABEL_DEFAULT)) {
-				if (label.equals(CavanAndroid.CLIP_LABEL_TEMP)) {
-					return;
-				}
-			} else if (CavanMessageActivity.isClipboardShareEnabled(this) && text.length() > 0) {
-				FloatEditorDialog dialog = FloatEditorDialog.getInstance(this, text, false, false);
-				dialog.show(6000);
-			}
-
-			CavanAndroid.dLog("clip = " + text);
-
 			CavanNotification notification = new CavanNotification(getPackageName(), "剪切板", text.toString(), false);
 			RedPacketNotification rpn = new RedPacketNotification(this, notification);
 			mHandler.obtainMessage(MSG_RED_PACKET_NOTIFICATION, rpn).sendToTarget();

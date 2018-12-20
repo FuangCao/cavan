@@ -7,6 +7,7 @@ import android.accessibilityservice.AccessibilityService;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
@@ -289,11 +290,30 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			}
 			break;
 
+		case "VIEW":
+			if (args.length > 1) {
+				try {
+					Uri uri = Uri.parse(args[1]);
+					Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+					startActivity(intent);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			break;
+
+		case "UNLOCK":
+			FloatMessageService fms = FloatMessageService.instance;
+			if (fms != null) {
+				fms.setAutoUnlockLevel(FloatMessageService.AUTO_UNLOCK_ALWAYS);
+			}
+			break;
+
 		case "CLIPBOARD":
 			if (args.length > 1) {
 				String text = args[1];
 				CavanAndroid.postClipboardTextTemp(getApplicationContext(), text);
-				FloatMessageService fms = FloatMessageService.instance;
+				fms = FloatMessageService.instance;
 				if (fms != null) {
 					fms.postShowToastWithArgs(R.string.clipboard_updated, text);
 				}
