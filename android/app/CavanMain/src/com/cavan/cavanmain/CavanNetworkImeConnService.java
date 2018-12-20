@@ -2,6 +2,8 @@ package com.cavan.cavanmain;
 
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.accessibilityservice.AccessibilityService;
 import android.content.Context;
@@ -26,6 +28,8 @@ import com.cavan.service.CavanPowerStateListener;
 import com.cavan.service.CavanTcpConnService;
 
 public class CavanNetworkImeConnService extends CavanTcpConnService implements CavanPowerStateListener {
+
+	public static final Pattern sUrlPattern = Pattern.compile("^\\w+://");
 
 	private static final int MSG_TCP_PACKET_RECEIVED = 1;
 	private static final int MSG_SHOW_MEDIA_VOLUME = 2;
@@ -292,8 +296,17 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 
 		case "VIEW":
 			if (args.length > 1) {
+				String url = args[1];
+
+				Matcher matcher = sUrlPattern.matcher(url);
+				if (!matcher.find()) {
+					url = "http://" + url;
+				}
+
+				CavanAndroid.dLog("url = " + url);
+
 				try {
-					Uri uri = Uri.parse(args[1]);
+					Uri uri = Uri.parse(url);
 					Intent intent = new Intent(Intent.ACTION_VIEW, uri);
 					startActivity(intent);
 				} catch (Exception e) {

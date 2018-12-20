@@ -28,6 +28,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
@@ -824,13 +825,39 @@ public class CavanAndroid {
 		return false;
 	}
 
-	public static boolean startActivity(Context context, String pkgName) {
-		Intent intent = context.getPackageManager().getLaunchIntentForPackage(pkgName);
-		if (intent == null) {
-			return false;
+	public static ApplicationInfo findApplication(PackageManager pm, CharSequence name, int flags) {
+		try {
+			for (ApplicationInfo info : pm.getInstalledApplications(flags)) {
+				CharSequence label = pm.getApplicationLabel(info);
+				if (label != null && label.toString().contains(name)) {
+					return info;
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
-		return startActivity(context, intent);
+		return null;
+	}
+
+	public static boolean startActivity(Context context, String pkgName) {
+		PackageManager pm = context.getPackageManager();
+
+		for (int i = 0; i < 2; i++) {
+			Intent intent = pm.getLaunchIntentForPackage(pkgName);
+			if (intent != null) {
+				return startActivity(context, intent);
+			}
+
+			ApplicationInfo info = findApplication(pm, pkgName, 0);
+			if (info == null) {
+				break;
+			}
+
+			pkgName = info.packageName;
+		}
+
+		return false;
 	}
 
 	public static boolean startActivity(Context context, String pkgName, String clsName) {
