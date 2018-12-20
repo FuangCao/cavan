@@ -7,6 +7,7 @@ import android.accessibilityservice.AccessibilityService;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
@@ -21,12 +22,15 @@ import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
 import com.cavan.java.CavanTcpClient;
 import com.cavan.java.CavanTcpPacketClient;
+import com.cavan.service.CavanPowerStateListener;
 import com.cavan.service.CavanTcpConnService;
 
-public class CavanNetworkImeConnService extends CavanTcpConnService {
+public class CavanNetworkImeConnService extends CavanTcpConnService implements CavanPowerStateListener {
 
 	private static final int MSG_TCP_PACKET_RECEIVED = 1;
 	private static final int MSG_SHOW_MEDIA_VOLUME = 2;
+
+	public static CavanNetworkImeConnService instance;
 
 	private Handler mHandler = new Handler() {
 
@@ -286,11 +290,30 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 			}
 			break;
 
+		case "VIEW":
+			if (args.length > 1) {
+				try {
+					Uri uri = Uri.parse(args[1]);
+					Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+					startActivity(intent);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			break;
+
+		case "UNLOCK":
+			FloatMessageService fms = FloatMessageService.instance;
+			if (fms != null) {
+				fms.setAutoUnlockLevel(FloatMessageService.AUTO_UNLOCK_ALWAYS);
+			}
+			break;
+
 		case "CLIPBOARD":
 			if (args.length > 1) {
 				String text = args[1];
 				CavanAndroid.postClipboardTextTemp(getApplicationContext(), text);
-				FloatMessageService fms = FloatMessageService.instance;
+				fms = FloatMessageService.instance;
 				if (fms != null) {
 					fms.postShowToastWithArgs(R.string.clipboard_updated, text);
 				}
@@ -444,10 +467,35 @@ public class CavanNetworkImeConnService extends CavanTcpConnService {
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
+
+		instance = this;
+		CavanMainApplication.gPowerStateWatcher.register(this);
+	}
+
+	@Override
+	public void onDestroy() {
+		instance = null;
+		super.onDestroy();
 	}
 
 	@Override
 	protected int getDefaultPort() {
 		return 8865;
 	}
+
+	@Override
+	public void onScreenOn() {
+		mTcpPacketClient.connect();
+	}
+
+	@Override
+	public void onScreenOff() {
+		mTcpPacketClient.setConnEnable(false);
+	}
+
+	@Override
+	public void onUserPresent() {}
+
+	@Override
+	public void onCloseSystemDialogs(String reason) {}
 }

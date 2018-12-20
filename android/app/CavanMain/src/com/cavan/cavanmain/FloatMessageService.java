@@ -59,7 +59,7 @@ public class FloatMessageService extends FloatWindowService {
 	public static final String NET_CMD_CLIPBOARD = "Clipboard: ";
 	public static final String NET_CMD_NOTIFY = "Notify: ";
 
-	public static final int AUTO_UNLOCK_CLOSE = 0;
+	public static final int AUTO_UNLOCK_ALWAYS = 0;
 	public static final int AUTO_UNLOCK_RED_PACKET = 1;
 	public static final int AUTO_UNLOCK_INFOMATION = 2;
 	public static final int AUTO_UNLOCK_KEY_WORD = 3;
@@ -233,7 +233,6 @@ public class FloatMessageService extends FloatWindowService {
 					CharSequence message;
 
 					if (msg.what == MSG_SHOW_NOTIFY) {
-						CavanAndroid.acquireWakeupLock(getApplicationContext(), 20000);
 						setAutoUnlockLevel(AUTO_UNLOCK_KEY_WORD);
 					}
 
@@ -391,7 +390,6 @@ public class FloatMessageService extends FloatWindowService {
 		@Override
 		public int addMessage(CharSequence message, String code, int level) throws RemoteException {
 			setAutoUnlockLevel(level);
-			CavanAndroid.acquireWakeupLock(getApplicationContext(), 20000);
 
 			if (code != null) {
 				CavanRedPacketAlipay packet = CavanRedPacketAlipay.get(code);
@@ -548,6 +546,8 @@ public class FloatMessageService extends FloatWindowService {
 	}
 
 	public void setAutoUnlockLevel(int level) {
+		CavanAndroid.acquireWakeupLock(getApplicationContext(), 20000);
+
 		if (level < mAutoUnlockLevel) {
 			mAutoUnlockLevel = level;
 		}
