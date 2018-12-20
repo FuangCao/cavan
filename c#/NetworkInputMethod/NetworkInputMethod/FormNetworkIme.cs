@@ -531,11 +531,6 @@ namespace NetworkInputMethod
             sendCommand("IME", false);
         }
 
-        private void buttonMm_Click(object sender, EventArgs e)
-        {
-            sendOpenApp("com.tencent.mm");
-        }
-
         private void buttonHome_Click(object sender, EventArgs e)
         {
             sendCommand("HOME", false);
@@ -615,6 +610,54 @@ namespace NetworkInputMethod
             }
 
             textBoxContent.Text = comboBoxHistory.Text;
+        }
+
+        private void buttonWeixin_Click(object sender, EventArgs e)
+        {
+            sendOpenApp("com.tencent.mm");
+        }
+
+        private void buttonUnlock_Click(object sender, EventArgs e)
+        {
+            sendCommand("UNLOCK", false);
+        }
+
+        private void buttonCommand_Click(object sender, EventArgs e)
+        {
+            var command = textBoxContent.Text.Trim();
+            if (command.Length > 0)
+            {
+                sendCommand(command, false);
+            }
+        }
+
+        private void buttonView_Click(object sender, EventArgs e)
+        {
+            var url = textBoxContent.Text.Trim();
+            if (url.Length > 0)
+            {
+                sendCommand("VIEW " + url, false);
+            }
+        }
+
+        private void buttonAlipay_Click(object sender, EventArgs e)
+        {
+            sendOpenApp("com.eg.android.AlipayGphone");
+        }
+
+        private void buttonWeibo_Click(object sender, EventArgs e)
+        {
+            sendOpenApp("com.sina.weibo");
+        }
+
+        private void buttonTaobao_Click(object sender, EventArgs e)
+        {
+            sendOpenApp("com.taobao.taobao");
+        }
+
+        private void buttonTmall_Click(object sender, EventArgs e)
+        {
+            sendOpenApp("com.tmall.wireless");
         }
     }
 
