@@ -134,11 +134,11 @@
             // 
             // buttonClear
             // 
-            this.buttonClear.Location = new System.Drawing.Point(341, 424);
+            this.buttonClear.Location = new System.Drawing.Point(77, 395);
             this.buttonClear.Name = "buttonClear";
             this.buttonClear.Size = new System.Drawing.Size(60, 23);
             this.buttonClear.TabIndex = 7;
-            this.buttonClear.Text = "清除";
+            this.buttonClear.Text = "清理";
             this.buttonClear.UseVisualStyleBackColor = true;
             this.buttonClear.Click += new System.EventHandler(this.buttonClear_Click);
             // 
@@ -261,7 +261,7 @@
             // 
             // buttonTmall
             // 
-            this.buttonTmall.Location = new System.Drawing.Point(143, 366);
+            this.buttonTmall.Location = new System.Drawing.Point(209, 395);
             this.buttonTmall.Name = "buttonTmall";
             this.buttonTmall.Size = new System.Drawing.Size(60, 23);
             this.buttonTmall.TabIndex = 28;
@@ -271,7 +271,7 @@
             // 
             // buttonPaste
             // 
-            this.buttonPaste.Location = new System.Drawing.Point(275, 395);
+            this.buttonPaste.Location = new System.Drawing.Point(341, 395);
             this.buttonPaste.Name = "buttonPaste";
             this.buttonPaste.Size = new System.Drawing.Size(60, 23);
             this.buttonPaste.TabIndex = 29;
@@ -281,7 +281,7 @@
             // 
             // buttonComplete
             // 
-            this.buttonComplete.Location = new System.Drawing.Point(341, 395);
+            this.buttonComplete.Location = new System.Drawing.Point(341, 424);
             this.buttonComplete.Name = "buttonComplete";
             this.buttonComplete.Size = new System.Drawing.Size(60, 23);
             this.buttonComplete.TabIndex = 30;
@@ -301,7 +301,7 @@
             // 
             // buttonBack
             // 
-            this.buttonBack.Location = new System.Drawing.Point(77, 424);
+            this.buttonBack.Location = new System.Drawing.Point(143, 424);
             this.buttonBack.Name = "buttonBack";
             this.buttonBack.Size = new System.Drawing.Size(60, 23);
             this.buttonBack.TabIndex = 33;
@@ -331,7 +331,7 @@
             // 
             // buttonHome
             // 
-            this.buttonHome.Location = new System.Drawing.Point(143, 424);
+            this.buttonHome.Location = new System.Drawing.Point(209, 424);
             this.buttonHome.Name = "buttonHome";
             this.buttonHome.Size = new System.Drawing.Size(60, 23);
             this.buttonHome.TabIndex = 37;
@@ -357,7 +357,7 @@
             // 
             // buttonHidden
             // 
-            this.buttonHidden.Location = new System.Drawing.Point(209, 395);
+            this.buttonHidden.Location = new System.Drawing.Point(143, 366);
             this.buttonHidden.Name = "buttonHidden";
             this.buttonHidden.Size = new System.Drawing.Size(60, 23);
             this.buttonHidden.TabIndex = 41;
@@ -420,7 +420,7 @@
             // 
             // buttonRecents
             // 
-            this.buttonRecents.Location = new System.Drawing.Point(209, 424);
+            this.buttonRecents.Location = new System.Drawing.Point(275, 424);
             this.buttonRecents.Name = "buttonRecents";
             this.buttonRecents.Size = new System.Drawing.Size(60, 23);
             this.buttonRecents.TabIndex = 42;
@@ -430,7 +430,7 @@
             // 
             // buttonRefresh
             // 
-            this.buttonRefresh.Location = new System.Drawing.Point(275, 424);
+            this.buttonRefresh.Location = new System.Drawing.Point(143, 395);
             this.buttonRefresh.Name = "buttonRefresh";
             this.buttonRefresh.Size = new System.Drawing.Size(60, 23);
             this.buttonRefresh.TabIndex = 43;
@@ -450,7 +450,7 @@
             // 
             // buttonUnfollow
             // 
-            this.buttonUnfollow.Location = new System.Drawing.Point(143, 395);
+            this.buttonUnfollow.Location = new System.Drawing.Point(275, 395);
             this.buttonUnfollow.Name = "buttonUnfollow";
             this.buttonUnfollow.Size = new System.Drawing.Size(60, 23);
             this.buttonUnfollow.TabIndex = 45;
@@ -508,7 +508,7 @@
             // 
             // buttonUnlock
             // 
-            this.buttonUnlock.Location = new System.Drawing.Point(77, 395);
+            this.buttonUnlock.Location = new System.Drawing.Point(77, 424);
             this.buttonUnlock.Name = "buttonUnlock";
             this.buttonUnlock.Size = new System.Drawing.Size(60, 23);
             this.buttonUnlock.TabIndex = 51;
@@ -518,7 +518,7 @@
             // 
             // buttonIme
             // 
-            this.buttonIme.Location = new System.Drawing.Point(209, 366);
+            this.buttonIme.Location = new System.Drawing.Point(77, 366);
             this.buttonIme.Name = "buttonIme";
             this.buttonIme.Size = new System.Drawing.Size(60, 23);
             this.buttonIme.TabIndex = 52;
@@ -558,7 +558,7 @@
             // 
             // buttonTaobao
             // 
-            this.buttonTaobao.Location = new System.Drawing.Point(77, 366);
+            this.buttonTaobao.Location = new System.Drawing.Point(209, 366);
             this.buttonTaobao.Name = "buttonTaobao";
             this.buttonTaobao.Size = new System.Drawing.Size(60, 23);
             this.buttonTaobao.TabIndex = 53;
@@ -570,7 +570,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(480, 456);
+            this.ClientSize = new System.Drawing.Size(480, 457);
             this.Controls.Add(this.buttonView);
             this.Controls.Add(this.buttonAlipay);
             this.Controls.Add(this.buttonWeibo);

@@ -19,6 +19,7 @@ namespace NetworkInputMethod
         private FormSelect mFormSelect;
         private FormHttpSender mFormSender;
         private FormPackBuilder mFormBuilder;
+        private FormAlipay mFormAlipay;
 
         //API declarations...
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -306,8 +307,7 @@ namespace NetworkInputMethod
 
         private void buttonClear_Click(object sender, EventArgs e)
         {
-            textBoxContent.Clear();
-            sendCommand("REPLACE", false);
+            sendCommand("CLEAR", true);
         }
 
         private void buttonVolumeDown_Click(object sender, EventArgs e)
@@ -642,7 +642,15 @@ namespace NetworkInputMethod
 
         private void buttonAlipay_Click(object sender, EventArgs e)
         {
-            sendOpenApp("com.eg.android.AlipayGphone");
+            if (mFormAlipay == null || mFormAlipay.IsDisposed)
+            {
+                mFormAlipay = new FormAlipay(this);
+                mFormAlipay.Show();
+            }
+            else
+            {
+                mFormAlipay.WindowState = FormWindowState.Normal;
+            }
         }
 
         private void buttonWeibo_Click(object sender, EventArgs e)

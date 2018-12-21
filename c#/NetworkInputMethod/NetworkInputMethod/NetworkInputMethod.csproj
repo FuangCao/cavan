@@ -64,6 +64,12 @@
     <Compile Include="CavanTreeView.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="FormAlipay.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormAlipay.Designer.cs">
+      <DependentUpon>FormAlipay.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormHttpSender.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -109,6 +115,9 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CavanTcpService.cs" />
+    <EmbeddedResource Include="FormAlipay.resx">
+      <DependentUpon>FormAlipay.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormHttpSender.resx">
       <DependentUpon>FormHttpSender.cs</DependentUpon>
     </EmbeddedResource>
