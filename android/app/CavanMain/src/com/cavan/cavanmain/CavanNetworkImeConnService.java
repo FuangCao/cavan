@@ -105,9 +105,9 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			String command = new String(bytes, 0, length);
 			CavanAndroid.dLog("onTcpPacketReceived: " + command);
 
-			String[] args = command.split(" ", 2);
+			String[] args = command.split("\\s+", 2);
 
-			switch (args[0].trim()) {
+			switch (args[0]) {
 			case "PING":
 				if (!sendPong()) {
 					return false;
@@ -284,6 +284,21 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 		return false;
 	}
 
+	public boolean doUnlockScreen() {
+		if (CavanMainApplication.isUserPresent()) {
+			return true;
+		}
+
+		FloatMessageService fms = FloatMessageService.instance;
+		if (fms == null) {
+			return false;
+		}
+
+		fms.setAutoUnlockLevel(FloatMessageService.AUTO_UNLOCK_ALWAYS);
+
+		return true;
+	}
+
 	protected void onTcpPacketReceived(String[] args) {
 		CavanAccessibilityService accessibility = CavanAccessibilityService.instance;
 
@@ -316,9 +331,38 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			break;
 
 		case "UNLOCK":
+			doUnlockScreen();
+			break;
+
+		case "CLEAR":
 			FloatMessageService fms = FloatMessageService.instance;
 			if (fms != null) {
-				fms.setAutoUnlockLevel(FloatMessageService.AUTO_UNLOCK_ALWAYS);
+				fms.removeTextAll();
+			}
+			break;
+
+		case "DUMP":
+			if (accessibility != null) {
+				boolean simple;
+
+				if (args.length > 1 && CavanJava.parseInt(args[1]) > 0) {
+					simple = false;
+				} else {
+					simple = true;
+				}
+
+				accessibility.dump(simple);
+			}
+			break;
+
+		case "ALIPAY":
+			if (args.length > 1) {
+				for (String code : args[1].split("\\s+")) {
+					RedPacketListenerService listener = RedPacketListenerService.instance;
+					if (listener != null) {
+						listener.addRedPacketCode(code, "网络输入法", false);
+					}
+				}
 			}
 			break;
 
@@ -341,7 +385,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			break;
 
 		case "HOME":
-			if (accessibility != null) {
+			if (accessibility != null && CavanMainApplication.isScreenOn()) {
 				if (accessibility.sendCommandHome()) {
 					break;
 				}
@@ -351,7 +395,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			break;
 
 		case "BACK":
-			if (accessibility != null) {
+			if (accessibility != null && CavanMainApplication.isScreenOn()) {
 				if (accessibility.sendCommandBack()) {
 					break;
 				}
@@ -361,7 +405,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			break;
 
 		case "RECENTS":
-			if (accessibility != null) {
+			if (accessibility != null && CavanMainApplication.isScreenOn()) {
 				accessibility.performGlobalAction(AccessibilityService.GLOBAL_ACTION_RECENTS);
 			}
 			break;
@@ -418,7 +462,9 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			break;
 
 		case "IME":
-			mInputMethodManager.showInputMethodPicker();
+			if (CavanMainApplication.isScreenOn()) {
+				mInputMethodManager.showInputMethodPicker();
+			}
 			break;
 
 		case "VOLUME":
@@ -482,7 +528,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 		}
 
 		instance = this;
-		CavanMainApplication.gPowerStateWatcher.register(this);
+		CavanMainApplication.addPowerStateListener(this);
 	}
 
 	@Override

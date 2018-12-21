@@ -861,6 +861,18 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 	}
 
+	public boolean dump(boolean simple) {
+		AccessibilityNodeInfo root = getRootInActiveWindow();
+		if (root == null) {
+			return false;
+		}
+
+		CavanAccessibilityHelper.dumpNode(root, simple);
+		root.recycle();
+
+		return true;
+	}
+
 	@Override
 	protected void onServiceConnected() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
@@ -965,11 +977,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 				if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP && event.getAction() == KeyEvent.ACTION_UP) {
 					int dump = SystemProperties.getInt("debug.cavan.dump.node", 0);
 					if (dump > 0) {
-						if (dump > 1) {
-							CavanAccessibilityHelper.dumpNode(root);
-						} else {
-							CavanAccessibilityHelper.dumpNodeSimple(root);
-						}
+						CavanAccessibilityHelper.dumpNode(root, dump < 2);
 					}
 				}
 

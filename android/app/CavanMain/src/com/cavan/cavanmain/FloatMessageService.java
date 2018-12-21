@@ -448,7 +448,6 @@ public class FloatMessageService extends FloatWindowService {
 		@Override
 		public void removeMessageAll() throws RemoteException {
 			FloatMessageService.this.removeTextAll();
-			mMessageCodeMap.clear();
 		}
 
 		@Override
@@ -558,6 +557,10 @@ public class FloatMessageService extends FloatWindowService {
 	}
 
 	public boolean isAutoUnlockEnabled() {
+		if (mAutoUnlockLevel == AUTO_UNLOCK_ALWAYS) {
+			return true;
+		}
+
 		return CavanMessageActivity.isAutoUnlockEnabled(getApplicationContext(), mAutoUnlockLevel);
 	}
 
@@ -743,6 +746,19 @@ public class FloatMessageService extends FloatWindowService {
 	}
 
 	@Override
+	public synchronized void removeTextAll() {
+		CavanMainAccessibilityService service = CavanMainAccessibilityService.instance;
+		if (service != null) {
+			service.getPackets().clear();
+		}
+
+		super.removeTextAll();
+		mMessageCodeMap.clear();
+		CavanRedPacketAlipay.getRecentPackets().clear();
+		CavanAndroid.showToast(FloatMessageService.this, R.string.already_clear);
+	}
+
+	@Override
 	protected View createRootView() {
 		return View.inflate(this, R.layout.float_message, null);
 	}
@@ -812,6 +828,10 @@ public class FloatMessageService extends FloatWindowService {
 		setTimerEnable(false);
 
 		super.onDestroy();
+	}
+
+	public IFloatMessageService getBind() {
+		return mBinder;
 	}
 
 	@Override

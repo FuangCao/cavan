@@ -627,9 +627,6 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 					e.printStackTrace();
 				}
 			}
-
-			CavanRedPacketAlipay.getRecentPackets().clear();
-			CavanAndroid.showToast(this, R.string.already_clear);
 		}
 
 		return super.onPreferenceTreeClick(preferenceScreen, preference);
