@@ -27,7 +27,7 @@ static const char *cavan_locale_envs[] = {
 	"LC_MEASUREMENT",
 	"LC_TIME",
 	"LC_NAME",
-	"LC_ALL",
+	// "LC_ALL",
 	"LANG",
 };
 
@@ -722,7 +722,7 @@ int cavan_dynamic_service_start(struct cavan_dynamic_service *service, bool sync
 	}
 
 	setenv("LANGUAGE", "zh_CN", 1);
-	setenv("LC_ALL", "C", 1);
+	// setenv("LC_ALL", "C", 1);
 
 	service->count = 0;
 	service->used = 0;
