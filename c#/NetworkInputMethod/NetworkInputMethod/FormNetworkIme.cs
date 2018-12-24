@@ -636,15 +636,6 @@ namespace NetworkInputMethod
             }
         }
 
-        private void buttonView_Click(object sender, EventArgs e)
-        {
-            var url = textBoxContent.Text.Trim();
-            if (url.Length > 0)
-            {
-                sendCommand("VIEW " + url, false);
-            }
-        }
-
         private void buttonAlipay_Click(object sender, EventArgs e)
         {
             if (mFormAlipay == null || mFormAlipay.IsDisposed)
@@ -671,6 +662,11 @@ namespace NetworkInputMethod
         private void buttonTmall_Click(object sender, EventArgs e)
         {
             sendOpenApp("com.tmall.wireless");
+        }
+
+        private void buttonDesktop_Click(object sender, EventArgs e)
+        {
+            sendCommand("DESKTOP", false);
         }
     }
 

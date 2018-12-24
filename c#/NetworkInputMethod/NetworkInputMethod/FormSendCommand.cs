@@ -27,5 +27,14 @@ namespace NetworkInputMethod
                 mIme.sendCommand(text, false);
             }
         }
+
+        private void buttonView_Click(object sender, EventArgs e)
+        {
+            var url = textBoxCommand.Text.Trim();
+            if (url.Length > 0)
+            {
+                mIme.sendCommand("VIEW " + url, false);
+            }
+        }
     }
 }

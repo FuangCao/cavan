@@ -30,7 +30,7 @@
         {
             this.textBoxCommand = new System.Windows.Forms.TextBox();
             this.buttonSend = new System.Windows.Forms.Button();
-            this.buttonCancel = new System.Windows.Forms.Button();
+            this.buttonView = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // textBoxCommand
@@ -38,12 +38,12 @@
             this.textBoxCommand.Location = new System.Drawing.Point(12, 12);
             this.textBoxCommand.Multiline = true;
             this.textBoxCommand.Name = "textBoxCommand";
-            this.textBoxCommand.Size = new System.Drawing.Size(260, 208);
+            this.textBoxCommand.Size = new System.Drawing.Size(398, 208);
             this.textBoxCommand.TabIndex = 0;
             // 
             // buttonSend
             // 
-            this.buttonSend.Location = new System.Drawing.Point(197, 226);
+            this.buttonSend.Location = new System.Drawing.Point(335, 226);
             this.buttonSend.Name = "buttonSend";
             this.buttonSend.Size = new System.Drawing.Size(75, 23);
             this.buttonSend.TabIndex = 1;
@@ -51,22 +51,23 @@
             this.buttonSend.UseVisualStyleBackColor = true;
             this.buttonSend.Click += new System.EventHandler(this.buttonSend_Click);
             // 
-            // buttonCancel
+            // buttonView
             // 
-            this.buttonCancel.Location = new System.Drawing.Point(12, 226);
-            this.buttonCancel.Name = "buttonCancel";
-            this.buttonCancel.Size = new System.Drawing.Size(75, 23);
-            this.buttonCancel.TabIndex = 2;
-            this.buttonCancel.Text = "取消";
-            this.buttonCancel.UseVisualStyleBackColor = true;
+            this.buttonView.Location = new System.Drawing.Point(12, 226);
+            this.buttonView.Name = "buttonView";
+            this.buttonView.Size = new System.Drawing.Size(75, 23);
+            this.buttonView.TabIndex = 3;
+            this.buttonView.Text = "浏览";
+            this.buttonView.UseVisualStyleBackColor = true;
+            this.buttonView.Click += new System.EventHandler(this.buttonView_Click);
             // 
             // FormSendCommand
             // 
             this.AcceptButton = this.buttonSend;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(284, 261);
-            this.Controls.Add(this.buttonCancel);
+            this.ClientSize = new System.Drawing.Size(422, 261);
+            this.Controls.Add(this.buttonView);
             this.Controls.Add(this.buttonSend);
             this.Controls.Add(this.textBoxCommand);
             this.Name = "FormSendCommand";
@@ -81,6 +82,6 @@
 
         private System.Windows.Forms.TextBox textBoxCommand;
         private System.Windows.Forms.Button buttonSend;
-        private System.Windows.Forms.Button buttonCancel;
+        private System.Windows.Forms.Button buttonView;
     }
 }

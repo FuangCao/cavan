@@ -76,7 +76,7 @@
             this.buttonCommand = new System.Windows.Forms.Button();
             this.buttonUnlock = new System.Windows.Forms.Button();
             this.buttonIme = new System.Windows.Forms.Button();
-            this.buttonView = new System.Windows.Forms.Button();
+            this.buttonDesktop = new System.Windows.Forms.Button();
             this.buttonAlipay = new System.Windows.Forms.Button();
             this.buttonWeibo = new System.Windows.Forms.Button();
             this.buttonTaobao = new System.Windows.Forms.Button();
@@ -134,7 +134,7 @@
             // 
             // buttonClear
             // 
-            this.buttonClear.Location = new System.Drawing.Point(77, 395);
+            this.buttonClear.Location = new System.Drawing.Point(275, 395);
             this.buttonClear.Name = "buttonClear";
             this.buttonClear.Size = new System.Drawing.Size(60, 23);
             this.buttonClear.TabIndex = 7;
@@ -261,7 +261,7 @@
             // 
             // buttonTmall
             // 
-            this.buttonTmall.Location = new System.Drawing.Point(209, 395);
+            this.buttonTmall.Location = new System.Drawing.Point(209, 366);
             this.buttonTmall.Name = "buttonTmall";
             this.buttonTmall.Size = new System.Drawing.Size(60, 23);
             this.buttonTmall.TabIndex = 28;
@@ -357,7 +357,7 @@
             // 
             // buttonHidden
             // 
-            this.buttonHidden.Location = new System.Drawing.Point(143, 366);
+            this.buttonHidden.Location = new System.Drawing.Point(77, 366);
             this.buttonHidden.Name = "buttonHidden";
             this.buttonHidden.Size = new System.Drawing.Size(60, 23);
             this.buttonHidden.TabIndex = 41;
@@ -450,7 +450,7 @@
             // 
             // buttonUnfollow
             // 
-            this.buttonUnfollow.Location = new System.Drawing.Point(275, 395);
+            this.buttonUnfollow.Location = new System.Drawing.Point(77, 395);
             this.buttonUnfollow.Name = "buttonUnfollow";
             this.buttonUnfollow.Size = new System.Drawing.Size(60, 23);
             this.buttonUnfollow.TabIndex = 45;
@@ -518,7 +518,7 @@
             // 
             // buttonIme
             // 
-            this.buttonIme.Location = new System.Drawing.Point(77, 366);
+            this.buttonIme.Location = new System.Drawing.Point(11, 366);
             this.buttonIme.Name = "buttonIme";
             this.buttonIme.Size = new System.Drawing.Size(60, 23);
             this.buttonIme.TabIndex = 52;
@@ -526,19 +526,19 @@
             this.buttonIme.UseVisualStyleBackColor = true;
             this.buttonIme.Click += new System.EventHandler(this.buttonIme_Click);
             // 
-            // buttonView
+            // buttonDesktop
             // 
-            this.buttonView.Location = new System.Drawing.Point(11, 337);
-            this.buttonView.Name = "buttonView";
-            this.buttonView.Size = new System.Drawing.Size(60, 23);
-            this.buttonView.TabIndex = 56;
-            this.buttonView.Text = "浏览";
-            this.buttonView.UseVisualStyleBackColor = true;
-            this.buttonView.Click += new System.EventHandler(this.buttonView_Click);
+            this.buttonDesktop.Location = new System.Drawing.Point(209, 395);
+            this.buttonDesktop.Name = "buttonDesktop";
+            this.buttonDesktop.Size = new System.Drawing.Size(60, 23);
+            this.buttonDesktop.TabIndex = 56;
+            this.buttonDesktop.Text = "桌面";
+            this.buttonDesktop.UseVisualStyleBackColor = true;
+            this.buttonDesktop.Click += new System.EventHandler(this.buttonDesktop_Click);
             // 
             // buttonAlipay
             // 
-            this.buttonAlipay.Location = new System.Drawing.Point(11, 366);
+            this.buttonAlipay.Location = new System.Drawing.Point(11, 337);
             this.buttonAlipay.Name = "buttonAlipay";
             this.buttonAlipay.Size = new System.Drawing.Size(60, 23);
             this.buttonAlipay.TabIndex = 55;
@@ -558,7 +558,7 @@
             // 
             // buttonTaobao
             // 
-            this.buttonTaobao.Location = new System.Drawing.Point(209, 366);
+            this.buttonTaobao.Location = new System.Drawing.Point(143, 366);
             this.buttonTaobao.Name = "buttonTaobao";
             this.buttonTaobao.Size = new System.Drawing.Size(60, 23);
             this.buttonTaobao.TabIndex = 53;
@@ -571,7 +571,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(480, 457);
-            this.Controls.Add(this.buttonView);
+            this.Controls.Add(this.buttonDesktop);
             this.Controls.Add(this.buttonAlipay);
             this.Controls.Add(this.buttonWeibo);
             this.Controls.Add(this.buttonTaobao);
@@ -671,7 +671,7 @@
         private System.Windows.Forms.Button buttonCommand;
         private System.Windows.Forms.Button buttonUnlock;
         private System.Windows.Forms.Button buttonIme;
-        private System.Windows.Forms.Button buttonView;
+        private System.Windows.Forms.Button buttonDesktop;
         private System.Windows.Forms.Button buttonAlipay;
         private System.Windows.Forms.Button buttonWeibo;
         private System.Windows.Forms.Button buttonTaobao;
