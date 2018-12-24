@@ -20,6 +20,7 @@ namespace NetworkInputMethod
         private FormHttpSender mFormSender;
         private FormPackBuilder mFormBuilder;
         private FormAlipay mFormAlipay;
+        private FormSendCommand mFormSendCommand;
 
         //API declarations...
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -624,10 +625,14 @@ namespace NetworkInputMethod
 
         private void buttonCommand_Click(object sender, EventArgs e)
         {
-            var command = textBoxContent.Text.Trim();
-            if (command.Length > 0)
+            if (mFormSendCommand == null || mFormSendCommand.IsDisposed)
             {
-                sendCommand(command, false);
+                mFormSendCommand = new FormSendCommand(this);
+                mFormSendCommand.Show();
+            }
+            else
+            {
+                mFormSendCommand.WindowState = FormWindowState.Normal;
             }
         }
 

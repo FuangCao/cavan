@@ -106,6 +106,12 @@
     <Compile Include="FormSelect.Designer.cs">
       <DependentUpon>FormSelect.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormSendCommand.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSendCommand.Designer.cs">
+      <DependentUpon>FormSendCommand.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormTextEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -135,6 +141,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormSelect.resx">
       <DependentUpon>FormSelect.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSendCommand.resx">
+      <DependentUpon>FormSendCommand.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormTextEditor.resx">
       <DependentUpon>FormTextEditor.cs</DependentUpon>
