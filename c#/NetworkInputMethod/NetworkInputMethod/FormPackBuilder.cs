@@ -456,7 +456,8 @@ namespace NetworkInputMethod
                 file = file.Parent;
             }
 
-            createAccountNode(file);
+            var node = createAccountNode(file);
+            treeView.SelectedNode = node;
         }
 
         private void buttonSave_Click(object sender, EventArgs e)
@@ -512,6 +513,8 @@ namespace NetworkInputMethod
                         file.Nodes.Clear();
                     }
                 }
+
+                mAccounts = 0;
             }
         }
 
@@ -655,6 +658,16 @@ namespace NetworkInputMethod
             treeView.SelectedNode = nodeNew;
             parent.Expand();
             node.Remove();
+        }
+
+        private void collapseToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            treeView.CollapseAll();
+        }
+
+        private void expandToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            treeView.ExpandAll();
         }
     }
 }
