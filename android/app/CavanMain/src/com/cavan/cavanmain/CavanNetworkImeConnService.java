@@ -106,6 +106,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			CavanAndroid.dLog("onTcpPacketReceived: " + command);
 
 			String[] args = command.split("\\s+", 2);
+			args[0] = args[0].toUpperCase();
 
 			switch (args[0]) {
 			case "PING":
@@ -304,13 +305,13 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 
 		switch (args[0]) {
 		case "OPEN":
-			if (args.length > 1) {
+			if (args.length > 1 && CavanMainApplication.isScreenOn()) {
 				CavanAndroid.startActivity(getApplicationContext(), args[1]);
 			}
 			break;
 
 		case "VIEW":
-			if (args.length > 1) {
+			if (args.length > 1 && CavanMainApplication.isScreenOn()) {
 				String url = args[1];
 
 				Matcher matcher = sUrlPattern.matcher(url);
@@ -323,7 +324,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 				try {
 					Uri uri = Uri.parse(url);
 					Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-					startActivity(intent);
+					CavanAndroid.startActivity(this, intent);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -390,6 +391,12 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 					break;
 				}
 
+				accessibility.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
+			}
+			break;
+
+		case "DESKTOP":
+			if (accessibility != null && CavanMainApplication.isScreenOn()) {
 				accessibility.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
 			}
 			break;
@@ -543,14 +550,21 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 	}
 
 	@Override
+	public long onTcpConnFailed(int times) {
+		if (times < 3 || CavanMainApplication.isScreenOn()) {
+			return super.onTcpConnFailed(times);
+		}
+
+		return -1;
+	}
+
+	@Override
 	public void onScreenOn() {
 		mTcpPacketClient.connect();
 	}
 
 	@Override
-	public void onScreenOff() {
-		mTcpPacketClient.setConnEnable(false);
-	}
+	public void onScreenOff() {}
 
 	@Override
 	public void onUserPresent() {}
