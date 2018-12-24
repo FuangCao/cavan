@@ -46,13 +46,22 @@
         android:layout_alignParentTop="true"
         android:autoLink="web" />
 
-    <EditText
+    <Button
+        android:id="@+id/buttonCopy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/imageViewQrCode"
+        android:layout_alignParentRight="true"
+        android:text="@string/copy" />
+
+   <EditText
         android:id="@+id/editTextFilter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonCopy"
+        android:layout_alignBottom="@+id/buttonCopy"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/imageViewQrCode"
+        android:layout_toLeftOf="@+id/buttonCopy"
         android:ems="10" />
 
 </RelativeLayout>

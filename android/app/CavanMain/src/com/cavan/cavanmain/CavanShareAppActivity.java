@@ -17,10 +17,12 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.format.Formatter;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -36,9 +38,10 @@ import com.cavan.cavanjni.CavanJni;
 import com.cavan.cavanjni.HttpService;
 import com.cavan.java.CavanFile;
 
-public class CavanShareAppActivity extends Activity implements OnItemClickListener, OnCheckedChangeListener {
+public class CavanShareAppActivity extends Activity implements OnItemClickListener, OnCheckedChangeListener, OnClickListener {
 
 	private String mUrl;
+	private Button mButtonCopy;
 	private TextView mTextViewUrl;
 	private ListView mListViewApps;
 	private EditText mEditTextFilter;
@@ -110,7 +113,7 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 					}
 				}
 
-				if (filter.isEmpty() || info.getApplicationName().contains(filter)) {
+				if (filter.isEmpty() || info.getApplicationName().contains(filter) || info.getPackageName().contains(filter)) {
 					list.add(info);
 				}
 			}
@@ -133,12 +136,15 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 		Intent intent = getIntent();
 		mUrl = intent.getStringExtra("url");
 
+		mButtonCopy = (Button) findViewById(R.id.buttonCopy);
 		mImageViewQrCode = (ImageView) findViewById(R.id.imageViewQrCode);
 		mListViewApps = (ListView) findViewById(R.id.listViewApps);
 		mTextViewUrl = (TextView) findViewById(R.id.textViewUrl);
 		mEditTextFilter = (EditText) findViewById(R.id.editTextFilter);
 		mCheckBoxShowSysApp = (CheckBox) findViewById(R.id.checkBoxShowSysApp);
 		mCheckBoxGameOnly = (CheckBox) findViewById(R.id.checkBoxGameOnly);
+
+		mButtonCopy.setOnClickListener(this);
 
 		mListViewApps.setOnItemClickListener(this);
 		mListViewApps.setAdapter(mAdapterApps);
@@ -171,7 +177,7 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 
 		try {
 			String url = mUrl + dir.getAbsolutePath() + File.separatorChar + URLEncoder.encode(file.getName(), "UTF-8");
-			CavanAndroid.postClipboardText(this, url);
+			// CavanAndroid.postClipboardText(this, url);
 			mTextViewUrl.setText(url);
 
 			Point point = new Point();
@@ -192,5 +198,13 @@ public class CavanShareAppActivity extends Activity implements OnItemClickListen
 	@Override
 	public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 		mAdapterApps.notifyDataSetChanged();
+	}
+
+	@Override
+	public void onClick(View v) {
+		CharSequence text = mTextViewUrl.getText();
+		if (text.length() > 0) {
+			CavanAndroid.postClipboardText(this, text);
+		}
 	}
 }
