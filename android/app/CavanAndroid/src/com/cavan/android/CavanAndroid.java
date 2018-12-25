@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -824,45 +825,88 @@ public class CavanAndroid {
 		return false;
 	}
 
-	public static ApplicationInfo findApplication(PackageManager pm, CharSequence name, int flags) {
+	public static List<ApplicationInfo> findApplications(PackageManager pm, CharSequence name, int flags) {
+		ArrayList<ApplicationInfo> infos = new ArrayList<ApplicationInfo>();
+
 		try {
 			for (ApplicationInfo info : pm.getInstalledApplications(flags)) {
-				CharSequence label = pm.getApplicationLabel(info);
-				if (label != null && label.toString().contains(name)) {
-					return info;
+				if (info.packageName.contains(name)) {
+					infos.add(info);
+				} else {
+					CharSequence label = pm.getApplicationLabel(info);
+					if (label != null && label.toString().contains(name)) {
+						infos.add(info);
+					}
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-		return null;
+		return infos;
+	}
+
+	public static ApplicationInfo findApplication(PackageManager pm, CharSequence name, int flags) {
+		List<ApplicationInfo> infos = findApplications(pm, name, flags);
+		int size = infos.size();
+
+		if (size < 1) {
+			return null;
+		}
+
+		if (size > 1) {
+			for (ApplicationInfo info : infos) {
+				if (info.packageName.equals(name)) {
+					return info;
+				}
+
+				CharSequence label = pm.getApplicationLabel(info);
+				if (name.equals(label)) {
+					return info;
+				}
+			}
+		}
+
+		return infos.get(0);
+	}
+
+	public static Intent getLaunchIntent(Context context, String name, boolean fuzzy) {
+		PackageManager pm = context.getPackageManager();
+
+		Intent intent = pm.getLaunchIntentForPackage(name);
+		if (intent == null && fuzzy) {
+			ApplicationInfo info = findApplication(pm, name, 0);
+			if (info == null) {
+				return null;
+			}
+
+			intent = pm.getLaunchIntentForPackage(info.packageName);
+		}
+
+		return intent;
+	}
+
+	public static boolean startActivity(Context context, String name, boolean fuzzy) {
+		Intent intent = getLaunchIntent(context, name, fuzzy);
+		if (intent == null) {
+			return false;
+		}
+
+		return startActivity(context, intent);
 	}
 
 	public static boolean startActivity(Context context, String pkgName) {
-		PackageManager pm = context.getPackageManager();
+		return startActivity(context, pkgName, false);
+	}
 
-		for (int i = 0; i < 2; i++) {
-			Intent intent = pm.getLaunchIntentForPackage(pkgName);
-			if (intent != null) {
-				return startActivity(context, intent);
-			}
-
-			ApplicationInfo info = findApplication(pm, pkgName, 0);
-			if (info == null) {
-				break;
-			}
-
-			pkgName = info.packageName;
-		}
-
-		return false;
+	public static boolean startActivityFuzzy(Context context, String name) {
+		return startActivity(context, name, true);
 	}
 
 	public static boolean startActivity(Context context, String pkgName, String clsName) {
 		Intent intent = new Intent();
 		intent.setClassName(pkgName, clsName);
-		return CavanAndroid.startActivity(context, intent);
+		return startActivity(context, intent);
 	}
 
 	public static boolean startActivity(Context context, Class<?> cls) {

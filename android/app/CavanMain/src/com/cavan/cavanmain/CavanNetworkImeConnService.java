@@ -306,7 +306,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 		switch (args[0]) {
 		case "OPEN":
 			if (args.length > 1 && CavanMainApplication.isScreenOn()) {
-				CavanAndroid.startActivity(getApplicationContext(), args[1]);
+				CavanAndroid.startActivityFuzzy(getApplicationContext(), args[1]);
 			}
 			break;
 
@@ -387,11 +387,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 
 		case "HOME":
 			if (accessibility != null && CavanMainApplication.isScreenOn()) {
-				if (accessibility.sendCommandHome()) {
-					break;
-				}
-
-				accessibility.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
+				accessibility.sendCommandHome();
 			}
 			break;
 
