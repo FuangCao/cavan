@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -12,6 +13,13 @@ namespace NetworkInputMethod
 {
     public partial class FormOpenApp : Form
     {
+        public static string[] sProgramFiles = {
+            "C:\\Program Files (x86)",
+            "C:\\Program Files",
+            "D:\\Program Files (x86)",
+            "D:\\Program Files",
+        };
+
         private FormNetworkIme mNetworkIme;
 
         public FormOpenApp(FormNetworkIme ime)
@@ -90,17 +98,50 @@ namespace NetworkInputMethod
             mNetworkIme.sendOpenApp("com.tencent.mm");
         }
 
+        private string getWeixinPath()
+        {
+            foreach (var dir in sProgramFiles)
+            {
+                if (Directory.Exists(dir))
+                {
+                    var path = Path.Combine(dir, "Tencent\\WeChat\\WeChat.exe");
+
+                    if (File.Exists(path))
+                    {
+                        return path;
+                    }
+                }
+            }
+
+            if (openFileDialogWeChat.ShowDialog() == DialogResult.OK)
+            {
+                return openFileDialogWeChat.FileName;
+            }
+
+            return null;
+        }
+
         private void buttonMmMulti_Click(object sender, EventArgs e)
         {
             FormMmMulti form = new FormMmMulti();
-            if (form.ShowDialog() == DialogResult.OK)
+            if (form.ShowDialog() != DialogResult.OK)
             {
-                for (int i = form.Count; i > 0; i--)
-                {
-                    Process process = new Process();
-                    process.StartInfo.FileName = "C:\\Program Files (x86)\\Tencent\\WeChat\\WeChat.exe";
-                    process.Start();
-                }
+                return;
+            }
+
+            var path = getWeixinPath();
+            if (path == null)
+            {
+                return;
+            }
+
+            Console.WriteLine("path = " + path);
+
+            for (int i = form.Count; i > 0; i--)
+            {
+                Process process = new Process();
+                process.StartInfo.FileName = path;
+                process.Start();
             }
         }
 
@@ -117,6 +158,25 @@ namespace NetworkInputMethod
         private void buttonTstl_Click(object sender, EventArgs e)
         {
             mNetworkIme.sendOpenApp("com.tencent.tmgp.tstl");
+        }
+
+        private void buttonPubgmhd_Click(object sender, EventArgs e)
+        {
+            mNetworkIme.sendOpenApp("com.tencent.tmgp.pubgmhd");
+        }
+
+        private void buttonCrossgate_Click(object sender, EventArgs e)
+        {
+            mNetworkIme.sendOpenApp("com.tencent.crossgate");
+        }
+
+        private void buttonOpen_Click(object sender, EventArgs e)
+        {
+            var name = textBoxAppName.Text.Trim();
+            if (name.Length > 0)
+            {
+                mNetworkIme.sendOpenApp(name);
+            }
         }
     }
 }
