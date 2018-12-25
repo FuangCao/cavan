@@ -199,7 +199,7 @@
             this.buttonMmMulti.Location = new System.Drawing.Point(255, 196);
             this.buttonMmMulti.Name = "buttonMmMulti";
             this.buttonMmMulti.Size = new System.Drawing.Size(75, 40);
-            this.buttonMmMulti.TabIndex = 0;
+            this.buttonMmMulti.TabIndex = 21;
             this.buttonMmMulti.Text = "微信多开";
             this.buttonMmMulti.UseVisualStyleBackColor = true;
             this.buttonMmMulti.Click += new System.EventHandler(this.buttonMmMulti_Click);
@@ -268,7 +268,7 @@
             this.buttonOpen.Location = new System.Drawing.Point(255, 241);
             this.buttonOpen.Name = "buttonOpen";
             this.buttonOpen.Size = new System.Drawing.Size(75, 23);
-            this.buttonOpen.TabIndex = 21;
+            this.buttonOpen.TabIndex = 0;
             this.buttonOpen.Text = "打开";
             this.buttonOpen.UseVisualStyleBackColor = true;
             this.buttonOpen.Click += new System.EventHandler(this.buttonOpen_Click);
@@ -283,7 +283,7 @@
             // 
             // FormOpenApp
             // 
-            this.AcceptButton = this.buttonMmMulti;
+            this.AcceptButton = this.buttonOpen;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(340, 277);
