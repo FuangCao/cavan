@@ -19,20 +19,27 @@ namespace NetworkInputMethod
             InitializeComponent();
         }
 
-        public List<string> getAlipayCodes()
+        public int sendAlipayCodes(string[] lines)
         {
-            List<string> codes = new List<string>();
+            var builder = new StringBuilder("ALIPAY");
+            int count = 0;
 
-            foreach (var line in textBoxCodes.Lines)
+            foreach (var line in lines)
             {
                 var code = line.Trim();
                 if (code.Length > 0)
                 {
-                    codes.Add(code);
+                    builder.Append(' ').Append(code);
+                    count++;
                 }
             }
 
-            return codes;
+            if (count == 0)
+            {
+                return 0;
+            }
+
+            return mIme.sendCommand(builder.ToString(), true);
         }
 
         private void buttonOpen_Click(object sender, EventArgs e)
@@ -42,23 +49,40 @@ namespace NetworkInputMethod
 
         private void buttonSend_Click(object sender, EventArgs e)
         {
-            var codes = getAlipayCodes();
-            if (codes.Count > 0)
-            {
-                var builder = new StringBuilder("ALIPAY");
-
-                foreach (var code in codes)
-                {
-                    builder.Append(' ').Append(code);
-                }
-
-                mIme.sendCommand(builder.ToString(), true);
-            }
+            sendAlipayCodes(textBoxCodes.Lines);
         }
 
         private void buttonClear_Click(object sender, EventArgs e)
         {
             mIme.sendCommand("CLEAR", true);
+            textBoxCodes.Clear();
+        }
+
+        public void setClipboardText(string text)
+        {
+            textBoxCodes.Text = text;
+        }
+
+        public bool onClipboardChanged(string text)
+        {
+            if (IsDisposed)
+            {
+                return false;
+            }
+
+            if (checkBoxClipboardListen.Checked)
+            {
+                textBoxCodes.Text = text;
+            }
+
+            if (checkBoxClipboardSend.Checked)
+            {
+                var lines = text.Split('\n');
+                sendAlipayCodes(lines);
+                return true;
+            }
+
+            return false;
         }
     }
 }

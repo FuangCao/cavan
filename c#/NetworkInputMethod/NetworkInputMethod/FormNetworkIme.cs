@@ -144,28 +144,31 @@ namespace NetworkInputMethod
             }
         }
 
-        private void onClipboardChanged()
+        public string getClipboardText()
         {
-            string text;
-
             try
             {
-                text = Clipboard.GetText();
+                var text = Clipboard.GetText();
+                if (text == null)
+                {
+                    return null;
+                }
+
+                return text.Trim();
             }
-            catch (Exception err)
+            catch (Exception e)
             {
-                MessageBox.Show(err.ToString());
-                return;
+                MessageBox.Show(e.ToString());
             }
 
-            if (text == null)
-            {
-                return;
-            }
+            return null;
+        }
 
-            text = text.Trim();
+        private void onClipboardChanged()
+        {
+            string text = getClipboardText();
 
-            if (text.Length <= 0)
+            if (string.IsNullOrEmpty(text))
             {
                 return;
             }
@@ -182,14 +185,30 @@ namespace NetworkInputMethod
             mClipboardText = text;
             mClipboardTime = time;
 
-            if (mFormBuilder == null || mFormBuilder.postClipboard(text) == false)
+            if (onClipboardChanged(text))
             {
-                if (checkBoxShareClipboard.Checked && text != null && text.Length > 0)
-                {
-                    string command = "CLIPBOARD " + text;
-                    sendCommand(command, true);
-                }
+                return;
             }
+            if (checkBoxShareClipboard.Checked && text != null && text.Length > 0)
+            {
+                string command = "CLIPBOARD " + text;
+                sendCommand(command, true);
+            }
+        }
+
+        private bool onClipboardChanged(string text)
+        {
+            if (mFormAlipay != null && mFormAlipay.onClipboardChanged(text))
+            {
+                return true;
+            }
+
+            if (mFormBuilder != null && mFormBuilder.postClipboard(text))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         public int sendCommand(byte[] bytes, bool all)
@@ -647,6 +666,9 @@ namespace NetworkInputMethod
             {
                 mFormAlipay.WindowState = FormWindowState.Normal;
             }
+
+            var text = getClipboardText();
+            mFormAlipay.setClipboardText(text);
         }
 
         private void buttonWeibo_Click(object sender, EventArgs e)
