@@ -189,10 +189,15 @@ namespace NetworkInputMethod
             {
                 return;
             }
-            if (checkBoxShareClipboard.Checked && text != null && text.Length > 0)
+
+            if (checkBoxShareClipboard.Checked)
             {
-                string command = "CLIPBOARD " + text;
-                sendCommand(command, true);
+                sendCommand("CLIPBOARD " + text, true);
+            }
+
+            if (checkBoxSendClipboard.Checked)
+            {
+                sendCommand("SEND " + text, false);
             }
         }
 

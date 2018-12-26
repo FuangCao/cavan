@@ -80,6 +80,7 @@
             this.buttonAlipay = new System.Windows.Forms.Button();
             this.buttonWeibo = new System.Windows.Forms.Button();
             this.buttonTaobao = new System.Windows.Forms.Button();
+            this.checkBoxSendClipboard = new System.Windows.Forms.CheckBox();
             this.groupBoxMode.SuspendLayout();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
@@ -241,7 +242,7 @@
             this.checkBoxShareClipboard.AutoSize = true;
             this.checkBoxShareClipboard.Checked = true;
             this.checkBoxShareClipboard.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxShareClipboard.Location = new System.Drawing.Point(305, 177);
+            this.checkBoxShareClipboard.Location = new System.Drawing.Point(215, 177);
             this.checkBoxShareClipboard.Name = "checkBoxShareClipboard";
             this.checkBoxShareClipboard.Size = new System.Drawing.Size(84, 16);
             this.checkBoxShareClipboard.TabIndex = 23;
@@ -566,11 +567,22 @@
             this.buttonTaobao.UseVisualStyleBackColor = true;
             this.buttonTaobao.Click += new System.EventHandler(this.buttonTaobao_Click);
             // 
+            // checkBoxSendClipboard
+            // 
+            this.checkBoxSendClipboard.AutoSize = true;
+            this.checkBoxSendClipboard.Location = new System.Drawing.Point(305, 177);
+            this.checkBoxSendClipboard.Name = "checkBoxSendClipboard";
+            this.checkBoxSendClipboard.Size = new System.Drawing.Size(84, 16);
+            this.checkBoxSendClipboard.TabIndex = 57;
+            this.checkBoxSendClipboard.Text = "剪切板发送";
+            this.checkBoxSendClipboard.UseVisualStyleBackColor = true;
+            // 
             // FormNetworkIme
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(480, 457);
+            this.Controls.Add(this.checkBoxSendClipboard);
             this.Controls.Add(this.buttonDesktop);
             this.Controls.Add(this.buttonAlipay);
             this.Controls.Add(this.buttonWeibo);
@@ -675,6 +687,7 @@
         private System.Windows.Forms.Button buttonAlipay;
         private System.Windows.Forms.Button buttonWeibo;
         private System.Windows.Forms.Button buttonTaobao;
+        private System.Windows.Forms.CheckBox checkBoxSendClipboard;
     }
 }
 
