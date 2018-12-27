@@ -242,6 +242,14 @@ namespace NetworkInputMethod
             return count;
         }
 
+        public ICollection NetworkImeClients
+        {
+            get
+            {
+                return checkedListBoxClients.Items;
+            }
+        }
+
         public int sendCommand(string command, bool all)
         {
             byte[] bytes = UTF8Encoding.UTF8.GetBytes(command);
@@ -386,6 +394,23 @@ namespace NetworkInputMethod
         internal void onTcpServiceWaiting(object sender, EventArgs e)
         {
             labelStatus.Text = "服务器正在等待";
+        }
+
+        internal void onTcpClientReceived(object sender, CavanEventArgs<string[]> e)
+        {
+            string[] args = e.Args;
+
+            switch (args[0])
+            {
+                case "RESPONSE":
+                    if (mFormSendCommand == null || mFormSendCommand.IsDisposed)
+                    {
+                        break;
+                    }
+
+                    mFormSendCommand.postResponse(args[1]);
+                    break;
+            }
         }
 
         private void checkBoxRepeat_CheckedChanged(object sender, EventArgs e)
@@ -703,6 +728,8 @@ namespace NetworkInputMethod
         private string mUserName;
         private NetworkImeService mService;
 
+        internal delegate void TcpClientReceivedEventHandler(object sender, CavanEventArgs<string[]> e);
+
         public NetworkImeClient(NetworkImeService service, TcpClient client) : base(client)
         {
             mService = service;
@@ -710,12 +737,15 @@ namespace NetworkInputMethod
 
         protected override void onDataPacketReceived(byte[] bytes, int length)
         {
-            char[] chars = UTF8Encoding.ASCII.GetChars(bytes, 0, length);
+            char[] chars = UTF8Encoding.UTF8.GetChars(bytes, 0, length);
             string command = new String(chars);
-            Console.WriteLine("onDataPacketReceived: " + command);
-            string[] args = command.Split(new char[] { ' ' }, 2);
 
-            switch (args[0].Trim())
+            // Console.WriteLine("onDataPacketReceived: " + command);
+
+            string[] args = command.Split(new char[] { ' ' }, 2);
+            args[0] = args[0].Trim().ToUpper();
+
+            switch (args[0])
             {
                 case "USER":
                     if (args.Length > 1)
@@ -742,6 +772,14 @@ namespace NetworkInputMethod
 
                 case "PONG":
                     mKeepAlive = 0;
+                    break;
+
+                default:
+                    {
+                        FormNetworkIme form = mService.Form;
+                        var handler = new TcpClientReceivedEventHandler(form.onTcpClientReceived);
+                        form.Invoke(handler, this, new CavanEventArgs<string[]>(args));
+                    }
                     break;
             }
         }
@@ -851,6 +889,29 @@ namespace NetworkInputMethod
         {
             EventHandler handler = new EventHandler(mForm.onTcpClientDisconnected);
             Invoke(handler, client, null);
+        }
+    }
+
+    class CavanEventArgs<E> : EventArgs
+    {
+        private E mArgs;
+
+        public CavanEventArgs(E args)
+        {
+            mArgs = args;
+        }
+
+        public E Args
+        {
+            get
+            {
+                return mArgs;
+            }
+
+            set
+            {
+                mArgs = value;
+            }
         }
     }
 }

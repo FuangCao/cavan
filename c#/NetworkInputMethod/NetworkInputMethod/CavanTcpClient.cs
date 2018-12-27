@@ -137,5 +137,22 @@ namespace NetworkInputMethod
             byte[] bytes = UTF8Encoding.UTF8.GetBytes(text);
             return send(bytes);
         }
+
+        public static bool fill(NetworkStream stream, byte[] bytes, int offset, int length)
+        {
+            while (length > 0)
+            {
+                var rdlen = stream.Read(bytes, offset, length);
+                if (rdlen <= 0)
+                {
+                    return false;
+                }
+
+                offset += rdlen;
+                length -= rdlen;
+            }
+
+            return true;
+        }
     }
 }

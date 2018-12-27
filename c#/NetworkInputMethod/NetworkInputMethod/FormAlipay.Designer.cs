@@ -41,12 +41,12 @@
             this.textBoxCodes.Location = new System.Drawing.Point(12, 12);
             this.textBoxCodes.Multiline = true;
             this.textBoxCodes.Name = "textBoxCodes";
-            this.textBoxCodes.Size = new System.Drawing.Size(248, 143);
+            this.textBoxCodes.Size = new System.Drawing.Size(320, 235);
             this.textBoxCodes.TabIndex = 0;
             // 
             // buttonSend
             // 
-            this.buttonSend.Location = new System.Drawing.Point(185, 191);
+            this.buttonSend.Location = new System.Drawing.Point(257, 286);
             this.buttonSend.Name = "buttonSend";
             this.buttonSend.Size = new System.Drawing.Size(75, 23);
             this.buttonSend.TabIndex = 2;
@@ -56,7 +56,7 @@
             // 
             // buttonOpen
             // 
-            this.buttonOpen.Location = new System.Drawing.Point(12, 333);
+            this.buttonOpen.Location = new System.Drawing.Point(12, 286);
             this.buttonOpen.Name = "buttonOpen";
             this.buttonOpen.Size = new System.Drawing.Size(75, 23);
             this.buttonOpen.TabIndex = 3;
@@ -66,7 +66,7 @@
             // 
             // buttonClear
             // 
-            this.buttonClear.Location = new System.Drawing.Point(12, 191);
+            this.buttonClear.Location = new System.Drawing.Point(93, 286);
             this.buttonClear.Name = "buttonClear";
             this.buttonClear.Size = new System.Drawing.Size(75, 23);
             this.buttonClear.TabIndex = 4;
@@ -77,7 +77,7 @@
             // checkBoxClipboardSend
             // 
             this.checkBoxClipboardSend.AutoSize = true;
-            this.checkBoxClipboardSend.Location = new System.Drawing.Point(176, 161);
+            this.checkBoxClipboardSend.Location = new System.Drawing.Point(248, 253);
             this.checkBoxClipboardSend.Name = "checkBoxClipboardSend";
             this.checkBoxClipboardSend.Size = new System.Drawing.Size(84, 16);
             this.checkBoxClipboardSend.TabIndex = 5;
@@ -87,7 +87,7 @@
             // checkBoxClipboardListen
             // 
             this.checkBoxClipboardListen.AutoSize = true;
-            this.checkBoxClipboardListen.Location = new System.Drawing.Point(12, 161);
+            this.checkBoxClipboardListen.Location = new System.Drawing.Point(12, 253);
             this.checkBoxClipboardListen.Name = "checkBoxClipboardListen";
             this.checkBoxClipboardListen.Size = new System.Drawing.Size(84, 16);
             this.checkBoxClipboardListen.TabIndex = 6;
@@ -98,7 +98,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(272, 226);
+            this.ClientSize = new System.Drawing.Size(344, 321);
             this.Controls.Add(this.checkBoxClipboardListen);
             this.Controls.Add(this.checkBoxClipboardSend);
             this.Controls.Add(this.buttonClear);

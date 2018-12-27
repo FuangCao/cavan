@@ -220,7 +220,7 @@
             this.buttonHome.Name = "buttonHome";
             this.buttonHome.Size = new System.Drawing.Size(75, 40);
             this.buttonHome.TabIndex = 16;
-            this.buttonHome.Text = "主页";
+            this.buttonHome.Text = "桌面";
             this.buttonHome.UseVisualStyleBackColor = true;
             this.buttonHome.Click += new System.EventHandler(this.buttonHome_Click);
             // 

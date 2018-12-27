@@ -16,13 +16,8 @@ namespace NetworkInputMethod
             NetworkStream stream = mTcpClient.GetStream();
             byte[] header = new byte[2];
 
-            while (true)
+            while (fill(stream, header, 0, 2))
             {
-                if (stream.Read(header, 0, 2) != 2)
-                {
-                    break;
-                }
-
                 int length = header[0] | header[1] << 8;
 
                 if (length > mBytes.Length)
@@ -30,12 +25,14 @@ namespace NetworkInputMethod
                     mBytes = new byte[length];
                 }
 
-                if (stream.Read(mBytes, 0, length) != length)
+                if (fill(stream, mBytes, 0, length))
+                {
+                    onDataPacketReceived(mBytes, length);
+                }
+                else
                 {
                     break;
                 }
-
-                onDataPacketReceived(mBytes, length);
             }
         }
 

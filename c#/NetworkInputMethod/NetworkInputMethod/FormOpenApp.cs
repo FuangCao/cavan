@@ -152,7 +152,7 @@ namespace NetworkInputMethod
 
         private void buttonHome_Click(object sender, EventArgs e)
         {
-            mNetworkIme.sendCommand("HOME", false);
+            mNetworkIme.sendCommand("DESKTOP", false);
         }
 
         private void buttonTstl_Click(object sender, EventArgs e)
