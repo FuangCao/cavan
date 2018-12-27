@@ -677,11 +677,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 				}
 			}
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
-			if (!RedPacketListenerService.checkAndOpenSettingsActivity(this)) {
-				FloatMessageService.showToast("请打开通知读取权限");
-			} else if (!CavanMainAccessibilityService.checkAndOpenSettingsActivity(this)) {
-				FloatMessageService.showToast("请打开辅助功能");
-			} else {
+			if (CavanMainApplication.test(this)) {
 				NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 				if (manager != null) {
 					String text = (String) object;

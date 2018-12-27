@@ -365,7 +365,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 							closure = new CavanAccessibilityHelper.ClosureDumpNodeSimple();
 						}
 
-						StringBuilder builder = new StringBuilder("DUMP ");
+						StringBuilder builder = new StringBuilder("RESPONSE ");
 						CavanAccessibilityHelper.dumpNodeTo(builder, root, closure);
 						root.recycle();
 
@@ -387,6 +387,12 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 						listener.addRedPacketCode(code, "网络输入法", false);
 					}
 				}
+			}
+			break;
+
+		case "TEST":
+			if (CavanMainApplication.isScreenOn() && CavanMainApplication.test(getApplicationContext())) {
+				FloatMessageService.showToast("测试成功");
 			}
 			break;
 
