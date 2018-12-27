@@ -2202,7 +2202,8 @@ static ssize_t network_client_recv_packed(struct network_client *client, void *b
 	}
 
 	if (size < length) {
-		return -ENOMEM;
+		pr_err_info("The buff is too small");
+		ERROR_RETURN(ENOMEM);
 	}
 
 	if (length == 0) {
@@ -2234,6 +2235,7 @@ static ssize_t network_client_recv_packed2(struct network_client *client, void *
 	length -= 2;
 
 	if (size < length) {
+		pr_err_info("The buff is too small");
 		return -ENOMEM;
 	}
 
@@ -4573,6 +4575,7 @@ ssize_t network_client_recv_packet(struct network_client *client, void *buff, si
 	}
 
 	if (size < length) {
+		pr_err_info("The buff is too small");
 		return -ENOMEM;
 	}
 

@@ -41,7 +41,7 @@ public class CavanTcpPacketClient extends CavanTcpClient {
 					}
 
 					return true;
-				} catch (IOException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}

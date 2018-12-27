@@ -1,12 +1,12 @@
 package com.cavan.java;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class CavanTcpClient {
 
@@ -21,22 +21,7 @@ public class CavanTcpClient {
 		void onTcpRecvTimeout();
 	}
 
-	private Socket mSocket;
-	private InputStream mInputStream;
-	private OutputStream mOutputStream;
-	private InetSocketAddress mConnAddress;
-	private InetSocketAddress mCurrAddress;
-	private CavanTcpClientListener mTcpClientListener;
-	private List<InetSocketAddress> mAddresses = new ArrayList<InetSocketAddress>();
-
-	private long mRecvTime;
-	private int mRecvTimeout;
-
-	private boolean mConnEnabled;
-	private boolean mConnected;
-	private int mConnTimes;
-
-	private CavanThread mConnThread = new CavanThread() {
+	public class ConnThread extends CavanThread {
 
 		@Override
 		public void run() {
@@ -58,7 +43,7 @@ public class CavanTcpClient {
 		}
 	};
 
-	private CavanThread mRecvThread = new CavanThread() {
+	public class RecvThread extends CavanThread {
 
 		@Override
 		public void run() {
@@ -77,13 +62,70 @@ public class CavanTcpClient {
 				synchronized (this) {
 					try {
 						wait();
-					} catch (InterruptedException e) {
+					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				}
 			}
 		}
-	};
+	}
+
+	public class SendThread extends CavanThread {
+
+		private LinkedBlockingQueue<byte[]> mQueue = new LinkedBlockingQueue<byte[]>();
+
+		@Override
+		public void run() {
+			while (true) {
+				try {
+					byte[] bytes = mQueue.take();
+
+					if (isConnected() && CavanTcpClient.this.send(bytes)) {
+						continue;
+					}
+
+					mQueue.clear();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		public boolean send(byte[] bytes) {
+			try {
+				if (isConnected()) {
+					mQueue.put(bytes);
+					return true;
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			return false;
+		}
+
+		public boolean send(String text) {
+			return send(text.getBytes());
+		}
+	}
+
+	private Socket mSocket;
+	private InputStream mInputStream;
+	private OutputStream mOutputStream;
+	private InetSocketAddress mConnAddress;
+	private InetSocketAddress mCurrAddress;
+	private CavanTcpClientListener mTcpClientListener;
+	private List<InetSocketAddress> mAddresses = new ArrayList<InetSocketAddress>();
+
+	private long mRecvTime;
+	private int mRecvTimeout;
+
+	private boolean mConnEnabled;
+	private boolean mConnected;
+	private int mConnTimes;
+
+	private ConnThread mConnThread = new ConnThread();
+	private RecvThread mRecvThread = new RecvThread();
 
 	public synchronized void setRecvTimeout(int timeout) {
 		mRecvTimeout = timeout;
@@ -126,6 +168,12 @@ public class CavanTcpClient {
 
 	public synchronized void setOutputStream(OutputStream outputStream) {
 		mOutputStream = outputStream;
+	}
+
+	public SendThread newSendThread() {
+		SendThread thread = new SendThread();
+		thread.start();
+		return thread;
 	}
 
 	public synchronized boolean isConnected() {
@@ -281,7 +329,7 @@ public class CavanTcpClient {
 					stream.write(bytes, offset, length);
 					return true;
 				}
-			} catch (IOException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
@@ -334,7 +382,7 @@ public class CavanTcpClient {
 				mConnected = false;
 				mConnAddress = null;
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			// e.printStackTrace();
 		}
 
@@ -354,7 +402,7 @@ public class CavanTcpClient {
 		if (mInputStream != null) {
 			try {
 				mInputStream.close();
-			} catch (IOException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 
@@ -364,7 +412,7 @@ public class CavanTcpClient {
 		if (mOutputStream != null) {
 			try {
 				mOutputStream.close();
-			} catch (IOException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 
@@ -374,7 +422,7 @@ public class CavanTcpClient {
 		if (mSocket != null) {
 			try {
 				mSocket.close();
-			} catch (IOException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 
@@ -514,7 +562,7 @@ public class CavanTcpClient {
 				} else {
 					break;
 				}
-			} catch (IOException e) {
+			} catch (Exception e) {
 				// e.printStackTrace();
 				break;
 			}

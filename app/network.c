@@ -33,7 +33,7 @@ static void *app_network_receive_thread(void *data)
 	struct network_client *client = data;
 
 	while (1) {
-		char buff[1024];
+		char buff[40960];
 		int rdlen, wrlen;
 
 		rdlen = client->recv(client, buff, sizeof(buff));

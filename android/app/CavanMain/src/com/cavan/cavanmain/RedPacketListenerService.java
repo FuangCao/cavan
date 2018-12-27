@@ -34,6 +34,7 @@ import com.cavan.accessibility.CavanRedPacketAlipay;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanIndexGenerator;
+import com.cavan.java.CavanString;
 import com.cavan.java.RedPacketFinder;
 import com.cavan.resource.EditableMultiSelectListPreference;
 
@@ -525,6 +526,10 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		if (CavanMessageActivity.isClipboardShareEnabled(this)) {
 			FloatEditorDialog dialog = FloatEditorDialog.getInstance(this, text, false, false);
 			dialog.show(6000);
+
+			if (CavanString.isNumber(text)) {
+				return;
+			}
 		}
 
 		if (text.equals(mClipText)) {

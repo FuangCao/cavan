@@ -909,40 +909,44 @@ public class CavanAccessibilityHelper {
 		CavanAndroid.dLogLarge(dumpNodeTo(node, closure));
 	}
 
+	public static class ClosureDumpNode implements ClosureVoid {
+
+		@Override
+		public void call(Object... args) {
+			StringBuilder builder = (StringBuilder) args[0];
+			AccessibilityNodeInfo node = (AccessibilityNodeInfo) args[1];
+
+			builder.append(node);
+		}
+	}
+
 	public static void dumpNode(AccessibilityNodeInfo node) {
-		dumpNode(node, new ClosureVoid() {
+		dumpNode(node, new ClosureDumpNode());
+	}
 
-			@Override
-			public void call(Object... args) {
-				StringBuilder builder = (StringBuilder) args[0];
-				AccessibilityNodeInfo node = (AccessibilityNodeInfo) args[1];
+	public static class ClosureDumpNodeSimple implements ClosureVoid {
 
-				builder.append(node);
+		@Override
+		public void call(Object... args) {
+			StringBuilder builder = (StringBuilder) args[0];
+			AccessibilityNodeInfo node = (AccessibilityNodeInfo) args[1];
+
+			builder.append(node.getClassName());
+			builder.append('[').append(Integer.toHexString(node.hashCode())).append(']');
+			builder.append("@");
+
+			if (CavanAndroid.SDK_VERSION >= 18) {
+				builder.append(node.getViewIdResourceName());
 			}
-		});
+
+			builder.append(": ");
+			builder.append(node.getText());
+			builder.append('@').append(node.getContentDescription());
+		}
 	}
 
 	public static void dumpNodeSimple(AccessibilityNodeInfo node) {
-		dumpNode(node, new ClosureVoid() {
-
-			@Override
-			public void call(Object... args) {
-				StringBuilder builder = (StringBuilder) args[0];
-				AccessibilityNodeInfo node = (AccessibilityNodeInfo) args[1];
-
-				builder.append(node.getClassName());
-				builder.append('[').append(Integer.toHexString(node.hashCode())).append(']');
-				builder.append("@");
-
-				if (CavanAndroid.SDK_VERSION >= 18) {
-					builder.append(node.getViewIdResourceName());
-				}
-
-				builder.append(": ");
-				builder.append(node.getText());
-				builder.append('@').append(node.getContentDescription());
-			}
-		});
+		dumpNode(node, new ClosureDumpNodeSimple());
 	}
 
 	public static void dumpNode(AccessibilityNodeInfo node, boolean simple) {

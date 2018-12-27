@@ -17,4 +17,11 @@ public class CavanThread extends Thread {
 			super.start();
 		}
 	}
+
+	@Override
+	public synchronized void start() {
+		if (!isAlive()) {
+			super.start();
+		}
+	}
 }

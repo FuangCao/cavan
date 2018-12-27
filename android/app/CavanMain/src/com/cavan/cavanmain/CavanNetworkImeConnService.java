@@ -14,13 +14,15 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 
+import com.cavan.accessibility.CavanAccessibilityHelper;
 import com.cavan.accessibility.CavanAccessibilityService;
 import com.cavan.android.CavanAndroid;
-import com.cavan.android.CavanThreadedHandler;
 import com.cavan.java.CavanJava;
+import com.cavan.java.CavanJava.ClosureVoid;
 import com.cavan.java.CavanString;
 import com.cavan.java.CavanTcpClient;
 import com.cavan.java.CavanTcpPacketClient;
@@ -60,8 +62,6 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 		}
 	};
 
-	private CavanThreadedHandler mThreadedHandler = new CavanThreadedHandler(getClass());
-
 	private AudioManager mAudioManager;
 	private InputMethodManager mInputMethodManager;
 
@@ -75,7 +75,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 				mHandler.removeCallbacks(this);
 
 				if (sendPing()) {
-					mThreadedHandler.postDelayed(this, 60000);
+					mHandler.postDelayed(this, 60000);
 				} else {
 					reconnect();
 				}
@@ -92,12 +92,12 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 				return false;
 			} else {
 				mKeepAlive = 1;
-				return send("PING");
+				return mSendThread.send("PING");
 			}
 		}
 
 		public boolean sendPong() {
-			return send("PONG");
+			return mSendThread.send("PONG");
 		}
 
 		@Override
@@ -137,17 +137,19 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			}
 
 			mKeepAlive = 0;
-			mThreadedHandler.post(mRunnableKeepAlive);
+			mHandler.post(mRunnableKeepAlive);
 
 			return super.onTcpConnected(socket);
 		}
 
 		@Override
 		protected void onTcpDisconnected() {
-			mThreadedHandler.removeCallbacks(mRunnableKeepAlive);
+			mHandler.removeCallbacks(mRunnableKeepAlive);
 			super.onTcpDisconnected();
 		}
 	};
+
+	private CavanTcpClient.SendThread mSendThread = mTcpPacketClient.newSendThread();
 
 	public static Intent getIntent(Context context) {
 		return new Intent(context, CavanNetworkImeConnService.class);
@@ -344,15 +346,36 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 
 		case "DUMP":
 			if (accessibility != null) {
-				boolean simple;
+				int level;
 
-				if (args.length > 1 && CavanJava.parseInt(args[1]) > 0) {
-					simple = false;
+				if (args.length > 1) {
+					level = CavanJava.parseInt(args[1]);
 				} else {
-					simple = true;
+					level = 0;
 				}
 
-				accessibility.dump(simple);
+				if (level > 1) {
+					AccessibilityNodeInfo root = accessibility.getRootInActiveWindow(3);
+					if (root != null) {
+						ClosureVoid closure;
+
+						if (level > 2) {
+							closure = new CavanAccessibilityHelper.ClosureDumpNode();
+						} else {
+							closure = new CavanAccessibilityHelper.ClosureDumpNodeSimple();
+						}
+
+						StringBuilder builder = new StringBuilder("DUMP ");
+						CavanAccessibilityHelper.dumpNodeTo(builder, root, closure);
+						root.recycle();
+
+						mSendThread.send(builder.toString());
+					}
+				} else if (level > 0) {
+					accessibility.dump(false);
+				} else {
+					accessibility.dump(true);
+				}
 			}
 			break;
 
