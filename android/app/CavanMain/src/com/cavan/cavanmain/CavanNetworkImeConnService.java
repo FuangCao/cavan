@@ -302,6 +302,39 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 		return true;
 	}
 
+	public int[] parseIndexs(String[] args) {
+		if (args.length < 2) {
+			return null;
+		}
+
+		String[] values = args[1].split("\\s+");
+		int[] indexs = new int[values.length];
+
+		for (int i = 0; i < values.length; i++) {
+			indexs[i] = CavanJava.parseInt(values[i]);
+		}
+
+		return indexs;
+	}
+
+	public boolean performAction(CavanAccessibilityService accessibility, int action, int[] indexs) {
+		AccessibilityNodeInfo node = accessibility.getChildRecursive(indexs);
+		if (node == null) {
+			return false;
+		}
+
+		return CavanAccessibilityHelper.performActionAndRecycle(node, action);
+	}
+
+	public boolean performAction(CavanAccessibilityService accessibility, int action, String[] args) {
+		int[] indexs = parseIndexs(args);
+		if (indexs == null) {
+			return false;
+		}
+
+		return performAction(accessibility, action, indexs);
+	}
+
 	protected void onTcpPacketReceived(String[] args) {
 		CavanAccessibilityService accessibility = CavanAccessibilityService.instance;
 
@@ -393,6 +426,18 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 		case "TEST":
 			if (CavanMainApplication.isScreenOn() && CavanMainApplication.test(getApplicationContext())) {
 				FloatMessageService.showToast("测试成功");
+			}
+			break;
+
+		case "CLICK":
+			if (accessibility != null && CavanMainApplication.isScreenOn()) {
+				performAction(accessibility, AccessibilityNodeInfo.ACTION_CLICK, args);
+			}
+			break;
+
+		case "LONG_CLICK":
+			if (accessibility != null && CavanMainApplication.isScreenOn()) {
+				performAction(accessibility, AccessibilityNodeInfo.ACTION_LONG_CLICK, args);
 			}
 			break;
 

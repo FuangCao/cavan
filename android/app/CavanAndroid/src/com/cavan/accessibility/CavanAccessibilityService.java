@@ -873,6 +873,27 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return true;
 	}
 
+	public AccessibilityNodeInfo getChildRecursive(int... indexs) {
+		AccessibilityNodeInfo root = getRootInActiveWindow(3);
+		if (root == null) {
+			return null;
+		}
+
+		if (indexs.length < 1) {
+			return root;
+		}
+
+		try {
+			return CavanAccessibilityHelper.getChildRecursive(root, indexs);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			root.recycle();
+		}
+
+		return null;
+	}
+
 	@Override
 	protected void onServiceConnected() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
