@@ -689,6 +689,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			super(name);
 		}
 
+		public List<AccessibilityNodeInfo> getListViews(AccessibilityNodeInfo root) {
+			return CavanAccessibilityHelper.getChildsByClassName(root, ListView.class.getCanonicalName(), 0);
+		}
+
 		public boolean enterOfficialAccounts(AccessibilityNodeInfo root) {
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, -1, 2, 0);
 			if (node != null) {
@@ -709,37 +713,39 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				}
 			}
 
-			AccessibilityNodeInfo listView = CavanAccessibilityHelper.getChildRecursive(root, 0, -1);
-			if (listView == null) {
+			List<AccessibilityNodeInfo> listViews = getListViews(root);
+			if (listViews == null || listViews.isEmpty()) {
 				return false;
 			}
 
 			try {
-				for (int i = 0; i < 3; i++) {
-					List<AccessibilityNodeInfo> nodes = CavanAccessibilityHelper.findNodesByTexts(listView, "关注", "进入公众号", "发消息");
-					if (nodes != null && nodes.size() > 0) {
-						try {
-							node = nodes.get(nodes.size() - 1);
+				for (AccessibilityNodeInfo listView : listViews) {
+					for (int i = 0; i < 3; i++) {
+						List<AccessibilityNodeInfo> nodes = CavanAccessibilityHelper.findNodesByTexts(listView, "关注", "发消息", "进入公众号", "关注公众号");
+						if (nodes != null && nodes.size() > 0) {
+							try {
+								node = nodes.get(nodes.size() - 1);
 
-							if (CavanAccessibilityHelper.performClick(node)) {
-								return true;
+								if (CavanAccessibilityHelper.performClick(node)) {
+									return true;
+								}
+
+								return CavanAccessibilityHelper.performClickParent(node);
+							} catch (Exception e) {
+								e.printStackTrace();
+							} finally {
+								CavanAccessibilityHelper.recycleNodes(nodes);
 							}
-
-							return CavanAccessibilityHelper.performClickParent(node);
-						} catch (Exception e) {
-							e.printStackTrace();
-						} finally {
-							CavanAccessibilityHelper.recycleNodes(nodes);
 						}
-					}
 
-					CavanAccessibilityHelper.performScrollDown(listView);
-					CavanJava.msleep(200);
+						CavanAccessibilityHelper.performScrollDown(listView);
+						CavanJava.msleep(200);
+					}
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
-				listView.recycle();
+				CavanAccessibilityHelper.recycleNodes(listViews);
 			}
 
 			return false;
@@ -759,22 +765,40 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doUnfollow(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, -1, 2, 1);
-			if (node != null) {
-				String text = CavanAccessibilityHelper.getNodeText(node);
-
+			List<AccessibilityNodeInfo> listViews = getListViews(root);
+			if (listViews != null && listViews.size() > 0) {
 				try {
-					if (CavanString.mach(text, "取消关注")) {
-						return CavanAccessibilityHelper.performClick(node);
+					for (AccessibilityNodeInfo listView : listViews) {
+						for (int i = 0; i < 3; i++) {
+							List<AccessibilityNodeInfo> nodes = CavanAccessibilityHelper.findNodesByText(listView, "取消关注");
+							if (nodes != null && nodes.size() > 0) {
+								try {
+									AccessibilityNodeInfo node = nodes.get(nodes.size() - 1);
+
+									if (CavanAccessibilityHelper.performClick(node)) {
+										return true;
+									}
+
+									return CavanAccessibilityHelper.performClickParent(node);
+								} catch (Exception e) {
+									e.printStackTrace();
+								} finally {
+									CavanAccessibilityHelper.recycleNodes(nodes);
+								}
+							}
+
+							CavanAccessibilityHelper.performScrollDown(listView);
+							CavanJava.msleep(200);
+						}
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				} finally {
-					node.recycle();
+					CavanAccessibilityHelper.recycleNodes(listViews);
 				}
 			}
 
-			node = CavanAccessibilityHelper.getChildRecursive(root, 0, 2);
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 2);
 			if (node == null) {
 				return false;
 			}

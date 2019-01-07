@@ -1073,18 +1073,16 @@ public class CavanAccessibilityHelper {
 	public static AccessibilityNodeInfo getChildRecursive(AccessibilityNodeInfo node, int... indexs) {
 		if (indexs.length > 0) {
 			node = getChild(node, indexs[0]);
-		} else {
-			return null;
-		}
 
-		for (int i = 1; i < indexs.length; i++) {
-			if (node == null) {
-				break;
+			for (int i = 1; i < indexs.length; i++) {
+				if (node == null) {
+					break;
+				}
+
+				AccessibilityNodeInfo child = getChild(node, indexs[i]);
+				node.recycle();
+				node = child;
 			}
-
-			AccessibilityNodeInfo child = getChild(node, indexs[i]);
-			node.recycle();
-			node = child;
 		}
 
 		return node;
@@ -1127,6 +1125,40 @@ public class CavanAccessibilityHelper {
 		}
 
 		return texts;
+	}
+
+	public static List<AccessibilityNodeInfo> getChildsByClassName(AccessibilityNodeInfo parent, CharSequence clsName) {
+		List<AccessibilityNodeInfo> childs = new ArrayList<AccessibilityNodeInfo>();
+
+		try {
+			int count = parent.getChildCount();
+
+			for (int i = 0; i < count; i++) {
+				AccessibilityNodeInfo child = parent.getChild(i);
+				if (child.getClassName().equals(clsName)) {
+					childs.add(child);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return childs;
+	}
+
+	public static List<AccessibilityNodeInfo> getChildsByClassName(AccessibilityNodeInfo root, CharSequence clsName, int... indexs) {
+		AccessibilityNodeInfo parent = getChildRecursive(root, indexs);
+		if (parent == null) {
+			return null;
+		}
+
+		List<AccessibilityNodeInfo> childs = getChildsByClassName(parent, clsName);
+
+		if (indexs.length > 0) {
+			parent.recycle();
+		}
+
+		return childs;
 	}
 
 	public static String getNodePackageName(AccessibilityNodeInfo node) {
