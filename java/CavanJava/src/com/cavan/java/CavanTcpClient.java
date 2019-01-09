@@ -2,8 +2,10 @@ package com.cavan.java;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -107,6 +109,19 @@ public class CavanTcpClient {
 		public boolean send(String text) {
 			return send(text.getBytes());
 		}
+	}
+
+	public static InetSocketAddress newSocketAddress(String host, int port) {
+		return InetSocketAddress.createUnresolved(host, port);
+	}
+
+	public static InetSocketAddress resolveSocketAddress(InetSocketAddress address) throws UnknownHostException {
+		String host = address.getHostName();
+		if (host == null) {
+			return address;
+		}
+
+		return new InetSocketAddress(InetAddress.getByName(host), address.getPort());
 	}
 
 	private Socket mSocket;
@@ -279,7 +294,7 @@ public class CavanTcpClient {
 	}
 
 	public synchronized void setAddress(String host, int port) {
-		setAddress(new InetSocketAddress(host, port));
+		setAddress(newSocketAddress(host, port));
 	}
 
 	public synchronized CavanTcpClientListener getTcpClientListener() {
@@ -311,7 +326,7 @@ public class CavanTcpClient {
 	}
 
 	public synchronized void connect(String host, int port) {
-		connect(new InetSocketAddress(host, port));
+		connect(newSocketAddress(host, port));
 	}
 
 	public synchronized void disconnect() {
@@ -367,7 +382,7 @@ public class CavanTcpClient {
 		onTcpConnecting(address);
 
 		try {
-			socket.connect(address, 6000);
+			socket.connect(resolveSocketAddress(address), 10000);
 
 			synchronized (this) {
 				mOutputStream = socket.getOutputStream();
