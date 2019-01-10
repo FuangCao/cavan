@@ -6,6 +6,7 @@ import java.util.List;
 import android.app.Notification;
 import android.graphics.Rect;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
@@ -211,7 +212,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		private boolean doAutoUnpack(AccessibilityNodeInfo root) {
 			AccessibilityNodeInfo listNode = CavanAccessibilityHelper.findNodeByViewId(root, "com.tencent.mobileqq:id/listView1");
 			if (listNode == null) {
-				listNode = CavanAccessibilityHelper.findChildByClassName(root, CavanAccessibilityHelper.CLASS_ABS_LIST_VIEW);
+				listNode = CavanAccessibilityHelper.findChildByClassName(root, ListView.class.getName());
 				if (listNode == null) {
 					return false;
 				}
@@ -380,7 +381,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public boolean isHomePage() {
+		public boolean isHomePage(AccessibilityNodeInfo root) {
 			return mHomePage;
 		}
 

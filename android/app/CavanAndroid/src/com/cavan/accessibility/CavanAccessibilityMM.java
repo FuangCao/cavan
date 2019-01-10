@@ -473,22 +473,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doActionBack(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo[] nodes = CavanAccessibilityHelper.getChildsRecursive(root, 0, 1, 0);
-			if (nodes == null) {
-				return false;
-			}
-
-			try {
-				if ("返回".equals(CavanAccessibilityHelper.getNodeDescription(nodes[2]))) {
-					return CavanAccessibilityHelper.performClick(nodes[1]);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				CavanAccessibilityHelper.recycleNodes(nodes);
-			}
-
-			return false;
+			return doActionBackBase(root, 0, 1, 0);
 		}
 
 		@Override
@@ -503,13 +488,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 			if (mSigninPending) {
 				doSignin(root);
-			} else if (mHomePending) {
-				doActionHome(root);
 			}
 		}
 
 		@Override
-		public boolean isHomePage() {
+		public boolean isHomePage(AccessibilityNodeInfo root) {
 			return true;
 		}
 	}
@@ -531,15 +514,30 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			}
 
 			try {
-				CharSequence text = node.getText();
-				if (text != null) {
-					text.toString();
+				if (CavanAccessibilityHelper.isTextView(node)) {
+					return CavanAccessibilityHelper.getNodeText(node);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
 				node.recycle();
 			}
+
+			return null;
+		}
+
+		public AccessibilityNodeInfo getChattingListView(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo[] nodes = CavanAccessibilityHelper.getChildsRecursive(root, 0, 0, 0);
+			if (nodes == null) {
+				return null;
+			}
+
+			if (isWxViewPager(nodes[1]) && CavanAccessibilityHelper.isListView(nodes[2])) {
+				CavanAccessibilityHelper.recycleNodes(nodes, 2);
+				return nodes[2];
+			}
+
+			CavanAccessibilityHelper.recycleNodes(nodes);
 
 			return null;
 		}
@@ -672,8 +670,21 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
+		protected boolean doActionBack(AccessibilityNodeInfo root) {
+			return doActionBackBase(root, 0, 0, 0, 0, 0);
+		}
+
+		@Override
 		protected boolean doActionHome(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo input = findInputNode(root);
+			if (input != null) {
+				input.recycle();
+			} else {
+				doActionBack(root);
+			}
+
 			mHomePending = false;
+
 			return true;
 		}
 
@@ -817,22 +828,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doActionBack(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo[] nodes = CavanAccessibilityHelper.getChildsRecursive(root, 0, 0, 0);
-			if (nodes == null) {
-				return false;
-			}
-
-			try {
-				if ("返回".equals(CavanAccessibilityHelper.getNodeDescription(nodes[2]))) {
-					return CavanAccessibilityHelper.performClick(nodes[1]);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				CavanAccessibilityHelper.recycleNodes(nodes);
-			}
-
-			return false;
+			return doActionBackBase(root, 0, 1, 0) || doActionBackBase(root, 0, 0, 0);
 		}
 
 		@Override
@@ -1044,6 +1040,16 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 			return true;
 		}
+
+		@Override
+		protected boolean doActionBack(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = findBackNode(root);
+			if (node == null) {
+				return false;
+			}
+
+			return CavanAccessibilityHelper.performClickAndRecycle(node);
+		}
 	}
 
 	public class WebViewWindow extends BaseWindow {
@@ -1190,6 +1196,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		protected void onEnter(AccessibilityNodeInfo root) {
 			if (mSigninPending) {
 				mService.postCommand(1500, 5, CMD_SIGNIN);
+			} else if (mHomePending) {
+				doActionHome(root);
 			}
 		}
 	}
@@ -2199,6 +2207,29 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 	};
 
+	public boolean doActionBackBase(AccessibilityNodeInfo root, int... indexs) {
+		AccessibilityNodeInfo[] nodes = CavanAccessibilityHelper.getChildsRecursive(root, indexs);
+		if (nodes == null) {
+			return false;
+		}
+
+		try {
+			if ("返回".equals(CavanAccessibilityHelper.getNodeDescription(nodes[nodes.length - 1]))) {
+				return CavanAccessibilityHelper.performClick(nodes[nodes.length - 2]);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			CavanAccessibilityHelper.recycleNodes(nodes);
+		}
+
+		return false;
+	}
+
+	public boolean isWxViewPager(AccessibilityNodeInfo node) {
+		return CavanAccessibilityHelper.isInstanceOf(node, "com.tencent.mm.ui.mogic.WxViewPager");
+	}
+
 	@Override
 	public void initWindows() {
 		mBrandServiceIndexWindow = new BrandServiceIndexWindow("com.tencent.mm.plugin.brandservice.ui.BrandServiceIndexUI");
@@ -2211,8 +2242,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(new ReceiveWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiReceiveUI"));
 		addWindow(new DetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI"));
 		addWindow(new DetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI"));
+
 		addWindow(new WebViewWindow("com.tencent.mm.plugin.webview.ui.tools.WebViewUI"));
 		addWindow(new WebViewWindow("com.tencent.mm.plugin.webview.ui.tools.WebviewMpUI"));
+		addWindow(new WebViewWindow("com.tencent.mm.plugin.webview.ui.tools.game.GameWebViewUI"));
+
 		addWindow(new WebViewMenu("android.support.design.widget.c"));
 		addWindow(new ChattingMenu("android.widget.FrameLayout"));
 		addWindow(new MobileInputWindow("com.tencent.mm.ui.account.MobileInputUI"));

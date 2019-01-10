@@ -12,10 +12,9 @@ import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction;
-import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
+import android.widget.ListView;
 import android.widget.TabHost;
 import android.widget.TextView;
 
@@ -89,14 +88,6 @@ public class CavanAccessibilityHelper {
 		}
 	}
 
-	public static final String CLASS_VIEW = View.class.getName();
-	public static final String CLASS_BUTTON = Button.class.getName();
-	public static final String CLASS_TAB_HOST = TabHost.class.getName();
-	public static final String CLASS_TEXT_VIEW = TextView.class.getName();
-	public static final String CLASS_EDIT_TEXT = EditText.class.getName();
-	public static final String CLASS_ABS_LIST_VIEW = AbsListView.class.getName();
-	public static final String CLASS_IMAGE_BUTTON = ImageButton.class.getName();
-
 	public static String getClassName(AccessibilityNodeInfo node) {
 		CharSequence sequence = node.getClassName();
 		if (sequence == null) {
@@ -115,24 +106,32 @@ public class CavanAccessibilityHelper {
 		return clsName.equals(sequence.toString());
 	}
 
+	public static boolean isInstanceOf(AccessibilityNodeInfo node, Class<?> cls) {
+		return isInstanceOf(node, cls.getName());
+	}
+
 	public static boolean isView(AccessibilityNodeInfo node) {
-		return isInstanceOf(node, CLASS_VIEW);
+		return isInstanceOf(node, View.class);
 	}
 
 	public static boolean isButton(AccessibilityNodeInfo node) {
-		return isInstanceOf(node, CLASS_BUTTON);
+		return isInstanceOf(node, Button.class);
 	}
 
 	public static boolean isTextView(AccessibilityNodeInfo node) {
-		return isInstanceOf(node, CLASS_TEXT_VIEW);
+		return isInstanceOf(node, TextView.class);
 	}
 
 	public static boolean isEditText(AccessibilityNodeInfo node) {
-		return isInstanceOf(node, CLASS_EDIT_TEXT);
+		return isInstanceOf(node, EditText.class);
 	}
 
 	public static boolean isTabHost(AccessibilityNodeInfo node) {
-		return isInstanceOf(node, CLASS_TAB_HOST);
+		return isInstanceOf(node, TabHost.class);
+	}
+
+	public static boolean isListView(AccessibilityNodeInfo node) {
+		return isInstanceOf(node, ListView.class);
 	}
 
 	public static void recycleNodes(List<AccessibilityNodeInfo> nodes, int start, int end) {

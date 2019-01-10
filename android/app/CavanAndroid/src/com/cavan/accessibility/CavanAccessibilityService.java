@@ -1091,4 +1091,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 		CavanAndroid.dLog("getPassword: " + username);
 		return null;
 	}
+
+	public AccessibilityNodeInfo findFocusInput() {
+		return findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
+	}
+
+	public AccessibilityNodeInfo findFocusAccessibility() {
+		return findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
+	}
 }

@@ -166,6 +166,7 @@ public class WifiDetectorActivity extends Activity {
 		}
 	};
 
+	private boolean mPaused;
 	private WifiManager mWifiManager;
 	private ListView mListViewAccessPoints;
 	private CavanAccessPointAdapter mAdapter = new CavanAccessPointAdapter();
@@ -175,6 +176,10 @@ public class WifiDetectorActivity extends Activity {
 		@Override
 		public void handleMessage(Message msg) {
 			removeMessages(msg.what);
+
+			if (mPaused) {
+				return;
+			}
 
 			switch (msg.what) {
 			case MSG_START_SCAN:
@@ -222,6 +227,7 @@ public class WifiDetectorActivity extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		mPaused = false;
 
 		IntentFilter filter = new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
 		registerReceiver(mReceiver, filter);
@@ -231,6 +237,7 @@ public class WifiDetectorActivity extends Activity {
 
 	@Override
 	protected void onPause() {
+		mPaused = true;
 		unregisterReceiver(mReceiver);
 		super.onPause();
 	}

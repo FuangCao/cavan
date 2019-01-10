@@ -489,7 +489,7 @@ public class CavanAccessibilityPackage {
 								return packet.getUnpackDelay(POLL_DELAY);
 							}
 
-							if (win.isHomePage()) {
+							if (win.isHomePage(root)) {
 								onHomePage(packet);
 								return -1;
 							}
@@ -503,7 +503,7 @@ public class CavanAccessibilityPackage {
 							setUnlockDelay(LOCK_DELAY);
 						}
 
-						if (win.isHomePage()) {
+						if (win.isHomePage(root)) {
 							onHomePage(packet);
 							return -1;
 						}

@@ -133,7 +133,7 @@ public class CavanAccessibilityWindow {
 	}
 
 	protected boolean doActionHome(AccessibilityNodeInfo root) {
-		return false;
+		return doActionBack(root);
 	}
 
 	protected void onPackageUpdated() {}
@@ -167,7 +167,7 @@ public class CavanAccessibilityWindow {
 		return (times < CavanAccessibilityPackage.FAIL_TIMES);
 	}
 
-	public boolean isHomePage() {
+	public boolean isHomePage(AccessibilityNodeInfo root) {
 		return false;
 	}
 
