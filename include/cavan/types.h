@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <sys/types.h>
 
+#define sp				std::shared_ptr
+#define make_sp			std::make_shared
+
 #ifndef null
 #define null			NULL
 #endif
