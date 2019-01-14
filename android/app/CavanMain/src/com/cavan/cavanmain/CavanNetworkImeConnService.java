@@ -302,6 +302,8 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			return false;
 		}
 
+		CavanAndroid.dLog("node = " + node);
+
 		return CavanAccessibilityHelper.performActionAndRecycle(node, action);
 	}
 

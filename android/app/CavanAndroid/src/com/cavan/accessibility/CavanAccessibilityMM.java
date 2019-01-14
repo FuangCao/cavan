@@ -135,7 +135,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			String action = CavanAccessibilityHelper.getChildText(node, 1);
 			CavanAndroid.dLog("action = " + action);
 
-			return "领取红包".equals(action);
+			return "领取红包".equals(action) || "微信红包".equals(action);
 		}
 
 		private boolean isRedPacketNode(AccessibilityNodeInfo node) {
@@ -2240,6 +2240,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(new ChattingWindow("com.tencent.mm.ui.conversation.BizConversationUI"));
 		addWindow(new ReceiveWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI"));
 		addWindow(new ReceiveWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiReceiveUI"));
+		addWindow(new ReceiveWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyNotHookReceiveUI"));
 		addWindow(new DetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI"));
 		addWindow(new DetailWindow("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyBusiDetailUI"));
 
