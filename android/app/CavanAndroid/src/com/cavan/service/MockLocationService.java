@@ -59,13 +59,15 @@ public class MockLocationService extends CavanService {
 			String text = new String(bytes, 0, length);
 			CavanAndroid.dLog("onPacketReceived: " + text);
 			String[] args = text.trim().split("\\s+");
-			return onCommandReceived(args);
+			return onCommandReceived(client, args);
 		}
 
-		private synchronized boolean onCommandReceived(String args[]) {
+		private synchronized boolean onCommandReceived(Client client, String args[]) {
 			String command = args[0];
 
-			if (command.equals("set_enable")) {
+			if (command.equals("ping")) {
+				client.send("pong");
+			} else if (command.equals("set_enable")) {
 				setEnable(args.length > 1 && Boolean.parseBoolean(args[1]));
 			} else if (command.equals("set_location")) {
 				if (args.length > 2) {

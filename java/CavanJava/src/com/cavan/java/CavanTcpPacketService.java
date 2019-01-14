@@ -95,7 +95,7 @@ public class CavanTcpPacketService extends CavanTcpService {
 
 		service.open();
 
-		CavanTcpPacketClient client = new CavanTcpPacketClient() {
+		CavanTcpPacketClient client = new CavanTcpPacketClient(5000) {
 
 			@Override
 			protected boolean onPacketReceived(byte[] bytes, int length) {

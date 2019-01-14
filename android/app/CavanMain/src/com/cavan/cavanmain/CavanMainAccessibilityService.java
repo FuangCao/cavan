@@ -42,7 +42,7 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 
 	private TelephonyManager mTelephonyManager;
 
-	private CavanTcpPacketClient mInputProxy = new CavanTcpPacketClient() {
+	private CavanTcpPacketClient mInputProxy = new CavanTcpPacketClient(0) {
 
 		@Override
 		protected boolean onPacketReceived(byte[] bytes, int length) {

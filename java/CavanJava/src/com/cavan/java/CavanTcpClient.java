@@ -20,7 +20,7 @@ public class CavanTcpClient {
 		void onTcpDisconnected();
 		long onTcpConnFailed(int times);
 		boolean onDataReceived(byte[] bytes, int length);
-		void onTcpRecvTimeout();
+		void onKeepAliveFailed();
 	}
 
 	public class ConnThread extends CavanThread {
@@ -132,8 +132,8 @@ public class CavanTcpClient {
 	private CavanTcpClientListener mTcpClientListener;
 	private List<InetSocketAddress> mAddresses = new ArrayList<InetSocketAddress>();
 
-	private long mRecvTime;
-	private int mRecvTimeout;
+	private int mKeepAliveTimes;
+	private long mKeepAliveDelay;
 
 	private boolean mConnEnabled;
 	private boolean mConnected;
@@ -142,23 +142,17 @@ public class CavanTcpClient {
 	private ConnThread mConnThread = new ConnThread();
 	private RecvThread mRecvThread = new RecvThread();
 
-	public synchronized void setRecvTimeout(int timeout) {
-		mRecvTimeout = timeout;
+	public synchronized void setKeepAliveDelay(long delay) {
+		mKeepAliveDelay = delay;
 		mConnThread.wakeup();
 	}
 
-	public synchronized int getRecvTimeout() {
-		return mRecvTimeout;
+	public synchronized long getKeepAliveDelay() {
+		return mKeepAliveDelay;
 	}
 
-	public synchronized void setRecvTime(long time) {
-		mRecvTime = time;
-	}
-
-	public synchronized void setRecvTime() {
-		if (mRecvTimeout > 0) {
-			setRecvTime(System.currentTimeMillis());
-		}
+	public synchronized void touchKeepAlive() {
+		mKeepAliveTimes = 0;
 	}
 
 	public synchronized Socket getSocket() {
@@ -495,25 +489,39 @@ public class CavanTcpClient {
 			if (success) {
 				mRecvThread.wakeup();
 
-				if (mRecvTimeout > 0) {
-					mRecvTime = System.currentTimeMillis();
+				long delay = mKeepAliveDelay;
+
+				if (delay > 0) {
+					long start = System.currentTimeMillis();
+
+					mKeepAliveTimes = 0;
 
 					while (isConnected() && isConnEnabled()) {
-						long overtime = System.currentTimeMillis() - mRecvTime;
+						long now = System.currentTimeMillis();
+						long overtime = now - start;
 
-						if (overtime < mRecvTimeout) {
-							long delay = mRecvTimeout - overtime;
-
+						if (overtime < delay) {
 							synchronized (mConnThread) {
 								try {
-									mConnThread.wait(delay);
+									mConnThread.wait(delay - overtime);
 								} catch (InterruptedException e) {
 									e.printStackTrace();
 								}
 							}
 						} else {
-							onTcpRecvTimeout();
-							break;
+							if (mKeepAliveTimes > 0) {
+								onKeepAliveFailed();
+								break;
+							}
+
+							int times = doTcpKeepAlive(1);
+							if (times < 0) {
+								onKeepAliveFailed();
+								break;
+							}
+
+							mKeepAliveTimes = times;
+							start = now;
 						}
 					}
 				} else {
@@ -565,6 +573,10 @@ public class CavanTcpClient {
 		onTcpClientStopped();
 	}
 
+	protected int doTcpKeepAlive(int times) {
+		return 0;
+	}
+
 	protected void runRecvThread(InputStream stream) {
 		byte[] bytes = new byte[4096];
 
@@ -572,7 +584,7 @@ public class CavanTcpClient {
 			try {
 				int length = stream.read(bytes);
 				if (length > 0) {
-					setRecvTime();
+					touchKeepAlive();
 					onDataReceived(bytes, length);
 				} else {
 					break;
@@ -671,12 +683,12 @@ public class CavanTcpClient {
 		return 0;
 	}
 
-	protected void onTcpRecvTimeout() {
+	protected void onKeepAliveFailed() {
 		CavanTcpClientListener listener = getTcpClientListener();
 		if (listener != null) {
-			listener.onTcpRecvTimeout();
+			listener.onKeepAliveFailed();
 		} else {
-			prDbgInfo("onTcpRecvTimeout");
+			prDbgInfo("onKeepAliveFailed");
 		}
 	}
 
@@ -696,7 +708,8 @@ public class CavanTcpClient {
 
 			@Override
 			protected boolean onTcpConnected(Socket socket) {
-				send("123456".getBytes());
+				super.onTcpConnected(socket);
+				send("123456");
 				return true;
 			}
 
@@ -705,9 +718,16 @@ public class CavanTcpClient {
 				prDbgInfo("onDataReceived: " + new String(bytes, 0, length));
 				return true;
 			}
+
+			@Override
+			protected int doTcpKeepAlive(int times) {
+				CavanJava.pLog();
+				send("KeepAlive");
+				return 0;
+			}
 		};
 
-		tcp.setRecvTimeout(10000);
+		tcp.setKeepAliveDelay(5000);
 		tcp.connect("127.0.0.1", 9901);
 	}
 }

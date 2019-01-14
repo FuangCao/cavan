@@ -16,6 +16,10 @@ public class CavanTcpPacketClient extends CavanTcpClient {
 	private byte[] mBytes = new byte[0];
 	private CavanTcpPacketClientListener mTcpPacketClientListener;
 
+	public CavanTcpPacketClient(long keepalive) {
+		setKeepAliveDelay(keepalive);
+	}
+
 	public synchronized CavanTcpPacketClientListener getTcpPacketClientListener() {
 		return mTcpPacketClientListener;
 	}
@@ -67,7 +71,7 @@ public class CavanTcpPacketClient extends CavanTcpClient {
 				}
 			}
 
-			setRecvTime();
+			touchKeepAlive();
 
 			if (!onPacketReceived(mBytes, length)) {
 				break;
@@ -85,7 +89,7 @@ public class CavanTcpPacketClient extends CavanTcpClient {
 	}
 
 	public static void main(String[] args) {
-		CavanTcpPacketClient client = new CavanTcpPacketClient() {
+		CavanTcpPacketClient client = new CavanTcpPacketClient(5000) {
 
 			@Override
 			protected boolean onPacketReceived(byte[] bytes, int length) {

@@ -406,6 +406,19 @@ public class MockLocationActivity extends Activity implements OnClickListener {
 			return mIsBusy;
 		}
 
+		public LocationClient() {
+			super(10000);
+		}
+
+		@Override
+		protected int doTcpKeepAlive(int times) {
+			if (send("ping")) {
+				return times;
+			}
+
+			return -1;
+		}
+
 		@Override
 		protected boolean onPacketReceived(byte[] bytes, int length) {
 			CavanAndroid.dLog("onPacketReceived: " + length);

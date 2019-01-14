@@ -65,39 +65,23 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 	private AudioManager mAudioManager;
 	private InputMethodManager mInputMethodManager;
 
-	private CavanTcpPacketClient mTcpPacketClient = new CavanTcpPacketClient() {
-
-		private int mKeepAlive;
-		private Runnable mRunnableKeepAlive = new Runnable() {
-
-			@Override
-			public void run() {
-				mHandler.removeCallbacks(this);
-
-				if (sendPing()) {
-					mHandler.postDelayed(this, 60000);
-				} else {
-					reconnect();
-				}
-			}
-		};
+	private CavanTcpPacketClient mTcpPacketClient = new CavanTcpPacketClient(10000) {
 
 		public boolean sendPing() {
-			if (mKeepAlive > 0) {
-				if (mKeepAlive < 3) {
-					mKeepAlive++;
-					return true;
-				}
-
-				return false;
-			} else {
-				mKeepAlive = 1;
-				return mSendThread.send("PING");
-			}
+			return mSendThread.send("PING");
 		}
 
 		public boolean sendPong() {
 			return mSendThread.send("PONG");
+		}
+
+		@Override
+		protected int doTcpKeepAlive(int times) {
+			if (sendPing()) {
+				return times;
+			}
+
+			return -1;
 		}
 
 		@Override
@@ -116,7 +100,6 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 				break;
 
 			case "PONG":
-				mKeepAlive = 0;
 				break;
 
 			default:
@@ -136,15 +119,11 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 				send("USER " + hostname);
 			}
 
-			mKeepAlive = 0;
-			mHandler.post(mRunnableKeepAlive);
-
 			return super.onTcpConnected(socket);
 		}
 
 		@Override
 		protected void onTcpDisconnected() {
-			mHandler.removeCallbacks(mRunnableKeepAlive);
 			super.onTcpDisconnected();
 		}
 	};
@@ -641,4 +620,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 
 	@Override
 	public void onCloseSystemDialogs(String reason) {}
+
+	@Override
+	public void onKeepAliveFailed() {}
 }
