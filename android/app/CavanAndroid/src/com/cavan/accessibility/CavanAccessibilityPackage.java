@@ -37,7 +37,9 @@ public class CavanAccessibilityPackage {
 	public static final int PENDING_HOME = 1 << 1;
 	public static final int PENDING_ALL = PENDING_PACKET | PENDING_HOME;
 
-	protected HashMap<String, CavanAccessibilityWindow> mWindows = new HashMap<String, CavanAccessibilityWindow>();
+	protected HashMap<Integer, CavanAccessibilityWindow> mActivitys = new HashMap<>();
+	protected HashMap<String, CavanAccessibilityWindow> mWindows = new HashMap<>();
+
 	protected CavanAccessibilityService mService;
 	protected CavanAccessibilityWindow mWindow;
 	protected CavanRedPacket mCurrentPacket;
@@ -105,6 +107,15 @@ public class CavanAccessibilityPackage {
 
 	public synchronized CavanAccessibilityWindow getWindow(String name) {
 		return mWindows.get(name);
+	}
+
+	public synchronized CavanAccessibilityWindow getWindow(int hashCode) {
+		CavanAccessibilityWindow win = mWindow;
+		if (win != null && win.getActivityHashCode() == hashCode) {
+			return win;
+		}
+
+		return mActivitys.get(hashCode);
 	}
 
 	public synchronized CavanAccessibilityService getService() {
@@ -353,30 +364,11 @@ public class CavanAccessibilityPackage {
 		onPackageUpdated();
 	}
 
-	protected synchronized CavanAccessibilityWindow onWindowStateChanged(AccessibilityNodeInfo root, AccessibilityEvent event) {
-		String name = CavanString.fromCharSequence(event.getClassName(), null);
-		if (name == null) {
-			return null;
-		}
-
-		CavanAndroid.dLog("onWindowStateChanged: " + mName + "/" + name);
-		touchUpdateTime();
-
-		CavanAccessibilityWindow win = getWindow(name);
-		if (win == null && name.startsWith("android.widget.")) {
-			win = mWindow;
-
-			if (win != null) {
-				win.onAndroidWidget(name);
-			}
-
-			return win;
-		}
-
+	protected synchronized CavanAccessibilityWindow onWindowStateChanged(AccessibilityNodeInfo root, CavanAccessibilityWindow win) {
 		if (win != mWindow) {
 			if (win != null && win.isProgressView()) {
 				if (mWindow != null) {
-					mWindow.onProgress(name);
+					mWindow.onProgress(win);
 				}
 
 				return mWindow;
@@ -389,6 +381,7 @@ public class CavanAccessibilityPackage {
 			mWindow = win;
 
 			if (win != null) {
+				setActivityHashCode(win, root.hashCode());
 				int types = win.getEventTypes(this);
 				mService.setEventTypes(types);
 				win.onEnter(root);
@@ -401,6 +394,39 @@ public class CavanAccessibilityPackage {
 		}
 
 		return win;
+	}
+
+	protected synchronized CavanAccessibilityWindow onWindowStateChanged(AccessibilityNodeInfo root, AccessibilityEvent event) {
+		String name = CavanString.fromCharSequence(event.getClassName(), null);
+		if (name == null) {
+			return null;
+		}
+
+		CavanAndroid.dLog("onWindowStateChanged: " + mName + "/" + name);
+		touchUpdateTime();
+
+		CavanAccessibilityWindow win = getWindow(name);
+
+		if (win != null) {
+			setActivityHashCode(win, root.hashCode());
+		}
+
+		if (win == null && name.startsWith("android.widget.")) {
+			win = mWindow;
+
+			if (win != null) {
+				win.onAndroidWidget(name);
+			}
+
+			return win;
+		}
+
+		return onWindowStateChanged(root, win);
+	}
+
+	private synchronized void setActivityHashCode(CavanAccessibilityWindow win, int hashCode) {
+		win.setActivityHashCode(hashCode);
+		mActivitys.put(hashCode, win);
 	}
 
 	public synchronized void onAccessibilityEvent(AccessibilityNodeInfo root, AccessibilityEvent event) {
@@ -539,7 +565,7 @@ public class CavanAccessibilityPackage {
 	}
 
 	public boolean doCommand(AccessibilityNodeInfo root, int command, Object[] args) {
-		CavanAccessibilityWindow win = getWindow();
+		CavanAccessibilityWindow win = getWindow(root.hashCode());
 		if (win == null) {
 			return false;
 		}

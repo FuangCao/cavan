@@ -6,6 +6,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import android.accessibilityservice.AccessibilityService;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
@@ -352,6 +353,11 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			break;
 
 		case "CLEAR":
+			NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+			if (manager != null) {
+				manager.cancelAll();
+			}
+
 			FloatMessageService fms = FloatMessageService.instance;
 			if (fms != null) {
 				fms.removeTextAll();

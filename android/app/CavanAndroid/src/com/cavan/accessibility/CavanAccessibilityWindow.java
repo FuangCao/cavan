@@ -10,6 +10,7 @@ public class CavanAccessibilityWindow {
 	public static final int WAIT_DELAY = 200;
 	public static final int WAIT_TIMES = 5;
 
+	protected int mActivityHashCode;
 	protected String mBackViewId;
 	protected String mName;
 
@@ -137,7 +138,7 @@ public class CavanAccessibilityWindow {
 	}
 
 	protected void onPackageUpdated() {}
-	protected void onProgress(String name) {}
+	protected void onProgress(CavanAccessibilityWindow win) {}
 	protected void onAndroidWidget(String name) {}
 	protected void onEnter(AccessibilityNodeInfo root) {}
 	protected void onLeave(AccessibilityNodeInfo root) {}
@@ -182,5 +183,13 @@ public class CavanAccessibilityWindow {
 
 	public int getEventTypes(CavanAccessibilityPackage pkg) {
 		return pkg.getEventTypes();
+	}
+
+	public void setActivityHashCode(int hashCode) {
+		mActivityHashCode = hashCode;
+	}
+
+	public int getActivityHashCode() {
+		return mActivityHashCode;
 	}
 }

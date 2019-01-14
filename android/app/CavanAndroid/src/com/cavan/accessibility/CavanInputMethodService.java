@@ -109,5 +109,4 @@ public class CavanInputMethodService extends InputMethodService {
 		instance = null;
 		super.onDestroy();
 	}
-
 }

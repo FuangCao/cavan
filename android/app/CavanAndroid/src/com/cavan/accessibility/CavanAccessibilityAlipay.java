@@ -184,7 +184,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public void onProgress(String name) {
+		public void onProgress(CavanAccessibilityWindow win) {
 			CavanRedPacketAlipay packet = getInputPacket(true);
 			if (packet != null) {
 				packet.addPostTimes();
