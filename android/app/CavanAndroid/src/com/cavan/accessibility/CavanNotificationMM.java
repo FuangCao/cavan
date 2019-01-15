@@ -3,8 +3,6 @@ package com.cavan.accessibility;
 import android.app.Notification;
 import android.service.notification.StatusBarNotification;
 
-import com.cavan.java.CavanString;
-
 public class CavanNotificationMM extends CavanNotification {
 
 	public CavanNotificationMM(Notification notification) {
@@ -32,14 +30,12 @@ public class CavanNotificationMM extends CavanNotification {
 
 	@Override
 	public void parse(String content) {
-		int endLine = CavanString.findLineEnd(content);
-
-		int index = CavanString.lastIndexOf(content, endLine, ':');
+		int index = content.indexOf(": ");
 		if (index < 0) {
 			mContent = content;
 		} else {
-			mUserName = content.substring(0, index).trim();
-			mContent = content.substring(index + 1).trim();
+			mUserName = content.substring(0, index);
+			mContent = content.substring(index + 2);
 		}
 
 		mGroupName = mTitle;
