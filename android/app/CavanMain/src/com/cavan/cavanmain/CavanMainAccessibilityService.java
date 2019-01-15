@@ -45,6 +45,11 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 	private CavanTcpPacketClient mInputProxy = new CavanTcpPacketClient(0) {
 
 		@Override
+		public int getConnOvertime() {
+			return 2000;
+		}
+
+		@Override
 		protected boolean onPacketReceived(byte[] bytes, int length) {
 			CavanAndroid.dLog("onPacketReceived: " + length);
 			return true;

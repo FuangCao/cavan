@@ -111,7 +111,6 @@ public class FloatMessageService extends FloatWindowService {
 	private boolean mNetworkConnected;
 	private NetworkSendHandler mNetworkSendHandler = new NetworkSendHandler();
 
-	private String mWanSummary;
 	private int mWanState = R.string.wan_disconnected;
 	private int mBridgeState = R.string.tcp_bridge_exit;
 
@@ -158,7 +157,7 @@ public class FloatMessageService extends FloatWindowService {
 			case MSG_TCP_SERVICE_STATE_CHANGED: {
 					CavanMessageActivity activity = CavanMessageActivity.instance;
 					if (activity != null) {
-						activity.updateWanState(mWanState, mWanSummary);
+						activity.updateWanState(mWanState, getWanSummary());
 					}
 
 					if (mWanState == R.string.wan_connected) {
@@ -1054,6 +1053,11 @@ public class FloatMessageService extends FloatWindowService {
 		}
 
 		@Override
+		public int getConnOvertime() {
+			return 5000;
+		}
+
+		@Override
 		public synchronized boolean send(byte[] bytes, int offset, int length) {
 			byte[] newLine = "\n".getBytes();
 			return super.send(bytes, offset, length) && super.send(newLine, 0, newLine.length);
@@ -1080,28 +1084,13 @@ public class FloatMessageService extends FloatWindowService {
 				return null;
 			}
 
-			ArrayList<InetSocketAddress> list = new ArrayList<>();
+			ArrayList<InetSocketAddress> addresses = new ArrayList<>();
 
 			for (String line : lines) {
-				int port;
-				String host;
-
-				String[] segs = line.split("\\s*:\\s*");
-				if (segs.length > 1) {
-					port = Integer.parseInt(segs[1].trim());
-				} else {
-					port = 8864;
-				}
-
-				host = segs[0].trim();
-				if (host.isEmpty()) {
-					continue;
-				}
-
-				list.add(new InetSocketAddress(host, port));
+				addresses.add(newSocketAddressByUrl(line, 8864));
 			}
 
-			return list;
+			return addresses;
 		}
 
 		@Override
@@ -1116,6 +1105,8 @@ public class FloatMessageService extends FloatWindowService {
 					if (line == null) {
 						break;
 					}
+
+					touchKeepAlive();
 
 					if (NET_CMD_KEEP_ALIVE.equals(line)) {
 						CavanAndroid.dLog("Received: " + line);
@@ -1152,6 +1143,11 @@ public class FloatMessageService extends FloatWindowService {
 		protected void onTcpDisconnected() {
 			mWanState = R.string.wan_disconnected;
 			mHandler.sendEmptyMessage(MSG_TCP_SERVICE_STATE_CHANGED);
+		}
+
+		@Override
+		protected long onTcpConnFailed(int times) {
+			return 0;
 		}
 	}
 
@@ -1227,7 +1223,7 @@ public class FloatMessageService extends FloatWindowService {
 	}
 
 	public CharSequence getWanSummary() {
-		return mWanSummary;
+		return mTcpClient.getCurrentAddressString();
 	}
 
 	public int getBridgeState() {

@@ -77,6 +77,11 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 		}
 
 		@Override
+		public int getConnOvertime() {
+			return 3000;
+		}
+
+		@Override
 		protected int doTcpKeepAlive(int times) {
 			if (sendPing()) {
 				return times;

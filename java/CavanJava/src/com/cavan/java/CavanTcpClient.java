@@ -7,6 +7,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -115,6 +116,45 @@ public class CavanTcpClient {
 		return InetSocketAddress.createUnresolved(host, port);
 	}
 
+	public static InetSocketAddress newSocketAddressByUrl(String url, int port) {
+		int index = url.indexOf(':');
+		String host;
+
+		if (index < 0) {
+			host = url.trim();
+		} else if (index > 0) {
+			host = url.substring(0, index).trim();
+			port = CavanJava.parseInt(url.substring(index + 1).trim());
+		} else {
+			host = "127.0.0.1";
+			port = CavanJava.parseInt(url.trim());
+		}
+
+		return newSocketAddress(host, port);
+	}
+
+	public static InetSocketAddress[] newSocketAddresses(int port, Collection<String> urls) {
+		InetSocketAddress[] addresses = new InetSocketAddress[urls.size()];
+		int i = 0;
+
+		for (String url : urls) {
+			addresses[i++] = newSocketAddressByUrl(url, port);
+		}
+
+		return addresses;
+	}
+
+	public static InetSocketAddress[] newSocketAddresses(int port, String... urls) {
+		InetSocketAddress[] addresses = new InetSocketAddress[urls.length];
+		int i = 0;
+
+		for (String url : urls) {
+			addresses[i++] = newSocketAddressByUrl(url, port);
+		}
+
+		return addresses;
+	}
+
 	public static InetSocketAddress resolveSocketAddress(InetSocketAddress address) throws UnknownHostException {
 		String host = address.getHostName();
 		if (host == null) {
@@ -153,6 +193,10 @@ public class CavanTcpClient {
 
 	public synchronized void touchKeepAlive() {
 		mKeepAliveTimes = 0;
+	}
+
+	public int getConnOvertime() {
+		return 10000;
 	}
 
 	public synchronized Socket getSocket() {
@@ -255,7 +299,7 @@ public class CavanTcpClient {
 		return true;
 	}
 
-	public synchronized void setAddresses(InetSocketAddress... addresses) {
+	public synchronized int setAddresses(InetSocketAddress... addresses) {
 		mAddresses.clear();
 
 		boolean reconn = true;
@@ -275,12 +319,24 @@ public class CavanTcpClient {
 		if (reconn) {
 			reconnect();
 		}
+
+		return addresses.length;
 	}
 
 	public void setAddresses(List<InetSocketAddress> addresses) {
 		InetSocketAddress[] array = new InetSocketAddress[addresses.size()];
 		addresses.toArray(array);
 		setAddresses(array);
+	}
+
+	public int setAddressesByUrl(int port, Collection<String> urls) {
+		InetSocketAddress[] addresses = newSocketAddresses(port, urls);
+		return setAddresses(addresses);
+	}
+
+	public int setAddressesByUrl(int port, String... urls) {
+		InetSocketAddress[] addresses = newSocketAddresses(port, urls);
+		return setAddresses(addresses);
 	}
 
 	public void setAddress(InetSocketAddress address) {
@@ -376,7 +432,7 @@ public class CavanTcpClient {
 		onTcpConnecting(address);
 
 		try {
-			socket.connect(resolveSocketAddress(address), 10000);
+			socket.connect(resolveSocketAddress(address), getConnOvertime());
 
 			synchronized (this) {
 				mOutputStream = socket.getOutputStream();

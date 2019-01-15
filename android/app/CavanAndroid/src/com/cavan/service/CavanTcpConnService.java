@@ -11,7 +11,6 @@ import android.os.IBinder;
 import android.os.RemoteException;
 
 import com.cavan.android.CavanAndroid;
-import com.cavan.java.CavanJava;
 import com.cavan.java.CavanTcpClient;
 import com.cavan.java.CavanTcpClient.CavanTcpClientListener;
 
@@ -66,24 +65,8 @@ public abstract class CavanTcpConnService extends Service implements CavanTcpCli
 
 		@Override
 		public void setAddresses(List<String> lines) throws RemoteException {
-			InetSocketAddress[] addresses = new InetSocketAddress[lines.size()];
-			int i = 0;
-
-			for (String line : lines) {
-				String[] args = line.split("\\s*:\\s*", 2);
-				int port;
-
-				if (args.length < 2) {
-					port = getDefaultPort();
-				} else {
-					port = CavanJava.parseInt(args[1]);
-				}
-
-				addresses[i++] = new InetSocketAddress(args[0], port);
-			}
-
-			mTcpClient.setAddresses(addresses);
-			if (addresses.length > 0) {
+			int count = mTcpClient.setAddressesByUrl(getDefaultPort(), lines);
+			if (count > 0) {
 				mTcpClient.connect();
 			}
 		}
@@ -95,12 +78,7 @@ public abstract class CavanTcpConnService extends Service implements CavanTcpCli
 
 		@Override
 		public String getCurrentAddress() throws RemoteException {
-			InetSocketAddress address = mTcpClient.getCurrentAddress();
-			if (address == null) {
-				return null;
-			}
-
-			return address.getHostString() + ":" + address.getPort();
+			return mTcpClient.getCurrentAddressString();
 		}
 
 		@Override
