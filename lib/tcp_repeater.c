@@ -131,13 +131,16 @@ static int tcp_repeater_run_handler(struct cavan_dynamic_service *service, void 
 		pd_info("tcp_repeater[%d] = %s", rdlen, buff);
 
 		if (text_lhcmp(TCP_REPEATER_KEEP_ALIVE_COMMAND, buff) == 0) {
-			continue;
-		}
-
-		for (head = conn->next; head != conn; head = head->next) {
 			wrlen = network_client_send(&head->client, buff, rdlen);
 			if (wrlen < rdlen) {
-				network_client_close(&head->client);
+				break;
+			}
+		} else {
+			for (head = conn->next; head != conn; head = head->next) {
+				wrlen = network_client_send(&head->client, buff, rdlen);
+				if (wrlen < rdlen) {
+					network_client_close(&head->client);
+				}
 			}
 		}
 	}

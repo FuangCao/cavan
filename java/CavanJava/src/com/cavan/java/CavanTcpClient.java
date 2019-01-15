@@ -248,7 +248,7 @@ public class CavanTcpClient {
 
 		mAddresses.add(address);
 
-		if (mConnEnabled) {
+		if (isConnEnabled()) {
 			mConnThread.wakeup();
 		}
 
@@ -311,7 +311,7 @@ public class CavanTcpClient {
 
 	public synchronized void reconnect() {
 		mConnected = false;
-		mConnThread.wakeup();
+		connect();
 	}
 
 	public synchronized void connect(InetSocketAddress address) {
@@ -450,17 +450,22 @@ public class CavanTcpClient {
 			InetSocketAddress[] addresses;
 
 			synchronized (this) {
-				if (!mConnEnabled) {
+				if (!isConnEnabled()) {
 					break;
 				}
 
-				int count = mAddresses.size();
+				List<InetSocketAddress> list = getAddresses();
+				if (list == null) {
+					break;
+				}
+
+				int count = list.size();
 				if (count <= 0) {
 					break;
 				}
 
 				addresses = new InetSocketAddress[count];
-				mAddresses.toArray(addresses);
+				list.toArray(addresses);
 
 				if (mConnAddress != null && count > 1) {
 					for (int i = 0; i < count; i++) {
@@ -487,9 +492,9 @@ public class CavanTcpClient {
 			}
 
 			if (success) {
-				mRecvThread.wakeup();
+				long delay = getKeepAliveDelay();
 
-				long delay = mKeepAliveDelay;
+				mRecvThread.wakeup();
 
 				if (delay > 0) {
 					long start = System.currentTimeMillis();

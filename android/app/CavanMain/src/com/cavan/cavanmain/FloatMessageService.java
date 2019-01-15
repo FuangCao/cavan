@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -43,6 +42,7 @@ import com.cavan.android.CavanThreadedHandler;
 import com.cavan.android.CavanWakeLock;
 import com.cavan.cavanjni.CavanJni;
 import com.cavan.java.CavanString;
+import com.cavan.java.CavanTcpClient;
 import com.cavan.service.FloatWindowService;
 
 public class FloatMessageService extends FloatWindowService {
@@ -91,7 +91,6 @@ public class FloatMessageService extends FloatWindowService {
 
 	public static final int MSG_SEND_UDP_COMMAND = 1;
 	public static final int MSG_SEND_TCP_COMMAND = 2;
-	private static final int MSG_KEEP_ALIVE = 3;
 
 	public static FloatMessageService instance;
 
@@ -105,8 +104,9 @@ public class FloatMessageService extends FloatWindowService {
 	private HashMap<CharSequence, CavanRedPacketAlipay> mMessageCodeMap = new HashMap<CharSequence, CavanRedPacketAlipay>();
 
 	private UdpDaemonThread mUdpDaemon;
-	private TcpDaemonThread mTcpDaemon;
 	private TcpBridgeThread mTcpBridge;
+
+	private TcpSharedClient mTcpClient = new TcpSharedClient();
 
 	private boolean mNetworkConnected;
 	private NetworkSendHandler mNetworkSendHandler = new NetworkSendHandler();
@@ -162,10 +162,6 @@ public class FloatMessageService extends FloatWindowService {
 					}
 
 					if (mWanState == R.string.wan_connected) {
-						if (mTcpDaemon != null) {
-							mTcpDaemon.setConnDelay(0);
-						}
-
 						postShowToast(mWanState);
 					}
 				}
@@ -173,14 +169,9 @@ public class FloatMessageService extends FloatWindowService {
 
 			case MSG_TCP_SERVICE_UPDATED:
 				if (mNetworkConnected && CavanMessageActivity.isWanShareEnabled(FloatMessageService.this)) {
-					if (mTcpDaemon == null) {
-						mTcpDaemon = new TcpDaemonThread();
-						mTcpDaemon.start();
-					} else {
-						mTcpDaemon.reload();
-					}
-				} else if (mTcpDaemon != null) {
-					mTcpDaemon.setActive(false);
+					mTcpClient.reconnect();
+				} else {
+					mTcpClient.disconnect();
 				}
 				break;
 
@@ -811,9 +802,7 @@ public class FloatMessageService extends FloatWindowService {
 	public void onDestroy() {
 		instance = null;
 
-		if (mTcpDaemon != null) {
-			mTcpDaemon.setActive(false);
-		}
+		mTcpClient.disconnect();
 
 		if (mUdpDaemon != null) {
 			mUdpDaemon.setActive(false);
@@ -939,13 +928,7 @@ public class FloatMessageService extends FloatWindowService {
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case MSG_SEND_TCP_COMMAND:
-				if (mTcpDaemon != null) {
-					String command = (String) msg.obj;
-
-					if (mTcpDaemon.sendCommand(command)) {
-						CavanAndroid.dLog("tcp success send: " + command);
-					}
-				}
+				mTcpClient.send((String) msg.obj);
 				break;
 
 			case MSG_SEND_UDP_COMMAND:
@@ -972,17 +955,6 @@ public class FloatMessageService extends FloatWindowService {
 				if (msg.arg1 > 0) {
 					Message message = obtainMessage(msg.what, msg.arg1 - 1, 0, msg.obj);
 					sendMessageDelayed(message, 1000);
-				}
-				break;
-
-			case MSG_KEEP_ALIVE:
-				removeMessages(MSG_KEEP_ALIVE);
-
-				if (mTcpDaemon != null && mTcpDaemon.isRunning()) {
-					CavanAndroid.dLog("Send: " + NET_CMD_KEEP_ALIVE);
-
-					mTcpDaemon.sendCommand(NET_CMD_KEEP_ALIVE);
-					sendEmptyMessageDelayed(MSG_KEEP_ALIVE, KEEP_ALIVE_DELAY);
 				}
 				break;
 			}
@@ -1075,210 +1047,111 @@ public class FloatMessageService extends FloatWindowService {
 		}
 	}
 
-	public class TcpDaemonThread extends Thread {
+	public class TcpSharedClient extends CavanTcpClient {
 
-		private boolean mActive;
-		private long mConnDelay;
-		private boolean mReload;
-		private boolean mRunning;
+		public TcpSharedClient() {
+			setKeepAliveDelay(20000);
+		}
 
-		private Socket mSocket;
-		private InputStream mInputStream;
-		private OutputStream mOutputStream;
+		@Override
+		public synchronized boolean send(byte[] bytes, int offset, int length) {
+			byte[] newLine = "\n".getBytes();
+			return super.send(bytes, offset, length) && super.send(newLine, 0, newLine.length);
+		}
 
-		synchronized public boolean sendCommand(String command) {
-			if (mOutputStream == null) {
-				return false;
+		@Override
+		protected int doTcpKeepAlive(int times) {
+			if (send(NET_CMD_KEEP_ALIVE)) {
+				return times;
+			}
+
+			return -1;
+		}
+
+		@Override
+		public synchronized boolean isConnEnabled() {
+			return super.isConnEnabled() && CavanMessageActivity.isWanShareEnabled(getApplicationContext());
+		}
+
+		@Override
+		public synchronized List<InetSocketAddress> getAddresses() {
+			ArrayList<String> lines = CavanMessageActivity.getWanShareServer(getApplicationContext());
+			if (lines == null || lines.isEmpty()) {
+				return null;
+			}
+
+			ArrayList<InetSocketAddress> list = new ArrayList<>();
+
+			for (String line : lines) {
+				int port;
+				String host;
+
+				String[] segs = line.split("\\s*:\\s*");
+				if (segs.length > 1) {
+					port = Integer.parseInt(segs[1].trim());
+				} else {
+					port = 8864;
+				}
+
+				host = segs[0].trim();
+				if (host.isEmpty()) {
+					continue;
+				}
+
+				list.add(new InetSocketAddress(host, port));
+			}
+
+			return list;
+		}
+
+		@Override
+		protected void runRecvThread(InputStream stream) {
+			BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+
+			while (true) {
+				String line;
+
+				try {
+					line = reader.readLine();
+					if (line == null) {
+						break;
+					}
+
+					if (NET_CMD_KEEP_ALIVE.equals(line)) {
+						CavanAndroid.dLog("Received: " + line);
+					} else if (CavanMessageActivity.isWanReceiveEnabled(getApplicationContext())) {
+						onNetworkCommandReceived("外网分享", line);
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+					break;
+				}
 			}
 
 			try {
-				command += "\n";
-				mOutputStream.write(command.getBytes());
-				mOutputStream.flush();
-				return true;
+				reader.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-
-			return false;
-		}
-
-		synchronized public void closeSocket() {
-			if (mOutputStream != null) {
-				try {
-					mOutputStream.close();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
-
-				mOutputStream = null;
-			}
-
-			if (mInputStream != null) {
-				try {
-					mInputStream.close();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
-
-				mInputStream = null;
-			}
-
-			if (mSocket != null) {
-				try {
-					mSocket.close();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
-
-				mSocket = null;
-			}
-		}
-
-		synchronized public void setActive(boolean active) {
-			if (active) {
-				mActive = true;
-				mConnDelay = 0;
-			} else {
-				mActive = false;
-				closeSocket();
-			}
-		}
-
-		synchronized private boolean isRunEnabled() {
-			return mActive && CavanMessageActivity.isWanShareEnabled(getApplicationContext());
-		}
-
-		synchronized public void setConnDelay(long delay) {
-			mConnDelay = delay;
-		}
-
-		synchronized public void reload() {
-			mReload = true;
-			setActive(true);
-			closeSocket();
-			notify();
-		}
-
-		synchronized boolean isRunning() {
-			return mRunning;
 		}
 
 		@Override
-		synchronized public void start() {
-			setActive(true);
-			super.start();
+		protected void onTcpConnecting(InetSocketAddress address) {
+			mWanState = R.string.wan_connecting;
+			mHandler.sendEmptyMessage(MSG_TCP_SERVICE_STATE_CHANGED);
 		}
 
 		@Override
-		public void run() {
-			while (isRunEnabled()) {
-				mReload = false;
+		protected boolean onTcpConnected(Socket socket) {
+			mWanState = R.string.wan_connected;
+			mHandler.sendEmptyMessage(MSG_TCP_SERVICE_STATE_CHANGED);
+			return true;
+		}
 
-				ArrayList<String> lines = CavanMessageActivity.getWanShareServer(getApplicationContext());
-				if (lines == null || lines.isEmpty()) {
-					break;
-				}
-
-				for (String line : lines) {
-					if (!isRunEnabled()) {
-						break;
-					}
-
-					try {
-						int port;
-						String host;
-
-						String[] segs = line.split("\\s*:\\s*");
-						if (segs.length > 1) {
-							port = Integer.parseInt(segs[1].trim());
-						} else {
-							port = 8864;
-						}
-
-						host = segs[0].trim();
-						if (host.isEmpty()) {
-							continue;
-						}
-
-						CavanAndroid.dLog("host = " + host + ", port = " + port);
-
-						mWanState = R.string.wan_connecting;
-						mWanSummary = host + ':' + port;
-
-						mHandler.sendEmptyMessage(MSG_TCP_SERVICE_STATE_CHANGED);
-
-						mSocket = new Socket();
-						mSocket.connect(new InetSocketAddress(host, port), 6000);
-
-						mInputStream = mSocket.getInputStream();
-						mOutputStream = mSocket.getOutputStream();
-
-						mWanState = R.string.wan_connected;
-						mHandler.sendEmptyMessageDelayed(MSG_TCP_SERVICE_STATE_CHANGED, 1000);
-
-						BufferedReader reader = new BufferedReader(new InputStreamReader(mInputStream));
-
-						mRunning = true;
-						mNetworkSendHandler.sendEmptyMessage(MSG_KEEP_ALIVE);
-
-						while (true) {
-							try {
-								line = reader.readLine();
-							} catch (IOException e) {
-								e.printStackTrace();
-								line = null;
-							}
-
-							if (line == null) {
-								break;
-							}
-
-							try {
-								if (NET_CMD_KEEP_ALIVE.equals(line)) {
-									CavanAndroid.dLog("Received: " + line);
-								} else if (CavanMessageActivity.isWanReceiveEnabled(getApplicationContext())) {
-									onNetworkCommandReceived("外网分享", line);
-								}
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
-						}
-
-						mRunning = false;
-					} catch (Exception e) {
-						e.printStackTrace();
-					} finally {
-						closeSocket();
-					}
-
-					CavanAndroid.dLog("mReload = " + mReload);
-
-					if (mReload) {
-						break;
-					}
-				}
-
-				mWanState = R.string.wan_disconnected;
-				mHandler.sendEmptyMessage(MSG_TCP_SERVICE_STATE_CHANGED);
-
-				if (mActive) {
-					synchronized (this) {
-						try {
-							if (mConnDelay < 30000) {
-								mConnDelay = mConnDelay * 2 + 500;
-							}
-
-							CavanAndroid.dLog("mConnDelay = " + mConnDelay);
-							wait(mConnDelay);
-						} catch (InterruptedException e1) {
-							e1.printStackTrace();
-						}
-					}
-				}
-			}
-
-			mTcpDaemon = null;
+		@Override
+		protected void onTcpDisconnected() {
+			mWanState = R.string.wan_disconnected;
+			mHandler.sendEmptyMessage(MSG_TCP_SERVICE_STATE_CHANGED);
 		}
 	}
 
