@@ -42,10 +42,10 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 
 	private TelephonyManager mTelephonyManager;
 
-	private CavanTcpPacketClient mInputProxy = new CavanTcpPacketClient(0) {
+	private CavanTcpPacketClient mInputProxy = new CavanTcpPacketClient() {
 
 		@Override
-		public int getConnOvertime() {
+		protected int onGetConnOvertime() {
 			return 2000;
 		}
 

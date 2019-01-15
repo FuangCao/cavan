@@ -406,8 +406,14 @@ public class MockLocationActivity extends Activity implements OnClickListener {
 			return mIsBusy;
 		}
 
-		public LocationClient() {
-			super(10000);
+		@Override
+		protected int onGetKeepAliveDelay() {
+			return 10000;
+		}
+
+		@Override
+		protected int onGetConnOvertime() {
+			return 3000;
 		}
 
 		@Override

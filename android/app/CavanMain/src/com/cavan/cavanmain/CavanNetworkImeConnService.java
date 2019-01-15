@@ -66,7 +66,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 	private AudioManager mAudioManager;
 	private InputMethodManager mInputMethodManager;
 
-	private CavanTcpPacketClient mTcpPacketClient = new CavanTcpPacketClient(10000) {
+	private CavanTcpPacketClient mTcpPacketClient = new CavanTcpPacketClient() {
 
 		public boolean sendPing() {
 			return mSendThread.send("PING");
@@ -77,8 +77,13 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 		}
 
 		@Override
-		public int getConnOvertime() {
+		public int onGetConnOvertime() {
 			return 3000;
+		}
+
+		@Override
+		protected int onGetKeepAliveDelay() {
+			return 10000;
 		}
 
 		@Override

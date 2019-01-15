@@ -1048,13 +1048,14 @@ public class FloatMessageService extends FloatWindowService {
 
 	public class TcpSharedClient extends CavanTcpClient {
 
-		public TcpSharedClient() {
-			setKeepAliveDelay(20000);
+		@Override
+		protected int onGetConnOvertime() {
+			return 5000;
 		}
 
 		@Override
-		public int getConnOvertime() {
-			return 5000;
+		protected int onGetKeepAliveDelay() {
+			return 20000;
 		}
 
 		@Override

@@ -173,7 +173,6 @@ public class CavanTcpClient {
 	private List<InetSocketAddress> mAddresses = new ArrayList<InetSocketAddress>();
 
 	private int mKeepAliveTimes;
-	private long mKeepAliveDelay;
 
 	private boolean mConnEnabled;
 	private boolean mConnected;
@@ -182,21 +181,8 @@ public class CavanTcpClient {
 	private ConnThread mConnThread = new ConnThread();
 	private RecvThread mRecvThread = new RecvThread();
 
-	public synchronized void setKeepAliveDelay(long delay) {
-		mKeepAliveDelay = delay;
-		mConnThread.wakeup();
-	}
-
-	public synchronized long getKeepAliveDelay() {
-		return mKeepAliveDelay;
-	}
-
 	public synchronized void touchKeepAlive() {
 		mKeepAliveTimes = 0;
-	}
-
-	public int getConnOvertime() {
-		return 10000;
 	}
 
 	public synchronized Socket getSocket() {
@@ -432,7 +418,7 @@ public class CavanTcpClient {
 		onTcpConnecting(address);
 
 		try {
-			socket.connect(resolveSocketAddress(address), getConnOvertime());
+			socket.connect(resolveSocketAddress(address), onGetConnOvertime());
 
 			synchronized (this) {
 				mOutputStream = socket.getOutputStream();
@@ -548,10 +534,9 @@ public class CavanTcpClient {
 			}
 
 			if (success) {
-				long delay = getKeepAliveDelay();
-
 				mRecvThread.wakeup();
 
+				int delay = onGetKeepAliveDelay();
 				if (delay > 0) {
 					long start = System.currentTimeMillis();
 
@@ -635,6 +620,14 @@ public class CavanTcpClient {
 	}
 
 	protected int doTcpKeepAlive(int times) {
+		return 0;
+	}
+
+	protected int onGetConnOvertime() {
+		return 10000;
+	}
+
+	protected int onGetKeepAliveDelay() {
 		return 0;
 	}
 
@@ -786,9 +779,13 @@ public class CavanTcpClient {
 				send("KeepAlive");
 				return 0;
 			}
+
+			@Override
+			protected int onGetKeepAliveDelay() {
+				return 5000;
+			}
 		};
 
-		tcp.setKeepAliveDelay(5000);
 		tcp.connect("127.0.0.1", 9901);
 	}
 }

@@ -8,7 +8,7 @@ public abstract class CavanTcpPacketConnService extends CavanTcpConnService impl
 
 	@Override
 	protected CavanTcpClient doCreateTcpClient() {
-		CavanTcpPacketClient client = new CavanTcpPacketClient(20000);
+		CavanTcpPacketClient client = new CavanTcpPacketClient();
 		client.setTcpPacketClientListener(this);
 		return client;
 	}
