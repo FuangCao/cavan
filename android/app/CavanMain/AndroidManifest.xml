@@ -198,7 +198,7 @@
         <activity
             android:name="com.cavan.accessibility.CavanUnlockActivity"
             android:excludeFromRecents="true"
-            android:showOnLockScreen="true" >
+            android:showOnLockScreen="true" android:launchMode="singleTask">
         </activity>
         <activity
             android:name="RedPacketEditActivity"
