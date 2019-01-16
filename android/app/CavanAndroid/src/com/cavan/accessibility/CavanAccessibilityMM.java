@@ -85,6 +85,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
+		public boolean isPopWindow() {
+			return true;
+		}
+
+		@Override
 		protected void onEnter(AccessibilityNodeInfo root) {
 			if (mMenuItem != null) {
 				CavanAndroid.dLog("mMenuItem = " + mMenuItem);
@@ -2102,6 +2107,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		public DialogWindow(String name) {
 			super(name);
+		}
+
+		@Override
+		public boolean isPopWindow() {
+			return true;
 		}
 
 		@Override

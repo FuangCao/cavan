@@ -62,6 +62,11 @@ public class CavanAccessibilityPackage {
 		public boolean isProgressView() {
 			return true;
 		}
+
+		@Override
+		public boolean isPopWindow() {
+			return true;
+		}
 	};
 
 	public CavanAccessibilityPackage(CavanAccessibilityService service, String[] names) {
@@ -111,11 +116,41 @@ public class CavanAccessibilityPackage {
 
 	public synchronized CavanAccessibilityWindow getWindow(int hashCode) {
 		CavanAccessibilityWindow win = mWindow;
+
 		if (win != null && win.getActivityHashCode() == hashCode) {
 			return win;
 		}
 
-		return mActivitys.get(hashCode);
+		win = mActivitys.get(hashCode);
+		if (win == null) {
+			return null;
+		}
+
+		CavanAndroid.dLog("getWindow: " + win);
+
+		mWindow = win;
+
+		return win;
+	}
+
+	public synchronized CavanAccessibilityWindow waitPopWindow(int hashCode) throws Exception {
+		CavanAccessibilityWindow win = mWindow;
+		if (win == null) {
+			throw new Exception("window is null");
+		}
+
+		if (win.isPopWindow()) {
+			win = mActivitys.get(hashCode);
+			if (win == null) {
+				return mWindow;
+			}
+
+			if (win.isPopWindow()) {
+				return null;
+			}
+		}
+
+		return win;
 	}
 
 	public synchronized CavanAccessibilityService getService() {
@@ -381,7 +416,6 @@ public class CavanAccessibilityPackage {
 			mWindow = win;
 
 			if (win != null) {
-				setActivityHashCode(win, root.hashCode());
 				int types = win.getEventTypes(this);
 				mService.setEventTypes(types);
 				win.onEnter(root);
@@ -409,6 +443,10 @@ public class CavanAccessibilityPackage {
 
 		if (win != null) {
 			setActivityHashCode(win, root.hashCode());
+
+			if (win.isPopWindow()) {
+				mService.postWaitPopWindow(this, 100);
+			}
 		}
 
 		if (win == null && name.startsWith("android.widget.")) {

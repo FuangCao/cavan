@@ -176,6 +176,10 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
+	public boolean isPopWindow() {
+		return false;
+	}
+
 	@Override
 	public String toString() {
 		return mName;

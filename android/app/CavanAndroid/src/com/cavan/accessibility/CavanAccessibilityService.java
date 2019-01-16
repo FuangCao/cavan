@@ -44,6 +44,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private static final int MSG_UPDATE_COUNT_DOWN = 3;
 	private static final int MSG_SHOW_LOGIN_DIALOG = 4;
 	private static final int MSG_SEND_COMMAND = 5;
+	private static final int MSG_WAIT_POP_WINDOW = 6;
 
 	public static CavanAccessibilityService instance;
 
@@ -273,6 +274,27 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 				if (msg.arg2 > 0) {
 					postCommand(500, msg.arg2 - 1, msg.arg1, (Object[]) msg.obj);
+				}
+				break;
+
+			case MSG_WAIT_POP_WINDOW:
+				CavanAccessibilityPackage pkg = (CavanAccessibilityPackage) msg.obj;
+				AccessibilityNodeInfo root = getRootInActiveWindow();
+
+				if (root == null) {
+					postWaitPopWindow(pkg, 50);
+				} else if (pkg.isCurrentPackage(root)) {
+					try {
+						CavanAccessibilityWindow win = pkg.waitPopWindow(root.hashCode());
+						if (win != null) {
+							CavanAndroid.dLog("win = " + win);
+							pkg.onWindowStateChanged(root, win);
+						} else {
+							postWaitPopWindow(pkg, 200);
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 				}
 				break;
 			}
@@ -1098,5 +1120,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	public AccessibilityNodeInfo findFocusAccessibility() {
 		return findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
+	}
+
+	public void postWaitPopWindow(CavanAccessibilityPackage pkg, int delay) {
+		Message msg = mThreadedHandler.obtainMessage(MSG_WAIT_POP_WINDOW, pkg);
+		mThreadedHandler.sendMessageDelayed(msg, delay);
 	}
 }
