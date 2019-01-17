@@ -6,6 +6,7 @@ import android.content.Context;
 import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.Handler;
+import android.text.Editable;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -35,6 +36,9 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 	private Button mButtonCopy;
 	private Button mButtonSend;
 	private Button mButtonExtract;
+	private Button mButtonReserve;
+	private Button mButtonDeleteHead;
+	private Button mButtonDeleteTail;
 
 	private CheckBox mCheckBox;
 	private EditText mEditText;
@@ -67,6 +71,15 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 
 		mButtonExtract = (Button) findViewById(R.id.buttonExtract);
 		mButtonExtract.setOnClickListener(this);
+
+		mButtonReserve = (Button) findViewById(R.id.buttonReserve);
+		mButtonReserve.setOnClickListener(this);
+
+		mButtonDeleteHead = (Button) findViewById(R.id.buttonDeleteHead);
+		mButtonDeleteHead.setOnClickListener(this);
+
+		mButtonDeleteTail = (Button) findViewById(R.id.buttonDeleteTail);
+		mButtonDeleteTail.setOnClickListener(this);
 
 		mCheckBox = (CheckBox) findViewById(R.id.checkBoxAsCode);
 
@@ -227,6 +240,30 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 			}
 
 			dismiss();
+		} else {
+			Editable editable = mEditText.getEditableText();
+			int start = mEditText.getSelectionStart();
+			int end = mEditText.getSelectionEnd();
+
+			if (start > end) {
+				int bak = end;
+				end = start;
+				start = bak;
+			}
+
+			try {
+				if (v == mButtonReserve) {
+					if (start != end) {
+						editable.replace(0, editable.length(), editable.subSequence(start, end));
+					}
+				} else if (v == mButtonDeleteHead) {
+					editable.delete(0, start);
+				} else if (v == mButtonDeleteTail) {
+					editable.delete(end, editable.length());
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 

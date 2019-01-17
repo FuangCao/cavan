@@ -843,5 +843,8 @@
 	<string name="connect_success">连接成功</string>
 	<string name="connect_failed">连接失败</string>
 	<string name="add_ssid_failed">添加热点失败</string>
+	<string name="delete_head">去头</string>
+	<string name="reserve">保留</string>
+	<string name="delete_tail">去尾</string>
 
 </resources>
