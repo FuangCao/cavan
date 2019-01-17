@@ -538,21 +538,19 @@ public class CavanTcpClient {
 
 				int delay = onGetKeepAliveDelay();
 				if (delay > 0) {
-					long start = System.currentTimeMillis();
+					long time = System.currentTimeMillis();
 
 					mKeepAliveTimes = 0;
 
 					while (isConnected() && isConnEnabled()) {
 						long now = System.currentTimeMillis();
-						long overtime = now - start;
+						long overtime = now - time;
+						long remain;
 
 						if (overtime < delay) {
-							synchronized (mConnThread) {
-								try {
-									mConnThread.wait(delay - overtime);
-								} catch (InterruptedException e) {
-									e.printStackTrace();
-								}
+							remain = delay - overtime;
+							if (remain > delay) {
+								remain = delay;
 							}
 						} else {
 							if (mKeepAliveTimes > 0) {
@@ -567,7 +565,16 @@ public class CavanTcpClient {
 							}
 
 							mKeepAliveTimes = times;
-							start = now;
+							remain = delay;
+							time = now;
+						}
+
+						synchronized (mConnThread) {
+							try {
+								mConnThread.wait(remain);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
 						}
 					}
 				} else {
