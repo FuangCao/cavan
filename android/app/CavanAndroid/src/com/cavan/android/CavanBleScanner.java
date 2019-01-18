@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.UUID;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothAdapter.LeScanCallback;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
@@ -78,8 +79,13 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 
 				if (mScanEnable) {
 					sendEmptyMessageDelayed(MSG_START_SCAN, START_SCAN_OVERTIME);
-					mAdapter.stopLeScan(CavanBleScanner.this);
-					mAdapter.startLeScan(mUuids, CavanBleScanner.this);
+
+					BluetoothAdapter adapter = getAdapter();
+					if (adapter != null) {
+						adapter.stopLeScan(CavanBleScanner.this);
+						adapter.startLeScan(mUuids, CavanBleScanner.this);
+					}
+
 					onScanStarted();
 
 					removeMessages(MSG_SCAN_TIMEOUT);
@@ -250,7 +256,11 @@ public class CavanBleScanner extends CavanBluetoothAdapter implements LeScanCall
 
 	public void stopScan() {
 		mScanEnable = false;
-		mAdapter.stopLeScan(this);
+
+		BluetoothAdapter adapter = getAdapter();
+		if (adapter != null) {
+			adapter.stopLeScan(this);
+		}
 	}
 
 	@Override

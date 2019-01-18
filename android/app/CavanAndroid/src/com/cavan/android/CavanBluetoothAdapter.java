@@ -8,14 +8,15 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 
 public class CavanBluetoothAdapter {
 
 	protected Context mContext;
-	protected BluetoothAdapter mAdapter;
 
 	private boolean mPoweredOn;
 	private int mLastState = -1;
+	private BluetoothAdapter mAdapter;
 	private boolean mBroadcastReceiverRegistered;
 
 	private IntentFilter mIntentFilter;
@@ -67,7 +68,6 @@ public class CavanBluetoothAdapter {
 
 	public CavanBluetoothAdapter(Context context) {
 		mContext = context;
-		mAdapter = BluetoothAdapter.getDefaultAdapter();
 		mPoweredOn = isAdapterEnabled();
 	}
 
@@ -75,20 +75,49 @@ public class CavanBluetoothAdapter {
 		return mContext;
 	}
 
-	public BluetoothAdapter getAdapter() {
+	public synchronized BluetoothAdapter getAdapter() {
+		if (mAdapter == null) {
+			BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+			if (adapter == null) {
+				return null;
+			}
+
+			mAdapter = adapter;
+		}
+
 		return mAdapter;
 	}
 
-	public boolean setAdapterEnable(boolean enable) {
-		if (enable) {
-			return mAdapter.enable();
+	public static boolean hasBleHardware(Context context) {
+		BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+		if (adapter == null) {
+			return false;
 		}
 
-		return mAdapter.disable();
+		PackageManager pm = context.getPackageManager();
+		if (pm == null) {
+			return false;
+		}
+
+		return pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+	}
+
+	public boolean setAdapterEnable(boolean enable) {
+		BluetoothAdapter adapter = getAdapter();
+		if (enable) {
+			return adapter.enable();
+		}
+
+		return adapter.disable();
 	}
 
 	public boolean isAdapterEnabled() {
-		return mAdapter.isEnabled();
+		BluetoothAdapter adapter = getAdapter();
+		if (adapter == null) {
+			return false;
+		}
+
+		return adapter.isEnabled();
 	}
 
 	public boolean isPoweredOn() {
@@ -100,8 +129,13 @@ public class CavanBluetoothAdapter {
 			return null;
 		}
 
+		BluetoothAdapter adapter = getAdapter();
+		if (adapter == null) {
+			return null;
+		}
+
 		try {
-			return mAdapter.getRemoteDevice(address);
+			return adapter.getRemoteDevice(address);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;

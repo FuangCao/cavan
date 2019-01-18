@@ -1,12 +1,12 @@
 package com.cavan.resource;
 
-import com.cavan.android.CavanAndroid;
-
 import android.app.Activity;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.widget.TextView;
+
+import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanBluetoothAdapter;
 
 public class CavanBleActivity extends Activity {
 
@@ -27,7 +27,7 @@ public class CavanBleActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+		if (CavanBluetoothAdapter.hasBleHardware(this)) {
 			onCreateBle(savedInstanceState);
 		} else {
 			onCreateNotSupport(savedInstanceState);

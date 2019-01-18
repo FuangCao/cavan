@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -188,7 +187,6 @@ public class CavanBleGatt extends CavanBluetoothAdapter {
 
 		mUuid = uuid;
 		mDevice = device;
-		mAdapter = BluetoothAdapter.getDefaultAdapter();
 	}
 
 	public CavanBleGatt(Context context, UUID uuid) {
