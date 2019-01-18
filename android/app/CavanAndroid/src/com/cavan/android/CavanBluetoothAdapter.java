@@ -104,6 +104,10 @@ public class CavanBluetoothAdapter {
 
 	public boolean setAdapterEnable(boolean enable) {
 		BluetoothAdapter adapter = getAdapter();
+		if (adapter == null) {
+			return false;
+		}
+
 		if (enable) {
 			return adapter.enable();
 		}
