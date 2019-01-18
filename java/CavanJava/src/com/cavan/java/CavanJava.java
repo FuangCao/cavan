@@ -546,6 +546,14 @@ public class CavanJava {
 		}
 	}
 
+	public static boolean parseBoolean(String text) {
+		if (CavanString.isNumber(text)) {
+			return parseInt(text) > 0;
+		}
+
+		return Boolean.parseBoolean(text);
+	}
+
 	public static int getShortBit(short value, int index, int base) {
 		while (index > 0) {
 			value /= base;

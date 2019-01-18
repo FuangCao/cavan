@@ -438,6 +438,21 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			}
 			break;
 
+		case "CLOCK":
+			if (args.length > 1) {
+				fms = FloatMessageService.instance;
+				if (fms != null) {
+					boolean enable = CavanJava.parseBoolean(args[1]);
+
+					try {
+						fms.getBind().setTimerEnable(enable);
+					} catch (RemoteException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			break;
+
 		case "CLIPBOARD":
 			if (args.length > 1) {
 				String text = args[1];

@@ -18,13 +18,14 @@ import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.EditText;
 
 import com.cavan.accessibility.CavanRedPacketAlipay;
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanEditText;
+import com.cavan.android.CavanEditText.OnSelectionChangedListener;
 import com.cavan.java.RedPacketFinder;
 
-public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListener, OnTouchListener {
+public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListener, OnTouchListener, OnSelectionChangedListener {
 
 	private static FloatEditorDialog mInstance;
 
@@ -41,7 +42,7 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 	private Button mButtonDeleteTail;
 
 	private CheckBox mCheckBox;
-	private EditText mEditText;
+	private CavanEditText mEditText;
 
 	private Dialog mDialog;
 	private WindowManager mWindowManager;
@@ -83,9 +84,10 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 
 		mCheckBox = (CheckBox) findViewById(R.id.checkBoxAsCode);
 
-		mEditText = (EditText) findViewById(R.id.editTextContent);
+		mEditText = (CavanEditText) findViewById(R.id.editTextContent);
 		mEditText.setOnKeyListener(this);
 		mEditText.setOnClickListener(this);
+		mEditText.setOnSelectionChangedListener(this);
 
 		mWindowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 	}
@@ -94,6 +96,10 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 		mCheckBox.setChecked(checked);
 		mEditText.setText(text);
 		mButtonCopy.setText(copy ? R.string.copy : R.string.share);
+
+		mButtonReserve.setVisibility(View.GONE);
+		mButtonDeleteHead.setVisibility(View.GONE);
+		mButtonDeleteTail.setVisibility(View.GONE);
 	}
 
 	private View findViewById(int id) {
@@ -283,5 +289,19 @@ public class FloatEditorDialog implements OnClickListener, Runnable, OnKeyListen
 		}
 
 		return false;
+	}
+
+	@Override
+	public void onSelectionChanged(int start, int end) {
+		if (start != end) {
+			mButtonReserve.setVisibility(View.VISIBLE);
+		} else {
+			mButtonReserve.setVisibility(View.GONE);
+		}
+
+		if (start > 0) {
+			mButtonDeleteHead.setVisibility(View.VISIBLE);
+			mButtonDeleteTail.setVisibility(View.VISIBLE);
+		}
 	}
 }
