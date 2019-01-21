@@ -535,10 +535,15 @@ public class FloatMessageService extends FloatWindowService {
 	}
 
 	public void setAutoUnlockLevel(int level) {
-		CavanAndroid.acquireWakeupLock(getApplicationContext(), 20000);
-
 		if (level < mAutoUnlockLevel) {
 			mAutoUnlockLevel = level;
+		}
+
+		CavanAndroid.acquireWakeupLock(getApplicationContext(), 20000);
+		CavanAndroid.dLog("mScreenClosed = " + mScreenClosed);
+
+		if (mScreenClosed) {
+			return;
 		}
 
 		if (isAutoUnlockEnabled()) {
