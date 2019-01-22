@@ -75,20 +75,17 @@ public class CavanTcpClient {
 
 	public class SendThread extends CavanThread {
 
-		private LinkedBlockingQueue<byte[]> mQueue = new LinkedBlockingQueue<byte[]>();
+		private LinkedBlockingQueue<byte[]> mQueue = new LinkedBlockingQueue<>();
 
 		@Override
 		public void run() {
 			while (true) {
 				try {
 					byte[] bytes = mQueue.take();
-
-					if (isConnected() && CavanTcpClient.this.send(bytes)) {
-						continue;
+					if (!runSendThread(bytes)) {
+						mQueue.clear();
 					}
-
-					mQueue.clear();
-				} catch (InterruptedException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
@@ -303,7 +300,7 @@ public class CavanTcpClient {
 		}
 
 		if (reconn) {
-			reconnect();
+			setConnected(false);
 		}
 
 		return addresses.length;
@@ -655,11 +652,10 @@ public class CavanTcpClient {
 				break;
 			}
 		}
+	}
 
-		synchronized (this) {
-			mConnected = false;
-			mConnThread.wakeup();
-		}
+	protected boolean runSendThread(byte[] bytes) {
+		return isConnected() && send(bytes);
 	}
 
 	public void prDbgInfo(String message) {
@@ -697,7 +693,7 @@ public class CavanTcpClient {
 		if (listener != null) {
 			listener.onTcpConnecting(address);
 		} else {
-			prDbgInfo("onTcpClientRunning");
+			prDbgInfo("onTcpConnecting");
 		}
 	}
 

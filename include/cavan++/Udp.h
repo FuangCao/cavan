@@ -61,6 +61,193 @@ typedef struct {
 } cavan_udp_header_t;
 #pragma pack()
 
+class UdpRawClient {
+protected:
+	int mSockFd;
+	struct sockaddr_in mPeerAddr;
+
+public:
+	UdpRawClient(int sockfd = INVALID_SOCKET) : mSockFd(sockfd) {}
+
+public:
+	virtual int getSockFd(void) {
+		return mSockFd;
+	}
+
+	virtual void setSockFd(int sockfd) {
+		mSockFd = sockfd;
+	}
+
+	virtual int open(void) {
+		int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+		if (sockfd != INVALID_SOCKET) {
+			mSockFd = sockfd;
+		}
+
+		return sockfd;
+	}
+
+	virtual void close(void) {
+		int sockfd = mSockFd;
+
+		mSockFd = INVALID_SOCKET;
+
+		if (sockfd != INVALID_SOCKET) {
+			::close(sockfd);
+		}
+	}
+
+	virtual void setPeerAddr(const sockaddr_in *addr) {
+		memcpy(&mPeerAddr, addr, sizeof(mPeerAddr));
+	}
+
+	virtual void setPeerAddr(in_addr_t addr, u16 port) {
+		mPeerAddr.sin_family = AF_INET;
+		mPeerAddr.sin_port = htons(port);
+		mPeerAddr.sin_addr.s_addr = addr;
+	}
+
+	virtual int bind(u16 port) {
+		struct sockaddr_in addr;
+
+		addr.sin_family = AF_INET;
+		addr.sin_port = htons(port);
+		addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+		return ::bind(mSockFd, (struct sockaddr *) &addr, sizeof(addr));
+	}
+
+#if 0
+	virtual bool equals(const sockaddr_in *addr) {
+		return mPeerAddr.sin_addr.s_addr == addr->sin_addr.s_addr && mPeerAddr.sin_port == addr->sin_port;
+	}
+#endif
+
+	virtual bool equals(const in_addr_t addr) {
+		return mPeerAddr.sin_addr.s_addr == addr;
+	}
+
+	virtual int send(const char *buff, int length) {
+		return ::sendto(mSockFd, buff, length, 0, (struct sockaddr *) &mPeerAddr, sizeof(mPeerAddr));
+	}
+
+	virtual int recv(char *buff, int size) {
+		return ::recvfrom(mSockFd, buff, size, 0, NULL, NULL);
+	}
+};
+
+class UdpRawLink : public UdpRawClient {
+	friend class UdpRawService;
+
+public:
+	UdpRawLink *prev;
+	UdpRawLink *next;
+
+public:
+	UdpRawLink(int sockfd) : UdpRawClient(sockfd) {
+		prev = next = this;
+	}
+
+protected:
+	virtual void onPackReceived(const char *buff, int length) {
+		println("buff[%d] = %s", length, buff);
+	}
+};
+
+class UdpRawService {
+protected:
+	int mSockFd;
+
+private:
+	UdpRawLink *mLinks[0xFFFF];
+
+public:
+	UdpRawService(void) : mSockFd(INVALID_SOCKET) {
+		for (int i = 0; i < NELEM(mLinks); i++) {
+			mLinks[i] = NULL;
+		}
+	}
+
+public:
+	virtual UdpRawLink *findLink(const struct sockaddr_in *addr, bool create) {
+		UdpRawLink *head = mLinks[addr->sin_port];
+
+		for (UdpRawLink *node = head; node; node = node->next) {
+			if (node->equals(addr->sin_addr.s_addr)) {
+				return node;
+			}
+		}
+
+		if (create) {
+			UdpRawLink *link = doCreateLink(mSockFd);
+			if (link == NULL) {
+				return NULL;
+			}
+
+			link->setPeerAddr(addr);
+
+			if (head != NULL) {
+				head->prev = link;
+			}
+
+			link->next = head;
+			link->prev = NULL;
+			mLinks[addr->sin_port] = head;
+
+			return link;
+		}
+
+		return NULL;
+	}
+
+	virtual int open(u16 port) {
+		int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+		if (sockfd < 0) {
+			return sockfd;
+		}
+
+		struct sockaddr_in addr;
+
+		addr.sin_family = AF_INET;
+		addr.sin_port = htons(port);
+		addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+		int ret = ::bind(sockfd, (struct sockaddr *) &addr, sizeof(addr));
+		if (ret < 0) {
+			pr_err_info("bind: %d", port);
+			::close(sockfd);
+			return ret;
+		}
+
+		mSockFd = sockfd;
+
+		return sockfd;
+	}
+
+	virtual void mainLoop(void) {
+		while (1) {
+			char buff[2018];
+			struct sockaddr_in addr;
+			socklen_t addrlen = sizeof(addr);
+
+			int length = recvfrom(mSockFd, buff, sizeof(buff), 0, (struct sockaddr *) &addr, &addrlen);
+			if (length < 0) {
+				break;
+			}
+
+			UdpRawLink *link = findLink(&addr, true);
+			if (link != NULL) {
+				link->onPackReceived(buff, length);
+			}
+		}
+	}
+
+protected:
+	virtual UdpRawLink *doCreateLink(int sockfd) {
+		return new UdpRawLink(mSockFd);
+	}
+};
+
 class UdpSock;
 class UdpLink;
 
