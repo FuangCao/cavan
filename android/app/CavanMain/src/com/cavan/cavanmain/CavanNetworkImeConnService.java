@@ -359,6 +359,10 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			break;
 
 		case "UNLOCK":
+			if (args.length > 1) {
+				CavanAndroid.startActivityFuzzy(getApplicationContext(), args[1]);
+			}
+
 			doUnlockScreen();
 			break;
 
@@ -570,12 +574,20 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 				} else if (action == 'o') {
 					direction = AudioManager.ADJUST_UNMUTE;
 				} else {
+					int volume;
+
 					if (action == '=') {
-						int volume = CavanJava.parseInt(args[1].substring(1));
-						mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0);
-						mHandler.sendEmptyMessage(MSG_SHOW_MEDIA_VOLUME);
+						volume = CavanJava.parseInt(args[1].substring(1));
+					} else {
+						try {
+							volume = Integer.parseInt(args[1]);
+						} catch (Exception e) {
+							break;
+						}
 					}
 
+					mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0);
+					mHandler.sendEmptyMessage(MSG_SHOW_MEDIA_VOLUME);
 					break;
 				}
 
