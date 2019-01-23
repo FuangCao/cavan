@@ -85,7 +85,7 @@ public class CavanMainInputMethod extends CavanInputMethodService implements OnK
 
 	private static final int MSG_REPLACE_TEXT = 4;
 	private static final int MSG_INSERT_TEXT = 5;
-	private static final int MSG_SEND_TEXT = 6;
+	private static final int MSG_COMMIT_TEXT = 6;
 	private static final int MSG_AUTO_SEND = 7;
 
 	public static CavanMainInputMethod instance;
@@ -119,15 +119,13 @@ public class CavanMainInputMethod extends CavanInputMethodService implements OnK
 				}
 				break;
 
-			case MSG_SEND_TEXT:
+			case MSG_COMMIT_TEXT:
 				CavanAccessibilityService accessibility = CavanAccessibilityService.instance;
-				if (accessibility != null && accessibility.sendText(null, true)) {
-					if (mAutoSendText != null) {
-						int delay = CavanMessageActivity.getRepeatDelay(CavanMainInputMethod.this);
-						sendEmptyMessageDelayed(MSG_AUTO_SEND, delay);
-					}
+				if (accessibility == null) {
+					break;
 				}
-				break;
+
+				accessibility.sendText(null, true);
 
 			case MSG_AUTO_SEND:
 				CharSequence text = mAutoSendText;
@@ -141,7 +139,7 @@ public class CavanMainInputMethod extends CavanInputMethodService implements OnK
 				}
 
 				if (conn.performContextMenuAction(android.R.id.selectAll) && conn.commitText(text, 0)) {
-					sendEmptyMessageDelayed(MSG_SEND_TEXT, AUTO_COMMIT_DELAY);
+					sendEmptyMessageDelayed(MSG_COMMIT_TEXT, getAutoCommitDelay());
 				}
 				break;
 			}
@@ -317,6 +315,15 @@ public class CavanMainInputMethod extends CavanInputMethodService implements OnK
 		return true;
 	}
 
+	public int getAutoCommitDelay() {
+		int delay = CavanMessageActivity.getRepeatDelay(CavanMainInputMethod.this);
+		if (delay > AUTO_COMMIT_DELAY) {
+			return delay;
+		}
+
+		return AUTO_COMMIT_DELAY;
+	}
+
 	public boolean sendRedPacketCode(CharSequence code, boolean execute) {
 		InputConnection conn = getCurrentInputConnection();
 		if (conn == null) {
@@ -383,7 +390,7 @@ public class CavanMainInputMethod extends CavanInputMethodService implements OnK
 			}
 		} else {
 			mAutoSendText = text;
-			mHandler.sendEmptyMessageDelayed(MSG_SEND_TEXT, AUTO_COMMIT_DELAY);
+			mHandler.sendEmptyMessageDelayed(MSG_COMMIT_TEXT, AUTO_COMMIT_DELAY);
 		}
 	}
 
@@ -892,6 +899,6 @@ public class CavanMainInputMethod extends CavanInputMethodService implements OnK
 	}
 
 	public void postAutoCommit() {
-		mHandler.sendEmptyMessageDelayed(MSG_SEND_TEXT, AUTO_COMMIT_DELAY);
+		mHandler.sendEmptyMessageDelayed(MSG_COMMIT_TEXT, AUTO_COMMIT_DELAY);
 	}
 }
