@@ -69,6 +69,7 @@
             this.textBoxResponse.Location = new System.Drawing.Point(12, 12);
             this.textBoxResponse.Multiline = true;
             this.textBoxResponse.Name = "textBoxResponse";
+            this.textBoxResponse.ReadOnly = true;
             this.textBoxResponse.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.textBoxResponse.Size = new System.Drawing.Size(760, 469);
             this.textBoxResponse.TabIndex = 4;
@@ -87,7 +88,7 @@
             // 
             this.comboBoxDevices.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxDevices.FormattingEnabled = true;
-            this.comboBoxDevices.Location = new System.Drawing.Point(12, 488);
+            this.comboBoxDevices.Location = new System.Drawing.Point(12, 487);
             this.comboBoxDevices.Name = "comboBoxDevices";
             this.comboBoxDevices.Size = new System.Drawing.Size(217, 20);
             this.comboBoxDevices.TabIndex = 6;

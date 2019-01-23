@@ -30,72 +30,72 @@ namespace NetworkInputMethod
 
         private void buttonJxqy_Click(object sender, EventArgs e)
         {
-            mNetworkIme.sendOpenApp("com.tencent.tmgp.jxqy");
+            mNetworkIme.sendOpenApp("com.tencent.tmgp.jxqy", false);
         }
 
         private void buttonXxsy_Click(object sender, EventArgs e)
         {
-            mNetworkIme.sendOpenApp("com.tencent.tmgp.xxsy");
+            mNetworkIme.sendOpenApp("com.tencent.tmgp.xxsy", false);
         }
 
         private void buttonWec_Click(object sender, EventArgs e)
         {
-            mNetworkIme.sendOpenApp("com.tencent.tmgp.wec");
+            mNetworkIme.sendOpenApp("com.tencent.tmgp.wec", false);
         }
 
         private void buttonXymobile_Click(object sender, EventArgs e)
         {
-            mNetworkIme.sendOpenApp("com.tencent.tmgp.xymobile");
+            mNetworkIme.sendOpenApp("com.tencent.tmgp.xymobile", false);
         }
 
         private void buttonDragonnest_Click(object sender, EventArgs e)
         {
-            mNetworkIme.sendOpenApp("com.tencent.tmgp.dragonnest");
+            mNetworkIme.sendOpenApp("com.tencent.tmgp.dragonnest", false);
         }
 
         private void buttonCf_Click(object sender, EventArgs e)
         {
-            mNetworkIme.sendOpenApp("com.tencent.tmgp.cf");
+            mNetworkIme.sendOpenApp("com.tencent.tmgp.cf", false);
         }
 
         private void buttonCldts_Click(object sender, EventArgs e)
         {
-            mNetworkIme.sendOpenApp("com.tencent.cldts");
+            mNetworkIme.sendOpenApp("com.tencent.cldts", false);
         }
 
         private void buttonBayechuanqi_Click(object sender, EventArgs e)
         {
-            mNetworkIme.sendOpenApp("com.game37.bayechuanqi");
+            mNetworkIme.sendOpenApp("com.game37.bayechuanqi", false);
         }
 
         private void buttonDdtank_Click(object sender, EventArgs e)
         {
-            mNetworkIme.sendOpenApp("com.tencent.tmgp.ddtank");
+            mNetworkIme.sendOpenApp("com.tencent.tmgp.ddtank", false);
         }
 
         private void buttonSgame_Click(object sender, EventArgs e)
         {
-            mNetworkIme.sendOpenApp("com.tencent.tmgp.sgame");
+            mNetworkIme.sendOpenApp("com.tencent.tmgp.sgame", false);
         }
 
         private void buttonNba_Click(object sender, EventArgs e)
         {
-            mNetworkIme.sendOpenApp("com.tencent.tmgp.NBA");
+            mNetworkIme.sendOpenApp("com.tencent.tmgp.NBA", false);
         }
 
         private void buttonSupercellClashroyale_Click(object sender, EventArgs e)
         {
-            mNetworkIme.sendOpenApp("com.tencent.tmgp.supercell.clashroyale");
+            mNetworkIme.sendOpenApp("com.tencent.tmgp.supercell.clashroyale", false);
         }
 
         private void buttonSupercellClashofclans_Click(object sender, EventArgs e)
         {
-            mNetworkIme.sendOpenApp("com.tencent.tmgp.supercell.clashofclans");
+            mNetworkIme.sendOpenApp("com.tencent.tmgp.supercell.clashofclans", false);
         }
 
         private void buttonMm_Click(object sender, EventArgs e)
         {
-            mNetworkIme.sendOpenApp("com.tencent.mm");
+            mNetworkIme.sendOpenApp("com.tencent.mm", false);
         }
 
         private string getWeixinPath()
@@ -157,17 +157,17 @@ namespace NetworkInputMethod
 
         private void buttonTstl_Click(object sender, EventArgs e)
         {
-            mNetworkIme.sendOpenApp("com.tencent.tmgp.tstl");
+            mNetworkIme.sendOpenApp("com.tencent.tmgp.tstl", false);
         }
 
         private void buttonPubgmhd_Click(object sender, EventArgs e)
         {
-            mNetworkIme.sendOpenApp("com.tencent.tmgp.pubgmhd");
+            mNetworkIme.sendOpenApp("com.tencent.tmgp.pubgmhd", false);
         }
 
         private void buttonCrossgate_Click(object sender, EventArgs e)
         {
-            mNetworkIme.sendOpenApp("com.tencent.crossgate");
+            mNetworkIme.sendOpenApp("com.tencent.crossgate", false);
         }
 
         private void buttonOpen_Click(object sender, EventArgs e)
@@ -175,7 +175,7 @@ namespace NetworkInputMethod
             var name = textBoxAppName.Text.Trim();
             if (name.Length > 0)
             {
-                mNetworkIme.sendOpenApp(name);
+                mNetworkIme.sendOpenApp(name, false);
             }
         }
     }
