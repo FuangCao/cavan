@@ -1275,6 +1275,40 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		private boolean doWebCommandXfzd(AccessibilityNodeInfo root, AccessibilityNodeInfo web) {
+			ArrayList<AccessibilityNodeInfo> nodes = new ArrayList<>();
+
+			try {
+				AccessibilityNodeInfo node = web.getChild(0);
+				if (node == null) {
+					return false;
+				}
+
+				nodes.add(node);
+
+				String id = CavanAccessibilityHelper.getNodeViewId(node);
+				CavanAndroid.dLog("id = " + id);
+
+				if ("waiting".equals(id)) {
+					return true;
+				}
+
+				while (node.getChildCount() > 0) {
+					AccessibilityNodeInfo child = node.getChild(0);
+					if (child == null) {
+						break;
+					}
+
+					nodes.add(child);
+					node = child;
+				}
+
+				return CavanAccessibilityHelper.performClick(node);
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				CavanAccessibilityHelper.recycleNodes(nodes);
+			}
+
 			return false;
 		}
 
