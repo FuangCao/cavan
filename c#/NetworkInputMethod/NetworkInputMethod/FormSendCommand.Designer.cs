@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.textBoxCommand = new System.Windows.Forms.TextBox();
             this.buttonSend = new System.Windows.Forms.Button();
             this.buttonView = new System.Windows.Forms.Button();
@@ -35,13 +36,20 @@
             this.buttonClear = new System.Windows.Forms.Button();
             this.comboBoxDevices = new System.Windows.Forms.ComboBox();
             this.buttonTest = new System.Windows.Forms.Button();
+            this.comboBoxRepeat = new System.Windows.Forms.ComboBox();
+            this.buttonStart = new System.Windows.Forms.Button();
+            this.buttonStop = new System.Windows.Forms.Button();
+            this.buttonVip = new System.Windows.Forms.Button();
+            this.buttonXfzd = new System.Windows.Forms.Button();
+            this.timerRepeater = new System.Windows.Forms.Timer(this.components);
+            this.labelStatus = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // textBoxCommand
             // 
-            this.textBoxCommand.Location = new System.Drawing.Point(235, 487);
+            this.textBoxCommand.Location = new System.Drawing.Point(12, 488);
             this.textBoxCommand.Name = "textBoxCommand";
-            this.textBoxCommand.Size = new System.Drawing.Size(537, 21);
+            this.textBoxCommand.Size = new System.Drawing.Size(760, 21);
             this.textBoxCommand.TabIndex = 0;
             // 
             // buttonSend
@@ -66,12 +74,12 @@
             // 
             // textBoxResponse
             // 
-            this.textBoxResponse.Location = new System.Drawing.Point(12, 12);
+            this.textBoxResponse.Location = new System.Drawing.Point(12, 38);
             this.textBoxResponse.Multiline = true;
             this.textBoxResponse.Name = "textBoxResponse";
             this.textBoxResponse.ReadOnly = true;
             this.textBoxResponse.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxResponse.Size = new System.Drawing.Size(760, 469);
+            this.textBoxResponse.Size = new System.Drawing.Size(760, 444);
             this.textBoxResponse.TabIndex = 4;
             // 
             // buttonClear
@@ -88,7 +96,7 @@
             // 
             this.comboBoxDevices.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxDevices.FormattingEnabled = true;
-            this.comboBoxDevices.Location = new System.Drawing.Point(12, 487);
+            this.comboBoxDevices.Location = new System.Drawing.Point(12, 12);
             this.comboBoxDevices.Name = "comboBoxDevices";
             this.comboBoxDevices.Size = new System.Drawing.Size(217, 20);
             this.comboBoxDevices.TabIndex = 6;
@@ -104,12 +112,111 @@
             this.buttonTest.UseVisualStyleBackColor = true;
             this.buttonTest.Click += new System.EventHandler(this.buttonTest_Click);
             // 
+            // comboBoxRepeat
+            // 
+            this.comboBoxRepeat.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxRepeat.FormattingEnabled = true;
+            this.comboBoxRepeat.Items.AddRange(new object[] {
+            "不重复发送",
+            "重复间隔50毫秒",
+            "重复间隔100毫秒",
+            "重复间隔150毫秒",
+            "重复间隔200毫秒",
+            "重复间隔250毫秒",
+            "重复间隔300毫秒",
+            "重复间隔350毫秒",
+            "重复间隔400毫秒",
+            "重复间隔450毫秒",
+            "重复间隔500毫秒",
+            "重复间隔550毫秒",
+            "重复间隔600毫秒",
+            "重复间隔650毫秒",
+            "重复间隔700毫秒",
+            "重复间隔750毫秒",
+            "重复间隔800毫秒",
+            "重复间隔850毫秒",
+            "重复间隔900毫秒",
+            "重复间隔950毫秒",
+            "重复间隔1000毫秒",
+            "重复间隔1500毫秒",
+            "重复间隔2000毫秒",
+            "重复间隔2500毫秒",
+            "重复间隔3000毫秒",
+            "重复间隔3500毫秒",
+            "重复间隔4000毫秒",
+            "重复间隔4500毫秒",
+            "重复间隔5000毫秒"});
+            this.comboBoxRepeat.Location = new System.Drawing.Point(235, 12);
+            this.comboBoxRepeat.Name = "comboBoxRepeat";
+            this.comboBoxRepeat.Size = new System.Drawing.Size(217, 20);
+            this.comboBoxRepeat.TabIndex = 8;
+            this.comboBoxRepeat.SelectedIndexChanged += new System.EventHandler(this.comboBoxRepeat_SelectedIndexChanged);
+            // 
+            // buttonStart
+            // 
+            this.buttonStart.Location = new System.Drawing.Point(336, 526);
+            this.buttonStart.Name = "buttonStart";
+            this.buttonStart.Size = new System.Drawing.Size(75, 23);
+            this.buttonStart.TabIndex = 9;
+            this.buttonStart.Text = "开始";
+            this.buttonStart.UseVisualStyleBackColor = true;
+            this.buttonStart.Click += new System.EventHandler(this.buttonStart_Click);
+            // 
+            // buttonStop
+            // 
+            this.buttonStop.Location = new System.Drawing.Point(535, 526);
+            this.buttonStop.Name = "buttonStop";
+            this.buttonStop.Size = new System.Drawing.Size(75, 23);
+            this.buttonStop.TabIndex = 10;
+            this.buttonStop.Text = "停止";
+            this.buttonStop.UseVisualStyleBackColor = true;
+            this.buttonStop.Click += new System.EventHandler(this.buttonStop_Click);
+            // 
+            // buttonVip
+            // 
+            this.buttonVip.Location = new System.Drawing.Point(174, 526);
+            this.buttonVip.Name = "buttonVip";
+            this.buttonVip.Size = new System.Drawing.Size(75, 23);
+            this.buttonVip.TabIndex = 11;
+            this.buttonVip.Text = "VIP";
+            this.buttonVip.UseVisualStyleBackColor = true;
+            this.buttonVip.Click += new System.EventHandler(this.buttonVip_Click);
+            // 
+            // buttonXfzd
+            // 
+            this.buttonXfzd.Location = new System.Drawing.Point(255, 526);
+            this.buttonXfzd.Name = "buttonXfzd";
+            this.buttonXfzd.Size = new System.Drawing.Size(75, 23);
+            this.buttonXfzd.TabIndex = 12;
+            this.buttonXfzd.Text = "幸福账单";
+            this.buttonXfzd.UseVisualStyleBackColor = true;
+            this.buttonXfzd.Click += new System.EventHandler(this.buttonXfzd_Click);
+            // 
+            // timerRepeater
+            // 
+            this.timerRepeater.Interval = 1000;
+            this.timerRepeater.Tick += new System.EventHandler(this.timerRepeater_Tick);
+            // 
+            // labelStatus
+            // 
+            this.labelStatus.Location = new System.Drawing.Point(458, 15);
+            this.labelStatus.Name = "labelStatus";
+            this.labelStatus.Size = new System.Drawing.Size(314, 15);
+            this.labelStatus.TabIndex = 13;
+            this.labelStatus.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
             // FormSendCommand
             // 
             this.AcceptButton = this.buttonSend;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 561);
+            this.Controls.Add(this.labelStatus);
+            this.Controls.Add(this.buttonXfzd);
+            this.Controls.Add(this.buttonVip);
+            this.Controls.Add(this.buttonStop);
+            this.Controls.Add(this.buttonStart);
+            this.Controls.Add(this.comboBoxRepeat);
             this.Controls.Add(this.buttonTest);
             this.Controls.Add(this.comboBoxDevices);
             this.Controls.Add(this.buttonClear);
@@ -120,6 +227,7 @@
             this.Name = "FormSendCommand";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "发送命令";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormSendCommand_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -134,5 +242,12 @@
         private System.Windows.Forms.Button buttonClear;
         private System.Windows.Forms.ComboBox comboBoxDevices;
         private System.Windows.Forms.Button buttonTest;
+        private System.Windows.Forms.ComboBox comboBoxRepeat;
+        private System.Windows.Forms.Button buttonStart;
+        private System.Windows.Forms.Button buttonStop;
+        private System.Windows.Forms.Button buttonVip;
+        private System.Windows.Forms.Button buttonXfzd;
+        private System.Windows.Forms.Timer timerRepeater;
+        private System.Windows.Forms.Label labelStatus;
     }
 }
