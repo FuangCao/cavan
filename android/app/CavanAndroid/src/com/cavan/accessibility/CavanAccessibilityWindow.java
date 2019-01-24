@@ -113,6 +113,10 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
+	protected boolean doWebCommand(AccessibilityNodeInfo root, String action) {
+		return false;
+	}
+
 	protected boolean doRefresh(AccessibilityNodeInfo root) {
 		return false;
 	}
@@ -168,7 +172,7 @@ public class CavanAccessibilityWindow {
 		return (times < CavanAccessibilityPackage.FAIL_TIMES);
 	}
 
-	public boolean isHomePage(AccessibilityNodeInfo root) {
+	public boolean isHomePage() {
 		return false;
 	}
 

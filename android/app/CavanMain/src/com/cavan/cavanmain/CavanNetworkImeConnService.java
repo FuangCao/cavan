@@ -366,6 +366,12 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			doUnlockScreen();
 			break;
 
+		case "WEB":
+			if (accessibility != null && args.length > 0) {
+				accessibility.sendCommandWeb(args[1]);
+			}
+			break;
+
 		case "CLEAR":
 			NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 			if (manager != null) {

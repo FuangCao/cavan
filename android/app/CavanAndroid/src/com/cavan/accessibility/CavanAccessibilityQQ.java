@@ -381,7 +381,7 @@ public class CavanAccessibilityQQ extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public boolean isHomePage(AccessibilityNodeInfo root) {
+		public boolean isHomePage() {
 			return mHomePage;
 		}
 

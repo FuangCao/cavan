@@ -207,7 +207,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public boolean isHomePage(AccessibilityNodeInfo root) {
+		public boolean isHomePage() {
 			return true;
 		}
 

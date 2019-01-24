@@ -871,6 +871,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return sendCommand(CavanAccessibilityPackage.CMD_HOME);
 	}
 
+	public boolean sendCommandWeb(String action) {
+		return sendCommand(CavanAccessibilityPackage.CMD_WEB, action);
+	}
+
 	public Class<?> getBroadcastReceiverClass() {
 		return mBroadcastReceiver.getClass();
 	}

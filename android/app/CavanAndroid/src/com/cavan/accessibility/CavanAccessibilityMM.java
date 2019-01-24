@@ -9,6 +9,7 @@ import android.app.Notification;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -497,7 +498,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public boolean isHomePage(AccessibilityNodeInfo root) {
+		public boolean isHomePage() {
 			return true;
 		}
 	}
@@ -1063,6 +1064,49 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			super(name);
 		}
 
+		public AccessibilityNodeInfo findWebView(AccessibilityNodeInfo root) {
+			ArrayList<AccessibilityNodeInfo> nodes = new ArrayList<>();
+
+			try {
+				AccessibilityNodeInfo parent = root.getChild(0);
+				if (parent == null) {
+					return null;
+				}
+
+				nodes.add(parent);
+
+				for (int i = 0; i < parent.getChildCount(); i++) {
+					AccessibilityNodeInfo child = parent.getChild(i);
+					if (child == null) {
+						return null;
+					}
+
+					nodes.add(child);
+
+					if (!CavanAccessibilityHelper.isInstanceOf(child, FrameLayout.class)) {
+						continue;
+					}
+
+					AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(child, 0, 0);
+					if (node == null) {
+						continue;
+					}
+
+					if (CavanAccessibilityHelper.isInstanceOf(node, WebView.class)) {
+						return node;
+					}
+
+					nodes.add(node);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				CavanAccessibilityHelper.recycleNodes(nodes);
+			}
+
+			return null;
+		}
+
 		public String getTitle(AccessibilityNodeInfo root) {
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 3, 1);
 			if (node == null) {
@@ -1205,6 +1249,43 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				doActionHome(root);
 			}
 		}
+
+		@Override
+		protected boolean doWebCommand(AccessibilityNodeInfo root, String action) {
+			AccessibilityNodeInfo web = findWebView(root);
+			if (web == null) {
+				return false;
+			}
+
+			try {
+				switch (action) {
+				case "vip":
+					return doWebCommandVip(root, web);
+
+				case "xfzd":
+					return doWebCommandXfzd(root, web);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				web.recycle();
+			}
+
+			return false;
+		}
+
+		private boolean doWebCommandXfzd(AccessibilityNodeInfo root, AccessibilityNodeInfo web) {
+			return false;
+		}
+
+		private boolean doWebCommandVip(AccessibilityNodeInfo root, AccessibilityNodeInfo web) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(web, 0, 0, 0, 0, 0);
+			if (node != null) {
+				return CavanAccessibilityHelper.performClickAndRecycle(node);
+			}
+
+			return false;
+		}
 	}
 
 	public class WebViewMenu extends MenuWindow {
@@ -1271,6 +1352,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		public boolean isProgressView() {
+			return true;
+		}
+
+		@Override
+		public boolean isPopWindow() {
 			return true;
 		}
 	}
@@ -2135,6 +2221,15 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			if (mUnfollowPending) {
 				doUnfollow(root);
 			}
+		}
+
+		@Override
+		protected boolean doWebCommand(AccessibilityNodeInfo root, String action) {
+			if (action.equals("vip")) {
+				return CavanAccessibilityHelper.performChildClick(root, 1);
+			}
+
+			return false;
 		}
 	}
 

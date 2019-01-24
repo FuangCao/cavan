@@ -25,6 +25,7 @@ public class CavanAccessibilityPackage {
 	public static final int CMD_UNFOLLOW = 6;
 	public static final int CMD_BACK = 7;
 	public static final int CMD_HOME = 8;
+	public static final int CMD_WEB = 9;
 
 	public static int WAIT_DELAY = 500;
 	public static int BACK_DELAY = 5000;
@@ -41,6 +42,7 @@ public class CavanAccessibilityPackage {
 	protected HashMap<String, CavanAccessibilityWindow> mWindows = new HashMap<>();
 
 	protected CavanAccessibilityService mService;
+	protected CavanAccessibilityWindow mPrevWin;
 	protected CavanAccessibilityWindow mWindow;
 	protected CavanRedPacket mCurrentPacket;
 	protected boolean mForceUnpack = true;
@@ -115,6 +117,8 @@ public class CavanAccessibilityPackage {
 	}
 
 	public synchronized CavanAccessibilityWindow getWindow(int hashCode) {
+		CavanAndroid.dLog("getWindow: " + Integer.toHexString(hashCode));
+
 		CavanAccessibilityWindow win = mWindow;
 
 		if (win != null && win.getActivityHashCode() == hashCode) {
@@ -123,7 +127,7 @@ public class CavanAccessibilityPackage {
 
 		win = mActivitys.get(hashCode);
 		if (win == null) {
-			return null;
+			return mWindow;
 		}
 
 		CavanAndroid.dLog("getWindow: " + win);
@@ -139,18 +143,25 @@ public class CavanAccessibilityPackage {
 			throw new Exception("window is null");
 		}
 
-		if (win.isPopWindow()) {
-			win = mActivitys.get(hashCode);
-			if (win == null) {
-				return mWindow;
-			}
-
-			if (win.isPopWindow()) {
-				return null;
-			}
+		if (!win.isPopWindow()) {
+			return win;
 		}
 
-		return win;
+		CavanAccessibilityWindow curr = mActivitys.get(hashCode);
+		if (curr != null) {
+			if (curr.isPopWindow()) {
+				return null;
+			}
+
+			return curr;
+		}
+
+		if (win.isProgressView() && mPrevWin != null) {
+			setActivityHashCode(mPrevWin, hashCode);
+			return mPrevWin;
+		}
+
+		return mWindow;
 	}
 
 	public synchronized CavanAccessibilityService getService() {
@@ -401,12 +412,12 @@ public class CavanAccessibilityPackage {
 
 	protected synchronized CavanAccessibilityWindow onWindowStateChanged(AccessibilityNodeInfo root, CavanAccessibilityWindow win) {
 		if (win != mWindow) {
+			mPrevWin = mWindow;
+
 			if (win != null && win.isProgressView()) {
 				if (mWindow != null) {
 					mWindow.onProgress(win);
 				}
-
-				return mWindow;
 			}
 
 			if (mWindow != null) {
@@ -463,6 +474,12 @@ public class CavanAccessibilityPackage {
 	}
 
 	private synchronized void setActivityHashCode(CavanAccessibilityWindow win, int hashCode) {
+		CavanAndroid.dLog("setActivityHashCode: " + win + " <= " + Integer.toHexString(hashCode));
+
+		if (win.isHomePage() && mActivitys.size() > 10000) {
+			mActivitys.clear();
+		}
+
 		win.setActivityHashCode(hashCode);
 		mActivitys.put(hashCode, win);
 	}
@@ -553,7 +570,7 @@ public class CavanAccessibilityPackage {
 								return packet.getUnpackDelay(POLL_DELAY);
 							}
 
-							if (win.isHomePage(root)) {
+							if (win.isHomePage()) {
 								onHomePage(packet);
 								return -1;
 							}
@@ -567,7 +584,7 @@ public class CavanAccessibilityPackage {
 							setUnlockDelay(LOCK_DELAY);
 						}
 
-						if (win.isHomePage(root)) {
+						if (win.isHomePage()) {
 							onHomePage(packet);
 							return -1;
 						}
@@ -604,6 +621,7 @@ public class CavanAccessibilityPackage {
 
 	public boolean doCommand(AccessibilityNodeInfo root, int command, Object[] args) {
 		CavanAccessibilityWindow win = getWindow(root.hashCode());
+		CavanAndroid.dLog("win = " + win);
 		if (win == null) {
 			return false;
 		}
@@ -616,6 +634,10 @@ public class CavanAccessibilityPackage {
 		case CMD_LOGIN:
 			CavanAndroid.dLog("CMD_LOGIN");
 			return win.doLogin(root, (String) args[0], (String) args[1]);
+
+		case CMD_WEB:
+			CavanAndroid.dLog("CMD_WEB");
+			return win.doWebCommand(root, (String) args[0]);
 
 		case CMD_REFRESH:
 			CavanAndroid.dLog("CMD_REFRESH");
