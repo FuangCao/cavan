@@ -414,14 +414,22 @@ public class CavanAccessibilityPackage {
 		if (win != mWindow) {
 			mPrevWin = mWindow;
 
+			boolean progress = false;
+
 			if (win != null && win.isProgressView()) {
+				progress = true;
+
 				if (mWindow != null) {
 					mWindow.onProgress(win);
 				}
 			}
 
 			if (mWindow != null) {
-				mWindow.onLeave(root);
+				if (mWindow.isProgressView()) {
+					progress = true;
+				} else {
+					mWindow.onLeave(root);
+				}
 			}
 
 			mWindow = win;
@@ -429,7 +437,11 @@ public class CavanAccessibilityPackage {
 			if (win != null) {
 				int types = win.getEventTypes(this);
 				mService.setEventTypes(types);
-				win.onEnter(root);
+
+				if (!progress) {
+					win.onEnter(root);
+				}
+
 				resetTimes();
 			}
 		}

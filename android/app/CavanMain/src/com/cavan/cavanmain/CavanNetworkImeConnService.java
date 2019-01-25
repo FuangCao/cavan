@@ -181,14 +181,14 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 					ime.postAutoCommit();
 				}
 			} else {
-				return conn.commitText(CavanString.EMPTY_STRING, 0);
+				return conn.commitText(CavanString.NONE, 0);
 			}
 			break;
 
 		case "DELETE":
 			CharSequence text = conn.getSelectedText(0);
 			if (text != null && text.length() > 0) {
-				return conn.commitText(CavanString.EMPTY_STRING, 1);
+				return conn.commitText(CavanString.NONE, 1);
 			} else {
 				return conn.deleteSurroundingText(1, 0);
 			}
@@ -292,22 +292,33 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 		return true;
 	}
 
-	public int[] parseIndexs(String[] args) {
+	public Object[] parseIndexs(String[] args) {
 		if (args.length < 2) {
 			return null;
 		}
 
 		String[] values = args[1].split("\\s+");
-		int[] indexs = new int[values.length];
+		Object[] indexs = new Object[values.length];
 
 		for (int i = 0; i < values.length; i++) {
-			indexs[i] = CavanJava.parseInt(values[i]);
+			String value = values[i];
+
+			if (value.charAt(0) == '@') {
+				indexs[i] = value.substring(1);
+			} else {
+				indexs[i] = CavanJava.parseInt(value);
+			}
 		}
 
 		return indexs;
 	}
 
-	public boolean performAction(CavanAccessibilityService accessibility, int action, int[] indexs) {
+	public boolean performAction(CavanAccessibilityService accessibility, int action, boolean touch, String[] args) {
+		Object[] indexs = parseIndexs(args);
+		if (indexs == null) {
+			return false;
+		}
+
 		AccessibilityNodeInfo node = accessibility.getChildRecursive(indexs);
 		if (node == null) {
 			return false;
@@ -315,16 +326,11 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 
 		CavanAndroid.dLog("node = " + node);
 
-		return CavanAccessibilityHelper.performActionAndRecycle(node, action);
-	}
-
-	public boolean performAction(CavanAccessibilityService accessibility, int action, String[] args) {
-		int[] indexs = parseIndexs(args);
-		if (indexs == null) {
-			return false;
+		if (touch && accessibility.doInputTap(node)) {
+			return true;
 		}
 
-		return performAction(accessibility, action, indexs);
+		return CavanAccessibilityHelper.performActionAndRecycle(node, action);
 	}
 
 	protected void onTcpPacketReceived(String[] args) {
@@ -438,13 +444,19 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 
 		case "CLICK":
 			if (accessibility != null && CavanMainApplication.isScreenOn()) {
-				performAction(accessibility, AccessibilityNodeInfo.ACTION_CLICK, args);
+				performAction(accessibility, AccessibilityNodeInfo.ACTION_CLICK, false, args);
+			}
+			break;
+
+		case "TOUCH":
+			if (accessibility != null && CavanMainApplication.isScreenOn()) {
+				performAction(accessibility, AccessibilityNodeInfo.ACTION_CLICK, true, args);
 			}
 			break;
 
 		case "LONG_CLICK":
 			if (accessibility != null && CavanMainApplication.isScreenOn()) {
-				performAction(accessibility, AccessibilityNodeInfo.ACTION_LONG_CLICK, args);
+				performAction(accessibility, AccessibilityNodeInfo.ACTION_LONG_CLICK, false, args);
 			}
 			break;
 

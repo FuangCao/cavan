@@ -271,7 +271,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				node.recycle();
 			}
 
-			node = CavanAccessibilityHelper.getChildRecursive(root, 0, 0, 0, -1, 0, 1, 0);
+			node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 0, 0, -1, 0, 1, 0);
 			if (node != null) {
 				if (CavanAccessibilityHelper.isEditText(node)) {
 					return node;
@@ -327,7 +327,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		public String getChattingName(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, -2);
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, -2);
 			if (node == null) {
 				return null;
 			}
@@ -418,7 +418,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doUnfollow(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, -1);
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, -1);
 			if (node == null) {
 				return false;
 			}
@@ -514,7 +514,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		public String getChattingName(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 0, 0, 1);
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 0, 0, 1);
 			if (node == null) {
 				return null;
 			}
@@ -533,7 +533,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		public AccessibilityNodeInfo getChattingListView(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo[] nodes = CavanAccessibilityHelper.getChildsRecursive(root, 0, 0, 0);
+			AccessibilityNodeInfo[] nodes = CavanAccessibilityHelper.getChildsRecursiveF(root, 0, 0, 0);
 			if (nodes == null) {
 				return null;
 			}
@@ -585,7 +585,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		public boolean isLauncherUI(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, -1, 0, -1);
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, -1, 0, -1);
 			if (node == null) {
 				return false;
 			}
@@ -595,7 +595,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 					return false;
 				}
 
-				AccessibilityNodeInfo child = CavanAccessibilityHelper.getChildRecursive(node, 0, 0, 0);
+				AccessibilityNodeInfo child = CavanAccessibilityHelper.getChildRecursiveF(node, 0, 0, 0);
 				if (child != null) {
 					String desc = CavanAccessibilityHelper.getNodeDescription(child);
 
@@ -707,11 +707,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		public List<AccessibilityNodeInfo> getListViews(AccessibilityNodeInfo root) {
-			return CavanAccessibilityHelper.getChildsByClassName(root, ListView.class.getCanonicalName(), 0);
+			return CavanAccessibilityHelper.getChildsByClassNameF(root, ListView.class.getCanonicalName(), 0);
 		}
 
 		public boolean enterOfficialAccounts(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, -1, 2, 0);
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, -1, 2, 0);
+			CavanAndroid.dLog("node = " + node);
 			if (node != null) {
 				String text = CavanAccessibilityHelper.getNodeText(node);
 
@@ -815,7 +816,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				}
 			}
 
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 2);
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 2);
 			if (node == null) {
 				return false;
 			}
@@ -1087,7 +1088,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 						continue;
 					}
 
-					AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(child, 0, 0);
+					AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(child, 0, 0);
 					if (node == null) {
 						continue;
 					}
@@ -1108,7 +1109,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		public String getTitle(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 3, 1);
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 3, 1);
 			if (node == null) {
 				return null;
 			}
@@ -1130,7 +1131,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		public boolean clickMenuButton(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, -1);
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, -1);
 			if (node == null) {
 				return false;
 			}
@@ -1160,7 +1161,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doActionBack(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo[] nodes = CavanAccessibilityHelper.getChildsRecursive(root, 0, 3, 0, 0);
+			AccessibilityNodeInfo[] nodes = CavanAccessibilityHelper.getChildsRecursiveF(root, 0, 3, 0, 0);
 			if (nodes == null) {
 				return false;
 			}
@@ -1197,7 +1198,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 			if (title.contains("穿越火线")) {
 				while (true) {
-					node = CavanAccessibilityHelper.getChildRecursive(root, 0, 0, 0, 0, 0, 2, 1);
+					node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 0, 0, 0, 0, 2, 1);
 					if (node == null) {
 						return false;
 					}
@@ -1210,7 +1211,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 					node.recycle();
 
-					node = CavanAccessibilityHelper.getChildRecursive(root, 0, 0, 0, 0, 0, 2, 3);
+					node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 0, 0, 0, 0, 2, 3);
 					if (node == null) {
 						return false;
 					}
@@ -1313,7 +1314,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		private boolean doWebCommandVip(AccessibilityNodeInfo root, AccessibilityNodeInfo web) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(web, 0, 0, 0, 0, 0);
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(web, 0, 0, 0, 0, 0);
 			if (node != null) {
 				return CavanAccessibilityHelper.performClickAndRecycle(node);
 			}
@@ -1403,7 +1404,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doLogin(AccessibilityNodeInfo root, String username, String password) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 2, 3);
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 2, 3);
 			if (node == null) {
 				return false;
 			}
@@ -1506,7 +1507,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		public String getUserName(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 2, 0);
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 2, 0);
 			if (node == null) {
 				return null;
 			}
@@ -1887,7 +1888,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 	};
 
 	public String getAppBrandTitle0(AccessibilityNodeInfo root) {
-		AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 0, 0);
+		AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 0, 0);
 		if (node == null) {
 			return null;
 		}
@@ -1907,7 +1908,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 	}
 
 	public String getAppBrandTitle1(AccessibilityNodeInfo root) {
-		AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 1, 0);
+		AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 1, 0);
 		if (node == null) {
 			return null;
 		}
@@ -1936,7 +1937,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 	}
 
 	public boolean isAnswerCorrect(AccessibilityNodeInfo root) {
-		AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 3, 0, 0, 1, 2);
+		AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 3, 0, 0, 1, 2);
 		if (node == null) {
 			return false;
 		}
@@ -1998,7 +1999,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 	}
 
 	public boolean isAnswerCompleted(AccessibilityNodeInfo root) {
-		AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 3, 0, 0, 10, 0);
+		AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 3, 0, 0, 10, 0);
 		if (node == null) {
 			return false;
 		}
@@ -2023,7 +2024,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		CavanAndroid.dLog("title = " + title);
 
 		if (title.equals("争分夺金")) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, -1, 0, 0, -1);
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, -1, 0, 0, -1);
 			if (node != null) {
 				AppBrandSubject subject = new AppBrandSubject(node);
 				setSubject(root, subject);
@@ -2038,7 +2039,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 			return true;
 		} else if (title.equals("答题")) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 3, 0);
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 3, 0);
 			if (node != null) {
 				try {
 					int a = CavanJava.parseInt(CavanAccessibilityHelper.getChildDesction(node, 3));
@@ -2092,12 +2093,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			AccessibilityNodeInfo[] childs = null;
 
 			try {
-				node0 = CavanAccessibilityHelper.getChildRecursive(root, 0, 3, 0, 2, 0, 0, 0, 2, 0);
+				node0 = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 3, 0, 2, 0, 0, 0, 2, 0);
 				if (node0 == null) {
 					return false;
 				}
 
-				node1 = CavanAccessibilityHelper.getChildRecursive(root, 0, 3, 0, 4);
+				node1 = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 3, 0, 4);
 				if (node1 == null) {
 					return false;
 				}
@@ -2275,7 +2276,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doUnfollow(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursive(root, 0, 4, 0);
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 4, 0);
 			if (node == null) {
 				return false;
 			}
@@ -2346,7 +2347,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 	};
 
-	public boolean doActionBackBase(AccessibilityNodeInfo root, int... indexs) {
+	public boolean doActionBackBase(AccessibilityNodeInfo root, Object... indexs) {
 		AccessibilityNodeInfo[] nodes = CavanAccessibilityHelper.getChildsRecursive(root, indexs);
 		if (nodes == null) {
 			return false;

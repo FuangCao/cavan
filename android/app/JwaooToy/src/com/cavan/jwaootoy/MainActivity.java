@@ -465,7 +465,7 @@ public class MainActivity extends JwaooToyActivity implements OnClickListener, O
 				try {
 					mAppSettings = mBleToy.readAppSettings();
 					if (mAppSettings == null) {
-						mEditTextSuspendOvertime.setText(CavanString.EMPTY_STRING);
+						mEditTextSuspendOvertime.setText(CavanString.NONE);
 						break;
 					}
 				} catch (Exception e) {

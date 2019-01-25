@@ -32,7 +32,7 @@ public class CavanUnlockActivity extends Activity implements Runnable {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		CavanAndroid.setActivityKeyguardEnable(this, false);
+		CavanAndroid.setActivityKeyguardEnable(this, false, true);
 		CavanAndroid.requestDismissKeyguard(this);
 		CavanAndroid.postRunnable(this);
 	}

@@ -132,7 +132,7 @@ public class CavanMacAddressView extends LinearLayout {
 		public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
 			for (int i = start; i < end; i++) {
 				if (!CavanString.isNumber(source.charAt(i), 16)) {
-					return CavanString.EMPTY_STRING;
+					return CavanString.NONE;
 				}
 			}
 

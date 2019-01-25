@@ -172,7 +172,7 @@ public class RedPacketListener extends TcpConnector implements ClipboardOwner {
 					break;
 				}
 
-				String code = line.replaceAll("\\W", CavanString.EMPTY_STRING);
+				String code = line.replaceAll("\\W", CavanString.NONE);
 				if (line.length() > 0) {
 					if (code.equals("keeplive")) {
 						listener.sendTcpData("CavanKeepAlive\n".getBytes());

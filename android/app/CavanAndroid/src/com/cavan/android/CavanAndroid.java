@@ -798,8 +798,12 @@ public class CavanAndroid {
 		return info.isAvailable();
 	}
 
-	public static void setWindowKeyguardEnable(Window window, boolean enable) {
+	public static void setWindowKeyguardEnable(Window window, boolean enable, boolean wakeup) {
 		int flags = LayoutParams.FLAG_DISMISS_KEYGUARD | LayoutParams.FLAG_SHOW_WHEN_LOCKED;
+
+		if (wakeup) {
+			flags |= LayoutParams.FLAG_TURN_SCREEN_ON;
+		}
 
 		if (enable) {
 			window.clearFlags(flags);
@@ -808,8 +812,8 @@ public class CavanAndroid {
 		}
 	}
 
-	public static void setActivityKeyguardEnable(Activity activity, boolean enable) {
-		setWindowKeyguardEnable(activity.getWindow(), enable);
+	public static void setActivityKeyguardEnable(Activity activity, boolean enable, boolean wakeup) {
+		setWindowKeyguardEnable(activity.getWindow(), enable, wakeup);
 	}
 
 	public static boolean startActivity(Context context, Intent intent) {

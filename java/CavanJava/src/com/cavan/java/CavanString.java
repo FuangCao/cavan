@@ -6,7 +6,8 @@ import java.util.regex.Pattern;
 
 public class CavanString {
 
-	public static final String EMPTY_STRING = new String();
+	public static final String NONE = new String();
+
 	public static final Pattern PATTERN_SPACE = Pattern.compile("\\s+");
 	public static final char[] HEX_LOWERCASE_CHARS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 	public static final char[] HEX_UPPERCASE_CHARS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
@@ -163,7 +164,7 @@ public class CavanString {
 	public static String deleteSpace(String text) {
 		Matcher matcher = PATTERN_SPACE.matcher(text);
 
-		return matcher.replaceAll(EMPTY_STRING);
+		return matcher.replaceAll(NONE);
 	}
 
 	public static String fromBdAddr(byte[] bytes) {
@@ -206,7 +207,7 @@ public class CavanString {
 	}
 
 	public static String fromCharSequence(CharSequence sequence) {
-		return fromCharSequence(sequence, EMPTY_STRING);
+		return fromCharSequence(sequence, NONE);
 	}
 
 	public static String fromStorageSize(double size) {

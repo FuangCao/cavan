@@ -145,7 +145,7 @@ public class RedPacketFinder {
 		sPackageCodeMap.put("com.tencent.mm", "微信");
 	}
 
-	private String mJoinedLines = CavanString.EMPTY_STRING;
+	private String mJoinedLines = CavanString.NONE;
 	private ArrayList<String> mLines = new ArrayList<String>();
 	private ArrayList<String> mSafeLines = new ArrayList<String>();
 
@@ -163,7 +163,7 @@ public class RedPacketFinder {
 
 			for (Pattern pattern : sExcludePatterns) {
 				Matcher matcher = pattern.matcher(line);
-				line = matcher.replaceAll(CavanString.EMPTY_STRING);
+				line = matcher.replaceAll(CavanString.NONE);
 			}
 
 			line = CavanString.strip(line);

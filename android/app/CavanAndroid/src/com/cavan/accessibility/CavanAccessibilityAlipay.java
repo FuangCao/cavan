@@ -150,7 +150,7 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 
 			if (!packet.isPending()) {
 				if (packet.isInvalid()) {
-					return inputRedPacketCode(input, CavanString.EMPTY_STRING);
+					return inputRedPacketCode(input, CavanString.NONE);
 				}
 
 				return true;

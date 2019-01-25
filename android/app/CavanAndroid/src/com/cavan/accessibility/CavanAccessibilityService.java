@@ -899,7 +899,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return true;
 	}
 
-	public AccessibilityNodeInfo getChildRecursive(int... indexs) {
+	public AccessibilityNodeInfo getChildRecursive(Object... indexs) {
 		AccessibilityNodeInfo root = getRootInActiveWindow(3);
 		if (root == null) {
 			return null;

@@ -102,7 +102,7 @@ public class CavanMainInputMethod extends CavanInputMethodService implements OnK
 				if (conn != null && conn.performContextMenuAction(android.R.id.selectAll)) {
 					CharSequence text = (CharSequence) msg.obj;
 					if (text == null) {
-						text = CavanString.EMPTY_STRING;
+						text = CavanString.NONE;
 					}
 
 					conn.commitText(text, 0);
@@ -537,7 +537,7 @@ public class CavanMainInputMethod extends CavanInputMethodService implements OnK
 		case KEYCODE_DELETE:
 			CharSequence text = conn.getSelectedText(0);
 			if (text != null && text.length() > 0) {
-				conn.commitText(CavanString.EMPTY_STRING, 1);
+				conn.commitText(CavanString.NONE, 1);
 			} else {
 				conn.deleteSurroundingText(1, 0);
 			}
@@ -547,7 +547,7 @@ public class CavanMainInputMethod extends CavanInputMethodService implements OnK
 
 		case KEYCODE_CLEAR:
 			conn.performContextMenuAction(android.R.id.selectAll);
-			conn.commitText(CavanString.EMPTY_STRING, 0);
+			conn.commitText(CavanString.NONE, 0);
 			break;
 
 		case KEYCODE_DONE:

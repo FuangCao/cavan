@@ -115,7 +115,7 @@ public class CavanTcpPacketClient extends CavanTcpClient {
 
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
-		String lineBak = CavanString.EMPTY_STRING;
+		String lineBak = CavanString.NONE;
 
 		while (true) {
 			String line;

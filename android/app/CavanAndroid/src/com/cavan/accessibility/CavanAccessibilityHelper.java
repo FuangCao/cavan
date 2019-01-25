@@ -289,6 +289,27 @@ public class CavanAccessibilityHelper {
 		return null;
 	}
 
+	public static AccessibilityNodeInfo findChildByDescription(AccessibilityNodeInfo parent, String desc) {
+		int childs = parent.getChildCount();
+
+		for (int i = 0; i < childs; i++) {
+			AccessibilityNodeInfo child = parent.getChild(i);
+			if (child == null) {
+				continue;
+			}
+
+			CharSequence sequence = child.getContentDescription();
+
+			if (sequence != null && desc.equals(sequence.toString())) {
+				return child;
+			}
+
+			child.recycle();
+		}
+
+		return null;
+	}
+
 	public static AccessibilityNodeInfo getFirstNode(List<AccessibilityNodeInfo> nodes) {
 		if (nodes == null) {
 			return null;
@@ -323,7 +344,7 @@ public class CavanAccessibilityHelper {
 			return text.toString().trim();
 		}
 
-		return CavanString.EMPTY_STRING;
+		return CavanString.NONE;
 	}
 
 	public static boolean isTextEquals(AccessibilityNodeInfo node, String text) {
@@ -336,7 +357,7 @@ public class CavanAccessibilityHelper {
 			return description.toString().trim();
 		}
 
-		return CavanString.EMPTY_STRING;
+		return CavanString.NONE;
 	}
 
 	public static boolean isDescriptionEquals(AccessibilityNodeInfo node, String text) {
@@ -346,7 +367,7 @@ public class CavanAccessibilityHelper {
 	public static String getEventText(AccessibilityEvent event) {
 		List<CharSequence> texts = event.getText();
 		if (texts.isEmpty()) {
-			return CavanString.EMPTY_STRING;
+			return CavanString.NONE;
 		}
 
 		return texts.get(0).toString();
@@ -703,7 +724,7 @@ public class CavanAccessibilityHelper {
 
 	public static String setNodeText(Context context, AccessibilityNodeInfo node, String text) {
 		if (text == null) {
-			text = CavanString.EMPTY_STRING;
+			text = CavanString.NONE;
 		}
 
 		performFocus(node);
@@ -1049,7 +1070,7 @@ public class CavanAccessibilityHelper {
 		return getChildsRaw(node, 0, node.getChildCount());
 	}
 
-	public static AccessibilityNodeInfo getChild(AccessibilityNodeInfo node, int index) {
+	public static AccessibilityNodeInfo getChildByIndex(AccessibilityNodeInfo node, int index) {
 		int count = node.getChildCount();
 		if (index < count) {
 			if (index < 0) {
@@ -1069,7 +1090,57 @@ public class CavanAccessibilityHelper {
 		return null;
 	}
 
-	public static AccessibilityNodeInfo getChildRecursive(AccessibilityNodeInfo node, int... indexs) {
+	public static AccessibilityNodeInfo getChildByName(AccessibilityNodeInfo node, String name) {
+		String type, value;
+
+		int index = name.indexOf('@');
+		if (index < 0) {
+			type = name;
+			value = CavanString.NONE;
+		} else {
+			type = name.substring(0, index);
+			value = name.substring(index + 1);
+		}
+
+		switch (type) {
+		case "id":
+			return findNodeByViewId(node, value);
+
+		case "text":
+			return findNodeByText(node, value);
+
+		case "desc":
+			return findChildByDescription(node, value);
+
+		case "type":
+			return findChildByClassName(node, value);
+
+		case "parent":
+			return node.getParent();
+		}
+
+		return null;
+	}
+
+	public static AccessibilityNodeInfo getChild(AccessibilityNodeInfo node, Object identify) {
+		if (identify instanceof Integer) {
+			return getChildByIndex(node, (Integer) identify);
+		}
+
+		if (identify instanceof String) {
+			return getChildByName(node, (String) identify);
+		}
+
+		if (identify instanceof Object[]) {
+			return getChildRecursive(node, (Object[]) identify);
+		}
+
+		CavanAndroid.dumpstack();
+
+		return null;
+	}
+
+	public static AccessibilityNodeInfo getChildRecursive(AccessibilityNodeInfo node, Object[] indexs) {
 		if (indexs.length > 0) {
 			node = getChild(node, indexs[0]);
 
@@ -1087,7 +1158,11 @@ public class CavanAccessibilityHelper {
 		return node;
 	}
 
-	public static AccessibilityNodeInfo[] getChildsRecursive(AccessibilityNodeInfo node, int... indexs) {
+	public static AccessibilityNodeInfo getChildRecursiveF(AccessibilityNodeInfo node, Object... indexs) {
+		return getChildRecursive(node, indexs);
+	}
+
+	public static AccessibilityNodeInfo[] getChildsRecursive(AccessibilityNodeInfo node, Object[] indexs) {
 		AccessibilityNodeInfo[] childs = new AccessibilityNodeInfo[indexs.length];
 
 		for (int i = 0; i < childs.length; i++) {
@@ -1105,6 +1180,10 @@ public class CavanAccessibilityHelper {
 		}
 
 		return childs;
+	}
+
+	public static AccessibilityNodeInfo[] getChildsRecursiveF(AccessibilityNodeInfo node, Object... indexs) {
+		return getChildsRecursive(node, indexs);
 	}
 
 	public static List<CharSequence> getChildTexts(AccessibilityNodeInfo parent) {
@@ -1145,7 +1224,7 @@ public class CavanAccessibilityHelper {
 		return childs;
 	}
 
-	public static List<AccessibilityNodeInfo> getChildsByClassName(AccessibilityNodeInfo root, CharSequence clsName, int... indexs) {
+	public static List<AccessibilityNodeInfo> getChildsByClassName(AccessibilityNodeInfo root, CharSequence clsName, Object[] indexs) {
 		AccessibilityNodeInfo parent = getChildRecursive(root, indexs);
 		if (parent == null) {
 			return null;
@@ -1158,6 +1237,10 @@ public class CavanAccessibilityHelper {
 		}
 
 		return childs;
+	}
+
+	public static List<AccessibilityNodeInfo> getChildsByClassNameF(AccessibilityNodeInfo root, CharSequence clsName, Object... indexs) {
+		return getChildsByClassName(root, clsName, indexs);
 	}
 
 	public static String getNodePackageName(AccessibilityNodeInfo node) {

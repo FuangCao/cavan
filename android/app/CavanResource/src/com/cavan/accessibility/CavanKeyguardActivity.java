@@ -25,7 +25,7 @@ public class CavanKeyguardActivity extends Activity implements OnClickListener {
 		super.onCreate(bundle);
 		instance = this;
 
-		CavanAndroid.setActivityKeyguardEnable(this, false);
+		CavanAndroid.setActivityKeyguardEnable(this, false, false);
 		setContentView(R.layout.keyguard);
 
 		mButtonUnlock = (Button) findViewById(R.id.buttonUnlock);
