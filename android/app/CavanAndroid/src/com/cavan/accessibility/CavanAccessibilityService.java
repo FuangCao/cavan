@@ -859,6 +859,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return sendCommand(CavanAccessibilityPackage.CMD_UNFOLLOW);
 	}
 
+	public boolean sendCommandShred(boolean friends) {
+		return sendCommand(CavanAccessibilityPackage.CMD_SHARE, friends);
+	}
+
 	public boolean refresh() {
 		return sendCommand(CavanAccessibilityPackage.CMD_REFRESH);
 	}

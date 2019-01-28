@@ -373,8 +373,14 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			break;
 
 		case "WEB":
-			if (accessibility != null && args.length > 0) {
+			if (accessibility != null && args.length > 1) {
 				accessibility.sendCommandWeb(args[1]);
+			}
+			break;
+
+		case "SHARE":
+			if (accessibility != null) {
+				accessibility.sendCommandShred(args.length > 1 && CavanJava.parseBoolean(args[1]));
 			}
 			break;
 

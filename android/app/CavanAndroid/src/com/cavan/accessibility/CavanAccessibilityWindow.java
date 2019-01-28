@@ -133,6 +133,10 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
+	protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
+		return false;
+	}
+
 	protected boolean doActionBack(AccessibilityNodeInfo root) {
 		return false;
 	}

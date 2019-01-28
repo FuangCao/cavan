@@ -1160,6 +1160,19 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
+		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
+			if (clickMenuButton(root)) {
+				if (friends) {
+					mMenuItem = "发送给朋友";
+				} else {
+					mMenuItem = "分享到朋友圈";
+				}
+			}
+
+			return false;
+		}
+
+		@Override
 		protected boolean doActionBack(AccessibilityNodeInfo root) {
 			AccessibilityNodeInfo[] nodes = CavanAccessibilityHelper.getChildsRecursiveF(root, 0, 3, 0, 0);
 			if (nodes == null) {
@@ -1361,6 +1374,15 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		@Override
 		protected boolean doRefresh(AccessibilityNodeInfo root) {
 			return doClickMenuItem(root, "刷新");
+		}
+
+		@Override
+		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
+			if (friends) {
+				return doClickMenuItem(root, "发送给朋友");
+			} else {
+				return doClickMenuItem(root, "分享到朋友圈");
+			}
 		}
 
 		@Override

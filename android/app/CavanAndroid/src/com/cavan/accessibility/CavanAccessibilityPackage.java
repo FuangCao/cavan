@@ -26,6 +26,7 @@ public class CavanAccessibilityPackage {
 	public static final int CMD_BACK = 7;
 	public static final int CMD_HOME = 8;
 	public static final int CMD_WEB = 9;
+	public static final int CMD_SHARE = 10;
 
 	public static int WAIT_DELAY = 500;
 	public static int BACK_DELAY = 5000;
@@ -412,12 +413,10 @@ public class CavanAccessibilityPackage {
 
 	protected synchronized CavanAccessibilityWindow onWindowStateChanged(AccessibilityNodeInfo root, CavanAccessibilityWindow win) {
 		if (win != mWindow) {
-			mPrevWin = mWindow;
-
-			boolean progress = false;
+			boolean pending = true;
 
 			if (win != null && win.isProgressView()) {
-				progress = true;
+				pending = false;
 
 				if (mWindow != null) {
 					mWindow.onProgress(win);
@@ -425,20 +424,27 @@ public class CavanAccessibilityPackage {
 			}
 
 			if (mWindow != null) {
-				if (mWindow.isProgressView()) {
-					progress = true;
-				} else {
+				if (pending) {
 					mWindow.onLeave(root);
+				}
+
+				if (mWindow.isProgressView()) {
+					if (win == mPrevWin) {
+						pending = false;
+					} else if (mPrevWin != null) {
+						mPrevWin.onLeave(root);
+					}
 				}
 			}
 
+			mPrevWin = mWindow;
 			mWindow = win;
 
 			if (win != null) {
 				int types = win.getEventTypes(this);
 				mService.setEventTypes(types);
 
-				if (!progress) {
+				if (pending) {
 					win.onEnter(root);
 				}
 
@@ -454,13 +460,14 @@ public class CavanAccessibilityPackage {
 	}
 
 	protected synchronized CavanAccessibilityWindow onWindowStateChanged(AccessibilityNodeInfo root, AccessibilityEvent event) {
+		touchUpdateTime();
+
 		String name = CavanString.fromCharSequence(event.getClassName(), null);
 		if (name == null) {
 			return null;
 		}
 
 		CavanAndroid.dLog("onWindowStateChanged: " + mName + "/" + name);
-		touchUpdateTime();
 
 		CavanAccessibilityWindow win = getWindow(name);
 
@@ -666,6 +673,10 @@ public class CavanAccessibilityPackage {
 		case CMD_UNFOLLOW:
 			CavanAndroid.dLog("CMD_UNFOLLOW");
 			return win.doUnfollow(root);
+
+		case CMD_SHARE:
+			CavanAndroid.dLog("CMD_SHARE");
+			return win.doCommandShare(root, (boolean) args[0]);
 
 		case CMD_BACK:
 			CavanAndroid.dLog("CMD_BACK");
