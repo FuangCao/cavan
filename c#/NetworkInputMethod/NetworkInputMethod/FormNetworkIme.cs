@@ -46,6 +46,8 @@ namespace NetworkInputMethod
         {
             InitializeComponent();
 
+            comboBoxSend.SelectedIndex = 0;
+
             mService = new NetworkImeService(this);
             buttonStart_Click(buttonStart, null);
 
@@ -316,17 +318,19 @@ namespace NetworkInputMethod
             string text = textBoxContent.Text;
             string command;
 
-            if (radioButtonInsert.Checked)
+            switch (comboBoxSend.SelectedIndex)
             {
-                command = "INSERT";
-            }
-            else if (radioButtonReplace.Checked)
-            {
-                command = "REPLACE";
-            }
-            else
-            {
-                command = "SEND";
+                case 1:
+                    command = "REPLACE";
+                    break;
+
+                case 2:
+                    command = "INSERT";
+                    break;
+
+                default:
+                    command = "SEND";
+                    break;
             }
 
             if (text != null && text.Length > 0)
@@ -346,6 +350,15 @@ namespace NetworkInputMethod
         private void buttonClear_Click(object sender, EventArgs e)
         {
             sendCommand("CLEAR", true);
+        }
+
+        private void buttonVolume_Click(object sender, EventArgs e)
+        {
+            var dialog = new FormVolumeEditor();
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                sendCommand("VOLUME =" + dialog.getVolume(), false);
+            }
         }
 
         private void buttonVolumeDown_Click(object sender, EventArgs e)
@@ -724,6 +737,16 @@ namespace NetworkInputMethod
         private void buttonDesktop_Click(object sender, EventArgs e)
         {
             sendCommand("DESKTOP", false);
+        }
+
+        private void buttonShareFriends_Click(object sender, EventArgs e)
+        {
+            sendCommand("SHARE 1", true);
+        }
+
+        private void buttonShare_Click(object sender, EventArgs e)
+        {
+            sendCommand("SHARE", true);
         }
     }
 

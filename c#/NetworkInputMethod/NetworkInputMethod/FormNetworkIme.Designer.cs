@@ -36,10 +36,6 @@
             this.textBoxContent = new System.Windows.Forms.TextBox();
             this.buttonSend = new System.Windows.Forms.Button();
             this.buttonClear = new System.Windows.Forms.Button();
-            this.groupBoxMode = new System.Windows.Forms.GroupBox();
-            this.radioButtonReplace = new System.Windows.Forms.RadioButton();
-            this.radioButtonInsert = new System.Windows.Forms.RadioButton();
-            this.radioButtonSend = new System.Windows.Forms.RadioButton();
             this.checkBoxClear = new System.Windows.Forms.CheckBox();
             this.labelStatus = new System.Windows.Forms.Label();
             this.checkBoxRepeat = new System.Windows.Forms.CheckBox();
@@ -81,23 +77,28 @@
             this.buttonWeibo = new System.Windows.Forms.Button();
             this.buttonTaobao = new System.Windows.Forms.Button();
             this.checkBoxSendClipboard = new System.Windows.Forms.CheckBox();
-            this.groupBoxMode.SuspendLayout();
+            this.comboBoxSend = new System.Windows.Forms.ComboBox();
+            this.buttonShare = new System.Windows.Forms.Button();
+            this.buttonShareFriends = new System.Windows.Forms.Button();
+            this.buttonVolume = new System.Windows.Forms.Button();
+            this.buttonCopy = new System.Windows.Forms.Button();
+            this.buttonMute = new System.Windows.Forms.Button();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // textBoxPort
             // 
-            this.textBoxPort.Location = new System.Drawing.Point(311, 14);
+            this.textBoxPort.Location = new System.Drawing.Point(273, 13);
             this.textBoxPort.Name = "textBoxPort";
-            this.textBoxPort.Size = new System.Drawing.Size(75, 21);
+            this.textBoxPort.Size = new System.Drawing.Size(60, 21);
             this.textBoxPort.TabIndex = 1;
             this.textBoxPort.Text = "8865";
             // 
             // buttonStart
             // 
-            this.buttonStart.Location = new System.Drawing.Point(392, 12);
+            this.buttonStart.Location = new System.Drawing.Point(339, 12);
             this.buttonStart.Name = "buttonStart";
-            this.buttonStart.Size = new System.Drawing.Size(75, 23);
+            this.buttonStart.Size = new System.Drawing.Size(60, 23);
             this.buttonStart.TabIndex = 2;
             this.buttonStart.Text = "启动";
             this.buttonStart.UseVisualStyleBackColor = true;
@@ -107,9 +108,9 @@
             // 
             this.checkedListBoxClients.CheckOnClick = true;
             this.checkedListBoxClients.FormattingEnabled = true;
-            this.checkedListBoxClients.Location = new System.Drawing.Point(12, 41);
+            this.checkedListBoxClients.Location = new System.Drawing.Point(9, 41);
             this.checkedListBoxClients.Name = "checkedListBoxClients";
-            this.checkedListBoxClients.Size = new System.Drawing.Size(455, 132);
+            this.checkedListBoxClients.Size = new System.Drawing.Size(390, 132);
             this.checkedListBoxClients.TabIndex = 4;
             this.checkedListBoxClients.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedListBoxClients_ItemCheck);
             // 
@@ -117,15 +118,15 @@
             // 
             this.textBoxContent.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.textBoxContent.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.HistoryList;
-            this.textBoxContent.Location = new System.Drawing.Point(12, 199);
+            this.textBoxContent.Location = new System.Drawing.Point(10, 199);
             this.textBoxContent.Multiline = true;
             this.textBoxContent.Name = "textBoxContent";
-            this.textBoxContent.Size = new System.Drawing.Size(455, 69);
+            this.textBoxContent.Size = new System.Drawing.Size(389, 69);
             this.textBoxContent.TabIndex = 5;
             // 
             // buttonSend
             // 
-            this.buttonSend.Location = new System.Drawing.Point(407, 424);
+            this.buttonSend.Location = new System.Drawing.Point(339, 441);
             this.buttonSend.Name = "buttonSend";
             this.buttonSend.Size = new System.Drawing.Size(60, 23);
             this.buttonSend.TabIndex = 6;
@@ -135,7 +136,7 @@
             // 
             // buttonClear
             // 
-            this.buttonClear.Location = new System.Drawing.Point(275, 395);
+            this.buttonClear.Location = new System.Drawing.Point(273, 412);
             this.buttonClear.Name = "buttonClear";
             this.buttonClear.Size = new System.Drawing.Size(60, 23);
             this.buttonClear.TabIndex = 7;
@@ -143,56 +144,10 @@
             this.buttonClear.UseVisualStyleBackColor = true;
             this.buttonClear.Click += new System.EventHandler(this.buttonClear_Click);
             // 
-            // groupBoxMode
-            // 
-            this.groupBoxMode.Controls.Add(this.radioButtonReplace);
-            this.groupBoxMode.Controls.Add(this.radioButtonInsert);
-            this.groupBoxMode.Controls.Add(this.radioButtonSend);
-            this.groupBoxMode.Location = new System.Drawing.Point(407, 325);
-            this.groupBoxMode.Name = "groupBoxMode";
-            this.groupBoxMode.Size = new System.Drawing.Size(60, 94);
-            this.groupBoxMode.TabIndex = 8;
-            this.groupBoxMode.TabStop = false;
-            // 
-            // radioButtonReplace
-            // 
-            this.radioButtonReplace.AutoSize = true;
-            this.radioButtonReplace.Location = new System.Drawing.Point(6, 44);
-            this.radioButtonReplace.Name = "radioButtonReplace";
-            this.radioButtonReplace.Size = new System.Drawing.Size(47, 16);
-            this.radioButtonReplace.TabIndex = 1;
-            this.radioButtonReplace.Text = "替换";
-            this.radioButtonReplace.UseVisualStyleBackColor = true;
-            this.radioButtonReplace.CheckedChanged += new System.EventHandler(this.radioButtonReplace_CheckedChanged);
-            // 
-            // radioButtonInsert
-            // 
-            this.radioButtonInsert.AutoSize = true;
-            this.radioButtonInsert.Location = new System.Drawing.Point(7, 73);
-            this.radioButtonInsert.Name = "radioButtonInsert";
-            this.radioButtonInsert.Size = new System.Drawing.Size(47, 16);
-            this.radioButtonInsert.TabIndex = 0;
-            this.radioButtonInsert.Text = "插入";
-            this.radioButtonInsert.UseVisualStyleBackColor = true;
-            this.radioButtonInsert.CheckedChanged += new System.EventHandler(this.radioButtonInsert_CheckedChanged);
-            // 
-            // radioButtonSend
-            // 
-            this.radioButtonSend.AutoSize = true;
-            this.radioButtonSend.Checked = true;
-            this.radioButtonSend.Location = new System.Drawing.Point(6, 15);
-            this.radioButtonSend.Name = "radioButtonSend";
-            this.radioButtonSend.Size = new System.Drawing.Size(47, 16);
-            this.radioButtonSend.TabIndex = 2;
-            this.radioButtonSend.TabStop = true;
-            this.radioButtonSend.Text = "发送";
-            this.radioButtonSend.UseVisualStyleBackColor = true;
-            this.radioButtonSend.CheckedChanged += new System.EventHandler(this.radioButtonSend_CheckedChanged);
-            // 
             // checkBoxClear
             // 
             this.checkBoxClear.AutoSize = true;
-            this.checkBoxClear.Location = new System.Drawing.Point(305, 303);
+            this.checkBoxClear.Location = new System.Drawing.Point(237, 303);
             this.checkBoxClear.Name = "checkBoxClear";
             this.checkBoxClear.Size = new System.Drawing.Size(84, 16);
             this.checkBoxClear.TabIndex = 9;
@@ -211,7 +166,7 @@
             // checkBoxRepeat
             // 
             this.checkBoxRepeat.AutoSize = true;
-            this.checkBoxRepeat.Location = new System.Drawing.Point(395, 177);
+            this.checkBoxRepeat.Location = new System.Drawing.Point(327, 177);
             this.checkBoxRepeat.Name = "checkBoxRepeat";
             this.checkBoxRepeat.Size = new System.Drawing.Size(72, 16);
             this.checkBoxRepeat.TabIndex = 21;
@@ -224,7 +179,7 @@
             this.checkBoxEnterSend.AutoSize = true;
             this.checkBoxEnterSend.Checked = true;
             this.checkBoxEnterSend.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxEnterSend.Location = new System.Drawing.Point(395, 303);
+            this.checkBoxEnterSend.Location = new System.Drawing.Point(327, 303);
             this.checkBoxEnterSend.Name = "checkBoxEnterSend";
             this.checkBoxEnterSend.Size = new System.Drawing.Size(72, 16);
             this.checkBoxEnterSend.TabIndex = 22;
@@ -242,7 +197,7 @@
             this.checkBoxShareClipboard.AutoSize = true;
             this.checkBoxShareClipboard.Checked = true;
             this.checkBoxShareClipboard.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxShareClipboard.Location = new System.Drawing.Point(215, 177);
+            this.checkBoxShareClipboard.Location = new System.Drawing.Point(147, 177);
             this.checkBoxShareClipboard.Name = "checkBoxShareClipboard";
             this.checkBoxShareClipboard.Size = new System.Drawing.Size(84, 16);
             this.checkBoxShareClipboard.TabIndex = 23;
@@ -262,7 +217,7 @@
             // 
             // buttonTmall
             // 
-            this.buttonTmall.Location = new System.Drawing.Point(209, 366);
+            this.buttonTmall.Location = new System.Drawing.Point(141, 383);
             this.buttonTmall.Name = "buttonTmall";
             this.buttonTmall.Size = new System.Drawing.Size(60, 23);
             this.buttonTmall.TabIndex = 28;
@@ -272,7 +227,7 @@
             // 
             // buttonPaste
             // 
-            this.buttonPaste.Location = new System.Drawing.Point(341, 395);
+            this.buttonPaste.Location = new System.Drawing.Point(339, 383);
             this.buttonPaste.Name = "buttonPaste";
             this.buttonPaste.Size = new System.Drawing.Size(60, 23);
             this.buttonPaste.TabIndex = 29;
@@ -282,7 +237,7 @@
             // 
             // buttonComplete
             // 
-            this.buttonComplete.Location = new System.Drawing.Point(341, 424);
+            this.buttonComplete.Location = new System.Drawing.Point(339, 412);
             this.buttonComplete.Name = "buttonComplete";
             this.buttonComplete.Size = new System.Drawing.Size(60, 23);
             this.buttonComplete.TabIndex = 30;
@@ -292,7 +247,7 @@
             // 
             // buttonOpen
             // 
-            this.buttonOpen.Location = new System.Drawing.Point(209, 337);
+            this.buttonOpen.Location = new System.Drawing.Point(141, 325);
             this.buttonOpen.Name = "buttonOpen";
             this.buttonOpen.Size = new System.Drawing.Size(60, 23);
             this.buttonOpen.TabIndex = 31;
@@ -302,7 +257,7 @@
             // 
             // buttonBack
             // 
-            this.buttonBack.Location = new System.Drawing.Point(143, 424);
+            this.buttonBack.Location = new System.Drawing.Point(141, 441);
             this.buttonBack.Name = "buttonBack";
             this.buttonBack.Size = new System.Drawing.Size(60, 23);
             this.buttonBack.TabIndex = 33;
@@ -312,7 +267,7 @@
             // 
             // buttonVolumeDown
             // 
-            this.buttonVolumeDown.Location = new System.Drawing.Point(275, 366);
+            this.buttonVolumeDown.Location = new System.Drawing.Point(207, 354);
             this.buttonVolumeDown.Name = "buttonVolumeDown";
             this.buttonVolumeDown.Size = new System.Drawing.Size(60, 23);
             this.buttonVolumeDown.TabIndex = 34;
@@ -322,7 +277,7 @@
             // 
             // buttonVolumeUp
             // 
-            this.buttonVolumeUp.Location = new System.Drawing.Point(341, 366);
+            this.buttonVolumeUp.Location = new System.Drawing.Point(339, 354);
             this.buttonVolumeUp.Name = "buttonVolumeUp";
             this.buttonVolumeUp.Size = new System.Drawing.Size(60, 23);
             this.buttonVolumeUp.TabIndex = 35;
@@ -332,7 +287,7 @@
             // 
             // buttonHome
             // 
-            this.buttonHome.Location = new System.Drawing.Point(209, 424);
+            this.buttonHome.Location = new System.Drawing.Point(207, 441);
             this.buttonHome.Name = "buttonHome";
             this.buttonHome.Size = new System.Drawing.Size(60, 23);
             this.buttonHome.TabIndex = 37;
@@ -348,7 +303,7 @@
             // 
             // buttonRequest
             // 
-            this.buttonRequest.Location = new System.Drawing.Point(275, 337);
+            this.buttonRequest.Location = new System.Drawing.Point(273, 325);
             this.buttonRequest.Name = "buttonRequest";
             this.buttonRequest.Size = new System.Drawing.Size(60, 23);
             this.buttonRequest.TabIndex = 40;
@@ -358,7 +313,7 @@
             // 
             // buttonHidden
             // 
-            this.buttonHidden.Location = new System.Drawing.Point(77, 366);
+            this.buttonHidden.Location = new System.Drawing.Point(75, 354);
             this.buttonHidden.Name = "buttonHidden";
             this.buttonHidden.Size = new System.Drawing.Size(60, 23);
             this.buttonHidden.TabIndex = 41;
@@ -421,7 +376,7 @@
             // 
             // buttonRecents
             // 
-            this.buttonRecents.Location = new System.Drawing.Point(275, 424);
+            this.buttonRecents.Location = new System.Drawing.Point(273, 441);
             this.buttonRecents.Name = "buttonRecents";
             this.buttonRecents.Size = new System.Drawing.Size(60, 23);
             this.buttonRecents.TabIndex = 42;
@@ -431,7 +386,7 @@
             // 
             // buttonRefresh
             // 
-            this.buttonRefresh.Location = new System.Drawing.Point(143, 395);
+            this.buttonRefresh.Location = new System.Drawing.Point(141, 412);
             this.buttonRefresh.Name = "buttonRefresh";
             this.buttonRefresh.Size = new System.Drawing.Size(60, 23);
             this.buttonRefresh.TabIndex = 43;
@@ -441,7 +396,7 @@
             // 
             // buttonSignin
             // 
-            this.buttonSignin.Location = new System.Drawing.Point(143, 337);
+            this.buttonSignin.Location = new System.Drawing.Point(339, 325);
             this.buttonSignin.Name = "buttonSignin";
             this.buttonSignin.Size = new System.Drawing.Size(60, 23);
             this.buttonSignin.TabIndex = 44;
@@ -451,7 +406,7 @@
             // 
             // buttonUnfollow
             // 
-            this.buttonUnfollow.Location = new System.Drawing.Point(77, 395);
+            this.buttonUnfollow.Location = new System.Drawing.Point(75, 412);
             this.buttonUnfollow.Name = "buttonUnfollow";
             this.buttonUnfollow.Size = new System.Drawing.Size(60, 23);
             this.buttonUnfollow.TabIndex = 45;
@@ -461,15 +416,15 @@
             // 
             // textBoxClock
             // 
-            this.textBoxClock.Location = new System.Drawing.Point(12, 14);
+            this.textBoxClock.Location = new System.Drawing.Point(9, 13);
             this.textBoxClock.Name = "textBoxClock";
             this.textBoxClock.ReadOnly = true;
-            this.textBoxClock.Size = new System.Drawing.Size(293, 21);
+            this.textBoxClock.Size = new System.Drawing.Size(258, 21);
             this.textBoxClock.TabIndex = 46;
             // 
             // buttonBuildPack
             // 
-            this.buttonBuildPack.Location = new System.Drawing.Point(341, 337);
+            this.buttonBuildPack.Location = new System.Drawing.Point(207, 325);
             this.buttonBuildPack.Name = "buttonBuildPack";
             this.buttonBuildPack.Size = new System.Drawing.Size(60, 23);
             this.buttonBuildPack.TabIndex = 47;
@@ -483,13 +438,13 @@
             this.comboBoxHistory.FormattingEnabled = true;
             this.comboBoxHistory.Location = new System.Drawing.Point(12, 274);
             this.comboBoxHistory.Name = "comboBoxHistory";
-            this.comboBoxHistory.Size = new System.Drawing.Size(455, 20);
+            this.comboBoxHistory.Size = new System.Drawing.Size(321, 20);
             this.comboBoxHistory.TabIndex = 48;
             this.comboBoxHistory.TextChanged += new System.EventHandler(this.comboBoxHistory_TextChanged);
             // 
             // buttonWeixin
             // 
-            this.buttonWeixin.Location = new System.Drawing.Point(11, 424);
+            this.buttonWeixin.Location = new System.Drawing.Point(9, 441);
             this.buttonWeixin.Name = "buttonWeixin";
             this.buttonWeixin.Size = new System.Drawing.Size(60, 23);
             this.buttonWeixin.TabIndex = 49;
@@ -499,7 +454,7 @@
             // 
             // buttonCommand
             // 
-            this.buttonCommand.Location = new System.Drawing.Point(77, 337);
+            this.buttonCommand.Location = new System.Drawing.Point(75, 325);
             this.buttonCommand.Name = "buttonCommand";
             this.buttonCommand.Size = new System.Drawing.Size(60, 23);
             this.buttonCommand.TabIndex = 50;
@@ -509,7 +464,7 @@
             // 
             // buttonUnlock
             // 
-            this.buttonUnlock.Location = new System.Drawing.Point(77, 424);
+            this.buttonUnlock.Location = new System.Drawing.Point(75, 441);
             this.buttonUnlock.Name = "buttonUnlock";
             this.buttonUnlock.Size = new System.Drawing.Size(60, 23);
             this.buttonUnlock.TabIndex = 51;
@@ -519,7 +474,7 @@
             // 
             // buttonIme
             // 
-            this.buttonIme.Location = new System.Drawing.Point(11, 366);
+            this.buttonIme.Location = new System.Drawing.Point(9, 354);
             this.buttonIme.Name = "buttonIme";
             this.buttonIme.Size = new System.Drawing.Size(60, 23);
             this.buttonIme.TabIndex = 52;
@@ -529,7 +484,7 @@
             // 
             // buttonDesktop
             // 
-            this.buttonDesktop.Location = new System.Drawing.Point(209, 395);
+            this.buttonDesktop.Location = new System.Drawing.Point(207, 412);
             this.buttonDesktop.Name = "buttonDesktop";
             this.buttonDesktop.Size = new System.Drawing.Size(60, 23);
             this.buttonDesktop.TabIndex = 56;
@@ -539,7 +494,7 @@
             // 
             // buttonAlipay
             // 
-            this.buttonAlipay.Location = new System.Drawing.Point(11, 337);
+            this.buttonAlipay.Location = new System.Drawing.Point(9, 325);
             this.buttonAlipay.Name = "buttonAlipay";
             this.buttonAlipay.Size = new System.Drawing.Size(60, 23);
             this.buttonAlipay.TabIndex = 55;
@@ -549,7 +504,7 @@
             // 
             // buttonWeibo
             // 
-            this.buttonWeibo.Location = new System.Drawing.Point(11, 395);
+            this.buttonWeibo.Location = new System.Drawing.Point(9, 412);
             this.buttonWeibo.Name = "buttonWeibo";
             this.buttonWeibo.Size = new System.Drawing.Size(60, 23);
             this.buttonWeibo.TabIndex = 54;
@@ -559,7 +514,7 @@
             // 
             // buttonTaobao
             // 
-            this.buttonTaobao.Location = new System.Drawing.Point(143, 366);
+            this.buttonTaobao.Location = new System.Drawing.Point(141, 354);
             this.buttonTaobao.Name = "buttonTaobao";
             this.buttonTaobao.Size = new System.Drawing.Size(60, 23);
             this.buttonTaobao.TabIndex = 53;
@@ -570,18 +525,87 @@
             // checkBoxSendClipboard
             // 
             this.checkBoxSendClipboard.AutoSize = true;
-            this.checkBoxSendClipboard.Location = new System.Drawing.Point(305, 177);
+            this.checkBoxSendClipboard.Location = new System.Drawing.Point(237, 177);
             this.checkBoxSendClipboard.Name = "checkBoxSendClipboard";
             this.checkBoxSendClipboard.Size = new System.Drawing.Size(84, 16);
             this.checkBoxSendClipboard.TabIndex = 57;
             this.checkBoxSendClipboard.Text = "剪切板发送";
             this.checkBoxSendClipboard.UseVisualStyleBackColor = true;
             // 
+            // comboBoxSend
+            // 
+            this.comboBoxSend.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxSend.FormattingEnabled = true;
+            this.comboBoxSend.Items.AddRange(new object[] {
+            "发送",
+            "替换",
+            "插入"});
+            this.comboBoxSend.Location = new System.Drawing.Point(339, 274);
+            this.comboBoxSend.Name = "comboBoxSend";
+            this.comboBoxSend.Size = new System.Drawing.Size(60, 20);
+            this.comboBoxSend.TabIndex = 58;
+            // 
+            // buttonShare
+            // 
+            this.buttonShare.Location = new System.Drawing.Point(75, 383);
+            this.buttonShare.Name = "buttonShare";
+            this.buttonShare.Size = new System.Drawing.Size(60, 23);
+            this.buttonShare.TabIndex = 59;
+            this.buttonShare.Text = "分圈";
+            this.buttonShare.UseVisualStyleBackColor = true;
+            this.buttonShare.Click += new System.EventHandler(this.buttonShare_Click);
+            // 
+            // buttonShareFriends
+            // 
+            this.buttonShareFriends.Location = new System.Drawing.Point(9, 383);
+            this.buttonShareFriends.Name = "buttonShareFriends";
+            this.buttonShareFriends.Size = new System.Drawing.Size(60, 23);
+            this.buttonShareFriends.TabIndex = 60;
+            this.buttonShareFriends.Text = "分朋友";
+            this.buttonShareFriends.UseVisualStyleBackColor = true;
+            this.buttonShareFriends.Click += new System.EventHandler(this.buttonShareFriends_Click);
+            // 
+            // buttonVolume
+            // 
+            this.buttonVolume.Location = new System.Drawing.Point(273, 354);
+            this.buttonVolume.Name = "buttonVolume";
+            this.buttonVolume.Size = new System.Drawing.Size(60, 23);
+            this.buttonVolume.TabIndex = 61;
+            this.buttonVolume.Text = "音量";
+            this.buttonVolume.UseVisualStyleBackColor = true;
+            this.buttonVolume.Click += new System.EventHandler(this.buttonVolume_Click);
+            // 
+            // buttonCopy
+            // 
+            this.buttonCopy.Location = new System.Drawing.Point(273, 383);
+            this.buttonCopy.Name = "buttonCopy";
+            this.buttonCopy.Size = new System.Drawing.Size(60, 23);
+            this.buttonCopy.TabIndex = 62;
+            this.buttonCopy.Text = "复制";
+            this.buttonCopy.UseVisualStyleBackColor = true;
+            this.buttonCopy.Click += new System.EventHandler(this.buttonCopy_Click);
+            // 
+            // buttonMute
+            // 
+            this.buttonMute.Location = new System.Drawing.Point(207, 383);
+            this.buttonMute.Name = "buttonMute";
+            this.buttonMute.Size = new System.Drawing.Size(60, 23);
+            this.buttonMute.TabIndex = 63;
+            this.buttonMute.Text = "静音";
+            this.buttonMute.UseVisualStyleBackColor = true;
+            this.buttonMute.Click += new System.EventHandler(this.buttonMute_Click);
+            // 
             // FormNetworkIme
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(480, 457);
+            this.ClientSize = new System.Drawing.Size(408, 474);
+            this.Controls.Add(this.buttonMute);
+            this.Controls.Add(this.buttonCopy);
+            this.Controls.Add(this.buttonVolume);
+            this.Controls.Add(this.buttonShareFriends);
+            this.Controls.Add(this.buttonShare);
+            this.Controls.Add(this.comboBoxSend);
             this.Controls.Add(this.checkBoxSendClipboard);
             this.Controls.Add(this.buttonDesktop);
             this.Controls.Add(this.buttonAlipay);
@@ -614,7 +638,6 @@
             this.Controls.Add(this.checkBoxRepeat);
             this.Controls.Add(this.labelStatus);
             this.Controls.Add(this.checkBoxClear);
-            this.Controls.Add(this.groupBoxMode);
             this.Controls.Add(this.buttonClear);
             this.Controls.Add(this.buttonSend);
             this.Controls.Add(this.textBoxContent);
@@ -628,8 +651,6 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "网络输入法";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormNetworkIme_FormClosing);
-            this.groupBoxMode.ResumeLayout(false);
-            this.groupBoxMode.PerformLayout();
             this.contextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -643,10 +664,6 @@
         private System.Windows.Forms.TextBox textBoxContent;
         private System.Windows.Forms.Button buttonSend;
         private System.Windows.Forms.Button buttonClear;
-        private System.Windows.Forms.GroupBox groupBoxMode;
-        private System.Windows.Forms.RadioButton radioButtonReplace;
-        private System.Windows.Forms.RadioButton radioButtonInsert;
-        private System.Windows.Forms.RadioButton radioButtonSend;
         private System.Windows.Forms.CheckBox checkBoxClear;
         private System.Windows.Forms.Label labelStatus;
         private System.Windows.Forms.CheckBox checkBoxRepeat;
@@ -688,6 +705,12 @@
         private System.Windows.Forms.Button buttonWeibo;
         private System.Windows.Forms.Button buttonTaobao;
         private System.Windows.Forms.CheckBox checkBoxSendClipboard;
+        private System.Windows.Forms.ComboBox comboBoxSend;
+        private System.Windows.Forms.Button buttonShare;
+        private System.Windows.Forms.Button buttonShareFriends;
+        private System.Windows.Forms.Button buttonVolume;
+        private System.Windows.Forms.Button buttonCopy;
+        private System.Windows.Forms.Button buttonMute;
     }
 }
 
