@@ -198,5 +198,10 @@ namespace NetworkInputMethod
         {
             updateRepeatInterval();
         }
+
+        private void buttonDebug_Click(object sender, EventArgs e)
+        {
+            sendCommand("DUMP 2");
+        }
     }
 }

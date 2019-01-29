@@ -43,10 +43,55 @@
             this.buttonXfzd = new System.Windows.Forms.Button();
             this.timerRepeater = new System.Windows.Forms.Timer(this.components);
             this.labelStatus = new System.Windows.Forms.Label();
+            this.buttonDebug = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // textBoxCommand
             // 
+            this.textBoxCommand.AutoCompleteCustomSource.AddRange(new string[] {
+            "open",
+            "view",
+            "web",
+            "unlock",
+            "share",
+            "clear",
+            "alipay",
+            "test",
+            "click",
+            "long_click",
+            "touch",
+            "dump",
+            "back",
+            "home",
+            "desktop",
+            "clipboard",
+            "global",
+            "recents",
+            "login",
+            "signin",
+            "refresh",
+            "follow",
+            "unfollow",
+            "tap",
+            "ime",
+            "volume",
+            "send",
+            "replace",
+            "insert",
+            "delete",
+            "commit",
+            "key",
+            "action",
+            "menu_action",
+            "copy",
+            "paste",
+            "select_all",
+            "ping",
+            "pong",
+            "done",
+            ""});
+            this.textBoxCommand.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
+            this.textBoxCommand.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
             this.textBoxCommand.Location = new System.Drawing.Point(12, 488);
             this.textBoxCommand.Name = "textBoxCommand";
             this.textBoxCommand.Size = new System.Drawing.Size(760, 21);
@@ -104,7 +149,7 @@
             // 
             // buttonTest
             // 
-            this.buttonTest.Location = new System.Drawing.Point(93, 526);
+            this.buttonTest.Location = new System.Drawing.Point(535, 526);
             this.buttonTest.Name = "buttonTest";
             this.buttonTest.Size = new System.Drawing.Size(75, 23);
             this.buttonTest.TabIndex = 7;
@@ -154,7 +199,7 @@
             // 
             // buttonStart
             // 
-            this.buttonStart.Location = new System.Drawing.Point(336, 526);
+            this.buttonStart.Location = new System.Drawing.Point(255, 526);
             this.buttonStart.Name = "buttonStart";
             this.buttonStart.Size = new System.Drawing.Size(75, 23);
             this.buttonStart.TabIndex = 9;
@@ -164,7 +209,7 @@
             // 
             // buttonStop
             // 
-            this.buttonStop.Location = new System.Drawing.Point(535, 526);
+            this.buttonStop.Location = new System.Drawing.Point(336, 526);
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(75, 23);
             this.buttonStop.TabIndex = 10;
@@ -174,7 +219,7 @@
             // 
             // buttonVip
             // 
-            this.buttonVip.Location = new System.Drawing.Point(174, 526);
+            this.buttonVip.Location = new System.Drawing.Point(93, 526);
             this.buttonVip.Name = "buttonVip";
             this.buttonVip.Size = new System.Drawing.Size(75, 23);
             this.buttonVip.TabIndex = 11;
@@ -184,7 +229,7 @@
             // 
             // buttonXfzd
             // 
-            this.buttonXfzd.Location = new System.Drawing.Point(255, 526);
+            this.buttonXfzd.Location = new System.Drawing.Point(174, 526);
             this.buttonXfzd.Name = "buttonXfzd";
             this.buttonXfzd.Size = new System.Drawing.Size(75, 23);
             this.buttonXfzd.TabIndex = 12;
@@ -205,12 +250,23 @@
             this.labelStatus.TabIndex = 13;
             this.labelStatus.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
+            // buttonDebug
+            // 
+            this.buttonDebug.Location = new System.Drawing.Point(454, 526);
+            this.buttonDebug.Name = "buttonDebug";
+            this.buttonDebug.Size = new System.Drawing.Size(75, 23);
+            this.buttonDebug.TabIndex = 14;
+            this.buttonDebug.Text = "调试";
+            this.buttonDebug.UseVisualStyleBackColor = true;
+            this.buttonDebug.Click += new System.EventHandler(this.buttonDebug_Click);
+            // 
             // FormSendCommand
             // 
             this.AcceptButton = this.buttonSend;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 561);
+            this.Controls.Add(this.buttonDebug);
             this.Controls.Add(this.labelStatus);
             this.Controls.Add(this.buttonXfzd);
             this.Controls.Add(this.buttonVip);
@@ -249,5 +305,6 @@
         private System.Windows.Forms.Button buttonXfzd;
         private System.Windows.Forms.Timer timerRepeater;
         private System.Windows.Forms.Label labelStatus;
+        private System.Windows.Forms.Button buttonDebug;
     }
 }
