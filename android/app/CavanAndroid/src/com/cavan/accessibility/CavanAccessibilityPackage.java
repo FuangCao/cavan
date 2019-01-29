@@ -97,7 +97,7 @@ public class CavanAccessibilityPackage {
 	}
 
 	public synchronized void addWindow(CavanAccessibilityWindow win) {
-		CavanAndroid.dLog(mName + " <= " + win.getName());
+		CavanAndroid.dLog("addWindow: " + mName + " <= " + win.getName());
 
 		CavanAccessibilityWindow previous = mWindows.put(win.getName(), win);
 		if (previous != null) {
@@ -642,6 +642,10 @@ public class CavanAccessibilityPackage {
 		CavanAccessibilityWindow win = getWindow(root.hashCode());
 		CavanAndroid.dLog("win = " + win);
 		if (win == null) {
+			if (command == CMD_BACK || command == CMD_HOME) {
+				return mService.performActionBack();
+			}
+
 			return false;
 		}
 

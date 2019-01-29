@@ -507,7 +507,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 
 		case "DESKTOP":
 			if (accessibility != null && CavanMainApplication.isScreenOn()) {
-				accessibility.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
+				accessibility.performActionHome();
 			}
 			break;
 
@@ -517,7 +517,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 					break;
 				}
 
-				accessibility.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+				accessibility.performActionBack();
 			}
 			break;
 

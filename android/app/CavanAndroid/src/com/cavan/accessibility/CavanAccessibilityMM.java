@@ -12,6 +12,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -1401,6 +1402,13 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 	}
 
+	public class AppBrandMenuWindow extends WebViewMenu {
+
+		public AppBrandMenuWindow(String name) {
+			super(name);
+		}
+	}
+
 	public class ProgressWindow extends BaseWindow {
 
 		public ProgressWindow(String name) {
@@ -2203,6 +2211,25 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			super(name);
 		}
 
+		public boolean performClickMoreButton(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo[] nodes = CavanAccessibilityHelper.getChildsRecursiveF(root, 1, 0, 0);
+			if (nodes == null) {
+				return false;
+			}
+
+			try {
+				if (CavanAccessibilityHelper.isInstanceOf(nodes[2], ImageButton.class)) {
+					return CavanAccessibilityHelper.performClick(nodes[1]);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				CavanAccessibilityHelper.recycleNodes(nodes);
+			}
+
+			return false;
+		}
+
 		@Override
 		protected void onViewClicked(AccessibilityNodeInfo root, AccessibilityEvent event) {
 			if (mSubject != null) {
@@ -2243,6 +2270,16 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		@Override
 		public int getEventTypes(CavanAccessibilityPackage pkg) {
 			return super.getEventTypes(pkg) | AccessibilityEvent.TYPE_VIEW_CLICKED;
+		}
+
+		@Override
+		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
+			if (performClickMoreButton(root)) {
+				mMenuItem = "转发";
+				return true;
+			}
+
+			return false;
 		}
 	};
 
@@ -2335,6 +2372,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			win = new ChattingWindow(name);
 		} else if (name.startsWith("com.tencent.mm.plugin.luckymoney.ui.En_")) {
 			win = new ReceiveWindow(name);
+		} else if (name.startsWith("com.tencent.mm.plugin.appbrand.ui.AppBrandUI")) {
+			win = new AppBrandWindow(name);
 		} else {
 			return null;
 		}
@@ -2424,11 +2463,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(new LoginPasswordWindow("com.tencent.mm.plugin.account.ui.LoginPasswordUI"));
 		addWindow(new ExtDeviceWXLoginWindow("com.tencent.mm.plugin.webwx.ui.ExtDeviceWXLoginUI"));
 
-		addWindow(new AppBrandWindow("com.tencent.mm.plugin.appbrand.ui.AppBrandUI"));
-		addWindow(new AppBrandWindow("com.tencent.mm.plugin.appbrand.ui.AppBrandUI1"));
 		addWindow(new ContactInfoWindow("com.tencent.mm.plugin.profile.ui.ContactInfoUI"));
 		addWindow(new DialogWindow("com.tencent.mm.ui.base.i"));
 		addWindow(new DialogWindow("com.tencent.mm.ui.widget.a.c"));
+		addWindow(new AppBrandMenuWindow("com.tencent.mm.ui.widget.a.b"));
 	}
 
 	@Override
