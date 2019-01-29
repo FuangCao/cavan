@@ -16,6 +16,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -1109,6 +1110,23 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			return null;
 		}
 
+		public boolean isInProgress(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 3);
+			if (node == null) {
+				return false;
+			}
+
+			try {
+				return CavanAccessibilityHelper.isInstanceOf(node, ProgressBar.class);
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				node.recycle();
+			}
+
+			return false;
+		}
+
 		public String getTitle(AccessibilityNodeInfo root) {
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 3, 1);
 			if (node == null) {
@@ -1152,6 +1170,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doRefresh(AccessibilityNodeInfo root) {
+			if (isInProgress(root)) {
+				CavanAndroid.dLog("isInProgress");
+				return true;
+			}
+
 			if (clickMenuButton(root)) {
 				mMenuItem = "刷新";
 				return true;
