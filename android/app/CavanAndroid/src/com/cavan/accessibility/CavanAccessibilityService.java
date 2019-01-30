@@ -868,11 +868,19 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public boolean sendCommandBack() {
-		return sendCommand(CavanAccessibilityPackage.CMD_BACK);
+		if (sendCommand(CavanAccessibilityPackage.CMD_BACK)) {
+			return true;
+		}
+
+		return performActionBack();
 	}
 
 	public boolean sendCommandHome() {
-		return sendCommand(CavanAccessibilityPackage.CMD_HOME);
+		if (sendCommand(CavanAccessibilityPackage.CMD_HOME)) {
+			return true;
+		}
+
+		return performActionBack();
 	}
 
 	public boolean sendCommandWeb(String action) {

@@ -2304,6 +2304,16 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 			return false;
 		}
+
+		@Override
+		protected boolean doActionBack(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 1, 1);
+			if (node == null) {
+				return false;
+			}
+
+			return CavanAccessibilityHelper.performClickAndRecycle(node);
+		}
 	};
 
 	public class DialogWindow extends BaseWindow {
@@ -2520,5 +2530,4 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		instance = null;
 		super.onDestroy();
 	}
-
 }

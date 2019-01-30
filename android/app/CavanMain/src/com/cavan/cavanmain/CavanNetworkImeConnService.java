@@ -517,11 +517,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 
 		case "BACK":
 			if (accessibility != null && CavanMainApplication.isScreenOn()) {
-				if (accessibility.sendCommandBack()) {
-					break;
-				}
-
-				accessibility.performActionBack();
+				accessibility.sendCommandBack();
 			}
 			break;
 

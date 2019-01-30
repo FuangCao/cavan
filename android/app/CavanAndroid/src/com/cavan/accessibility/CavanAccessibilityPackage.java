@@ -642,10 +642,6 @@ public class CavanAccessibilityPackage {
 		CavanAccessibilityWindow win = getWindow(root.hashCode());
 		CavanAndroid.dLog("win = " + win);
 		if (win == null) {
-			if (command == CMD_BACK || command == CMD_HOME) {
-				return mService.performActionBack();
-			}
-
 			return false;
 		}
 
