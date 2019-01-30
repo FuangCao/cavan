@@ -22,6 +22,7 @@ import android.view.inputmethod.InputMethodManager;
 import com.cavan.accessibility.CavanAccessibilityHelper;
 import com.cavan.accessibility.CavanAccessibilityService;
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanWakeLock;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanJava.ClosureVoid;
 import com.cavan.java.CavanString;
@@ -65,6 +66,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 
 	private AudioManager mAudioManager;
 	private InputMethodManager mInputMethodManager;
+	private CavanWakeLock mFullWakeLock = new CavanWakeLock.FullLock();
 
 	private CavanTcpPacketClient mTcpPacketClient = new CavanTcpPacketClient() {
 
@@ -365,6 +367,8 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			break;
 
 		case "UNLOCK":
+			mFullWakeLock.acquire(this, 300000);
+
 			if (args.length > 1) {
 				CavanAndroid.startActivityFuzzy(getApplicationContext(), args[1]);
 			}
@@ -682,7 +686,9 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 	}
 
 	@Override
-	public void onScreenOff() {}
+	public void onScreenOff() {
+		mFullWakeLock.release();
+	}
 
 	@Override
 	public void onUserPresent() {}

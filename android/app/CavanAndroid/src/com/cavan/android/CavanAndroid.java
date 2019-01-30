@@ -115,8 +115,8 @@ public class CavanAndroid {
 	private static Context sContext;
 	private static Handler sHandler;
 	private static CavanThreadedHandler sThreadedHandler;
-	private static CavanWakeLock sWakeLock = new CavanWakeLock(false);
-	private static CavanWakeLock sWakeupLock = new CavanWakeLock(true);
+	private static CavanWakeLock sWakeLock = new CavanWakeLock();
+	private static CavanWakeLock sWakeupLock = new CavanWakeLock.WakupLock();
 	private static CavanKeyguardLock sKeyguardLock = new CavanKeyguardLock();
 	private static CavanMulticastLock sMulticastLock = new CavanMulticastLock();
 

@@ -56,7 +56,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	protected boolean mScreenOn = true;
 
 	private CavanKeyguardLock mKeyguardLock = new CavanKeyguardLock();
-	private CavanWakeLock mWakeLock = new CavanWakeLock(true);
+	private CavanWakeLock mWakeLock = new CavanWakeLock.WakupLock();
 	private CavanRedPacket mPacketDummy = new CavanRedPacket();
 	private CavanCountDownDialogBase mCountDownDialog;
 

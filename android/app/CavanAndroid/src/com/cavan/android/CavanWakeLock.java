@@ -1,55 +1,92 @@
 package com.cavan.android;
 
-import com.cavan.java.CavanIndexGenerator;
-
 import android.content.Context;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 
-@SuppressWarnings("deprecation")
+import com.cavan.java.CavanIndexGenerator;
+
 public class CavanWakeLock {
 
 	private static final CavanIndexGenerator sGenerator = new CavanIndexGenerator();
 
-	private int mFlags;
-	private String mTag;
-	private WakeLock mLock;
+	public static class FullLock extends CavanWakeLock {
 
-	public CavanWakeLock(String tag, int flags) {
-		setTag(tag);
-		mFlags = flags;
-	}
+		public FullLock() {
+			super();
+		}
 
-	public CavanWakeLock(String tag, boolean light, boolean wakeup) {
-		setTag(tag);
+		public FullLock(String tag) {
+			super(tag);
+		}
 
-		if (wakeup) {
-			mFlags = PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP;
-		} else if (light) {
-			mFlags = PowerManager.FULL_WAKE_LOCK;
-		} else {
-			mFlags = PowerManager.PARTIAL_WAKE_LOCK;
+		@SuppressWarnings("deprecation")
+		@Override
+		protected int onGetWakeLockFlags() {
+			return PowerManager.FULL_WAKE_LOCK;
 		}
 	}
 
-	public CavanWakeLock(String tag, boolean wakeup) {
-		this(tag, false, wakeup);
+	public static class WakupLock extends CavanWakeLock {
+
+		public WakupLock() {
+			super();
+		}
+
+		public WakupLock(String tag) {
+			super(tag);
+		}
+
+		@SuppressWarnings("deprecation")
+		@Override
+		protected int onGetWakeLockFlags() {
+			return PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP;
+		}
 	}
+
+	public static class DimLock extends CavanWakeLock {
+
+		public DimLock() {
+			super();
+		}
+
+		public DimLock(String tag) {
+			super(tag);
+		}
+
+		@SuppressWarnings("deprecation")
+		@Override
+		protected int onGetWakeLockFlags() {
+			return PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE;
+		}
+	}
+
+	public static class BrightLock extends CavanWakeLock {
+
+		public BrightLock() {
+			super();
+		}
+
+		public BrightLock(String tag) {
+			super(tag);
+		}
+
+		@SuppressWarnings("deprecation")
+		@Override
+		protected int onGetWakeLockFlags() {
+			return PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE;
+		}
+	}
+
+	private String mTag;
+	private WakeLock mLock;
 
 	public CavanWakeLock(String tag) {
-		this(tag, false);
-	}
-
-	public CavanWakeLock(boolean light, boolean wakeup) {
-		this(CavanWakeLock.class.getCanonicalName(), light, wakeup);
-	}
-
-	public CavanWakeLock(boolean wakeup) {
-		this(false, wakeup);
+		setTag(tag);
 	}
 
 	public CavanWakeLock() {
-		this(false);
+		this(CavanWakeLock.class.getCanonicalName());
 	}
 
 	synchronized public void setTag(String tag) {
@@ -64,7 +101,7 @@ public class CavanWakeLock {
 
 	synchronized public boolean acquire(PowerManager manager, long overtime) {
 		if (mLock == null) {
-			mLock = manager.newWakeLock(mFlags, mTag + sGenerator.genIndex());
+			mLock = manager.newWakeLock(onGetWakeLockFlags(), mTag + sGenerator.genIndex());
 			if (mLock == null) {
 				return false;
 			}
@@ -98,5 +135,9 @@ public class CavanWakeLock {
 
 	synchronized public boolean isHeld() {
 		return mLock != null && mLock.isHeld();
+	}
+
+	protected int onGetWakeLockFlags() {
+		return PowerManager.PARTIAL_WAKE_LOCK;
 	}
 }
