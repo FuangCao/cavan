@@ -263,9 +263,9 @@ namespace NetworkInputMethod
             return sendCommand("KEY " + code, false);
         }
 
-        public int sendOpenApp(string pkgName, bool unlock)
+        public int sendOpenApp(string pkgName)
         {
-            if (unlock)
+            if (checkBoxAutoUnlock.Checked)
             {
                 return sendCommand("UNLOCK " + pkgName, true);
             }
@@ -682,7 +682,7 @@ namespace NetworkInputMethod
 
         private void buttonWeixin_Click(object sender, EventArgs e)
         {
-            sendOpenApp("com.tencent.mm", true);
+            sendOpenApp("com.tencent.mm");
         }
 
         private void buttonUnlock_Click(object sender, EventArgs e)
@@ -721,17 +721,17 @@ namespace NetworkInputMethod
 
         private void buttonWeibo_Click(object sender, EventArgs e)
         {
-            sendOpenApp("com.sina.weibo", true);
+            sendOpenApp("com.sina.weibo");
         }
 
         private void buttonTaobao_Click(object sender, EventArgs e)
         {
-            sendOpenApp("com.taobao.taobao", true);
+            sendOpenApp("com.taobao.taobao");
         }
 
         private void buttonTmall_Click(object sender, EventArgs e)
         {
-            sendOpenApp("com.tmall.wireless", true);
+            sendOpenApp("com.tmall.wireless");
         }
 
         private void buttonDesktop_Click(object sender, EventArgs e)

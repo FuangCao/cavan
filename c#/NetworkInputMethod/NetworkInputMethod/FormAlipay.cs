@@ -44,7 +44,7 @@ namespace NetworkInputMethod
 
         private void buttonOpen_Click(object sender, EventArgs e)
         {
-            mIme.sendOpenApp("com.eg.android.AlipayGphone", true);
+            mIme.sendOpenApp("com.eg.android.AlipayGphone");
         }
 
         private void buttonSend_Click(object sender, EventArgs e)
