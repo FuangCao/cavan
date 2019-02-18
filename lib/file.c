@@ -3471,3 +3471,24 @@ int cavan_file_flags_clear(int fd, int flags)
 
 	return fcntl(fd, F_SETFL, flags);
 }
+
+int cavan_file_fill(int fd, void *buff, size_t size)
+{
+	while (size > 0) {
+		int rdlen = read(fd, buff, size);
+		if (rdlen < (int) size) {
+			if (rdlen > 0) {
+				buff = POINTER_ADD(buff, rdlen);
+				size -= rdlen;
+			} else if (rdlen < 0) {
+				return rdlen;
+			} else {
+				return -ENODATA;
+			}
+		} else {
+			break;
+		}
+	}
+
+	return 0;
+}

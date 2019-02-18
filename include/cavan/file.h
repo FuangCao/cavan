@@ -250,6 +250,7 @@ int cavan_rename_part(const char *pathname, const char *start, const char *end);
 const char *cavan_file_get_extension(const char *pathname);
 int cavan_file_flags_set(int fd, int flags);
 int cavan_file_flags_clear(int fd, int flags);
+int cavan_file_fill(int fd, void *buff, size_t size);
 
 static inline int cavan_rename_part2(const char *pathname, const char *start, size_t length)
 {
