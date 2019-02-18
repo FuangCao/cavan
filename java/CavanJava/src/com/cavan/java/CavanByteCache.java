@@ -1,5 +1,9 @@
 package com.cavan.java;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 public class CavanByteCache {
 	private byte[] mBytes;
 	private int mOffset;
@@ -75,6 +79,44 @@ public class CavanByteCache {
 	public int seek(int offset) {
 		mOffset += offset;
 		return mOffset;
+	}
+
+	public boolean flush(OutputStream stream) {
+		try {
+			stream.write(mBytes);
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return false;
+	}
+
+	public boolean load(InputStream stream) {
+		try {
+			int offset = 0;
+			int length = mBytes.length;
+
+			while (true) {
+				int rdlen = stream.read(mBytes, offset, length);
+				if (rdlen < length) {
+					if (rdlen > 0) {
+						offset += rdlen;
+						length -= rdlen;
+					} else {
+						return false;
+					}
+				} else {
+					break;
+				}
+			}
+
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return false;
 	}
 
 	public boolean writeValue8(byte value) {
