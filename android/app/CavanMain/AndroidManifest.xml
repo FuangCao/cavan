@@ -42,7 +42,6 @@
         android:persistent="true"
         android:theme="@style/AppTheme"
         android:windowSoftInputMode="adjustPan" >
-
         <activity
             android:name="com.cavan.cavanmain.CavanMessageActivity"
             android:label="@string/my_message"
@@ -198,7 +197,8 @@
         <activity
             android:name="com.cavan.accessibility.CavanUnlockActivity"
             android:excludeFromRecents="true"
-            android:showOnLockScreen="true" android:launchMode="singleTask">
+            android:launchMode="singleTask"
+            android:showOnLockScreen="true" >
         </activity>
         <activity
             android:name="RedPacketEditActivity"
@@ -294,7 +294,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-
         <activity
             android:name="CavanUserInfoActivity"
             android:label="@string/account_manage"
@@ -318,6 +317,18 @@
         </service>
         <service android:name="com.cavan.cavanjni.RoleChangeProxy" >
         </service>
+
+        <receiver
+            android:name="CavanMainDeviceAdminReceiver"
+            android:permission="android.permission.BIND_DEVICE_ADMIN" >
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin" />
+
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

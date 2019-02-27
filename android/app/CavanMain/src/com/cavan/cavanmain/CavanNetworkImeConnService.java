@@ -376,6 +376,10 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			doUnlockScreen();
 			break;
 
+		case "LOCK":
+			CavanMainDeviceAdminReceiver.lockScreen(this);
+			break;
+
 		case "WEB":
 			if (accessibility != null && args.length > 1) {
 				accessibility.sendCommandWeb(args[1]);
@@ -486,10 +490,9 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			break;
 
 		case "PROXY":
-			if (args.length > 1) {
-				boolean success = CavanAndroid.setHttpProxy(this, args[1]);
-				CavanAndroid.dLog("setHttpProxy: " + success);
-			}
+			String proxy = args.length > 1 ? args[1] : null;
+			boolean success = CavanAndroid.setHttpProxy(this, proxy);
+			CavanAndroid.dLog("setHttpProxy: " + success);
 			break;
 
 		case "CLIPBOARD":

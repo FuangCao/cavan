@@ -430,7 +430,6 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
 		addPreferencesFromResource(R.xml.red_packet_settings);
 
 		if (CavanAndroid.SDK_VERSION >= CavanAndroid.SDK_VERSION_40) {
@@ -542,7 +541,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		updateWanState();
 		updateBridgeState();
 
-		CavanAndroid.checkAndRequestPermissions(this, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION);
+		CavanAndroid.checkAndRequestPermissions(this, Manifest.permission.ACCESS_COARSE_LOCATION);
 	}
 
 	@Override
@@ -551,6 +550,13 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		unbindService(mFloatMessageConnection);
 
 		super.onDestroy();
+	}
+
+	@Override
+	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+		for (int i = 0; i < permissions.length; i++) {
+			CavanAndroid.dLog("permissions[" + i + "]: " + permissions[i] + " => " + grantResults[i]);
+		}
 	}
 
 	private boolean setDesktopFloatTimerEnable(boolean enable) {
@@ -677,7 +683,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 				}
 			}
 		} else if (preference == mPreferenceRedPacketNotifyTest) {
-			if (CavanMainApplication.test(this)) {
+			if (CavanMainApplication.test(this) && CavanMainDeviceAdminReceiver.isAdminActive(this)) {
 				NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 				if (manager != null) {
 					String text = (String) object;
