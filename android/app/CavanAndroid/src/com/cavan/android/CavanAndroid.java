@@ -1265,6 +1265,22 @@ public class CavanAndroid {
 		return true;
 	}
 
+	public static boolean setHttpProxy(Context context, String url) {
+		if (url == null) {
+			return setHttpProxy(context, null, 0);
+		}
+
+		int index = url.indexOf(':');
+		if (index < 0) {
+			return false;
+		}
+
+		String host = url.substring(0, index);
+		int port = CavanJava.parseInt(url.substring(index + 1));
+
+		return setHttpProxy(context, host, port);
+	}
+
 	public static boolean requestDismissKeyguard(Activity activity) {
 		if (SDK_VERSION < SDK_VERSION_80) {
 			setLockScreenEnable(activity, false);

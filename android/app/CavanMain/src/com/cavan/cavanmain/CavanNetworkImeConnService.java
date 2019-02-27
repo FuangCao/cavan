@@ -485,6 +485,13 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			}
 			break;
 
+		case "PROXY":
+			if (args.length > 1) {
+				boolean success = CavanAndroid.setHttpProxy(this, args[1]);
+				CavanAndroid.dLog("setHttpProxy: " + success);
+			}
+			break;
+
 		case "CLIPBOARD":
 			if (args.length > 1) {
 				String text = args[1];
