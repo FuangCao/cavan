@@ -81,9 +81,9 @@
             this.buttonShare = new System.Windows.Forms.Button();
             this.buttonShareFriends = new System.Windows.Forms.Button();
             this.buttonVolume = new System.Windows.Forms.Button();
-            this.buttonCopy = new System.Windows.Forms.Button();
             this.buttonMute = new System.Windows.Forms.Button();
             this.checkBoxAutoUnlock = new System.Windows.Forms.CheckBox();
+            this.buttonLock = new System.Windows.Forms.Button();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -137,7 +137,7 @@
             // 
             // buttonClear
             // 
-            this.buttonClear.Location = new System.Drawing.Point(273, 412);
+            this.buttonClear.Location = new System.Drawing.Point(273, 383);
             this.buttonClear.Name = "buttonClear";
             this.buttonClear.Size = new System.Drawing.Size(60, 23);
             this.buttonClear.TabIndex = 7;
@@ -397,7 +397,7 @@
             // 
             // buttonSignin
             // 
-            this.buttonSignin.Location = new System.Drawing.Point(75, 412);
+            this.buttonSignin.Location = new System.Drawing.Point(141, 412);
             this.buttonSignin.Name = "buttonSignin";
             this.buttonSignin.Size = new System.Drawing.Size(60, 23);
             this.buttonSignin.TabIndex = 44;
@@ -407,7 +407,7 @@
             // 
             // buttonUnfollow
             // 
-            this.buttonUnfollow.Location = new System.Drawing.Point(141, 412);
+            this.buttonUnfollow.Location = new System.Drawing.Point(207, 412);
             this.buttonUnfollow.Name = "buttonUnfollow";
             this.buttonUnfollow.Size = new System.Drawing.Size(60, 23);
             this.buttonUnfollow.TabIndex = 45;
@@ -485,7 +485,7 @@
             // 
             // buttonDesktop
             // 
-            this.buttonDesktop.Location = new System.Drawing.Point(207, 412);
+            this.buttonDesktop.Location = new System.Drawing.Point(273, 412);
             this.buttonDesktop.Name = "buttonDesktop";
             this.buttonDesktop.Size = new System.Drawing.Size(60, 23);
             this.buttonDesktop.TabIndex = 56;
@@ -576,16 +576,6 @@
             this.buttonVolume.UseVisualStyleBackColor = true;
             this.buttonVolume.Click += new System.EventHandler(this.buttonVolume_Click);
             // 
-            // buttonCopy
-            // 
-            this.buttonCopy.Location = new System.Drawing.Point(273, 383);
-            this.buttonCopy.Name = "buttonCopy";
-            this.buttonCopy.Size = new System.Drawing.Size(60, 23);
-            this.buttonCopy.TabIndex = 62;
-            this.buttonCopy.Text = "复制";
-            this.buttonCopy.UseVisualStyleBackColor = true;
-            this.buttonCopy.Click += new System.EventHandler(this.buttonCopy_Click);
-            // 
             // buttonMute
             // 
             this.buttonMute.Location = new System.Drawing.Point(207, 383);
@@ -608,14 +598,24 @@
             this.checkBoxAutoUnlock.Text = "自动解锁";
             this.checkBoxAutoUnlock.UseVisualStyleBackColor = true;
             // 
+            // buttonLock
+            // 
+            this.buttonLock.Location = new System.Drawing.Point(75, 412);
+            this.buttonLock.Name = "buttonLock";
+            this.buttonLock.Size = new System.Drawing.Size(60, 23);
+            this.buttonLock.TabIndex = 65;
+            this.buttonLock.Text = "锁屏";
+            this.buttonLock.UseVisualStyleBackColor = true;
+            this.buttonLock.Click += new System.EventHandler(this.buttonLock_Click);
+            // 
             // FormNetworkIme
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(408, 474);
+            this.Controls.Add(this.buttonLock);
             this.Controls.Add(this.checkBoxAutoUnlock);
             this.Controls.Add(this.buttonMute);
-            this.Controls.Add(this.buttonCopy);
             this.Controls.Add(this.buttonVolume);
             this.Controls.Add(this.buttonShareFriends);
             this.Controls.Add(this.buttonShare);
@@ -723,9 +723,9 @@
         private System.Windows.Forms.Button buttonShare;
         private System.Windows.Forms.Button buttonShareFriends;
         private System.Windows.Forms.Button buttonVolume;
-        private System.Windows.Forms.Button buttonCopy;
         private System.Windows.Forms.Button buttonMute;
         private System.Windows.Forms.CheckBox checkBoxAutoUnlock;
+        private System.Windows.Forms.Button buttonLock;
     }
 }
 

@@ -748,6 +748,11 @@ namespace NetworkInputMethod
         {
             sendCommand("SHARE", true);
         }
+
+        private void buttonLock_Click(object sender, EventArgs e)
+        {
+            sendCommand("LOCK", true);
+        }
     }
 
     public class NetworkImeClient : CavanTcpPacketClient
