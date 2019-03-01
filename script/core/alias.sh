@@ -47,6 +47,7 @@ alias cavan-xopen="xdg-open"
 alias eclipse="${TOOLS_ANDROID}/eclipse/eclipse > /dev/null 2>&1 &"
 alias android-studio="${TOOLS_ANDROID}/studio/bin/studio.sh > /dev/null 2>&1 &"
 alias postman="${TOOLS_HOME}/Postman/Postman > /dev/null 2>&1 &"
+alias liteide="${TOOLS_GO}/liteide/bin/liteide > /dev/null 2>&1 &"
 
 for svr in ${SSH_SERVERS}
 do
