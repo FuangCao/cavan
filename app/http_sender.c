@@ -385,6 +385,7 @@ static bool cavan_http_sender_is_completed(struct cavan_http_group *group, struc
 	const char *texts3[] = {
 		"\u9519\u8bef", // ´íÎó
 		"\u4e0d\u8db3", // ²»×ã
+		"\u706b\u7206", // »ğ±¬
 		"\u4e0d\u6ee1\u8db3", // ²»Âú×ã
 		"\u672a\u767b\u5f55", // Î´µÇÂ¼
 	};
