@@ -55,6 +55,12 @@ public class CavanAccessibilityPackage {
 	protected String[] mNames;
 	protected String mName;
 
+	private boolean mSigninPending;
+	private boolean mFollowPending;
+	private boolean mUnfollowPending;
+	private boolean mHomePending;
+	private boolean mSharePending;
+
 	public class ProgressWindow extends CavanAccessibilityWindow {
 
 		public ProgressWindow(String name) {
@@ -89,6 +95,46 @@ public class CavanAccessibilityPackage {
 
 	public String[] getNames() {
 		return mNames;
+	}
+
+	public boolean isSigninPending() {
+		return mSigninPending;
+	}
+
+	public void setSigninPending(boolean pending) {
+		mSigninPending = pending;
+	}
+
+	public boolean isFollowPending() {
+		return mFollowPending;
+	}
+
+	public void setFollowPending(boolean pending) {
+		mFollowPending = pending;
+	}
+
+	public boolean isUnfollowPending() {
+		return mUnfollowPending;
+	}
+
+	public void setUnfollowPending(boolean pending) {
+		mUnfollowPending = pending;
+	}
+
+	public boolean isHomePending() {
+		return mHomePending;
+	}
+
+	public void setHomePending(boolean pending) {
+		mHomePending = pending;
+	}
+
+	public boolean isSharePending() {
+		return mSharePending;
+	}
+
+	public void setSharePending(boolean pending) {
+		mSharePending = pending;
 	}
 
 	public synchronized void resetTimes() {
@@ -444,6 +490,10 @@ public class CavanAccessibilityPackage {
 				int types = win.getEventTypes(this);
 				mService.setEventTypes(types);
 
+				if (win.isHomePage()) {
+					onEnterHomePage(win, root);
+				}
+
 				if (pending) {
 					win.onEnter(root);
 				}
@@ -664,19 +714,23 @@ public class CavanAccessibilityPackage {
 
 		case CMD_SIGNIN:
 			CavanAndroid.dLog("CMD_SIGNIN");
-			return win.doSignin(root);
+			mSigninPending = win.doSignin(root);
+			return mSigninPending;
 
 		case CMD_FOLLOW:
 			CavanAndroid.dLog("CMD_FOLLOW");
-			return win.doFollow(root);
+			mFollowPending = win.doFollow(root);
+			return mFollowPending;
 
 		case CMD_UNFOLLOW:
 			CavanAndroid.dLog("CMD_UNFOLLOW");
-			return win.doUnfollow(root);
+			mUnfollowPending = win.doUnfollow(root);
+			return mUnfollowPending;
 
 		case CMD_SHARE:
 			CavanAndroid.dLog("CMD_SHARE");
-			return win.doCommandShare(root, (boolean) args[0]);
+			mSharePending = win.doCommandShare(root, (boolean) args[0]);
+			return mSharePending;
 
 		case CMD_BACK:
 			CavanAndroid.dLog("CMD_BACK");
@@ -684,7 +738,8 @@ public class CavanAccessibilityPackage {
 
 		case CMD_HOME:
 			CavanAndroid.dLog("CMD_HOME");
-			return win.doActionHome(root);
+			mHomePending = win.doActionHome(root);
+			return mHomePending;
 
 		default:
 			CavanAndroid.eLog("Invalid command: " + command);
@@ -711,6 +766,14 @@ public class CavanAccessibilityPackage {
 	protected void onDestroy() {}
 	protected void onPollStarted() {}
 	protected void onPollStopped() {}
+
+	protected void onEnterHomePage(CavanAccessibilityWindow win, AccessibilityNodeInfo root) {
+		mHomePending = false;
+		mFollowPending = false;
+		mUnfollowPending = false;
+		mSharePending = false;
+		mSigninPending = false;
+	}
 
 	@Override
 	public String toString() {

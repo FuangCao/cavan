@@ -31,10 +31,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 	private HashSet<Integer> mFinishNodes = new HashSet<Integer>();
 	private AppBrandSubject mSubject;
 	private String mMenuItem;
-	private boolean mSigninPending;
-	private boolean mFollowPending;
-	private boolean mUnfollowPending;
-	private boolean mHomePending;
 	private boolean mAutoAnswer;
 	private long mAnswerTime;
 	private int mAnswerTimes;
@@ -370,7 +366,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doSignin(AccessibilityNodeInfo root) {
-			mSigninPending = false;
+			setSigninPending(false);
 
 			String chatting = getChattingName(root);
 			if (chatting == null) {
@@ -411,8 +407,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				break;
 
 			case "穿越火线官方FPS手游":
-				mSigninPending = doClickMenuItem(root, "官网", "CDK兑换");
-				break;
+				return doClickMenuItem(root, "官网", "CDK兑换");
 			}
 
 			return false;
@@ -427,8 +422,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 			try {
 				if ("聊天信息".equals(CavanAccessibilityHelper.getNodeDescription(node))) {
-					mUnfollowPending = CavanAccessibilityHelper.performClick(node);
-					return mUnfollowPending;
+					return CavanAccessibilityHelper.performClick(node);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -486,15 +480,14 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doActionHome(AccessibilityNodeInfo root) {
-			mHomePending = doActionBack(root);
-			return mHomePending;
+			return doActionBack(root);
 		}
 
 		@Override
 		protected void onEnter(AccessibilityNodeInfo root) {
-			mFollowPending = false;
+			setFollowPending(false);
 
-			if (mSigninPending) {
+			if (isSigninPending()) {
 				doSignin(root);
 			}
 		}
@@ -625,8 +618,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				performPackageUpdated();
 			}
 
-			mHomePending = false;
-			mUnfollowPending = false;
+			setHomePending(false);
+			setUnfollowPending(false);
 		}
 
 		@Override
@@ -667,14 +660,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doSignin(AccessibilityNodeInfo root) {
-			mSigninPending = clickOfficialAccounts(root);
-			return mSigninPending;
+			return clickOfficialAccounts(root);
 		}
 
 		@Override
 		protected boolean doFollow(AccessibilityNodeInfo root) {
-			mFollowPending = clickOfficialAccounts(root);
-			return mFollowPending;
+			return clickOfficialAccounts(root);
 		}
 
 		@Override
@@ -691,7 +682,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				doActionBack(root);
 			}
 
-			mHomePending = false;
+			setHomePending(false);
 
 			return true;
 		}
@@ -773,14 +764,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doSignin(AccessibilityNodeInfo root) {
-			mSigninPending = enterOfficialAccounts(root);
-			return mSigninPending;
+			return enterOfficialAccounts(root);
 		}
 
 		@Override
 		protected boolean doFollow(AccessibilityNodeInfo root) {
-			mFollowPending = enterOfficialAccounts(root);
-			return mFollowPending;
+			return enterOfficialAccounts(root);
 		}
 
 		@Override
@@ -824,8 +813,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			}
 
 			try {
-				mUnfollowPending = CavanAccessibilityHelper.performClick(node);
-				return mUnfollowPending;
+				return CavanAccessibilityHelper.performClick(node);
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
@@ -842,19 +830,18 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doActionHome(AccessibilityNodeInfo root) {
-			mHomePending = doActionBack(root);
-			return mHomePending;
+			return doActionBack(root);
 		}
 
 		@Override
 		protected void onEnter(AccessibilityNodeInfo root) {
-			if (mSigninPending) {
+			if (isSigninPending()) {
 				doSignin(root);
-			} else if (mFollowPending) {
+			} else if (isFollowPending()) {
 				doFollow(root);
-			} else if (mUnfollowPending) {
+			} else if (isUnfollowPending()) {
 				doUnfollow(root);
-			}  else if (mHomePending) {
+			}  else if (isHomePending()) {
 				doActionHome(root);
 			}
 		}
@@ -1185,15 +1172,17 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
-			if (clickMenuButton(root)) {
-				if (friends) {
-					mMenuItem = "发送给朋友";
-				} else {
-					mMenuItem = "分享到朋友圈";
-				}
+			if (!clickMenuButton(root)) {
+				return false;
 			}
 
-			return false;
+			if (friends) {
+				mMenuItem = "发送给朋友";
+			} else {
+				mMenuItem = "分享到朋友圈";
+			}
+
+			return true;
 		}
 
 		@Override
@@ -1218,13 +1207,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doActionHome(AccessibilityNodeInfo root) {
-			mHomePending = doActionBack(root);
-			return mHomePending;
+			return doActionBack(root);
 		}
 
 		@Override
 		protected boolean doSignin(AccessibilityNodeInfo root) {
-			mSigninPending = false;
+			setSigninPending(false);
 
 			String title = getTitle(root);
 			if (title == null) {
@@ -1269,7 +1257,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			}
 
 			try {
-				return CavanAccessibilityHelper.performClick(node);
+				CavanAccessibilityHelper.performClick(node);
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
@@ -1281,9 +1269,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected void onEnter(AccessibilityNodeInfo root) {
-			if (mSigninPending) {
+			if (isSigninPending()) {
 				mService.postCommand(1500, 5, CMD_SIGNIN);
-			} else if (mHomePending) {
+			} else if (isHomePending()) {
 				doActionHome(root);
 			}
 		}
@@ -1411,13 +1399,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doUnfollow(AccessibilityNodeInfo root) {
-			mUnfollowPending = doClickMenuItem(root, "不再关注");
-			return mUnfollowPending;
+			return doClickMenuItem(root, "不再关注");
 		}
 
 		@Override
 		protected void onEnter(AccessibilityNodeInfo root) {
-			if (mUnfollowPending) {
+			if (isUnfollowPending()) {
 				doUnfollow(root);
 			} else {
 				super.onEnter(root);
@@ -2332,8 +2319,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			for (int  i = 0; i < 3; i++) {
 				AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "不再关注");
 				if (node != null) {
-					mUnfollowPending = CavanAccessibilityHelper.performClickAndRecycle(node);
-					return mUnfollowPending;
+					return CavanAccessibilityHelper.performClickAndRecycle(node);
 				}
 
 				CavanAndroid.dLog("retry = " + i);
@@ -2345,8 +2331,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected void onEnter(AccessibilityNodeInfo root) {
-			if (mUnfollowPending) {
+			if (isUnfollowPending()) {
 				doUnfollow(root);
+			} else if (isSharePending()) {
+				doCommandShare(root, false);
 			}
 		}
 
@@ -2354,6 +2342,28 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		protected boolean doWebCommand(AccessibilityNodeInfo root, String action) {
 			if (action.equals("vip")) {
 				return CavanAccessibilityHelper.performChildClick(root, 1);
+			}
+
+			return false;
+		}
+
+		@Override
+		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
+			setSharePending(false);
+
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildByIndex(root, 4);
+			if (node == null) {
+				return false;
+			}
+
+			try {
+				if ("发送".equals(CavanAccessibilityHelper.getNodeText(node))) {
+					CavanAccessibilityHelper.performClick(node);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				node.recycle();
 			}
 
 			return false;
@@ -2373,8 +2383,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				return false;
 			}
 
-			mUnfollowPending = CavanAccessibilityHelper.performLongClickAndRecycle(node);
-			if (mUnfollowPending) {
+			if (CavanAccessibilityHelper.performLongClickAndRecycle(node)) {
 				mMenuItem = "取消关注";
 				return true;
 			}
@@ -2439,7 +2448,116 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				}
 			}
 		}
-	};
+	}
+
+	public class SelectConversationWindow extends BaseWindow {
+
+		public SelectConversationWindow(String name) {
+			super(name);
+		}
+
+		@Override
+		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "两口");
+			if (node == null) {
+				return false;
+			}
+
+			return CavanAccessibilityHelper.performClickParentAndRecycle(node);
+		}
+
+		@Override
+		protected void onEnter(AccessibilityNodeInfo root) {
+			CavanAndroid.dLog("isSharePending = " + isSharePending());
+			if (isSharePending()) {
+				CavanAndroid.pLog();
+				doCommandShare(root, false);
+			}
+		}
+	}
+
+	public class SnsUploadWindow extends BaseWindow {
+
+		public SnsUploadWindow(String name) {
+			super(name);
+		}
+
+		@Override
+		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 0, 3);
+			if (node == null) {
+				return false;
+			}
+
+			try {
+				if ("谁可以看".equals(CavanAccessibilityHelper.getChildText(node, 0))) {
+					String type = CavanAccessibilityHelper.getChildText(node, 1);
+					if (type == null) {
+						return false;
+					}
+
+					if (type.equals("公开")) {
+						return CavanAccessibilityHelper.performClick(node);
+					}
+
+					setSharePending(false);
+
+					AccessibilityNodeInfo publish = CavanAccessibilityHelper.getChild(root, 3);
+					if (publish != null) {
+						CavanAccessibilityHelper.performClickAndRecycle(publish);
+					}
+
+					return false;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				node.recycle();
+			}
+
+			return false;
+		}
+
+		@Override
+		protected void onEnter(AccessibilityNodeInfo root) {
+			if (isSharePending()) {
+				doCommandShare(root, false);
+			}
+		}
+	}
+
+	public class SnsLabelWindow extends BaseWindow {
+
+		public SnsLabelWindow(String name) {
+			super(name);
+		}
+
+		@Override
+		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "私密");
+			if (node == null) {
+				return false;
+			}
+
+			if (!CavanAccessibilityHelper.performClickParentAndRecycle(node)) {
+				return false;
+			}
+
+			node = CavanAccessibilityHelper.findNodeByText(root, "完成");
+			if (node == null) {
+				return false;
+			}
+
+			return CavanAccessibilityHelper.performClickAndRecycle(node);
+		}
+
+		@Override
+		protected void onEnter(AccessibilityNodeInfo root) {
+			if (isSharePending()) {
+				doCommandShare(root, false);
+			}
+		}
+	}
 
 	public boolean doActionBackBase(AccessibilityNodeInfo root, Object... indexs) {
 		AccessibilityNodeInfo[] nodes = CavanAccessibilityHelper.getChildsRecursive(root, indexs);
@@ -2500,6 +2618,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(new DialogWindow("com.tencent.mm.ui.base.i"));
 		addWindow(new DialogWindow("com.tencent.mm.ui.widget.a.c"));
 		addWindow(new AppBrandMenuWindow("com.tencent.mm.ui.widget.a.b"));
+
+		addWindow(new SelectConversationWindow("com.tencent.mm.ui.transmit.SelectConversationUI"));
+		addWindow(new SnsUploadWindow("com.tencent.mm.plugin.sns.ui.SnsUploadUI"));
+		addWindow(new SnsLabelWindow("com.tencent.mm.plugin.sns.ui.SnsLabelUI"));
 	}
 
 	@Override

@@ -718,18 +718,31 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return removePackets(pkg);
 	}
 
+	public boolean isInputMethodPicker(AccessibilityNodeInfo root) {
+		if (!CavanAccessibilityHelper.isNodePackgeEquals(root, "android")) {
+			return false;
+		}
+
+		String title = CavanAccessibilityHelper.getChildText(root, 0);
+		if (title == null) {
+			return false;
+		}
+
+		return (title.equals("选择输入法") || title.equals("更改键盘"));
+	}
+
 	public boolean setInputMethod(String name) {
 		InputMethodManager manager = (InputMethodManager) CavanAndroid.getSystemServiceCached(this, INPUT_METHOD_SERVICE);
 		if (manager == null) {
 			return false;
 		}
 
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 3; i++) {
 			AccessibilityNodeInfo root = getRootInActiveWindow();
 
 			if (root != null) {
 				try {
-					if (CavanAccessibilityHelper.isNodePackgeEquals(root, "android") && "选择输入法".equals(CavanAccessibilityHelper.getChildText(root, 0))) {
+					if (isInputMethodPicker(root)) {
 						AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, name);
 						if (node != null) {
 							AccessibilityNodeInfo parent = node.getParent();
@@ -752,7 +765,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			CavanJava.msleep(500);
 		}
 
-		performActionBack();
+		// performActionBack();
 
 		return false;
 	}
@@ -782,6 +795,10 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 
 		return null;
+	}
+
+	public boolean setInputMethod() {
+		return (getInputMethodService() != null);
 	}
 
 	protected String getInputMethodName() {
