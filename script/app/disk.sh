@@ -58,3 +58,20 @@ function cavan-disk-create-raid0()
 	echo "dev = ${dev}"
 	sudo mdadm -C "${dev}" -l 0 -n $# $@
 }
+
+function cavan-disk-raid-remove()
+{
+	for fn in $@
+	do
+		sudo mdadm --stop ${fn} || break
+		sudo mdadm --remove ${fn} || break
+	done
+}
+
+function cavan-disk-raid-clear()
+{
+	for fn in $@
+	do
+		sudo mdadm --zero-superblock ${fn} || break
+	done
+}

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export UMAKE_HOME="${TOOLS_HOME}/umake"
+
 FILE_LSB_RELEASE="/etc/lsb-release"
 
 [ -f "${FILE_LSB_RELEASE}" ] && source "${FILE_LSB_RELEASE}"
@@ -44,3 +46,13 @@ function cavan-nginx-restart()
 		echo "start nginx failed"
 	fi
 }
+
+function cavan-umake-setup()
+{
+	sudo add-apt-repository ppa:ubuntu-desktop/ubuntu-make || return 1
+	sudo apt-get update || return 1
+	sudo apt-get install ubuntu-make || return 1
+}
+
+alias cavan-umake-install-vscode="umake ide visual-studio-code"
+alias vscode="${UMAKE_HOME}/ide/visual-studio-code/bin/code"
