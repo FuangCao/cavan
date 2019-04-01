@@ -28,12 +28,17 @@ function cavan-apt-get-source()
 	done
 }
 
+
 alias cavan-apt-get-source-aliyun="cavan-apt-get-source mirrors.aliyun.com"
 alias cavan-apt-get-source-cn99="cavan-apt-get-source mirrors.cn99.com"
 alias cavan-apt-get-source-sohu="cavan-apt-get-source mirrors.sohu.com"
 alias cavan-apt-get-source-ustc="cavan-apt-get-source mirrors.ustc.edu.cn"
 alias cavan-apt-get-source-sjtu="cavan-apt-get-source ftp.sjtu.edu.cn"
 alias cavan-apt-get-source-us="cavan-apt-get-source us.archive.ubuntu.com"
+
+alias cavan-apt-get-reinstall="sudo apt-get --reinstall install"
+alias cavan-apt-get-auto-remove="sudo apt-get autoremove"
+alias cavan-apt-get-remove="sudo apt-get remove"
 
 function cavan-nginx-restart()
 {

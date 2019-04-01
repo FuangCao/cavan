@@ -318,11 +318,12 @@ public class CavanAccessibilityPackage {
 	}
 
 	public synchronized void setForceUnpackEnable(boolean enabled) {
+		CavanAndroid.dLog("setForceUnpackEnable: " + enabled);
 		mForceUnpack = enabled;
 	}
 
 	public synchronized boolean isForceUnpackEnabled() {
-		CavanAndroid.dLog("mForceUnpack = " + mForceUnpack);
+		CavanAndroid.dLog("isForceUnpackEnabled = " + mForceUnpack);
 		return mForceUnpack;
 	}
 

@@ -485,6 +485,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected void onEnter(AccessibilityNodeInfo root) {
+			setForceUnpackEnable(true);
 			setFollowPending(false);
 
 			if (isSigninPending()) {
@@ -620,6 +621,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 			setHomePending(false);
 			setUnfollowPending(false);
+			setForceUnpackEnable(true);
 		}
 
 		@Override
@@ -933,7 +935,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		public void onLeave(AccessibilityNodeInfo root) {
-			setForceUnpackEnable(true);
+			setForceUnpackEnable(false);
 		}
 
 		@Override

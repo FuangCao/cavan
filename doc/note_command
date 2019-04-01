@@ -31,3 +31,27 @@ systemctl status tcp-dd.service
 journalctl -xe
 tail -f /var/log/test.log
 iconv -f GBK -t UTF8 gbk.txt -o utf8.txt
+
+常用的top命令操作指令
+如果想看每一个cpu的处理情况，按1即可；折叠，再次按1
+通过”shift + >”或”shift + <”可以向右或左改变排序列
+如果只需要查看内存：可用free命令。只查看uptime信息（第一行），可用uptime命令
+q: 退出top命令
+<Space>: 立即刷新
+s: 设置刷新时间间隔
+c: 显示命令完全模式
+t: 显示或隐藏进程和CPU状态信息
+m: 显示或隐藏内存状态信息
+l: 显示或隐藏uptime信息
+f: 增加或减少进程显示标志
+S: 累计模式，会把已完成或退出的子进程占用的CPU时间累计到父进程的MITE+
+P: 按%CPU使用率排行
+T: 按MITE+排行
+M: 按%MEM排行
+u: 指定显示用户进程
+r: 修改进程renice值
+kkill: 进程
+i: 只显示正在运行的进程
+W: 保存对top的设置到文件~/.toprc，下次启动将自动调用toprc文件的设置。
+h: 帮助命令。
+q: 退出

@@ -554,6 +554,20 @@ public class CavanJava {
 		return Boolean.parseBoolean(text);
 	}
 
+	public static int parseCoord(String text, int max) {
+		if (text.indexOf('.') > 0) {
+			return (int) (CavanJava.parseDouble(text) * max);
+		}
+
+		int length = text.length();
+
+		if (text.charAt(length - 1) != '%') {
+			return CavanJava.parseInt(text);
+		}
+
+		return CavanJava.parseInt(text.substring(0, length - 1)) * max / 100;
+	}
+
 	public static int getShortBit(short value, int index, int base) {
 		while (index > 0) {
 			value /= base;

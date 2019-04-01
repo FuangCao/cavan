@@ -367,7 +367,7 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			break;
 
 		case "UNLOCK":
-			mFullWakeLock.acquire(this, 300000);
+			mFullWakeLock.acquire(this, 1800000);
 
 			if (args.length > 1) {
 				CavanAndroid.startActivityFuzzy(getApplicationContext(), args[1]);
@@ -581,8 +581,8 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			if (args.length > 1 && accessibility != null) {
 				String[] params = args[1].split("\\s+");
 				if (params.length > 1) {
-					int x = CavanJava.parseInt(params[0]);
-					int y = CavanJava.parseInt(params[1]);
+					int x = CavanJava.parseCoord(params[0], accessibility.getDisplayWidth());
+					int y = CavanJava.parseCoord(params[1], accessibility.getDisplayHeight());
 					accessibility.doInputTap(x, y);
 				}
 			}
