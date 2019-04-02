@@ -60,4 +60,4 @@ function cavan-umake-setup()
 }
 
 alias cavan-umake-install-vscode="umake ide visual-studio-code"
-alias vscode="${UMAKE_HOME}/ide/visual-studio-code/bin/code"
+alias vscode="(ulimit -v 2097152 && ${UMAKE_HOME}/ide/visual-studio-code/bin/code)"
