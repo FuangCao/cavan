@@ -436,6 +436,14 @@ class CavanCommandMd5sum extends CavanNativeCommand {
 	}
 }
 
+class CavanCommandMessageQueue extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doMessageQueue(async, args);
+	}
+}
+
 class CavanCommandMkdir extends CavanNativeCommand {
 
 	@Override
@@ -1177,6 +1185,7 @@ public class CavanNative {
 		sHashMap.put("lm49350_clock", new CavanCommandLm49350Clock());
 		sHashMap.put("loop_run", new CavanCommandLoopRun());
 		sHashMap.put("md5sum", new CavanCommandMd5sum());
+		sHashMap.put("message_queue", new CavanCommandMessageQueue());
 		sHashMap.put("mkdir", new CavanCommandMkdir());
 		sHashMap.put("mknp", new CavanCommandMknp());
 		sHashMap.put("mksdcard", new CavanCommandMksdcard());
@@ -1318,6 +1327,7 @@ public class CavanNative {
 	public static native int doLm49350Clock(boolean async, String... args);
 	public static native int doLoopRun(boolean async, String... args);
 	public static native int doMd5sum(boolean async, String... args);
+	public static native int doMessageQueue(boolean async, String... args);
 	public static native int doMkdir(boolean async, String... args);
 	public static native int doMknp(boolean async, String... args);
 	public static native int doMksdcard(boolean async, String... args);

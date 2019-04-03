@@ -440,7 +440,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 							}
 						}
 
-						mInformationGroups.add(group);
+						// mInformationGroups.add(group);
 
 						return message;
 					}

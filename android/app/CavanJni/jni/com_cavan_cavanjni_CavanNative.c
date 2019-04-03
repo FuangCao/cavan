@@ -380,6 +380,13 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMd5sum(JNIEnv *env, jclass 
 	return CavanMainExecute(env, "md5sum", async, args, do_cavan_md5sum);
 }
 
+extern int do_cavan_message_queue(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMessageQueue(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "message_queue", async, args, do_cavan_message_queue);
+}
+
 extern int do_cavan_mkdir(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMkdir(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
