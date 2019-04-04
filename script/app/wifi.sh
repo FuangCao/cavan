@@ -15,7 +15,7 @@ function cavan-wifi-mon-stop()
 function cavan-wifi-mon-scan()
 {
 	clear
-	sudo airodump-ng $1
+	sudo airodump-ng --manufacturer --wps $1
 }
 
 function cavan-wifi-mon-capture()
@@ -116,7 +116,7 @@ function cavan-wifi-minidwep-gtk()
 function cavan-wifi-reaver()
 {
 	local pathname="${CAVAN_WIFI_PATH}/reaver-${2//:}.wps"
-	local args="-i $1 -b $2 -s ${pathname} -a -l 1 -vv -S"
+	local args="-i $1 -b $2 -s ${pathname} -l 1 -vv -S"
 
 	[ "$3" ] && args="$args -c $3"
 	[ "$4" ] && args="$args -p $4"
