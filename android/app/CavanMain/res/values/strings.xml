@@ -846,5 +846,6 @@
 	<string name="delete_head">去头</string>
 	<string name="reserve">保留</string>
 	<string name="delete_tail">去尾</string>
+	<string name="input_device_proxy">输入设备代理</string>
 
 </resources>

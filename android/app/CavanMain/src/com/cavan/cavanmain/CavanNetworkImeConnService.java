@@ -134,11 +134,6 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 
 			return super.onTcpConnected(socket);
 		}
-
-		@Override
-		protected void onTcpDisconnected() {
-			super.onTcpDisconnected();
-		}
 	};
 
 	private CavanTcpClient.SendThread mSendThread = mTcpPacketClient.newSendThread();

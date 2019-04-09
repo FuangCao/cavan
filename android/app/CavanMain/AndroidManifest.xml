@@ -309,6 +309,8 @@
         </service>
         <service android:name="CavanNetworkImeConnService" >
         </service>
+        <service android:name="CavanInputProxyConnService" >
+        </service>
         <service android:name="com.cavan.service.CavanCommandService" >
         </service>
         <service android:name="com.cavan.cavanjni.RoleChangeClient" >

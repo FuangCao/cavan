@@ -13,7 +13,13 @@
 
 	<com.cavan.cavanmain.CavanNetworkImeClientPreference android:key="network_ime"
 	    android:persistent="true"
+	    android:defaultValue="192.168.88.233"
 	    android:title="@string/network_ime" />
+
+	<com.cavan.cavanmain.CavanInputProxyClientPreference android:key="input_proxy"
+	    android:persistent="true"
+	    android:defaultValue="127.0.0.1"
+	    android:title="@string/input_device_proxy" />
 
 	<com.cavan.cavanjni.TcpRepeaterPreference android:key="tcp_repeater"
 	    android:persistent="true"
