@@ -893,11 +893,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public boolean sendCommandHome() {
-		if (sendCommand(CavanAccessibilityPackage.CMD_HOME)) {
-			return true;
-		}
-
-		return performActionBack();
+		return sendCommand(CavanAccessibilityPackage.CMD_HOME);
 	}
 
 	public boolean sendCommandWeb(String action) {

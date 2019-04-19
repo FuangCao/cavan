@@ -415,7 +415,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		@Override
 		protected boolean doUnfollow(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, -1);
+			/* AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, -1);
 			if (node == null) {
 				return false;
 			}
@@ -430,7 +430,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				node.recycle();
 			}
 
-			return false;
+			return false; */
+
+			return doActionBack(root);
 		}
 
 		@Override
@@ -751,7 +753,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 							}
 						}
 
-						CavanAccessibilityHelper.performScrollDown(listView);
+						if (i > 0) {
+							CavanAccessibilityHelper.performScrollDown(listView);
+						}
+
 						CavanJava.msleep(200);
 					}
 				}
@@ -781,7 +786,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				try {
 					for (AccessibilityNodeInfo listView : listViews) {
 						for (int i = 0; i < 3; i++) {
-							List<AccessibilityNodeInfo> nodes = CavanAccessibilityHelper.findNodesByText(listView, "取消关注");
+							List<AccessibilityNodeInfo> nodes = CavanAccessibilityHelper.findNodesByTexts(listView, "取消关注", "不再关注");
 							if (nodes != null && nodes.size() > 0) {
 								try {
 									AccessibilityNodeInfo node = nodes.get(nodes.size() - 1);
@@ -798,7 +803,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 								}
 							}
 
-							CavanAccessibilityHelper.performScrollDown(listView);
+							if (i > 0) {
+								CavanAccessibilityHelper.performScrollDown(listView);
+							}
+
 							CavanJava.msleep(200);
 						}
 					}

@@ -692,6 +692,7 @@ public class CavanAccessibilityPackage {
 	public boolean doCommand(AccessibilityNodeInfo root, int command, Object[] args) {
 		CavanAccessibilityWindow win = getWindow(root.hashCode());
 		CavanAndroid.dLog("win = " + win);
+
 		if (win == null) {
 			return false;
 		}
@@ -739,8 +740,12 @@ public class CavanAccessibilityPackage {
 
 		case CMD_HOME:
 			CavanAndroid.dLog("CMD_HOME");
-			mHomePending = win.doActionHome(root);
-			return mHomePending;
+			if (win.doActionHome(root)) {
+				mHomePending = true;
+				return true;
+			}
+
+			return mService.performActionBack();
 
 		default:
 			CavanAndroid.eLog("Invalid command: " + command);
