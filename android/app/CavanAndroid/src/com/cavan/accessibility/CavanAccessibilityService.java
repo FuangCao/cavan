@@ -38,6 +38,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	public static final int POLL_DELAY = 500;
 	public static final int LAUNCH_DELAY = 2000;
+	public static final int CMD_OVERTIME = 60000;
 
 	private static final int MSG_SCREEN_ON = 1;
 	private static final int MSG_SHOW_COUNT_DOWN = 2;

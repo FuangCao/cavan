@@ -47,6 +47,7 @@ public class CavanAccessibilityPackage {
 	protected CavanAccessibilityWindow mWindow;
 	protected CavanRedPacket mCurrentPacket;
 	protected boolean mForceUnpack = true;
+
 	protected int mPending;
 	protected long mUpdateTime;
 	protected long mUnlockTime;
@@ -55,6 +56,8 @@ public class CavanAccessibilityPackage {
 	protected String[] mNames;
 	protected String mName;
 
+	private int mCommandPending;
+	private long mCommandTime;
 	private boolean mSigninPending;
 	private boolean mFollowPending;
 	private boolean mUnfollowPending;
@@ -97,8 +100,24 @@ public class CavanAccessibilityPackage {
 		return mNames;
 	}
 
+	public void updateCommandTime() {
+		mCommandTime = System.currentTimeMillis();
+	}
+
+	public boolean isCommandPending(int command, boolean pending) {
+		if (pending && command == mCommandPending) {
+			long time = System.currentTimeMillis();
+			if (time - mCommandTime < CavanAccessibilityService.CMD_OVERTIME) {
+				CavanAndroid.dLog("isCommandPending: " + command);
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public boolean isSigninPending() {
-		return mSigninPending;
+		return isCommandPending(CMD_SIGNIN, mSigninPending);
 	}
 
 	public void setSigninPending(boolean pending) {
@@ -106,7 +125,7 @@ public class CavanAccessibilityPackage {
 	}
 
 	public boolean isFollowPending() {
-		return mFollowPending;
+		return isCommandPending(CMD_FOLLOW, mFollowPending);
 	}
 
 	public void setFollowPending(boolean pending) {
@@ -114,7 +133,7 @@ public class CavanAccessibilityPackage {
 	}
 
 	public boolean isUnfollowPending() {
-		return mUnfollowPending;
+		return isCommandPending(CMD_UNFOLLOW, mUnfollowPending);
 	}
 
 	public void setUnfollowPending(boolean pending) {
@@ -122,7 +141,7 @@ public class CavanAccessibilityPackage {
 	}
 
 	public boolean isHomePending() {
-		return mHomePending;
+		return isCommandPending(CMD_HOME, mHomePending);
 	}
 
 	public void setHomePending(boolean pending) {
@@ -130,7 +149,7 @@ public class CavanAccessibilityPackage {
 	}
 
 	public boolean isSharePending() {
-		return mSharePending;
+		return isCommandPending(CMD_SHARE, mSharePending);
 	}
 
 	public void setSharePending(boolean pending) {
@@ -697,6 +716,9 @@ public class CavanAccessibilityPackage {
 			return false;
 		}
 
+		mCommandPending = command;
+		updateCommandTime();
+
 		switch (command) {
 		case CMD_SEND_TEXT:
 			CavanAndroid.dLog("CMD_SEND_TEXT");
@@ -740,8 +762,8 @@ public class CavanAccessibilityPackage {
 
 		case CMD_HOME:
 			CavanAndroid.dLog("CMD_HOME");
-			if (win.doActionHome(root)) {
-				mHomePending = true;
+			mHomePending = win.doActionHome(root);
+			if (mHomePending) {
 				return true;
 			}
 
