@@ -53,6 +53,8 @@ EOF
 	{
 		cvt 1920 1080
 		cvt 1280 720
+		cvt 1280 960
+		cvt 1920 1440
 	} | sed 's/^/\t/g'
 
 	cat << EOF
