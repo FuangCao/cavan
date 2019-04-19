@@ -1060,8 +1060,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 	public class WebViewWindow extends BaseWindow {
 
+		private boolean isTmpWebviewUi;
+
 		public WebViewWindow(String name) {
 			super(name);
+			isTmpWebviewUi = name.indexOf("Tmp") > 0;
 		}
 
 		public AccessibilityNodeInfo findWebView(AccessibilityNodeInfo root) {
@@ -1108,6 +1111,10 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		public boolean isInProgress(AccessibilityNodeInfo root) {
+			if (isTmpWebviewUi) {
+				return false;
+			}
+
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 3);
 			if (node == null) {
 				return false;
@@ -2426,6 +2433,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			win = new ReceiveWindow(name);
 		} else if (name.startsWith("com.tencent.mm.plugin.appbrand.ui.AppBrandUI")) {
 			win = new AppBrandWindow(name);
+		} else if (name.startsWith("com.tencent.mm.plugin.webview.ui.tools.")) {
+			win = new WebViewWindow(name);
 		} else {
 			return null;
 		}
