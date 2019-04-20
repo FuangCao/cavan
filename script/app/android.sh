@@ -586,3 +586,16 @@ function cavan-android-keystore-show()
 
 	keytool -v -list -storepass "${storepass}" -keystore "$1"
 }
+
+function cavan-android-input-server()
+{
+	local src_cavan_main="${1-${CAVAN_HOME}/android/app/CavanJni/libs/armeabi/cavan-main}"
+	local dest_cavan_main="/data/local/tmp/cavan-main"
+
+	echo "wait for device"
+	adb wait-for-device && adb devices || return 1
+
+	echo "${src_cavan_main} -> ${dest_cavan_main}"
+	adb push "${src_cavan_main}" "${dest_cavan_main}" || return 1
+	adb shell "${dest_cavan_main} input_server -dp 9981" || return 1
+}
