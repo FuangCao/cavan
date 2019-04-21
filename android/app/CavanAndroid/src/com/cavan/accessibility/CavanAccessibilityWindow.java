@@ -4,11 +4,24 @@ import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import com.cavan.android.CavanAndroid;
+
 
 public class CavanAccessibilityWindow {
 
 	public static final int WAIT_DELAY = 200;
 	public static final int WAIT_TIMES = 5;
+
+	public static final int CMD_SEND_TEXT = 1;
+	public static final int CMD_LOGIN = 2;
+	public static final int CMD_REFRESH = 3;
+	public static final int CMD_SIGNIN = 4;
+	public static final int CMD_FOLLOW = 5;
+	public static final int CMD_UNFOLLOW = 6;
+	public static final int CMD_BACK = 7;
+	public static final int CMD_HOME = 8;
+	public static final int CMD_WEB = 9;
+	public static final int CMD_SHARE = 10;
 
 	protected int mActivityHashCode;
 	protected String mBackViewId;
@@ -117,7 +130,7 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
-	protected boolean doRefresh(AccessibilityNodeInfo root) {
+	protected boolean doRefresh(AccessibilityNodeInfo root, int times) {
 		return false;
 	}
 
@@ -125,15 +138,15 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
-	protected boolean doFollow(AccessibilityNodeInfo root) {
+	protected boolean doFollow(AccessibilityNodeInfo root, int times) {
 		return false;
 	}
 
-	protected boolean doUnfollow(AccessibilityNodeInfo root) {
+	protected boolean doUnfollow(AccessibilityNodeInfo root, int times) {
 		return false;
 	}
 
-	protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
+	protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends, int times) {
 		return false;
 	}
 
@@ -141,7 +154,7 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
-	protected boolean doActionHome(AccessibilityNodeInfo root) {
+	protected boolean doActionHome(AccessibilityNodeInfo root, int times) {
 		return doActionBack(root);
 	}
 
@@ -203,5 +216,58 @@ public class CavanAccessibilityWindow {
 
 	public int getActivityHashCode() {
 		return mActivityHashCode;
+	}
+
+	public boolean processCommand(AccessibilityNodeInfo root, int command, Object[] args, int times) {
+		switch (command) {
+		case CMD_SEND_TEXT:
+			CavanAndroid.dLog("CMD_SEND_TEXT");
+			return doSendText(root, (String) args[0], (boolean) args[1]);
+
+		case CMD_LOGIN:
+			CavanAndroid.dLog("CMD_LOGIN");
+			return doLogin(root, (String) args[0], (String) args[1]);
+
+		case CMD_WEB:
+			CavanAndroid.dLog("CMD_WEB");
+			return doWebCommand(root, (String) args[0]);
+
+		case CMD_REFRESH:
+			CavanAndroid.dLog("CMD_REFRESH");
+			return doRefresh(root, times);
+
+		case CMD_SIGNIN:
+			CavanAndroid.dLog("CMD_SIGNIN");
+			return doSignin(root);
+
+		case CMD_FOLLOW:
+			CavanAndroid.dLog("CMD_FOLLOW");
+			return doFollow(root, times);
+
+		case CMD_UNFOLLOW:
+			CavanAndroid.dLog("CMD_UNFOLLOW");
+			return doUnfollow(root, times);
+
+		case CMD_SHARE:
+			CavanAndroid.dLog("CMD_SHARE");
+			return doCommandShare(root, (boolean) args[0], times);
+
+		case CMD_BACK:
+			CavanAndroid.dLog("CMD_BACK");
+			doActionBack(root);
+			return false;
+
+		case CMD_HOME:
+			CavanAndroid.dLog("CMD_HOME");
+			if (isHomePage()) {
+				return false;
+			}
+
+			return doActionHome(root, times);
+
+		default:
+			CavanAndroid.eLog("Invalid command: " + command);
+			return false;
+		}
 	}
 }

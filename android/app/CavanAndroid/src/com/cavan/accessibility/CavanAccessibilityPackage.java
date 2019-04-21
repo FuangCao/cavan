@@ -17,17 +17,6 @@ import com.cavan.java.CavanString;
 
 public class CavanAccessibilityPackage {
 
-	public static final int CMD_SEND_TEXT = 1;
-	public static final int CMD_LOGIN = 2;
-	public static final int CMD_REFRESH = 3;
-	public static final int CMD_SIGNIN = 4;
-	public static final int CMD_FOLLOW = 5;
-	public static final int CMD_UNFOLLOW = 6;
-	public static final int CMD_BACK = 7;
-	public static final int CMD_HOME = 8;
-	public static final int CMD_WEB = 9;
-	public static final int CMD_SHARE = 10;
-
 	public static int WAIT_DELAY = 500;
 	public static int BACK_DELAY = 5000;
 	public static int POLL_DELAY = 500;
@@ -55,14 +44,6 @@ public class CavanAccessibilityPackage {
 	protected int mFailTimes;
 	protected String[] mNames;
 	protected String mName;
-
-	private int mCommandPending;
-	private long mCommandTime;
-	private boolean mSigninPending;
-	private boolean mFollowPending;
-	private boolean mUnfollowPending;
-	private boolean mHomePending;
-	private boolean mSharePending;
 
 	public class ProgressWindow extends CavanAccessibilityWindow {
 
@@ -98,62 +79,6 @@ public class CavanAccessibilityPackage {
 
 	public String[] getNames() {
 		return mNames;
-	}
-
-	public void updateCommandTime() {
-		mCommandTime = System.currentTimeMillis();
-	}
-
-	public boolean isCommandPending(int command, boolean pending) {
-		if (pending && command == mCommandPending) {
-			long time = System.currentTimeMillis();
-			if (time - mCommandTime < CavanAccessibilityService.CMD_OVERTIME) {
-				CavanAndroid.dLog("isCommandPending: " + command);
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	public boolean isSigninPending() {
-		return isCommandPending(CMD_SIGNIN, mSigninPending);
-	}
-
-	public void setSigninPending(boolean pending) {
-		mSigninPending = pending;
-	}
-
-	public boolean isFollowPending() {
-		return isCommandPending(CMD_FOLLOW, mFollowPending);
-	}
-
-	public void setFollowPending(boolean pending) {
-		mFollowPending = pending;
-	}
-
-	public boolean isUnfollowPending() {
-		return isCommandPending(CMD_UNFOLLOW, mUnfollowPending);
-	}
-
-	public void setUnfollowPending(boolean pending) {
-		mUnfollowPending = pending;
-	}
-
-	public boolean isHomePending() {
-		return isCommandPending(CMD_HOME, mHomePending);
-	}
-
-	public void setHomePending(boolean pending) {
-		mHomePending = pending;
-	}
-
-	public boolean isSharePending() {
-		return isCommandPending(CMD_SHARE, mSharePending);
-	}
-
-	public void setSharePending(boolean pending) {
-		mSharePending = pending;
 	}
 
 	public synchronized void resetTimes() {
@@ -491,14 +416,14 @@ public class CavanAccessibilityPackage {
 
 			if (mWindow != null) {
 				if (pending) {
-					mWindow.onLeave(root);
+					onLeaveWindow(mWindow, root);
 				}
 
 				if (mWindow.isProgressView()) {
 					if (win == mPrevWin) {
 						pending = false;
 					} else if (mPrevWin != null) {
-						mPrevWin.onLeave(root);
+						onLeaveWindow(mPrevWin, root);
 					}
 				}
 			}
@@ -515,7 +440,7 @@ public class CavanAccessibilityPackage {
 				}
 
 				if (pending) {
-					win.onEnter(root);
+					onEnterWindow(win, root);
 				}
 
 				resetTimes();
@@ -708,71 +633,44 @@ public class CavanAccessibilityPackage {
 		return -1;
 	}
 
-	public boolean doCommand(AccessibilityNodeInfo root, int command, Object[] args) {
-		CavanAccessibilityWindow win = getWindow(root.hashCode());
-		CavanAndroid.dLog("win = " + win);
-
-		if (win == null) {
-			return false;
-		}
-
-		mCommandPending = command;
-		updateCommandTime();
-
+	public boolean processCommand(AccessibilityNodeInfo root, int command, Object[] args, int times) {
 		switch (command) {
-		case CMD_SEND_TEXT:
-			CavanAndroid.dLog("CMD_SEND_TEXT");
-			return win.doSendText(root, (String) args[0], (boolean) args[1]);
-
-		case CMD_LOGIN:
-			CavanAndroid.dLog("CMD_LOGIN");
-			return win.doLogin(root, (String) args[0], (String) args[1]);
-
-		case CMD_WEB:
-			CavanAndroid.dLog("CMD_WEB");
-			return win.doWebCommand(root, (String) args[0]);
-
-		case CMD_REFRESH:
-			CavanAndroid.dLog("CMD_REFRESH");
-			return win.doRefresh(root);
-
-		case CMD_SIGNIN:
-			CavanAndroid.dLog("CMD_SIGNIN");
-			mSigninPending = win.doSignin(root);
-			return mSigninPending;
-
-		case CMD_FOLLOW:
-			CavanAndroid.dLog("CMD_FOLLOW");
-			mFollowPending = win.doFollow(root);
-			return mFollowPending;
-
-		case CMD_UNFOLLOW:
-			CavanAndroid.dLog("CMD_UNFOLLOW");
-			mUnfollowPending = win.doUnfollow(root);
-			return mUnfollowPending;
-
-		case CMD_SHARE:
-			CavanAndroid.dLog("CMD_SHARE");
-			mSharePending = win.doCommandShare(root, (boolean) args[0]);
-			return mSharePending;
-
-		case CMD_BACK:
-			CavanAndroid.dLog("CMD_BACK");
-			return win.doActionBack(root);
-
-		case CMD_HOME:
-			CavanAndroid.dLog("CMD_HOME");
-			mHomePending = win.doActionHome(root);
-			if (mHomePending) {
-				return true;
-			}
-
+		case CavanAccessibilityWindow.CMD_BACK:
+		case CavanAccessibilityWindow.CMD_HOME:
 			return mService.performActionBack();
 
 		default:
-			CavanAndroid.eLog("Invalid command: " + command);
 			return false;
 		}
+	}
+
+
+	public long doCommand(AccessibilityNodeInfo root, int command, Object[] args, int times) {
+		long time = System.currentTimeMillis();
+		long overtime = time - mUpdateTime;
+
+		if (overtime < 200) {
+			return 200 - overtime;
+		}
+
+		CavanAccessibilityWindow win = getWindow(root.hashCode());
+		CavanAndroid.dLog("win = " + win);
+
+		boolean success;
+
+		if (win == null) {
+			success = processCommand(root, command, args, times);
+		} else {
+			success = win.processCommand(root, command, args, times);
+		}
+
+		CavanAndroid.dLog("command = " + command + ", success = " + success);
+
+		if (success) {
+			return 0;
+		}
+
+		return -1;
 	}
 
 	protected void initWindows() {}
@@ -788,6 +686,15 @@ public class CavanAccessibilityPackage {
 		mService.removePacket(packet);
 	}
 
+	protected void onEnterWindow(CavanAccessibilityWindow win, AccessibilityNodeInfo root) {
+		win.onEnter(root);
+		mService.postCommand();
+	}
+
+	protected void onLeaveWindow(CavanAccessibilityWindow win, AccessibilityNodeInfo root) {
+		win.onLeave(root);
+	}
+
 	protected void onEnter() {}
 	protected void onLeave() {}
 	protected void onCreate() {}
@@ -796,11 +703,7 @@ public class CavanAccessibilityPackage {
 	protected void onPollStopped() {}
 
 	protected void onEnterHomePage(CavanAccessibilityWindow win, AccessibilityNodeInfo root) {
-		mHomePending = false;
-		mFollowPending = false;
-		mUnfollowPending = false;
-		mSharePending = false;
-		mSigninPending = false;
+		mService.stopCommand();
 	}
 
 	@Override

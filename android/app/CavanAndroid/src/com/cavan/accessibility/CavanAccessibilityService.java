@@ -31,6 +31,7 @@ import com.cavan.android.CavanThreadedHandler;
 import com.cavan.android.CavanWakeLock;
 import com.cavan.android.SystemProperties;
 import com.cavan.java.CavanJava;
+import com.cavan.java.CavanThread;
 
 public class CavanAccessibilityService extends AccessibilityService {
 
@@ -64,18 +65,18 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private int mDisplayWidth = 1080;
 	private int mDisplayHeight = 1920;
 
-	private Thread mPollThread = new Thread() {
+	public class CavanAccessibilityThread extends CavanThread {
 
 		@Override
-		public synchronized void start() {
+		public synchronized void wakeup() {
 			if (mScreenOn) {
-				if (isAlive()) {
-					notify();
-				} else {
-					super.start();
-				}
+				super.wakeup();
 			}
 		}
+
+	}
+
+	private CavanAccessibilityThread mPollThread = new CavanAccessibilityThread() {
 
 		public boolean poll(CavanAccessibilityPackage pkg, CavanRedPacket packet) {
 			int retry = 0;
@@ -217,6 +218,87 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 	};
 
+	public class CavanAccessibilityCommand {
+
+		private long mTime;
+		private int mTimes;
+		private int mCommand;
+		private Object[] mArgs;
+
+		public CavanAccessibilityCommand(int command, Object[] args) {
+			mTime = System.currentTimeMillis();
+			mCommand = command;
+			mArgs = args;
+		}
+
+		public boolean isTimeout(long timeout) {
+			long time = System.currentTimeMillis();
+			return time - mTime > timeout;
+		}
+
+		public long execute() {
+			if (isTimeout(20000)) {
+				return -1;
+			}
+
+			AccessibilityNodeInfo root = getRootInActiveWindow();
+			if (root == null) {
+				return 500;
+			}
+
+			CavanAccessibilityPackage pkg = getPackage(root);
+			if (pkg == null) {
+				return 0;
+			}
+
+			try {
+				return pkg.doCommand(root, mCommand, mArgs, ++mTimes);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			return 0;
+		}
+	}
+
+	private CavanAccessibilityCommand mCommand;
+
+	private CavanAccessibilityThread mCommandThread = new CavanAccessibilityThread() {
+
+		@Override
+		public void run() {
+			while (true) {
+				CavanAccessibilityCommand command = mCommand;
+				if (command != null) {
+					long delay = command.execute();
+					CavanAndroid.dLog("delay = " + delay);
+
+					if (delay > 0) {
+						synchronized (this) {
+							try {
+								wait(delay);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+
+						continue;
+					} else if (delay < 0 && command == mCommand) {
+						mCommand = null;
+					}
+				}
+
+				synchronized (this) {
+					try {
+						wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+	};
+
 	private Handler mHandler = new Handler() {
 
 		@Override
@@ -225,7 +307,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 			switch (msg.what) {
 			case MSG_SCREEN_ON:
-				mPollThread.start();
+				mPollThread.wakeup();
 				break;
 
 			case MSG_SHOW_COUNT_DOWN:
@@ -240,6 +322,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 					if (mCountDownDialog == null) {
 						break;
 					}
+
 				}
 
 				mCountDownDialog.show(packet);
@@ -289,6 +372,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 						CavanAccessibilityWindow win = pkg.waitPopWindow(root.hashCode());
 						if (win != null) {
 							CavanAndroid.dLog("win = " + win);
+							pkg.touchUpdateTime();
 							pkg.onWindowStateChanged(root, win);
 						} else {
 							postWaitPopWindow(pkg, 200);
@@ -584,7 +668,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public void startPoll() {
-		mPollThread.start();
+		mPollThread.wakeup();
 	}
 
 	public String[] getPackageNames() {
@@ -811,24 +895,20 @@ public class CavanAccessibilityService extends AccessibilityService {
 		mThreadedHandler.sendMessageDelayed(message, delay);
 	}
 
+	public void postCommand() {
+		if (mCommand != null) {
+			mCommandThread.wakeup();
+		}
+	}
+
+	public void stopCommand() {
+		mCommand = null;
+	}
+
 	public boolean sendCommand(int command, Object... args) {
-		AccessibilityNodeInfo root = getRootInActiveWindow(3);
-		if (root == null) {
-			return false;
-		}
-
-		CavanAccessibilityPackage pkg = getPackage(root);
-		if (pkg == null) {
-			return false;
-		}
-
-		try {
-			return pkg.doCommand(root, command, args);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return false;
+		mCommand = new CavanAccessibilityCommand(command, args);
+		mCommandThread.wakeup();
+		return true;
 	}
 
 	public boolean sendCommand(int command) {
@@ -836,7 +916,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public boolean sendText(String message, boolean commit) {
-		if (sendCommand(CavanAccessibilityPackage.CMD_SEND_TEXT, message, commit)) {
+		if (sendCommand(CavanAccessibilityWindow.CMD_SEND_TEXT, message, commit)) {
 			return true;
 		}
 
@@ -862,31 +942,31 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public boolean login(String username, String password) {
-		return sendCommand(CavanAccessibilityPackage.CMD_LOGIN, username, password);
+		return sendCommand(CavanAccessibilityWindow.CMD_LOGIN, username, password);
 	}
 
 	public boolean signin() {
-		return sendCommand(CavanAccessibilityPackage.CMD_SIGNIN);
+		return sendCommand(CavanAccessibilityWindow.CMD_SIGNIN);
 	}
 
 	public boolean follow() {
-		return sendCommand(CavanAccessibilityPackage.CMD_FOLLOW);
+		return sendCommand(CavanAccessibilityWindow.CMD_FOLLOW);
 	}
 
 	public boolean unfollow() {
-		return sendCommand(CavanAccessibilityPackage.CMD_UNFOLLOW);
+		return sendCommand(CavanAccessibilityWindow.CMD_UNFOLLOW);
 	}
 
 	public boolean sendCommandShred(boolean friends) {
-		return sendCommand(CavanAccessibilityPackage.CMD_SHARE, friends);
+		return sendCommand(CavanAccessibilityWindow.CMD_SHARE, friends);
 	}
 
 	public boolean refresh() {
-		return sendCommand(CavanAccessibilityPackage.CMD_REFRESH);
+		return sendCommand(CavanAccessibilityWindow.CMD_REFRESH);
 	}
 
 	public boolean sendCommandBack() {
-		if (sendCommand(CavanAccessibilityPackage.CMD_BACK)) {
+		if (sendCommand(CavanAccessibilityWindow.CMD_BACK)) {
 			return true;
 		}
 
@@ -894,11 +974,11 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public boolean sendCommandHome() {
-		return sendCommand(CavanAccessibilityPackage.CMD_HOME);
+		return sendCommand(CavanAccessibilityWindow.CMD_HOME);
 	}
 
 	public boolean sendCommandWeb(String action) {
-		return sendCommand(CavanAccessibilityPackage.CMD_WEB, action);
+		return sendCommand(CavanAccessibilityWindow.CMD_WEB, action);
 	}
 
 	public Class<?> getBroadcastReceiverClass() {
