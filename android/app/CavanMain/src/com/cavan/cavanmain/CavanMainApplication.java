@@ -81,5 +81,6 @@ public class CavanMainApplication extends Application {
 		gPowerStateWatcher.start(this);
 		FloatMessageService.startService(this);
 		CavanNetworkImeConnService.startService(this);
+		CavanInputProxyConnService.startService(this);
 	}
 }

@@ -32,6 +32,7 @@ public class CavanServiceActivity extends PreferenceActivity {
 	public static final String KEY_ROLE_CHANGE_CLIENT = "role_change_client";
 	public static final String KEY_ROLE_CHANGE_PROXY = "role_change_proxy";
 	public static final String KEY_COMMAND = "command";
+	public static final String KEY_INPUT_PROXY = "input_proxy";
 
 	private Preference mPreferenceIpAddress;
 	private Preference mPreferenceShareApp;

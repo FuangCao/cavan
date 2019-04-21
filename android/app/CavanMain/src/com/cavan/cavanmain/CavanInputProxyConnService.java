@@ -1,7 +1,10 @@
 package com.cavan.cavanmain;
 
+import java.util.ArrayList;
+
 import android.content.Context;
 import android.content.Intent;
+import android.os.RemoteException;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanTcpClient;
@@ -68,6 +71,13 @@ public class CavanInputProxyConnService extends CavanTcpConnService implements C
 	@Override
 	public void onCreate() {
 		super.onCreate();
+
+		try {
+			ArrayList<String> addresses = CavanInputProxyClientPreference.load(this, CavanServiceActivity.KEY_INPUT_PROXY);
+			mBinder.setAddresses(addresses);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
 
 		instance = this;
 		CavanMainApplication.addPowerStateListener(this);
