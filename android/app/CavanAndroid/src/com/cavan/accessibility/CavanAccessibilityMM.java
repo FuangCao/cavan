@@ -263,6 +263,19 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			return nodes;
 		}
 
+		protected AccessibilityNodeInfo onFindInputNode(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 0, -1, -3, 0);
+			if (node != null) {
+				if (CavanAccessibilityHelper.isEditText(node)) {
+					return node;
+				}
+
+				node.recycle();
+			}
+
+			return null;
+		}
+
 		public AccessibilityNodeInfo findInputNode(AccessibilityNodeInfo root) {
 			AccessibilityNodeInfo node = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
 			if (node != null) {
@@ -273,16 +286,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				node.recycle();
 			}
 
-			node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 0, 0, -1, 0, 1, 0);
-			if (node != null) {
-				if (CavanAccessibilityHelper.isEditText(node)) {
-					return node;
-				}
-
-				node.recycle();
-			}
-
-			return null;
+			return onFindInputNode(root);
 		}
 
 		public boolean doCommitMessage(AccessibilityNodeInfo root) {
@@ -516,6 +520,20 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
+				node.recycle();
+			}
+
+			return null;
+		}
+
+		@Override
+		protected AccessibilityNodeInfo onFindInputNode(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 0, 0, -1, 0, -3, 0);
+			if (node != null) {
+				if (CavanAccessibilityHelper.isEditText(node)) {
+					return node;
+				}
+
 				node.recycle();
 			}
 
