@@ -14,6 +14,8 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TabHost;
 import android.widget.TextView;
@@ -126,12 +128,20 @@ public class CavanAccessibilityHelper {
 		return isInstanceOf(node, EditText.class);
 	}
 
+	public static boolean isImageView(AccessibilityNodeInfo node) {
+		return isInstanceOf(node, ImageView.class);
+	}
+
 	public static boolean isTabHost(AccessibilityNodeInfo node) {
 		return isInstanceOf(node, TabHost.class);
 	}
 
 	public static boolean isListView(AccessibilityNodeInfo node) {
 		return isInstanceOf(node, ListView.class);
+	}
+
+	public static boolean isLinearLayout(AccessibilityNodeInfo node) {
+		return isInstanceOf(node, LinearLayout.class);
 	}
 
 	public static void recycleNodes(List<AccessibilityNodeInfo> nodes, int start, int end) {
