@@ -13,6 +13,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.SystemProperties;
+import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
 
 public class CavanAccessibilityPackage {
@@ -44,6 +45,8 @@ public class CavanAccessibilityPackage {
 	protected int mFailTimes;
 	protected String[] mNames;
 	protected String mName;
+
+	protected boolean mCommandPending;
 
 	public class ProgressWindow extends CavanAccessibilityWindow {
 
@@ -235,6 +238,10 @@ public class CavanAccessibilityPackage {
 	public synchronized void setGotoHome(boolean enabled) {
 		CavanAndroid.dLog("setGotoHome: " + enabled);
 		setPending(enabled, PENDING_HOME);
+	}
+
+	public void setCommandPending() {
+		mCommandPending = true;
 	}
 
 	public synchronized void setComplete() {
@@ -656,18 +663,28 @@ public class CavanAccessibilityPackage {
 		CavanAccessibilityWindow win = getWindow(root.hashCode());
 		CavanAndroid.dLog("win = " + win);
 
-		boolean success;
+		boolean success = false;
 
-		if (win == null) {
-			success = processCommand(root, command, args, times);
-		} else {
-			success = win.processCommand(root, command, args, times);
-		}
+		for (int i = 0; i < 3; i++) {
+			mCommandPending = false;
 
-		CavanAndroid.dLog("command = " + command + ", success = " + success);
+			if (win == null) {
+				success = processCommand(root, command, args, times);
+			} else {
+				success = win.processCommand(root, command, args, times);
+			}
 
-		if (success) {
-			return 0;
+			CavanAndroid.dLog("command = " + command + ", success = " + success);
+
+			if (success) {
+				return 0;
+			}
+
+			if (mCommandPending) {
+				CavanJava.msleep(200);
+			} else {
+				break;
+			}
 		}
 
 		return -1;

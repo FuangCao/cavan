@@ -2384,6 +2384,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends, int times) {
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildByIndex(root, 4);
 			if (node == null) {
+				mCommandPending = true;
 				return false;
 			}
 
@@ -2493,6 +2494,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends, int times) {
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "两口");
 			if (node == null) {
+				setCommandPending();
 				return false;
 			}
 
@@ -2510,6 +2512,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends, int times) {
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 0, 3);
 			if (node == null) {
+				setCommandPending();
 				return false;
 			}
 
@@ -2551,6 +2554,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends, int times) {
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "私密");
 			if (node == null) {
+				setCommandPending();
 				return false;
 			}
 
@@ -2565,6 +2569,19 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 			return CavanAccessibilityHelper.performClickAndRecycle(node);
 		}
+	}
+
+	public class WebViewStubProxyWindow extends BaseWindow {
+
+		public WebViewStubProxyWindow(String name) {
+			super(name);
+		}
+
+		@Override
+		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends, int times) {
+			return true;
+		}
+
 	}
 
 	public boolean doActionBackBase(AccessibilityNodeInfo root, Object... indexs) {
@@ -2630,6 +2647,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(new SelectConversationWindow("com.tencent.mm.ui.transmit.SelectConversationUI"));
 		addWindow(new SnsUploadWindow("com.tencent.mm.plugin.sns.ui.SnsUploadUI"));
 		addWindow(new SnsLabelWindow("com.tencent.mm.plugin.sns.ui.SnsLabelUI"));
+		addWindow(new WebViewStubProxyWindow("com.tencent.mm.plugin.webview.stub.WebViewStubProxyUI"));
 	}
 
 	@Override
