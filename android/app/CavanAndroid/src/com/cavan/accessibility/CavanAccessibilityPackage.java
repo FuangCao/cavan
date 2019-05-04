@@ -11,9 +11,9 @@ import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import com.cavan.accessibility.CavanAccessibilityService.CavanAccessibilityCommand;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.SystemProperties;
-import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
 
 public class CavanAccessibilityPackage {
@@ -242,6 +242,10 @@ public class CavanAccessibilityPackage {
 
 	public void setCommandPending() {
 		mCommandPending = true;
+	}
+
+	public boolean isCommandPending() {
+		return mCommandPending;
 	}
 
 	public synchronized void setComplete() {
@@ -640,8 +644,8 @@ public class CavanAccessibilityPackage {
 		return -1;
 	}
 
-	public boolean processCommand(AccessibilityNodeInfo root, int command, Object[] args, int times) {
-		switch (command) {
+	public boolean processCommand(AccessibilityNodeInfo root, CavanAccessibilityCommand command) {
+		switch (command.getCommand()) {
 		case CavanAccessibilityWindow.CMD_BACK:
 		case CavanAccessibilityWindow.CMD_HOME:
 			return mService.performActionBack();
@@ -652,7 +656,7 @@ public class CavanAccessibilityPackage {
 	}
 
 
-	public long doCommand(AccessibilityNodeInfo root, int command, Object[] args, int times) {
+	public long doCommand(AccessibilityNodeInfo root, CavanAccessibilityCommand command) {
 		long time = System.currentTimeMillis();
 		long overtime = time - mUpdateTime;
 
@@ -660,31 +664,23 @@ public class CavanAccessibilityPackage {
 			return 200 - overtime;
 		}
 
+		boolean success = false;
+
 		CavanAccessibilityWindow win = getWindow(root.hashCode());
 		CavanAndroid.dLog("win = " + win);
 
-		boolean success = false;
+		mCommandPending = false;
 
-		for (int i = 0; i < 3; i++) {
-			mCommandPending = false;
+		if (win == null) {
+			success = processCommand(root, command);
+		} else {
+			success = win.processCommand(root, command);
+		}
 
-			if (win == null) {
-				success = processCommand(root, command, args, times);
-			} else {
-				success = win.processCommand(root, command, args, times);
-			}
+		CavanAndroid.dLog("command = " + command + ", success = " + success);
 
-			CavanAndroid.dLog("command = " + command + ", success = " + success);
-
-			if (success) {
-				return 0;
-			}
-
-			if (mCommandPending) {
-				CavanJava.msleep(200);
-			} else {
-				break;
-			}
+		if (success) {
+			return 0;
 		}
 
 		return -1;

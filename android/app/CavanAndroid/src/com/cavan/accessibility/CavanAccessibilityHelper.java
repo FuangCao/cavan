@@ -755,10 +755,21 @@ public class CavanAccessibilityHelper {
 
 		if (context != null) {
 			performSelection(node, 0, old.length());
-			CavanAndroid.postClipboardText(context, CavanAndroid.CLIP_LABEL_TEMP, text);
 
-			if (node.performAction(AccessibilityNodeInfo.ACTION_PASTE)) {
-				return old;
+			String clipboard = CavanAndroid.getClipboardText(context);
+
+			if (!CavanAndroid.postClipboardText(context, CavanAndroid.CLIP_LABEL_TEMP, text)) {
+				return null;
+			}
+
+			try {
+				if (node.performAction(AccessibilityNodeInfo.ACTION_PASTE)) {
+					return old;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				CavanAndroid.postClipboardText(context, CavanAndroid.CLIP_LABEL_TEMP, clipboard);
 			}
 		}
 

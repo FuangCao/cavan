@@ -229,6 +229,23 @@ public class CavanAccessibilityService extends AccessibilityService {
 			mTime = System.currentTimeMillis();
 			mCommand = command;
 			mArgs = args;
+			mTimes = 0;
+		}
+
+		public long getTime() {
+			return mTime;
+		}
+
+		public int getTimes() {
+			return mTimes;
+		}
+
+		public int getCommand() {
+			return mCommand;
+		}
+
+		public Object[] getArgs() {
+			return mArgs;
 		}
 
 		public boolean isTimeout(long timeout) {
@@ -241,20 +258,25 @@ public class CavanAccessibilityService extends AccessibilityService {
 				return -1;
 			}
 
-			AccessibilityNodeInfo root = getRootInActiveWindow();
-			if (root == null) {
-				return 500;
-			}
+			for (int i = 0; i < 3 && isCurrentCommand(this); i++) {
+					AccessibilityNodeInfo root = getRootInActiveWindow();
+					if (root == null) {
+						return 500;
+					}
 
-			CavanAccessibilityPackage pkg = getPackage(root);
-			if (pkg == null) {
-				return 0;
-			}
+					mTimes++;
 
-			try {
-				return pkg.doCommand(root, mCommand, mArgs, ++mTimes);
-			} catch (Exception e) {
-				e.printStackTrace();
+					CavanAccessibilityPackage pkg = getPackage(root);
+					if (pkg == null) {
+						return doCommand(root, this);
+					}
+
+					long delay = pkg.doCommand(root, this);
+					if (delay < 0 && pkg.isCommandPending()) {
+						mCommandThread.msleep(200);
+					} else {
+						return delay;
+					}
 			}
 
 			return 0;
@@ -435,6 +457,20 @@ public class CavanAccessibilityService extends AccessibilityService {
 		if (mScreenOn && idle) {
 			CavanAndroid.startLauncher(this);
 		}
+	}
+
+	public synchronized boolean isCurrentCommand(CavanAccessibilityCommand command) {
+		return (command == mCommand);
+	}
+
+	public long doCommand(AccessibilityNodeInfo root, CavanAccessibilityCommand command) {
+		switch (command.getCommand()) {
+		case CavanAccessibilityWindow.CMD_BACK:
+			performActionBack();
+			break;
+		}
+
+		return 0;
 	}
 
 	public CavanAccessibilityPackage getPendingPackage() {

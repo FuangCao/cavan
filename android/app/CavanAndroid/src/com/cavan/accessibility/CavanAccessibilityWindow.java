@@ -4,6 +4,7 @@ import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import com.cavan.accessibility.CavanAccessibilityService.CavanAccessibilityCommand;
 import com.cavan.android.CavanAndroid;
 
 
@@ -130,7 +131,7 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
-	protected boolean doRefresh(AccessibilityNodeInfo root, int times) {
+	protected boolean doRefresh(AccessibilityNodeInfo root) {
 		return false;
 	}
 
@@ -138,15 +139,15 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
-	protected boolean doFollow(AccessibilityNodeInfo root, int times) {
+	protected boolean doFollow(AccessibilityNodeInfo root) {
 		return false;
 	}
 
-	protected boolean doUnfollow(AccessibilityNodeInfo root, int times) {
+	protected boolean doUnfollow(AccessibilityNodeInfo root) {
 		return false;
 	}
 
-	protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends, int times) {
+	protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
 		return false;
 	}
 
@@ -154,7 +155,7 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
-	protected boolean doActionHome(AccessibilityNodeInfo root, int times) {
+	protected boolean doActionHome(AccessibilityNodeInfo root) {
 		return doActionBack(root);
 	}
 
@@ -201,6 +202,10 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
+	public boolean isCommandCompleted(CavanAccessibilityCommand command) {
+		return false;
+	}
+
 	@Override
 	public String toString() {
 		return mName;
@@ -218,8 +223,14 @@ public class CavanAccessibilityWindow {
 		return mActivityHashCode;
 	}
 
-	public boolean processCommand(AccessibilityNodeInfo root, int command, Object[] args, int times) {
-		switch (command) {
+	public boolean processCommand(AccessibilityNodeInfo root, CavanAccessibilityCommand command) {
+		if (isCommandCompleted(command)) {
+			return true;
+		}
+
+		Object[] args = command.getArgs();
+
+		switch (command.getCommand()) {
 		case CMD_SEND_TEXT:
 			CavanAndroid.dLog("CMD_SEND_TEXT");
 			return doSendText(root, (String) args[0], (boolean) args[1]);
@@ -234,7 +245,7 @@ public class CavanAccessibilityWindow {
 
 		case CMD_REFRESH:
 			CavanAndroid.dLog("CMD_REFRESH");
-			return doRefresh(root, times);
+			return doRefresh(root);
 
 		case CMD_SIGNIN:
 			CavanAndroid.dLog("CMD_SIGNIN");
@@ -242,15 +253,15 @@ public class CavanAccessibilityWindow {
 
 		case CMD_FOLLOW:
 			CavanAndroid.dLog("CMD_FOLLOW");
-			return doFollow(root, times);
+			return doFollow(root);
 
 		case CMD_UNFOLLOW:
 			CavanAndroid.dLog("CMD_UNFOLLOW");
-			return doUnfollow(root, times);
+			return doUnfollow(root);
 
 		case CMD_SHARE:
 			CavanAndroid.dLog("CMD_SHARE");
-			return doCommandShare(root, (boolean) args[0], times);
+			return doCommandShare(root, (boolean) args[0]);
 
 		case CMD_BACK:
 			CavanAndroid.dLog("CMD_BACK");
@@ -263,7 +274,7 @@ public class CavanAccessibilityWindow {
 				return false;
 			}
 
-			return doActionHome(root, times);
+			return doActionHome(root);
 
 		default:
 			CavanAndroid.eLog("Invalid command: " + command);

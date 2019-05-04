@@ -18,6 +18,22 @@ public class CavanThread extends Thread {
 		}
 	}
 
+	public synchronized void msleep() {
+		try {
+			wait();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public synchronized void msleep(long millis) {
+		try {
+			wait(millis);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
 	@Override
 	public synchronized void start() {
 		if (!isAlive()) {
