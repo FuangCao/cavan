@@ -101,6 +101,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		public boolean isPopWindow() {
 			return true;
 		}
+
+		@Override
+		protected boolean doUnfollow(AccessibilityNodeInfo root) {
+			return doClickMenuItem(root, "不再关注") || doClickMenuItem(root, "取消关注");
+		}
 	}
 
 	public class ChattingMenu extends MenuWindow {
@@ -1448,11 +1453,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				return doClickMenuItem(root, "分享到朋友圈");
 			}
 		}
-
-		@Override
-		protected boolean doUnfollow(AccessibilityNodeInfo root) {
-			return doClickMenuItem(root, "不再关注");
-		}
 	}
 
 	public class AppBrandMenuWindow extends WebViewMenu {
@@ -2426,12 +2426,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				return false;
 			}
 
-			if (CavanAccessibilityHelper.performLongClickAndRecycle(node)) {
-				mMenuItem = "取消关注";
-				return true;
-			}
-
-			return false;
+			return CavanAccessibilityHelper.performLongClickAndRecycle(node);
 		}
 	}
 
