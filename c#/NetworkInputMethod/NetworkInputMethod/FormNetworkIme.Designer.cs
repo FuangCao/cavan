@@ -228,7 +228,7 @@
             // 
             // buttonPaste
             // 
-            this.buttonPaste.Location = new System.Drawing.Point(339, 383);
+            this.buttonPaste.Location = new System.Drawing.Point(339, 412);
             this.buttonPaste.Name = "buttonPaste";
             this.buttonPaste.Size = new System.Drawing.Size(60, 23);
             this.buttonPaste.TabIndex = 29;
@@ -238,7 +238,7 @@
             // 
             // buttonComplete
             // 
-            this.buttonComplete.Location = new System.Drawing.Point(339, 412);
+            this.buttonComplete.Location = new System.Drawing.Point(339, 383);
             this.buttonComplete.Name = "buttonComplete";
             this.buttonComplete.Size = new System.Drawing.Size(60, 23);
             this.buttonComplete.TabIndex = 30;

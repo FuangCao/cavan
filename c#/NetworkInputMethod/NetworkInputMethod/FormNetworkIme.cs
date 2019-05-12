@@ -559,7 +559,11 @@ namespace NetworkInputMethod
 
         private void buttonPaste_Click(object sender, EventArgs e)
         {
-            sendCommand("PASTE", false);
+            var text = Clipboard.GetText();
+            if (text != null && text.Length > 0)
+            {
+                sendCommand("SEND " + text, false);
+            }
         }
 
         private void buttonComplete_Click(object sender, EventArgs e)
