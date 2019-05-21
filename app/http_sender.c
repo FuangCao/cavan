@@ -29,7 +29,6 @@
 #define HTTP_SENDER_DELAY			(-100)
 #define HTTP_SENDER_HOST			"game.weixin.qq.com"
 #define HTTP_SENDER_SEND_COUNT		10
-#define HTTP_SENDER_CONN_COUNT		50
 #define HTTP_SENDER_GROUP_COUNT		20
 #define HTTP_SENDER_SUCCESS_MAX		2
 #define HTTP_SENDER_PACKAGES		200
@@ -62,8 +61,8 @@ struct cavan_http_group {
 };
 
 struct cavan_http_sender {
-	struct cavan_http_client clients[HTTP_SENDER_CONN_COUNT];
 	struct cavan_http_group groups[HTTP_SENDER_GROUP_COUNT];
+	struct cavan_http_client clients[HTTP_SENDER_PACKAGES];
 	struct cavan_http_group *head;
 	struct cavan_http_group *tail;
 	pthread_cond_t cond_write;
