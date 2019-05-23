@@ -38,20 +38,21 @@
             // 
             this.textBoxUrl.Location = new System.Drawing.Point(12, 14);
             this.textBoxUrl.Name = "textBoxUrl";
-            this.textBoxUrl.Size = new System.Drawing.Size(258, 21);
+            this.textBoxUrl.Size = new System.Drawing.Size(213, 21);
             this.textBoxUrl.TabIndex = 0;
+            this.textBoxUrl.Text = "192.168.0.176:8118";
             // 
             // textBoxPort
             // 
-            this.textBoxPort.Location = new System.Drawing.Point(276, 14);
+            this.textBoxPort.Location = new System.Drawing.Point(231, 14);
             this.textBoxPort.Name = "textBoxPort";
             this.textBoxPort.Size = new System.Drawing.Size(43, 21);
             this.textBoxPort.TabIndex = 1;
-            this.textBoxPort.Text = "8022";
+            this.textBoxPort.Text = "9090";
             // 
             // buttonStartStop
             // 
-            this.buttonStartStop.Location = new System.Drawing.Point(325, 12);
+            this.buttonStartStop.Location = new System.Drawing.Point(277, 12);
             this.buttonStartStop.Name = "buttonStartStop";
             this.buttonStartStop.Size = new System.Drawing.Size(75, 23);
             this.buttonStartStop.TabIndex = 2;
@@ -65,14 +66,14 @@
             this.listBoxClients.ItemHeight = 12;
             this.listBoxClients.Location = new System.Drawing.Point(12, 41);
             this.listBoxClients.Name = "listBoxClients";
-            this.listBoxClients.Size = new System.Drawing.Size(388, 304);
+            this.listBoxClients.Size = new System.Drawing.Size(340, 340);
             this.listBoxClients.TabIndex = 3;
             // 
             // FormTcpProxyService
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(412, 354);
+            this.ClientSize = new System.Drawing.Size(364, 388);
             this.Controls.Add(this.listBoxClients);
             this.Controls.Add(this.buttonStartStop);
             this.Controls.Add(this.textBoxPort);
