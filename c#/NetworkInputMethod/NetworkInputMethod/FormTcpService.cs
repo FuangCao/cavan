@@ -11,7 +11,10 @@ namespace NetworkInputMethod
     {
         public void Invoke(EventHandler handler, object sender, EventArgs e)
         {
-            base.Invoke(handler, sender, e);
+            if (!IsDisposed)
+            {
+                base.Invoke(handler, sender, e);
+            }
         }
 
         public virtual void onTcpServiceStopped(object sender, EventArgs e)

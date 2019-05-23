@@ -59,6 +59,12 @@ namespace NetworkInputMethod
         {
             listBoxClients.Items.Remove(sender);
         }
+
+        private void FormWebProxyService_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            e.Cancel = true;
+            Visible = false;
+        }
     }
 
     public class CavanHttpRequest

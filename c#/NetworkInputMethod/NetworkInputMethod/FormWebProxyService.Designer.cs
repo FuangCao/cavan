@@ -65,20 +65,21 @@
             this.listBoxClients.ItemHeight = 12;
             this.listBoxClients.Location = new System.Drawing.Point(12, 41);
             this.listBoxClients.Name = "listBoxClients";
-            this.listBoxClients.Size = new System.Drawing.Size(313, 268);
+            this.listBoxClients.Size = new System.Drawing.Size(313, 316);
             this.listBoxClients.TabIndex = 3;
             // 
             // FormWebProxyService
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(337, 321);
+            this.ClientSize = new System.Drawing.Size(337, 376);
             this.Controls.Add(this.listBoxClients);
             this.Controls.Add(this.buttonStartStop);
             this.Controls.Add(this.textBoxPort);
             this.Controls.Add(this.textBoxUrl);
             this.Name = "FormWebProxyService";
             this.Text = "WebProxyService";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormWebProxyService_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
 
