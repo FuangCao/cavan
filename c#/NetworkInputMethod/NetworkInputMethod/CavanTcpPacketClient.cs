@@ -7,13 +7,13 @@ namespace NetworkInputMethod
     {
         private byte[] mBytes = new byte[32];
 
-        public CavanTcpPacketClient(TcpClient client) : base(client)
+        public CavanTcpPacketClient(CavanTcpService service, TcpClient client) : base(service, client)
         {
         }
 
         public override void mainLoop()
         {
-            NetworkStream stream = mTcpClient.GetStream();
+            NetworkStream stream = mClient.GetStream();
             byte[] header = new byte[2];
 
             while (fill(stream, header, 0, 2))
@@ -38,14 +38,14 @@ namespace NetworkInputMethod
 
         protected virtual void onDataPacketReceived(byte[] bytes, int length)
         {
-            throw new NotImplementedException();
+            mService.onTcpPacketReceived(this, bytes, length);
         }
 
         public override bool send(byte[] bytes, int offset, int length)
         {
             lock (this)
             {
-                if (mTcpClient == null)
+                if (mClient == null)
                 {
                     return false;
                 }
@@ -54,7 +54,7 @@ namespace NetworkInputMethod
 
                 try
                 {
-                    NetworkStream stream = mTcpClient.GetStream();
+                    NetworkStream stream = mClient.GetStream();
                     stream.Write(header, 0, 2);
                     stream.Write(bytes, offset, length);
                 }

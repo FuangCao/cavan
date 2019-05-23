@@ -10,18 +10,20 @@ namespace NetworkInputMethod
 
     public class CavanTcpClient
     {
-        protected TcpClient mTcpClient;
+        protected TcpClient mClient;
+        protected CavanTcpService mService;
 
-        public CavanTcpClient(TcpClient client)
+        public CavanTcpClient(CavanTcpService service, TcpClient client)
         {
-            mTcpClient = client;
+            mService = service;
+            mClient = client;
         }
 
-        public TcpClient TcpClient
+        public TcpClient Client
         {
             get
             {
-                return mTcpClient;
+                return mClient;
             }
         }
 
@@ -31,9 +33,9 @@ namespace NetworkInputMethod
             {
                 lock (this)
                 {
-                    if (mTcpClient != null)
+                    if (mClient != null)
                     {
-                        return mTcpClient.GetStream();
+                        return mClient.GetStream();
                     }
                 }
 
@@ -43,7 +45,7 @@ namespace NetworkInputMethod
 
         public virtual void mainLoop()
         {
-            NetworkStream stream = mTcpClient.GetStream();
+            NetworkStream stream = mClient.GetStream();
             byte[] bytes = new byte[1024];
 
             while (true)
@@ -60,7 +62,7 @@ namespace NetworkInputMethod
 
         protected virtual void onDataReceived(byte[] bytes, int length)
         {
-            throw new NotImplementedException();
+            mService.onTcpDataReceived(this, bytes, length);
         }
 
         public override string ToString()
@@ -69,9 +71,9 @@ namespace NetworkInputMethod
             {
                 try
                 {
-                    if (mTcpClient != null)
+                    if (mClient != null)
                     {
-                        return mTcpClient.Client.RemoteEndPoint.ToString();
+                        return mClient.Client.RemoteEndPoint.ToString();
                     }
                 }
                 catch (Exception)
@@ -86,10 +88,10 @@ namespace NetworkInputMethod
         {
             try
             {
-                if (mTcpClient != null)
+                if (mClient != null)
                 {
-                    mTcpClient.Close();
-                    mTcpClient = null;
+                    mClient.Close();
+                    mClient = null;
                 }
             }
             catch (Exception e)
@@ -102,14 +104,14 @@ namespace NetworkInputMethod
         {
             lock (this)
             {
-                if (mTcpClient == null)
+                if (mClient == null)
                 {
                     return false;
                 }
 
                 try
                 {
-                    var stream = mTcpClient.GetStream();
+                    var stream = mClient.GetStream();
                     stream.Write(bytes, offset, length);
                     stream.Flush();
                 }

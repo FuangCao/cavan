@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="ByteArrayWriter.cs" />
     <Compile Include="CavanBusyLock.cs" />
+    <Compile Include="CavanEventArgs.cs" />
     <Compile Include="CavanHttpPacket.cs" />
     <Compile Include="CavanHttpReader.cs" />
     <Compile Include="CavanHttpSender.cs" />
@@ -112,6 +113,9 @@
     <Compile Include="FormSendCommand.Designer.cs">
       <DependentUpon>FormSendCommand.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormTcpService.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="FormTextEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -127,6 +131,18 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CavanTcpService.cs" />
+    <Compile Include="FormTcpProxyService.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormTcpProxyService.Designer.cs">
+      <DependentUpon>FormTcpProxyService.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormWebProxyService.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormWebProxyService.Designer.cs">
+      <DependentUpon>FormWebProxyService.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="FormAlipay.resx">
       <DependentUpon>FormAlipay.cs</DependentUpon>
     </EmbeddedResource>
@@ -151,11 +167,17 @@
     <EmbeddedResource Include="FormSendCommand.resx">
       <DependentUpon>FormSendCommand.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FormTcpProxyService.resx">
+      <DependentUpon>FormTcpProxyService.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormTextEditor.resx">
       <DependentUpon>FormTextEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormVolumeEditor.resx">
       <DependentUpon>FormVolumeEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormWebProxyService.resx">
+      <DependentUpon>FormWebProxyService.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

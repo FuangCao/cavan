@@ -13,10 +13,12 @@ namespace NetworkInputMethod
         private bool mNeedExit;
         private TcpListener mListener;
         private Thread mThread;
+        private FormTcpService mForm;
         private List<CavanTcpClient> mClients = new List<CavanTcpClient>();
 
-        public CavanTcpService()
+        public CavanTcpService(FormTcpService form)
         {
+            mForm = form;
             mThread = new Thread(new ThreadStart(runServiceThread));
         }
 
@@ -51,6 +53,19 @@ namespace NetworkInputMethod
                     }
                 }
             }
+        }
+
+        public FormTcpService Form
+        {
+            get
+            {
+                return mForm;
+            }
+        }
+
+        public void Invoke(EventHandler handler, object sender, EventArgs e)
+        {
+            mForm.Invoke(handler, sender, e);
         }
 
         public void start()
@@ -199,24 +214,66 @@ namespace NetworkInputMethod
             }
         }
 
-        protected virtual void onTcpServiceStopped()
+        protected void onTcpServiceRunning()
         {
-            Console.WriteLine("onTcpServiceStopped");
+            EventHandler handler = new EventHandler(mForm.onTcpServiceRunning);
+            Invoke(handler, this, null);
         }
 
         protected virtual void onTcpServiceStarted()
         {
-            Console.WriteLine("onTcpServiceStarted");
+            EventHandler handler = new EventHandler(mForm.onTcpServiceStarted);
+            Invoke(handler, this, null);
         }
 
-        protected virtual void onTcpServiceRunning()
+        protected virtual void onTcpServiceStopped()
         {
-            Console.WriteLine("onTcpServiceRunning");
+            EventHandler handler = new EventHandler(mForm.onTcpServiceStopped);
+            Invoke(handler, this, null);
         }
 
         protected virtual void onTcpServiceWaiting()
         {
-            Console.WriteLine("onTcpServiceWaiting");
+            EventHandler handler = new EventHandler(mForm.onTcpServiceWaiting);
+            Invoke(handler, this, null);
+        }
+
+        protected virtual void onTcpClientConnected(CavanTcpClient client)
+        {
+            EventHandler handler = new EventHandler(mForm.onTcpClientConnected);
+            Invoke(handler, client, null);
+        }
+
+        protected virtual void onTcpClientDisconnected(CavanTcpClient client)
+        {
+            EventHandler handler = new EventHandler(mForm.onTcpClientDisconnected);
+            Invoke(handler, client, null);
+        }
+
+        public virtual void onTcpClientUpdated(CavanTcpClient client)
+        {
+            EventHandler handler = new EventHandler(mForm.onTcpClientUpdated);
+            Invoke(handler, client, null);
+        }
+
+        public virtual CavanTcpClient onTcpClientAccepted(TcpClient conn)
+        {
+            return mForm.onTcpClientAccepted(conn);
+        }
+
+        public virtual void onTcpCommandReceived(CavanTcpClient client, string[] args)
+        {
+            mForm.onTcpCommandReceived(client, args);
+        }
+
+        public virtual void onTcpPacketReceived(CavanTcpClient client, byte[] bytes, int length)
+        {
+            mForm.onTcpPacketReceived(client, bytes, length);
+        }
+
+        public virtual void onTcpDataReceived(CavanTcpClient client, byte[] bytes, int length)
+        {
+            mForm.onTcpDataReceived(client, bytes, length);
         }
 
         private void runTcpClientThread(object obj)
@@ -258,21 +315,6 @@ namespace NetworkInputMethod
             {
                 Console.WriteLine(e);
             }
-        }
-
-        protected virtual void onTcpClientDisconnected(CavanTcpClient client)
-        {
-            Console.WriteLine("onTcpClientDisconnected: " + client);
-        }
-
-        protected virtual void onTcpClientConnected(CavanTcpClient client)
-        {
-            Console.WriteLine("onTcpClientConnected: " + client);
-        }
-
-        protected virtual CavanTcpClient onTcpClientAccepted(TcpClient conn)
-        {
-            return new CavanTcpClient(conn);
         }
     }
 }

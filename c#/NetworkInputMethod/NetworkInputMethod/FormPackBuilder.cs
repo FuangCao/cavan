@@ -669,5 +669,11 @@ namespace NetworkInputMethod
         {
             treeView.ExpandAll();
         }
+
+        private void FormPackBuilder_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            e.Cancel = true;
+            Visible = false;
+        }
     }
 }

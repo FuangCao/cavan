@@ -61,6 +61,8 @@
             this.toolStripMenuItemSelect = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemRequest = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemExit = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemTcpProxy = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemWebProxy = new System.Windows.Forms.ToolStripMenuItem();
             this.buttonRecents = new System.Windows.Forms.Button();
             this.buttonRefresh = new System.Windows.Forms.Button();
             this.buttonSignin = new System.Windows.Forms.Button();
@@ -108,6 +110,7 @@
             // checkedListBoxClients
             // 
             this.checkedListBoxClients.CheckOnClick = true;
+            this.checkedListBoxClients.ContextMenuStrip = this.contextMenuStrip;
             this.checkedListBoxClients.FormattingEnabled = true;
             this.checkedListBoxClients.Location = new System.Drawing.Point(9, 41);
             this.checkedListBoxClients.Name = "checkedListBoxClients";
@@ -336,44 +339,60 @@
             this.toolStripMenuItemOpen,
             this.toolStripMenuItemSelect,
             this.toolStripMenuItemRequest,
-            this.toolStripMenuItemExit});
+            this.toolStripMenuItemExit,
+            this.toolStripMenuItemTcpProxy,
+            this.toolStripMenuItemWebProxy});
             this.contextMenuStrip.Name = "contextMenuStrip";
-            this.contextMenuStrip.Size = new System.Drawing.Size(101, 114);
+            this.contextMenuStrip.Size = new System.Drawing.Size(132, 158);
             // 
             // toolStripMenuItemPack
             // 
             this.toolStripMenuItemPack.Name = "toolStripMenuItemPack";
-            this.toolStripMenuItemPack.Size = new System.Drawing.Size(100, 22);
+            this.toolStripMenuItemPack.Size = new System.Drawing.Size(131, 22);
             this.toolStripMenuItemPack.Text = "组包";
             this.toolStripMenuItemPack.Click += new System.EventHandler(this.buttonBuildPack_Click);
             // 
             // toolStripMenuItemOpen
             // 
             this.toolStripMenuItemOpen.Name = "toolStripMenuItemOpen";
-            this.toolStripMenuItemOpen.Size = new System.Drawing.Size(100, 22);
+            this.toolStripMenuItemOpen.Size = new System.Drawing.Size(131, 22);
             this.toolStripMenuItemOpen.Text = "打开";
             this.toolStripMenuItemOpen.Click += new System.EventHandler(this.buttonOpen_Click);
             // 
             // toolStripMenuItemSelect
             // 
             this.toolStripMenuItemSelect.Name = "toolStripMenuItemSelect";
-            this.toolStripMenuItemSelect.Size = new System.Drawing.Size(100, 22);
+            this.toolStripMenuItemSelect.Size = new System.Drawing.Size(131, 22);
             this.toolStripMenuItemSelect.Text = "选择";
             this.toolStripMenuItemSelect.Click += new System.EventHandler(this.buttonSelect_Click);
             // 
             // toolStripMenuItemRequest
             // 
             this.toolStripMenuItemRequest.Name = "toolStripMenuItemRequest";
-            this.toolStripMenuItemRequest.Size = new System.Drawing.Size(100, 22);
+            this.toolStripMenuItemRequest.Size = new System.Drawing.Size(131, 22);
             this.toolStripMenuItemRequest.Text = "请求";
             this.toolStripMenuItemRequest.Click += new System.EventHandler(this.buttonRequest_Click);
             // 
             // toolStripMenuItemExit
             // 
             this.toolStripMenuItemExit.Name = "toolStripMenuItemExit";
-            this.toolStripMenuItemExit.Size = new System.Drawing.Size(100, 22);
+            this.toolStripMenuItemExit.Size = new System.Drawing.Size(131, 22);
             this.toolStripMenuItemExit.Text = "退出";
             this.toolStripMenuItemExit.Click += new System.EventHandler(this.toolStripMenuItemExit_Click);
+            // 
+            // toolStripMenuItemTcpProxy
+            // 
+            this.toolStripMenuItemTcpProxy.Name = "toolStripMenuItemTcpProxy";
+            this.toolStripMenuItemTcpProxy.Size = new System.Drawing.Size(131, 22);
+            this.toolStripMenuItemTcpProxy.Text = "Tcp 代理";
+            this.toolStripMenuItemTcpProxy.Click += new System.EventHandler(this.toolStripMenuItemTcpProxy_Click);
+            // 
+            // toolStripMenuItemWebProxy
+            // 
+            this.toolStripMenuItemWebProxy.Name = "toolStripMenuItemWebProxy";
+            this.toolStripMenuItemWebProxy.Size = new System.Drawing.Size(131, 22);
+            this.toolStripMenuItemWebProxy.Text = "Web 代理";
+            this.toolStripMenuItemWebProxy.Click += new System.EventHandler(this.toolStripMenuItemWebProxy_Click);
             // 
             // buttonRecents
             // 
@@ -613,6 +632,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(408, 474);
+            this.ContextMenuStrip = this.contextMenuStrip;
             this.Controls.Add(this.buttonLock);
             this.Controls.Add(this.checkBoxAutoUnlock);
             this.Controls.Add(this.buttonMute);
@@ -726,6 +746,8 @@
         private System.Windows.Forms.Button buttonMute;
         private System.Windows.Forms.CheckBox checkBoxAutoUnlock;
         private System.Windows.Forms.Button buttonLock;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemTcpProxy;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemWebProxy;
     }
 }
 

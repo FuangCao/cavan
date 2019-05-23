@@ -10,7 +10,7 @@ using System.Diagnostics;
 
 namespace NetworkInputMethod
 {
-    public partial class FormNetworkIme : Form
+    public partial class FormNetworkIme : FormTcpService
     {
         private const int WM_DRAWCLIPBOARD = 0x308;
         private const int WM_CHANGECBCHAIN = 0x30D;
@@ -21,6 +21,8 @@ namespace NetworkInputMethod
         private FormPackBuilder mFormBuilder;
         private FormAlipay mFormAlipay;
         private FormSendCommand mFormSendCommand;
+        private FormTcpProxyService mFormTcpProxy;
+        private FormWebProxyService mFormWebProxy;
 
         //API declarations...
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -31,7 +33,7 @@ namespace NetworkInputMethod
         public static extern int SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
 
         private byte[] mRepeatSendBytes;
-        private NetworkImeService mService;
+        private CavanTcpService mService;
         private IntPtr mNextClipboardViewer;
         private CavanBusyLock mBusyLock = new CavanBusyLock();
         private Thread mClockThread;
@@ -48,7 +50,7 @@ namespace NetworkInputMethod
 
             comboBoxSend.SelectedIndex = 0;
 
-            mService = new NetworkImeService(this);
+            mService = new CavanTcpService(this);
             buttonStart_Click(buttonStart, null);
 
             mClockThread = new Thread(new ThreadStart(ClockThreadHandler));
@@ -288,19 +290,19 @@ namespace NetworkInputMethod
             }
         }
 
-        public void onTcpClientConnected(object sender, EventArgs e)
+        public override void onTcpClientConnected(object sender, EventArgs e)
         {
             Console.WriteLine("onTcpClientConnected: sender = " + sender);
             checkedListBoxClients.Items.Add(sender, true);
         }
 
-        public void onTcpClientDisconnected(object sender, EventArgs e)
+        public override void onTcpClientDisconnected(object sender, EventArgs e)
         {
             Console.WriteLine("onTcpClientDisconnected: sender = " + sender);
             checkedListBoxClients.Items.Remove(sender);
         }
 
-        public void onTcpClientUpdated(object sender, EventArgs e)
+        public override void onTcpClientUpdated(object sender, EventArgs e)
         {
             Console.WriteLine("onTcpClientUpdated: sender = " + sender);
             checkedListBoxClients.Invalidate();
@@ -394,29 +396,29 @@ namespace NetworkInputMethod
             checkBoxEnterSend.Checked = false;
         }
 
-        internal void onTcpServiceRunning(object sender, EventArgs e)
+        public override void onTcpServiceRunning(object sender, EventArgs e)
         {
             labelStatus.Text = "服务器正在运行";
         }
 
-        internal void onTcpServiceStarted(object sender, EventArgs e)
+        public override void onTcpServiceStarted(object sender, EventArgs e)
         {
             labelStatus.Text = "服务器已启动";
         }
 
-        internal void onTcpServiceStopped(object sender, EventArgs e)
+        public override void onTcpServiceStopped(object sender, EventArgs e)
         {
             labelStatus.Text = "服务器已停止";
         }
 
-        internal void onTcpServiceWaiting(object sender, EventArgs e)
+        public override void onTcpServiceWaiting(object sender, EventArgs e)
         {
             labelStatus.Text = "服务器正在等待";
         }
 
-        internal void onTcpClientReceived(object sender, CavanEventArgs<string[]> e)
+        public override void onTcpCommandReceived(object sender, EventArgs e)
         {
-            string[] args = e.Args;
+            var args = (e as CavanEventArgs<string[]>).Args;
 
             switch (args[0])
             {
@@ -665,12 +667,9 @@ namespace NetworkInputMethod
             if (mFormBuilder == null || mFormBuilder.IsDisposed)
             {
                 mFormBuilder = new FormPackBuilder();
-                mFormBuilder.Show();
             }
-            else
-            {
-                mFormBuilder.WindowState = FormWindowState.Normal;
-            }
+
+            mFormBuilder.Show();
         }
 
         private void comboBoxHistory_TextChanged(object sender, EventArgs e)
@@ -757,19 +756,37 @@ namespace NetworkInputMethod
         {
             sendCommand("LOCK", true);
         }
+
+        private void toolStripMenuItemTcpProxy_Click(object sender, EventArgs e)
+        {
+            if (mFormTcpProxy == null || mFormTcpProxy.IsDisposed)
+            {
+                mFormTcpProxy = new FormTcpProxyService();
+            }
+
+            mFormTcpProxy.Show();
+        }
+
+        private void toolStripMenuItemWebProxy_Click(object sender, EventArgs e)
+        {
+            if (mFormWebProxy == null || mFormWebProxy.IsDisposed)
+            {
+                mFormWebProxy = new FormWebProxyService();
+            }
+
+            mFormWebProxy.Show();
+        }
     }
 
     public class NetworkImeClient : CavanTcpPacketClient
     {
         private int mKeepAlive;
         private string mUserName;
-        private NetworkImeService mService;
 
         internal delegate void TcpClientReceivedEventHandler(object sender, CavanEventArgs<string[]> e);
 
-        public NetworkImeClient(NetworkImeService service, TcpClient client) : base(client)
+        public NetworkImeClient(CavanTcpService service, TcpClient client) : base(service, client)
         {
-            mService = service;
         }
 
         protected override void onDataPacketReceived(byte[] bytes, int length)
@@ -791,9 +808,7 @@ namespace NetworkInputMethod
                         if (name.Length > 0)
                         {
                             mUserName = name;
-                            FormNetworkIme form = mService.Form;
-                            EventHandler handler = new EventHandler(form.onTcpClientUpdated);
-                            form.Invoke(handler, this, null);
+                            mService.onTcpClientUpdated(this);
                         }
 
                         Console.WriteLine("user = " + mUserName);
@@ -813,9 +828,7 @@ namespace NetworkInputMethod
 
                 default:
                     {
-                        FormNetworkIme form = mService.Form;
-                        var handler = new TcpClientReceivedEventHandler(form.onTcpClientReceived);
-                        form.Invoke(handler, this, new CavanEventArgs<string[]>(args));
+                        mService.onTcpCommandReceived(this, args);
                     }
                     break;
             }
@@ -855,100 +868,6 @@ namespace NetworkInputMethod
             }
 
             return text;
-        }
-    }
-
-    public class NetworkImeService : CavanTcpService
-    {
-        private FormNetworkIme mForm;
-
-        public NetworkImeService(FormNetworkIme form)
-        {
-            mForm = form;
-        }
-
-        public FormNetworkIme Form
-        {
-            get
-            {
-                return mForm;
-            }
-        }
-
-        private object Invoke(Delegate method, params object[] args)
-        {
-            try
-            {
-                return mForm.Invoke(method, args);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
-
-        protected override void onTcpServiceRunning()
-        {
-            EventHandler handler = new EventHandler(mForm.onTcpServiceRunning);
-            Invoke(handler, this);
-        }
-
-        protected override void onTcpServiceStarted()
-        {
-            EventHandler handler = new EventHandler(mForm.onTcpServiceStarted);
-            Invoke(handler, this);
-        }
-
-        protected override void onTcpServiceStopped()
-        {
-            EventHandler handler = new EventHandler(mForm.onTcpServiceStopped);
-            Invoke(handler, this);
-        }
-
-        protected override void onTcpServiceWaiting()
-        {
-            EventHandler handler = new EventHandler(mForm.onTcpServiceWaiting);
-            Invoke(handler, this);
-        }
-
-        protected override CavanTcpClient onTcpClientAccepted(TcpClient conn)
-        {
-            return new NetworkImeClient(this, conn);
-        }
-
-        protected override void onTcpClientConnected(CavanTcpClient client)
-        {
-            EventHandler handler = new EventHandler(mForm.onTcpClientConnected);
-            Invoke(handler, client, null);
-        }
-
-        protected override void onTcpClientDisconnected(CavanTcpClient client)
-        {
-            EventHandler handler = new EventHandler(mForm.onTcpClientDisconnected);
-            Invoke(handler, client, null);
-        }
-    }
-
-    class CavanEventArgs<E> : EventArgs
-    {
-        private E mArgs;
-
-        public CavanEventArgs(E args)
-        {
-            mArgs = args;
-        }
-
-        public E Args
-        {
-            get
-            {
-                return mArgs;
-            }
-
-            set
-            {
-                mArgs = value;
-            }
         }
     }
 }
