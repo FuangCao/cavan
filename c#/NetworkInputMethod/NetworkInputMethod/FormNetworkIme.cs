@@ -277,9 +277,9 @@ namespace NetworkInputMethod
 
         private void buttonStart_Click(object sender, EventArgs e)
         {
-            if (mService.Enabled)
+            if (mService.Running)
             {
-                mService.stop(false);
+                mService.stop();
                 buttonStart.Text = "启动";
             }
             else
@@ -638,7 +638,7 @@ namespace NetworkInputMethod
 
         private void toolStripMenuItemExit_Click(object sender, EventArgs e)
         {
-            mService.stop(true);
+            mService.stop();
             Dispose(true);
         }
 

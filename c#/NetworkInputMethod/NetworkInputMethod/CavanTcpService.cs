@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace NetworkInputMethod
 {
     public class CavanTcpService
     {
         private int mPort = 8865;
-        private bool mEnabled;
-        private bool mNeedExit;
         private TcpListener mListener;
         private Thread mThread;
         private FormTcpService mForm;
@@ -19,16 +18,15 @@ namespace NetworkInputMethod
         public CavanTcpService(FormTcpService form)
         {
             mForm = form;
-            mThread = new Thread(new ThreadStart(runServiceThread));
         }
 
-        public bool Enabled
+        public bool Running
         {
             get
             {
                 lock (this)
                 {
-                    return mEnabled;
+                    return (mListener != null);
                 }
             }
         }
@@ -72,144 +70,80 @@ namespace NetworkInputMethod
         {
             lock (this)
             {
-                mEnabled = true;
-
-                lock (mThread)
+                if (mThread == null)
                 {
-                    if (mThread.IsAlive)
-                    {
-
-                        Monitor.Pulse(mThread);
-
-                    }
-                    else
-                    {
-                        mThread.Start();
-                    }
+                    mThread = new Thread(new ThreadStart(runServiceThread));
+                    mThread.Start();
                 }
             }
         }
 
-        public void stop(bool exit)
+        public void stop()
         {
             lock (this)
             {
-                mNeedExit = exit;
-                mEnabled = false;
-
                 if (mListener != null)
                 {
                     mListener.Stop();
                     mListener = null;
-                }
-                else
-                {
-                    lock (mThread)
-                    {
-                        Monitor.Pulse(mThread);
-                    }
                 }
             }
         }
 
         private void runServiceThread()
         {
-            while (true)
+            onTcpServiceStarted();
+
+            TcpListener listener = new TcpListener(IPAddress.Any, mPort);
+
+            try
             {
-                if (mNeedExit)
+                listener.Start();
+                mListener = listener;
+                onTcpServiceRunning();
+
+                while (true)
                 {
-                    break;
+                    TcpClient conn = listener.AcceptTcpClient();
+                    if (conn == null)
+                    {
+                        break;
+                    }
+
+                    ParameterizedThreadStart start = new ParameterizedThreadStart(runTcpClientThread);
+                    Thread thread = new Thread(start);
+                    thread.Start(conn);
                 }
-
-                onTcpServiceStarted();
-
-                while (mEnabled)
+            }
+            catch (SocketException e)
+            {
+                if (e.SocketErrorCode != SocketError.Interrupted)
                 {
-                    TcpListener listener = null;
-
-                    try
-                    {
-                        listener = new TcpListener(IPAddress.Any, mPort);
-                        listener.Start();
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-
-                        if (listener != null)
-                        {
-                            listener.Stop();
-                        }
-
-                        if (mEnabled)
-                        {
-                            onTcpServiceWaiting();
-
-                            lock (mThread)
-                            {
-                                Monitor.Wait(mThread, 2000);
-                            }
-                        }
-
-                        continue;
-                    }
-
-                    mListener = listener;
-                    onTcpServiceRunning();
-
-                    while (mEnabled)
-                    {
-                        try
-                        {
-                            TcpClient conn = listener.AcceptTcpClient();
-                            if (conn == null)
-                            {
-                                break;
-                            }
-
-                            if (mEnabled)
-                            {
-                                ParameterizedThreadStart start = new ParameterizedThreadStart(runTcpClientThread);
-                                Thread thread = new Thread(start);
-                                thread.Start(conn);
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e);
-                        }
-                    }
-
-                    try
-                    {
-                        listener.Stop();
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                    }
-
-                    mListener = null;
-
-                    lock (mClients)
-                    {
-                        foreach (CavanTcpClient client in mClients)
-                        {
-                            client.disconnect();
-                        }
-                    }
+                    MessageBox.Show(e.ToString());
                 }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                mListener = null;
+                listener.Stop();
+            }
 
-                onTcpServiceStopped();
+            lock (this)
+            {
+                mThread = null;
+            }
 
-                if (mNeedExit)
+            onTcpServiceStopped();
+
+            lock (mClients)
+            {
+                foreach (CavanTcpClient client in mClients)
                 {
-                    break;
-                }
-
-                lock (mThread)
-                {
-                    Monitor.Wait(mThread);
+                    client.disconnect();
                 }
             }
         }

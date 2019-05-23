@@ -30,9 +30,9 @@ namespace NetworkInputMethod
 
         private void buttonStartStop_Click(object sender, EventArgs e)
         {
-            if (mService.Enabled)
+            if (mService.Running)
             {
-                mService.stop(false);
+                mService.stop();
             }
             else
             {
