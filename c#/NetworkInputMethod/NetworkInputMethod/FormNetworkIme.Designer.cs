@@ -34,13 +34,13 @@
             this.buttonStart = new System.Windows.Forms.Button();
             this.checkedListBoxClients = new System.Windows.Forms.CheckedListBox();
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripMenuItemWebProxy = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemTcpProxy = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemPack = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemOpen = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemSelect = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemRequest = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemExit = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItemTcpProxy = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItemWebProxy = new System.Windows.Forms.ToolStripMenuItem();
             this.textBoxContent = new System.Windows.Forms.TextBox();
             this.buttonSend = new System.Windows.Forms.Button();
             this.buttonClear = new System.Windows.Forms.Button();
@@ -131,6 +131,20 @@
             this.contextMenuStrip.Name = "contextMenuStrip";
             this.contextMenuStrip.Size = new System.Drawing.Size(132, 158);
             // 
+            // toolStripMenuItemWebProxy
+            // 
+            this.toolStripMenuItemWebProxy.Name = "toolStripMenuItemWebProxy";
+            this.toolStripMenuItemWebProxy.Size = new System.Drawing.Size(131, 22);
+            this.toolStripMenuItemWebProxy.Text = "Web 代理";
+            this.toolStripMenuItemWebProxy.Click += new System.EventHandler(this.toolStripMenuItemWebProxy_Click);
+            // 
+            // toolStripMenuItemTcpProxy
+            // 
+            this.toolStripMenuItemTcpProxy.Name = "toolStripMenuItemTcpProxy";
+            this.toolStripMenuItemTcpProxy.Size = new System.Drawing.Size(131, 22);
+            this.toolStripMenuItemTcpProxy.Text = "Tcp 代理";
+            this.toolStripMenuItemTcpProxy.Click += new System.EventHandler(this.toolStripMenuItemTcpProxy_Click);
+            // 
             // toolStripMenuItemPack
             // 
             this.toolStripMenuItemPack.Name = "toolStripMenuItemPack";
@@ -165,20 +179,6 @@
             this.toolStripMenuItemExit.Size = new System.Drawing.Size(131, 22);
             this.toolStripMenuItemExit.Text = "退出";
             this.toolStripMenuItemExit.Click += new System.EventHandler(this.toolStripMenuItemExit_Click);
-            // 
-            // toolStripMenuItemTcpProxy
-            // 
-            this.toolStripMenuItemTcpProxy.Name = "toolStripMenuItemTcpProxy";
-            this.toolStripMenuItemTcpProxy.Size = new System.Drawing.Size(131, 22);
-            this.toolStripMenuItemTcpProxy.Text = "Tcp 代理";
-            this.toolStripMenuItemTcpProxy.Click += new System.EventHandler(this.toolStripMenuItemTcpProxy_Click);
-            // 
-            // toolStripMenuItemWebProxy
-            // 
-            this.toolStripMenuItemWebProxy.Name = "toolStripMenuItemWebProxy";
-            this.toolStripMenuItemWebProxy.Size = new System.Drawing.Size(131, 22);
-            this.toolStripMenuItemWebProxy.Text = "Web 代理";
-            this.toolStripMenuItemWebProxy.Click += new System.EventHandler(this.toolStripMenuItemWebProxy_Click);
             // 
             // textBoxContent
             // 
@@ -685,6 +685,7 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "网络输入法";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormNetworkIme_FormClosing);
+            this.Load += new System.EventHandler(this.FormNetworkIme_Load);
             this.contextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();

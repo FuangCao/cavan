@@ -59,7 +59,7 @@ namespace NetworkInputMethod
 
         public virtual void onTcpCommandReceived(CavanTcpClient client, string[] args)
         {
-            Invoke(new EventHandler(onTcpCommandReceived), client, args);
+            Invoke(new EventHandler(onTcpCommandReceived), client, new CavanEventArgs<string[]>(args));
         }
 
         public virtual void onTcpCommandReceived(object sender, EventArgs e)

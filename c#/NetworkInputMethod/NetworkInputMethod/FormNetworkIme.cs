@@ -46,14 +46,16 @@ namespace NetworkInputMethod
 
         public FormNetworkIme()
         {
-            InitializeComponent();
-
-            comboBoxSend.SelectedIndex = 0;
-
-            mService = new CavanTcpService(this);
-            buttonStart_Click(buttonStart, null);
-
             mClockThread = new Thread(new ThreadStart(ClockThreadHandler));
+            mService = new CavanTcpService(this);
+
+            InitializeComponent();
+            comboBoxSend.SelectedIndex = 0;
+        }
+
+        private void FormNetworkIme_Load(object sender, EventArgs e)
+        {
+            buttonStart_Click(sender, e);
             mClockThread.Start();
         }
 
@@ -288,6 +290,11 @@ namespace NetworkInputMethod
                 buttonStart.Text = "停止";
                 SetClipboardViewer();
             }
+        }
+
+        public override CavanTcpClient onTcpClientAccepted(TcpClient conn)
+        {
+            return new NetworkImeClient(mService, conn);
         }
 
         public override void onTcpClientConnected(object sender, EventArgs e)
@@ -827,9 +834,7 @@ namespace NetworkInputMethod
                     break;
 
                 default:
-                    {
-                        mService.onTcpCommandReceived(this, args);
-                    }
+                    mService.onTcpCommandReceived(this, args);
                     break;
             }
         }
