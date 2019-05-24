@@ -40,6 +40,7 @@
             this.textBoxUrl.Name = "textBoxUrl";
             this.textBoxUrl.Size = new System.Drawing.Size(182, 21);
             this.textBoxUrl.TabIndex = 0;
+            this.textBoxUrl.Text = "http://www.baidu.com";
             // 
             // textBoxPort
             // 

@@ -47,7 +47,8 @@ namespace NetworkInputMethod
 
         public override CavanTcpClient onTcpClientAccepted(TcpClient conn)
         {
-            return new WebProxyClient(mService, conn);
+            var url = new CavanUrl(textBoxUrl.Text);
+            return new WebProxyClient(mService, conn, url);
         }
 
         public override void onTcpClientConnected(object sender, EventArgs e)
@@ -69,62 +70,37 @@ namespace NetworkInputMethod
 
     public class CavanHttpRequest
     {
+        static char[] SEPARATOR = { ' ', '\t', '\f' };
+
         private ArrayList mLines = new ArrayList();
-        private string mAction;
-        private string mProto;
-        private string mHost;
-        private string mPath;
+        private CavanUrl mUrl;
+
         private string mVersion;
+        private string mMethod;
 
-        public string Action
+        public string Method
         {
             get
             {
-                return mAction.ToUpper();
+                return mMethod.ToUpper();
             }
 
             set
             {
-                mAction = value;
+                mMethod = value;
             }
         }
 
-        public string Proto
+        public CavanUrl Url
         {
             get
             {
-                return mProto.ToLower();
+                return mUrl;
             }
 
             set
             {
-                mProto = value;
-            }
-        }
-
-        public string Host
-        {
-            get
-            {
-                return mHost;
-            }
-
-            set
-            {
-                mHost = value;
-            }
-        }
-
-        public string Path
-        {
-            get
-            {
-                return mPath;
-            }
-
-            set
-            {
-                mPath = value;
+                mUrl = value;
             }
         }
 
@@ -169,7 +145,7 @@ namespace NetworkInputMethod
             return builder.ToString();
         }
 
-        public bool read(Stream stream)
+        public bool read(Stream stream, CavanUrl url)
         {
             var line = readline(stream);
             if (line == null)
@@ -185,54 +161,93 @@ namespace NetworkInputMethod
                 return false;
             }
 
-            mAction = args[0];
+            var path = args[1];
+
+            mMethod = args[0];
             mVersion = args[2];
-
-            var url = args[1];
-
-            var index = url.IndexOf("://");
-            if (index > 0)
-            {
-                mProto = url.Substring(0, index);
-                index += 3;
-            }
-            else
-            {
-                mProto = "tcp";
-                index = 0;
-            }
-
-            var path = url.IndexOf('/', index);
-            if (path < 0)
-            {
-                mPath = "/";
-                mHost = url.Substring(index);
-            }
-            else
-            {
-                mPath = url.Substring(path);
-                mHost = url.Substring(index, path - index);
-            }
 
             mLines.Clear();
 
-            while (true)
+            if (path[0] != '/')
             {
-                line = readline(stream);
-                if (line == null)
+                mUrl = new CavanUrl(path);
+            }
+            else
+            {
+                mUrl = new CavanUrl(url.Proto, url.Host, url.Port, path);
+
+                while (true)
                 {
-                    return false;
+                    line = readline(stream);
+                    if (line == null)
+                    {
+                        return false;
+                    }
+
+                    if (line.Length == 0)
+                    {
+                        break;
+                    }
+
+                    args = line.Split(new char[] { ':' }, 2);
+                    if (args.Length > 1)
+                    {
+                        var key = args[0].Trim().ToUpper();
+
+                        if (key == "HOST")
+                        {
+                            line = "Host: " + url.HostPort;
+                        }
+                    }
+
+                    mLines.Add(line);
                 }
 
-                if (line.Length == 0)
+                mLines.Add("");
+            }
+
+            return true;
+        }
+
+        public bool discard(Stream stream)
+        {
+            var bytes = new byte[1024];
+            var count = 0;
+
+            while (true)
+            {
+                var length = stream.Read(bytes, 0, bytes.Length);
+                if (length <= 0)
                 {
                     break;
                 }
 
-                mLines.Add(line);
+                for (var i = 0; i < length; i++)
+                {
+                    var value = bytes[i];
+
+                    if (value == '\r')
+                    {
+                        continue;
+                    }
+
+                    if (value == '\n')
+                    {
+                        if (count == 0)
+                        {
+                            return true;
+                        }
+
+                        count = 0;
+                    }
+                    else
+                    {
+                        count++;
+                    }
+                }
             }
 
-            return true;
+            return false;
         }
 
         public void write(Stream stream, string text)
@@ -254,70 +269,33 @@ namespace NetworkInputMethod
 
         public void write(NetworkStream stream)
         {
-            writeline(stream, mAction + ' ' + mPath + ' ' + mVersion);
+            writeline(stream, mMethod + ' ' + mUrl.Path + ' ' + mVersion);
 
             foreach (var line in mLines)
             {
                 writeline(stream, line as string);
             }
-
-            writeline(stream);
         }
 
-        public void sendResponse(StreamWriter writer)
+        public void sendConnResponse(StreamWriter writer)
         {
             writer.WriteLine("HTTP/1.1 200 Connection Established");
             writer.WriteLine();
             writer.Flush();
         }
 
-        public void sendResponse(NetworkStream stream)
+        public void sendConnResponse(NetworkStream stream)
         {
-            sendResponse(new StreamWriter(stream));
+            sendConnResponse(new StreamWriter(stream));
         }
 
         public TcpClient connect()
         {
-            if (mHost == null)
-            {
-                return null;
-            }
-
-            string host;
-            int port;
-
-            var index = mHost.IndexOf(':');
-            if (index > 0)
-            {
-                host = mHost.Substring(0, index);
-                port = Convert.ToUInt16(mHost.Substring(index + 1));
-            }
-            else
-            {
-                host = mHost;
-
-                if (mProto != null)
-                {
-                    switch (mProto.ToLower())
-                    {
-                        case "https":
-                            port = 443;
-                            break;
-
-                        default:
-                            port = 80;
-                            break;
-                    }
-                }
-                else
-                {
-                    port = 80;
-                }
-            }
+            Console.WriteLine(mUrl);
 
             try
             {
-                return new TcpClient(host, port);
+                return new TcpClient(mUrl.Host, mUrl.Port);
             }
             catch (Exception e)
             {
@@ -332,8 +310,11 @@ namespace NetworkInputMethod
     {
         public const int SELECT_OVERTIME = 60000000;
 
-        public WebProxyClient(CavanTcpService service, TcpClient client) : base(service, client)
+        private CavanUrl mUrl;
+
+        public WebProxyClient(CavanTcpService service, TcpClient client, CavanUrl url) : base(service, client)
         {
+            mUrl = url;
         }
 
         public static bool ProxyLoop(TcpClient ilink, TcpClient olink)
@@ -382,7 +363,7 @@ namespace NetworkInputMethod
             while (true)
             {
                 var req = new CavanHttpRequest();
-                if (!req.read(mClient.GetStream()))
+                if (!req.read(mClient.GetStream(), mUrl))
                 {
                     break;
                 }
@@ -397,9 +378,10 @@ namespace NetworkInputMethod
                 {
                     var list = new ArrayList();
 
-                    if (req.Action == "CONNECT")
+                    if (req.Method == "CONNECT")
                     {
-                        req.sendResponse(mClient.GetStream());
+                        req.discard(mClient.GetStream());
+                        req.sendConnResponse(mClient.GetStream());
                         TcpProxyClient.ProxyLoop(mClient, client);
                         break;
                     }

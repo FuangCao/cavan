@@ -157,4 +157,172 @@ namespace NetworkInputMethod
             return true;
         }
     }
+
+    public class CavanUrl
+    {
+        private string mProto;
+        private string mHost;
+        private UInt16 mPort;
+        private string mPath;
+
+        public CavanUrl(string proto, string host, UInt16 port, string path)
+        {
+            mProto = proto.ToLower();
+            mHost = host;
+            mPort = port;
+            mPath = path;
+        }
+
+        public CavanUrl(string host, UInt16 port, string path)
+        {
+            mProto = "tcp";
+            mHost = host;
+            mPort = port;
+            mPath = path;
+        }
+
+        public CavanUrl(string host, UInt16 port)
+        {
+            mProto = "tcp";
+            mHost = host;
+            mPort = port;
+            mPath = "/";
+        }
+
+        public CavanUrl(string url)
+        {
+            if (string.IsNullOrEmpty(url))
+            {
+                url = "127.0.0.1:80";
+            }
+
+            var index = url.IndexOf("://");
+
+            if (index < 0)
+            {
+                mProto = "http";
+                index = 0;
+            }
+            else
+            {
+                mProto = url.Substring(0, index).ToLower();
+                index += 3;
+            }
+
+            var path = url.IndexOf('/', index);
+
+            if (path < 0)
+            {
+                mPath = "/";
+                path = url.Length;
+            }
+            else
+            {
+                mPath = url.Substring(path);
+            }
+
+            var port = url.IndexOf(':', index, path - index);
+
+            if (port < 0)
+            {
+                switch (mProto)
+                {
+                    case "https":
+                        mPort = 443;
+                        break;
+
+                    case "ftp":
+                        mPort = 21;
+                        break;
+
+                    default:
+                        mPort = 80;
+                        break;
+                }
+
+                mHost = url.Substring(index, path - index);
+            }
+            else
+            {
+                mHost = url.Substring(index, port - index);
+
+                try
+                {
+                    port++;
+                    mPort = Convert.ToUInt16(url.Substring(port, path - port));
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    mPort = 80;
+                }
+
+            }
+        }
+
+        public string Proto
+        {
+            get
+            {
+                return mProto;
+            }
+
+            set
+            {
+                mProto = value.ToLower();
+            }
+        }
+
+        public string Host
+        {
+            get
+            {
+                return mHost;
+            }
+
+            set
+            {
+                mHost = value;
+            }
+        }
+
+        public UInt16 Port
+        {
+            get
+            {
+                return mPort;
+            }
+
+            set
+            {
+                mPort = value;
+            }
+        }
+
+        public string Path
+        {
+            get
+            {
+                return mPath;
+            }
+
+            set
+            {
+                mPath = value;
+            }
+        }
+
+        public string HostPort
+        {
+            get
+            {
+                return mHost + ":" + mPort;
+            }
+        }
+
+        public override string ToString()
+        {
+            return mProto + "://" + HostPort + mPath;
+        }
+    }
 }
