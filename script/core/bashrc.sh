@@ -1,17 +1,22 @@
-#!/bin/bash
+#!/bin/sh
 
 stty -ixon
 
 [ -d "${CAVAN_HOME}" ] ||
 {
-	for fn in ${HOME}/cavan ${HOME}/work/cavan /cavan /work/cavan
-	do
-		[ -d "$fn" ] &&
-		{
-			CAVAN_HOME="$fn"
-			break
-		}
-	done
+	if [ "${BASH_SOURCE}" ]
+	then
+		CAVAN_HOME=$(realpath $(dirname "${BASH_SOURCE}")/../..)
+	else
+		for fn in ${HOME}/cavan ${HOME}/work/cavan /cavan /work/cavan
+		do
+			[ -d "$fn" ] &&
+			{
+				CAVAN_HOME="$fn"
+				break
+			}
+		done
+	fi
 }
 
 export CAVAN_OS_NAME=$(uname -s)
