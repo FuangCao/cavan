@@ -4,19 +4,8 @@ stty -ixon
 
 [ -d "${CAVAN_HOME}" ] ||
 {
-	if [ "${BASH_SOURCE}" ]
-	then
-		CAVAN_HOME=$(realpath $(dirname "${BASH_SOURCE}")/../..)
-	else
-		for fn in ${HOME}/cavan ${HOME}/work/cavan /cavan /work/cavan
-		do
-			[ -d "$fn" ] &&
-			{
-				CAVAN_HOME="$fn"
-				break
-			}
-		done
-	fi
+	echo "Please setenv CAVAN_HOME"
+	exit 1
 }
 
 export CAVAN_OS_NAME=$(uname -s)
