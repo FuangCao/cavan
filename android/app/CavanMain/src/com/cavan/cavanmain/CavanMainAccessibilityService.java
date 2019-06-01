@@ -16,6 +16,7 @@ import com.cavan.accessibility.CavanAccessibilityPackage;
 import com.cavan.accessibility.CavanAccessibilityService;
 import com.cavan.accessibility.CavanKeyguardActivity;
 import com.cavan.accessibility.CavanRedPacket;
+import com.cavan.accessibility.CavanUnlockActivity;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanThreadedHandler;
 import com.cavan.android.TcpExecClient;
@@ -222,5 +223,10 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 	@Override
 	protected void onCloseSystemDialogs(String reason) {
 		CavanAndroid.dLog("onCloseSystemDialogs: " + reason);
+	}
+
+	@Override
+	public void acquireScreenLock() {
+		CavanUnlockActivity.setLockScreenEnable(this, false);
 	}
 }
