@@ -260,8 +260,10 @@ public class CavanAccessibilityPackage {
 		mCurrentPacket = packet;
 	}
 
-	public synchronized void touchUpdateTime() {
-		mUpdateTime = System.currentTimeMillis();
+	public synchronized long touchUpdateTime() {
+		long time = System.currentTimeMillis();
+		mUpdateTime = time;
+		return time;
 	}
 
 	public synchronized long getUpdateTime() {
@@ -413,7 +415,7 @@ public class CavanAccessibilityPackage {
 		onPackageUpdated();
 	}
 
-	protected synchronized CavanAccessibilityWindow onWindowStateChanged(AccessibilityNodeInfo root, CavanAccessibilityWindow win) {
+	protected synchronized CavanAccessibilityWindow onWindowStateChanged(AccessibilityNodeInfo root, CavanAccessibilityWindow win, long time) {
 		if (win != mWindow) {
 			boolean pending = true;
 
@@ -427,14 +429,14 @@ public class CavanAccessibilityPackage {
 
 			if (mWindow != null) {
 				if (pending) {
-					onLeaveWindow(mWindow, root);
+					onLeaveWindow(mWindow, root, time);
 				}
 
 				if (mWindow.isProgressView()) {
 					if (win == mPrevWin) {
 						pending = false;
 					} else if (mPrevWin != null) {
-						onLeaveWindow(mPrevWin, root);
+						onLeaveWindow(mPrevWin, root, time);
 					}
 				}
 			}
@@ -451,7 +453,7 @@ public class CavanAccessibilityPackage {
 				}
 
 				if (pending) {
-					onEnterWindow(win, root);
+					onEnterWindow(win, root, time);
 				}
 
 				resetTimes();
@@ -466,7 +468,7 @@ public class CavanAccessibilityPackage {
 	}
 
 	protected synchronized CavanAccessibilityWindow onWindowStateChanged(AccessibilityNodeInfo root, AccessibilityEvent event) {
-		touchUpdateTime();
+		long time = touchUpdateTime();
 
 		String name = CavanString.fromCharSequence(event.getClassName(), null);
 		if (name == null) {
@@ -495,7 +497,7 @@ public class CavanAccessibilityPackage {
 			return win;
 		}
 
-		return onWindowStateChanged(root, win);
+		return onWindowStateChanged(root, win, time);
 	}
 
 	private synchronized void setActivityHashCode(CavanAccessibilityWindow win, int hashCode) {
@@ -574,14 +576,14 @@ public class CavanAccessibilityPackage {
 				return mUnlockTime - timeNow;
 			}
 
-			long consume = timeNow - mUpdateTime;
-			if (consume < WAIT_DELAY) {
-				return WAIT_DELAY - consume;
-			}
-
 			CavanAccessibilityWindow win = mWindow;
 			if (win != null) {
 				CavanAndroid.dLog("window = " + win);
+
+				long consume = win.getEnterDelay(timeNow);
+				if (consume < WAIT_DELAY) {
+					return WAIT_DELAY - consume;
+				}
 
 				try {
 					mPollTimes++;
@@ -628,6 +630,8 @@ public class CavanAccessibilityPackage {
 				mService.removePackets(this);
 				return -1;
 			} else {
+				long consume = getTimeConsume();
+
 				if (consume < BACK_DELAY) {
 					if (performActionBack(root, false)) {
 						return POLL_DELAY;
@@ -699,13 +703,13 @@ public class CavanAccessibilityPackage {
 		mService.removePacket(packet);
 	}
 
-	protected void onEnterWindow(CavanAccessibilityWindow win, AccessibilityNodeInfo root) {
-		win.onEnter(root);
+	protected void onEnterWindow(CavanAccessibilityWindow win, AccessibilityNodeInfo root, long time) {
+		win.onEnter(root, time);
 		mService.postCommand();
 	}
 
-	protected void onLeaveWindow(CavanAccessibilityWindow win, AccessibilityNodeInfo root) {
-		win.onLeave(root);
+	protected void onLeaveWindow(CavanAccessibilityWindow win, AccessibilityNodeInfo root, long time) {
+		win.onLeave(root, time);
 	}
 
 	protected void onEnter() {}

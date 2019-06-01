@@ -28,6 +28,9 @@ public class CavanAccessibilityWindow {
 	protected String mBackViewId;
 	protected String mName;
 
+	protected long mEnterTime;
+	protected long mLeaveTime;
+
 	protected Thread mWaitReadyThread = new Thread() {
 
 		private long mUpdateTime;
@@ -88,6 +91,22 @@ public class CavanAccessibilityWindow {
 
 	public String getBackViewId() {
 		return mBackViewId;
+	}
+
+	public long getEnterTime() {
+		return mEnterTime;
+	}
+
+	public long getEnterDelay(long time) {
+		return time - mEnterTime;
+	}
+
+	public long getLeaveTime() {
+		return mLeaveTime;
+	}
+
+	public long getLeaveDelay(long time) {
+		return time - mLeaveTime;
 	}
 
 	public void startWaitReady() {
@@ -162,8 +181,15 @@ public class CavanAccessibilityWindow {
 	protected void onPackageUpdated() {}
 	protected void onProgress(CavanAccessibilityWindow win) {}
 	protected void onAndroidWidget(String name) {}
-	protected void onEnter(AccessibilityNodeInfo root) {}
-	protected void onLeave(AccessibilityNodeInfo root) {}
+
+	protected void onEnter(AccessibilityNodeInfo root, long time) {
+		mEnterTime = time;
+	}
+
+	protected void onLeave(AccessibilityNodeInfo root, long time) {
+		mLeaveTime = time;
+	}
+
 	protected void onWindowContentChanged(AccessibilityNodeInfo root, AccessibilityEvent event) {}
 	protected void onViewClicked(AccessibilityNodeInfo root, AccessibilityEvent event) {}
 	protected void onViewTextChanged(AccessibilityNodeInfo root, AccessibilityEvent event) {}

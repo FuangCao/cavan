@@ -225,7 +225,9 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public void onEnter(AccessibilityNodeInfo root) {
+		public void onEnter(AccessibilityNodeInfo root, long time) {
+			super.onEnter(root, time);
+
 			CavanRedPacketAlipay packet = getInputPacket(true);
 			if (packet != null) {
 				packet.addCommitTimes(false);
@@ -259,7 +261,8 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public void onEnter(AccessibilityNodeInfo root) {
+		public void onEnter(AccessibilityNodeInfo root, long time) {
+			super.onEnter(root, time);
 			setMaybeInvalid(null);
 		}
 
@@ -283,7 +286,9 @@ public class CavanAccessibilityAlipay extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public void onEnter(AccessibilityNodeInfo root) {
+		public void onEnter(AccessibilityNodeInfo root, long time) {
+			super.onEnter(root, time);
+
 			CavanRedPacketAlipay packet = getInputPacket(true);
 			if (packet != null) {
 				packet.addCommitTimes(true);

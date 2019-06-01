@@ -47,6 +47,10 @@ public class CavanNotificationMM extends CavanNotification {
 			return true;
 		}
 
+		if ("Windows 微信登录确认".equals(mContent)) {
+			return true;
+		}
+
 		return super.isRedPacket();
 	}
 }

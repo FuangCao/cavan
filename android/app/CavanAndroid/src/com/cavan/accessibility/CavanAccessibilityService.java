@@ -394,8 +394,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 						CavanAccessibilityWindow win = pkg.waitPopWindow(root.hashCode());
 						if (win != null) {
 							CavanAndroid.dLog("win = " + win);
-							pkg.touchUpdateTime();
-							pkg.onWindowStateChanged(root, win);
+							pkg.onWindowStateChanged(root, win, pkg.touchUpdateTime());
 						} else {
 							postWaitPopWindow(pkg, 200);
 						}

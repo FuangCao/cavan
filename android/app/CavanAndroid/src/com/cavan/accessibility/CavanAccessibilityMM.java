@@ -499,7 +499,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		protected void onEnter(AccessibilityNodeInfo root) {
+		protected void onEnter(AccessibilityNodeInfo root, long time) {
+			super.onEnter(root, time);
 			setForceUnpackEnable(true);
 		}
 	}
@@ -653,7 +654,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public void onEnter(AccessibilityNodeInfo root) {
+		public void onEnter(AccessibilityNodeInfo root, long time) {
+			super.onEnter(root, time);
+
 			int hashCode = root.hashCode();
 			if (hashCode != mHashCode) {
 				mHashCode = hashCode;
@@ -979,14 +982,17 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public void onEnter(AccessibilityNodeInfo root) {
+		public void onEnter(AccessibilityNodeInfo root, long time) {
+			super.onEnter(root, time);
+
 			if (isForceUnpackEnabled()) {
 				setPending(true);
 			}
 		}
 
 		@Override
-		public void onLeave(AccessibilityNodeInfo root) {
+		public void onLeave(AccessibilityNodeInfo root, long time) {
+			super.onLeave(root, time);
 			setForceUnpackEnable(false);
 		}
 
@@ -1072,7 +1078,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		public void onEnter(AccessibilityNodeInfo root) {
+		public void onEnter(AccessibilityNodeInfo root, long time) {
+			super.onEnter(root, time);
+
 			if (getCurrentPacket() == null) {
 				setPending(false);
 			}
@@ -1607,7 +1615,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		protected void onEnter(AccessibilityNodeInfo root) {
+		protected void onEnter(AccessibilityNodeInfo root, long time) {
+			super.onEnter(root, time);
 			setPassword(root);
 		}
 
@@ -1658,7 +1667,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		protected void onEnter(AccessibilityNodeInfo root) {
+		protected void onEnter(AccessibilityNodeInfo root, long time) {
+			super.onEnter(root, time);
 			mService.showLoginDialog(CavanAccessibilityMM.this);
 		}
 
@@ -2316,12 +2326,14 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		protected void onEnter(AccessibilityNodeInfo root) {
+		protected void onEnter(AccessibilityNodeInfo root, long time) {
+			super.onEnter(root, time);
 			cancelAutoAnswer(root);
 		}
 
 		@Override
-		protected void onLeave(AccessibilityNodeInfo root) {
+		protected void onLeave(AccessibilityNodeInfo root, long time) {
+			super.onLeave(root, time);
 			cancelAutoAnswer(root);
 		}
 
@@ -2472,20 +2484,42 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		protected void onEnter(AccessibilityNodeInfo root) {
+		public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
 			List<AccessibilityNodeInfo> nodes = CavanAccessibilityHelper.findNodesByText(root, "登录");
-			if (nodes != null) {
-				try {
-					for (AccessibilityNodeInfo node : nodes) {
-						if (CavanAccessibilityHelper.isButton(node)) {
-							CavanAccessibilityHelper.performClick(node);
-						}
+			if (nodes == null || nodes.isEmpty()) {
+				return false;
+			}
+
+			try {
+				int count = 0;
+
+				for (AccessibilityNodeInfo node : nodes) {
+					if (CavanAccessibilityHelper.isButton(node) && CavanAccessibilityHelper.performClick(node)) {
+						count++;
 					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				} finally {
-					CavanAccessibilityHelper.recycleNodes(nodes);
 				}
+
+				if (count > 0) {
+					packet.setGotoIdle(false);
+					setPending(false);
+					removePackets();
+					return true;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				CavanAccessibilityHelper.recycleNodes(nodes);
+			}
+
+			return false;
+		}
+
+		@Override
+		protected void onEnter(AccessibilityNodeInfo root, long time) {
+			super.onEnter(root, time);
+
+			if (getLeaveDelay(time) > 10000) {
+				setPending(true);
 			}
 		}
 	}
