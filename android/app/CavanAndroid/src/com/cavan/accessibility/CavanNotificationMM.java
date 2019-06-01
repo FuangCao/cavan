@@ -5,6 +5,8 @@ import android.service.notification.StatusBarNotification;
 
 public class CavanNotificationMM extends CavanNotification {
 
+	private String mPacketName = "微信";
+
 	public CavanNotificationMM(Notification notification) {
 		super(notification);
 	}
@@ -15,7 +17,7 @@ public class CavanNotificationMM extends CavanNotification {
 
 	@Override
 	public String getPacketName() {
-		return "微信";
+		return mPacketName;
 	}
 
 	@Override
@@ -48,6 +50,7 @@ public class CavanNotificationMM extends CavanNotification {
 		}
 
 		if ("Windows 微信登录确认".equals(mContent)) {
+			mPacketName = "登录确认";
 			return true;
 		}
 

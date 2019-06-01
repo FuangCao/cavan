@@ -52,6 +52,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 	private static final int MSG_REMOVE_NOTIFICATION = 2;
 	private static final int MSG_RED_PACKET_NOTIFICATION = 3;
 	private static final int MSG_CANCEL_NOTIFYCATION = 4;
+	private static final int MSG_REMOVE_MESSAGE = 5;
 
 	public static RedPacketListenerService instance;
 
@@ -187,6 +188,16 @@ public class RedPacketListenerService extends NotificationListenerService implem
 					notification.sendRedPacketNotifyNormal(finder);
 				}
 				break;
+
+			case MSG_REMOVE_MESSAGE:
+				if (mFloatMessageService != null) {
+					try {
+						mFloatMessageService.removeMessage((CharSequence) msg.obj);
+					} catch (RemoteException e) {
+						e.printStackTrace();
+					}
+				}
+				break;
 			}
 		}
 	};
@@ -307,17 +318,17 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			notification.extras.putCharSequence(EXTRA_MESSAGE, message);
 
 			mNotificationManager.notify(id, notification);
-
-			int delay = CavanMessageActivity.getNotifyAutoClear(this);
-			if (delay > 0) {
-				Message msg = mHandler.obtainMessage(MSG_CANCEL_NOTIFYCATION, id);
-				mHandler.sendMessageDelayed(msg, delay * 60000);
-			}
 		}
 
 		if (mFloatMessageService != null) {
 			try {
 				mFloatMessageService.addMessage(message, code, level);
+
+				int delay = CavanMessageActivity.getNotifyAutoClear(this);
+				if (delay > 0) {
+					Message msg = mHandler.obtainMessage(MSG_REMOVE_MESSAGE, message);
+					mHandler.sendMessageDelayed(msg, delay * 60000);
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
