@@ -229,4 +229,22 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 	public void acquireScreenLock() {
 		CavanUnlockActivity.setLockScreenEnable(this, false);
 	}
+
+	@Override
+	public boolean isInformationGroup(String chatting) {
+		if (chatting.contains("皇族") || chatting.contains("线报")) {
+			return true;
+		}
+
+		if (chatting.contains("讨论组") || chatting.contains("互助群")) {
+			return true;
+		}
+
+		RedPacketListenerService service = RedPacketListenerService.instance;
+		if (instance == null) {
+			return false;
+		}
+
+		return service.isInformationGroup(chatting);
+	}
 }

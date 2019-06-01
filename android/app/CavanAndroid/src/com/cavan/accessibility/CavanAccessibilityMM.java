@@ -619,7 +619,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		public boolean isLauncherUI(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, -1, 0, -1);
+			/* AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, -1, 0, -1);
 			if (node == null) {
 				return false;
 			}
@@ -643,9 +643,14 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				e.printStackTrace();
 			} finally {
 				node.recycle();
+			} */
+
+			String chatting = getChattingName(root);
+			if (chatting == null) {
+				return true;
 			}
 
-			return true;
+			return getChattingNameTail(chatting) > 0;
 		}
 
 		@Override
@@ -754,6 +759,18 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		@Override
 		public int getEventTypes(CavanAccessibilityPackage pkg) {
 			return super.getEventTypes(pkg) | AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED;
+		}
+
+		@Override
+		public boolean doCommitMessage(AccessibilityNodeInfo root) {
+			String chatting = getChattingName(root);
+
+			chatting = fixupChattingName(chatting, null);
+			if (chatting != null && mService.isInformationGroup(chatting)) {
+				return false;
+			}
+
+			return super.doCommitMessage(root);
 		}
 	}
 
@@ -2644,6 +2661,39 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 	public boolean isWxViewPager(AccessibilityNodeInfo node) {
 		return CavanAccessibilityHelper.isInstanceOf(node, "com.tencent.mm.ui.mogic.WxViewPager");
+	}
+
+	public static int getChattingNameTail(String text) {
+		if (text == null) {
+			return -1;
+		}
+
+		if (text.charAt(text.length() - 1) != ')') {
+			return -1;
+		}
+
+		int index = text.lastIndexOf('(');
+		if (index < 0) {
+			return -1;
+		}
+
+		for (int i = text.length() - 2; i > index; i--) {
+			char ch = text.charAt(i);
+			if (ch < '0' || ch > '9') {
+				return -1;
+			}
+		}
+
+		return index;
+	}
+
+	public static String fixupChattingName(String text, String vdef) {
+		int index = getChattingNameTail(text);
+		if (index < 0) {
+			return vdef;
+		}
+
+		return text.substring(0, index);
 	}
 
 	@Override

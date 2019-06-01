@@ -395,6 +395,10 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		CavanAndroid.dLog("mInformationGroups = " + mInformationGroups);
 	}
 
+	public boolean isInformationGroup(String group) {
+		return mInformationGroups.contains(group);
+	}
+
 	public String getKeyword(String group, RedPacketFinder finder) {
 		String content = finder.getJoinedLines();
 		if (content == null || content.isEmpty()) {
@@ -402,7 +406,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		}
 
 		if (content.charAt(0) != '@') {
-			if (mInformationGroups.contains(group)) {
+			if (isInformationGroup(group)) {
 				for (String keyword : mInformations) {
 					if (content.contains(keyword)) {
 						return keyword;

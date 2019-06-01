@@ -1271,4 +1271,8 @@ public class CavanAccessibilityService extends AccessibilityService {
 		Message msg = mThreadedHandler.obtainMessage(MSG_WAIT_POP_WINDOW, pkg);
 		mThreadedHandler.sendMessageDelayed(msg, delay);
 	}
+
+	public boolean isInformationGroup(String chatting) {
+		return false;
+	}
 }
