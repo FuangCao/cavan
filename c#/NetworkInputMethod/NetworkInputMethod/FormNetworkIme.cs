@@ -7,6 +7,7 @@ using System.Threading;
 using System.Runtime.InteropServices;
 using System.Collections;
 using System.Diagnostics;
+using Microsoft.Win32;
 
 namespace NetworkInputMethod
 {
@@ -43,6 +44,89 @@ namespace NetworkInputMethod
 
         delegate void SimpleDelegate(Object obj);
         delegate void UpdateClockdelegate(DateTime date);
+
+        public static bool setAutoRunEnable(bool enable)
+        {
+            var path = Application.ExecutablePath;
+            var name = Application.ProductName;
+            RegistryKey key = null;
+
+            try
+            {
+                key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+
+                if (enable)
+                {
+                    if (key == null)
+                    {
+                        key = Registry.LocalMachine.CreateSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
+                        if (key == null)
+                        {
+                            return false;
+                        }
+                    }
+
+                    key.SetValue(name, path);
+                }
+                else if (key != null)
+                {
+                    var value = key.GetValue(name);
+                    if (value != null && value.Equals(path))
+                    {
+                        key.DeleteValue(name);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            finally
+            {
+                if (key != null)
+                {
+                    key.Close();
+                }
+            }
+
+            return true;
+        }
+
+        public static bool isAutoRunEnabled()
+        {
+            RegistryKey key = null;
+
+            try
+            {
+                key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", false);
+
+                if (key == null)
+                {
+                    return false;
+                }
+
+                var name = Application.ProductName;
+
+                var value = key.GetValue(name);
+                if (value == null)
+                {
+                    return false;
+                }
+
+                return value.Equals(Application.ExecutablePath);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            finally
+            {
+                if (key != null)
+                {
+                    key.Close();
+                }
+            }
+        }
 
         public FormNetworkIme()
         {
@@ -118,6 +202,54 @@ namespace NetworkInputMethod
                         buttonSend.PerformClick();
                         return true;
                     }
+                    break;
+
+                case Keys.Escape:
+                    buttonHome.PerformClick();
+                    break;
+
+                case Keys.F1:
+                    buttonWeixin.PerformClick();
+                    break;
+
+                case Keys.F2:
+                    buttonWeibo.PerformClick();
+                    break;
+
+                case Keys.F3:
+                    buttonAlipay.PerformClick();
+                    break;
+
+                case Keys.F4:
+                    buttonTaobao.PerformClick();
+                    break;
+
+                case Keys.F5:
+                    buttonRefresh.PerformClick();
+                    break;
+
+                case Keys.F6:
+                    buttonSignin.PerformClick();
+                    break;
+
+                case Keys.F7:
+                    buttonUnfollow.PerformClick();
+                    break;
+
+                case Keys.F9:
+                    buttonUnlock.PerformClick();
+                    break;
+
+                case Keys.F10:
+                    buttonLock.PerformClick();
+                    break;
+
+                case Keys.F11:
+                    buttonShareFriends.PerformClick();
+                    break;
+
+                case Keys.F12:
+                    buttonShare.PerformClick();
                     break;
             }
 
@@ -782,6 +914,28 @@ namespace NetworkInputMethod
             }
 
             mFormWebProxy.Show();
+        }
+
+        private void checkBoxFloatClock_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxFloatClock.Checked)
+            {
+                sendCommand("CLOCK 1", true);
+            }
+            else
+            {
+                sendCommand("CLOCK 0", true);
+            }
+        }
+
+        private void toolStripMenuItemAutoRun_Click(object sender, EventArgs e)
+        {
+            setAutoRunEnable(toolStripMenuItemAutoRun.Checked);
+        }
+
+        private void contextMenuStrip_Opening(object sender, CancelEventArgs e)
+        {
+            toolStripMenuItemAutoRun.Checked = isAutoRunEnabled();
         }
     }
 

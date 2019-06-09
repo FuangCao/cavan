@@ -36,6 +36,7 @@
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItemWebProxy = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemTcpProxy = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemAutoRun = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemPack = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemOpen = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemSelect = new System.Windows.Forms.ToolStripMenuItem();
@@ -86,6 +87,7 @@
             this.buttonMute = new System.Windows.Forms.Button();
             this.checkBoxAutoUnlock = new System.Windows.Forms.CheckBox();
             this.buttonLock = new System.Windows.Forms.Button();
+            this.checkBoxFloatClock = new System.Windows.Forms.CheckBox();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -109,7 +111,6 @@
             // 
             // checkedListBoxClients
             // 
-            this.checkedListBoxClients.CheckOnClick = true;
             this.checkedListBoxClients.ContextMenuStrip = this.contextMenuStrip;
             this.checkedListBoxClients.FormattingEnabled = true;
             this.checkedListBoxClients.Location = new System.Drawing.Point(9, 41);
@@ -123,13 +124,15 @@
             this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItemWebProxy,
             this.toolStripMenuItemTcpProxy,
+            this.toolStripMenuItemAutoRun,
             this.toolStripMenuItemPack,
             this.toolStripMenuItemOpen,
             this.toolStripMenuItemSelect,
             this.toolStripMenuItemRequest,
             this.toolStripMenuItemExit});
             this.contextMenuStrip.Name = "contextMenuStrip";
-            this.contextMenuStrip.Size = new System.Drawing.Size(132, 158);
+            this.contextMenuStrip.Size = new System.Drawing.Size(132, 180);
+            this.contextMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip_Opening);
             // 
             // toolStripMenuItemWebProxy
             // 
@@ -144,6 +147,14 @@
             this.toolStripMenuItemTcpProxy.Size = new System.Drawing.Size(131, 22);
             this.toolStripMenuItemTcpProxy.Text = "Tcp 代理";
             this.toolStripMenuItemTcpProxy.Click += new System.EventHandler(this.toolStripMenuItemTcpProxy_Click);
+            // 
+            // toolStripMenuItemAutoRun
+            // 
+            this.toolStripMenuItemAutoRun.CheckOnClick = true;
+            this.toolStripMenuItemAutoRun.Name = "toolStripMenuItemAutoRun";
+            this.toolStripMenuItemAutoRun.Size = new System.Drawing.Size(131, 22);
+            this.toolStripMenuItemAutoRun.Text = "开机启动";
+            this.toolStripMenuItemAutoRun.Click += new System.EventHandler(this.toolStripMenuItemAutoRun_Click);
             // 
             // toolStripMenuItemPack
             // 
@@ -627,12 +638,26 @@
             this.buttonLock.UseVisualStyleBackColor = true;
             this.buttonLock.Click += new System.EventHandler(this.buttonLock_Click);
             // 
+            // checkBoxFloatClock
+            // 
+            this.checkBoxFloatClock.AutoSize = true;
+            this.checkBoxFloatClock.Checked = true;
+            this.checkBoxFloatClock.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxFloatClock.Location = new System.Drawing.Point(69, 177);
+            this.checkBoxFloatClock.Name = "checkBoxFloatClock";
+            this.checkBoxFloatClock.Size = new System.Drawing.Size(72, 16);
+            this.checkBoxFloatClock.TabIndex = 66;
+            this.checkBoxFloatClock.Text = "悬浮时钟";
+            this.checkBoxFloatClock.UseVisualStyleBackColor = true;
+            this.checkBoxFloatClock.CheckedChanged += new System.EventHandler(this.checkBoxFloatClock_CheckedChanged);
+            // 
             // FormNetworkIme
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(408, 474);
             this.ContextMenuStrip = this.contextMenuStrip;
+            this.Controls.Add(this.checkBoxFloatClock);
             this.Controls.Add(this.buttonLock);
             this.Controls.Add(this.checkBoxAutoUnlock);
             this.Controls.Add(this.buttonMute);
@@ -749,6 +774,8 @@
         private System.Windows.Forms.Button buttonLock;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemTcpProxy;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemWebProxy;
+        private System.Windows.Forms.CheckBox checkBoxFloatClock;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemAutoRun;
     }
 }
 

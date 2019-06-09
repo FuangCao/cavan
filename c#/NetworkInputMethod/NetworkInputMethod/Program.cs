@@ -3,6 +3,8 @@ using System.Windows.Forms;
 using System.Reflection;
 using NetworkInputMethod.Properties;
 using System.Threading;
+using Microsoft.Win32;
+using System.Diagnostics;
 
 namespace NetworkInputMethod
 {
