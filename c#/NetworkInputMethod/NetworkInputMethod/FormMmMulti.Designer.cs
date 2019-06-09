@@ -39,7 +39,7 @@
             this.textBoxCount.Name = "textBoxCount";
             this.textBoxCount.Size = new System.Drawing.Size(176, 21);
             this.textBoxCount.TabIndex = 0;
-            this.textBoxCount.Text = "6";
+            this.textBoxCount.Text = "8";
             // 
             // buttonCancel
             // 

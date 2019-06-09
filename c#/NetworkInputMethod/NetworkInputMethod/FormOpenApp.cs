@@ -137,11 +137,18 @@ namespace NetworkInputMethod
 
             Console.WriteLine("path = " + path);
 
-            for (int i = form.Count; i > 0; i--)
+            var processes = new Process[form.Count];
+
+            for (int i = 0; i < processes.Length; i++)
             {
                 Process process = new Process();
                 process.StartInfo.FileName = path;
-                process.Start();
+                processes[i] = process;
+            }
+
+            for (int i = 0; i < processes.Length; i++)
+            {
+                processes[i].Start();
             }
         }
 
