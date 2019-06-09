@@ -135,6 +135,7 @@ namespace NetworkInputMethod
 
             InitializeComponent();
             comboBoxSend.SelectedIndex = 0;
+            comboBoxRepeat.SelectedIndex = 0;
         }
 
         private void FormNetworkIme_Load(object sender, EventArgs e)
@@ -572,28 +573,6 @@ namespace NetworkInputMethod
             }
         }
 
-        private void checkBoxRepeat_CheckedChanged(object sender, EventArgs e)
-        {
-            if (checkBoxRepeat.Checked)
-            {
-                string text = textBoxContent.Text;
-                if (text != null && text.Length > 0)
-                {
-                    mRepeatSendBytes = UTF8Encoding.UTF8.GetBytes("SEND " + text);
-
-                    if (!backgroundWorkerRepeater.IsBusy)
-                    {
-                        backgroundWorkerRepeater.RunWorkerAsync();
-                    }
-                }
-            }
-            else
-            {
-                mRepeatSendBytes = null;
-                backgroundWorkerRepeater.CancelAsync();
-            }
-        }
-
         private void FormNetworkIme_FormClosing(object sender, FormClosingEventArgs e)
         {
             e.Cancel = true;
@@ -635,14 +614,23 @@ namespace NetworkInputMethod
                 }
 
                 sendCommand(bytes, false);
-                Thread.Sleep(500);
+
+                var index = comboBoxRepeat.SelectedIndex;
+                if (index > 0)
+                {
+                    Thread.Sleep(index * 100);
+                }
+                else
+                {
+                    break;
+                }
             }
         }
 
         private void backgroundWorkerRepeater_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             mRepeatSendBytes = null;
-            checkBoxRepeat.Checked = false;
+            comboBoxRepeat.SelectedIndex = 0;
         }
 
         private void checkBoxSelectAll_CheckedChanged(object sender, EventArgs e)
@@ -936,6 +924,29 @@ namespace NetworkInputMethod
         private void contextMenuStrip_Opening(object sender, CancelEventArgs e)
         {
             toolStripMenuItemAutoRun.Checked = isAutoRunEnabled();
+        }
+
+        private void comboBoxRepeat_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+            if (comboBoxRepeat.SelectedIndex > 0)
+            {
+                string text = textBoxContent.Text;
+                if (text != null && text.Length > 0)
+                {
+                    mRepeatSendBytes = UTF8Encoding.UTF8.GetBytes("SEND " + text);
+
+                    if (!backgroundWorkerRepeater.IsBusy)
+                    {
+                        backgroundWorkerRepeater.RunWorkerAsync();
+                    }
+                }
+            }
+            else
+            {
+                mRepeatSendBytes = null;
+                backgroundWorkerRepeater.CancelAsync();
+            }
         }
     }
 

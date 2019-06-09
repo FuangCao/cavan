@@ -47,7 +47,6 @@
             this.buttonClear = new System.Windows.Forms.Button();
             this.checkBoxClear = new System.Windows.Forms.CheckBox();
             this.labelStatus = new System.Windows.Forms.Label();
-            this.checkBoxRepeat = new System.Windows.Forms.CheckBox();
             this.checkBoxEnterSend = new System.Windows.Forms.CheckBox();
             this.backgroundWorkerRepeater = new System.ComponentModel.BackgroundWorker();
             this.checkBoxShareClipboard = new System.Windows.Forms.CheckBox();
@@ -88,20 +87,21 @@
             this.checkBoxAutoUnlock = new System.Windows.Forms.CheckBox();
             this.buttonLock = new System.Windows.Forms.Button();
             this.checkBoxFloatClock = new System.Windows.Forms.CheckBox();
+            this.comboBoxRepeat = new System.Windows.Forms.ComboBox();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // textBoxPort
             // 
-            this.textBoxPort.Location = new System.Drawing.Point(273, 13);
+            this.textBoxPort.Location = new System.Drawing.Point(292, 13);
             this.textBoxPort.Name = "textBoxPort";
-            this.textBoxPort.Size = new System.Drawing.Size(60, 21);
+            this.textBoxPort.Size = new System.Drawing.Size(41, 21);
             this.textBoxPort.TabIndex = 1;
             this.textBoxPort.Text = "8865";
             // 
             // buttonStart
             // 
-            this.buttonStart.Location = new System.Drawing.Point(339, 12);
+            this.buttonStart.Location = new System.Drawing.Point(336, 12);
             this.buttonStart.Name = "buttonStart";
             this.buttonStart.Size = new System.Drawing.Size(60, 23);
             this.buttonStart.TabIndex = 2;
@@ -240,17 +240,6 @@
             this.labelStatus.TabIndex = 20;
             this.labelStatus.Text = "服务器未启动";
             // 
-            // checkBoxRepeat
-            // 
-            this.checkBoxRepeat.AutoSize = true;
-            this.checkBoxRepeat.Location = new System.Drawing.Point(327, 177);
-            this.checkBoxRepeat.Name = "checkBoxRepeat";
-            this.checkBoxRepeat.Size = new System.Drawing.Size(72, 16);
-            this.checkBoxRepeat.TabIndex = 21;
-            this.checkBoxRepeat.Text = "重复发送";
-            this.checkBoxRepeat.UseVisualStyleBackColor = true;
-            this.checkBoxRepeat.CheckedChanged += new System.EventHandler(this.checkBoxRepeat_CheckedChanged);
-            // 
             // checkBoxEnterSend
             // 
             this.checkBoxEnterSend.AutoSize = true;
@@ -274,7 +263,7 @@
             this.checkBoxShareClipboard.AutoSize = true;
             this.checkBoxShareClipboard.Checked = true;
             this.checkBoxShareClipboard.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxShareClipboard.Location = new System.Drawing.Point(147, 177);
+            this.checkBoxShareClipboard.Location = new System.Drawing.Point(225, 177);
             this.checkBoxShareClipboard.Name = "checkBoxShareClipboard";
             this.checkBoxShareClipboard.Size = new System.Drawing.Size(84, 16);
             this.checkBoxShareClipboard.TabIndex = 23;
@@ -447,10 +436,10 @@
             // 
             // textBoxClock
             // 
-            this.textBoxClock.Location = new System.Drawing.Point(9, 13);
+            this.textBoxClock.Location = new System.Drawing.Point(118, 13);
             this.textBoxClock.Name = "textBoxClock";
             this.textBoxClock.ReadOnly = true;
-            this.textBoxClock.Size = new System.Drawing.Size(258, 21);
+            this.textBoxClock.Size = new System.Drawing.Size(168, 21);
             this.textBoxClock.TabIndex = 46;
             // 
             // buttonBuildPack
@@ -556,7 +545,7 @@
             // checkBoxSendClipboard
             // 
             this.checkBoxSendClipboard.AutoSize = true;
-            this.checkBoxSendClipboard.Location = new System.Drawing.Point(237, 177);
+            this.checkBoxSendClipboard.Location = new System.Drawing.Point(315, 177);
             this.checkBoxSendClipboard.Name = "checkBoxSendClipboard";
             this.checkBoxSendClipboard.Size = new System.Drawing.Size(84, 16);
             this.checkBoxSendClipboard.TabIndex = 57;
@@ -643,7 +632,7 @@
             this.checkBoxFloatClock.AutoSize = true;
             this.checkBoxFloatClock.Checked = true;
             this.checkBoxFloatClock.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxFloatClock.Location = new System.Drawing.Point(69, 177);
+            this.checkBoxFloatClock.Location = new System.Drawing.Point(147, 177);
             this.checkBoxFloatClock.Name = "checkBoxFloatClock";
             this.checkBoxFloatClock.Size = new System.Drawing.Size(72, 16);
             this.checkBoxFloatClock.TabIndex = 66;
@@ -651,12 +640,75 @@
             this.checkBoxFloatClock.UseVisualStyleBackColor = true;
             this.checkBoxFloatClock.CheckedChanged += new System.EventHandler(this.checkBoxFloatClock_CheckedChanged);
             // 
+            // comboBoxRepeat
+            // 
+            this.comboBoxRepeat.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxRepeat.FormattingEnabled = true;
+            this.comboBoxRepeat.Items.AddRange(new object[] {
+            "不重复发送",
+            "间隔100毫秒",
+            "间隔200毫秒",
+            "间隔300毫秒",
+            "间隔400毫秒",
+            "间隔500毫秒",
+            "间隔600毫秒",
+            "间隔700毫秒",
+            "间隔800毫秒",
+            "间隔900毫秒",
+            "间隔1000毫秒",
+            "间隔1100毫秒",
+            "间隔1200毫秒",
+            "间隔1300毫秒",
+            "间隔1400毫秒",
+            "间隔1500毫秒",
+            "间隔1600毫秒",
+            "间隔1700毫秒",
+            "间隔1800毫秒",
+            "间隔1900毫秒",
+            "间隔2000毫秒",
+            "间隔2100毫秒",
+            "间隔2200毫秒",
+            "间隔2300毫秒",
+            "间隔2400毫秒",
+            "间隔2500毫秒",
+            "间隔2600毫秒",
+            "间隔2700毫秒",
+            "间隔2800毫秒",
+            "间隔2900毫秒",
+            "间隔3000毫秒",
+            "间隔3100毫秒",
+            "间隔3200毫秒",
+            "间隔3300毫秒",
+            "间隔3400毫秒",
+            "间隔3500毫秒",
+            "间隔3600毫秒",
+            "间隔3700毫秒",
+            "间隔3800毫秒",
+            "间隔3900毫秒",
+            "间隔4000毫秒",
+            "间隔4100毫秒",
+            "间隔4200毫秒",
+            "间隔4300毫秒",
+            "间隔4400毫秒",
+            "间隔4500毫秒",
+            "间隔4600毫秒",
+            "间隔4700毫秒",
+            "间隔4800毫秒",
+            "间隔4900毫秒",
+            "间隔5000毫秒"});
+            this.comboBoxRepeat.Location = new System.Drawing.Point(9, 13);
+            this.comboBoxRepeat.Name = "comboBoxRepeat";
+            this.comboBoxRepeat.Size = new System.Drawing.Size(103, 20);
+            this.comboBoxRepeat.TabIndex = 67;
+            this.comboBoxRepeat.SelectedIndexChanged += new System.EventHandler(this.comboBoxRepeat_SelectedIndexChanged);
+            // 
             // FormNetworkIme
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(408, 474);
             this.ContextMenuStrip = this.contextMenuStrip;
+            this.Controls.Add(this.comboBoxRepeat);
             this.Controls.Add(this.checkBoxFloatClock);
             this.Controls.Add(this.buttonLock);
             this.Controls.Add(this.checkBoxAutoUnlock);
@@ -694,7 +746,6 @@
             this.Controls.Add(this.checkBoxSelectAll);
             this.Controls.Add(this.checkBoxShareClipboard);
             this.Controls.Add(this.checkBoxEnterSend);
-            this.Controls.Add(this.checkBoxRepeat);
             this.Controls.Add(this.labelStatus);
             this.Controls.Add(this.checkBoxClear);
             this.Controls.Add(this.buttonClear);
@@ -726,7 +777,6 @@
         private System.Windows.Forms.Button buttonClear;
         private System.Windows.Forms.CheckBox checkBoxClear;
         private System.Windows.Forms.Label labelStatus;
-        private System.Windows.Forms.CheckBox checkBoxRepeat;
         private System.Windows.Forms.CheckBox checkBoxEnterSend;
         private System.ComponentModel.BackgroundWorker backgroundWorkerRepeater;
         private System.Windows.Forms.CheckBox checkBoxShareClipboard;
@@ -776,6 +826,7 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemWebProxy;
         private System.Windows.Forms.CheckBox checkBoxFloatClock;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemAutoRun;
+        private System.Windows.Forms.ComboBox comboBoxRepeat;
     }
 }
 
