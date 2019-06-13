@@ -404,7 +404,6 @@ static int app_network_test_udp_client_main(int argc, char *argv[])
 {
 	struct sockaddr_in addr;
 	int sockfd;
-	int count;
 	int ret;
 
 	assert(argc > 1);
@@ -435,8 +434,6 @@ static int app_network_test_udp_client_main(int argc, char *argv[])
 		goto out_close_sockfd;
 	}
 
-	count = 0;
-
 	while (1) {
 		char buff[1024];
 		int length;
@@ -446,10 +443,13 @@ static int app_network_test_udp_client_main(int argc, char *argv[])
 			break;
 		}
 
-		buff[length] = 0;
-		count++;
+		length = inet_sendto(sockfd, buff, length, &addr);
+		if (length < 0) {
+			break;
+		}
 
-		time_println("count = %d", count);
+		buff[length] = 0;
+		time_println(buff);
 	}
 
 out_close_sockfd:
@@ -461,9 +461,9 @@ static int app_network_test_udp_service_main(int argc, char *argv[])
 {
 	struct sockaddr_in addr;
 	char buff[1024];
-	int length;
 	int sockfd;
-	int count;
+	int pkg_count;
+	int err_count;
 
 	assert(argc > 1);
 
@@ -473,32 +473,34 @@ static int app_network_test_udp_service_main(int argc, char *argv[])
 		return sockfd;
 	}
 
-	length = inet_recvfrom(sockfd, buff, sizeof(buff) - 1, &addr);
-	if (length < 0) {
-		pr_err_info("inet_recvfrom");
-		goto out_close_sockfd;
-	}
-
-	buff[length] = 0;
-	println("buff[%d] = %s", length, buff);
-
-	count = 0;
+	err_count = 0;
+	pkg_count = 0;
 
 	while (1) {
-		int wrlen = inet_sendto(sockfd, buff, length, &addr);
-		if (wrlen < 0) {
-			pr_err_info("inet_sendto");
-			break;
+		int length = inet_recvfrom_timeout(sockfd, buff, sizeof(buff), &addr, 2000);
+
+		if (length > 0) {
+			pkg_count++;
+		} else if (pkg_count > 0) {
+			err_count++;
 		}
 
-		count++;
-		time_println("count = %d", count);
+		if (pkg_count > 0) {
+			length = snprintf(buff, sizeof(buff), "pkg = %d, err = %d", pkg_count, err_count);
 
+			int wrlen = inet_sendto(sockfd, buff, length, &addr);
+			if (wrlen < 0) {
+				pr_err_info("inet_sendto");
+				break;
+			}
+		}
+
+		time_println("pkg = %d, err = %d", pkg_count, err_count);
 		msleep(2000);
 	}
 
-out_close_sockfd:
 	close(sockfd);
+
 	return 0;
 }
 
