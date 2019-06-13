@@ -131,6 +131,12 @@
     <Compile Include="FormTextEditor.Designer.cs">
       <DependentUpon>FormTextEditor.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormUrlBuilder.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormUrlBuilder.Designer.cs">
+      <DependentUpon>FormUrlBuilder.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormVolumeEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -181,6 +187,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormTextEditor.resx">
       <DependentUpon>FormTextEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormUrlBuilder.resx">
+      <DependentUpon>FormUrlBuilder.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormVolumeEditor.resx">
       <DependentUpon>FormVolumeEditor.cs</DependentUpon>

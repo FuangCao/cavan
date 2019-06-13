@@ -45,13 +45,13 @@
             this.buttonSupercellClashroyale = new System.Windows.Forms.Button();
             this.buttonMmMulti = new System.Windows.Forms.Button();
             this.buttonBack = new System.Windows.Forms.Button();
-            this.buttonHome = new System.Windows.Forms.Button();
             this.buttonTstl = new System.Windows.Forms.Button();
             this.buttonPubgmhd = new System.Windows.Forms.Button();
             this.buttonCrossgate = new System.Windows.Forms.Button();
             this.textBoxAppName = new System.Windows.Forms.TextBox();
             this.buttonOpen = new System.Windows.Forms.Button();
             this.openFileDialogWeChat = new System.Windows.Forms.OpenFileDialog();
+            this.buttonWmsj = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // buttonMm
@@ -86,7 +86,7 @@
             // 
             // buttonXxsy
             // 
-            this.buttonXxsy.Location = new System.Drawing.Point(12, 150);
+            this.buttonXxsy.Location = new System.Drawing.Point(93, 196);
             this.buttonXxsy.Name = "buttonXxsy";
             this.buttonXxsy.Size = new System.Drawing.Size(75, 40);
             this.buttonXxsy.TabIndex = 3;
@@ -214,16 +214,6 @@
             this.buttonBack.UseVisualStyleBackColor = true;
             this.buttonBack.Click += new System.EventHandler(this.buttonBack_Click);
             // 
-            // buttonHome
-            // 
-            this.buttonHome.Location = new System.Drawing.Point(93, 196);
-            this.buttonHome.Name = "buttonHome";
-            this.buttonHome.Size = new System.Drawing.Size(75, 40);
-            this.buttonHome.TabIndex = 16;
-            this.buttonHome.Text = "桌面";
-            this.buttonHome.UseVisualStyleBackColor = true;
-            this.buttonHome.Click += new System.EventHandler(this.buttonHome_Click);
-            // 
             // buttonTstl
             // 
             this.buttonTstl.Location = new System.Drawing.Point(255, 104);
@@ -281,18 +271,28 @@
             this.openFileDialogWeChat.InitialDirectory = "C:\\Program Files";
             this.openFileDialogWeChat.Title = "选择微信的安装位置";
             // 
+            // buttonWmsj
+            // 
+            this.buttonWmsj.Location = new System.Drawing.Point(12, 150);
+            this.buttonWmsj.Name = "buttonWmsj";
+            this.buttonWmsj.Size = new System.Drawing.Size(75, 40);
+            this.buttonWmsj.TabIndex = 22;
+            this.buttonWmsj.Text = "完美世界";
+            this.buttonWmsj.UseVisualStyleBackColor = true;
+            this.buttonWmsj.Click += new System.EventHandler(this.buttonWmsj_Click);
+            // 
             // FormOpenApp
             // 
             this.AcceptButton = this.buttonOpen;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(340, 277);
+            this.Controls.Add(this.buttonWmsj);
             this.Controls.Add(this.buttonOpen);
             this.Controls.Add(this.textBoxAppName);
             this.Controls.Add(this.buttonCrossgate);
             this.Controls.Add(this.buttonPubgmhd);
             this.Controls.Add(this.buttonTstl);
-            this.Controls.Add(this.buttonHome);
             this.Controls.Add(this.buttonBack);
             this.Controls.Add(this.buttonMmMulti);
             this.Controls.Add(this.buttonSupercellClashroyale);
@@ -338,12 +338,12 @@
         private System.Windows.Forms.Button buttonSupercellClashroyale;
         private System.Windows.Forms.Button buttonMmMulti;
         private System.Windows.Forms.Button buttonBack;
-        private System.Windows.Forms.Button buttonHome;
         private System.Windows.Forms.Button buttonTstl;
         private System.Windows.Forms.Button buttonPubgmhd;
         private System.Windows.Forms.Button buttonCrossgate;
         private System.Windows.Forms.TextBox textBoxAppName;
         private System.Windows.Forms.Button buttonOpen;
         private System.Windows.Forms.OpenFileDialog openFileDialogWeChat;
+        private System.Windows.Forms.Button buttonWmsj;
     }
 }

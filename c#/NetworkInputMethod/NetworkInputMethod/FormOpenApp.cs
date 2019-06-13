@@ -185,5 +185,10 @@ namespace NetworkInputMethod
                 mNetworkIme.sendOpenApp(name);
             }
         }
+
+        private void buttonWmsj_Click(object sender, EventArgs e)
+        {
+            mNetworkIme.sendOpenApp("com.tencent.wmsj");
+        }
     }
 }
