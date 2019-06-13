@@ -50,6 +50,36 @@
 #define ARRAY_PAIR(array) \
 	array, NELEM(array)
 
+#define CAST(type, value)		((type) (value))
+#define CAST_PV(type, value)	(*CAST(type *, value))
+
+#define CAST_CHAR(value)		CAST(int, (value))
+#define CAST_UCHAR(value)		CAST(uchar, (value))
+
+#define CAST_SHORT(value)		CAST(short, (value))
+#define CAST_USHORT(value)		CAST(ushort, (value))
+
+#define CAST_INT(value)			CAST(int, (value))
+#define CAST_UINT(value)		CAST(uint, (value))
+
+#define CAST_LONG(value)		CAST(long, (value))
+#define CAST_ULONG(value)		CAST(ulong, (value))
+
+#define CAST_FLOAT(value)		CAST(float, (value))
+#define CAST_DOUBLE(value)		CAST(double, (value))
+
+#define CAST_S8(value)			CAST(s8, (value))
+#define CAST_U8(value)			CAST(u8, (value))
+
+#define CAST_S16(value)			CAST(s16, (value))
+#define CAST_U16(value)			CAST(u16, (value))
+
+#define CAST_S32(value)			CAST(s32, (value))
+#define CAST_U32(value)			CAST(u32, (value))
+
+#define CAST_S64(value)			CAST(s64, (value))
+#define CAST_U64(value)			CAST(u64, (value))
+
 typedef uint64_t u64, dword;
 typedef int64_t s64;
 
@@ -130,7 +160,7 @@ typedef struct {
 	int y;
 } cavan_point_t;
 
-#define ARRAY_SIZE(a)				(sizeof(a) / sizeof((a)[0]))
+#define ARRAY_SIZE(a)				(sizeof(a) / sizeof(*(a)))
 #define NELEM(a)					((int) ARRAY_SIZE(a))
 #define LAST_ELEM(a)				((a) + NELEM(a) - 1)
 #define MOFS(type, member)			MEMBER_OFFSET(type, member)

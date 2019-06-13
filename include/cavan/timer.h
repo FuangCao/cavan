@@ -11,6 +11,8 @@
 #include <cavan/time.h>
 #include <cavan/thread.h>
 
+#define TIME_FMT1			"%Y-%m-%d %T"
+
 __BEGIN_DECLS;
 
 struct cavan_timer {
@@ -189,6 +191,44 @@ static inline u64 clock_gettime_real_ms(void)
 static inline u32 clock_gettime_real_ss(void)
 {
 	return clock_gettime_ss(CLOCK_REALTIME);
+}
+
+static inline struct tm *cavan_date(struct tm *date)
+{
+	time_t now = time(NULL);
+	return localtime_r(&now, date);
+}
+
+static inline size_t cavan_strftime(char *buff, size_t size, const char *format, struct tm *date)
+{
+	return strftime(buff, size, format, date);
+}
+
+static inline size_t cavan_strftime2(struct tm *date, char *buff, size_t size)
+{
+	return cavan_strftime(buff, size, TIME_FMT1, date);
+}
+
+static inline size_t cavan_strftime3(char *buff, size_t size, const char *format, time_t *time)
+{
+	struct tm date;
+	return cavan_strftime(buff, size, format, localtime_r(time, &date));
+}
+
+static inline size_t cavan_strftime4(char *buff, size_t size, time_t *time)
+{
+	return cavan_strftime3(buff, size, TIME_FMT1, time);
+}
+
+static inline size_t cavan_strftime5(char *buff, size_t size, const char *format)
+{
+	time_t now = time(NULL);
+	return cavan_strftime3(buff, size, format, &now);
+}
+
+static inline size_t cavan_strftime6(char *buff, size_t size)
+{
+	return cavan_strftime5(buff, size, TIME_FMT1);
 }
 
 __END_DECLS;

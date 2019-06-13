@@ -400,6 +400,108 @@ static int app_network_test_dns_main(int argc, char *argv[])
 	return 0;
 }
 
+static int app_network_test_udp_client_main(int argc, char *argv[])
+{
+	struct sockaddr_in addr;
+	int sockfd;
+	int count;
+	int ret;
+
+	assert(argc > 1);
+
+	if (argc > 2) {
+		ret = cavan_stdio_redirect3(argv[2], 0x06);
+		if (ret < 0) {
+			pr_err_info("cavan_stdio_redirect3");
+			return ret;
+		}
+	}
+
+	sockfd = udp_socket();
+	if (sockfd < 0) {
+		pr_err_info("udp_socket");
+		return sockfd;
+	}
+
+	ret = inet_sockaddr_init_url(&addr, argv[1]);
+	if (ret < 0) {
+		pr_err_info("inet_sockaddr_init_url");
+		goto out_close_sockfd;
+	}
+
+	ret = inet_sendto(sockfd, "0123456789", 10, &addr);
+	if (ret < 0) {
+		pr_err_info("inet_sendto");
+		goto out_close_sockfd;
+	}
+
+	count = 0;
+
+	while (1) {
+		char buff[1024];
+		int length;
+
+		length = inet_recvfrom(sockfd, buff, sizeof(buff) - 1, &addr);
+		if (length <= 0) {
+			break;
+		}
+
+		buff[length] = 0;
+		count++;
+
+		time_println("count = %d", count);
+	}
+
+out_close_sockfd:
+	close(sockfd);
+	return ret;
+}
+
+static int app_network_test_udp_service_main(int argc, char *argv[])
+{
+	struct sockaddr_in addr;
+	char buff[1024];
+	int length;
+	int sockfd;
+	int count;
+
+	assert(argc > 1);
+
+	sockfd = inet_create_udp_service(atoi(argv[1]));
+	if (sockfd < 0) {
+		pr_err_info("inet_create_udp_service");
+		return sockfd;
+	}
+
+	length = inet_recvfrom(sockfd, buff, sizeof(buff) - 1, &addr);
+	if (length < 0) {
+		pr_err_info("inet_recvfrom");
+		goto out_close_sockfd;
+	}
+
+	buff[length] = 0;
+	println("buff[%d] = %s", length, buff);
+
+	count = 0;
+
+	while (1) {
+		int wrlen = inet_sendto(sockfd, buff, length, &addr);
+		if (wrlen < 0) {
+			pr_err_info("inet_sendto");
+			break;
+		}
+
+		count++;
+		time_println("count = %d", count);
+
+		msleep(2000);
+	}
+
+out_close_sockfd:
+	close(sockfd);
+	return 0;
+}
+
 CAVAN_COMMAND_MAP_START {
 	{ "dump", app_network_dump_main },
 	{ "client", app_network_client_main },
@@ -408,4 +510,6 @@ CAVAN_COMMAND_MAP_START {
 	{ "test-max-links", app_network_test_max_links_main },
 	{ "test-relink", app_network_test_relink_main },
 	{ "test-dns", app_network_test_dns_main },
+	{ "test-udp-client", app_network_test_udp_client_main },
+	{ "test-udp-service", app_network_test_udp_service_main },
 } CAVAN_COMMAND_MAP_END;

@@ -277,6 +277,8 @@ function config_samba()
    follow symlinks = true
    wide links = true
    unix extensions = no
+   force group = root
+   force user = root
 
 [rootfs]
    comment = ${DISTRIB_ID}-${DISTRIB_RELEASE}

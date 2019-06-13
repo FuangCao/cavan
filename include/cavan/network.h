@@ -605,9 +605,29 @@ static inline int inet_socket(int type)
 	return socket(PF_INET, type, 0);
 }
 
+static inline int tcp_socket(void)
+{
+	return inet_socket(SOCK_STREAM);
+}
+
+static inline int udp_socket(void)
+{
+	return inet_socket(SOCK_DGRAM);
+}
+
 static inline int unix_socket(int type)
 {
 	return socket(PF_UNIX, type, 0);
+}
+
+static inline int unix_tcp_socket(void)
+{
+	return unix_socket(SOCK_STREAM);
+}
+
+static inline int unix_udp_socket(void)
+{
+	return unix_socket(SOCK_DGRAM);
 }
 
 static inline int inet_bind(int sockfd, const struct sockaddr_in *addr)

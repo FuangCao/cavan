@@ -591,6 +591,7 @@ int print_ntext(const char *text, size_t size);
 void print_buffer(const char *buff, size_t size);
 void print_title(const char *title, char sep, size_t size);
 void print_sep(size_t size);
+void time_println(const char *fmt, ...);
 
 void print_mem(const char *promp, const u8 *mem, size_t size, ...);
 

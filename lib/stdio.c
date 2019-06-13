@@ -1,5 +1,6 @@
 #include <cavan.h>
 #include <cavan/text.h>
+#include <cavan/timer.h>
 #include <cavan/thread.h>
 #include <linux/kd.h>
 #include <termios.h>
@@ -181,6 +182,39 @@ int print_ntext(const char *text, size_t size)
 	return ret;
 }
 #endif
+
+void time_println(const char *fmt, ...)
+{
+	char *p, *p_end;
+	char buff[4096];
+	va_list ap;
+	struct timespec time;
+	struct tm date;
+
+	clock_gettime_real(&time);
+	localtime_r(&time.tv_sec, &date);
+
+	p = buff;
+	p_end = p + sizeof(buff);
+
+
+	p += cavan_strftime2(&date, p, p_end - p);
+	p += snprintf(p, p_end - p, ".%03d", CAST_INT(time.tv_nsec / 1000000 % 1000));
+
+	if (p < p_end) {
+		*p++ = ' ';
+	}
+
+	va_start(ap, fmt);
+	p += vsnprintf(p, p_end - p, fmt, ap);
+	va_end(ap);
+
+	if (p < p_end) {
+		*p++ = '\n';
+	}
+
+	print_ntext(buff, p - buff);
+}
 
 static void *cavan_async_stdout_thread(void *data)
 {
