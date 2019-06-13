@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <sys/types.h>
 
+#define SIZEOF_INT		__SIZEOF_INT__
+#define SIZEOF_LONG		__SIZEOF_LONG__
+#define SIZEOF_SIZE_T	__SIZEOF_SIZE_T__
+
 #define sp				std::shared_ptr
 #define make_sp			std::make_shared
 

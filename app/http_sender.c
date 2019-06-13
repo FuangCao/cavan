@@ -98,10 +98,12 @@ static inline void cavan_http_sender_wait(struct cavan_http_sender *sender, pthr
 	pthread_cond_wait(cond, &sender->lock);
 }
 
+#if 0
 static inline void cavan_http_sender_timedwait(struct cavan_http_sender *sender, pthread_cond_t *cond, const struct timespec *time)
 {
 	pthread_cond_timedwait(cond, &sender->lock, time);
 }
+#endif
 
 static inline void cavan_http_sender_post(pthread_cond_t *cond)
 {

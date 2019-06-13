@@ -95,9 +95,15 @@ using namespace std;
 #define CAVAN_COLOR_MAGENTA				"\033[35m"
 
 #ifdef CONFIG_ANDROID_NDK
-#define PRINT_FORMAT_UID				"ld"
+#if SIZEOF_SIZE_T == SIZEOF_INT
+#define PRINT_FORMAT_UID				"d"
 #define PRINT_FORMAT_SIZE				"d"
+#define PRINT_FORMAT_SSIZE				"d"
+#else
+#define PRINT_FORMAT_UID				"ld"
+#define PRINT_FORMAT_SIZE				"ld"
 #define PRINT_FORMAT_SSIZE				"ld"
+#endif
 #define PRINT_FORMAT_INT64				"Ld"
 #define PRINT_FORMAT_OFF				"Ld"
 #else

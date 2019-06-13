@@ -27,7 +27,8 @@ CAVAN_APP_LIST := $(foreach app,$(CAVAN_APP_SRC_FILES),$(basename $(notdir $(app
 
 CAVAN_ANDROID_VERSION := $(firstword $(subst ., ,$(PLATFORM_VERSION)))
 CAVAN_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/android/include
-CAVAN_CFLAGS := -DCAVAN_ARCH_ARM -DCAVAN -DCONFIG_ANDROID -DCONFIG_ANDROID_VERSION=$(CAVAN_ANDROID_VERSION)  -DCONFIG_ANDROID_NDK -Wall -Wundef -Wextra -Werror -Wno-unused-parameter
+CAVAN_CFLAGS := -DCAVAN_ARCH_ARM -DCAVAN -DCONFIG_ANDROID -DCONFIG_ANDROID_VERSION=$(CAVAN_ANDROID_VERSION) -DCONFIG_ANDROID_NDK
+CAVAN_CFLAGS += -Wall -Wundef -Wextra -Werror -Wno-unused-parameter -Wno-gnu-designator -Wno-overloaded-virtual
 CAVAN_CFLAGS += -include $(LOCAL_PATH)/android/include/android.h -include $(LOCAL_PATH)/include/cavan/config.h
 
 CAVAN_LDLIBS = -llog -landroid

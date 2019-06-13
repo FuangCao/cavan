@@ -24,5 +24,5 @@
 
 class BitMap : public CavanRect {
 private:
-	void *mem;
+	// void *mem;
 };

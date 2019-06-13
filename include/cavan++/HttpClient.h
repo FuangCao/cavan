@@ -118,6 +118,10 @@ private:
 public:
 	HttpResponse(HttpStatusCode &code) : mStatusCode(code) {}
 	virtual ~HttpResponse() {}
+
+	HttpStatusCode &getStatusCode(void) {
+		return mStatusCode;
+	}
 };
 
 class HttpClient : public NetworkEpollClient<HttpHeader> {

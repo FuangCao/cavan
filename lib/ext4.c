@@ -460,11 +460,13 @@ static inline ssize_t cavan_ext4_read_block(struct cavan_ext4_fs *fs, size_t ind
 	return fs->bdev->read_block(fs->bdev, index, buff, count << fs->hw_blocks_per_block_shift);
 }
 
+#if 0
 static inline ssize_t cavan_ext4_write_block(struct cavan_ext4_fs *fs, size_t index, const void *buff, size_t count)
 {
 	index = cavan_ext4_get_block_hw_addr(fs, index);
 	return fs->bdev->write_block(fs->bdev, index, buff, count << fs->hw_blocks_per_block_shift);
 }
+#endif
 
 static struct ext2_group_desc *cavan_ext4_get_group(struct cavan_ext4_fs *fs, u32 index)
 {
@@ -487,10 +489,12 @@ static inline u32 cavan_ext4_inode_index_to_table(struct cavan_ext4_fs *fs, u32 
 	return cavan_ext4_get_group(fs, group)->bg_inode_table;
 }
 
+#if 0
 static inline int cavan_ext4_get_dir_entry_length(struct ext2_dir_entry_2 *entry)
 {
 	return CAVAN_EXT4_DIR_ENTRY_HEADER_LEN + entry->name_len;
 }
+#endif
 
 ssize_t cavan_ext4_read_inode(struct cavan_ext4_fs *fs, u32 index, struct ext2_inode_large *inode)
 {

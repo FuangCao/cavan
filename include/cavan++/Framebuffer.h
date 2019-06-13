@@ -24,8 +24,8 @@
 
 class Framebuffer : public DisplayDevice {
 private:
-	int mFd;
-	void *mMem;
+	// int mFd;
+	// void *mMem;
 
 public:
 	Framebuffer(void) {}
