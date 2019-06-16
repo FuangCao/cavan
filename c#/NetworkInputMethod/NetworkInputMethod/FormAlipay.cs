@@ -9,7 +9,7 @@ using System.Windows.Forms;
 
 namespace NetworkInputMethod
 {
-    public partial class FormAlipay : Form
+    public partial class FormAlipay : CavanSubForm
     {
         private FormNetworkIme mIme;
 

@@ -24,6 +24,7 @@ namespace NetworkInputMethod
         private FormSendCommand mFormSendCommand;
         private FormTcpProxyService mFormTcpProxy;
         private FormWebProxyService mFormWebProxy;
+        private FormUrlBuilder mFormUrlBuilder;
 
         //API declarations...
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -77,8 +78,9 @@ namespace NetworkInputMethod
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                MessageBox.Show(e.ToString());
                 return false;
             }
             finally
@@ -342,12 +344,17 @@ namespace NetworkInputMethod
 
         private bool onClipboardChanged(string text)
         {
-            if (mFormAlipay != null && mFormAlipay.onClipboardChanged(text))
+            if (mFormAlipay != null && mFormAlipay.Visible &&  mFormAlipay.onClipboardChanged(text))
             {
                 return true;
             }
 
-            if (mFormBuilder != null && mFormBuilder.postClipboard(text))
+            if (mFormBuilder != null && mFormBuilder.Visible && mFormBuilder.postClipboard(text))
+            {
+                return true;
+            }
+
+            if (mFormUrlBuilder != null && mFormUrlBuilder.Visible && mFormUrlBuilder.postClipboard(text))
             {
                 return true;
             }
@@ -707,12 +714,11 @@ namespace NetworkInputMethod
 
         private void buttonOpen_Click(object sender, EventArgs e)
         {
-            if (mFormOpenApp != null)
+            if (mFormOpenApp == null || mFormOpenApp.IsDisposed)
             {
-                mFormOpenApp.Dispose();
+                mFormOpenApp = new FormOpenApp(this);
             }
 
-            mFormOpenApp = new FormOpenApp(this);
             mFormOpenApp.Show();
         }
 
@@ -755,12 +761,9 @@ namespace NetworkInputMethod
             if (mFormSender == null || mFormSender.IsDisposed)
             {
                 mFormSender = new FormHttpSender();
-                mFormSender.Show();
             }
-            else
-            {
-                mFormSender.WindowState = FormWindowState.Normal;
-            }
+
+            mFormSender.Show();
         }
 
         private void toolStripMenuItemExit_Click(object sender, EventArgs e)
@@ -825,12 +828,9 @@ namespace NetworkInputMethod
             if (mFormSendCommand == null || mFormSendCommand.IsDisposed)
             {
                 mFormSendCommand = new FormSendCommand(this);
-                mFormSendCommand.Show();
             }
-            else
-            {
-                mFormSendCommand.WindowState = FormWindowState.Normal;
-            }
+
+            mFormSendCommand.Show();
         }
 
         private void buttonAlipay_Click(object sender, EventArgs e)
@@ -838,12 +838,9 @@ namespace NetworkInputMethod
             if (mFormAlipay == null || mFormAlipay.IsDisposed)
             {
                 mFormAlipay = new FormAlipay(this);
-                mFormAlipay.Show();
             }
-            else
-            {
-                mFormAlipay.WindowState = FormWindowState.Normal;
-            }
+
+            mFormAlipay.Show();
 
             var text = getClipboardText();
             mFormAlipay.setClipboardText(text);
@@ -947,6 +944,16 @@ namespace NetworkInputMethod
                 mRepeatSendBytes = null;
                 backgroundWorkerRepeater.CancelAsync();
             }
+        }
+
+        private void toolStripMenuItemUrlBuilder_Click(object sender, EventArgs e)
+        {
+            if (mFormUrlBuilder == null || mFormUrlBuilder.IsDisposed)
+            {
+                mFormUrlBuilder = new FormUrlBuilder();
+            }
+
+            mFormUrlBuilder.Show();
         }
     }
 

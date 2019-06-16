@@ -22,12 +22,6 @@ namespace NetworkInputMethod
             InitializeComponent();
         }
 
-        private void FormTcpProxyService_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            e.Cancel = true;
-            Visible = false;
-        }
-
         private void buttonStartStop_Click(object sender, EventArgs e)
         {
             if (mService.Running)

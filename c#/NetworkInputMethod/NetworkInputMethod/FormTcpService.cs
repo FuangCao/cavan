@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 namespace NetworkInputMethod
 {
-    public class FormTcpService : Form
+    public class FormTcpService : CavanSubForm
     {
         public void Invoke(EventHandler handler, object sender, EventArgs e)
         {

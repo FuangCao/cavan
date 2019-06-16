@@ -80,8 +80,7 @@
             this.Controls.Add(this.textBoxUrl);
             this.Name = "FormTcpProxyService";
             this.Text = "TcpProxyService";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormTcpProxyService_FormClosing);
-            this.ResumeLayout(false);
+           this.ResumeLayout(false);
             this.PerformLayout();
 
         }

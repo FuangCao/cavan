@@ -60,12 +60,6 @@ namespace NetworkInputMethod
         {
             listBoxClients.Items.Remove(sender);
         }
-
-        private void FormWebProxyService_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            e.Cancel = true;
-            Visible = false;
-        }
     }
 
     public class CavanHttpRequest
@@ -168,7 +162,25 @@ namespace NetworkInputMethod
 
             mLines.Clear();
 
-            if (path[0] != '/')
+            if (url == null)
+            {
+                while (true)
+                {
+                    line = readline(stream);
+                    if (line == null)
+                    {
+                        return false;
+                    }
+
+                    if (line.Length == 0)
+                    {
+                        break;
+                    }
+
+                    mLines.Add(line);
+                }
+            }
+            else if (path[0] != '/')
             {
                 mUrl = new CavanUrl(path);
             }

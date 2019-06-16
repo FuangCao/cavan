@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace NetworkInputMethod
 {
-    public partial class FormSendCommand : Form
+    public partial class FormSendCommand : CavanSubForm
     {
         private FormNetworkIme mIme;
         private byte[] mRepeatBytes;

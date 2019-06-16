@@ -13,7 +13,7 @@ using Newtonsoft.Json.Linq;
 
 namespace NetworkInputMethod
 {
-    public partial class FormPackBuilder : Form
+    public partial class FormPackBuilder : CavanSubForm
     {
         public const int IMG_INDEX_SERVER = 0;
         public const int IMG_INDEX_FILE = 1;
@@ -668,12 +668,6 @@ namespace NetworkInputMethod
         private void expandToolStripMenuItem_Click(object sender, EventArgs e)
         {
             treeView.ExpandAll();
-        }
-
-        private void FormPackBuilder_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            e.Cancel = true;
-            Visible = false;
         }
     }
 }

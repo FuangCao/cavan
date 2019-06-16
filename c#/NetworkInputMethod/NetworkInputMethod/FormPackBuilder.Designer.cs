@@ -285,7 +285,6 @@
             this.Controls.Add(this.buttonAccount);
             this.Name = "FormPackBuilder";
             this.Text = "FormPackBuilder";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormPackBuilder_FormClosing);
             this.contextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
 

@@ -14,7 +14,7 @@ using System.Diagnostics;
 
 namespace NetworkInputMethod
 {
-    public partial class FormHttpSender : Form
+    public partial class FormHttpSender : CavanSubForm
     {
         private const long START_AHEAD = 15000;
 

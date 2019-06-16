@@ -80,7 +80,6 @@
             this.Controls.Add(this.textBoxUrl);
             this.Name = "FormWebProxyService";
             this.Text = "WebProxyService";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormWebProxyService_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
 

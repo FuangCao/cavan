@@ -11,7 +11,7 @@ using System.Diagnostics;
 
 namespace NetworkInputMethod
 {
-    public partial class FormOpenApp : Form
+    public partial class FormOpenApp : CavanSubForm
     {
         public static string[] sProgramFiles = {
             "C:\\Program Files (x86)",

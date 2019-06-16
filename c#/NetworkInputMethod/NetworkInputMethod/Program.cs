@@ -5,6 +5,8 @@ using NetworkInputMethod.Properties;
 using System.Threading;
 using Microsoft.Win32;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
+using System.IO;
 
 namespace NetworkInputMethod
 {
@@ -16,10 +18,13 @@ namespace NetworkInputMethod
         [STAThread]
         static void Main()
         {
-            bool createdNew;
-            Mutex mutex = new Mutex(true, Application.ProductName, out createdNew);
+            var name = Application.ExecutablePath.Replace(Path.DirectorySeparatorChar, '_');
+            bool created;
+            Mutex mutex;
 
-            if (createdNew)
+            mutex = new Mutex(true, name, out created);
+
+            if (created)
             {
                 AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
                 Application.EnableVisualStyles();
