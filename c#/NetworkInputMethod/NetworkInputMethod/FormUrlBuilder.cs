@@ -152,6 +152,20 @@ namespace NetworkInputMethod
             builder.AppendLine("</html>");
 
             mWebContent = Encoding.UTF8.GetBytes(builder.ToString());
+
+            builder = new StringBuilder();
+
+            foreach (ListViewItem item in listViewUrls.Items)
+            {
+                if (builder.Length > 0)
+                {
+                    builder.AppendLine();
+                }
+
+                builder.Append(item.Index + 1).Append(". ").AppendLine(item.SubItems[2].Text);
+            }
+
+            Clipboard.SetText(builder.ToString());
         }
 
         private void buttonClear_Click(object sender, EventArgs e)
