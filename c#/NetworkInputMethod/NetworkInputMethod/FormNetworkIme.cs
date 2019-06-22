@@ -344,7 +344,7 @@ namespace NetworkInputMethod
 
         private bool onClipboardChanged(string text)
         {
-            if (mFormAlipay != null && mFormAlipay.Visible &&  mFormAlipay.onClipboardChanged(text))
+            if (mFormAlipay != null && mFormAlipay.Visible && mFormAlipay.onClipboardChanged(text))
             {
                 return true;
             }
@@ -595,13 +595,10 @@ namespace NetworkInputMethod
             if (e.Button == MouseButtons.Left)
             {
                 WindowState = FormWindowState.Normal;
-
-                if (!Visible)
-                {
-                    ShowInTaskbar = true;
-                    Visible = true;
-                    SetClipboardViewer();
-                }
+                ShowInTaskbar = true;
+                Visible = true;
+                Focus();
+                SetClipboardViewer();
             }
         }
 
@@ -868,12 +865,34 @@ namespace NetworkInputMethod
 
         private void buttonShareFriends_Click(object sender, EventArgs e)
         {
-            sendCommand("SHARE 1", true);
+            string command;
+
+            if (checkBoxFakeShare.Checked)
+            {
+                command = "SHARE 4";
+            }
+            else
+            {
+                command = "SHARE 1";
+            }
+
+            sendCommand(command, true);
         }
 
         private void buttonShare_Click(object sender, EventArgs e)
         {
-            sendCommand("SHARE", true);
+            string command;
+
+            if (checkBoxFakeShare.Checked)
+            {
+                command = "SHARE 8";
+            }
+            else
+            {
+                command = "SHARE 2";
+            }
+
+            sendCommand(command, true);
         }
 
         private void buttonLock_Click(object sender, EventArgs e)
