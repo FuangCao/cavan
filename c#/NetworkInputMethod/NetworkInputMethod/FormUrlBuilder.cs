@@ -172,6 +172,23 @@ namespace NetworkInputMethod
         {
             listViewUrls.Items.Clear();
         }
+
+        private void toolStripMenuItemCopy_Click(object sender, EventArgs e)
+        {
+            var builder = new StringBuilder();
+
+            foreach (ListViewItem item in listViewUrls.SelectedItems)
+            {
+                if (builder.Length > 0)
+                {
+                    builder.AppendLine();
+                }
+
+                builder.Append(item.Index).Append(". ").AppendLine(item.SubItems[2].Text);
+            }
+
+            Clipboard.SetText(builder.ToString());
+        }
     }
 
     public class UrlBuilderClient : CavanTcpClient

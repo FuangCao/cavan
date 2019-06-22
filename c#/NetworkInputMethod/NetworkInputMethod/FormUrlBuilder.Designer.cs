@@ -28,14 +28,18 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.textBoxPort = new System.Windows.Forms.TextBox();
             this.buttonSwitch = new System.Windows.Forms.Button();
             this.listViewUrls = new System.Windows.Forms.ListView();
             this.columnHeaderIndex = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderUrl = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.buttonGenerate = new System.Windows.Forms.Button();
             this.buttonClear = new System.Windows.Forms.Button();
-            this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripMenuItemCopy = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // textBoxPort
@@ -62,6 +66,7 @@
             this.columnHeaderIndex,
             this.columnHeaderName,
             this.columnHeaderUrl});
+            this.listViewUrls.ContextMenuStrip = this.contextMenuStrip;
             this.listViewUrls.FullRowSelect = true;
             this.listViewUrls.GridLines = true;
             this.listViewUrls.Location = new System.Drawing.Point(12, 39);
@@ -74,6 +79,10 @@
             // columnHeaderIndex
             // 
             this.columnHeaderIndex.Text = "序号";
+            // 
+            // columnHeaderName
+            // 
+            this.columnHeaderName.Text = "名称";
             // 
             // columnHeaderUrl
             // 
@@ -100,9 +109,19 @@
             this.buttonClear.UseVisualStyleBackColor = true;
             this.buttonClear.Click += new System.EventHandler(this.buttonClear_Click);
             // 
-            // columnHeaderName
+            // contextMenuStrip
             // 
-            this.columnHeaderName.Text = "名称";
+            this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItemCopy});
+            this.contextMenuStrip.Name = "contextMenuStrip";
+            this.contextMenuStrip.Size = new System.Drawing.Size(101, 26);
+            // 
+            // toolStripMenuItemCopy
+            // 
+            this.toolStripMenuItemCopy.Name = "toolStripMenuItemCopy";
+            this.toolStripMenuItemCopy.Size = new System.Drawing.Size(100, 22);
+            this.toolStripMenuItemCopy.Text = "复制";
+            this.toolStripMenuItemCopy.Click += new System.EventHandler(this.toolStripMenuItemCopy_Click);
             // 
             // FormUrlBuilder
             // 
@@ -116,6 +135,7 @@
             this.Controls.Add(this.textBoxPort);
             this.Name = "FormUrlBuilder";
             this.Text = "FormUrlBuilder";
+            this.contextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -131,5 +151,7 @@
         private System.Windows.Forms.Button buttonGenerate;
         private System.Windows.Forms.Button buttonClear;
         private System.Windows.Forms.ColumnHeader columnHeaderName;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemCopy;
     }
 }
