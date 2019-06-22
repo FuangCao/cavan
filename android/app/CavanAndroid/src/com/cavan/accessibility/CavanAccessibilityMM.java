@@ -1129,11 +1129,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 	public class WebViewWindow extends BaseWindow {
 
-		private boolean isTmpWebviewUi;
+		private boolean isTmpWebViewUi;
 
 		public WebViewWindow(String name) {
 			super(name);
-			isTmpWebviewUi = name.indexOf("Tmp") > 0;
+			isTmpWebViewUi = name.indexOf("Tmp") > 0;
 		}
 
 		public AccessibilityNodeInfo findWebView(AccessibilityNodeInfo root) {
@@ -1180,7 +1180,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		public boolean isInProgress(AccessibilityNodeInfo root) {
-			if (isTmpWebviewUi) {
+			if (isTmpWebViewUi) {
 				return false;
 			}
 
@@ -1422,6 +1422,53 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(web, 0, 0, 0, 0, 0);
 			if (node != null) {
 				return CavanAccessibilityHelper.performClickAndRecycle(node);
+			}
+
+			return false;
+		}
+	}
+
+	public class GameWebViewWindow extends WebViewWindow {
+
+		public GameWebViewWindow(String name) {
+			super(name);
+		}
+
+		@Override
+		public boolean clickMenuButton(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 2);
+			if (node == null) {
+				return false;
+			}
+
+			try {
+				if (CavanAccessibilityHelper.isImageView(node)) {
+					return CavanAccessibilityHelper.performClick(node);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				node.recycle();
+			}
+
+			return false;
+		}
+
+		@Override
+		protected boolean doActionBack(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 0, 0);
+			if (node == null) {
+				return false;
+			}
+
+			try {
+				if (CavanAccessibilityHelper.isImageView(node)) {
+					return CavanAccessibilityHelper.performClick(node);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				node.recycle();
 			}
 
 			return false;
@@ -2464,40 +2511,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 	}
 
-	public CavanAccessibilityMM(CavanAccessibilityService service) {
-		super(service, CavanPackageName.MM);
-	}
-
-	public boolean isWebViewUi() {
-		BaseWindow win = (BaseWindow) mWindow;
-		return (win != null && win.isWebviewUi() && isCurrentPackage());
-	}
-
-	@Override
-	public synchronized CavanAccessibilityWindow getWindow(String name) {
-		CavanAccessibilityWindow win = super.getWindow(name);
-		if (win != null) {
-			return win;
-		}
-
-		if (name.startsWith("com.tencent.mm.ui.base.")) {
-			win = new ProgressWindow(name);
-		} else if (name.startsWith("com.tencent.mm.ui.chatting.En_")) {
-			win = new ChattingWindow(name);
-		} else if (name.startsWith("com.tencent.mm.plugin.luckymoney.ui.En_")) {
-			win = new ReceiveWindow(name);
-		} else if (name.startsWith("com.tencent.mm.plugin.appbrand.ui.AppBrandUI")) {
-			win = new AppBrandWindow(name);
-		} else if (name.startsWith("com.tencent.mm.plugin.webview.ui.tools.")) {
-			win = new WebViewWindow(name);
-		} else {
-			return null;
-		}
-
-		addWindow(win);
-
-		return win;
-	}
 
 	public class ExtDeviceWXLoginWindow extends BaseWindow {
 
@@ -2709,6 +2722,46 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		return text.substring(0, index);
 	}
 
+	public CavanAccessibilityMM(CavanAccessibilityService service) {
+		super(service, CavanPackageName.MM);
+	}
+
+	public boolean isWebViewUi() {
+		BaseWindow win = (BaseWindow) mWindow;
+		return (win != null && win.isWebviewUi() && isCurrentPackage());
+	}
+
+	@Override
+	public synchronized CavanAccessibilityWindow getWindow(String name) {
+		CavanAccessibilityWindow win = super.getWindow(name);
+		if (win != null) {
+			return win;
+		}
+
+		if (name.startsWith("com.tencent.mm.ui.base.")) {
+			win = new ProgressWindow(name);
+		} else if (name.startsWith("com.tencent.mm.ui.chatting.En_")) {
+			win = new ChattingWindow(name);
+		} else if (name.startsWith("com.tencent.mm.plugin.luckymoney.ui.En_")) {
+			win = new ReceiveWindow(name);
+		} else if (name.startsWith("com.tencent.mm.plugin.appbrand.ui.AppBrandUI")) {
+			win = new AppBrandWindow(name);
+		} else if (name.startsWith("com.tencent.mm.plugin.webview.ui.tools.") || name.endsWith("WebViewUI") || name.endsWith("WebviewMpUI")) {
+			if (name.indexOf("Game") < 0) {
+				win = new WebViewWindow(name);
+			} else {
+				win = new GameWebViewWindow(name);
+			}
+		} else {
+			return null;
+		}
+
+		addWindow(win);
+
+		return win;
+	}
+
+
 	@Override
 	public void initWindows() {
 		mBrandServiceIndexWindow = new BrandServiceIndexWindow("com.tencent.mm.plugin.brandservice.ui.BrandServiceIndexUI");
@@ -2725,7 +2778,9 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		addWindow(new WebViewWindow("com.tencent.mm.plugin.webview.ui.tools.WebViewUI"));
 		addWindow(new WebViewWindow("com.tencent.mm.plugin.webview.ui.tools.WebviewMpUI"));
-		addWindow(new WebViewWindow("com.tencent.mm.plugin.webview.ui.tools.game.GameWebViewUI"));
+
+		addWindow(new GameWebViewWindow("com.tencent.mm.plugin.webview.ui.tools.game.GameWebViewUI"));
+		addWindow(new GameWebViewWindow("com.tencent.mm.plugin.game.luggage.LuggageGameWebViewUI"));
 
 		addWindow(new WebViewMenu("android.support.design.widget.c"));
 		addWindow(new ChattingMenu("android.widget.FrameLayout"));
@@ -2750,7 +2805,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(new SnsUploadWindow("com.tencent.mm.plugin.sns.ui.SnsUploadUI"));
 		addWindow(new SnsLabelWindow("com.tencent.mm.plugin.sns.ui.SnsLabelUI"));
 		addWindow(new WebViewStubProxyWindow("com.tencent.mm.plugin.webview.stub.WebViewStubProxyUI"));
-	}
+		addWindow(new WebViewStubProxyWindow("com.tencent.mm.plugin.webview.luggage.ipc.IpcProxyUI"));}
 
 	@Override
 	public void onPollStarted() {
