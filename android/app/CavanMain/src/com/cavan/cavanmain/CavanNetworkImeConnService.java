@@ -383,7 +383,15 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 
 		case "SHARE":
 			if (accessibility != null) {
-				accessibility.sendCommandShred(args.length > 1 && CavanJava.parseBoolean(args[1]));
+				int mode;
+
+				if (args.length > 1) {
+					mode = CavanJava.parseInt(args[1]);
+				} else {
+					mode = 0;
+				}
+
+				accessibility.sendCommandShred(mode);
 			}
 			break;
 

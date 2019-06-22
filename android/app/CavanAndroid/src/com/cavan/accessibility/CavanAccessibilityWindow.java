@@ -24,12 +24,30 @@ public class CavanAccessibilityWindow {
 	public static final int CMD_WEB = 9;
 	public static final int CMD_SHARE = 10;
 
+	public static final int SHARE_FRIEND = 1;
+	public static final int SHARE_CIRCLE = 2;
+	public static final int SHARE_FRIEND_FAKE = 4;
+	public static final int SHARE_CIRCLE_FAKE = 8;
+
+	protected CavanAccessibilityPackage mPackage;
 	protected int mActivityHashCode;
 	protected String mBackViewId;
 	protected String mName;
 
 	protected long mEnterTime;
 	protected long mLeaveTime;
+
+	public static boolean isShareFriendMode(int mode) {
+		return (mode & (SHARE_FRIEND | SHARE_FRIEND_FAKE)) != 0;
+	}
+
+	public static boolean isShareCircleMode(int mode) {
+		return (mode & (SHARE_CIRCLE | SHARE_CIRCLE_FAKE)) != 0;
+	}
+
+	public static boolean isShareFakeMode(int mode) {
+		return (mode & (SHARE_FRIEND_FAKE | SHARE_CIRCLE_FAKE)) != 0;
+	}
 
 	protected Thread mWaitReadyThread = new Thread() {
 
@@ -113,6 +131,15 @@ public class CavanAccessibilityWindow {
 		mWaitReadyThread.start();
 	}
 
+
+	public CavanAccessibilityPackage getPackage() {
+		return mPackage;
+	}
+
+	public void setPackage(CavanAccessibilityPackage package1) {
+		mPackage = package1;
+	}
+
 	public boolean poll(CavanRedPacket packet, AccessibilityNodeInfo root, int times) {
 		return false;
 	}
@@ -166,12 +193,12 @@ public class CavanAccessibilityWindow {
 		return false;
 	}
 
-	protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
+	protected boolean doCommandShare(AccessibilityNodeInfo root, int mode) {
 		return false;
 	}
 
 	protected boolean doActionBack(AccessibilityNodeInfo root) {
-		return false;
+		return mPackage.performActionBack(root, true);
 	}
 
 	protected boolean doActionHome(AccessibilityNodeInfo root) {
@@ -287,7 +314,7 @@ public class CavanAccessibilityWindow {
 
 		case CMD_SHARE:
 			CavanAndroid.dLog("CMD_SHARE");
-			return doCommandShare(root, (boolean) args[0]);
+			return doCommandShare(root, (int) args[0]);
 
 		case CMD_BACK:
 			CavanAndroid.dLog("CMD_BACK");

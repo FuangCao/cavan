@@ -1262,12 +1262,12 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
+		protected boolean doCommandShare(AccessibilityNodeInfo root, int mode) {
 			if (!clickMenuButton(root)) {
 				return false;
 			}
 
-			if (friends) {
+			if (CavanAccessibilityWindow.isShareFriendMode(mode)) {
 				mMenuItem = "发送给朋友";
 			} else {
 				mMenuItem = "分享到朋友圈";
@@ -1469,10 +1469,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
-			CavanAndroid.dLog("doCommandShare: " + friends);
-
-			if (friends) {
+		protected boolean doCommandShare(AccessibilityNodeInfo root, int mode) {
+			if (CavanAccessibilityWindow.isShareFriendMode(mode)) {
 				return doClickMenuItem(root, "发送给朋友");
 			} else {
 				return doClickMenuItem(root, "分享到朋友圈");
@@ -2360,7 +2358,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
+		protected boolean doCommandShare(AccessibilityNodeInfo root, int mode) {
 			if (performClickMoreButton(root)) {
 				mMenuItem = "转发";
 				return true;
@@ -2416,7 +2414,14 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
+		protected boolean doCommandShare(AccessibilityNodeInfo root, int mode) {
+			if (CavanAccessibilityWindow.isShareFakeMode(mode)) {
+				AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "退出");
+				if (node != null) {
+					return CavanAccessibilityHelper.performClickAndRecycle(node);
+				}
+			}
+
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildByIndex(root, 4);
 			if (node == null) {
 				mCommandPending = true;
@@ -2548,7 +2553,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
+		protected boolean doCommandShare(AccessibilityNodeInfo root, int mode) {
+			if (CavanAccessibilityWindow.isShareFakeMode(mode)) {
+				return doActionBack(root);
+			}
+
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "两口");
 			if (node == null) {
 				setCommandPending();
@@ -2566,7 +2575,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
+		protected boolean doCommandShare(AccessibilityNodeInfo root, int mode) {
+			if (CavanAccessibilityWindow.isShareFakeMode(mode)) {
+				return doActionBack(root);
+			}
+
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 0, 3);
 			if (node == null) {
 				setCommandPending();
@@ -2608,7 +2621,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
+		protected boolean doCommandShare(AccessibilityNodeInfo root, int mode) {
 			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByText(root, "私密");
 			if (node == null) {
 				setCommandPending();
@@ -2635,7 +2648,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		@Override
-		protected boolean doCommandShare(AccessibilityNodeInfo root, boolean friends) {
+		protected boolean doCommandShare(AccessibilityNodeInfo root, int mode) {
 			return true;
 		}
 	}
