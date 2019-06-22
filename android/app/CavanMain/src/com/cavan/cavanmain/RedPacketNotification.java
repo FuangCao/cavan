@@ -256,7 +256,7 @@ public class RedPacketNotification extends CavanNotificationTable {
 		builder.append('@');
 		builder.append(getUserDescription());
 
-		String content = mNotification.getContent();
+		String content = mNotification.getContent().trim();
 		if (!keyword.equals(content)) {
 			builder.append(':').append(content);
 		}
