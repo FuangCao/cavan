@@ -312,7 +312,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 		protected AccessibilityNodeInfo onFindInputNode(AccessibilityNodeInfo root) {
 			AccessibilityNodeInfo layout = findInputLayout(root);
-			CavanAndroid.dLog("layout = " + layout);
 			if (layout == null) {
 				return null;
 			}
