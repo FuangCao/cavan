@@ -14,6 +14,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -132,6 +133,10 @@ public class CavanAccessibilityHelper {
 		return isInstanceOf(node, ImageView.class);
 	}
 
+	public static boolean isImageButton(AccessibilityNodeInfo node) {
+		return isInstanceOf(node, ImageButton.class);
+	}
+
 	public static boolean isTabHost(AccessibilityNodeInfo node) {
 		return isInstanceOf(node, TabHost.class);
 	}
@@ -162,18 +167,21 @@ public class CavanAccessibilityHelper {
 		recycleNodes(nodes, 0);
 	}
 
-	public static void recycleNodes(AccessibilityNodeInfo[] nodes, int index, int count) {
-		for (int end = index + count; index < end; index++) {
+	public static void recycleNodes(AccessibilityNodeInfo[] nodes, int index, int end) {
+		while (index < end) {
 			try {
-				nodes[index].recycle();
+				AccessibilityNodeInfo node = nodes[index++];
+				if (node != null) {
+					node.recycle();
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 	}
 
-	public static void recycleNodes(AccessibilityNodeInfo[] nodes, int count) {
-		recycleNodes(nodes, 0, count);
+	public static void recycleNodes(AccessibilityNodeInfo[] nodes, int end) {
+		recycleNodes(nodes, 0, end);
 	}
 
 	public static void recycleNodes(AccessibilityNodeInfo[] nodes) {
@@ -1059,27 +1067,13 @@ public class CavanAccessibilityHelper {
 		AccessibilityNodeInfo[] childs = new AccessibilityNodeInfo[count];
 
 		for (int i = 0; i < count; i++, index++) {
-			try {
-				AccessibilityNodeInfo child = node.getChild(index);
-				if (child == null) {
-					return null;
-				}
-
-				childs[i] = child;
-			} catch (Exception e) {
-				e.printStackTrace();
-				return null;
-			}
+			childs[i] = getChildByIndex(node, index);
 		}
 
 		return childs;
 	}
 
 	public static AccessibilityNodeInfo[] getChilds(AccessibilityNodeInfo node, int index, int count) {
-		if (index + count > node.getChildCount()) {
-			return null;
-		}
-
 		return getChildsRaw(node, index, count);
 	}
 
@@ -1089,6 +1083,20 @@ public class CavanAccessibilityHelper {
 
 	public static AccessibilityNodeInfo[] getChilds(AccessibilityNodeInfo node) {
 		return getChildsRaw(node, 0, node.getChildCount());
+	}
+
+	public static AccessibilityNodeInfo[] getChilds(AccessibilityNodeInfo node, int[] indexs) {
+		AccessibilityNodeInfo[] childs = new AccessibilityNodeInfo[indexs.length];
+
+		for (int i = 0; i < indexs.length; i++) {
+			childs[i] = getChildByIndex(node, indexs[i]);
+		}
+
+		return childs;
+	}
+
+	public static AccessibilityNodeInfo[] getChildsF(AccessibilityNodeInfo node, int... indexs) {
+		return getChilds(node, indexs);
 	}
 
 	public static AccessibilityNodeInfo getChildByIndex(AccessibilityNodeInfo node, int index) {

@@ -269,27 +269,76 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			return nodes;
 		}
 
-		protected AccessibilityNodeInfo onFindInputNode(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo parent = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 0, 1);
+		public AccessibilityNodeInfo findInputLayout(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo parent = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 0);
 			if (parent == null) {
 				return null;
 			}
 
 			try {
-				AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(parent, -3, 0);
+				AccessibilityNodeInfo[] childs = CavanAccessibilityHelper.getChildsF(parent, 1, 2);
+
+				for (int i = 0; i < childs.length; i++) {
+					AccessibilityNodeInfo child = childs[i];
+					if (child == null) {
+						continue;
+					}
+
+					if (child.getChildCount() == 4) {
+						CavanAccessibilityHelper.recycleNodes(childs, i + 1, childs.length);
+						return child;
+					}
+
+					if (child.getChildCount() == 1) {
+						AccessibilityNodeInfo node = child.getChild(0);
+						if (node.getChildCount() == 4) {
+							CavanAccessibilityHelper.recycleNodes(childs, i, childs.length);
+							return node;
+						} else {
+							node.recycle();
+						}
+					}
+
+					child.recycle();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				parent.recycle();
+			}
+
+			return null;
+		}
+
+		protected AccessibilityNodeInfo onFindInputNode(AccessibilityNodeInfo root) {
+			AccessibilityNodeInfo layout = findInputLayout(root);
+			CavanAndroid.dLog("layout = " + layout);
+			if (layout == null) {
+				return null;
+			}
+
+			try {
+				AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(layout, -3, 0);
 				if (node != null) {
 					if (CavanAccessibilityHelper.isEditText(node)) {
 						return node;
 					}
 
 					node.recycle();
-				} else if (CavanAccessibilityHelper.isImageView(parent)) {
-					CavanAccessibilityHelper.performClick(parent);
+				} else if (CavanAccessibilityHelper.isImageView(layout)) {
+					CavanAccessibilityHelper.performClick(layout);
+				} else {
+					AccessibilityNodeInfo child = layout.getChild(0);
+					if (CavanAccessibilityHelper.isImageButton(child)) {
+						CavanAccessibilityHelper.performClick(child);
+					}
+
+					child.recycle();
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
-				parent.recycle();
+				layout.recycle();
 			}
 
 			return null;
