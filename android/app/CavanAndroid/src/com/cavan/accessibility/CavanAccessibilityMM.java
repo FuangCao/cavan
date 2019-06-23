@@ -11,6 +11,7 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.webkit.WebView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -269,75 +270,42 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			return nodes;
 		}
 
-		public AccessibilityNodeInfo findInputLayout(AccessibilityNodeInfo root) {
+		protected AccessibilityNodeInfo onFindInputNode(AccessibilityNodeInfo root) {
 			AccessibilityNodeInfo parent = CavanAccessibilityHelper.getChildRecursiveF(root, 0, 0);
 			if (parent == null) {
 				return null;
 			}
 
 			try {
-				AccessibilityNodeInfo[] childs = CavanAccessibilityHelper.getChildsF(parent, 1, 2);
+				for (int i = 1; i < parent.getChildCount(); i++) {
+					AccessibilityNodeInfo child = parent.getChild(i);
 
-				for (int i = 0; i < childs.length; i++) {
-					AccessibilityNodeInfo child = childs[i];
-					if (child == null) {
-						continue;
-					}
+					try {
+						if (child.getChildCount() > 0) {
+							AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByClass(root, EditText.class);
+							if (node != null) {
+								return node;
+							}
 
-					if (child.getChildCount() == 4) {
-						CavanAccessibilityHelper.recycleNodes(childs, i + 1, childs.length);
-						return child;
-					}
-
-					if (child.getChildCount() == 1) {
-						AccessibilityNodeInfo node = child.getChild(0);
-						if (node.getChildCount() == 4) {
-							CavanAccessibilityHelper.recycleNodes(childs, i, childs.length);
-							return node;
-						} else {
-							node.recycle();
+							node = CavanAccessibilityHelper.findNodeByClass(parent, ImageView.class);
+							if (node != null) {
+								CavanAccessibilityHelper.performClickAndRecycle(node);
+								return null;
+							}
+						} else if (CavanAccessibilityHelper.isImageView(child)) {
+							CavanAccessibilityHelper.performClick(child);
+							return null;
 						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					} finally {
+						child.recycle();
 					}
-
-					child.recycle();
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
 				parent.recycle();
-			}
-
-			return null;
-		}
-
-		protected AccessibilityNodeInfo onFindInputNode(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo layout = findInputLayout(root);
-			if (layout == null) {
-				return null;
-			}
-
-			try {
-				AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(layout, -3, 0);
-				if (node != null) {
-					if (CavanAccessibilityHelper.isEditText(node)) {
-						return node;
-					}
-
-					node.recycle();
-				} else if (CavanAccessibilityHelper.isImageView(layout)) {
-					CavanAccessibilityHelper.performClick(layout);
-				} else {
-					AccessibilityNodeInfo child = layout.getChild(0);
-					if (CavanAccessibilityHelper.isImageButton(child)) {
-						CavanAccessibilityHelper.performClick(child);
-					}
-
-					child.recycle();
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				layout.recycle();
 			}
 
 			return null;
@@ -352,7 +320,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
 				node.recycle();
 			}
-
 			return onFindInputNode(root);
 		}
 
@@ -380,6 +347,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		@Override
 		protected boolean doSendText(AccessibilityNodeInfo root, String message, boolean commit) {
 			if (message != null) {
+
 				AccessibilityNodeInfo node = findInputNode(root);
 				if (node == null) {
 					return false;

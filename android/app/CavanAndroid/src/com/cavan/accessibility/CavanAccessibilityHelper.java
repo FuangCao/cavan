@@ -307,6 +307,10 @@ public class CavanAccessibilityHelper {
 		return null;
 	}
 
+	public static AccessibilityNodeInfo findNodeByClass(AccessibilityNodeInfo root, Class<?> clazz) {
+		return findNodeByClassName(root, clazz.getName());
+	}
+
 	public static AccessibilityNodeInfo findChildByDescription(AccessibilityNodeInfo parent, String desc) {
 		int childs = parent.getChildCount();
 
