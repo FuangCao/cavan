@@ -76,7 +76,7 @@ ssize_t tcp_dd_package_recv(struct network_client *client, struct tcp_dd_package
 
 	rdlen = client->recv(client, pkg, sizeof(struct tcp_dd_package));
 	if (rdlen < (ssize_t) TCP_DD_PKG_BODY_OFFSET) {
-		pr_red_info("Invalid package length %" PRINT_FORMAT_SSIZE, rdlen);
+		pr_red_info("Invalid package length %ld", (long) rdlen);
 
 		if (rdlen < 0) {
 			return rdlen;

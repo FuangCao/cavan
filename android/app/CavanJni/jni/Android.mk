@@ -28,8 +28,10 @@ CAVAN_APP_LIST := $(foreach app,$(CAVAN_APP_SRC_FILES),$(basename $(notdir $(app
 CAVAN_ANDROID_VERSION := $(firstword $(subst ., ,$(PLATFORM_VERSION)))
 CAVAN_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/android/include
 CAVAN_CFLAGS := -DCAVAN_ARCH_ARM -DCAVAN -DCONFIG_ANDROID -DCONFIG_ANDROID_VERSION=$(CAVAN_ANDROID_VERSION) -DCONFIG_ANDROID_NDK
-CAVAN_CFLAGS += -Wall -Wundef -Wextra -Werror -Wno-unused-parameter -Wno-gnu-designator -Wno-overloaded-virtual
+CAVAN_CFLAGS += -Wall -Wundef -Wextra -Werror -Wno-unused-parameter -Wno-gnu-designator
 CAVAN_CFLAGS += -include $(LOCAL_PATH)/android/include/android.h -include $(LOCAL_PATH)/include/cavan/config.h
+
+CAVAN_CPPFLAGS = $(CAVAN_CFLAGS) -Wno-overloaded-virtual
 
 CAVAN_LDLIBS = -llog -landroid
 CAVAN_OUT_PATH := $(TARGET_OBJS)
@@ -58,6 +60,7 @@ $(foreach app,$(CAVAN_APP_SRC_FILES),$(eval $(call cavan-build-app-lib,$(app))))
 include $(CLEAR_VARS)
 LOCAL_MODULE := libcavan-static
 LOCAL_CFLAGS := $(CAVAN_CFLAGS)
+LOCAL_CPPFLAGS := $(CAVAN_CPPFLAGS)
 LOCAL_C_INCLUDES := $(CAVAN_C_INCLUDES)
 LOCAL_SRC_FILES := $(CAVAN_LIB_SRC_FILES)
 include $(BUILD_STATIC_LIBRARY)
@@ -65,6 +68,7 @@ include $(BUILD_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_MODULE := libcavan-jni
 LOCAL_CFLAGS := $(CAVAN_CFLAGS)
+LOCAL_CPPFLAGS := $(CAVAN_CPPFLAGS)
 LOCAL_C_INCLUDES := $(CAVAN_C_INCLUDES)
 LOCAL_SRC_FILES := $(CAVAN_NATIVE_C) $(CAVAN_JNI_PATH)/CavanMain.c $(CAVAN_JNI_PATH)/com_cavan_cavanjni_CavanJni.c
 LOCAL_LDLIBS := $(CAVAN_LDLIBS)
@@ -73,6 +77,7 @@ include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_CFLAGS := $(CAVAN_CFLAGS)
+LOCAL_CPPFLAGS := $(CAVAN_CPPFLAGS)
 LOCAL_C_INCLUDES := $(CAVAN_C_INCLUDES) $(CAVAN_OUT_PATH)
 LOCAL_SRC_FILES := $(CAVAN_APP_CORE_SRC_FILES)
 LOCAL_MODULE := cavan-main

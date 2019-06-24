@@ -66,8 +66,8 @@ static void *ping_recv_thread(void *data)
 
 		seq = ping->seq;
 
-		println("%" PRINT_FORMAT_SSIZE " bytes from %s: icmp_seq=%d ttl=%d time=%lf ms",
-			rdlen, inet_ntoa(*(struct in_addr *) &ip->src_ip), seq, ip->ttl, (double) (clock_gettime_mono_ns() - pkg.pkg.time) / (1000 * 1000));
+		println("%ld bytes from %s: icmp_seq=%d ttl=%d time=%lf ms",
+			(long) rdlen, inet_ntoa(*(struct in_addr *) &ip->src_ip), seq, ip->ttl, (double) (clock_gettime_mono_ns() - pkg.pkg.time) / (1000 * 1000));
 	}
 
 	return NULL;
