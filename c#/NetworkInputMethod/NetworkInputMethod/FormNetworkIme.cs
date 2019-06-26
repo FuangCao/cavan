@@ -133,7 +133,11 @@ namespace NetworkInputMethod
 
         public FormNetworkIme()
         {
-            mClockThread = new Thread(new ThreadStart(ClockThreadHandler));
+            mClockThread = new Thread(new ThreadStart(ClockThreadHandler))
+            {
+                IsBackground = true
+            };
+
             mService = new CavanTcpService(this);
 
             InitializeComponent();

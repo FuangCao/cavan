@@ -72,7 +72,11 @@ namespace NetworkInputMethod
             {
                 if (mThread == null)
                 {
-                    mThread = new Thread(new ThreadStart(runServiceThread));
+                    mThread = new Thread(new ThreadStart(runServiceThread))
+                    {
+                        IsBackground = true
+                    };
+
                     mThread.Start();
                 }
             }
@@ -111,7 +115,11 @@ namespace NetworkInputMethod
                     }
 
                     ParameterizedThreadStart start = new ParameterizedThreadStart(runTcpClientThread);
-                    Thread thread = new Thread(start);
+                    Thread thread = new Thread(start)
+                    {
+                        IsBackground = true
+                    };
+
                     thread.Start(conn);
                 }
             }

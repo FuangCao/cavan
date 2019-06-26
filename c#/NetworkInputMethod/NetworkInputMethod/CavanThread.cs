@@ -16,7 +16,11 @@ namespace NetworkInputMethod
 
         public CavanThread(string name, ThreadStart loop)
         {
-            mThread = new Thread(new ThreadStart(MainLoop));
+            mThread = new Thread(new ThreadStart(MainLoop))
+            {
+                IsBackground = true
+            };
+
             mMainLoop = loop;
             mName = name;
         }
