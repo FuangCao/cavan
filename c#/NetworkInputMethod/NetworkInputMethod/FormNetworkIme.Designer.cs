@@ -147,8 +147,8 @@
             this.toolStripMenuItemAutoRun.Name = "toolStripMenuItemAutoRun";
             this.toolStripMenuItemAutoRun.Size = new System.Drawing.Size(152, 22);
             this.toolStripMenuItemAutoRun.Text = "开机启动";
-            this.toolStripMenuItemAutoRun.CheckedChanged += new System.EventHandler(this.toolStripMenuItemAutoRun_CheckedChanged);
             this.toolStripMenuItemAutoRun.DropDownOpening += new System.EventHandler(this.toolStripMenuItemAutoRun_DropDownOpening);
+            this.toolStripMenuItemAutoRun.Click += new System.EventHandler(this.toolStripMenuItemAutoRun_Click);
             // 
             // toolStripMenuItemNetworkImeAuto
             // 
@@ -156,7 +156,7 @@
             this.toolStripMenuItemNetworkImeAuto.Name = "toolStripMenuItemNetworkImeAuto";
             this.toolStripMenuItemNetworkImeAuto.Size = new System.Drawing.Size(152, 22);
             this.toolStripMenuItemNetworkImeAuto.Text = "网络输入法";
-            this.toolStripMenuItemNetworkImeAuto.CheckedChanged += new System.EventHandler(this.toolStripMenuItemNetworkImeAuto_CheckedChanged);
+            this.toolStripMenuItemNetworkImeAuto.Click += new System.EventHandler(this.toolStripMenuItemNetworkImeAuto_Click);
             // 
             // toolStripMenuItemWebProxyAuto
             // 
@@ -164,7 +164,7 @@
             this.toolStripMenuItemWebProxyAuto.Name = "toolStripMenuItemWebProxyAuto";
             this.toolStripMenuItemWebProxyAuto.Size = new System.Drawing.Size(152, 22);
             this.toolStripMenuItemWebProxyAuto.Text = "Web 代理";
-            this.toolStripMenuItemWebProxyAuto.CheckedChanged += new System.EventHandler(this.toolStripMenuItemWebProxyAuto_CheckedChanged);
+            this.toolStripMenuItemWebProxyAuto.Click += new System.EventHandler(this.toolStripMenuItemWebProxyAuto_Click);
             // 
             // toolStripMenuItemServers
             // 

@@ -992,19 +992,19 @@ namespace NetworkInputMethod
             toolStripMenuItemWebProxyAuto.Checked = Settings.Default.WebProxyEnable;
         }
 
-        private void toolStripMenuItemNetworkImeAuto_CheckedChanged(object sender, EventArgs e)
+        private void toolStripMenuItemAutoRun_Click(object sender, EventArgs e)
+        {
+            setAutoRunEnable(toolStripMenuItemAutoRun.Checked);
+        }
+
+        private void toolStripMenuItemNetworkImeAuto_Click(object sender, EventArgs e)
         {
             Settings.Default.NetworkImeEnable = toolStripMenuItemNetworkImeAuto.Checked;
         }
 
-        private void toolStripMenuItemWebProxyAuto_CheckedChanged(object sender, EventArgs e)
+        private void toolStripMenuItemWebProxyAuto_Click(object sender, EventArgs e)
         {
             Settings.Default.WebProxyEnable = toolStripMenuItemWebProxyAuto.Checked;
-        }
-
-        private void toolStripMenuItemAutoRun_CheckedChanged(object sender, EventArgs e)
-        {
-            setAutoRunEnable(toolStripMenuItemAutoRun.Checked);
         }
     }
 
