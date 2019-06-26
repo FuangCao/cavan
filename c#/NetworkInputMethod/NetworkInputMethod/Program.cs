@@ -31,6 +31,8 @@ namespace NetworkInputMethod
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.Run(new FormNetworkIme());
 
+                Settings.Default.Save();
+
                 mutex.ReleaseMutex();
             }
             else

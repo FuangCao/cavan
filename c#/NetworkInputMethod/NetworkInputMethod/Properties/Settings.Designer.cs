@@ -22,5 +22,53 @@ namespace NetworkInputMethod.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool WebProxyEnable {
+            get {
+                return ((bool)(this["WebProxyEnable"]));
+            }
+            set {
+                this["WebProxyEnable"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("9090")]
+        public int WebProxyPort {
+            get {
+                return ((int)(this["WebProxyPort"]));
+            }
+            set {
+                this["WebProxyPort"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool NetworkImeEnable {
+            get {
+                return ((bool)(this["NetworkImeEnable"]));
+            }
+            set {
+                this["NetworkImeEnable"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("8864")]
+        public int NetworkImePort {
+            get {
+                return ((int)(this["NetworkImePort"]));
+            }
+            set {
+                this["NetworkImePort"] = value;
+            }
+        }
     }
 }

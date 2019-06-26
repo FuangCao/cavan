@@ -9,6 +9,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.IO;
 using System.Collections;
+using NetworkInputMethod.Properties;
 
 namespace NetworkInputMethod
 {
@@ -20,6 +21,7 @@ namespace NetworkInputMethod
         {
             mService = new CavanTcpService(this);
             InitializeComponent();
+            textBoxPort.Text = Settings.Default.WebProxyPort.ToString();
         }
 
         private void buttonStartStop_Click(object sender, EventArgs e)
@@ -37,11 +39,13 @@ namespace NetworkInputMethod
 
         public override void onTcpServiceStarted(object sender, EventArgs e)
         {
+            Settings.Default.WebProxyPort = mService.Port;
             buttonStartStop.Text = "停止";
         }
 
         public override void onTcpServiceStopped(object sender, EventArgs e)
         {
+            Settings.Default.WebProxyEnable = false;
             buttonStartStop.Text = "启动";
         }
 
@@ -59,6 +63,14 @@ namespace NetworkInputMethod
         public override void onTcpClientDisconnected(object sender, EventArgs e)
         {
             listBoxClients.Items.Remove(sender);
+        }
+
+        private void FormWebProxyService_Load(object sender, EventArgs e)
+        {
+            if (Settings.Default.WebProxyEnable)
+            {
+                buttonStartStop.PerformClick();
+            }
         }
     }
 

@@ -80,6 +80,7 @@
             this.Controls.Add(this.textBoxUrl);
             this.Name = "FormWebProxyService";
             this.Text = "WebProxyService";
+            this.Load += new System.EventHandler(this.FormWebProxyService_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

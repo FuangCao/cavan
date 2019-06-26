@@ -11,9 +11,12 @@ namespace NetworkInputMethod
     {
         public void Invoke(EventHandler handler, object sender, EventArgs e)
         {
-            if (!IsDisposed)
+            try
             {
                 base.Invoke(handler, sender, e);
+            }
+            catch (Exception)
+            {
             }
         }
 

@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Collections;
 using System.Diagnostics;
 using Microsoft.Win32;
+using NetworkInputMethod.Properties;
 
 namespace NetworkInputMethod
 {
@@ -136,14 +137,25 @@ namespace NetworkInputMethod
             mService = new CavanTcpService(this);
 
             InitializeComponent();
+            textBoxPort.Text = Settings.Default.NetworkImePort.ToString();
             comboBoxSend.SelectedIndex = 0;
             comboBoxRepeat.SelectedIndex = 0;
         }
 
         private void FormNetworkIme_Load(object sender, EventArgs e)
         {
-            buttonStart_Click(sender, e);
             mClockThread.Start();
+
+            if (Settings.Default.NetworkImeEnable)
+            {
+                buttonStart.PerformClick();
+            }
+
+            if (Settings.Default.WebProxyEnable)
+            {
+                mFormWebProxy = new FormWebProxyService();
+                mFormWebProxy.Show();
+            }
         }
 
         private void UpdateClock(DateTime date)
@@ -422,12 +434,10 @@ namespace NetworkInputMethod
             if (mService.Running)
             {
                 mService.stop();
-                buttonStart.Text = "启动";
             }
             else
             {
                 mService.start();
-                buttonStart.Text = "停止";
                 SetClipboardViewer();
             }
         }
@@ -550,12 +560,16 @@ namespace NetworkInputMethod
 
         public override void onTcpServiceStarted(object sender, EventArgs e)
         {
+            Settings.Default.NetworkImePort = mService.Port;
             labelStatus.Text = "服务器已启动";
+            buttonStart.Text = "停止";
         }
 
         public override void onTcpServiceStopped(object sender, EventArgs e)
         {
+            Settings.Default.NetworkImeEnable = false;
             labelStatus.Text = "服务器已停止";
+            buttonStart.Text = "启动";
         }
 
         public override void onTcpServiceWaiting(object sender, EventArgs e)
@@ -582,6 +596,8 @@ namespace NetworkInputMethod
 
         private void FormNetworkIme_FormClosing(object sender, FormClosingEventArgs e)
         {
+            Settings.Default.Save();
+
             e.Cancel = true;
             WindowState = FormWindowState.Minimized;
             ShowInTaskbar = false;
@@ -932,11 +948,6 @@ namespace NetworkInputMethod
             }
         }
 
-        private void toolStripMenuItemAutoRun_Click(object sender, EventArgs e)
-        {
-            setAutoRunEnable(toolStripMenuItemAutoRun.Checked);
-        }
-
         private void contextMenuStrip_Opening(object sender, CancelEventArgs e)
         {
             toolStripMenuItemAutoRun.Checked = isAutoRunEnabled();
@@ -973,6 +984,27 @@ namespace NetworkInputMethod
             }
 
             mFormUrlBuilder.Show();
+        }
+
+        private void toolStripMenuItemAutoRun_DropDownOpening(object sender, EventArgs e)
+        {
+            toolStripMenuItemNetworkImeAuto.Checked = Settings.Default.NetworkImeEnable;
+            toolStripMenuItemWebProxyAuto.Checked = Settings.Default.WebProxyEnable;
+        }
+
+        private void toolStripMenuItemNetworkImeAuto_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.NetworkImeEnable = toolStripMenuItemNetworkImeAuto.Checked;
+        }
+
+        private void toolStripMenuItemWebProxyAuto_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.WebProxyEnable = toolStripMenuItemWebProxyAuto.Checked;
+        }
+
+        private void toolStripMenuItemAutoRun_CheckedChanged(object sender, EventArgs e)
+        {
+            setAutoRunEnable(toolStripMenuItemAutoRun.Checked);
         }
     }
 
