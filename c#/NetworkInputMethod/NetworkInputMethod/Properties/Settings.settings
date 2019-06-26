@@ -12,7 +12,7 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="NetworkImePort" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">8864</Value>
+      <Value Profile="(Default)">8865</Value>
     </Setting>
   </Settings>
 </SettingsFile>

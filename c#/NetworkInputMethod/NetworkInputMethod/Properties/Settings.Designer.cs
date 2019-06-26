@@ -61,7 +61,7 @@ namespace NetworkInputMethod.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("8864")]
+        [global::System.Configuration.DefaultSettingValueAttribute("8865")]
         public int NetworkImePort {
             get {
                 return ((int)(this["NetworkImePort"]));
