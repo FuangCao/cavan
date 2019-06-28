@@ -144,6 +144,8 @@ namespace NetworkInputMethod
                 {
                     links.Remove(link);
                 }
+
+                item.SubItems[0].Text = links.Count.ToString();
             }
         }
 
@@ -196,11 +198,9 @@ namespace NetworkInputMethod
             var items = listViewClients.SelectedItems;
             if (items != null && items.Count > 0)
             {
-                var links = items[0].Tag as HashSet<ReverseProxyLink>;
-                var link = links.First();
-
-                form.ClientName = link.Hostname;
-                form.ClientAddress = link.RemoteAddress.ToString();
+                var item = items[0];
+                form.ClientName = item.SubItems[2].Text;
+                form.ClientAddress = item.SubItems[1].Text;
             }
 
             if (form.ShowDialog() == DialogResult.OK)
@@ -477,11 +477,6 @@ namespace NetworkInputMethod
                     case "linked":
                         if (processCommandLinked(args))
                         {
-                            if (mPeer != null)
-                            {
-                                mPeer.disconnect();
-                            }
-
                             return false;
                         }
                         break;
@@ -489,6 +484,19 @@ namespace NetworkInputMethod
             }
 
             return false;
+        }
+
+        public override void onDisconnected()
+        {
+            base.onDisconnected();
+
+            var peer = mPeer;
+            mPeer = null;
+
+            if (peer != null)
+            {
+                peer.disconnect();
+            }
         }
 
         private bool processCommandLinked(string[] args)
@@ -499,23 +507,27 @@ namespace NetworkInputMethod
                 return false;
             }
 
-            if (args.Length > 1)
+            try
             {
-                try
+                if (args.Length > 1)
                 {
-                    var error = Convert.ToInt32(args[1]);
-                    if (error != 0)
+                    if (Convert.ToInt32(args[1]) != 0)
                     {
                         return false;
                     }
                 }
-                catch (Exception)
-                {
-                    return true;
-                }
-            }
 
-            TcpProxyClient.ProxyLoop(Client, peer.Client);
+                TcpProxyClient.ProxyLoop(Client, peer.Client);
+            }
+            catch (Exception)
+            {
+                return true;
+            }
+            finally
+            {
+                peer.disconnect();
+                mPeer = null;
+            }
 
             return true;
         }

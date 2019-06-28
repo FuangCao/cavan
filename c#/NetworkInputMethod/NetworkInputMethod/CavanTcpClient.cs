@@ -332,7 +332,7 @@ namespace NetworkInputMethod
             }
         }
 
-        public void onConnected()
+        public virtual void onConnected()
         {
             if (mService != null)
             {
@@ -340,7 +340,7 @@ namespace NetworkInputMethod
             }
         }
 
-        public void onDisconnected()
+        public virtual void onDisconnected()
         {
             if (mService != null)
             {
