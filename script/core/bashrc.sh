@@ -26,13 +26,16 @@ KERNEL_HOME="${PROJECT_HOME}/kernel"
 UBOOT_HOME="${PROJECT_HOME}/u-boot"
 FSLDROID_HOME="${PROJECT_HOME}/fsldroid"
 
-if [ "${JDK_VERSION}" ]
-then
-	[[ ${JDK_VERSION} = [0-9]* ]] && JDK_VERSION="jdk${JDK_VERSION}"
-	JAVA_HOME="${TOOLS_HOME}/${JDK_VERSION}"
-else
-	JAVA_HOME="${TOOLS_HOME}/jdk"
-fi
+[ -d "${TOOLS_HOME}" ] &&
+{
+	if [ "${JDK_VERSION}" ]
+	then
+		[[ ${JDK_VERSION} = [0-9]* ]] && JDK_VERSION="jdk${JDK_VERSION}"
+		JAVA_HOME="${TOOLS_HOME}/${JDK_VERSION}"
+	else
+		JAVA_HOME="${TOOLS_HOME}/jdk"
+	fi
+}
 
 JRE_HOME="${JAVA_HOME}/jre"
 TOOLS_ANDROID="${TOOLS_HOME}/android"
