@@ -94,5 +94,16 @@ namespace NetworkInputMethod.Properties {
                 this["ReverseProxyPort"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.Collections.Specialized.StringCollection ReverseProxyMap {
+            get {
+                return ((global::System.Collections.Specialized.StringCollection)(this["ReverseProxyMap"]));
+            }
+            set {
+                this["ReverseProxyMap"] = value;
+            }
+        }
     }
 }

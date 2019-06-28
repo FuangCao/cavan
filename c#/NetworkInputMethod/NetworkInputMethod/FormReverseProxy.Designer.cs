@@ -31,6 +31,7 @@
             this.components = new System.ComponentModel.Container();
             this.listViewProxys = new System.Windows.Forms.ListView();
             this.columnHeaderProxyState = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeaderProxyLinkCount = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderProxyLocalPort = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderTarget = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderServer = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -50,7 +51,7 @@
             this.buttonSwitch = new System.Windows.Forms.Button();
             this.textBoxPort = new System.Windows.Forms.TextBox();
             this.timerKeepAlive = new System.Windows.Forms.Timer(this.components);
-            this.columnHeaderProxyLinkCount = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.textBoxLinkCount = new System.Windows.Forms.TextBox();
             this.contextMenuStripProxy.SuspendLayout();
             this.contextMenuStripClient.SuspendLayout();
             this.SuspendLayout();
@@ -79,6 +80,11 @@
             // columnHeaderProxyState
             // 
             this.columnHeaderProxyState.Text = "状态";
+            // 
+            // columnHeaderProxyLinkCount
+            // 
+            this.columnHeaderProxyLinkCount.Text = "连接数";
+            this.columnHeaderProxyLinkCount.Width = 50;
             // 
             // columnHeaderProxyLocalPort
             // 
@@ -180,12 +186,12 @@
             this.contextMenuStripClient.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItemAddProxy});
             this.contextMenuStripClient.Name = "contextMenuStripClient";
-            this.contextMenuStripClient.Size = new System.Drawing.Size(153, 48);
+            this.contextMenuStripClient.Size = new System.Drawing.Size(101, 26);
             // 
             // toolStripMenuItemAddProxy
             // 
             this.toolStripMenuItemAddProxy.Name = "toolStripMenuItemAddProxy";
-            this.toolStripMenuItemAddProxy.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemAddProxy.Size = new System.Drawing.Size(100, 22);
             this.toolStripMenuItemAddProxy.Text = "映射";
             this.toolStripMenuItemAddProxy.Click += new System.EventHandler(this.toolStripMenuItemAddProxy_Click);
             // 
@@ -213,22 +219,27 @@
             this.timerKeepAlive.Interval = 10000;
             this.timerKeepAlive.Tick += new System.EventHandler(this.timerKeepAlive_Tick);
             // 
-            // columnHeaderProxyLinkCount
+            // textBoxLinkCount
             // 
-            this.columnHeaderProxyLinkCount.Text = "连接数";
-            this.columnHeaderProxyLinkCount.Width = 50;
+            this.textBoxLinkCount.Location = new System.Drawing.Point(60, 12);
+            this.textBoxLinkCount.Name = "textBoxLinkCount";
+            this.textBoxLinkCount.ReadOnly = true;
+            this.textBoxLinkCount.Size = new System.Drawing.Size(100, 21);
+            this.textBoxLinkCount.TabIndex = 4;
+            this.textBoxLinkCount.Text = "0";
             // 
             // FormReverseProxy
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 561);
+            this.Controls.Add(this.textBoxLinkCount);
             this.Controls.Add(this.listViewProxys);
             this.Controls.Add(this.listViewClients);
             this.Controls.Add(this.buttonSwitch);
             this.Controls.Add(this.textBoxPort);
             this.Name = "FormReverseProxy";
-            this.Text = "FormReverseProxy";
+            this.Text = "反向代理";
             this.Load += new System.EventHandler(this.FormReverseProxy_Load);
             this.contextMenuStripProxy.ResumeLayout(false);
             this.contextMenuStripClient.ResumeLayout(false);
@@ -261,5 +272,6 @@
         private System.Windows.Forms.ColumnHeader columnHeaderProxyState;
         private System.Windows.Forms.Timer timerKeepAlive;
         private System.Windows.Forms.ColumnHeader columnHeaderProxyLinkCount;
+        private System.Windows.Forms.TextBox textBoxLinkCount;
     }
 }

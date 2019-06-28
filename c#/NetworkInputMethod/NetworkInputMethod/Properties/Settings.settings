@@ -20,5 +20,8 @@
     <Setting Name="ReverseProxyPort" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">8868</Value>
     </Setting>
+    <Setting Name="ReverseProxyMap" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -166,7 +166,7 @@
             this.Controls.Add(this.textBoxServer);
             this.Name = "FormAddProxy";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "FormAddProxy";
+            this.Text = "添加映射";
             this.ResumeLayout(false);
             this.PerformLayout();
 

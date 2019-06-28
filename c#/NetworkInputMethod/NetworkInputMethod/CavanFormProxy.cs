@@ -10,10 +10,10 @@ namespace NetworkInputMethod
     {
         public CavanSubForm()
         {
-            FormClosing += Form_FormClosing;
+            FormClosing += onCavanSubFormClosing;
         }
 
-        private void Form_FormClosing(object sender, FormClosingEventArgs e)
+        protected virtual void onCavanSubFormClosing(object sender, FormClosingEventArgs e)
         {
             Visible = false;
             e.Cancel = true;

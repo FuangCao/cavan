@@ -3,6 +3,7 @@ using System.Net;
 using System.Threading;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
@@ -24,6 +25,7 @@ namespace NetworkInputMethod
             InitializeComponent();
             textBoxPort.Text = Settings.Default.ReverseProxyPort.ToString();
             mService = new CavanTcpService(this);
+            loadProxyMap();
         }
 
         public string LocalUrl
@@ -131,8 +133,15 @@ namespace NetworkInputMethod
             item.SubItems[0].Text = links.Count.ToString();
         }
 
+        public override void onTcpClientConnected(object sender, EventArgs e)
+        {
+            textBoxLinkCount.Text = mService.Count.ToString();
+        }
+
         public override void onTcpClientDisconnected(object sender, EventArgs e)
         {
+            textBoxLinkCount.Text = mService.Count.ToString();
+
             var link = sender as ReverseProxyLink;
             var item = link.Item;
 
@@ -205,7 +214,6 @@ namespace NetworkInputMethod
 
             if (form.ShowDialog() == DialogResult.OK)
             {
-
                 var service = new ReverseProxyService
                 {
                     Form = this,
@@ -221,11 +229,75 @@ namespace NetworkInputMethod
             }
         }
 
+        private void loadProxyMap()
+        {
+            var coll = Settings.Default.ReverseProxyMap;
+            if (coll == null)
+            {
+                return;
+            }
+
+            foreach (var map in coll)
+            {
+                var args = map.Split('|');
+                if (args.Length < 5)
+                {
+                    continue;
+                }
+
+                var service = new ReverseProxyService
+                {
+                    Form = this,
+                    Port = Convert.ToUInt16(args[0]),
+                    TargetUrl = args[1],
+                    ServerUrl = args[2],
+                    ClientAddress = args[3],
+                    ClientName = args[4]
+                };
+
+                service.addToListView(listViewProxys);
+            }
+        }
+
+        private void saveProxyMap()
+        {
+            var coll = new StringCollection();
+
+            foreach (ListViewItem item in listViewProxys.Items)
+            {
+                var service = item.Tag as ReverseProxyService;
+                var builder = new StringBuilder();
+
+                builder.Append(service.Port).Append('|');
+                builder.Append(service.TargetUrl).Append('|');
+                builder.Append(service.ServerUrl).Append('|');
+                builder.Append(service.ClientAddress).Append('|');
+                builder.Append(service.ClientName);
+
+                coll.Add(builder.ToString());
+            }
+
+            Settings.Default.ReverseProxyMap = coll;
+            Settings.Default.Save();
+        }
+
+        protected override void onCavanSubFormClosing(object sender, FormClosingEventArgs e)
+        {
+            base.onCavanSubFormClosing(sender, e);
+            saveProxyMap();
+        }
+
         private void FormReverseProxy_Load(object sender, EventArgs e)
         {
             if (Settings.Default.ReverseProxyEnable)
             {
                 buttonSwitch.PerformClick();
+
+                foreach (ListViewItem item in listViewProxys.Items)
+                {
+                    var service = item.Tag as ReverseProxyService;
+                    service.start();
+                }
             }
         }
 
