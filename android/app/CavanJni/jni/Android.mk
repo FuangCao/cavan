@@ -31,7 +31,7 @@ CAVAN_CFLAGS := -DCAVAN_ARCH_ARM -DCAVAN -DCONFIG_ANDROID -DCONFIG_ANDROID_VERSI
 CAVAN_CFLAGS += -Wall -Wundef -Wextra -Werror -Wno-unused-parameter -Wno-gnu-designator
 CAVAN_CFLAGS += -include $(LOCAL_PATH)/android/include/android.h -include $(LOCAL_PATH)/include/cavan/config.h
 
-CAVAN_CPPFLAGS = $(CAVAN_CFLAGS) -Wno-overloaded-virtual
+CAVAN_CPPFLAGS := -Wno-overloaded-virtual
 
 CAVAN_LDLIBS = -llog -landroid
 CAVAN_OUT_PATH := $(TARGET_OBJS)
@@ -46,6 +46,7 @@ include $$(CLEAR_VARS)
 LOCAL_APP_NAME := $$(basename $$(notdir $1))
 LOCAL_MODULE := libcavan_app_$$(LOCAL_APP_NAME)
 LOCAL_CFLAGS := $$(CAVAN_CFLAGS) -Dmain=do_cavan_$$(LOCAL_APP_NAME)
+LOCAL_CPPFLAGS := $$(CAVAN_CPPFLAGS)
 LOCAL_C_INCLUDES := $$(CAVAN_C_INCLUDES)
 LOCAL_SRC_FILES := $1
 LOCAL_STATIC_LIBRARIES := libcavan-static

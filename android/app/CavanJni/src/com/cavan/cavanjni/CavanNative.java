@@ -4,531 +4,11 @@ package com.cavan.cavanjni;
 
 import java.util.HashMap;
 
-class CavanCommandAbspath extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doAbspath(async, args);
-	}
-}
-
-class CavanCommandAlarm extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doAlarm(async, args);
-	}
-}
-
-class CavanCommandAlc5671Clock extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doAlc5671Clock(async, args);
-	}
-}
-
 class CavanCommandAscii extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
 		return CavanNative.doAscii(async, args);
-	}
-}
-
-class CavanCommandAutoDd extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doAutoDd(async, args);
-	}
-}
-
-class CavanCommandAutoInput extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doAutoInput(async, args);
-	}
-}
-
-class CavanCommandAutoMount extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doAutoMount(async, args);
-	}
-}
-
-class CavanCommandBattery extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doBattery(async, args);
-	}
-}
-
-class CavanCommandBatteryLevel extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doBatteryLevel(async, args);
-	}
-}
-
-class CavanCommandBdata extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doBdata(async, args);
-	}
-}
-
-class CavanCommandBkernel extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doBkernel(async, args);
-	}
-}
-
-class CavanCommandBmpView extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doBmpView(async, args);
-	}
-}
-
-class CavanCommandBootimg extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doBootimg(async, args);
-	}
-}
-
-class CavanCommandBramdisk extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doBramdisk(async, args);
-	}
-}
-
-class CavanCommandBrecovery extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doBrecovery(async, args);
-	}
-}
-
-class CavanCommandBsystem extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doBsystem(async, args);
-	}
-}
-
-class CavanCommandBuboot extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doBuboot(async, args);
-	}
-}
-
-class CavanCommandCalculator extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doCalculator(async, args);
-	}
-}
-
-class CavanCommandChroot extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doChroot(async, args);
-	}
-}
-
-class CavanCommandChtty extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doChtty(async, args);
-	}
-}
-
-class CavanCommandClock extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doClock(async, args);
-	}
-}
-
-class CavanCommandCopy extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doCopy(async, args);
-	}
-}
-
-class CavanCommandDd extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doDd(async, args);
-	}
-}
-
-class CavanCommandDf extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doDf(async, args);
-	}
-}
-
-class CavanCommandDicGenerator extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doDicGenerator(async, args);
-	}
-}
-
-class CavanCommandDisplay extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doDisplay(async, args);
-	}
-}
-
-class CavanCommandDos2unix extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doDos2unix(async, args);
-	}
-}
-
-class CavanCommandEavooSellStatistic extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doEavooSellStatistic(async, args);
-	}
-}
-
-class CavanCommandEcc extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doEcc(async, args);
-	}
-}
-
-class CavanCommandEventRepeater extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doEventRepeater(async, args);
-	}
-}
-
-class CavanCommandExt2 extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doExt2(async, args);
-	}
-}
-
-class CavanCommandFbCapture extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doFbCapture(async, args);
-	}
-}
-
-class CavanCommandFdisk extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doFdisk(async, args);
-	}
-}
-
-class CavanCommandFileCrc32 extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doFileCrc32(async, args);
-	}
-}
-
-class CavanCommandFileJoin extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doFileJoin(async, args);
-	}
-}
-
-class CavanCommandFileLoop extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doFileLoop(async, args);
-	}
-}
-
-class CavanCommandFileSplit extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doFileSplit(async, args);
-	}
-}
-
-class CavanCommandFtp extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doFtp(async, args);
-	}
-}
-
-class CavanCommandFtpServer extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doFtpServer(async, args);
-	}
-}
-
-class CavanCommandGitDaemon extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doGitDaemon(async, args);
-	}
-}
-
-class CavanCommandHeartRate extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doHeartRate(async, args);
-	}
-}
-
-class CavanCommandHttpClient extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doHttpClient(async, args);
-	}
-}
-
-class CavanCommandHttpSender extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doHttpSender(async, args);
-	}
-}
-
-class CavanCommandHttpService extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doHttpService(async, args);
-	}
-}
-
-class CavanCommandI2c extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doI2c(async, args);
-	}
-}
-
-class CavanCommandImageDd extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doImageDd(async, args);
-	}
-}
-
-class CavanCommandInotify extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doInotify(async, args);
-	}
-}
-
-class CavanCommandInput extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doInput(async, args);
-	}
-}
-
-class CavanCommandInputServer extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doInputServer(async, args);
-	}
-}
-
-class CavanCommandJw650Lcd extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doJw650Lcd(async, args);
-	}
-}
-
-class CavanCommandJwpUdp extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doJwpUdp(async, args);
-	}
-}
-
-class CavanCommandLm49350Clock extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doLm49350Clock(async, args);
-	}
-}
-
-class CavanCommandLoopRun extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doLoopRun(async, args);
-	}
-}
-
-class CavanCommandMd5sum extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doMd5sum(async, args);
-	}
-}
-
-class CavanCommandMessageQueue extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doMessageQueue(async, args);
-	}
-}
-
-class CavanCommandMkdir extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doMkdir(async, args);
-	}
-}
-
-class CavanCommandMknp extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doMknp(async, args);
-	}
-}
-
-class CavanCommandMksdcard extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doMksdcard(async, args);
-	}
-}
-
-class CavanCommandModemUpgrade extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doModemUpgrade(async, args);
-	}
-}
-
-class CavanCommandMount extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doMount(async, args);
-	}
-}
-
-class CavanCommandMove extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doMove(async, args);
-	}
-}
-
-class CavanCommandMtd extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doMtd(async, args);
-	}
-}
-
-class CavanCommandNetDiscovery extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doNetDiscovery(async, args);
-	}
-}
-
-class CavanCommandNetMonitor extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doNetMonitor(async, args);
-	}
-}
-
-class CavanCommandNetwork extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doNetwork(async, args);
-	}
-}
-
-class CavanCommandP2p extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doP2p(async, args);
 	}
 }
 
@@ -540,11 +20,579 @@ class CavanCommandPartProbe extends CavanNativeCommand {
 	}
 }
 
-class CavanCommandPartShow extends CavanNativeCommand {
+class CavanCommandLm49350Clock extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doPartShow(async, args);
+		return CavanNative.doLm49350Clock(async, args);
+	}
+}
+
+class CavanCommandUmount extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doUmount(async, args);
+	}
+}
+
+class CavanCommandWebProxy extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doWebProxy(async, args);
+	}
+}
+
+class CavanCommandFtpServer extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doFtpServer(async, args);
+	}
+}
+
+class CavanCommandHttpSender extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doHttpSender(async, args);
+	}
+}
+
+class CavanCommandChroot extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doChroot(async, args);
+	}
+}
+
+class CavanCommandInput extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doInput(async, args);
+	}
+}
+
+class CavanCommandRedpacket extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doRedpacket(async, args);
+	}
+}
+
+class CavanCommandTcpInstall extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doTcpInstall(async, args);
+	}
+}
+
+class CavanCommandTftpDd extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doTftpDd(async, args);
+	}
+}
+
+class CavanCommandTouch extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doTouch(async, args);
+	}
+}
+
+class CavanCommandTftpCommand extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doTftpCommand(async, args);
+	}
+}
+
+class CavanCommandDos2unix extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doDos2unix(async, args);
+	}
+}
+
+class CavanCommandTextlen extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doTextlen(async, args);
+	}
+}
+
+class CavanCommandBrecovery extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doBrecovery(async, args);
+	}
+}
+
+class CavanCommandInputServer extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doInputServer(async, args);
+	}
+}
+
+class CavanCommandFileSplit extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doFileSplit(async, args);
+	}
+}
+
+class CavanCommandSha1sum extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doSha1sum(async, args);
+	}
+}
+
+class CavanCommandAutoDd extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doAutoDd(async, args);
+	}
+}
+
+class CavanCommandFileCrc32 extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doFileCrc32(async, args);
+	}
+}
+
+class CavanCommandSsh extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doSsh(async, args);
+	}
+}
+
+class CavanCommandUsb extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doUsb(async, args);
+	}
+}
+
+class CavanCommandHttpClient extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doHttpClient(async, args);
+	}
+}
+
+class CavanCommandEventRepeater extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doEventRepeater(async, args);
+	}
+}
+
+class CavanCommandBootimg extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doBootimg(async, args);
+	}
+}
+
+class CavanCommandCopy extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doCopy(async, args);
+	}
+}
+
+class CavanCommandMknp extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doMknp(async, args);
+	}
+}
+
+class CavanCommandSwanCheck extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanCheck(async, args);
+	}
+}
+
+class CavanCommandTcpCopy extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doTcpCopy(async, args);
+	}
+}
+
+class CavanCommandGitDaemon extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doGitDaemon(async, args);
+	}
+}
+
+class CavanCommandInotify extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doInotify(async, args);
+	}
+}
+
+class CavanCommandDd extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doDd(async, args);
+	}
+}
+
+class CavanCommandMessageQueue extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doMessageQueue(async, args);
+	}
+}
+
+class CavanCommandSu extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doSu(async, args);
+	}
+}
+
+class CavanCommandSprdWriteImei extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doSprdWriteImei(async, args);
+	}
+}
+
+class CavanCommandSwanMkfs extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanMkfs(async, args);
+	}
+}
+
+class CavanCommandVfat extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doVfat(async, args);
+	}
+}
+
+class CavanCommandMd5sum extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doMd5sum(async, args);
+	}
+}
+
+class CavanCommandMkdir extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doMkdir(async, args);
+	}
+}
+
+class CavanCommandSwanMac extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanMac(async, args);
+	}
+}
+
+class CavanCommandTtyMode extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doTtyMode(async, args);
+	}
+}
+
+class CavanCommandExt2 extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doExt2(async, args);
+	}
+}
+
+class CavanCommandWifi extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doWifi(async, args);
+	}
+}
+
+class CavanCommandRle extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doRle(async, args);
+	}
+}
+
+class CavanCommandFbCapture extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doFbCapture(async, args);
+	}
+}
+
+class CavanCommandHttpService extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doHttpService(async, args);
+	}
+}
+
+class CavanCommandBattery extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doBattery(async, args);
+	}
+}
+
+class CavanCommandJw650Lcd extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doJw650Lcd(async, args);
+	}
+}
+
+class CavanCommandFdisk extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doFdisk(async, args);
+	}
+}
+
+class CavanCommandEavooSellStatistic extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doEavooSellStatistic(async, args);
+	}
+}
+
+class CavanCommandSwanVk extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanVk(async, args);
+	}
+}
+
+class CavanCommandEcc extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doEcc(async, args);
+	}
+}
+
+class CavanCommandMove extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doMove(async, args);
+	}
+}
+
+class CavanCommandTftpCopy extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doTftpCopy(async, args);
+	}
+}
+
+class CavanCommandTcpDdServer extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doTcpDdServer(async, args);
+	}
+}
+
+class CavanCommandAbspath extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doAbspath(async, args);
+	}
+}
+
+class CavanCommandI2c extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doI2c(async, args);
+	}
+}
+
+class CavanCommandTcpDd extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doTcpDd(async, args);
+	}
+}
+
+class CavanCommandTftpAutoDd extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doTftpAutoDd(async, args);
+	}
+}
+
+class CavanCommandAutoMount extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doAutoMount(async, args);
+	}
+}
+
+class CavanCommandAutoInput extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doAutoInput(async, args);
+	}
+}
+
+class CavanCommandTcpKeypad extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doTcpKeypad(async, args);
+	}
+}
+
+class CavanCommandScreenMirror extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doScreenMirror(async, args);
+	}
+}
+
+class CavanCommandLoopRun extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doLoopRun(async, args);
+	}
+}
+
+class CavanCommandCalculator extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doCalculator(async, args);
+	}
+}
+
+class CavanCommandRoleChange extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doRoleChange(async, args);
+	}
+}
+
+class CavanCommandImageDd extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doImageDd(async, args);
+	}
+}
+
+class CavanCommandTcpProxy extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doTcpProxy(async, args);
+	}
+}
+
+class CavanCommandSprdAt extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doSprdAt(async, args);
+	}
+}
+
+class CavanCommandTee extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doTee(async, args);
+	}
+}
+
+class CavanCommandService extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doService(async, args);
+	}
+}
+
+class CavanCommandAlarm extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doAlarm(async, args);
 	}
 }
 
@@ -556,11 +604,91 @@ class CavanCommandPartTable extends CavanNativeCommand {
 	}
 }
 
-class CavanCommandPenetrator extends CavanNativeCommand {
+class CavanCommandSshd extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doPenetrator(async, args);
+		return CavanNative.doSshd(async, args);
+	}
+}
+
+class CavanCommandUsbCopy extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doUsbCopy(async, args);
+	}
+}
+
+class CavanCommandMount extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doMount(async, args);
+	}
+}
+
+class CavanCommandMksdcard extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doMksdcard(async, args);
+	}
+}
+
+class CavanCommandMtd extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doMtd(async, args);
+	}
+}
+
+class CavanCommandTcpExec extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doTcpExec(async, args);
+	}
+}
+
+class CavanCommandSystemInit extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doSystemInit(async, args);
+	}
+}
+
+class CavanCommandNetMonitor extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doNetMonitor(async, args);
+	}
+}
+
+class CavanCommandPartShow extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doPartShow(async, args);
+	}
+}
+
+class CavanCommandBuboot extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doBuboot(async, args);
+	}
+}
+
+class CavanCommandSwanFac extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanFac(async, args);
 	}
 }
 
@@ -572,11 +700,19 @@ class CavanCommandPing extends CavanNativeCommand {
 	}
 }
 
-class CavanCommandPollEvent extends CavanNativeCommand {
+class CavanCommandSshCopy extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doPollEvent(async, args);
+		return CavanNative.doSshCopy(async, args);
+	}
+}
+
+class CavanCommandSwanTs extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanTs(async, args);
 	}
 }
 
@@ -596,78 +732,6 @@ class CavanCommandRamdisk extends CavanNativeCommand {
 	}
 }
 
-class CavanCommandRedpacket extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doRedpacket(async, args);
-	}
-}
-
-class CavanCommandRemove extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doRemove(async, args);
-	}
-}
-
-class CavanCommandResize extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doResize(async, args);
-	}
-}
-
-class CavanCommandRle extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doRle(async, args);
-	}
-}
-
-class CavanCommandRoleChange extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doRoleChange(async, args);
-	}
-}
-
-class CavanCommandScreenMirror extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doScreenMirror(async, args);
-	}
-}
-
-class CavanCommandService extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doService(async, args);
-	}
-}
-
-class CavanCommandServiceManager extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doServiceManager(async, args);
-	}
-}
-
-class CavanCommandSha1sum extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doSha1sum(async, args);
-	}
-}
-
 class CavanCommandShowArgs extends CavanNativeCommand {
 
 	@Override
@@ -676,75 +740,27 @@ class CavanCommandShowArgs extends CavanNativeCommand {
 	}
 }
 
-class CavanCommandShowFile extends CavanNativeCommand {
+class CavanCommandDf extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doShowFile(async, args);
+		return CavanNative.doDf(async, args);
 	}
 }
 
-class CavanCommandShrink extends CavanNativeCommand {
+class CavanCommandDisplay extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doShrink(async, args);
+		return CavanNative.doDisplay(async, args);
 	}
 }
 
-class CavanCommandSprdAt extends CavanNativeCommand {
+class CavanCommandNetDiscovery extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doSprdAt(async, args);
-	}
-}
-
-class CavanCommandSprdWriteImei extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doSprdWriteImei(async, args);
-	}
-}
-
-class CavanCommandSsh extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doSsh(async, args);
-	}
-}
-
-class CavanCommandSshCopy extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doSshCopy(async, args);
-	}
-}
-
-class CavanCommandSshd extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doSshd(async, args);
-	}
-}
-
-class CavanCommandSshDd extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doSshDd(async, args);
-	}
-}
-
-class CavanCommandSu extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doSu(async, args);
+		return CavanNative.doNetDiscovery(async, args);
 	}
 }
 
@@ -756,115 +772,43 @@ class CavanCommandSudo extends CavanNativeCommand {
 	}
 }
 
-class CavanCommandSuperUpgrade extends CavanNativeCommand {
+class CavanCommandP2p extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doSuperUpgrade(async, args);
+		return CavanNative.doP2p(async, args);
 	}
 }
 
-class CavanCommandSwanCheck extends CavanNativeCommand {
+class CavanCommandFileLoop extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doSwanCheck(async, args);
+		return CavanNative.doFileLoop(async, args);
 	}
 }
 
-class CavanCommandSwanEmmc extends CavanNativeCommand {
+class CavanCommandResize extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doSwanEmmc(async, args);
+		return CavanNative.doResize(async, args);
 	}
 }
 
-class CavanCommandSwanFac extends CavanNativeCommand {
+class CavanCommandJwpUdp extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doSwanFac(async, args);
+		return CavanNative.doJwpUdp(async, args);
 	}
 }
 
-class CavanCommandSwanIpu extends CavanNativeCommand {
+class CavanCommandModemUpgrade extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doSwanIpu(async, args);
-	}
-}
-
-class CavanCommandSwanMac extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doSwanMac(async, args);
-	}
-}
-
-class CavanCommandSwanMd5 extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doSwanMd5(async, args);
-	}
-}
-
-class CavanCommandSwanMkfs extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doSwanMkfs(async, args);
-	}
-}
-
-class CavanCommandSwanSfdisk extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doSwanSfdisk(async, args);
-	}
-}
-
-class CavanCommandSwanTs extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doSwanTs(async, args);
-	}
-}
-
-class CavanCommandSwanUpgrade extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doSwanUpgrade(async, args);
-	}
-}
-
-class CavanCommandSwanVk extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doSwanVk(async, args);
-	}
-}
-
-class CavanCommandSwanVn extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doSwanVn(async, args);
-	}
-}
-
-class CavanCommandSystemInit extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doSystemInit(async, args);
+		return CavanNative.doModemUpgrade(async, args);
 	}
 }
 
@@ -876,59 +820,35 @@ class CavanCommandTcpBridge extends CavanNativeCommand {
 	}
 }
 
-class CavanCommandTcpCopy extends CavanNativeCommand {
+class CavanCommandShowFile extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doTcpCopy(async, args);
+		return CavanNative.doShowFile(async, args);
 	}
 }
 
-class CavanCommandTcpDd extends CavanNativeCommand {
+class CavanCommandBdata extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doTcpDd(async, args);
+		return CavanNative.doBdata(async, args);
 	}
 }
 
-class CavanCommandTcpDdServer extends CavanNativeCommand {
+class CavanCommandChtty extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doTcpDdServer(async, args);
+		return CavanNative.doChtty(async, args);
 	}
 }
 
-class CavanCommandTcpExec extends CavanNativeCommand {
+class CavanCommandAlc5671Clock extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doTcpExec(async, args);
-	}
-}
-
-class CavanCommandTcpInstall extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doTcpInstall(async, args);
-	}
-}
-
-class CavanCommandTcpKeypad extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doTcpKeypad(async, args);
-	}
-}
-
-class CavanCommandTcpProxy extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doTcpProxy(async, args);
+		return CavanNative.doAlc5671Clock(async, args);
 	}
 }
 
@@ -940,107 +860,43 @@ class CavanCommandTcpRepeater extends CavanNativeCommand {
 	}
 }
 
-class CavanCommandTee extends CavanNativeCommand {
+class CavanCommandShrink extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doTee(async, args);
+		return CavanNative.doShrink(async, args);
 	}
 }
 
-class CavanCommandTextlen extends CavanNativeCommand {
+class CavanCommandSwanIpu extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doTextlen(async, args);
+		return CavanNative.doSwanIpu(async, args);
 	}
 }
 
-class CavanCommandTftpAutoDd extends CavanNativeCommand {
+class CavanCommandPenetrator extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doTftpAutoDd(async, args);
+		return CavanNative.doPenetrator(async, args);
 	}
 }
 
-class CavanCommandTftpCommand extends CavanNativeCommand {
+class CavanCommandFtp extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doTftpCommand(async, args);
+		return CavanNative.doFtp(async, args);
 	}
 }
 
-class CavanCommandTftpCopy extends CavanNativeCommand {
+class CavanCommandSwanUpgrade extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doTftpCopy(async, args);
-	}
-}
-
-class CavanCommandTftpDd extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doTftpDd(async, args);
-	}
-}
-
-class CavanCommandTftpDdServer extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doTftpDdServer(async, args);
-	}
-}
-
-class CavanCommandTouch extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doTouch(async, args);
-	}
-}
-
-class CavanCommandTtyMode extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doTtyMode(async, args);
-	}
-}
-
-class CavanCommandUmount extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doUmount(async, args);
-	}
-}
-
-class CavanCommandUsb extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doUsb(async, args);
-	}
-}
-
-class CavanCommandUsbCopy extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doUsbCopy(async, args);
-	}
-}
-
-class CavanCommandUsbDd extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doUsbDd(async, args);
+		return CavanNative.doSwanUpgrade(async, args);
 	}
 }
 
@@ -1052,27 +908,171 @@ class CavanCommandUsbDdServer extends CavanNativeCommand {
 	}
 }
 
-class CavanCommandVfat extends CavanNativeCommand {
+class CavanCommandSwanSfdisk extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doVfat(async, args);
+		return CavanNative.doSwanSfdisk(async, args);
 	}
 }
 
-class CavanCommandWebProxy extends CavanNativeCommand {
+class CavanCommandHeartRate extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doWebProxy(async, args);
+		return CavanNative.doHeartRate(async, args);
 	}
 }
 
-class CavanCommandWifi extends CavanNativeCommand {
+class CavanCommandSuperUpgrade extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doWifi(async, args);
+		return CavanNative.doSuperUpgrade(async, args);
+	}
+}
+
+class CavanCommandBmpView extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doBmpView(async, args);
+	}
+}
+
+class CavanCommandNetwork extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doNetwork(async, args);
+	}
+}
+
+class CavanCommandClock extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doClock(async, args);
+	}
+}
+
+class CavanCommandFileJoin extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doFileJoin(async, args);
+	}
+}
+
+class CavanCommandSshDd extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doSshDd(async, args);
+	}
+}
+
+class CavanCommandServiceManager extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doServiceManager(async, args);
+	}
+}
+
+class CavanCommandTftpDdServer extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doTftpDdServer(async, args);
+	}
+}
+
+class CavanCommandPollEvent extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doPollEvent(async, args);
+	}
+}
+
+class CavanCommandSwanMd5 extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanMd5(async, args);
+	}
+}
+
+class CavanCommandSwanEmmc extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanEmmc(async, args);
+	}
+}
+
+class CavanCommandBkernel extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doBkernel(async, args);
+	}
+}
+
+class CavanCommandBramdisk extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doBramdisk(async, args);
+	}
+}
+
+class CavanCommandSwanVn extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doSwanVn(async, args);
+	}
+}
+
+class CavanCommandDicGenerator extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doDicGenerator(async, args);
+	}
+}
+
+class CavanCommandBsystem extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doBsystem(async, args);
+	}
+}
+
+class CavanCommandBatteryLevel extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doBatteryLevel(async, args);
+	}
+}
+
+class CavanCommandRemove extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doRemove(async, args);
+	}
+}
+
+class CavanCommandUsbDd extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doUsbDd(async, args);
 	}
 }
 
@@ -1081,14 +1081,6 @@ class CavanCommandMkfs extends CavanNativeCommand {
 	@Override
 	public int main(boolean async, String... args) {
 		return CavanNative.doMkfs(async, args);
-	}
-}
-
-class CavanCommandCppCalculator extends CavanNativeCommand {
-
-	@Override
-	public int main(boolean async, String... args) {
-		return CavanNative.doCppCalculator(async, args);
 	}
 }
 
@@ -1108,11 +1100,11 @@ class CavanCommandImClient extends CavanNativeCommand {
 	}
 }
 
-class CavanCommandImServer extends CavanNativeCommand {
+class CavanCommandCppCalculator extends CavanNativeCommand {
 
 	@Override
 	public int main(boolean async, String... args) {
-		return CavanNative.doImServer(async, args);
+		return CavanNative.doCppCalculator(async, args);
 	}
 }
 
@@ -1124,6 +1116,14 @@ class CavanCommandUdpProxy extends CavanNativeCommand {
 	}
 }
 
+class CavanCommandImServer extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doImServer(async, args);
+	}
+}
+
 public class CavanNative {
 
 	public static HashMap<String, CavanNativeCommand> sHashMap = new HashMap<String, CavanNativeCommand>();
@@ -1131,286 +1131,286 @@ public class CavanNative {
 	static {
 		System.loadLibrary("cavan-jni");
 
-		sHashMap.put("abspath", new CavanCommandAbspath());
-		sHashMap.put("alarm", new CavanCommandAlarm());
-		sHashMap.put("alc5671_clock", new CavanCommandAlc5671Clock());
 		sHashMap.put("ascii", new CavanCommandAscii());
-		sHashMap.put("auto_dd", new CavanCommandAutoDd());
-		sHashMap.put("auto_input", new CavanCommandAutoInput());
-		sHashMap.put("auto_mount", new CavanCommandAutoMount());
-		sHashMap.put("battery", new CavanCommandBattery());
-		sHashMap.put("battery_level", new CavanCommandBatteryLevel());
-		sHashMap.put("bdata", new CavanCommandBdata());
-		sHashMap.put("bkernel", new CavanCommandBkernel());
-		sHashMap.put("bmp_view", new CavanCommandBmpView());
-		sHashMap.put("bootimg", new CavanCommandBootimg());
-		sHashMap.put("bramdisk", new CavanCommandBramdisk());
-		sHashMap.put("brecovery", new CavanCommandBrecovery());
-		sHashMap.put("bsystem", new CavanCommandBsystem());
-		sHashMap.put("buboot", new CavanCommandBuboot());
-		sHashMap.put("calculator", new CavanCommandCalculator());
-		sHashMap.put("chroot", new CavanCommandChroot());
-		sHashMap.put("chtty", new CavanCommandChtty());
-		sHashMap.put("clock", new CavanCommandClock());
-		sHashMap.put("copy", new CavanCommandCopy());
-		sHashMap.put("dd", new CavanCommandDd());
-		sHashMap.put("df", new CavanCommandDf());
-		sHashMap.put("dic_generator", new CavanCommandDicGenerator());
-		sHashMap.put("display", new CavanCommandDisplay());
-		sHashMap.put("dos2unix", new CavanCommandDos2unix());
-		sHashMap.put("eavoo_sell_statistic", new CavanCommandEavooSellStatistic());
-		sHashMap.put("ecc", new CavanCommandEcc());
-		sHashMap.put("event_repeater", new CavanCommandEventRepeater());
-		sHashMap.put("ext2", new CavanCommandExt2());
-		sHashMap.put("fb_capture", new CavanCommandFbCapture());
-		sHashMap.put("fdisk", new CavanCommandFdisk());
-		sHashMap.put("file_crc32", new CavanCommandFileCrc32());
-		sHashMap.put("file_join", new CavanCommandFileJoin());
-		sHashMap.put("file_loop", new CavanCommandFileLoop());
-		sHashMap.put("file_split", new CavanCommandFileSplit());
-		sHashMap.put("ftp", new CavanCommandFtp());
-		sHashMap.put("ftp_server", new CavanCommandFtpServer());
-		sHashMap.put("git_daemon", new CavanCommandGitDaemon());
-		sHashMap.put("heart_rate", new CavanCommandHeartRate());
-		sHashMap.put("http_client", new CavanCommandHttpClient());
-		sHashMap.put("http_sender", new CavanCommandHttpSender());
-		sHashMap.put("http_service", new CavanCommandHttpService());
-		sHashMap.put("i2c", new CavanCommandI2c());
-		sHashMap.put("image_dd", new CavanCommandImageDd());
-		sHashMap.put("inotify", new CavanCommandInotify());
-		sHashMap.put("input", new CavanCommandInput());
-		sHashMap.put("input_server", new CavanCommandInputServer());
-		sHashMap.put("jw650_lcd", new CavanCommandJw650Lcd());
-		sHashMap.put("jwp_udp", new CavanCommandJwpUdp());
-		sHashMap.put("lm49350_clock", new CavanCommandLm49350Clock());
-		sHashMap.put("loop_run", new CavanCommandLoopRun());
-		sHashMap.put("md5sum", new CavanCommandMd5sum());
-		sHashMap.put("message_queue", new CavanCommandMessageQueue());
-		sHashMap.put("mkdir", new CavanCommandMkdir());
-		sHashMap.put("mknp", new CavanCommandMknp());
-		sHashMap.put("mksdcard", new CavanCommandMksdcard());
-		sHashMap.put("modem_upgrade", new CavanCommandModemUpgrade());
-		sHashMap.put("mount", new CavanCommandMount());
-		sHashMap.put("move", new CavanCommandMove());
-		sHashMap.put("mtd", new CavanCommandMtd());
-		sHashMap.put("net_discovery", new CavanCommandNetDiscovery());
-		sHashMap.put("net_monitor", new CavanCommandNetMonitor());
-		sHashMap.put("network", new CavanCommandNetwork());
-		sHashMap.put("p2p", new CavanCommandP2p());
 		sHashMap.put("part_probe", new CavanCommandPartProbe());
-		sHashMap.put("part_show", new CavanCommandPartShow());
+		sHashMap.put("lm49350_clock", new CavanCommandLm49350Clock());
+		sHashMap.put("umount", new CavanCommandUmount());
+		sHashMap.put("web_proxy", new CavanCommandWebProxy());
+		sHashMap.put("ftp_server", new CavanCommandFtpServer());
+		sHashMap.put("http_sender", new CavanCommandHttpSender());
+		sHashMap.put("chroot", new CavanCommandChroot());
+		sHashMap.put("input", new CavanCommandInput());
+		sHashMap.put("redpacket", new CavanCommandRedpacket());
+		sHashMap.put("tcp_install", new CavanCommandTcpInstall());
+		sHashMap.put("tftp_dd", new CavanCommandTftpDd());
+		sHashMap.put("touch", new CavanCommandTouch());
+		sHashMap.put("tftp_command", new CavanCommandTftpCommand());
+		sHashMap.put("dos2unix", new CavanCommandDos2unix());
+		sHashMap.put("textlen", new CavanCommandTextlen());
+		sHashMap.put("brecovery", new CavanCommandBrecovery());
+		sHashMap.put("input_server", new CavanCommandInputServer());
+		sHashMap.put("file_split", new CavanCommandFileSplit());
+		sHashMap.put("sha1sum", new CavanCommandSha1sum());
+		sHashMap.put("auto_dd", new CavanCommandAutoDd());
+		sHashMap.put("file_crc32", new CavanCommandFileCrc32());
+		sHashMap.put("ssh", new CavanCommandSsh());
+		sHashMap.put("usb", new CavanCommandUsb());
+		sHashMap.put("http_client", new CavanCommandHttpClient());
+		sHashMap.put("event_repeater", new CavanCommandEventRepeater());
+		sHashMap.put("bootimg", new CavanCommandBootimg());
+		sHashMap.put("copy", new CavanCommandCopy());
+		sHashMap.put("mknp", new CavanCommandMknp());
+		sHashMap.put("swan_check", new CavanCommandSwanCheck());
+		sHashMap.put("tcp_copy", new CavanCommandTcpCopy());
+		sHashMap.put("git_daemon", new CavanCommandGitDaemon());
+		sHashMap.put("inotify", new CavanCommandInotify());
+		sHashMap.put("dd", new CavanCommandDd());
+		sHashMap.put("message_queue", new CavanCommandMessageQueue());
+		sHashMap.put("su", new CavanCommandSu());
+		sHashMap.put("sprd_write_imei", new CavanCommandSprdWriteImei());
+		sHashMap.put("swan_mkfs", new CavanCommandSwanMkfs());
+		sHashMap.put("vfat", new CavanCommandVfat());
+		sHashMap.put("md5sum", new CavanCommandMd5sum());
+		sHashMap.put("mkdir", new CavanCommandMkdir());
+		sHashMap.put("swan_mac", new CavanCommandSwanMac());
+		sHashMap.put("tty_mode", new CavanCommandTtyMode());
+		sHashMap.put("ext2", new CavanCommandExt2());
+		sHashMap.put("wifi", new CavanCommandWifi());
+		sHashMap.put("rle", new CavanCommandRle());
+		sHashMap.put("fb_capture", new CavanCommandFbCapture());
+		sHashMap.put("http_service", new CavanCommandHttpService());
+		sHashMap.put("battery", new CavanCommandBattery());
+		sHashMap.put("jw650_lcd", new CavanCommandJw650Lcd());
+		sHashMap.put("fdisk", new CavanCommandFdisk());
+		sHashMap.put("eavoo_sell_statistic", new CavanCommandEavooSellStatistic());
+		sHashMap.put("swan_vk", new CavanCommandSwanVk());
+		sHashMap.put("ecc", new CavanCommandEcc());
+		sHashMap.put("move", new CavanCommandMove());
+		sHashMap.put("tftp_copy", new CavanCommandTftpCopy());
+		sHashMap.put("tcp_dd_server", new CavanCommandTcpDdServer());
+		sHashMap.put("abspath", new CavanCommandAbspath());
+		sHashMap.put("i2c", new CavanCommandI2c());
+		sHashMap.put("tcp_dd", new CavanCommandTcpDd());
+		sHashMap.put("tftp_auto_dd", new CavanCommandTftpAutoDd());
+		sHashMap.put("auto_mount", new CavanCommandAutoMount());
+		sHashMap.put("auto_input", new CavanCommandAutoInput());
+		sHashMap.put("tcp_keypad", new CavanCommandTcpKeypad());
+		sHashMap.put("screen_mirror", new CavanCommandScreenMirror());
+		sHashMap.put("loop_run", new CavanCommandLoopRun());
+		sHashMap.put("calculator", new CavanCommandCalculator());
+		sHashMap.put("role_change", new CavanCommandRoleChange());
+		sHashMap.put("image_dd", new CavanCommandImageDd());
+		sHashMap.put("tcp_proxy", new CavanCommandTcpProxy());
+		sHashMap.put("sprd_at", new CavanCommandSprdAt());
+		sHashMap.put("tee", new CavanCommandTee());
+		sHashMap.put("service", new CavanCommandService());
+		sHashMap.put("alarm", new CavanCommandAlarm());
 		sHashMap.put("part_table", new CavanCommandPartTable());
-		sHashMap.put("penetrator", new CavanCommandPenetrator());
+		sHashMap.put("sshd", new CavanCommandSshd());
+		sHashMap.put("usb_copy", new CavanCommandUsbCopy());
+		sHashMap.put("mount", new CavanCommandMount());
+		sHashMap.put("mksdcard", new CavanCommandMksdcard());
+		sHashMap.put("mtd", new CavanCommandMtd());
+		sHashMap.put("tcp_exec", new CavanCommandTcpExec());
+		sHashMap.put("system_init", new CavanCommandSystemInit());
+		sHashMap.put("net_monitor", new CavanCommandNetMonitor());
+		sHashMap.put("part_show", new CavanCommandPartShow());
+		sHashMap.put("buboot", new CavanCommandBuboot());
+		sHashMap.put("swan_fac", new CavanCommandSwanFac());
 		sHashMap.put("ping", new CavanCommandPing());
-		sHashMap.put("poll_event", new CavanCommandPollEvent());
+		sHashMap.put("ssh_copy", new CavanCommandSshCopy());
+		sHashMap.put("swan_ts", new CavanCommandSwanTs());
 		sHashMap.put("poll_input", new CavanCommandPollInput());
 		sHashMap.put("ramdisk", new CavanCommandRamdisk());
-		sHashMap.put("redpacket", new CavanCommandRedpacket());
-		sHashMap.put("remove", new CavanCommandRemove());
-		sHashMap.put("resize", new CavanCommandResize());
-		sHashMap.put("rle", new CavanCommandRle());
-		sHashMap.put("role_change", new CavanCommandRoleChange());
-		sHashMap.put("screen_mirror", new CavanCommandScreenMirror());
-		sHashMap.put("service", new CavanCommandService());
-		sHashMap.put("service_manager", new CavanCommandServiceManager());
-		sHashMap.put("sha1sum", new CavanCommandSha1sum());
 		sHashMap.put("show_args", new CavanCommandShowArgs());
-		sHashMap.put("show_file", new CavanCommandShowFile());
-		sHashMap.put("shrink", new CavanCommandShrink());
-		sHashMap.put("sprd_at", new CavanCommandSprdAt());
-		sHashMap.put("sprd_write_imei", new CavanCommandSprdWriteImei());
-		sHashMap.put("ssh", new CavanCommandSsh());
-		sHashMap.put("ssh_copy", new CavanCommandSshCopy());
-		sHashMap.put("sshd", new CavanCommandSshd());
-		sHashMap.put("ssh_dd", new CavanCommandSshDd());
-		sHashMap.put("su", new CavanCommandSu());
+		sHashMap.put("df", new CavanCommandDf());
+		sHashMap.put("display", new CavanCommandDisplay());
+		sHashMap.put("net_discovery", new CavanCommandNetDiscovery());
 		sHashMap.put("sudo", new CavanCommandSudo());
-		sHashMap.put("super_upgrade", new CavanCommandSuperUpgrade());
-		sHashMap.put("swan_check", new CavanCommandSwanCheck());
-		sHashMap.put("swan_emmc", new CavanCommandSwanEmmc());
-		sHashMap.put("swan_fac", new CavanCommandSwanFac());
-		sHashMap.put("swan_ipu", new CavanCommandSwanIpu());
-		sHashMap.put("swan_mac", new CavanCommandSwanMac());
-		sHashMap.put("swan_md5", new CavanCommandSwanMd5());
-		sHashMap.put("swan_mkfs", new CavanCommandSwanMkfs());
-		sHashMap.put("swan_sfdisk", new CavanCommandSwanSfdisk());
-		sHashMap.put("swan_ts", new CavanCommandSwanTs());
-		sHashMap.put("swan_upgrade", new CavanCommandSwanUpgrade());
-		sHashMap.put("swan_vk", new CavanCommandSwanVk());
-		sHashMap.put("swan_vn", new CavanCommandSwanVn());
-		sHashMap.put("system_init", new CavanCommandSystemInit());
+		sHashMap.put("p2p", new CavanCommandP2p());
+		sHashMap.put("file_loop", new CavanCommandFileLoop());
+		sHashMap.put("resize", new CavanCommandResize());
+		sHashMap.put("jwp_udp", new CavanCommandJwpUdp());
+		sHashMap.put("modem_upgrade", new CavanCommandModemUpgrade());
 		sHashMap.put("tcp_bridge", new CavanCommandTcpBridge());
-		sHashMap.put("tcp_copy", new CavanCommandTcpCopy());
-		sHashMap.put("tcp_dd", new CavanCommandTcpDd());
-		sHashMap.put("tcp_dd_server", new CavanCommandTcpDdServer());
-		sHashMap.put("tcp_exec", new CavanCommandTcpExec());
-		sHashMap.put("tcp_install", new CavanCommandTcpInstall());
-		sHashMap.put("tcp_keypad", new CavanCommandTcpKeypad());
-		sHashMap.put("tcp_proxy", new CavanCommandTcpProxy());
+		sHashMap.put("show_file", new CavanCommandShowFile());
+		sHashMap.put("bdata", new CavanCommandBdata());
+		sHashMap.put("chtty", new CavanCommandChtty());
+		sHashMap.put("alc5671_clock", new CavanCommandAlc5671Clock());
 		sHashMap.put("tcp_repeater", new CavanCommandTcpRepeater());
-		sHashMap.put("tee", new CavanCommandTee());
-		sHashMap.put("textlen", new CavanCommandTextlen());
-		sHashMap.put("tftp_auto_dd", new CavanCommandTftpAutoDd());
-		sHashMap.put("tftp_command", new CavanCommandTftpCommand());
-		sHashMap.put("tftp_copy", new CavanCommandTftpCopy());
-		sHashMap.put("tftp_dd", new CavanCommandTftpDd());
-		sHashMap.put("tftp_dd_server", new CavanCommandTftpDdServer());
-		sHashMap.put("touch", new CavanCommandTouch());
-		sHashMap.put("tty_mode", new CavanCommandTtyMode());
-		sHashMap.put("umount", new CavanCommandUmount());
-		sHashMap.put("usb", new CavanCommandUsb());
-		sHashMap.put("usb_copy", new CavanCommandUsbCopy());
-		sHashMap.put("usb_dd", new CavanCommandUsbDd());
+		sHashMap.put("shrink", new CavanCommandShrink());
+		sHashMap.put("swan_ipu", new CavanCommandSwanIpu());
+		sHashMap.put("penetrator", new CavanCommandPenetrator());
+		sHashMap.put("ftp", new CavanCommandFtp());
+		sHashMap.put("swan_upgrade", new CavanCommandSwanUpgrade());
 		sHashMap.put("usb_dd_server", new CavanCommandUsbDdServer());
-		sHashMap.put("vfat", new CavanCommandVfat());
-		sHashMap.put("web_proxy", new CavanCommandWebProxy());
-		sHashMap.put("wifi", new CavanCommandWifi());
+		sHashMap.put("swan_sfdisk", new CavanCommandSwanSfdisk());
+		sHashMap.put("heart_rate", new CavanCommandHeartRate());
+		sHashMap.put("super_upgrade", new CavanCommandSuperUpgrade());
+		sHashMap.put("bmp_view", new CavanCommandBmpView());
+		sHashMap.put("network", new CavanCommandNetwork());
+		sHashMap.put("clock", new CavanCommandClock());
+		sHashMap.put("file_join", new CavanCommandFileJoin());
+		sHashMap.put("ssh_dd", new CavanCommandSshDd());
+		sHashMap.put("service_manager", new CavanCommandServiceManager());
+		sHashMap.put("tftp_dd_server", new CavanCommandTftpDdServer());
+		sHashMap.put("poll_event", new CavanCommandPollEvent());
+		sHashMap.put("swan_md5", new CavanCommandSwanMd5());
+		sHashMap.put("swan_emmc", new CavanCommandSwanEmmc());
+		sHashMap.put("bkernel", new CavanCommandBkernel());
+		sHashMap.put("bramdisk", new CavanCommandBramdisk());
+		sHashMap.put("swan_vn", new CavanCommandSwanVn());
+		sHashMap.put("dic_generator", new CavanCommandDicGenerator());
+		sHashMap.put("bsystem", new CavanCommandBsystem());
+		sHashMap.put("battery_level", new CavanCommandBatteryLevel());
+		sHashMap.put("remove", new CavanCommandRemove());
+		sHashMap.put("usb_dd", new CavanCommandUsbDd());
 		sHashMap.put("mkfs", new CavanCommandMkfs());
-		sHashMap.put("cpp_calculator", new CavanCommandCppCalculator());
 		sHashMap.put("cpp_http_service", new CavanCommandCppHttpService());
 		sHashMap.put("im_client", new CavanCommandImClient());
-		sHashMap.put("im_server", new CavanCommandImServer());
+		sHashMap.put("cpp_calculator", new CavanCommandCppCalculator());
 		sHashMap.put("udp_proxy", new CavanCommandUdpProxy());
+		sHashMap.put("im_server", new CavanCommandImServer());
 	}
 
-	public static native int doAbspath(boolean async, String... args);
-	public static native int doAlarm(boolean async, String... args);
-	public static native int doAlc5671Clock(boolean async, String... args);
 	public static native int doAscii(boolean async, String... args);
-	public static native int doAutoDd(boolean async, String... args);
-	public static native int doAutoInput(boolean async, String... args);
-	public static native int doAutoMount(boolean async, String... args);
-	public static native int doBattery(boolean async, String... args);
-	public static native int doBatteryLevel(boolean async, String... args);
-	public static native int doBdata(boolean async, String... args);
-	public static native int doBkernel(boolean async, String... args);
-	public static native int doBmpView(boolean async, String... args);
-	public static native int doBootimg(boolean async, String... args);
-	public static native int doBramdisk(boolean async, String... args);
-	public static native int doBrecovery(boolean async, String... args);
-	public static native int doBsystem(boolean async, String... args);
-	public static native int doBuboot(boolean async, String... args);
-	public static native int doCalculator(boolean async, String... args);
-	public static native int doChroot(boolean async, String... args);
-	public static native int doChtty(boolean async, String... args);
-	public static native int doClock(boolean async, String... args);
-	public static native int doCopy(boolean async, String... args);
-	public static native int doDd(boolean async, String... args);
-	public static native int doDf(boolean async, String... args);
-	public static native int doDicGenerator(boolean async, String... args);
-	public static native int doDisplay(boolean async, String... args);
-	public static native int doDos2unix(boolean async, String... args);
-	public static native int doEavooSellStatistic(boolean async, String... args);
-	public static native int doEcc(boolean async, String... args);
-	public static native int doEventRepeater(boolean async, String... args);
-	public static native int doExt2(boolean async, String... args);
-	public static native int doFbCapture(boolean async, String... args);
-	public static native int doFdisk(boolean async, String... args);
-	public static native int doFileCrc32(boolean async, String... args);
-	public static native int doFileJoin(boolean async, String... args);
-	public static native int doFileLoop(boolean async, String... args);
-	public static native int doFileSplit(boolean async, String... args);
-	public static native int doFtp(boolean async, String... args);
-	public static native int doFtpServer(boolean async, String... args);
-	public static native int doGitDaemon(boolean async, String... args);
-	public static native int doHeartRate(boolean async, String... args);
-	public static native int doHttpClient(boolean async, String... args);
-	public static native int doHttpSender(boolean async, String... args);
-	public static native int doHttpService(boolean async, String... args);
-	public static native int doI2c(boolean async, String... args);
-	public static native int doImageDd(boolean async, String... args);
-	public static native int doInotify(boolean async, String... args);
-	public static native int doInput(boolean async, String... args);
-	public static native int doInputServer(boolean async, String... args);
-	public static native int doJw650Lcd(boolean async, String... args);
-	public static native int doJwpUdp(boolean async, String... args);
-	public static native int doLm49350Clock(boolean async, String... args);
-	public static native int doLoopRun(boolean async, String... args);
-	public static native int doMd5sum(boolean async, String... args);
-	public static native int doMessageQueue(boolean async, String... args);
-	public static native int doMkdir(boolean async, String... args);
-	public static native int doMknp(boolean async, String... args);
-	public static native int doMksdcard(boolean async, String... args);
-	public static native int doModemUpgrade(boolean async, String... args);
-	public static native int doMount(boolean async, String... args);
-	public static native int doMove(boolean async, String... args);
-	public static native int doMtd(boolean async, String... args);
-	public static native int doNetDiscovery(boolean async, String... args);
-	public static native int doNetMonitor(boolean async, String... args);
-	public static native int doNetwork(boolean async, String... args);
-	public static native int doP2p(boolean async, String... args);
 	public static native int doPartProbe(boolean async, String... args);
-	public static native int doPartShow(boolean async, String... args);
+	public static native int doLm49350Clock(boolean async, String... args);
+	public static native int doUmount(boolean async, String... args);
+	public static native int doWebProxy(boolean async, String... args);
+	public static native int doFtpServer(boolean async, String... args);
+	public static native int doHttpSender(boolean async, String... args);
+	public static native int doChroot(boolean async, String... args);
+	public static native int doInput(boolean async, String... args);
+	public static native int doRedpacket(boolean async, String... args);
+	public static native int doTcpInstall(boolean async, String... args);
+	public static native int doTftpDd(boolean async, String... args);
+	public static native int doTouch(boolean async, String... args);
+	public static native int doTftpCommand(boolean async, String... args);
+	public static native int doDos2unix(boolean async, String... args);
+	public static native int doTextlen(boolean async, String... args);
+	public static native int doBrecovery(boolean async, String... args);
+	public static native int doInputServer(boolean async, String... args);
+	public static native int doFileSplit(boolean async, String... args);
+	public static native int doSha1sum(boolean async, String... args);
+	public static native int doAutoDd(boolean async, String... args);
+	public static native int doFileCrc32(boolean async, String... args);
+	public static native int doSsh(boolean async, String... args);
+	public static native int doUsb(boolean async, String... args);
+	public static native int doHttpClient(boolean async, String... args);
+	public static native int doEventRepeater(boolean async, String... args);
+	public static native int doBootimg(boolean async, String... args);
+	public static native int doCopy(boolean async, String... args);
+	public static native int doMknp(boolean async, String... args);
+	public static native int doSwanCheck(boolean async, String... args);
+	public static native int doTcpCopy(boolean async, String... args);
+	public static native int doGitDaemon(boolean async, String... args);
+	public static native int doInotify(boolean async, String... args);
+	public static native int doDd(boolean async, String... args);
+	public static native int doMessageQueue(boolean async, String... args);
+	public static native int doSu(boolean async, String... args);
+	public static native int doSprdWriteImei(boolean async, String... args);
+	public static native int doSwanMkfs(boolean async, String... args);
+	public static native int doVfat(boolean async, String... args);
+	public static native int doMd5sum(boolean async, String... args);
+	public static native int doMkdir(boolean async, String... args);
+	public static native int doSwanMac(boolean async, String... args);
+	public static native int doTtyMode(boolean async, String... args);
+	public static native int doExt2(boolean async, String... args);
+	public static native int doWifi(boolean async, String... args);
+	public static native int doRle(boolean async, String... args);
+	public static native int doFbCapture(boolean async, String... args);
+	public static native int doHttpService(boolean async, String... args);
+	public static native int doBattery(boolean async, String... args);
+	public static native int doJw650Lcd(boolean async, String... args);
+	public static native int doFdisk(boolean async, String... args);
+	public static native int doEavooSellStatistic(boolean async, String... args);
+	public static native int doSwanVk(boolean async, String... args);
+	public static native int doEcc(boolean async, String... args);
+	public static native int doMove(boolean async, String... args);
+	public static native int doTftpCopy(boolean async, String... args);
+	public static native int doTcpDdServer(boolean async, String... args);
+	public static native int doAbspath(boolean async, String... args);
+	public static native int doI2c(boolean async, String... args);
+	public static native int doTcpDd(boolean async, String... args);
+	public static native int doTftpAutoDd(boolean async, String... args);
+	public static native int doAutoMount(boolean async, String... args);
+	public static native int doAutoInput(boolean async, String... args);
+	public static native int doTcpKeypad(boolean async, String... args);
+	public static native int doScreenMirror(boolean async, String... args);
+	public static native int doLoopRun(boolean async, String... args);
+	public static native int doCalculator(boolean async, String... args);
+	public static native int doRoleChange(boolean async, String... args);
+	public static native int doImageDd(boolean async, String... args);
+	public static native int doTcpProxy(boolean async, String... args);
+	public static native int doSprdAt(boolean async, String... args);
+	public static native int doTee(boolean async, String... args);
+	public static native int doService(boolean async, String... args);
+	public static native int doAlarm(boolean async, String... args);
 	public static native int doPartTable(boolean async, String... args);
-	public static native int doPenetrator(boolean async, String... args);
+	public static native int doSshd(boolean async, String... args);
+	public static native int doUsbCopy(boolean async, String... args);
+	public static native int doMount(boolean async, String... args);
+	public static native int doMksdcard(boolean async, String... args);
+	public static native int doMtd(boolean async, String... args);
+	public static native int doTcpExec(boolean async, String... args);
+	public static native int doSystemInit(boolean async, String... args);
+	public static native int doNetMonitor(boolean async, String... args);
+	public static native int doPartShow(boolean async, String... args);
+	public static native int doBuboot(boolean async, String... args);
+	public static native int doSwanFac(boolean async, String... args);
 	public static native int doPing(boolean async, String... args);
-	public static native int doPollEvent(boolean async, String... args);
+	public static native int doSshCopy(boolean async, String... args);
+	public static native int doSwanTs(boolean async, String... args);
 	public static native int doPollInput(boolean async, String... args);
 	public static native int doRamdisk(boolean async, String... args);
-	public static native int doRedpacket(boolean async, String... args);
-	public static native int doRemove(boolean async, String... args);
-	public static native int doResize(boolean async, String... args);
-	public static native int doRle(boolean async, String... args);
-	public static native int doRoleChange(boolean async, String... args);
-	public static native int doScreenMirror(boolean async, String... args);
-	public static native int doService(boolean async, String... args);
-	public static native int doServiceManager(boolean async, String... args);
-	public static native int doSha1sum(boolean async, String... args);
 	public static native int doShowArgs(boolean async, String... args);
-	public static native int doShowFile(boolean async, String... args);
-	public static native int doShrink(boolean async, String... args);
-	public static native int doSprdAt(boolean async, String... args);
-	public static native int doSprdWriteImei(boolean async, String... args);
-	public static native int doSsh(boolean async, String... args);
-	public static native int doSshCopy(boolean async, String... args);
-	public static native int doSshd(boolean async, String... args);
-	public static native int doSshDd(boolean async, String... args);
-	public static native int doSu(boolean async, String... args);
+	public static native int doDf(boolean async, String... args);
+	public static native int doDisplay(boolean async, String... args);
+	public static native int doNetDiscovery(boolean async, String... args);
 	public static native int doSudo(boolean async, String... args);
-	public static native int doSuperUpgrade(boolean async, String... args);
-	public static native int doSwanCheck(boolean async, String... args);
-	public static native int doSwanEmmc(boolean async, String... args);
-	public static native int doSwanFac(boolean async, String... args);
-	public static native int doSwanIpu(boolean async, String... args);
-	public static native int doSwanMac(boolean async, String... args);
-	public static native int doSwanMd5(boolean async, String... args);
-	public static native int doSwanMkfs(boolean async, String... args);
-	public static native int doSwanSfdisk(boolean async, String... args);
-	public static native int doSwanTs(boolean async, String... args);
-	public static native int doSwanUpgrade(boolean async, String... args);
-	public static native int doSwanVk(boolean async, String... args);
-	public static native int doSwanVn(boolean async, String... args);
-	public static native int doSystemInit(boolean async, String... args);
+	public static native int doP2p(boolean async, String... args);
+	public static native int doFileLoop(boolean async, String... args);
+	public static native int doResize(boolean async, String... args);
+	public static native int doJwpUdp(boolean async, String... args);
+	public static native int doModemUpgrade(boolean async, String... args);
 	public static native int doTcpBridge(boolean async, String... args);
-	public static native int doTcpCopy(boolean async, String... args);
-	public static native int doTcpDd(boolean async, String... args);
-	public static native int doTcpDdServer(boolean async, String... args);
-	public static native int doTcpExec(boolean async, String... args);
-	public static native int doTcpInstall(boolean async, String... args);
-	public static native int doTcpKeypad(boolean async, String... args);
-	public static native int doTcpProxy(boolean async, String... args);
+	public static native int doShowFile(boolean async, String... args);
+	public static native int doBdata(boolean async, String... args);
+	public static native int doChtty(boolean async, String... args);
+	public static native int doAlc5671Clock(boolean async, String... args);
 	public static native int doTcpRepeater(boolean async, String... args);
-	public static native int doTee(boolean async, String... args);
-	public static native int doTextlen(boolean async, String... args);
-	public static native int doTftpAutoDd(boolean async, String... args);
-	public static native int doTftpCommand(boolean async, String... args);
-	public static native int doTftpCopy(boolean async, String... args);
-	public static native int doTftpDd(boolean async, String... args);
-	public static native int doTftpDdServer(boolean async, String... args);
-	public static native int doTouch(boolean async, String... args);
-	public static native int doTtyMode(boolean async, String... args);
-	public static native int doUmount(boolean async, String... args);
-	public static native int doUsb(boolean async, String... args);
-	public static native int doUsbCopy(boolean async, String... args);
-	public static native int doUsbDd(boolean async, String... args);
+	public static native int doShrink(boolean async, String... args);
+	public static native int doSwanIpu(boolean async, String... args);
+	public static native int doPenetrator(boolean async, String... args);
+	public static native int doFtp(boolean async, String... args);
+	public static native int doSwanUpgrade(boolean async, String... args);
 	public static native int doUsbDdServer(boolean async, String... args);
-	public static native int doVfat(boolean async, String... args);
-	public static native int doWebProxy(boolean async, String... args);
-	public static native int doWifi(boolean async, String... args);
+	public static native int doSwanSfdisk(boolean async, String... args);
+	public static native int doHeartRate(boolean async, String... args);
+	public static native int doSuperUpgrade(boolean async, String... args);
+	public static native int doBmpView(boolean async, String... args);
+	public static native int doNetwork(boolean async, String... args);
+	public static native int doClock(boolean async, String... args);
+	public static native int doFileJoin(boolean async, String... args);
+	public static native int doSshDd(boolean async, String... args);
+	public static native int doServiceManager(boolean async, String... args);
+	public static native int doTftpDdServer(boolean async, String... args);
+	public static native int doPollEvent(boolean async, String... args);
+	public static native int doSwanMd5(boolean async, String... args);
+	public static native int doSwanEmmc(boolean async, String... args);
+	public static native int doBkernel(boolean async, String... args);
+	public static native int doBramdisk(boolean async, String... args);
+	public static native int doSwanVn(boolean async, String... args);
+	public static native int doDicGenerator(boolean async, String... args);
+	public static native int doBsystem(boolean async, String... args);
+	public static native int doBatteryLevel(boolean async, String... args);
+	public static native int doRemove(boolean async, String... args);
+	public static native int doUsbDd(boolean async, String... args);
 	public static native int doMkfs(boolean async, String... args);
-	public static native int doCppCalculator(boolean async, String... args);
 	public static native int doCppHttpService(boolean async, String... args);
 	public static native int doImClient(boolean async, String... args);
-	public static native int doImServer(boolean async, String... args);
+	public static native int doCppCalculator(boolean async, String... args);
 	public static native int doUdpProxy(boolean async, String... args);
+	public static native int doImServer(boolean async, String... args);
 }
