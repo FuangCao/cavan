@@ -671,6 +671,8 @@ static int role_change_client_process_command(struct role_change_client *proxy, 
 		return 0;
 	} else if (strcmp(command, "link") == 0) {
 		conn->mode = ROLE_CHANGE_MODE_LINK;
+	} else if (strcmp(command, "link2") == 0) {
+		conn->mode = ROLE_CHANGE_MODE_LINK2;
 	} else if (strcmp(command, "burrow") == 0) {
 		conn->mode = ROLE_CHANGE_MODE_BURROW;
 	} else {
@@ -686,7 +688,24 @@ static int role_change_client_process_command(struct role_change_client *proxy, 
 		ret = network_client_open2(&conn->client, url, 0);
 		if (ret < 0) {
 			pr_red_info("network_client_open2");
+
+			if (conn->mode == ROLE_CHANGE_MODE_LINK2) {
+				ret = role_change_send_command(&conn->conn, "linked %d", ret);
+				if (ret < 0) {
+					return ret;
+				}
+
+				return 0;
+			}
+
 			return ret;
+		}
+
+		if (conn->mode == ROLE_CHANGE_MODE_LINK2) {
+			ret = role_change_send_command(&conn->conn, "linked");
+			if (ret < 0) {
+				return ret;
+			}
 		}
 
 		return 1;
