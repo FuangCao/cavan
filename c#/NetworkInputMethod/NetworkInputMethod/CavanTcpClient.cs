@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Net;
 using System.Net.Sockets;
 
 namespace NetworkInputMethod
@@ -11,39 +12,217 @@ namespace NetworkInputMethod
     public class CavanTcpClient
     {
         protected TcpClient mClient;
-        protected CavanTcpService mService;
+        protected CavanTcpServiceBase mService;
 
-        public CavanTcpClient(CavanTcpService service, TcpClient client)
+        public CavanTcpClient(TcpClient client)
         {
-            mService = service;
             mClient = client;
+        }
+
+        public static TcpClient Connect(string url)
+        {
+            string host;
+            string port;
+
+            var index = url.IndexOf(':');
+            if (index > 0)
+            {
+                host = url.Substring(0, index);
+                port = url.Substring(index + 1);
+            }
+            else
+            {
+                host = "127.0.0.1";
+                port = url;
+            }
+
+            try
+            {
+                return new TcpClient(host, Convert.ToUInt16(port));
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public static bool WriteData(NetworkStream stream, byte[] bytes, int index, int length)
+        {
+            try
+            {
+                stream.Write(bytes, index, length);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public static bool WriteData(NetworkStream stream, byte[] bytes)
+        {
+            return WriteData(stream, bytes, 0, bytes.Length);
+        }
+
+        public static bool WriteData(NetworkStream stream, string text)
+        {
+            var bytes = Encoding.UTF8.GetBytes(text);
+            return WriteData(stream, bytes);
+        }
+
+        public static bool WritePacket(NetworkStream stream, byte[] bytes, int index, int length)
+        {
+            var header = new byte[] { (byte)length, ((byte)(length >> 8)) };
+            return WriteData(stream, header) && WriteData(stream, bytes, index, length);
+        }
+
+        public static bool WritePacket(NetworkStream stream, byte[] bytes)
+        {
+            return WritePacket(stream, bytes, 0, bytes.Length);
+        }
+
+        public static bool WritePacket(NetworkStream stream, string text)
+        {
+            var bytes = Encoding.UTF8.GetBytes(text);
+            return WritePacket(stream, bytes);
+        }
+
+        public static int ReadData(NetworkStream stream, byte[] bytes, int index, int size)
+        {
+            try
+            {
+                return stream.Read(bytes, index, size);
+            }
+            catch (Exception)
+            {
+                return -1;
+            }
+        }
+
+        public static int ReadData(NetworkStream stream, byte[] bytes)
+        {
+            return ReadData(stream, bytes, 0, bytes.Length);
+        }
+
+        public static bool Fill(NetworkStream stream, byte[] bytes, int index, int size)
+        {
+            while (true)
+            {
+                var length = ReadData(stream, bytes, index, size);
+                if (length >= size)
+                {
+                    return true;
+                }
+
+                if (length <= 0)
+                {
+                    return false;
+                }
+
+                index += length;
+                size -= length;
+            }
+        }
+
+        public static bool Fill(NetworkStream stream, byte[] bytes)
+        {
+            return Fill(stream, bytes, 0, bytes.Length);
+        }
+
+        public static int ReadPacket(NetworkStream stream, byte[] bytes, int index, int size)
+        {
+            var header = new byte[2];
+
+            if (!Fill(stream, header))
+            {
+                return -1;
+            }
+
+            var length = (header[1] & 0xFF) << 8 | (header[0] & 0xFF);
+            if (length > 0)
+            {
+                if (size < length)
+                {
+                    return -1;
+                }
+
+                if (!Fill(stream, bytes, index, length))
+                {
+                    return -1;
+                }
+            }
+
+            return length;
+        }
+
+        public static int ReadPacket(NetworkStream stream, byte[] bytes)
+        {
+            return ReadPacket(stream, bytes, 0, bytes.Length);
         }
 
         public TcpClient Client
         {
             get
             {
-                return mClient;
+                lock (this)
+                {
+                    return mClient;
+                }
+            }
+
+            set
+            {
+                lock (this)
+                {
+                    mClient = value;
+                }
             }
         }
 
-        public NetworkStream NetworkStream
+        public CavanTcpServiceBase Service
         {
             get
             {
                 lock (this)
                 {
-                    if (mClient != null)
-                    {
-                        return mClient.GetStream();
-                    }
+                    return mService;
                 }
+            }
 
-                return null;
+            set
+            {
+                lock (this)
+                {
+                    mService = value;
+                }
             }
         }
 
-        public virtual void mainLoop()
+        public TcpClient setClient(TcpClient client)
+        {
+            lock (this)
+            {
+                var backup = mClient;
+                mClient = client;
+                return backup;
+            }
+        }
+
+        public NetworkStream getStream()
+        {
+            lock (this)
+            {
+                if (mClient != null)
+                {
+                    return mClient.GetStream();
+                }
+            }
+
+            return null;
+        }
+
+        public virtual bool mainLoop()
         {
             NetworkStream stream = mClient.GetStream();
             byte[] bytes = new byte[1024];
@@ -58,6 +237,8 @@ namespace NetworkInputMethod
 
                 onDataReceived(bytes, length);
             }
+
+            return false;
         }
 
         protected virtual void onDataReceived(byte[] bytes, int length)
@@ -65,63 +246,122 @@ namespace NetworkInputMethod
             mService.onTcpDataReceived(this, bytes, length);
         }
 
+        public IPEndPoint RemoteEndPoint
+        {
+            get
+            {
+                var client = mClient;
+                if (client != null)
+                {
+                    return client.Client.RemoteEndPoint as IPEndPoint;
+                }
+
+                return null;
+            }
+        }
+
+        public IPAddress RemoteAddress
+        {
+            get
+            {
+                var addr = RemoteEndPoint;
+                if (addr == null)
+                {
+                    return null;
+                }
+
+                return addr.Address;
+            }
+        }
+
+        public int RemotePort
+        {
+            get
+            {
+                var addr = RemoteEndPoint;
+                if (addr == null)
+                {
+                    return 0;
+                }
+
+                return addr.Port;
+            }
+        }
+
         public override string ToString()
         {
-            lock (this)
+            var addr = RemoteEndPoint;
+            if (addr != null)
             {
-                try
-                {
-                    if (mClient != null)
-                    {
-                        return mClient.Client.RemoteEndPoint.ToString();
-                    }
-                }
-                catch (Exception)
-                {
-                }
+                return addr.ToString();
             }
 
             return "disconnected";
         }
 
+        public bool connect(string url)
+        {
+            var client = Connect(url);
+            if (client == null)
+            {
+                return false;
+            }
+
+            setClient(client);
+            onConnected();
+
+            return true;
+        }
+
         public void disconnect()
         {
-            try
+            var client = setClient(null);
+
+            if (client != null)
             {
-                if (mClient != null)
+                try
                 {
-                    mClient.Close();
-                    mClient = null;
+                    client.Close();
                 }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+
+                onDisconnected();
             }
         }
 
-        public virtual bool send(byte[] bytes, int offset, int length)
+        public void onConnected()
         {
-            lock (this)
+            if (mService != null)
             {
-                if (mClient == null)
-                {
-                    return false;
-                }
+                mService.performTcpClientConnected(this);
+            }
+        }
 
-                try
-                {
-                    var stream = mClient.GetStream();
-                    stream.Write(bytes, offset, length);
-                    stream.Flush();
-                }
-                catch (Exception)
-                {
-                    return false;
-                }
+        public void onDisconnected()
+        {
+            if (mService != null)
+            {
+                mService.performTcpClientDisconnected(this);
+            }
+        }
+
+        public virtual bool send(NetworkStream stream, byte[] bytes, int offset, int length)
+        {
+            return WriteData(stream, bytes, offset, length);
+        }
+
+        public bool send(byte[] bytes, int offset, int length)
+        {
+            var stream = getStream();
+            if (stream == null)
+            {
+                return false;
             }
 
-            return true;
+            return send(stream, bytes, offset, length);
         }
 
         public bool send(byte[] bytes, int length)

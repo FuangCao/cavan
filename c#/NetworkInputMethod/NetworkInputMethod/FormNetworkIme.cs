@@ -26,6 +26,7 @@ namespace NetworkInputMethod
         private FormTcpProxyService mFormTcpProxy;
         private FormWebProxyService mFormWebProxy;
         private FormUrlBuilder mFormUrlBuilder;
+        private FormReverseProxy mFormReverseProxy;
 
         //API declarations...
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -159,6 +160,12 @@ namespace NetworkInputMethod
             {
                 mFormWebProxy = new FormWebProxyService();
                 mFormWebProxy.Show();
+            }
+
+            if (Settings.Default.ReverseProxyEnable)
+            {
+                mFormReverseProxy = new FormReverseProxy();
+                mFormReverseProxy.Show();
             }
         }
 
@@ -448,7 +455,7 @@ namespace NetworkInputMethod
 
         public override CavanTcpClient onTcpClientAccepted(TcpClient conn)
         {
-            return new NetworkImeClient(mService, conn);
+            return new NetworkImeClient(conn);
         }
 
         public override void onTcpClientConnected(object sender, EventArgs e)
@@ -571,7 +578,6 @@ namespace NetworkInputMethod
 
         public override void onTcpServiceStopped(object sender, EventArgs e)
         {
-            Settings.Default.NetworkImeEnable = false;
             labelStatus.Text = "服务器已停止";
             buttonStart.Text = "启动";
         }
@@ -994,6 +1000,7 @@ namespace NetworkInputMethod
         {
             toolStripMenuItemNetworkImeAuto.Checked = Settings.Default.NetworkImeEnable;
             toolStripMenuItemWebProxyAuto.Checked = Settings.Default.WebProxyEnable;
+            toolStripMenuItemReverseProxyAuto.Checked = Settings.Default.ReverseProxyEnable;
         }
 
         private void toolStripMenuItemAutoRun_Click(object sender, EventArgs e)
@@ -1010,6 +1017,21 @@ namespace NetworkInputMethod
         {
             Settings.Default.WebProxyEnable = toolStripMenuItemWebProxyAuto.Checked;
         }
+
+        private void toolStripMenuItemReverseProxy_Click(object sender, EventArgs e)
+        {
+            if (mFormReverseProxy == null || mFormReverseProxy.IsDisposed)
+            {
+                mFormReverseProxy = new FormReverseProxy();
+            }
+
+            mFormReverseProxy.Show();
+        }
+
+        private void toolStripMenuItemReverseProxyAuto_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ReverseProxyEnable = toolStripMenuItemReverseProxyAuto.Checked;
+        }
     }
 
     public class NetworkImeClient : CavanTcpPacketClient
@@ -1019,7 +1041,7 @@ namespace NetworkInputMethod
 
         internal delegate void TcpClientReceivedEventHandler(object sender, CavanEventArgs<string[]> e);
 
-        public NetworkImeClient(CavanTcpService service, TcpClient client) : base(service, client)
+        public NetworkImeClient(TcpClient client) : base(client)
         {
         }
 

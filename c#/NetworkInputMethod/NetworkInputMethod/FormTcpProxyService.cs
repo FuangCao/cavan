@@ -63,7 +63,7 @@ namespace NetworkInputMethod
             }
 
 
-            return new TcpProxyClient(mService, conn, args[0], port);
+            return new TcpProxyClient(conn, args[0], port);
         }
 
         public override void onTcpClientConnected(object sender, EventArgs e)
@@ -84,7 +84,7 @@ namespace NetworkInputMethod
         private string mHost;
         private int mPort;
 
-        public TcpProxyClient(CavanTcpService service, TcpClient client, string host, int port) : base(service, client)
+        public TcpProxyClient(TcpClient client, string host, int port) : base(client)
         {
             mHost = host;
             mPort = port;
@@ -132,7 +132,7 @@ namespace NetworkInputMethod
             }
         }
 
-        public override void mainLoop()
+        public override bool mainLoop()
         {
             TcpClient client = new TcpClient();
 
@@ -149,6 +149,8 @@ namespace NetworkInputMethod
             {
                 client.Close();
             }
+
+            return false;
         }
     }
 }

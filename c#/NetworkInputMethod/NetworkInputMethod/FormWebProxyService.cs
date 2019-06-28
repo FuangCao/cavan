@@ -26,15 +26,7 @@ namespace NetworkInputMethod
 
         private void buttonStartStop_Click(object sender, EventArgs e)
         {
-            if (mService.Running)
-            {
-                mService.stop();
-            }
-            else
-            {
-                mService.Port = Convert.ToUInt16(textBoxPort.Text);
-                mService.start();
-            }
+            mService.toggle(textBoxPort.Text);
         }
 
         public override void onTcpServiceStarted(object sender, EventArgs e)
@@ -45,14 +37,13 @@ namespace NetworkInputMethod
 
         public override void onTcpServiceStopped(object sender, EventArgs e)
         {
-            Settings.Default.WebProxyEnable = false;
             buttonStartStop.Text = "启动";
         }
 
         public override CavanTcpClient onTcpClientAccepted(TcpClient conn)
         {
             var url = new CavanUrl(textBoxUrl.Text);
-            return new WebProxyClient(mService, conn, url);
+            return new WebProxyClient(conn, url);
         }
 
         public override void onTcpClientConnected(object sender, EventArgs e)
@@ -76,7 +67,7 @@ namespace NetworkInputMethod
 
     public class CavanHttpRequest
     {
-        static char[] SEPARATOR = { ' ', '\t', '\f' };
+        public static char[] SEPARATOR = { ' ', '\t', '\f' };
 
         private ArrayList mLines = new ArrayList();
         private CavanUrl mUrl;
@@ -336,7 +327,7 @@ namespace NetworkInputMethod
 
         private CavanUrl mUrl;
 
-        public WebProxyClient(CavanTcpService service, TcpClient client, CavanUrl url) : base(service, client)
+        public WebProxyClient(TcpClient client, CavanUrl url) : base(client)
         {
             mUrl = url;
         }
@@ -380,7 +371,7 @@ namespace NetworkInputMethod
             }
         }
 
-        public override void mainLoop()
+        public override bool mainLoop()
         {
             var bytes = new byte[1024];
 
@@ -434,6 +425,8 @@ namespace NetworkInputMethod
                     client.Close();
                 }
             }
+
+            return false;
         }
     }
 }

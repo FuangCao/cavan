@@ -61,7 +61,7 @@ namespace NetworkInputMethod
 
         public override CavanTcpClient onTcpClientAccepted(TcpClient conn)
         {
-            return new UrlBuilderClient(this, mService, conn);
+            return new UrlBuilderClient(this, conn);
         }
 
         public bool postClipboard(string text)
@@ -195,19 +195,19 @@ namespace NetworkInputMethod
     {
         private FormUrlBuilder mForm;
 
-        public UrlBuilderClient(FormUrlBuilder form, CavanTcpService service, TcpClient client) : base(service, client)
+        public UrlBuilderClient(FormUrlBuilder form, TcpClient client) : base(client)
         {
             mForm = form;
         }
 
-        public override void mainLoop()
+        public override bool mainLoop()
         {
             var stream = mClient.GetStream();
             var req = new CavanHttpRequest();
 
             if (!req.read(stream, null))
             {
-                return;
+                return false;
             }
 
             var builder = new StringBuilder();
@@ -231,6 +231,8 @@ namespace NetworkInputMethod
             writer.WriteLine();
             writer.Flush();
             stream.Write(content, 0, content.Length);
+
+            return false;
         }
     }
 }

@@ -74,9 +74,16 @@
     <Compile Include="CavanHttpWriter.cs" />
     <Compile Include="CavanTcpClient.cs" />
     <Compile Include="CavanTcpPacketClient.cs" />
+    <Compile Include="CavanTcpServiceBase.cs" />
     <Compile Include="CavanThread.cs" />
     <Compile Include="CavanTreeView.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="FormAddProxy.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormAddProxy.Designer.cs">
+      <DependentUpon>FormAddProxy.cs</DependentUpon>
     </Compile>
     <Compile Include="FormAlipay.cs">
       <SubType>Form</SubType>
@@ -113,6 +120,12 @@
     </Compile>
     <Compile Include="FormPackBuilder.Designer.cs">
       <DependentUpon>FormPackBuilder.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormReverseProxy.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormReverseProxy.Designer.cs">
+      <DependentUpon>FormReverseProxy.cs</DependentUpon>
     </Compile>
     <Compile Include="FormSelect.cs">
       <SubType>Form</SubType>
@@ -162,6 +175,9 @@
     <Compile Include="FormWebProxyService.Designer.cs">
       <DependentUpon>FormWebProxyService.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="FormAddProxy.resx">
+      <DependentUpon>FormAddProxy.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormAlipay.resx">
       <DependentUpon>FormAlipay.cs</DependentUpon>
     </EmbeddedResource>
@@ -179,6 +195,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormPackBuilder.resx">
       <DependentUpon>FormPackBuilder.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormReverseProxy.resx">
+      <DependentUpon>FormReverseProxy.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormSelect.resx">
       <DependentUpon>FormSelect.cs</DependentUpon>

@@ -37,10 +37,12 @@
             this.toolStripMenuItemAutoRun = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemNetworkImeAuto = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemWebProxyAuto = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemReverseProxyAuto = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemServers = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemWebProxy = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemTcpProxy = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemUrlBuilder = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemReverseProxy = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemPack = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemOpen = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemSelect = new System.Windows.Forms.ToolStripMenuItem();
@@ -135,7 +137,7 @@
             this.toolStripMenuItemRequest,
             this.toolStripMenuItemExit});
             this.contextMenuStrip.Name = "contextMenuStrip";
-            this.contextMenuStrip.Size = new System.Drawing.Size(153, 180);
+            this.contextMenuStrip.Size = new System.Drawing.Size(125, 158);
             this.contextMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip_Opening);
             // 
             // toolStripMenuItemAutoRun
@@ -143,9 +145,10 @@
             this.toolStripMenuItemAutoRun.CheckOnClick = true;
             this.toolStripMenuItemAutoRun.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItemNetworkImeAuto,
-            this.toolStripMenuItemWebProxyAuto});
+            this.toolStripMenuItemWebProxyAuto,
+            this.toolStripMenuItemReverseProxyAuto});
             this.toolStripMenuItemAutoRun.Name = "toolStripMenuItemAutoRun";
-            this.toolStripMenuItemAutoRun.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemAutoRun.Size = new System.Drawing.Size(124, 22);
             this.toolStripMenuItemAutoRun.Text = "开机启动";
             this.toolStripMenuItemAutoRun.DropDownOpening += new System.EventHandler(this.toolStripMenuItemAutoRun_DropDownOpening);
             this.toolStripMenuItemAutoRun.Click += new System.EventHandler(this.toolStripMenuItemAutoRun_Click);
@@ -166,14 +169,23 @@
             this.toolStripMenuItemWebProxyAuto.Text = "Web 代理";
             this.toolStripMenuItemWebProxyAuto.Click += new System.EventHandler(this.toolStripMenuItemWebProxyAuto_Click);
             // 
+            // toolStripMenuItemReverseProxyAuto
+            // 
+            this.toolStripMenuItemReverseProxyAuto.CheckOnClick = true;
+            this.toolStripMenuItemReverseProxyAuto.Name = "toolStripMenuItemReverseProxyAuto";
+            this.toolStripMenuItemReverseProxyAuto.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemReverseProxyAuto.Text = "反向代理";
+            this.toolStripMenuItemReverseProxyAuto.Click += new System.EventHandler(this.toolStripMenuItemReverseProxyAuto_Click);
+            // 
             // toolStripMenuItemServers
             // 
             this.toolStripMenuItemServers.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItemWebProxy,
             this.toolStripMenuItemTcpProxy,
-            this.toolStripMenuItemUrlBuilder});
+            this.toolStripMenuItemUrlBuilder,
+            this.toolStripMenuItemReverseProxy});
             this.toolStripMenuItemServers.Name = "toolStripMenuItemServers";
-            this.toolStripMenuItemServers.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemServers.Size = new System.Drawing.Size(124, 22);
             this.toolStripMenuItemServers.Text = "服务器";
             // 
             // toolStripMenuItemWebProxy
@@ -197,38 +209,45 @@
             this.toolStripMenuItemUrlBuilder.Text = "Url 服务";
             this.toolStripMenuItemUrlBuilder.Click += new System.EventHandler(this.toolStripMenuItemUrlBuilder_Click);
             // 
+            // toolStripMenuItemReverseProxy
+            // 
+            this.toolStripMenuItemReverseProxy.Name = "toolStripMenuItemReverseProxy";
+            this.toolStripMenuItemReverseProxy.Size = new System.Drawing.Size(131, 22);
+            this.toolStripMenuItemReverseProxy.Text = "反向代理";
+            this.toolStripMenuItemReverseProxy.Click += new System.EventHandler(this.toolStripMenuItemReverseProxy_Click);
+            // 
             // toolStripMenuItemPack
             // 
             this.toolStripMenuItemPack.Name = "toolStripMenuItemPack";
-            this.toolStripMenuItemPack.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemPack.Size = new System.Drawing.Size(124, 22);
             this.toolStripMenuItemPack.Text = "组包";
             this.toolStripMenuItemPack.Click += new System.EventHandler(this.buttonBuildPack_Click);
             // 
             // toolStripMenuItemOpen
             // 
             this.toolStripMenuItemOpen.Name = "toolStripMenuItemOpen";
-            this.toolStripMenuItemOpen.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemOpen.Size = new System.Drawing.Size(124, 22);
             this.toolStripMenuItemOpen.Text = "打开";
             this.toolStripMenuItemOpen.Click += new System.EventHandler(this.buttonOpen_Click);
             // 
             // toolStripMenuItemSelect
             // 
             this.toolStripMenuItemSelect.Name = "toolStripMenuItemSelect";
-            this.toolStripMenuItemSelect.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemSelect.Size = new System.Drawing.Size(124, 22);
             this.toolStripMenuItemSelect.Text = "选择";
             this.toolStripMenuItemSelect.Click += new System.EventHandler(this.buttonSelect_Click);
             // 
             // toolStripMenuItemRequest
             // 
             this.toolStripMenuItemRequest.Name = "toolStripMenuItemRequest";
-            this.toolStripMenuItemRequest.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemRequest.Size = new System.Drawing.Size(124, 22);
             this.toolStripMenuItemRequest.Text = "请求";
             this.toolStripMenuItemRequest.Click += new System.EventHandler(this.buttonRequest_Click);
             // 
             // toolStripMenuItemExit
             // 
             this.toolStripMenuItemExit.Name = "toolStripMenuItemExit";
-            this.toolStripMenuItemExit.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemExit.Size = new System.Drawing.Size(124, 22);
             this.toolStripMenuItemExit.Text = "退出";
             this.toolStripMenuItemExit.Click += new System.EventHandler(this.toolStripMenuItemExit_Click);
             // 
@@ -884,6 +903,8 @@
         private System.Windows.Forms.CheckBox checkBoxFakeShare;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemNetworkImeAuto;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemWebProxyAuto;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemReverseProxy;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemReverseProxyAuto;
     }
 }
 

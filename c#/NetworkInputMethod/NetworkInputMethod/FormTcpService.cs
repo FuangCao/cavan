@@ -9,14 +9,16 @@ namespace NetworkInputMethod
 {
     public class FormTcpService : CavanSubForm
     {
-        public void Invoke(EventHandler handler, object sender, EventArgs e)
+        public bool Invoke(EventHandler handler, object sender, EventArgs e)
         {
             try
             {
                 base.Invoke(handler, sender, e);
+                return true;
             }
             catch (Exception)
             {
+                return false;
             }
         }
 

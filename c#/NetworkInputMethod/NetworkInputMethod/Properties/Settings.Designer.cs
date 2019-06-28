@@ -70,5 +70,29 @@ namespace NetworkInputMethod.Properties {
                 this["NetworkImePort"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ReverseProxyEnable {
+            get {
+                return ((bool)(this["ReverseProxyEnable"]));
+            }
+            set {
+                this["ReverseProxyEnable"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("8868")]
+        public int ReverseProxyPort {
+            get {
+                return ((int)(this["ReverseProxyPort"]));
+            }
+            set {
+                this["ReverseProxyPort"] = value;
+            }
+        }
     }
 }

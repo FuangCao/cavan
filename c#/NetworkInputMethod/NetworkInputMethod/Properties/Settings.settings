@@ -14,5 +14,11 @@
     <Setting Name="NetworkImePort" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">8865</Value>
     </Setting>
+    <Setting Name="ReverseProxyEnable" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ReverseProxyPort" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">8868</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
