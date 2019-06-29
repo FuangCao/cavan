@@ -90,9 +90,38 @@ namespace NetworkInputMethod
             service.Item.SubItems[1].Text = client.Service.Count.ToString();
         }
 
-        public string getProxyLinkKey(object address, object hostname)
+        public static string ToString(object obj)
         {
-            return address + "@" + hostname;
+            if (obj == null)
+            {
+                return null;
+            }
+
+            var text = obj.ToString();
+            if (text.Length > 0)
+            {
+                return text;
+            }
+
+            return null;
+        }
+
+        public string getProxyLinkKey(object address, object name)
+        {
+            string key0 = ToString(address);
+            string key1 = ToString(name);
+
+            if (key0 != null)
+            {
+                if (key1 != null)
+                {
+                    return key0 + "@" + key1;
+                }
+
+                return key0;
+            }
+
+            return key1;
         }
 
         public string getProxyLinkKey(ReverseProxyLink link)
