@@ -23,5 +23,11 @@
     <Setting Name="ReverseProxyMap" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="HttpCaptureEnable" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="HttpCapturePort" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">9090</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

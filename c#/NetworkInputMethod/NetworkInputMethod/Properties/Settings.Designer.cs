@@ -105,5 +105,29 @@ namespace NetworkInputMethod.Properties {
                 this["ReverseProxyMap"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool HttpCaptureEnable {
+            get {
+                return ((bool)(this["HttpCaptureEnable"]));
+            }
+            set {
+                this["HttpCaptureEnable"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("9090")]
+        public int HttpCapturePort {
+            get {
+                return ((int)(this["HttpCapturePort"]));
+            }
+            set {
+                this["HttpCapturePort"] = value;
+            }
+        }
     }
 }

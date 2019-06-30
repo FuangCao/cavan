@@ -307,7 +307,6 @@ namespace NetworkInputMethod
             }
 
             Settings.Default.ReverseProxyMap = coll;
-            Settings.Default.Save();
         }
 
         protected override void onCavanSubFormClosing(object sender, FormClosingEventArgs e)
@@ -866,7 +865,7 @@ namespace NetworkInputMethod
                 return false;
             }
 
-            if (CavanTcpClient.WritePacket(client.GetStream(), "link " + Key + " " + TargetUrl)) ;
+            if (CavanTcpClient.WritePacket(client.GetStream(), "link " + Key + " " + TargetUrl))
             {
                 TcpProxyClient.ProxyLoop(client, peer.Client);
             }

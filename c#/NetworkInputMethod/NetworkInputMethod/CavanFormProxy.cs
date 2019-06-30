@@ -17,6 +17,7 @@ namespace NetworkInputMethod
         {
             Visible = false;
             e.Cancel = true;
+            Properties.Settings.Default.Save();
         }
 
         public new bool Show()

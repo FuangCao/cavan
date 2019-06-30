@@ -27,6 +27,7 @@ namespace NetworkInputMethod
         private FormWebProxyService mFormWebProxy;
         private FormUrlBuilder mFormUrlBuilder;
         private FormReverseProxy mFormReverseProxy;
+        private FormHttpCapture mFormHttpCapture;
 
         //API declarations...
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -166,6 +167,12 @@ namespace NetworkInputMethod
             {
                 mFormReverseProxy = new FormReverseProxy();
                 mFormReverseProxy.Show();
+            }
+
+            if (Settings.Default.HttpCaptureEnable)
+            {
+                mFormHttpCapture = new FormHttpCapture();
+                mFormHttpCapture.Show();
             }
         }
 
@@ -604,17 +611,11 @@ namespace NetworkInputMethod
             }
         }
 
-        private void FormNetworkIme_FormClosing(object sender, FormClosingEventArgs e)
+        protected override void onCavanSubFormClosing(object sender, FormClosingEventArgs e)
         {
-            Settings.Default.Save();
-
-            e.Cancel = true;
-            WindowState = FormWindowState.Minimized;
-            ShowInTaskbar = false;
-            Visible = false;
+            base.onCavanSubFormClosing(sender, e);
             SetClipboardViewer();
         }
-
 
         private void notifyIcon_MouseClick(object sender, MouseEventArgs e)
         {
@@ -1001,6 +1002,7 @@ namespace NetworkInputMethod
             toolStripMenuItemNetworkImeAuto.Checked = Settings.Default.NetworkImeEnable;
             toolStripMenuItemWebProxyAuto.Checked = Settings.Default.WebProxyEnable;
             toolStripMenuItemReverseProxyAuto.Checked = Settings.Default.ReverseProxyEnable;
+            ToolStripMenuItemHttpCaptureAuto.Checked = Settings.Default.HttpCaptureEnable;
         }
 
         private void toolStripMenuItemAutoRun_Click(object sender, EventArgs e)
@@ -1031,6 +1033,26 @@ namespace NetworkInputMethod
         private void toolStripMenuItemReverseProxyAuto_Click(object sender, EventArgs e)
         {
             Settings.Default.ReverseProxyEnable = toolStripMenuItemReverseProxyAuto.Checked;
+        }
+
+        private void ToolStripMenuItemHttpCaptureAuto_Click(object sender, EventArgs e)
+        {
+            Settings.Default.HttpCaptureEnable = ToolStripMenuItemHttpCaptureAuto.Checked;
+        }
+
+        private void ToolStripMenuItemHttpCapturer_Click(object sender, EventArgs e)
+        {
+            if (mFormHttpCapture == null || mFormHttpCapture.IsDisposed)
+            {
+                mFormHttpCapture = new FormHttpCapture();
+            }
+
+            mFormHttpCapture.Show();
+        }
+
+        private void ToolStripMenuItemSave_Click(object sender, EventArgs e)
+        {
+            Settings.Default.Save();
         }
     }
 

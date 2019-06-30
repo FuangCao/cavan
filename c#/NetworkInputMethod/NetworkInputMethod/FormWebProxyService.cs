@@ -79,7 +79,7 @@ namespace NetworkInputMethod
         {
             get
             {
-                return mMethod.ToUpper();
+                return mMethod;
             }
 
             set
@@ -158,15 +158,17 @@ namespace NetworkInputMethod
                 return false;
             }
 
-            var path = args[1];
-
-            mMethod = args[0];
+            mMethod = args[0].ToUpper();
             mVersion = args[2];
 
             mLines.Clear();
 
+            var path = args[1];
+
             if (url == null)
             {
+                mUrl = new CavanUrl(path);
+
                 while (true)
                 {
                     line = readline(stream);
