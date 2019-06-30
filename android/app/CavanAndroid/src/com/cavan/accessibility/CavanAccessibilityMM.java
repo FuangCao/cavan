@@ -2747,6 +2747,31 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		return (win != null && win.isWebviewUi() && isCurrentPackage());
 	}
 
+	public boolean isWebViewUI(String name) {
+		int index = name.lastIndexOf('.');
+		if (index < 0) {
+			return false;
+		}
+
+		index = name.indexOf("Web", index + 1);
+		if (index < 0) {
+			return false;
+		}
+
+		if (name.length() < index + 9) {
+			return false;
+		}
+
+		char ch = name.charAt(index + 3);
+		if (ch != 'v' && ch != 'V') {
+			return false;
+		}
+
+		name = name.substring(index + 4);
+
+		return name .startsWith("iew") && name.endsWith("UI");
+	}
+
 	@Override
 	public synchronized CavanAccessibilityWindow getWindow(String name) {
 		CavanAccessibilityWindow win = super.getWindow(name);
@@ -2762,7 +2787,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			win = new ReceiveWindow(name);
 		} else if (name.startsWith("com.tencent.mm.plugin.appbrand.ui.AppBrandUI")) {
 			win = new AppBrandWindow(name);
-		} else if (name.startsWith("com.tencent.mm.plugin.webview.ui.tools.") || name.endsWith("WebViewUI") || name.endsWith("WebviewMpUI")) {
+		} else if (isWebViewUI(name)) {
 			if (name.indexOf("Game") < 0) {
 				win = new WebViewWindow(name);
 			} else {
