@@ -2,515 +2,11 @@
 
 #include "CavanMain.h"
 
-extern int do_cavan_ascii(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doAscii(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "ascii", async, args, do_cavan_ascii);
-}
-
-extern int do_cavan_part_probe(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doPartProbe(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "part_probe", async, args, do_cavan_part_probe);
-}
-
-extern int do_cavan_lm49350_clock(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doLm49350Clock(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "lm49350_clock", async, args, do_cavan_lm49350_clock);
-}
-
-extern int do_cavan_umount(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doUmount(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "umount", async, args, do_cavan_umount);
-}
-
-extern int do_cavan_web_proxy(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doWebProxy(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "web_proxy", async, args, do_cavan_web_proxy);
-}
-
-extern int do_cavan_ftp_server(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doFtpServer(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "ftp_server", async, args, do_cavan_ftp_server);
-}
-
-extern int do_cavan_http_sender(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doHttpSender(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "http_sender", async, args, do_cavan_http_sender);
-}
-
-extern int do_cavan_chroot(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doChroot(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "chroot", async, args, do_cavan_chroot);
-}
-
-extern int do_cavan_input(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doInput(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "input", async, args, do_cavan_input);
-}
-
-extern int do_cavan_redpacket(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doRedpacket(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "redpacket", async, args, do_cavan_redpacket);
-}
-
-extern int do_cavan_tcp_install(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpInstall(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "tcp_install", async, args, do_cavan_tcp_install);
-}
-
-extern int do_cavan_tftp_dd(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTftpDd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "tftp_dd", async, args, do_cavan_tftp_dd);
-}
-
-extern int do_cavan_touch(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTouch(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "touch", async, args, do_cavan_touch);
-}
-
-extern int do_cavan_tftp_command(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTftpCommand(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "tftp_command", async, args, do_cavan_tftp_command);
-}
-
-extern int do_cavan_dos2unix(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doDos2unix(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "dos2unix", async, args, do_cavan_dos2unix);
-}
-
-extern int do_cavan_textlen(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTextlen(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "textlen", async, args, do_cavan_textlen);
-}
-
-extern int do_cavan_brecovery(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBrecovery(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "brecovery", async, args, do_cavan_brecovery);
-}
-
-extern int do_cavan_input_server(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doInputServer(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "input_server", async, args, do_cavan_input_server);
-}
-
-extern int do_cavan_file_split(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doFileSplit(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "file_split", async, args, do_cavan_file_split);
-}
-
-extern int do_cavan_sha1sum(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSha1sum(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "sha1sum", async, args, do_cavan_sha1sum);
-}
-
-extern int do_cavan_auto_dd(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doAutoDd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "auto_dd", async, args, do_cavan_auto_dd);
-}
-
-extern int do_cavan_file_crc32(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doFileCrc32(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "file_crc32", async, args, do_cavan_file_crc32);
-}
-
-extern int do_cavan_ssh(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSsh(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "ssh", async, args, do_cavan_ssh);
-}
-
-extern int do_cavan_usb(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doUsb(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "usb", async, args, do_cavan_usb);
-}
-
-extern int do_cavan_http_client(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doHttpClient(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "http_client", async, args, do_cavan_http_client);
-}
-
-extern int do_cavan_event_repeater(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doEventRepeater(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "event_repeater", async, args, do_cavan_event_repeater);
-}
-
-extern int do_cavan_bootimg(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBootimg(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "bootimg", async, args, do_cavan_bootimg);
-}
-
-extern int do_cavan_copy(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doCopy(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "copy", async, args, do_cavan_copy);
-}
-
-extern int do_cavan_mknp(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMknp(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "mknp", async, args, do_cavan_mknp);
-}
-
-extern int do_cavan_swan_check(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanCheck(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "swan_check", async, args, do_cavan_swan_check);
-}
-
-extern int do_cavan_tcp_copy(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpCopy(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "tcp_copy", async, args, do_cavan_tcp_copy);
-}
-
-extern int do_cavan_git_daemon(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doGitDaemon(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "git_daemon", async, args, do_cavan_git_daemon);
-}
-
-extern int do_cavan_inotify(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doInotify(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "inotify", async, args, do_cavan_inotify);
-}
-
-extern int do_cavan_dd(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doDd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "dd", async, args, do_cavan_dd);
-}
-
-extern int do_cavan_message_queue(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMessageQueue(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "message_queue", async, args, do_cavan_message_queue);
-}
-
-extern int do_cavan_su(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSu(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "su", async, args, do_cavan_su);
-}
-
-extern int do_cavan_sprd_write_imei(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSprdWriteImei(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "sprd_write_imei", async, args, do_cavan_sprd_write_imei);
-}
-
-extern int do_cavan_swan_mkfs(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanMkfs(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "swan_mkfs", async, args, do_cavan_swan_mkfs);
-}
-
-extern int do_cavan_vfat(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doVfat(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "vfat", async, args, do_cavan_vfat);
-}
-
-extern int do_cavan_md5sum(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMd5sum(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "md5sum", async, args, do_cavan_md5sum);
-}
-
-extern int do_cavan_mkdir(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMkdir(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "mkdir", async, args, do_cavan_mkdir);
-}
-
-extern int do_cavan_swan_mac(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanMac(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "swan_mac", async, args, do_cavan_swan_mac);
-}
-
-extern int do_cavan_tty_mode(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTtyMode(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "tty_mode", async, args, do_cavan_tty_mode);
-}
-
-extern int do_cavan_ext2(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doExt2(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "ext2", async, args, do_cavan_ext2);
-}
-
-extern int do_cavan_wifi(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doWifi(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "wifi", async, args, do_cavan_wifi);
-}
-
-extern int do_cavan_rle(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doRle(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "rle", async, args, do_cavan_rle);
-}
-
-extern int do_cavan_fb_capture(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doFbCapture(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "fb_capture", async, args, do_cavan_fb_capture);
-}
-
-extern int do_cavan_http_service(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doHttpService(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "http_service", async, args, do_cavan_http_service);
-}
-
-extern int do_cavan_battery(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBattery(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "battery", async, args, do_cavan_battery);
-}
-
-extern int do_cavan_jw650_lcd(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doJw650Lcd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "jw650_lcd", async, args, do_cavan_jw650_lcd);
-}
-
-extern int do_cavan_fdisk(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doFdisk(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "fdisk", async, args, do_cavan_fdisk);
-}
-
-extern int do_cavan_eavoo_sell_statistic(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doEavooSellStatistic(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "eavoo_sell_statistic", async, args, do_cavan_eavoo_sell_statistic);
-}
-
-extern int do_cavan_swan_vk(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanVk(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "swan_vk", async, args, do_cavan_swan_vk);
-}
-
-extern int do_cavan_ecc(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doEcc(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "ecc", async, args, do_cavan_ecc);
-}
-
-extern int do_cavan_move(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMove(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "move", async, args, do_cavan_move);
-}
-
-extern int do_cavan_tftp_copy(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTftpCopy(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "tftp_copy", async, args, do_cavan_tftp_copy);
-}
-
-extern int do_cavan_tcp_dd_server(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpDdServer(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "tcp_dd_server", async, args, do_cavan_tcp_dd_server);
-}
-
 extern int do_cavan_abspath(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doAbspath(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
 {
 	return CavanMainExecute(env, "abspath", async, args, do_cavan_abspath);
-}
-
-extern int do_cavan_i2c(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doI2c(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "i2c", async, args, do_cavan_i2c);
-}
-
-extern int do_cavan_tcp_dd(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpDd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "tcp_dd", async, args, do_cavan_tcp_dd);
-}
-
-extern int do_cavan_tftp_auto_dd(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTftpAutoDd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "tftp_auto_dd", async, args, do_cavan_tftp_auto_dd);
-}
-
-extern int do_cavan_auto_mount(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doAutoMount(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "auto_mount", async, args, do_cavan_auto_mount);
-}
-
-extern int do_cavan_auto_input(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doAutoInput(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "auto_input", async, args, do_cavan_auto_input);
-}
-
-extern int do_cavan_tcp_keypad(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpKeypad(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "tcp_keypad", async, args, do_cavan_tcp_keypad);
-}
-
-extern int do_cavan_screen_mirror(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doScreenMirror(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "screen_mirror", async, args, do_cavan_screen_mirror);
-}
-
-extern int do_cavan_loop_run(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doLoopRun(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "loop_run", async, args, do_cavan_loop_run);
-}
-
-extern int do_cavan_calculator(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doCalculator(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "calculator", async, args, do_cavan_calculator);
-}
-
-extern int do_cavan_role_change(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doRoleChange(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "role_change", async, args, do_cavan_role_change);
-}
-
-extern int do_cavan_image_dd(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doImageDd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "image_dd", async, args, do_cavan_image_dd);
-}
-
-extern int do_cavan_tcp_proxy(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpProxy(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "tcp_proxy", async, args, do_cavan_tcp_proxy);
-}
-
-extern int do_cavan_sprd_at(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSprdAt(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "sprd_at", async, args, do_cavan_sprd_at);
-}
-
-extern int do_cavan_tee(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTee(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "tee", async, args, do_cavan_tee);
-}
-
-extern int do_cavan_service(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doService(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "service", async, args, do_cavan_service);
 }
 
 extern int do_cavan_alarm(int argc, char *argv[]);
@@ -520,74 +16,102 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doAlarm(JNIEnv *env, jclass c
 	return CavanMainExecute(env, "alarm", async, args, do_cavan_alarm);
 }
 
-extern int do_cavan_part_table(int argc, char *argv[]);
+extern int do_cavan_alc5671_clock(int argc, char *argv[]);
 
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doPartTable(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doAlc5671Clock(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
 {
-	return CavanMainExecute(env, "part_table", async, args, do_cavan_part_table);
+	return CavanMainExecute(env, "alc5671_clock", async, args, do_cavan_alc5671_clock);
 }
 
-extern int do_cavan_sshd(int argc, char *argv[]);
+extern int do_cavan_ascii(int argc, char *argv[]);
 
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSshd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doAscii(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
 {
-	return CavanMainExecute(env, "sshd", async, args, do_cavan_sshd);
+	return CavanMainExecute(env, "ascii", async, args, do_cavan_ascii);
 }
 
-extern int do_cavan_usb_copy(int argc, char *argv[]);
+extern int do_cavan_auto_dd(int argc, char *argv[]);
 
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doUsbCopy(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doAutoDd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
 {
-	return CavanMainExecute(env, "usb_copy", async, args, do_cavan_usb_copy);
+	return CavanMainExecute(env, "auto_dd", async, args, do_cavan_auto_dd);
 }
 
-extern int do_cavan_mount(int argc, char *argv[]);
+extern int do_cavan_auto_input(int argc, char *argv[]);
 
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMount(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doAutoInput(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
 {
-	return CavanMainExecute(env, "mount", async, args, do_cavan_mount);
+	return CavanMainExecute(env, "auto_input", async, args, do_cavan_auto_input);
 }
 
-extern int do_cavan_mksdcard(int argc, char *argv[]);
+extern int do_cavan_auto_mount(int argc, char *argv[]);
 
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMksdcard(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doAutoMount(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
 {
-	return CavanMainExecute(env, "mksdcard", async, args, do_cavan_mksdcard);
+	return CavanMainExecute(env, "auto_mount", async, args, do_cavan_auto_mount);
 }
 
-extern int do_cavan_mtd(int argc, char *argv[]);
+extern int do_cavan_battery(int argc, char *argv[]);
 
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMtd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBattery(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
 {
-	return CavanMainExecute(env, "mtd", async, args, do_cavan_mtd);
+	return CavanMainExecute(env, "battery", async, args, do_cavan_battery);
 }
 
-extern int do_cavan_tcp_exec(int argc, char *argv[]);
+extern int do_cavan_battery_level(int argc, char *argv[]);
 
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpExec(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBatteryLevel(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
 {
-	return CavanMainExecute(env, "tcp_exec", async, args, do_cavan_tcp_exec);
+	return CavanMainExecute(env, "battery_level", async, args, do_cavan_battery_level);
 }
 
-extern int do_cavan_system_init(int argc, char *argv[]);
+extern int do_cavan_bdata(int argc, char *argv[]);
 
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSystemInit(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBdata(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
 {
-	return CavanMainExecute(env, "system_init", async, args, do_cavan_system_init);
+	return CavanMainExecute(env, "bdata", async, args, do_cavan_bdata);
 }
 
-extern int do_cavan_net_monitor(int argc, char *argv[]);
+extern int do_cavan_bkernel(int argc, char *argv[]);
 
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doNetMonitor(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBkernel(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
 {
-	return CavanMainExecute(env, "net_monitor", async, args, do_cavan_net_monitor);
+	return CavanMainExecute(env, "bkernel", async, args, do_cavan_bkernel);
 }
 
-extern int do_cavan_part_show(int argc, char *argv[]);
+extern int do_cavan_bmp_view(int argc, char *argv[]);
 
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doPartShow(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBmpView(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
 {
-	return CavanMainExecute(env, "part_show", async, args, do_cavan_part_show);
+	return CavanMainExecute(env, "bmp_view", async, args, do_cavan_bmp_view);
+}
+
+extern int do_cavan_bootimg(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBootimg(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "bootimg", async, args, do_cavan_bootimg);
+}
+
+extern int do_cavan_bramdisk(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBramdisk(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "bramdisk", async, args, do_cavan_bramdisk);
+}
+
+extern int do_cavan_brecovery(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBrecovery(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "brecovery", async, args, do_cavan_brecovery);
+}
+
+extern int do_cavan_bsystem(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBsystem(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "bsystem", async, args, do_cavan_bsystem);
 }
 
 extern int do_cavan_buboot(int argc, char *argv[]);
@@ -597,11 +121,375 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBuboot(JNIEnv *env, jclass 
 	return CavanMainExecute(env, "buboot", async, args, do_cavan_buboot);
 }
 
-extern int do_cavan_swan_fac(int argc, char *argv[]);
+extern int do_cavan_calculator(int argc, char *argv[]);
 
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanFac(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doCalculator(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
 {
-	return CavanMainExecute(env, "swan_fac", async, args, do_cavan_swan_fac);
+	return CavanMainExecute(env, "calculator", async, args, do_cavan_calculator);
+}
+
+extern int do_cavan_chroot(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doChroot(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "chroot", async, args, do_cavan_chroot);
+}
+
+extern int do_cavan_chtty(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doChtty(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "chtty", async, args, do_cavan_chtty);
+}
+
+extern int do_cavan_clock(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doClock(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "clock", async, args, do_cavan_clock);
+}
+
+extern int do_cavan_copy(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doCopy(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "copy", async, args, do_cavan_copy);
+}
+
+extern int do_cavan_dd(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doDd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "dd", async, args, do_cavan_dd);
+}
+
+extern int do_cavan_df(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doDf(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "df", async, args, do_cavan_df);
+}
+
+extern int do_cavan_dic_generator(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doDicGenerator(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "dic_generator", async, args, do_cavan_dic_generator);
+}
+
+extern int do_cavan_display(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doDisplay(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "display", async, args, do_cavan_display);
+}
+
+extern int do_cavan_dos2unix(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doDos2unix(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "dos2unix", async, args, do_cavan_dos2unix);
+}
+
+extern int do_cavan_eavoo_sell_statistic(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doEavooSellStatistic(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "eavoo_sell_statistic", async, args, do_cavan_eavoo_sell_statistic);
+}
+
+extern int do_cavan_ecc(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doEcc(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "ecc", async, args, do_cavan_ecc);
+}
+
+extern int do_cavan_event_repeater(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doEventRepeater(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "event_repeater", async, args, do_cavan_event_repeater);
+}
+
+extern int do_cavan_ext2(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doExt2(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "ext2", async, args, do_cavan_ext2);
+}
+
+extern int do_cavan_fb_capture(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doFbCapture(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "fb_capture", async, args, do_cavan_fb_capture);
+}
+
+extern int do_cavan_fdisk(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doFdisk(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "fdisk", async, args, do_cavan_fdisk);
+}
+
+extern int do_cavan_file_crc32(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doFileCrc32(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "file_crc32", async, args, do_cavan_file_crc32);
+}
+
+extern int do_cavan_file_join(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doFileJoin(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "file_join", async, args, do_cavan_file_join);
+}
+
+extern int do_cavan_file_loop(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doFileLoop(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "file_loop", async, args, do_cavan_file_loop);
+}
+
+extern int do_cavan_file_split(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doFileSplit(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "file_split", async, args, do_cavan_file_split);
+}
+
+extern int do_cavan_ftp(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doFtp(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "ftp", async, args, do_cavan_ftp);
+}
+
+extern int do_cavan_ftp_server(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doFtpServer(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "ftp_server", async, args, do_cavan_ftp_server);
+}
+
+extern int do_cavan_git_daemon(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doGitDaemon(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "git_daemon", async, args, do_cavan_git_daemon);
+}
+
+extern int do_cavan_heart_rate(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doHeartRate(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "heart_rate", async, args, do_cavan_heart_rate);
+}
+
+extern int do_cavan_http_client(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doHttpClient(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "http_client", async, args, do_cavan_http_client);
+}
+
+extern int do_cavan_http_sender(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doHttpSender(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "http_sender", async, args, do_cavan_http_sender);
+}
+
+extern int do_cavan_http_service(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doHttpService(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "http_service", async, args, do_cavan_http_service);
+}
+
+extern int do_cavan_i2c(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doI2c(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "i2c", async, args, do_cavan_i2c);
+}
+
+extern int do_cavan_image_dd(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doImageDd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "image_dd", async, args, do_cavan_image_dd);
+}
+
+extern int do_cavan_inotify(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doInotify(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "inotify", async, args, do_cavan_inotify);
+}
+
+extern int do_cavan_input(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doInput(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "input", async, args, do_cavan_input);
+}
+
+extern int do_cavan_input_server(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doInputServer(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "input_server", async, args, do_cavan_input_server);
+}
+
+extern int do_cavan_jw650_lcd(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doJw650Lcd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "jw650_lcd", async, args, do_cavan_jw650_lcd);
+}
+
+extern int do_cavan_jwp_udp(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doJwpUdp(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "jwp_udp", async, args, do_cavan_jwp_udp);
+}
+
+extern int do_cavan_lm49350_clock(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doLm49350Clock(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "lm49350_clock", async, args, do_cavan_lm49350_clock);
+}
+
+extern int do_cavan_loop_run(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doLoopRun(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "loop_run", async, args, do_cavan_loop_run);
+}
+
+extern int do_cavan_md5sum(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMd5sum(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "md5sum", async, args, do_cavan_md5sum);
+}
+
+extern int do_cavan_message_queue(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMessageQueue(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "message_queue", async, args, do_cavan_message_queue);
+}
+
+extern int do_cavan_mkdir(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMkdir(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "mkdir", async, args, do_cavan_mkdir);
+}
+
+extern int do_cavan_mknp(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMknp(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "mknp", async, args, do_cavan_mknp);
+}
+
+extern int do_cavan_mksdcard(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMksdcard(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "mksdcard", async, args, do_cavan_mksdcard);
+}
+
+extern int do_cavan_modem_upgrade(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doModemUpgrade(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "modem_upgrade", async, args, do_cavan_modem_upgrade);
+}
+
+extern int do_cavan_mount(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMount(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "mount", async, args, do_cavan_mount);
+}
+
+extern int do_cavan_move(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMove(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "move", async, args, do_cavan_move);
+}
+
+extern int do_cavan_mtd(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMtd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "mtd", async, args, do_cavan_mtd);
+}
+
+extern int do_cavan_net_discovery(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doNetDiscovery(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "net_discovery", async, args, do_cavan_net_discovery);
+}
+
+extern int do_cavan_net_monitor(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doNetMonitor(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "net_monitor", async, args, do_cavan_net_monitor);
+}
+
+extern int do_cavan_network(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doNetwork(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "network", async, args, do_cavan_network);
+}
+
+extern int do_cavan_p2p(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doP2p(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "p2p", async, args, do_cavan_p2p);
+}
+
+extern int do_cavan_part_probe(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doPartProbe(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "part_probe", async, args, do_cavan_part_probe);
+}
+
+extern int do_cavan_part_show(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doPartShow(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "part_show", async, args, do_cavan_part_show);
+}
+
+extern int do_cavan_part_table(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doPartTable(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "part_table", async, args, do_cavan_part_table);
+}
+
+extern int do_cavan_penetrator(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doPenetrator(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "penetrator", async, args, do_cavan_penetrator);
 }
 
 extern int do_cavan_ping(int argc, char *argv[]);
@@ -611,18 +499,11 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doPing(JNIEnv *env, jclass cl
 	return CavanMainExecute(env, "ping", async, args, do_cavan_ping);
 }
 
-extern int do_cavan_ssh_copy(int argc, char *argv[]);
+extern int do_cavan_poll_event(int argc, char *argv[]);
 
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSshCopy(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doPollEvent(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
 {
-	return CavanMainExecute(env, "ssh_copy", async, args, do_cavan_ssh_copy);
-}
-
-extern int do_cavan_swan_ts(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanTs(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "swan_ts", async, args, do_cavan_swan_ts);
+	return CavanMainExecute(env, "poll_event", async, args, do_cavan_poll_event);
 }
 
 extern int do_cavan_poll_input(int argc, char *argv[]);
@@ -639,291 +520,11 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doRamdisk(JNIEnv *env, jclass
 	return CavanMainExecute(env, "ramdisk", async, args, do_cavan_ramdisk);
 }
 
-extern int do_cavan_show_args(int argc, char *argv[]);
+extern int do_cavan_redpacket(int argc, char *argv[]);
 
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doShowArgs(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doRedpacket(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
 {
-	return CavanMainExecute(env, "show_args", async, args, do_cavan_show_args);
-}
-
-extern int do_cavan_df(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doDf(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "df", async, args, do_cavan_df);
-}
-
-extern int do_cavan_display(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doDisplay(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "display", async, args, do_cavan_display);
-}
-
-extern int do_cavan_net_discovery(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doNetDiscovery(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "net_discovery", async, args, do_cavan_net_discovery);
-}
-
-extern int do_cavan_sudo(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSudo(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "sudo", async, args, do_cavan_sudo);
-}
-
-extern int do_cavan_p2p(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doP2p(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "p2p", async, args, do_cavan_p2p);
-}
-
-extern int do_cavan_file_loop(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doFileLoop(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "file_loop", async, args, do_cavan_file_loop);
-}
-
-extern int do_cavan_resize(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doResize(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "resize", async, args, do_cavan_resize);
-}
-
-extern int do_cavan_jwp_udp(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doJwpUdp(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "jwp_udp", async, args, do_cavan_jwp_udp);
-}
-
-extern int do_cavan_modem_upgrade(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doModemUpgrade(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "modem_upgrade", async, args, do_cavan_modem_upgrade);
-}
-
-extern int do_cavan_tcp_bridge(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpBridge(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "tcp_bridge", async, args, do_cavan_tcp_bridge);
-}
-
-extern int do_cavan_show_file(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doShowFile(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "show_file", async, args, do_cavan_show_file);
-}
-
-extern int do_cavan_bdata(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBdata(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "bdata", async, args, do_cavan_bdata);
-}
-
-extern int do_cavan_chtty(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doChtty(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "chtty", async, args, do_cavan_chtty);
-}
-
-extern int do_cavan_alc5671_clock(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doAlc5671Clock(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "alc5671_clock", async, args, do_cavan_alc5671_clock);
-}
-
-extern int do_cavan_tcp_repeater(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpRepeater(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "tcp_repeater", async, args, do_cavan_tcp_repeater);
-}
-
-extern int do_cavan_shrink(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doShrink(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "shrink", async, args, do_cavan_shrink);
-}
-
-extern int do_cavan_swan_ipu(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanIpu(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "swan_ipu", async, args, do_cavan_swan_ipu);
-}
-
-extern int do_cavan_penetrator(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doPenetrator(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "penetrator", async, args, do_cavan_penetrator);
-}
-
-extern int do_cavan_ftp(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doFtp(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "ftp", async, args, do_cavan_ftp);
-}
-
-extern int do_cavan_swan_upgrade(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanUpgrade(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "swan_upgrade", async, args, do_cavan_swan_upgrade);
-}
-
-extern int do_cavan_usb_dd_server(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doUsbDdServer(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "usb_dd_server", async, args, do_cavan_usb_dd_server);
-}
-
-extern int do_cavan_swan_sfdisk(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanSfdisk(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "swan_sfdisk", async, args, do_cavan_swan_sfdisk);
-}
-
-extern int do_cavan_heart_rate(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doHeartRate(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "heart_rate", async, args, do_cavan_heart_rate);
-}
-
-extern int do_cavan_super_upgrade(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSuperUpgrade(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "super_upgrade", async, args, do_cavan_super_upgrade);
-}
-
-extern int do_cavan_bmp_view(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBmpView(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "bmp_view", async, args, do_cavan_bmp_view);
-}
-
-extern int do_cavan_network(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doNetwork(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "network", async, args, do_cavan_network);
-}
-
-extern int do_cavan_clock(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doClock(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "clock", async, args, do_cavan_clock);
-}
-
-extern int do_cavan_file_join(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doFileJoin(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "file_join", async, args, do_cavan_file_join);
-}
-
-extern int do_cavan_ssh_dd(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSshDd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "ssh_dd", async, args, do_cavan_ssh_dd);
-}
-
-extern int do_cavan_service_manager(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doServiceManager(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "service_manager", async, args, do_cavan_service_manager);
-}
-
-extern int do_cavan_tftp_dd_server(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTftpDdServer(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "tftp_dd_server", async, args, do_cavan_tftp_dd_server);
-}
-
-extern int do_cavan_poll_event(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doPollEvent(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "poll_event", async, args, do_cavan_poll_event);
-}
-
-extern int do_cavan_swan_md5(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanMd5(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "swan_md5", async, args, do_cavan_swan_md5);
-}
-
-extern int do_cavan_swan_emmc(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanEmmc(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "swan_emmc", async, args, do_cavan_swan_emmc);
-}
-
-extern int do_cavan_bkernel(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBkernel(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "bkernel", async, args, do_cavan_bkernel);
-}
-
-extern int do_cavan_bramdisk(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBramdisk(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "bramdisk", async, args, do_cavan_bramdisk);
-}
-
-extern int do_cavan_swan_vn(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanVn(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "swan_vn", async, args, do_cavan_swan_vn);
-}
-
-extern int do_cavan_dic_generator(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doDicGenerator(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "dic_generator", async, args, do_cavan_dic_generator);
-}
-
-extern int do_cavan_bsystem(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBsystem(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "bsystem", async, args, do_cavan_bsystem);
-}
-
-extern int do_cavan_battery_level(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doBatteryLevel(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "battery_level", async, args, do_cavan_battery_level);
+	return CavanMainExecute(env, "redpacket", async, args, do_cavan_redpacket);
 }
 
 extern int do_cavan_remove(int argc, char *argv[]);
@@ -933,6 +534,377 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doRemove(JNIEnv *env, jclass 
 	return CavanMainExecute(env, "remove", async, args, do_cavan_remove);
 }
 
+extern int do_cavan_resize(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doResize(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "resize", async, args, do_cavan_resize);
+}
+
+extern int do_cavan_rle(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doRle(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "rle", async, args, do_cavan_rle);
+}
+
+extern int do_cavan_role_change(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doRoleChange(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "role_change", async, args, do_cavan_role_change);
+}
+
+extern int do_cavan_screen_mirror(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doScreenMirror(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "screen_mirror", async, args, do_cavan_screen_mirror);
+}
+
+extern int do_cavan_service(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doService(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "service", async, args, do_cavan_service);
+}
+
+extern int do_cavan_service_manager(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doServiceManager(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "service_manager", async, args, do_cavan_service_manager);
+}
+
+extern int do_cavan_sha1sum(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSha1sum(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "sha1sum", async, args, do_cavan_sha1sum);
+}
+
+extern int do_cavan_show_args(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doShowArgs(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "show_args", async, args, do_cavan_show_args);
+}
+
+extern int do_cavan_show_file(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doShowFile(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "show_file", async, args, do_cavan_show_file);
+}
+
+extern int do_cavan_shrink(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doShrink(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "shrink", async, args, do_cavan_shrink);
+}
+
+extern int do_cavan_sprd_at(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSprdAt(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "sprd_at", async, args, do_cavan_sprd_at);
+}
+
+extern int do_cavan_sprd_write_imei(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSprdWriteImei(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "sprd_write_imei", async, args, do_cavan_sprd_write_imei);
+}
+
+extern int do_cavan_ssh(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSsh(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "ssh", async, args, do_cavan_ssh);
+}
+
+extern int do_cavan_ssh_copy(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSshCopy(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "ssh_copy", async, args, do_cavan_ssh_copy);
+}
+
+extern int do_cavan_sshd(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSshd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "sshd", async, args, do_cavan_sshd);
+}
+
+extern int do_cavan_ssh_dd(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSshDd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "ssh_dd", async, args, do_cavan_ssh_dd);
+}
+
+extern int do_cavan_su(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSu(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "su", async, args, do_cavan_su);
+}
+
+extern int do_cavan_sudo(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSudo(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "sudo", async, args, do_cavan_sudo);
+}
+
+extern int do_cavan_super_upgrade(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSuperUpgrade(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "super_upgrade", async, args, do_cavan_super_upgrade);
+}
+
+extern int do_cavan_swan_check(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanCheck(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "swan_check", async, args, do_cavan_swan_check);
+}
+
+extern int do_cavan_swan_emmc(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanEmmc(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "swan_emmc", async, args, do_cavan_swan_emmc);
+}
+
+extern int do_cavan_swan_fac(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanFac(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "swan_fac", async, args, do_cavan_swan_fac);
+}
+
+extern int do_cavan_swan_ipu(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanIpu(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "swan_ipu", async, args, do_cavan_swan_ipu);
+}
+
+extern int do_cavan_swan_mac(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanMac(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "swan_mac", async, args, do_cavan_swan_mac);
+}
+
+extern int do_cavan_swan_md5(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanMd5(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "swan_md5", async, args, do_cavan_swan_md5);
+}
+
+extern int do_cavan_swan_mkfs(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanMkfs(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "swan_mkfs", async, args, do_cavan_swan_mkfs);
+}
+
+extern int do_cavan_swan_sfdisk(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanSfdisk(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "swan_sfdisk", async, args, do_cavan_swan_sfdisk);
+}
+
+extern int do_cavan_swan_ts(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanTs(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "swan_ts", async, args, do_cavan_swan_ts);
+}
+
+extern int do_cavan_swan_upgrade(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanUpgrade(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "swan_upgrade", async, args, do_cavan_swan_upgrade);
+}
+
+extern int do_cavan_swan_vk(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanVk(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "swan_vk", async, args, do_cavan_swan_vk);
+}
+
+extern int do_cavan_swan_vn(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSwanVn(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "swan_vn", async, args, do_cavan_swan_vn);
+}
+
+extern int do_cavan_system_init(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSystemInit(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "system_init", async, args, do_cavan_system_init);
+}
+
+extern int do_cavan_tcp_bridge(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpBridge(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "tcp_bridge", async, args, do_cavan_tcp_bridge);
+}
+
+extern int do_cavan_tcp_copy(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpCopy(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "tcp_copy", async, args, do_cavan_tcp_copy);
+}
+
+extern int do_cavan_tcp_dd(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpDd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "tcp_dd", async, args, do_cavan_tcp_dd);
+}
+
+extern int do_cavan_tcp_dd_server(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpDdServer(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "tcp_dd_server", async, args, do_cavan_tcp_dd_server);
+}
+
+extern int do_cavan_tcp_exec(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpExec(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "tcp_exec", async, args, do_cavan_tcp_exec);
+}
+
+extern int do_cavan_tcp_install(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpInstall(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "tcp_install", async, args, do_cavan_tcp_install);
+}
+
+extern int do_cavan_tcp_keypad(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpKeypad(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "tcp_keypad", async, args, do_cavan_tcp_keypad);
+}
+
+extern int do_cavan_tcp_proxy(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpProxy(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "tcp_proxy", async, args, do_cavan_tcp_proxy);
+}
+
+extern int do_cavan_tcp_repeater(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTcpRepeater(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "tcp_repeater", async, args, do_cavan_tcp_repeater);
+}
+
+extern int do_cavan_tee(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTee(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "tee", async, args, do_cavan_tee);
+}
+
+extern int do_cavan_textlen(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTextlen(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "textlen", async, args, do_cavan_textlen);
+}
+
+extern int do_cavan_tftp_auto_dd(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTftpAutoDd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "tftp_auto_dd", async, args, do_cavan_tftp_auto_dd);
+}
+
+extern int do_cavan_tftp_command(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTftpCommand(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "tftp_command", async, args, do_cavan_tftp_command);
+}
+
+extern int do_cavan_tftp_copy(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTftpCopy(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "tftp_copy", async, args, do_cavan_tftp_copy);
+}
+
+extern int do_cavan_tftp_dd(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTftpDd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "tftp_dd", async, args, do_cavan_tftp_dd);
+}
+
+extern int do_cavan_tftp_dd_server(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTftpDdServer(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "tftp_dd_server", async, args, do_cavan_tftp_dd_server);
+}
+
+extern int do_cavan_touch(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTouch(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "touch", async, args, do_cavan_touch);
+}
+
+extern int do_cavan_tty_mode(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doTtyMode(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "tty_mode", async, args, do_cavan_tty_mode);
+}
+
+extern int do_cavan_umount(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doUmount(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "umount", async, args, do_cavan_umount);
+}
+
+extern int do_cavan_usb(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doUsb(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "usb", async, args, do_cavan_usb);
+}
+
+extern int do_cavan_usb_copy(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doUsbCopy(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "usb_copy", async, args, do_cavan_usb_copy);
+}
+
 extern int do_cavan_usb_dd(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doUsbDd(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
@@ -940,11 +912,46 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doUsbDd(JNIEnv *env, jclass c
 	return CavanMainExecute(env, "usb_dd", async, args, do_cavan_usb_dd);
 }
 
+extern int do_cavan_usb_dd_server(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doUsbDdServer(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "usb_dd_server", async, args, do_cavan_usb_dd_server);
+}
+
+extern int do_cavan_vfat(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doVfat(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "vfat", async, args, do_cavan_vfat);
+}
+
+extern int do_cavan_web_proxy(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doWebProxy(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "web_proxy", async, args, do_cavan_web_proxy);
+}
+
+extern int do_cavan_wifi(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doWifi(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "wifi", async, args, do_cavan_wifi);
+}
+
 extern int do_cavan_mkfs(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doMkfs(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
 {
 	return CavanMainExecute(env, "mkfs", async, args, do_cavan_mkfs);
+}
+
+extern int do_cavan_cpp_calculator(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doCppCalculator(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "cpp_calculator", async, args, do_cavan_cpp_calculator);
 }
 
 extern int do_cavan_cpp_http_service(int argc, char *argv[]);
@@ -961,11 +968,11 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doImClient(JNIEnv *env, jclas
 	return CavanMainExecute(env, "im_client", async, args, do_cavan_im_client);
 }
 
-extern int do_cavan_cpp_calculator(int argc, char *argv[]);
+extern int do_cavan_im_server(int argc, char *argv[]);
 
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doCppCalculator(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doImServer(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
 {
-	return CavanMainExecute(env, "cpp_calculator", async, args, do_cavan_cpp_calculator);
+	return CavanMainExecute(env, "im_server", async, args, do_cavan_im_server);
 }
 
 extern int do_cavan_udp_proxy(int argc, char *argv[]);
@@ -973,11 +980,4 @@ extern int do_cavan_udp_proxy(int argc, char *argv[]);
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doUdpProxy(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
 {
 	return CavanMainExecute(env, "udp_proxy", async, args, do_cavan_udp_proxy);
-}
-
-extern int do_cavan_im_server(int argc, char *argv[]);
-
-JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doImServer(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
-{
-	return CavanMainExecute(env, "im_server", async, args, do_cavan_im_server);
 }

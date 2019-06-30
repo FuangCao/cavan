@@ -9,6 +9,7 @@ import android.accessibilityservice.AccessibilityService;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Point;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -633,6 +634,12 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			}
 			break;
 
+		case "CURSOR":
+			if (args.length > 1) {
+				processCommandCursor(accessibility, args[1].split("\\s+"));
+			}
+			break;
+
 		default:
 			CavanMainInputMethod ime = CavanMainInputMethod.instance;
 			if (ime == null) {
@@ -643,6 +650,64 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 				processCommand(ime, accessibility, args);
 			}
 		}
+	}
+
+	private boolean processCommandCursor(CavanAccessibilityService accessibility, String[] args) {
+		FloatMessageService service = FloatMessageService.instance;
+		if (service == null) {
+			return false;
+		}
+
+		switch (args[0]) {
+		case "set":
+			if (args.length > 2) {
+				int x = CavanJava.parseInt(args[1]);
+				int y = CavanJava.parseInt(args[2]);
+				service.setCurorPosition(x, y);
+				return true;
+			}
+			break;
+
+		case "add":
+			if (args.length > 2) {
+				int x = CavanJava.parseInt(args[1]);
+				int y = CavanJava.parseInt(args[2]);
+				service.addCursorPosition(x, y);
+				return true;
+			}
+			break;
+
+		case "save":
+			if (accessibility != null) {
+				Point point = service.getCursorPosition();
+				if (point == null) {
+					return false;
+				}
+
+				return accessibility.savePosition(point);
+			}
+			break;
+
+		case "remove":
+			if (accessibility != null) {
+				return accessibility.removePosition();
+			}
+			break;
+
+		case "1":
+		case "true":
+		case "enable":
+			service.setCursorEnale(true);
+			return true;
+
+		case "0":
+		case "false":
+		case "disable":
+			service.setCursorEnale(false);
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override

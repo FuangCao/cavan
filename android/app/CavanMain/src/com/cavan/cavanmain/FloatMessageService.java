@@ -19,6 +19,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Environment;
@@ -27,7 +28,9 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
+import android.view.Display;
 import android.view.Gravity;
+import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager.LayoutParams;
@@ -38,6 +41,7 @@ import com.cavan.accessibility.CavanAccessibilityService;
 import com.cavan.accessibility.CavanRedPacketAlipay;
 import com.cavan.accessibility.CavanUnlockActivity;
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanCursorView;
 import com.cavan.android.CavanThreadedHandler;
 import com.cavan.android.CavanWakeLock;
 import com.cavan.cavanjni.CavanJni;
@@ -103,6 +107,7 @@ public class FloatMessageService extends FloatWindowService {
 	private CavanWakeLock mWakeLock = new CavanWakeLock(FloatMessageService.class.getCanonicalName());
 	private HashMap<CharSequence, CavanRedPacketAlipay> mMessageCodeMap = new HashMap<CharSequence, CavanRedPacketAlipay>();
 
+	private CavanCursorView mCursorView;
 	private UdpDaemonThread mUdpDaemon;
 	private TcpBridgeThread mTcpBridge;
 
@@ -738,6 +743,74 @@ public class FloatMessageService extends FloatWindowService {
 		mNetworkConnected = CavanAndroid.isNetworkAvailable(this);
 		mHandler.sendEmptyMessage(MSG_TCP_SERVICE_UPDATED);
 		mHandler.sendEmptyMessage(MSG_TCP_BRIDGE_UPDATED);
+	}
+
+	public void setCursorEnale(boolean enable) {
+		if (enable) {
+			if (mCursorView == null) {
+				mCursorView = new CavanCursorView(this, createRootViewLayoutParams());
+				addRootView(mCursorView);
+			} else {
+				mCursorView.setVisibility(View.VISIBLE);
+			}
+		} else if (mCursorView != null) {
+			mCursorView.setVisibility(View.GONE);
+		}
+	}
+
+	public void setCurorPosition(int x, int y) {
+		if (mCursorView != null) {
+			mCursorView.setPosition(x, y);
+		}
+	}
+
+	public void addCursorPosition(int x, int y) {
+		if (mCursorView != null) {
+			mCursorView.addPosition(x, y);
+		}
+	}
+
+	public Point getCursorPosition() {
+		if (mCursorView == null) {
+			return null;
+		}
+
+		Display display = mManager.getDefaultDisplay();
+		int rotation = display.getRotation();
+		int x = mCursorView.getCursorX();
+		int y = mCursorView.getCursorY();
+		Point point = new Point();
+
+		display.getRealSize(point);
+		CavanAndroid.dLog("width = " + point.x + ", height = " + point.y);
+
+		switch (rotation) {
+		case Surface.ROTATION_0:
+			CavanAndroid.dLog("ROTATION_0");
+			point.set(point.x - x, y);
+			break;
+
+		case Surface.ROTATION_90:
+			CavanAndroid.dLog("ROTATION_90");
+			point.set(point.y - y, point.x - x);
+			break;
+
+		case Surface.ROTATION_180:
+			CavanAndroid.dLog("ROTATION_180");
+			point.set(x, point.y - y);
+			break;
+
+		case Surface.ROTATION_270:
+			CavanAndroid.dLog("ROTATION_270");
+			point.set(y, x);
+			break;
+
+		default:
+			point.set(x, y);
+			break;
+		}
+
+		return point;
 	}
 
 	@Override

@@ -467,9 +467,27 @@ public class CavanAccessibilityService extends AccessibilityService {
 		case CavanAccessibilityWindow.CMD_BACK:
 			performActionBack();
 			break;
+
+		case CavanAccessibilityWindow.CMD_SIGNIN:
+			processCommandSignin(root);
+			break;
 		}
 
 		return 0;
+	}
+
+	private boolean processCommandSignin(AccessibilityNodeInfo root) {
+		CharSequence pkg = root.getPackageName();
+		if (pkg == null) {
+			return false;
+		}
+
+		Point position = onReadPosition(pkg.toString());
+		if (position == null) {
+			return false;
+		}
+
+		return doInputTap(position.x, position.y);
 	}
 
 	public CavanAccessibilityPackage getPendingPackage() {
@@ -1014,6 +1032,45 @@ public class CavanAccessibilityService extends AccessibilityService {
 
 	public boolean sendCommandWeb(String action) {
 		return sendCommand(CavanAccessibilityWindow.CMD_WEB, action);
+	}
+
+	public boolean savePosition(Point point) {
+		String pkg = getCurrntPacketName();
+		if (pkg == null) {
+			return false;
+		}
+
+		return onSavePosition(pkg, point);
+	}
+
+	public boolean removePosition() {
+		String pkg = getCurrntPacketName();
+		if (pkg == null) {
+			return false;
+		}
+
+		return onRemovePosition(pkg);
+	}
+
+	public Point readPosition() {
+		String pkg = getCurrntPacketName();
+		if (pkg == null) {
+			return null;
+		}
+
+		return onReadPosition(pkg);
+	}
+
+	protected boolean onSavePosition(String pkg, Point point) {
+		return false;
+	}
+
+	protected Point onReadPosition(String pkg) {
+		return null;
+	}
+
+	protected boolean onRemovePosition(String pkg) {
+		return false;
 	}
 
 	public Class<?> getBroadcastReceiverClass() {
