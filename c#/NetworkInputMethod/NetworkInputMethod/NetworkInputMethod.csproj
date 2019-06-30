@@ -145,6 +145,12 @@
     <Compile Include="FormSendCommand.Designer.cs">
       <DependentUpon>FormSendCommand.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormSimulateTap.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSimulateTap.Designer.cs">
+      <DependentUpon>FormSimulateTap.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormTcpService.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -213,6 +219,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormSendCommand.resx">
       <DependentUpon>FormSendCommand.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSimulateTap.resx">
+      <DependentUpon>FormSimulateTap.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormTcpProxyService.resx">
       <DependentUpon>FormTcpProxyService.cs</DependentUpon>

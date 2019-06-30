@@ -28,6 +28,7 @@ namespace NetworkInputMethod
         private FormUrlBuilder mFormUrlBuilder;
         private FormReverseProxy mFormReverseProxy;
         private FormHttpCapture mFormHttpCapture;
+        private FormSimulateTap mFormSimulateTap;
 
         //API declarations...
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -1053,6 +1054,16 @@ namespace NetworkInputMethod
         private void ToolStripMenuItemSave_Click(object sender, EventArgs e)
         {
             Settings.Default.Save();
+        }
+
+        private void ToolStripMenuItemTap_Click(object sender, EventArgs e)
+        {
+            if (mFormSimulateTap == null || mFormSimulateTap.IsDisposed)
+            {
+                mFormSimulateTap = new FormSimulateTap(this);
+            }
+
+            mFormSimulateTap.Show();
         }
     }
 

@@ -45,6 +45,7 @@
             this.toolStripMenuItemUrlBuilder = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemReverseProxy = new System.Windows.Forms.ToolStripMenuItem();
             this.ToolStripMenuItemHttpCapturer = new System.Windows.Forms.ToolStripMenuItem();
+            this.ToolStripMenuItemSave = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemPack = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemOpen = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemSelect = new System.Windows.Forms.ToolStripMenuItem();
@@ -97,7 +98,7 @@
             this.checkBoxFloatClock = new System.Windows.Forms.CheckBox();
             this.comboBoxRepeat = new System.Windows.Forms.ComboBox();
             this.checkBoxFakeShare = new System.Windows.Forms.CheckBox();
-            this.ToolStripMenuItemSave = new System.Windows.Forms.ToolStripMenuItem();
+            this.ToolStripMenuItemTap = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -137,11 +138,12 @@
             this.ToolStripMenuItemSave,
             this.toolStripMenuItemPack,
             this.toolStripMenuItemOpen,
+            this.ToolStripMenuItemTap,
             this.toolStripMenuItemSelect,
             this.toolStripMenuItemRequest,
             this.toolStripMenuItemExit});
             this.contextMenuStrip.Name = "contextMenuStrip";
-            this.contextMenuStrip.Size = new System.Drawing.Size(153, 202);
+            this.contextMenuStrip.Size = new System.Drawing.Size(153, 224);
             this.contextMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip_Opening);
             // 
             // toolStripMenuItemAutoRun
@@ -162,7 +164,7 @@
             // 
             this.toolStripMenuItemNetworkImeAuto.CheckOnClick = true;
             this.toolStripMenuItemNetworkImeAuto.Name = "toolStripMenuItemNetworkImeAuto";
-            this.toolStripMenuItemNetworkImeAuto.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemNetworkImeAuto.Size = new System.Drawing.Size(136, 22);
             this.toolStripMenuItemNetworkImeAuto.Text = "网络输入法";
             this.toolStripMenuItemNetworkImeAuto.Click += new System.EventHandler(this.toolStripMenuItemNetworkImeAuto_Click);
             // 
@@ -170,7 +172,7 @@
             // 
             this.toolStripMenuItemWebProxyAuto.CheckOnClick = true;
             this.toolStripMenuItemWebProxyAuto.Name = "toolStripMenuItemWebProxyAuto";
-            this.toolStripMenuItemWebProxyAuto.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemWebProxyAuto.Size = new System.Drawing.Size(136, 22);
             this.toolStripMenuItemWebProxyAuto.Text = "Web 代理";
             this.toolStripMenuItemWebProxyAuto.Click += new System.EventHandler(this.toolStripMenuItemWebProxyAuto_Click);
             // 
@@ -178,7 +180,7 @@
             // 
             this.toolStripMenuItemReverseProxyAuto.CheckOnClick = true;
             this.toolStripMenuItemReverseProxyAuto.Name = "toolStripMenuItemReverseProxyAuto";
-            this.toolStripMenuItemReverseProxyAuto.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItemReverseProxyAuto.Size = new System.Drawing.Size(136, 22);
             this.toolStripMenuItemReverseProxyAuto.Text = "反向代理";
             this.toolStripMenuItemReverseProxyAuto.Click += new System.EventHandler(this.toolStripMenuItemReverseProxyAuto_Click);
             // 
@@ -186,7 +188,7 @@
             // 
             this.ToolStripMenuItemHttpCaptureAuto.CheckOnClick = true;
             this.ToolStripMenuItemHttpCaptureAuto.Name = "ToolStripMenuItemHttpCaptureAuto";
-            this.ToolStripMenuItemHttpCaptureAuto.Size = new System.Drawing.Size(152, 22);
+            this.ToolStripMenuItemHttpCaptureAuto.Size = new System.Drawing.Size(136, 22);
             this.ToolStripMenuItemHttpCaptureAuto.Text = "抓包工具";
             this.ToolStripMenuItemHttpCaptureAuto.Click += new System.EventHandler(this.ToolStripMenuItemHttpCaptureAuto_Click);
             // 
@@ -236,6 +238,13 @@
             this.ToolStripMenuItemHttpCapturer.Size = new System.Drawing.Size(152, 22);
             this.ToolStripMenuItemHttpCapturer.Text = "抓包工具";
             this.ToolStripMenuItemHttpCapturer.Click += new System.EventHandler(this.ToolStripMenuItemHttpCapturer_Click);
+            // 
+            // ToolStripMenuItemSave
+            // 
+            this.ToolStripMenuItemSave.Name = "ToolStripMenuItemSave";
+            this.ToolStripMenuItemSave.Size = new System.Drawing.Size(152, 22);
+            this.ToolStripMenuItemSave.Text = "保存";
+            this.ToolStripMenuItemSave.Click += new System.EventHandler(this.ToolStripMenuItemSave_Click);
             // 
             // toolStripMenuItemPack
             // 
@@ -793,12 +802,12 @@
             this.checkBoxFakeShare.Text = "假分";
             this.checkBoxFakeShare.UseVisualStyleBackColor = true;
             // 
-            // ToolStripMenuItemSave
+            // ToolStripMenuItemTap
             // 
-            this.ToolStripMenuItemSave.Name = "ToolStripMenuItemSave";
-            this.ToolStripMenuItemSave.Size = new System.Drawing.Size(152, 22);
-            this.ToolStripMenuItemSave.Text = "保存";
-            this.ToolStripMenuItemSave.Click += new System.EventHandler(this.ToolStripMenuItemSave_Click);
+            this.ToolStripMenuItemTap.Name = "ToolStripMenuItemTap";
+            this.ToolStripMenuItemTap.Size = new System.Drawing.Size(152, 22);
+            this.ToolStripMenuItemTap.Text = "点击";
+            this.ToolStripMenuItemTap.Click += new System.EventHandler(this.ToolStripMenuItemTap_Click);
             // 
             // FormNetworkIme
             // 
@@ -858,7 +867,8 @@
             this.MaximizeBox = false;
             this.Name = "FormNetworkIme";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "网络输入法";this.Load += new System.EventHandler(this.FormNetworkIme_Load);
+            this.Text = "网络输入法";
+            this.Load += new System.EventHandler(this.FormNetworkIme_Load);
             this.contextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -934,6 +944,7 @@
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItemHttpCaptureAuto;
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItemHttpCapturer;
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItemSave;
+        private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItemTap;
     }
 }
 
