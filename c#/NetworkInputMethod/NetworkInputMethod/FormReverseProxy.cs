@@ -106,22 +106,25 @@ namespace NetworkInputMethod
             return null;
         }
 
-        public string getProxyLinkKey(object address, object name)
+        public string getProxyLinkKey(string address, string name)
         {
-            string key0 = ToString(address);
-            string key1 = ToString(name);
-
-            if (key0 != null)
+            if (string.IsNullOrEmpty(address))
             {
-                if (key1 != null)
+                if (string.IsNullOrEmpty(name))
                 {
-                    return key0 + "@" + key1;
+                    return null;
                 }
 
-                return key0;
+                return name;
             }
-
-            return key1;
+            else if (string.IsNullOrEmpty(name))
+            {
+                return address;
+            }
+            else
+            {
+                return address + "@" + name;
+            }
         }
 
         public string getProxyLinkKey(ReverseProxyLink link)
@@ -133,7 +136,7 @@ namespace NetworkInputMethod
             {
                 if (hostname != null)
                 {
-                    return getProxyLinkKey(address, hostname);
+                    return getProxyLinkKey(address.ToString(), hostname);
                 }
 
                 return address.ToString();
@@ -198,7 +201,7 @@ namespace NetworkInputMethod
                 return;
             }
 
-            var key = getProxyLinkKey(address, hostname);
+            var key = getProxyLinkKey(address.ToString(), hostname);
 
             var item = findProxyLinkItem(key);
             if (item == null)
@@ -865,7 +868,18 @@ namespace NetworkInputMethod
                 return false;
             }
 
-            if (CavanTcpClient.WritePacket(client.GetStream(), "link " + Key + " " + TargetUrl))
+            var builder = new StringBuilder();
+            builder.Append("link ");
+
+            var key = Key;
+            if (key != null)
+            {
+                builder.Append(key).Append(' ');
+            }
+
+            builder.Append(TargetUrl);
+
+            if (CavanTcpClient.WritePacket(client.GetStream(), builder.ToString()))
             {
                 TcpProxyClient.ProxyLoop(client, peer.Client);
             }
