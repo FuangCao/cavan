@@ -386,7 +386,7 @@ namespace NetworkInputMethod
 
                 if (response != null)
                 {
-                    MessageBox.Show(url + "\r\n" + response, "上传成功");
+                    // MessageBox.Show(url + "\r\n" + response, "上传成功");
                     return true;
                 }
             }
@@ -542,17 +542,12 @@ namespace NetworkInputMethod
 
         private void buttonUpload_Click(object sender, EventArgs e)
         {
-            StringBuilder builder = new StringBuilder();
+            buttonUpload.Enabled = false;
 
-            foreach (TreeNode server in treeView.Nodes)
+            if (!backgroundWorkerUpload.IsBusy)
             {
-                foreach (TreeNode file in server.Nodes)
-                {
-                    upload(builder, server, file);
-                }
+                backgroundWorkerUpload.RunWorkerAsync();
             }
-
-            MessageBox.Show(builder.ToString());
         }
 
         private void uploadToolStripMenuItem_Click(object sender, EventArgs e)
@@ -668,6 +663,26 @@ namespace NetworkInputMethod
         private void expandToolStripMenuItem_Click(object sender, EventArgs e)
         {
             treeView.ExpandAll();
+        }
+
+        private void backgroundWorkerUpload_DoWork(object sender, DoWorkEventArgs e)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            foreach (TreeNode server in treeView.Nodes)
+            {
+                foreach (TreeNode file in server.Nodes)
+                {
+                    upload(builder, server, file);
+                }
+            }
+
+            MessageBox.Show(builder.ToString());
+        }
+
+        private void backgroundWorkerUpload_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            buttonUpload.Enabled = true;
         }
     }
 }

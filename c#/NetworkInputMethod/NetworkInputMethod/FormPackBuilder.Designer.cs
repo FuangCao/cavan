@@ -53,6 +53,7 @@
             this.buttonUpload = new System.Windows.Forms.Button();
             this.comboBoxReqCount = new System.Windows.Forms.ComboBox();
             this.treeView = new NetworkInputMethod.CavanTreeView();
+            this.backgroundWorkerUpload = new System.ComponentModel.BackgroundWorker();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -269,6 +270,11 @@
             this.treeView.DragDrop += new System.Windows.Forms.DragEventHandler(this.treeView_DragDrop);
             this.treeView.DragEnter += new System.Windows.Forms.DragEventHandler(this.treeView_DragEnter);
             // 
+            // backgroundWorkerUpload
+            // 
+            this.backgroundWorkerUpload.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorkerUpload_DoWork);
+            this.backgroundWorkerUpload.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorkerUpload_RunWorkerCompleted);
+            // 
             // FormPackBuilder
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -314,5 +320,6 @@
         private CavanTreeView treeView;
         private System.Windows.Forms.ToolStripMenuItem collapseToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem expandToolStripMenuItem;
+        private System.ComponentModel.BackgroundWorker backgroundWorkerUpload;
     }
 }

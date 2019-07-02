@@ -22,9 +22,13 @@ namespace NetworkInputMethod
 
         public FormReverseProxy()
         {
-            InitializeComponent();
-            textBoxPort.Text = Settings.Default.ReverseProxyPort.ToString();
             mService = new CavanTcpService(this);
+            InitializeComponent();
+
+            var port = Settings.Default.ReverseProxyPort;
+            textBoxPort.Text = port.ToString();
+            mService.Port = port;
+
             loadProxyMap();
         }
 
