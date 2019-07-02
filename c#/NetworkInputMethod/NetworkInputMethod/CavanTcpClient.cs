@@ -496,7 +496,6 @@ namespace NetworkInputMethod
                     Console.WriteLine(e);
                     mPort = 80;
                 }
-
             }
         }
 

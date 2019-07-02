@@ -184,6 +184,8 @@ namespace NetworkInputMethod
 
                     mLines.Add(line);
                 }
+
+                mLines.Add("");
             }
             else if (path[0] != '/')
             {
