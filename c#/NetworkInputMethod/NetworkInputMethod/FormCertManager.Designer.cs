@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.listViewCerts = new System.Windows.Forms.ListView();
             this.columnHeaderDomain = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderPassword = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -40,6 +41,9 @@
             this.labelDomain = new System.Windows.Forms.Label();
             this.labelPassword = new System.Windows.Forms.Label();
             this.openFileDialogCert = new System.Windows.Forms.OpenFileDialog();
+            this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.ToolStripMenuItemDelete = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // listViewCerts
@@ -48,6 +52,8 @@
             this.columnHeaderDomain,
             this.columnHeaderPassword,
             this.columnHeaderPathname});
+            this.listViewCerts.ContextMenuStrip = this.contextMenuStrip;
+            this.listViewCerts.FullRowSelect = true;
             this.listViewCerts.Location = new System.Drawing.Point(12, 12);
             this.listViewCerts.Name = "listViewCerts";
             this.listViewCerts.Size = new System.Drawing.Size(613, 431);
@@ -137,6 +143,20 @@
             // 
             this.openFileDialogCert.Filter = "证书文件|*.pfx|所有文件|*.*";
             // 
+            // contextMenuStrip
+            // 
+            this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.ToolStripMenuItemDelete});
+            this.contextMenuStrip.Name = "contextMenuStrip";
+            this.contextMenuStrip.Size = new System.Drawing.Size(101, 26);
+            // 
+            // ToolStripMenuItemDelete
+            // 
+            this.ToolStripMenuItemDelete.Name = "ToolStripMenuItemDelete";
+            this.ToolStripMenuItemDelete.Size = new System.Drawing.Size(152, 22);
+            this.ToolStripMenuItemDelete.Text = "删除";
+            this.ToolStripMenuItemDelete.Click += new System.EventHandler(this.ToolStripMenuItemDelete_Click);
+            // 
             // FormCertManager
             // 
             this.AcceptButton = this.buttonOK;
@@ -155,6 +175,7 @@
             this.Name = "FormCertManager";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "证书管理器";
+            this.contextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -174,5 +195,7 @@
         private System.Windows.Forms.Label labelDomain;
         private System.Windows.Forms.Label labelPassword;
         private System.Windows.Forms.OpenFileDialog openFileDialogCert;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
+        private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItemDelete;
     }
 }

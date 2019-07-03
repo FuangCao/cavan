@@ -108,7 +108,7 @@ namespace NetworkInputMethod
                     var cert = new X509Certificate2(args[2], args[1]);
                     mCertTable[args[0]] = cert;
 
-                    Console.WriteLine("add cert: " + args[0]);
+                    Console.WriteLine(args[0] + " => " + args[2]);
                 }
                 catch (Exception err)
                 {

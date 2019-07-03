@@ -72,5 +72,13 @@ namespace NetworkInputMethod
             Settings.Default.HttpCaptureCerts = lines;
             Settings.Default.Save();
         }
+
+        private void ToolStripMenuItemDelete_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in listViewCerts.SelectedItems)
+            {
+                listViewCerts.Items.Remove(item);
+            }
+        }
     }
 }
