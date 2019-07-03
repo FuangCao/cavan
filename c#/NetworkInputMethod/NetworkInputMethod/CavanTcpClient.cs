@@ -2,6 +2,7 @@
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.Windows.Forms;
 
 namespace NetworkInputMethod
 {
@@ -17,6 +18,14 @@ namespace NetworkInputMethod
         public CavanTcpClient(TcpClient client)
         {
             mClient = client;
+        }
+
+        public FormTcpService Form
+        {
+            get
+            {
+                return mService.Form;
+            }
         }
 
         public static TcpClient Connect(string url)
@@ -525,7 +534,7 @@ namespace NetworkInputMethod
             }
         }
 
-        public UInt16 Port
+        public ushort Port
         {
             get
             {
@@ -555,6 +564,23 @@ namespace NetworkInputMethod
         {
             get
             {
+                switch (mPort)
+                {
+                    case 80:
+                        if ("http".Equals(mProto))
+                        {
+                            return mHost;
+                        }
+                        break;
+
+                    case 443:
+                        if ("https".Equals(mProto))
+                        {
+                            return mHost;
+                        }
+                        break;
+                }
+
                 return mHost + ":" + mPort;
             }
         }

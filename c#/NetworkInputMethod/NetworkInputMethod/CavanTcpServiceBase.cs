@@ -44,6 +44,18 @@ namespace NetworkInputMethod
             }
         }
 
+        public virtual FormTcpService Form
+        {
+            get
+            {
+                return null;
+            }
+
+            set
+            {
+            }
+        }
+
         public TcpListener setListener(TcpListener listener)
         {
             TcpListener backup;

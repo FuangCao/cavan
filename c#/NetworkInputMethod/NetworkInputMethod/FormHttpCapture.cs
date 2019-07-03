@@ -16,6 +16,8 @@ namespace NetworkInputMethod
     {
         private CavanTcpService mService;
 
+        delegate void PacketCapturedHandler(HttpCapturePacket req, HttpCapturePacket rsp);
+
         public FormHttpCapture()
         {
             mService = new CavanTcpService(this);
@@ -55,25 +57,74 @@ namespace NetworkInputMethod
                 buttonSwitch.PerformClick();
             }
         }
+
+        private void onPacketCaptured(HttpCapturePacket req, HttpCapturePacket rsp)
+        {
+            var packet = new HttpCapturePacketFull
+            {
+                Request = req,
+                Response = rsp,
+            };
+
+            listBoxUrl.Items.Add(packet);
+        }
+
+        public void performPacketCaptured(HttpCapturePacket req, HttpCapturePacket rsp)
+        {
+            var method = new PacketCapturedHandler(onPacketCaptured);
+            Invoke(method, req, rsp);
+        }
+
+        private void listBoxUrl_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var packet = listBoxUrl.SelectedItem as HttpCapturePacketFull;
+            if (packet != null)
+            {
+                textBoxReq.Text = packet.Request.ToString();
+                textBoxRsp.Text = packet.Response.ToString();
+            }
+        }
+    }
+
+    public enum HttpHeaderType
+    {
+        Host,
+        ContentType,
+        ContentLength,
     }
 
     public class HttpCapturePacket
     {
         public const int OVERTIME = 20000000;
+        public const int CONTENT_MAX = 10 << 20;
 
         public static byte[] LineEnd = Encoding.UTF8.GetBytes("\r\n");
+        public static Hashtable HeaderTable = new Hashtable()
+        {
+            { "host", HttpHeaderType.Host },
+            { "content-type", HttpHeaderType.ContentType },
+            { "content-length", HttpHeaderType.ContentLength },
+
+        };
+
+        public static string[] HeaderNames = new string[]
+        {
+            "Host",
+            "Content-Type",
+            "Content-Length",
+        };
 
         private string mFirstLine;
         private ArrayList mLines;
-        private byte[] mContent;
+
+        private byte[] mContent = new byte[1024];
         private int mLength;
 
         private string mMethod;
         private CavanUrl mUrl;
         private string mVersion;
 
-        private string mContentLength;
-        private string mContentType;
+        private string[] mHeaders = new string[HeaderNames.Length];
 
         public string FirstLine
         {
@@ -166,6 +217,42 @@ namespace NetworkInputMethod
             }
         }
 
+        public int ContentLength
+        {
+            get
+            {
+                return getHeader(HttpHeaderType.ContentLength, -1);
+            }
+
+            set
+            {
+                setHeader(HttpHeaderType.ContentLength, value);
+            }
+        }
+
+        public string getHeader(HttpHeaderType type)
+        {
+            return mHeaders[(int)type];
+        }
+
+        public int getHeader(HttpHeaderType type, int vdef)
+        {
+            var text = getHeader(type);
+            if (text == null)
+            {
+                return vdef;
+            }
+
+            return Convert.ToInt32(text);
+        }
+
+        public string setHeader(HttpHeaderType type, object value)
+        {
+            var prev = mHeaders[(int)type];
+            mHeaders[(int)type] = value.ToString();
+            return prev;
+        }
+
         public string readline(Socket sock, byte[] bytes)
         {
             var buff = new byte[1];
@@ -192,7 +279,7 @@ namespace NetworkInputMethod
 
                 if (length < bytes.Length)
                 {
-                    bytes[length++] = (byte)value;
+                    bytes[length++] = value;
                 }
                 else
                 {
@@ -208,6 +295,11 @@ namespace NetworkInputMethod
             var bytes = new byte[4096];
             string line;
 
+            for (int i = 0; i < mHeaders.Length; i++)
+            {
+                mHeaders[i] = null;
+            }
+
             line = readline(sock, bytes);
             if (line == null)
             {
@@ -215,8 +307,6 @@ namespace NetworkInputMethod
             }
 
             mFirstLine = line;
-            mContentType = null;
-            mContentLength = null;
 
             var lines = new ArrayList();
 
@@ -242,16 +332,25 @@ namespace NetworkInputMethod
                 }
 
                 var key = line.Substring(0, index).Trim();
-                switch (key.ToLower())
-                {
-                    case "content-type":
-                        mContentType = line.Substring(index + 1).Trim();
-                        break;
+                var header = HeaderTable[key.ToLower()];
 
-                    case "content-length":
-                        mContentLength = line.Substring(index + 1).Trim();
-                        break;
+                if (header != null)
+                {
+                    mHeaders[(int)header] = line.Substring(index + 1).TrimStart();
                 }
+            }
+
+            for (int i = 0; i < mHeaders.Length; i++)
+            {
+                var value = mHeaders[i];
+                if (value == null)
+                {
+                    continue;
+                }
+
+                var key = HeaderNames[i];
+
+                Console.WriteLine(key + ": " + value);
             }
 
             mLines = lines;
@@ -332,6 +431,8 @@ namespace NetworkInputMethod
 
             var url = new CavanUrl(args[1]);
 
+            Console.WriteLine("url = " + url);
+
             try
             {
                 var link = new TcpClient(url.Host, url.Port);
@@ -349,14 +450,74 @@ namespace NetworkInputMethod
             }
         }
 
+        public bool append(byte[] bytes, int index, int length)
+        {
+            var size = mLength + length;
+
+            if (size > mContent.Length)
+            {
+                if (size > CONTENT_MAX)
+                {
+                    return false;
+                }
+
+                var content = new byte[(size * 2 + 7) & (~0x07)];
+                Array.Copy(mContent, content, mLength);
+                mContent = content;
+            }
+
+            Array.Copy(bytes, index, mContent, mLength, length);
+            mLength += length;
+
+            return true;
+        }
+
         public bool proxy(Socket isock, Socket osock)
         {
             var bytes = new byte[1024];
+            var length = ContentLength;
 
-            if (mContentLength != null)
+            if (length < 0)
             {
-                var length = Convert.ToInt32(mContentLength);
+                var links = new ArrayList();
 
+                links.Add(isock);
+
+                while (true)
+                {
+                    links.Add(osock);
+
+                    Socket.Select(links, null, null, OVERTIME);
+
+                    if (links.Count == 0)
+                    {
+                        return false;
+                    }
+
+                    foreach (Socket link in links)
+                    {
+                        if (link == osock)
+                        {
+                            return true;
+                        }
+
+                        length = link.Receive(bytes);
+                        if (length <= 0)
+                        {
+                            return false;
+                        }
+
+                        if (!send(osock, bytes, length))
+                        {
+                            return false;
+                        }
+
+                        append(bytes, 0, length);
+                    }
+                }
+            }
+            else
+            {
                 while (length > 0)
                 {
                     if (!isock.Poll(OVERTIME, SelectMode.SelectRead))
@@ -391,44 +552,8 @@ namespace NetworkInputMethod
                         return false;
                     }
 
+                    append(bytes, 0, rdlen);
                     length -= rdlen;
-                }
-            }
-            else
-            {
-                var links = new ArrayList();
-
-                links.Add(isock);
-
-                while (true)
-                {
-                    links.Add(osock);
-
-                    Socket.Select(links, null, null, OVERTIME);
-
-                    if (links.Count == 0)
-                    {
-                        return false;
-                    }
-
-                    foreach (Socket link in links)
-                    {
-                        if (link == osock)
-                        {
-                            return true;
-                        }
-
-                        var length = link.Receive(bytes);
-                        if (length <= 0)
-                        {
-                            return false;
-                        }
-
-                        if (!send(osock, bytes, length))
-                        {
-                            return false;
-                        }
-                    }
                 }
             }
 
@@ -446,7 +571,51 @@ namespace NetworkInputMethod
                 builder.AppendLine(line);
             }
 
+            builder.AppendLine();
+
+            if (mLength > 0)
+            {
+                builder.AppendLine(Encoding.UTF8.GetString(mContent, 0, mLength));
+            }
+
             return builder.ToString();
+        }
+    }
+
+    public class HttpCapturePacketFull
+    {
+        private HttpCapturePacket mRequest;
+        private HttpCapturePacket mResponse;
+
+        public HttpCapturePacket Request
+        {
+            get
+            {
+                return mRequest;
+            }
+
+            set
+            {
+                mRequest = value;
+            }
+        }
+
+        public HttpCapturePacket Response
+        {
+            get
+            {
+                return mResponse;
+            }
+
+            set
+            {
+                mResponse = value;
+            }
+        }
+
+        public override string ToString()
+        {
+            return mRequest.Url.ToString();
         }
     }
 
@@ -505,6 +674,9 @@ namespace NetworkInputMethod
                     {
                         return false;
                     }
+
+                    var form = Form as FormHttpCapture;
+                    form.performPacketCaptured(req, rsp);
                 }
             }
             catch (Exception)

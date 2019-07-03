@@ -16,7 +16,7 @@ namespace NetworkInputMethod
             mForm = form;
         }
 
-        public FormTcpService Form
+        public override FormTcpService Form
         {
             get
             {

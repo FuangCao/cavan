@@ -711,7 +711,7 @@ namespace NetworkInputMethod
         private string mTargetUrl;
         private ListViewItem mItem;
 
-        public FormReverseProxy Form
+        public override FormTcpService Form
         {
             get
             {
@@ -720,7 +720,7 @@ namespace NetworkInputMethod
 
             set
             {
-                mForm = value;
+                mForm = value as FormReverseProxy;
             }
         }
 
