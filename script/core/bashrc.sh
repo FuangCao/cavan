@@ -44,7 +44,7 @@ SDK_HOME="${TOOLS_ANDROID}/sdk"
 NDK_HOME="${TOOLS_ANDROID}/ndk"
 NDKROOT="${NDK_HOME}"
 
-[ -d ${JAVA_HOME} -o -d ${JRE_HOME} ] &&
+[ -d "${JAVA_HOME}" -o -d "${JRE_HOME}" ] &&
 {
 	CLASSPATH=".$(find ${JAVA_HOME}/lib ${JRE_HOME}/lib -maxdepth 1 -name "*.jar" | while read line; do echo -n :${line}; done)"
 }
