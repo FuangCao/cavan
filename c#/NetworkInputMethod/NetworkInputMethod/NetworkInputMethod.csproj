@@ -91,6 +91,12 @@
     <Compile Include="FormAlipay.Designer.cs">
       <DependentUpon>FormAlipay.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormCertManager.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormCertManager.Designer.cs">
+      <DependentUpon>FormCertManager.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormHttpCapture.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -192,6 +198,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormAlipay.resx">
       <DependentUpon>FormAlipay.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormCertManager.resx">
+      <DependentUpon>FormCertManager.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormHttpCapture.resx">
       <DependentUpon>FormHttpCapture.cs</DependentUpon>

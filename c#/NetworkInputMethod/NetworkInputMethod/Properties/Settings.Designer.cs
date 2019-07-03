@@ -129,5 +129,16 @@ namespace NetworkInputMethod.Properties {
                 this["HttpCapturePort"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.Collections.Specialized.StringCollection HttpCaptureCerts {
+            get {
+                return ((global::System.Collections.Specialized.StringCollection)(this["HttpCaptureCerts"]));
+            }
+            set {
+                this["HttpCaptureCerts"] = value;
+            }
+        }
     }
 }

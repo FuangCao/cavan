@@ -29,5 +29,8 @@
     <Setting Name="HttpCapturePort" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">9090</Value>
     </Setting>
+    <Setting Name="HttpCaptureCerts" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

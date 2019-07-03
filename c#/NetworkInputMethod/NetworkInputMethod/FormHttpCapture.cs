@@ -17,12 +17,15 @@ namespace NetworkInputMethod
 {
     public partial class FormHttpCapture : FormTcpService
     {
+        private Hashtable mCertTable = new Hashtable();
         private CavanTcpService mService;
 
         public FormHttpCapture()
         {
             mService = new CavanTcpService(this);
             InitializeComponent();
+            loadSslCerts();
+
             textBoxPort.Text = Settings.Default.HttpCapturePort.ToString();
         }
 
@@ -87,12 +90,41 @@ namespace NetworkInputMethod
 
         public X509Certificate getSslCert(string hostname)
         {
-            return new X509Certificate2("D:\\cert\\server.pfx", "CFA8888");
+            return mCertTable[hostname] as X509Certificate;
+        }
+
+        public void loadSslCerts()
+        {
+            foreach (var node in Settings.Default.HttpCaptureCerts)
+            {
+                var args = node.Split('|');
+                if (args.Length < 3)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    var cert = new X509Certificate2(args[2], args[1]);
+                    mCertTable[args[0]] = cert;
+
+                    Console.WriteLine("add cert: " + args[0]);
+                }
+                catch (Exception err)
+                {
+                    MessageBox.Show(err.ToString());
+                }
+            }
         }
 
         private void buttonCert_Click(object sender, EventArgs e)
         {
+            var form = new FormCertManager();
 
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+                loadSslCerts();
+            }
         }
     }
 
@@ -623,7 +655,7 @@ namespace NetworkInputMethod
                         sslServer.AuthenticateAsServer(cert, false, System.Security.Authentication.SslProtocols.Tls, false);
 
                         var sslClient = new SslStream(link.GetStream(), false, new RemoteCertificateValidationCallback(CavanSslCertificateValidationCallback), null);
-                        sslClient.AuthenticateAsClient("Cavan");
+                        sslClient.AuthenticateAsClient(url.Host);
 
                         while (true)
                         {
