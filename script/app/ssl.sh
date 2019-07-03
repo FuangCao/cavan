@@ -73,7 +73,7 @@ function cavan-openssl-convert-crt-pem()
 	openssl x509 -inform der -in "$1" -out "$2"
 }
 
-function cavan-openssl_convert-pem-pfx()
+function cavan-openssl-convert-pem-pfx()
 {
-	openssl pkcs12 -export -out "$4" -inkey "$1" -in "$3" -certfile "$2"
+	openssl pkcs12 -export -out "$3" -inkey "$1" -in "$2"
 }
