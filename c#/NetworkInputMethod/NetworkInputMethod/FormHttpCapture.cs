@@ -95,7 +95,13 @@ namespace NetworkInputMethod
 
         public void loadSslCerts()
         {
-            foreach (var node in Settings.Default.HttpCaptureCerts)
+            var certs = Settings.Default.HttpCaptureCerts;
+            if (certs == null)
+            {
+                return;
+            }
+
+            foreach (var node in certs)
             {
                 var args = node.Split('|');
                 if (args.Length < 3)
@@ -123,6 +129,7 @@ namespace NetworkInputMethod
 
             if (form.ShowDialog() == DialogResult.OK)
             {
+                mCertTable.Clear();
                 loadSslCerts();
             }
         }
