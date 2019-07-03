@@ -34,6 +34,8 @@
             this.textBoxReq = new System.Windows.Forms.TextBox();
             this.tableLayoutPanelDetail = new System.Windows.Forms.TableLayoutPanel();
             this.textBoxRsp = new System.Windows.Forms.TextBox();
+            this.buttonClear = new System.Windows.Forms.Button();
+            this.buttonCert = new System.Windows.Forms.Button();
             this.tableLayoutPanelDetail.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -63,7 +65,7 @@
             this.listBoxUrl.ItemHeight = 12;
             this.listBoxUrl.Location = new System.Drawing.Point(12, 42);
             this.listBoxUrl.Name = "listBoxUrl";
-            this.listBoxUrl.Size = new System.Drawing.Size(323, 508);
+            this.listBoxUrl.Size = new System.Drawing.Size(238, 508);
             this.listBoxUrl.TabIndex = 2;
             this.listBoxUrl.SelectedIndexChanged += new System.EventHandler(this.listBoxUrl_SelectedIndexChanged);
             // 
@@ -74,7 +76,7 @@
             this.textBoxReq.Multiline = true;
             this.textBoxReq.Name = "textBoxReq";
             this.textBoxReq.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxReq.Size = new System.Drawing.Size(525, 248);
+            this.textBoxReq.Size = new System.Drawing.Size(610, 248);
             this.textBoxReq.TabIndex = 3;
             this.textBoxReq.WordWrap = false;
             // 
@@ -87,12 +89,12 @@
             this.tableLayoutPanelDetail.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanelDetail.Controls.Add(this.textBoxReq, 0, 0);
             this.tableLayoutPanelDetail.Controls.Add(this.textBoxRsp, 0, 1);
-            this.tableLayoutPanelDetail.Location = new System.Drawing.Point(341, 42);
+            this.tableLayoutPanelDetail.Location = new System.Drawing.Point(256, 42);
             this.tableLayoutPanelDetail.Name = "tableLayoutPanelDetail";
             this.tableLayoutPanelDetail.RowCount = 2;
             this.tableLayoutPanelDetail.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanelDetail.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanelDetail.Size = new System.Drawing.Size(531, 508);
+            this.tableLayoutPanelDetail.Size = new System.Drawing.Size(616, 508);
             this.tableLayoutPanelDetail.TabIndex = 5;
             // 
             // textBoxRsp
@@ -102,15 +104,37 @@
             this.textBoxRsp.Multiline = true;
             this.textBoxRsp.Name = "textBoxRsp";
             this.textBoxRsp.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxRsp.Size = new System.Drawing.Size(525, 248);
+            this.textBoxRsp.Size = new System.Drawing.Size(610, 248);
             this.textBoxRsp.TabIndex = 4;
             this.textBoxRsp.WordWrap = false;
+            // 
+            // buttonClear
+            // 
+            this.buttonClear.Location = new System.Drawing.Point(716, 10);
+            this.buttonClear.Name = "buttonClear";
+            this.buttonClear.Size = new System.Drawing.Size(75, 23);
+            this.buttonClear.TabIndex = 6;
+            this.buttonClear.Text = "清空";
+            this.buttonClear.UseVisualStyleBackColor = true;
+            this.buttonClear.Click += new System.EventHandler(this.buttonClear_Click);
+            // 
+            // buttonCert
+            // 
+            this.buttonCert.Location = new System.Drawing.Point(635, 10);
+            this.buttonCert.Name = "buttonCert";
+            this.buttonCert.Size = new System.Drawing.Size(75, 23);
+            this.buttonCert.TabIndex = 7;
+            this.buttonCert.Text = "证书";
+            this.buttonCert.UseVisualStyleBackColor = true;
+            this.buttonCert.Click += new System.EventHandler(this.buttonCert_Click);
             // 
             // FormHttpCapture
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(884, 561);
+            this.Controls.Add(this.buttonCert);
+            this.Controls.Add(this.buttonClear);
             this.Controls.Add(this.tableLayoutPanelDetail);
             this.Controls.Add(this.listBoxUrl);
             this.Controls.Add(this.buttonSwitch);
@@ -133,5 +157,7 @@
         private System.Windows.Forms.TextBox textBoxReq;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanelDetail;
         private System.Windows.Forms.TextBox textBoxRsp;
+        private System.Windows.Forms.Button buttonClear;
+        private System.Windows.Forms.Button buttonCert;
     }
 }

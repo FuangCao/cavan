@@ -5,18 +5,19 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Net.Sockets;
+using System.Net.Security;
 using System.Text;
 using System.Windows.Forms;
 using NetworkInputMethod.Properties;
 using System.Collections;
+using System.Security.Cryptography.X509Certificates;
+using System.IO;
 
 namespace NetworkInputMethod
 {
     public partial class FormHttpCapture : FormTcpService
     {
         private CavanTcpService mService;
-
-        delegate void PacketCapturedHandler(HttpCapturePacket req, HttpCapturePacket rsp);
 
         public FormHttpCapture()
         {
@@ -58,21 +59,15 @@ namespace NetworkInputMethod
             }
         }
 
-        private void onPacketCaptured(HttpCapturePacket req, HttpCapturePacket rsp)
+        private void onPacketCaptured(object sender, EventArgs e)
         {
-            var packet = new HttpCapturePacketFull
-            {
-                Request = req,
-                Response = rsp,
-            };
-
-            listBoxUrl.Items.Add(packet);
+            listBoxUrl.Items.Add(sender);
         }
 
-        public void performPacketCaptured(HttpCapturePacket req, HttpCapturePacket rsp)
+        public void performPacketCaptured(HttpCapturePacketFull packet)
         {
-            var method = new PacketCapturedHandler(onPacketCaptured);
-            Invoke(method, req, rsp);
+            var method = new EventHandler(onPacketCaptured);
+            Invoke(method, packet);
         }
 
         private void listBoxUrl_SelectedIndexChanged(object sender, EventArgs e)
@@ -83,6 +78,21 @@ namespace NetworkInputMethod
                 textBoxReq.Text = packet.Request.ToString();
                 textBoxRsp.Text = packet.Response.ToString();
             }
+        }
+
+        private void buttonClear_Click(object sender, EventArgs e)
+        {
+            listBoxUrl.Items.Clear();
+        }
+
+        public X509Certificate getSslCert(string hostname)
+        {
+            return new X509Certificate2("D:\\cert\\server.pfx", "CFA8888");
+        }
+
+        private void buttonCert_Click(object sender, EventArgs e)
+        {
+
         }
     }
 
@@ -96,7 +106,7 @@ namespace NetworkInputMethod
     public class HttpCapturePacket
     {
         public const int OVERTIME = 20000000;
-        public const int CONTENT_MAX = 10 << 20;
+        public const int CONTENT_MAX = 1 << 20;
 
         public static byte[] LineEnd = Encoding.UTF8.GetBytes("\r\n");
         public static Hashtable HeaderTable = new Hashtable()
@@ -104,7 +114,6 @@ namespace NetworkInputMethod
             { "host", HttpHeaderType.Host },
             { "content-type", HttpHeaderType.ContentType },
             { "content-length", HttpHeaderType.ContentLength },
-
         };
 
         public static string[] HeaderNames = new string[]
@@ -253,19 +262,13 @@ namespace NetworkInputMethod
             return prev;
         }
 
-        public string readline(Socket sock, byte[] bytes)
+        public string readline(Stream stream, byte[] bytes)
         {
-            var buff = new byte[1];
             var length = 0;
 
             while (true)
             {
-                if (sock.Receive(buff) < 1)
-                {
-                    return null;
-                }
-
-                var value = buff[0];
+                var value = stream.ReadByte();
 
                 if (value == '\r')
                 {
@@ -279,7 +282,7 @@ namespace NetworkInputMethod
 
                 if (length < bytes.Length)
                 {
-                    bytes[length++] = value;
+                    bytes[length++] = (byte)value;
                 }
                 else
                 {
@@ -290,7 +293,7 @@ namespace NetworkInputMethod
             return Encoding.UTF8.GetString(bytes, 0, length);
         }
 
-        public bool read(Socket sock)
+        public bool read(Stream stream)
         {
             var bytes = new byte[4096];
             string line;
@@ -300,7 +303,7 @@ namespace NetworkInputMethod
                 mHeaders[i] = null;
             }
 
-            line = readline(sock, bytes);
+            line = readline(stream, bytes);
             if (line == null)
             {
                 return false;
@@ -312,7 +315,7 @@ namespace NetworkInputMethod
 
             while (true)
             {
-                line = readline(sock, bytes);
+                line = readline(stream, bytes);
                 if (line == null)
                 {
                     return false;
@@ -340,85 +343,35 @@ namespace NetworkInputMethod
                 }
             }
 
-            for (int i = 0; i < mHeaders.Length; i++)
-            {
-                var value = mHeaders[i];
-                if (value == null)
-                {
-                    continue;
-                }
-
-                var key = HeaderNames[i];
-
-                Console.WriteLine(key + ": " + value);
-            }
-
             mLines = lines;
 
             return true;
         }
 
-        public bool send(Socket sock, byte[] bytes, int index, int length)
-        {
-            while (length > 0)
-            {
-                var wrlen = sock.Send(bytes, index, length, SocketFlags.None);
-                if (wrlen < length)
-                {
-                    if (wrlen < 0)
-                    {
-                        return false;
-                    }
-                }
-                else
-                {
-                    break;
-                }
-
-                index += wrlen;
-                length -= wrlen;
-            }
-
-            return true;
-        }
-
-        public bool send(Socket sock, byte[] bytes, int length)
-        {
-            return send(sock, bytes, 0, length);
-        }
-
-        public bool send(Socket sock, byte[] bytes)
-        {
-            return send(sock, bytes, bytes.Length);
-        }
-
-        public bool writeline(Socket sock, string line)
+        public void writeline(Stream stream, string line)
         {
             var bytes = Encoding.UTF8.GetBytes(line);
-            return send(sock, bytes) && writeline(sock);
+            stream.Write(bytes, 0, bytes.Length);
+            writeline(stream);
         }
 
-        public bool writeline(Socket link)
+        public void writeline(Stream stream)
         {
-            return send(link, LineEnd);
+            stream.Write(LineEnd, 0, LineEnd.Length);
         }
 
-        public bool write(Socket sock)
+        public void write(Stream stream)
         {
-            if (!writeline(sock, mFirstLine))
-            {
-                return false;
-            }
+            writeline(stream, mFirstLine);
 
             foreach (string line in mLines)
             {
-                if (!writeline(sock, line))
-                {
-                    return false;
-                }
+                writeline(stream, line);
             }
 
-            return writeline(sock);
+            writeline(stream);
+
+            stream.Flush();
         }
 
         public TcpClient connect()
@@ -472,7 +425,7 @@ namespace NetworkInputMethod
             return true;
         }
 
-        public bool proxy(Socket isock, Socket osock)
+        public bool proxy(Socket isock, Stream istream, Socket osock, Stream ostream)
         {
             var bytes = new byte[1024];
             var length = ContentLength;
@@ -501,17 +454,13 @@ namespace NetworkInputMethod
                             return true;
                         }
 
-                        length = link.Receive(bytes);
+                        length = istream.Read(bytes, 0, bytes.Length);
                         if (length <= 0)
                         {
                             return false;
                         }
 
-                        if (!send(osock, bytes, length))
-                        {
-                            return false;
-                        }
-
+                        ostream.Write(bytes, 0, length);
                         append(bytes, 0, length);
                     }
                 }
@@ -520,11 +469,6 @@ namespace NetworkInputMethod
             {
                 while (length > 0)
                 {
-                    if (!isock.Poll(OVERTIME, SelectMode.SelectRead))
-                    {
-                        return false;
-                    }
-
                     int rdlen;
 
                     if (length < bytes.Length)
@@ -536,21 +480,13 @@ namespace NetworkInputMethod
                         rdlen = bytes.Length;
                     }
 
-                    rdlen = isock.Receive(bytes, rdlen, SocketFlags.None);
+                    rdlen = istream.Read(bytes, 0, bytes.Length);
                     if (rdlen <= 0)
                     {
                         return false;
                     }
 
-                    if (rdlen > length)
-                    {
-                        return false;
-                    }
-
-                    if (!send(osock, bytes, rdlen))
-                    {
-                        return false;
-                    }
+                    ostream.Write(bytes, 0, rdlen);
 
                     append(bytes, 0, rdlen);
                     length -= rdlen;
@@ -580,12 +516,33 @@ namespace NetworkInputMethod
 
             return builder.ToString();
         }
+
+        public void response(Stream stream)
+        {
+            writeline(stream, "HTTP/1.1 200 Connection Established");
+            writeline(stream);
+            stream.Flush();
+        }
     }
 
     public class HttpCapturePacketFull
     {
+        private CavanUrl mUrl;
         private HttpCapturePacket mRequest;
         private HttpCapturePacket mResponse;
+
+        public CavanUrl Url
+        {
+            get
+            {
+                return mUrl;
+            }
+
+            set
+            {
+                mUrl = value;
+            }
+        }
 
         public HttpCapturePacket Request
         {
@@ -615,7 +572,7 @@ namespace NetworkInputMethod
 
         public override string ToString()
         {
-            return mRequest.Url.ToString();
+            return mUrl.ToString();
         }
     }
 
@@ -625,11 +582,16 @@ namespace NetworkInputMethod
         {
         }
 
+        private bool CavanSslCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            return true;
+        }
+
         public override bool mainLoop()
         {
             var req = new HttpCapturePacket();
 
-            if (!req.read(mClient.Client))
+            if (!req.read(mClient.GetStream()))
             {
                 return false;
             }
@@ -640,48 +602,109 @@ namespace NetworkInputMethod
                 return false;
             }
 
+            var url = req.Url;
+
             Console.WriteLine("Method: " + req.Method);
 
             try
             {
                 if (req.Method.Equals("CONNECT"))
                 {
+                    req.response(mClient.GetStream());
+
+                    var form = Form as FormHttpCapture;
+                    var cert = form.getSslCert(url.Host);
+
+                    if (cert != null)
+                    {
+                        url.Proto = "https";
+                        var sslServer = new SslStream(mClient.GetStream());
+
+                        sslServer.AuthenticateAsServer(cert, false, System.Security.Authentication.SslProtocols.Tls, false);
+
+                        var sslClient = new SslStream(link.GetStream(), false, new RemoteCertificateValidationCallback(CavanSslCertificateValidationCallback), null);
+                        sslClient.AuthenticateAsClient("Cavan");
+
+                        while (true)
+                        {
+                            req = new HttpCapturePacket();
+
+                            if (!req.read(sslServer))
+                            {
+                                break;
+                            }
+
+                            req.write(sslClient);
+
+                            if (!req.proxy(mClient.Client, sslServer, link.Client, sslClient))
+                            {
+                                return false;
+                            }
+
+                            var rsp = new HttpCapturePacket();
+                            if (!rsp.read(sslClient))
+                            {
+                                return false;
+                            }
+
+                            rsp.write(sslServer);
+
+                            if (!rsp.proxy(link.Client, sslClient, mClient.Client, sslServer))
+                            {
+                                return false;
+                            }
+
+                            var packet = new HttpCapturePacketFull
+                            {
+                                Url = url,
+                                Request = req,
+                                Response = rsp,
+                            };
+
+                            form.performPacketCaptured(packet);
+                        }
+                    }
+                    else
+                    {
+                        TcpProxyClient.ProxyLoop(mClient, link);
+                    }
                 }
                 else
                 {
-                    if (!req.write(link.Client))
-                    {
-                        return false;
-                    }
+                    req.write(link.GetStream());
 
-                    if (!req.proxy(mClient.Client, link.Client))
+                    if (!req.proxy(mClient.Client, mClient.GetStream(), link.Client, link.GetStream()))
                     {
                         return false;
                     }
 
                     var rsp = new HttpCapturePacket();
-                    if (!rsp.read(link.Client))
+                    if (!rsp.read(link.GetStream()))
                     {
                         return false;
                     }
 
-                    if (!rsp.write(mClient.Client))
+                    rsp.write(mClient.GetStream());
+
+                    if (!rsp.proxy(link.Client, link.GetStream(), mClient.Client, mClient.GetStream()))
                     {
                         return false;
                     }
 
-                    if (!rsp.proxy(link.Client, mClient.Client))
+                    var packet = new HttpCapturePacketFull
                     {
-                        return false;
-                    }
+                        Url = url,
+                        Request = req,
+                        Response = rsp,
+                    };
 
                     var form = Form as FormHttpCapture;
-                    form.performPacketCaptured(req, rsp);
+                    form.performPacketCaptured(packet);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                return false;
+                Console.WriteLine(e.ToString());
             }
             finally
             {
