@@ -28,7 +28,7 @@ function cavan-openssl-verify()
 	openssl verify "$1"
 }
 
-function cavan-openssl-show-csr()
+function cavan-openssl-show-req()
 {
 	openssl req -noout -text -in "$1"
 }
@@ -75,5 +75,40 @@ function cavan-openssl-convert-crt-pem()
 
 function cavan-openssl-convert-pem-pfx()
 {
-	openssl pkcs12 -export -out "$3" -inkey "$1" -in "$2"
+	openssl pkcs12 -export -password "pass:CFA8888" -out "$3" -inkey "$1" -in "$2"
+}
+
+function cavan-ca-req()
+{
+	openssl genrsa -out "$1" 2048 || return 1
+	openssl req -new -days 3650 -key "$1" -out "$2" -subj "/C=CN/ST=Shanghai/L=Shanghai/CN=$3/O=Cavan/OU=Software" || return 1
+}
+
+function cavan-ca-sign()
+{
+	openssl ca -in "$1" -out "$2" -batch || return 1
+	cavan-openssl-show-cert "$2" || return 1
+}
+
+function cavan-ca-selfsign()
+{
+	openssl ca -selfsign -in "$1" -out "$2" -extensions v3_ca -batch || return 1
+	cavan-openssl-show-cert "$2" || return 1
+}
+
+function cavan-ca-init()
+{
+	mkdir -pv ./demoCA/private ./demoCA/newcerts || return 1
+	touch ./demoCA/index.txt || return 1
+	echo 01 > ./demoCA/serial || return 1
+	cavan-ca-req ./demoCA/private/cakey.pem ./demoCA/careq.pem "www.cavan.com" || return 1
+	cavan-ca-selfsign ./demoCA/careq.pem ./demoCA/cacert.pem || return 1
+	cavan-openssl-convert-pem-pfx ./demoCA/private/cakey.pem ./demoCA/cacert.pem ./demoCA/cacert.pfx || return 1
+}
+
+function cavan-ca-gen()
+{
+	cavan-ca-req ./userkey.pem ./userreq.pem "$1" || return 1
+	cavan-ca-sign ./userreq.pem ./usercert.pem || return 1
+	cavan-openssl-convert-pem-pfx ./userkey.pem ./usercert.pem ./usercert.pfx || return 1
 }
