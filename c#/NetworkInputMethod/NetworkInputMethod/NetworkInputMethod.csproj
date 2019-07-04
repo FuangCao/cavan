@@ -62,6 +62,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArrayEventArgs.cs" />
     <Compile Include="ByteArrayWriter.cs" />
     <Compile Include="CavanBusyLock.cs" />
     <Compile Include="CavanEventArgs.cs" />

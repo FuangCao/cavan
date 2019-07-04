@@ -407,7 +407,7 @@ namespace NetworkInputMethod
                 coll = checkedListBoxClients.CheckedItems;
             }
 
-            foreach (Object item in coll)
+            foreach (var item in coll)
             {
                 NetworkImeClient client = item as NetworkImeClient;
                 if (!client.send(bytes))
@@ -1065,6 +1065,45 @@ namespace NetworkInputMethod
 
             mFormSimulateTap.Show();
         }
+
+        internal void performClipboardReceived(NetworkImeClient client, string text)
+        {
+            var method = new EventHandler(onClipboardReceived);
+            var args = new ArrayEventArgs(text);
+            Invoke(method, client, args);
+        }
+
+        protected void onClipboardReceived(object sender, EventArgs e)
+        {
+            var args = e as ArrayEventArgs;
+            var text = args.Args[0] as string;
+            addHistory(text);
+        }
+
+        internal void performBroadcastReceived(NetworkImeClient client, string command)
+        {
+            var method = new EventHandler(onBroadcastReceived);
+            var args = new ArrayEventArgs(command);
+            Invoke(method, client, args);
+        }
+
+        private void onBroadcastReceived(object sender, EventArgs e)
+        {
+            var args = e as ArrayEventArgs;
+            var text = args.Args[0] as string;
+            var client = sender as NetworkImeClient;
+            var bytes = Encoding.UTF8.GetBytes(text);
+
+            foreach (NetworkImeClient link in checkedListBoxClients.Items)
+            {
+                if (link == client)
+                {
+                    continue;
+                }
+
+                link.send(bytes);
+            }
+        }
     }
 
     public class NetworkImeClient : CavanTcpPacketClient
@@ -1113,6 +1152,22 @@ namespace NetworkInputMethod
 
                 case "PONG":
                     mKeepAlive = 0;
+                    break;
+
+                case "CLIPBOARD":
+                    if (args.Length > 1)
+                    {
+                        var form = Form as FormNetworkIme;
+                        form.performClipboardReceived(this, args[1]);
+                    }
+                    break;
+
+                case "BROADCAST":
+                    if (args.Length > 1)
+                    {
+                        var form = Form as FormNetworkIme;
+                        form.performBroadcastReceived(this, args[1]);
+                    }
                     break;
 
                 default:
