@@ -504,11 +504,112 @@ static int app_network_test_udp_service_main(int argc, char *argv[])
 	return 0;
 }
 
+static void *app_network_ime_receive_handler(void *data)
+{
+	struct network_client_lock *lock = (struct network_client_lock *) data;
+	char line[1024];
+
+	while (1)
+	{
+		struct network_client *client;
+		int length;
+
+		client = network_client_lock_read_acquire(lock);
+		length = network_client_recv(client, line, sizeof(line) - 1);
+		network_client_lock_read_release(lock);
+
+		if (length <= 0) {
+			break;
+		}
+
+		line[length] = 0;
+
+		if (strcasecmp(line, "PING") == 0) {
+			client = network_client_lock_write_acquire(lock);
+			length = network_client_send_text(client, "PONG");
+			network_client_lock_write_release(lock);
+
+			if (length < 0) {
+				break;
+			}
+		} else {
+			puts(line);
+		}
+	}
+
+	return NULL;
+}
+
+static int app_network_ime_login(struct network_client *client)
+{
+	char hostname[1024];
+
+	network_get_hostname(hostname, sizeof(hostname));
+
+	return network_client_printf(client, "USER %s", hostname);
+}
+
+static int app_network_ime_main(int argc, char *argv[])
+{
+	struct network_client_lock lock;
+	struct network_client client;
+	int ret;
+
+	assert(argc > 1);
+
+	network_client_lock_init(&lock, &client);
+
+	ret = network_client_open2(&client, argv[1], CAVAN_NET_FLAG_PACK);
+	if (ret < 0) {
+		pr_err_info("network_client_open2: %d", ret);
+		return ret;
+	}
+
+	ret = app_network_ime_login(&client);
+	if (ret < 0) {
+		pr_err_info("app_network_ime_login: %d", ret);
+		goto out_network_client_close;
+	}
+
+	ret = cavan_pthread_create(NULL, app_network_ime_receive_handler, &lock, false);
+	if (ret < 0) {
+		pr_err_info("cavan_pthread_create: %d", ret);
+		goto out_network_client_close;
+	}
+
+	while (true) {
+		char buff[1024];
+		char *line;
+		int length;
+
+		print("> ");
+
+		if (!fgets(buff, sizeof(buff) - 1, stdin)) {
+			break;
+		}
+
+		length = strlen(buff);
+		line = cavan_string_trim(buff, &length);
+
+		if (length > 0) {
+			network_client_lock_write_acquire(&lock);
+			network_client_send(&client, line, length);
+			network_client_lock_write_release(&lock);
+		}
+	}
+
+out_network_client_close:
+	network_client_close(&client);
+	network_client_lock_deinit(&lock);
+	return ret;
+}
+
 CAVAN_COMMAND_MAP_START {
+	{ "ime", app_network_ime_main },
+	{ "test", app_network_test_main },
 	{ "dump", app_network_dump_main },
 	{ "client", app_network_client_main },
 	{ "service", app_network_service_main },
-	{ "test", app_network_test_main },
 	{ "test-max-links", app_network_test_max_links_main },
 	{ "test-relink", app_network_test_relink_main },
 	{ "test-dns", app_network_test_dns_main },

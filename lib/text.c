@@ -3292,3 +3292,54 @@ bool cavan_string_startswith2(const char *text1, int len1, const char *text2)
 
 	return (*text2 == 0);
 }
+
+char *cavan_string_trim_start(const char *text, int length)
+{
+	const char *text_end = text + length;
+
+	while (text < text_end && cavan_isspace_lf(*text)) {
+		text++;
+	}
+
+	return (char *) text;
+}
+
+int cavan_string_trim_end(const char *text, int length)
+{
+	const char *text_end = text + length;
+
+	while (text_end > text) {
+		const char *p = text_end - 1;
+
+		if (!cavan_isspace_lf(*p)) {
+			break;
+		}
+
+		text_end = p;
+	}
+
+	return text_end - text;
+}
+
+char *cavan_string_trim(const char *text, int *length)
+{
+	const char *text_end = text + (*length);
+
+	while (text < text_end && cavan_isspace_lf(*text)) {
+		text++;
+	}
+
+	while (text_end > text) {
+		const char *p = text_end - 1;
+
+		if (!cavan_isspace_lf(*p)) {
+			break;
+		}
+
+		text_end = p;
+	}
+
+	*length = text_end - text;
+
+	return (char *) text;
+}

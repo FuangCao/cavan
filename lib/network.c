@@ -5253,3 +5253,40 @@ int tcp_discovery_client_run(struct tcp_discovery_client *client, void *data)
 
 	return client->count;
 }
+
+int network_client_lock_init(struct network_client_lock *lock, struct network_client *client)
+{
+	lock->client = client;
+	pthread_mutex_init(&lock->wr_lock, NULL);
+	pthread_mutex_init(&lock->rd_lock, NULL);
+
+	return 0;
+}
+
+void network_client_lock_deinit(struct network_client_lock *lock)
+{
+	pthread_mutex_destroy(&lock->wr_lock);
+	pthread_mutex_destroy(&lock->rd_lock);
+}
+
+struct network_client *network_client_lock_read_acquire(struct network_client_lock *lock)
+{
+	pthread_mutex_lock(&lock->rd_lock);
+	return lock->client;
+}
+
+void network_client_lock_read_release(struct network_client_lock *lock)
+{
+	pthread_mutex_unlock(&lock->rd_lock);
+}
+
+struct network_client *network_client_lock_write_acquire(struct network_client_lock *lock)
+{
+	pthread_mutex_lock(&lock->wr_lock);
+	return lock->client;
+}
+
+void network_client_lock_write_release(struct network_client_lock *lock)
+{
+	pthread_mutex_unlock(&lock->wr_lock);
+}

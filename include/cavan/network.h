@@ -297,6 +297,12 @@ struct network_client {
 	ssize_t (*recvfrom)(struct network_client *client, void *buff, size_t size, struct sockaddr *addr);
 };
 
+struct network_client_lock {
+	struct network_client *client;
+	pthread_mutex_t wr_lock;
+	pthread_mutex_t rd_lock;
+};
+
 struct network_transmit_data {
 	int sender_fd;
 	int receiver_fd;
@@ -558,6 +564,13 @@ int udp_discovery_service_start(struct udp_discovery_service *service, const cha
 void udp_discovery_service_stop(struct udp_discovery_service *service);
 int udp_discovery_client_run(u16 port, void *data, void (*handler)(int index, const char *command, struct sockaddr_in *addr, void *data));
 int tcp_discovery_client_run(struct tcp_discovery_client *client, void *data);
+
+int network_client_lock_init(struct network_client_lock *lock, struct network_client *client);
+void network_client_lock_deinit(struct network_client_lock *lock);
+struct network_client *network_client_lock_read_acquire(struct network_client_lock *lock);
+void network_client_lock_read_release(struct network_client_lock *lock);
+struct network_client *network_client_lock_write_acquire(struct network_client_lock *lock);
+void network_client_lock_write_release(struct network_client_lock *lock);
 
 static inline int setsockopt_uint(int sockfd, int level, int optname, uint value)
 {

@@ -292,6 +292,10 @@ int cavan_string_casecmp2(const char *text1, int len1, const char *text2);
 bool cavan_string_startswith(const char *text1, int len1, const char *text2, int len2);
 bool cavan_string_startswith2(const char *text1, int len1, const char *text2);
 
+char *cavan_string_trim_start(const char *text, int length);
+int cavan_string_trim_end(const char *text, int length);
+char *cavan_string_trim(const char *text, int *length);
+
 static inline int cavan_string_append_char(cavan_string_t *str, char c)
 {
 	return cavan_string_append(str, &c, 1);
