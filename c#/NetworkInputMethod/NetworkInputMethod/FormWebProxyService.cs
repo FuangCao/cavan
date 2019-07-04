@@ -308,13 +308,26 @@ namespace NetworkInputMethod
             sendConnResponse(new StreamWriter(stream));
         }
 
-        public TcpClient connect()
+        public TcpClient connect(TcpClient client, CavanUrl url)
         {
-            Console.WriteLine(mUrl);
+            var host = mUrl.Host;
+            var port = mUrl.Port;
+
+            if (client != null)
+            {
+                if (host.Equals(url.Host) && port == url.Port)
+                {
+                    return client;
+                }
+
+                Console.WriteLine(mUrl + " => " + url);
+
+                client.Close();
+            }
 
             try
             {
-                return new TcpClient(mUrl.Host, mUrl.Port);
+                return new TcpClient(host, port);
             }
             catch (Exception e)
             {
@@ -378,23 +391,27 @@ namespace NetworkInputMethod
         public override bool mainLoop()
         {
             var bytes = new byte[1024];
+            TcpClient client = null;
+            CavanUrl url = null;
 
-            while (true)
+            try
             {
-                var req = new CavanHttpRequest();
-                if (!req.read(mClient.GetStream(), mUrl))
+                while (true)
                 {
-                    break;
-                }
+                    var req = new CavanHttpRequest();
+                    if (!req.read(mClient.GetStream(), mUrl))
+                    {
+                        break;
+                    }
 
-                var client = req.connect();
-                if (client == null)
-                {
-                    break;
-                }
+                    client = req.connect(client, url);
+                    if (client == null)
+                    {
+                        break;
+                    }
 
-                try
-                {
+                    url = req.Url;
+
                     var list = new ArrayList();
 
                     if (req.Method == "CONNECT")
@@ -402,33 +419,34 @@ namespace NetworkInputMethod
                         req.discard(mClient.GetStream());
                         req.sendConnResponse(mClient.GetStream());
                         TcpProxyClient.ProxyLoop(mClient, client);
+                        return false;
+                    }
+
+                    req.write(client.GetStream());
+
+                    if (!ProxyLoop(mClient, client))
+                    {
                         break;
                     }
-                    else
+
+                    if (!ProxyLoop(client, mClient))
                     {
-                        req.write(client.GetStream());
-
-                        if (!ProxyLoop(mClient, client))
-                        {
-                            break;
-                        }
-
-                        if (!ProxyLoop(client, mClient))
-                        {
-                            break;
-                        }
+                        break;
                     }
                 }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    break;
-                }
-                finally
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine(err.ToString());
+            }
+            finally
+            {
+                if (client != null)
                 {
                     client.Close();
                 }
             }
+
 
             return false;
         }
