@@ -687,8 +687,13 @@ static int app_network_ime_main(int argc, char *argv[])
 
 			if (length > 0) {
 				network_client_lock_write_acquire(&lock);
-				network_client_send(&client, line, length);
+				length = network_client_send(&client, line, length);
 				network_client_lock_write_release(&lock);
+
+				if (length < 0) {
+					pr_err_info("network_client_send: %d", length);
+					break;
+				}
 			}
 		}
 	}
