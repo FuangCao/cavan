@@ -1094,7 +1094,7 @@ namespace NetworkInputMethod
             var client = sender as NetworkImeClient;
             var bytes = Encoding.UTF8.GetBytes(text);
 
-            foreach (NetworkImeClient link in checkedListBoxClients.Items)
+            foreach (NetworkImeClient link in checkedListBoxClients.CheckedItems)
             {
                 if (link == client)
                 {
