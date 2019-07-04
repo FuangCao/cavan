@@ -537,6 +537,8 @@ static void *app_network_ime_receive_handler(void *data)
 		}
 	}
 
+	pr_red_info("ime receive thread exit!");
+
 	return NULL;
 }
 
@@ -577,26 +579,84 @@ static int app_network_ime_main(int argc, char *argv[])
 		goto out_network_client_close;
 	}
 
-	while (true) {
-		char buff[1024];
-		char *line;
-		int length;
+	if (argc > 2) {
+		const char *command = argv[2];
 
-		print("> ");
+		if (strcmp(command, "sign") == 0) {
+			struct timespec ts;
+			int ahead;
+			u64 time;
 
-		if (!fgets(buff, sizeof(buff) - 1, stdin)) {
-			break;
+			command = "signin";
+
+			clock_gettime_real(&ts);
+			time = ((cavan_timespec_mseconds(&ts) + 3600000 - 1) / 3600000) * 3600000;
+
+			if (argc > 3) {
+				ahead = atoi(argv[3]);
+			} else {
+				ahead = -1000;
+			}
+
+			println("ahead = %d", ahead);
+
+			time += ahead;
+
+			while (1) {
+				struct tm tm;
+				u64 mseconds;
+
+				clock_gettime_real(&ts);
+				localtime_r(&ts.tv_sec, &tm);
+
+				println("time  = %02d:%02d:%02d", tm.tm_hour, tm.tm_min, tm.tm_sec);
+
+				mseconds = cavan_timespec_mseconds(&ts);
+				if (mseconds < time) {
+					int delay = time - mseconds;
+
+					if (delay < 1000) {
+						msleep(delay);
+					} else {
+						char buff[1024];
+
+						time2text_msec(delay, buff, sizeof(buff));
+						println("delay = %s", buff);
+						msleep(1000 - (mseconds % 1000));
+					}
+				} else {
+					break;
+				}
+			}
 		}
 
-		length = strlen(buff);
-		line = cavan_string_trim(buff, &length);
+		network_client_lock_write_acquire(&lock);
+		network_client_printf(&client, "broadcast %s", command);
+		network_client_lock_write_release(&lock);
+	} else {
+		while (true) {
+			char buff[1024];
+			char *line;
+			int length;
 
-		if (length > 0) {
-			network_client_lock_write_acquire(&lock);
-			network_client_send(&client, line, length);
-			network_client_lock_write_release(&lock);
+			print("> ");
+
+			if (!fgets(buff, sizeof(buff) - 1, stdin)) {
+				break;
+			}
+
+			length = strlen(buff);
+			line = cavan_string_trim(buff, &length);
+
+			if (length > 0) {
+				network_client_lock_write_acquire(&lock);
+				network_client_send(&client, line, length);
+				network_client_lock_write_release(&lock);
+			}
 		}
 	}
+
+	msleep(200);
 
 out_network_client_close:
 	network_client_close(&client);
