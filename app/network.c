@@ -629,12 +629,14 @@ static int app_network_ime_main(int argc, char *argv[])
 
 					if (delay < 1000) {
 						msleep(delay);
-					} else {
+					} else if (delay < 50 * 60 * 1000) {
 						char buff[1024];
 
 						time2text_msec(delay, buff, sizeof(buff));
 						println("delay = %s", buff);
 						msleep(1000 - (mseconds % 1000));
+					} else {
+						break;
 					}
 				} else {
 					break;
