@@ -80,6 +80,12 @@ function cavan-openssl-convert-pem-pfx()
 
 function cavan-ca-req()
 {
+	[ "$3" ] ||
+	{
+		echo "$0 key.pem req.pem www.cavan.com"
+		return 1
+	}
+
 	openssl genrsa -out "$1" 2048 || return 1
 	openssl req -new -days 3650 -key "$1" -out "$2" -subj "/C=CN/ST=Shanghai/L=Shanghai/CN=$3/O=Cavan/OU=Software" || return 1
 }
@@ -108,7 +114,18 @@ function cavan-ca-init()
 
 function cavan-ca-gen()
 {
-	cavan-ca-req ./userkey.pem ./userreq.pem "$1" || return 1
-	cavan-ca-sign ./userreq.pem ./usercert.pem || return 1
-	cavan-openssl-convert-pem-pfx ./userkey.pem ./usercert.pem ./usercert.pfx || return 1
+	local path
+
+	[ "$1" ] ||
+	{
+		echo "$0 baidu.com"
+		return 1
+	}
+
+	path="./$1"
+
+	mkdir -pv "${path}" || return 1
+	[ -f "${path}/req.pem" ] || cavan-ca-req "${path}/key.pem" "${path}/req.pem" "*.$1" || return 1
+	[ -f "${path}/cert.pem" ] || cavan-ca-sign "${path}/req.pem" "${path}/cert.pem" || return 1
+	[ -f "${path}/cert.pfx" ] || cavan-openssl-convert-pem-pfx "${path}/key.pem" "${path}/cert.pem" "${path}/cert.pfx" || return 1
 }
