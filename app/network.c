@@ -542,35 +542,46 @@ static void *app_network_ime_receive_handler(void *data)
 	return NULL;
 }
 
-static int app_network_ime_login(struct network_client *client)
+static int app_network_ime_login(struct network_client *client, const char *url)
 {
 	char hostname[1024];
+	int ret;
+
+	ret = network_client_open2(client, url, CAVAN_NET_FLAG_PACK);
+	if (ret < 0) {
+		pr_err_info("network_client_open2: %d", ret);
+		return ret;
+	}
 
 	network_get_hostname(hostname, sizeof(hostname));
 
-	return network_client_printf(client, "USER %s", hostname);
+	ret = network_client_printf(client, "USER %s", hostname);
+	if (ret < 0) {
+		pr_err_info("network_client_printf: %d", ret);
+		network_client_close(client);
+		return ret;
+	}
+
+	return 0;
 }
 
 static int app_network_ime_main(int argc, char *argv[])
 {
 	struct network_client_lock lock;
 	struct network_client client;
+	const char *url;
 	int ret;
 
 	assert(argc > 1);
 
+	url = argv[1];
+
 	network_client_lock_init(&lock, &client);
 
-	ret = network_client_open2(&client, argv[1], CAVAN_NET_FLAG_PACK);
+	ret = app_network_ime_login(&client, url);
 	if (ret < 0) {
-		pr_err_info("network_client_open2: %d", ret);
+		pr_err_info("app_network_ime_login");
 		return ret;
-	}
-
-	ret = app_network_ime_login(&client);
-	if (ret < 0) {
-		pr_err_info("app_network_ime_login: %d", ret);
-		goto out_network_client_close;
 	}
 
 	ret = cavan_pthread_create(NULL, app_network_ime_receive_handler, &lock, false);
@@ -581,6 +592,7 @@ static int app_network_ime_main(int argc, char *argv[])
 
 	if (argc > 2) {
 		const char *command = argv[2];
+		int times = 0;
 
 		if (strcmp(command, "sign") == 0) {
 			struct timespec ts;
@@ -630,9 +642,32 @@ static int app_network_ime_main(int argc, char *argv[])
 			}
 		}
 
-		network_client_lock_write_acquire(&lock);
-		network_client_printf(&client, "broadcast %s", command);
-		network_client_lock_write_release(&lock);
+		while (1) {
+			while (1) {
+				int length;
+
+				network_client_lock_write_acquire(&lock);
+				length = network_client_printf(&client, "broadcast %s", command);
+				network_client_lock_write_release(&lock);
+
+				if (length > 0) {
+					break;
+				}
+
+				network_client_close(&client);
+
+				ret = app_network_ime_login(&client, url);
+				if (ret < 0) {
+					pr_err_info("app_network_ime_login: %d", ret);
+					break;
+				}
+			}
+
+			times++;
+
+			println("Press Enter to continue %d", times);
+			getchar();
+		}
 	} else {
 		while (true) {
 			char buff[1024];
@@ -655,8 +690,6 @@ static int app_network_ime_main(int argc, char *argv[])
 			}
 		}
 	}
-
-	msleep(200);
 
 out_network_client_close:
 	network_client_close(&client);
