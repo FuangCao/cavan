@@ -407,12 +407,15 @@ namespace NetworkInputMethod
                 coll = checkedListBoxClients.CheckedItems;
             }
 
-            foreach (var item in coll)
+            lock (coll)
             {
-                NetworkImeClient client = item as NetworkImeClient;
-                if (!client.send(bytes))
+                foreach (var item in coll)
                 {
-                    count++;
+                    NetworkImeClient client = item as NetworkImeClient;
+                    if (!client.send(bytes))
+                    {
+                        count++;
+                    }
                 }
             }
 
@@ -469,13 +472,21 @@ namespace NetworkInputMethod
         public override void onTcpClientConnected(object sender, EventArgs e)
         {
             Console.WriteLine("onTcpClientConnected: sender = " + sender);
-            checkedListBoxClients.Items.Add(sender, true);
+
+            lock (checkedListBoxClients.Items)
+            {
+                checkedListBoxClients.Items.Add(sender, true);
+            }
         }
 
         public override void onTcpClientDisconnected(object sender, EventArgs e)
         {
             Console.WriteLine("onTcpClientDisconnected: sender = " + sender);
-            checkedListBoxClients.Items.Remove(sender);
+
+            lock (checkedListBoxClients.Items)
+            {
+                checkedListBoxClients.Items.Remove(sender);
+            }
         }
 
         public override void onTcpClientUpdated(object sender, EventArgs e)
@@ -669,12 +680,15 @@ namespace NetworkInputMethod
         {
             if (mBusyLock.acquire(checkBoxSelectAll))
             {
-                int index = checkedListBoxClients.Items.Count;
-                bool value = checkBoxSelectAll.Checked;
-
-                while (index > 0)
+                lock (checkedListBoxClients.Items)
                 {
-                    checkedListBoxClients.SetItemChecked(--index, value);
+                    int index = checkedListBoxClients.Items.Count;
+                    bool value = checkBoxSelectAll.Checked;
+
+                    while (index > 0)
+                    {
+                        checkedListBoxClients.SetItemChecked(--index, value);
+                    }
                 }
             }
         }
@@ -688,19 +702,22 @@ namespace NetworkInputMethod
 
             if (e.NewValue == CheckState.Checked)
             {
-                int index = checkedListBoxClients.Items.Count;
-                bool checkedAll = true;
-
-                while (index > 0)
+                lock (checkedListBoxClients.Items)
                 {
-                    if (checkedListBoxClients.GetItemCheckState(--index) != CheckState.Checked && index != e.Index)
-                    {
-                        checkedAll = false;
-                        break;
-                    }
-                }
+                    int index = checkedListBoxClients.Items.Count;
+                    bool checkedAll = true;
 
-                checkBoxSelectAll.Checked = checkedAll;
+                    while (index > 0)
+                    {
+                        if (checkedListBoxClients.GetItemCheckState(--index) != CheckState.Checked && index != e.Index)
+                        {
+                            checkedAll = false;
+                            break;
+                        }
+                    }
+
+                    checkBoxSelectAll.Checked = checkedAll;
+                }
             }
             else
             {
@@ -770,13 +787,18 @@ namespace NetworkInputMethod
 
         private void timerKeepAlive_Tick(object sender, EventArgs e)
         {
-            foreach (object item in checkedListBoxClients.Items)
+            var items = checkedListBoxClients.Items;
+
+            lock (items)
             {
-                NetworkImeClient client = item as NetworkImeClient;
-                if (!client.sendPing())
+                foreach (object item in items)
                 {
-                    Console.WriteLine("disconnect keepalive");
-                    client.disconnect();
+                    NetworkImeClient client = item as NetworkImeClient;
+                    if (!client.sendPing())
+                    {
+                        Console.WriteLine("disconnect keepalive");
+                        client.disconnect();
+                    }
                 }
             }
         }
@@ -1094,14 +1116,19 @@ namespace NetworkInputMethod
             var client = sender as NetworkImeClient;
             var bytes = Encoding.UTF8.GetBytes(text);
 
-            foreach (NetworkImeClient link in checkedListBoxClients.CheckedItems)
-            {
-                if (link == client)
-                {
-                    continue;
-                }
+            var items = checkedListBoxClients.CheckedItems;
 
-                link.send(bytes);
+            lock (items)
+            {
+                foreach (NetworkImeClient link in items)
+                {
+                    if (link == client)
+                    {
+                        continue;
+                    }
+
+                    link.send(bytes);
+                }
             }
         }
     }
