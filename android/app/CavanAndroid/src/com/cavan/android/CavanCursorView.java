@@ -36,6 +36,7 @@ public class CavanCursorView extends View {
 		mParams = params;
 		params.width = WIDTH;
 		params.height = WIDTH;
+		params.flags |= LayoutParams.FLAG_TRANSLUCENT_STATUS | LayoutParams.FLAG_TRANSLUCENT_NAVIGATION;
 		mManager.addView(this, params);
 	}
 
@@ -81,7 +82,6 @@ public class CavanCursorView extends View {
 		Point point = new Point();
 
 		mManager.getDefaultDisplay().getRealSize(point);
-
 		point.set(point.x / 2, point.y / 2);
 
 		return point;

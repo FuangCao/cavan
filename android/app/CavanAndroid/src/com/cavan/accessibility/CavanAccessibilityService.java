@@ -1197,7 +1197,12 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public Point readPosition(CharSequence pkg, int type) {
-		return getPositionMap(type).get(pkg);
+		Point point = getPositionMap(type).get(pkg);
+		if (point == null) {
+			return null;
+		}
+
+		return new Point(point);
 	}
 
 	public Point readPosition(int type) {
