@@ -3,6 +3,8 @@ package com.cavan.accessibility;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
@@ -11,12 +13,16 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Parcelable;
+import android.preference.PreferenceManager;
+import android.util.ArraySet;
 import android.view.Display;
 import android.view.KeyEvent;
 import android.view.Surface;
@@ -26,6 +32,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.inputmethod.InputMethodManager;
 
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanCursorView;
 import com.cavan.android.CavanKeyguardLock;
 import com.cavan.android.CavanThreadedHandler;
 import com.cavan.android.CavanWakeLock;
@@ -36,6 +43,7 @@ import com.cavan.java.CavanThread;
 public class CavanAccessibilityService extends AccessibilityService {
 
 	public static final String ACTION_CODE_RECEIVED = "com.cavan.intent.ACTION_CODE_RECEIVED";
+	public static final String KEY_POSITIONS = "positions";
 
 	public static final int POLL_DELAY = 500;
 	public static final int LAUNCH_DELAY = 2000;
@@ -61,7 +69,9 @@ public class CavanAccessibilityService extends AccessibilityService {
 	private CavanWakeLock mWakeLock = new CavanWakeLock.WakupLock();
 	private CavanRedPacket mPacketDummy = new CavanRedPacket();
 	private CavanCountDownDialogBase mCountDownDialog;
+	private WindowManager mWindowManager;
 
+	private Object[] mPositions = new Object[CavanCursorView.TYPE_COUNT];
 	private int mDisplayWidth = 1080;
 	private int mDisplayHeight = 1920;
 
@@ -452,6 +462,22 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 	};
 
+	public CavanAccessibilityService() {
+		super();
+
+		for (int i = 0; i < mPositions.length; i++) {
+			mPositions[i] = new HashMap<CharSequence, Point>();
+		}
+	}
+
+	public WindowManager getWindowManager() {
+		return mWindowManager;
+	}
+
+	public Display getDisplay() {
+		return mWindowManager.getDefaultDisplay();
+	}
+
 	protected void onPollSuspend(boolean idle) {
 		if (mScreenOn && idle) {
 			CavanAndroid.startLauncher(this);
@@ -469,25 +495,67 @@ public class CavanAccessibilityService extends AccessibilityService {
 			break;
 
 		case CavanAccessibilityWindow.CMD_SIGNIN:
-			processCommandSignin(root);
+		case CavanAccessibilityWindow.CMD_FOLLOW:
+		case CavanAccessibilityWindow.CMD_LOGIN:
+			processCommandSignin(root, CavanCursorView.TYPE_LOGIN);
+			break;
+
+		case CavanAccessibilityWindow.CMD_UNFOLLOW:
+			processCommandSignin(root, CavanCursorView.TYPE_LOGOUT);
 			break;
 		}
 
 		return 0;
 	}
 
-	private boolean processCommandSignin(AccessibilityNodeInfo root) {
+	private boolean processCommandSignin(AccessibilityNodeInfo root, int type) {
 		CharSequence pkg = root.getPackageName();
 		if (pkg == null) {
 			return false;
 		}
 
-		Point position = onReadPosition(pkg.toString());
-		if (position == null) {
+		Point point = readPosition(pkg, type);
+		if (point == null) {
 			return false;
 		}
 
-		return doInputTap(position.x, position.y);
+		Display display = getDisplay();
+		Point size = new Point();
+		int x;
+		int y;
+
+		display.getRealSize(size);
+
+		CavanAndroid.dLog("size = " + size);
+
+		switch (display.getRotation()) {
+		case Surface.ROTATION_0:
+			x = size.x - point.x;
+			y = point.y;
+			break;
+
+		case Surface.ROTATION_90:
+			x = size.y - point.y;
+			y = size.x - point.x;
+			break;
+
+		case Surface.ROTATION_180:
+			x = point.x;
+			y = size.y - point.y;
+			break;
+
+		case Surface.ROTATION_270:
+			x = point.y;
+			y = point.x;
+			break;
+
+		default:
+			x = point.x;
+			y = point.y;
+			break;
+		}
+
+		return doInputTap(x, y);
 	}
 
 	public CavanAccessibilityPackage getPendingPackage() {
@@ -1034,43 +1102,135 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return sendCommand(CavanAccessibilityWindow.CMD_WEB, action);
 	}
 
-	public boolean savePosition(Point point) {
+	@SuppressWarnings("unchecked")
+	public HashMap<CharSequence, Point> getPositionMap(int type)
+	{
+		return (HashMap<CharSequence, Point>) mPositions[type];
+	}
+
+	public boolean savePositions() {
+		Set<String> positions = new ArraySet<String>();
+
+		for (int i = 0; i < mPositions.length; i++) {
+			HashMap<CharSequence, Point> map = getPositionMap(i);
+
+			synchronized (map) {
+				for (Entry<CharSequence, Point> entry : map.entrySet()) {
+					Point point = entry.getValue();
+					StringBuilder builder = new StringBuilder();
+
+					builder.append(entry.getKey());
+					builder.append('|').append(point.x);
+					builder.append('|').append(point.y);
+					builder.append('|').append(i);
+
+					String text = builder.toString();
+					CavanAndroid.dLog("save: " + text);
+					positions.add(text);
+				}
+			}
+		}
+
+		return onSavePositions(positions);
+	}
+
+	public boolean loadPositions() {
+		Set<String> positions = onLoadPositions();
+		if (positions == null) {
+			return false;
+		}
+
+		for (String position : positions) {
+			CavanAndroid.dLog("load: " + position);
+
+			String[] args = position.split("\\|");
+			if (args.length < 3) {
+				continue;
+			}
+
+			String pkg = args[0];
+			if (pkg.isEmpty()) {
+				continue;
+			}
+
+			int x = CavanJava.parseInt(args[1]);
+			int y = CavanJava.parseInt(args[2]);
+			int type;
+
+			Point point = new Point(x, y);
+
+			if (args.length > 3) {
+				type = CavanJava.parseInt(args[3]);
+			} else {
+				type = CavanCursorView.TYPE_LOGIN;
+			}
+
+			getPositionMap(type).put(pkg, point);
+		}
+
+		return true;
+	}
+
+	public boolean savePosition(int type, int x, int y) {
 		String pkg = getCurrntPacketName();
 		if (pkg == null) {
 			return false;
 		}
 
-		return onSavePosition(pkg, point);
+		Point point = new Point(x, y);
+		getPositionMap(type).put(pkg, point);
+
+		return savePositions();
 	}
 
-	public boolean removePosition() {
+	public boolean removePosition(int type) {
 		String pkg = getCurrntPacketName();
 		if (pkg == null) {
 			return false;
 		}
 
-		return onRemovePosition(pkg);
+		if (getPositionMap(type).remove(pkg) == null) {
+			return true;
+		}
+
+		return savePositions();
 	}
 
-	public Point readPosition() {
+	public Point readPosition(CharSequence pkg, int type) {
+		return getPositionMap(type).get(pkg);
+	}
+
+	public Point readPosition(int type) {
 		String pkg = getCurrntPacketName();
 		if (pkg == null) {
 			return null;
 		}
 
-		return onReadPosition(pkg);
+		return readPosition(pkg, type);
 	}
 
-	protected boolean onSavePosition(String pkg, Point point) {
-		return false;
+	protected boolean onSavePositions(Set<String> positions) {
+		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+		if (preferences == null) {
+			return false;
+		}
+
+		try {
+			Editor editor = preferences.edit();
+			editor.putStringSet(KEY_POSITIONS, positions);
+			return editor.commit();
+		} catch (Exception e) {
+			return false;
+		}
 	}
 
-	protected Point onReadPosition(String pkg) {
-		return null;
-	}
+	private Set<String> onLoadPositions() {
+		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+		if (preferences == null) {
+			return null;
+		}
 
-	protected boolean onRemovePosition(String pkg) {
-		return false;
+		return preferences.getStringSet(KEY_POSITIONS, null);
 	}
 
 	public Class<?> getBroadcastReceiverClass() {
@@ -1249,25 +1409,25 @@ public class CavanAccessibilityService extends AccessibilityService {
 	public void onCreate() {
 		super.onCreate();
 
+		mWindowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+		loadPositions();
+
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-			WindowManager manager = (WindowManager) getSystemService(WINDOW_SERVICE);
-			if (manager != null) {
-				Display display = manager.getDefaultDisplay();
-				int rotation = display.getRotation();
-				Point point = new Point();
+			Display display = getDisplay();
+			int rotation = display.getRotation();
+			Point point = new Point();
 
-				display.getRealSize(point);
+			display.getRealSize(point);
 
-				CavanAndroid.dLog("rotation = " + rotation);
-				CavanAndroid.dLog("size = " + point);
+			CavanAndroid.dLog("rotation = " + rotation);
+			CavanAndroid.dLog("size = " + point);
 
-				if (rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) {
-					mDisplayWidth = point.x;
-					mDisplayHeight = point.y;
-				} else {
-					mDisplayWidth = point.y;
-					mDisplayHeight = point.x;
-				}
+			if (rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) {
+				mDisplayWidth = point.x;
+				mDisplayHeight = point.y;
+			} else {
+				mDisplayWidth = point.y;
+				mDisplayHeight = point.x;
 			}
 		}
 

@@ -19,7 +19,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
-import android.graphics.Point;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Environment;
@@ -28,9 +27,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
-import android.view.Display;
 import android.view.Gravity;
-import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager.LayoutParams;
@@ -745,16 +742,18 @@ public class FloatMessageService extends FloatWindowService {
 		mHandler.sendEmptyMessage(MSG_TCP_BRIDGE_UPDATED);
 	}
 
-	public void setCursorEnale(boolean enable) {
-		if (enable) {
-			if (mCursorView == null) {
-				mCursorView = new CavanCursorView(this, createRootViewLayoutParams());
-				addRootView(mCursorView);
-			} else {
-				mCursorView.setVisibility(View.VISIBLE);
-			}
-		} else if (mCursorView != null) {
-			mCursorView.setVisibility(View.GONE);
+	public void showCursorView(int type) {
+		if (mCursorView == null) {
+			mCursorView = new CavanCursorView(this, createRootViewLayoutParams());
+			addRootView(mCursorView);
+		}
+
+		mCursorView.enable(type);
+	}
+
+	public void hiddenCursorView() {
+		if (mCursorView != null) {
+			mCursorView.disable();
 		}
 	}
 
@@ -770,47 +769,20 @@ public class FloatMessageService extends FloatWindowService {
 		}
 	}
 
-	public Point getCursorPosition() {
-		if (mCursorView == null) {
-			return null;
+	public boolean saveCursorPosition() {
+		if (mCursorView != null) {
+			return mCursorView.save();
 		}
 
-		Display display = mManager.getDefaultDisplay();
-		int rotation = display.getRotation();
-		int x = mCursorView.getCursorX();
-		int y = mCursorView.getCursorY();
-		Point point = new Point();
+		return false;
+	}
 
-		display.getRealSize(point);
-		CavanAndroid.dLog("width = " + point.x + ", height = " + point.y);
-
-		switch (rotation) {
-		case Surface.ROTATION_0:
-			CavanAndroid.dLog("ROTATION_0");
-			point.set(point.x - x, y);
-			break;
-
-		case Surface.ROTATION_90:
-			CavanAndroid.dLog("ROTATION_90");
-			point.set(point.y - y, point.x - x);
-			break;
-
-		case Surface.ROTATION_180:
-			CavanAndroid.dLog("ROTATION_180");
-			point.set(x, point.y - y);
-			break;
-
-		case Surface.ROTATION_270:
-			CavanAndroid.dLog("ROTATION_270");
-			point.set(y, x);
-			break;
-
-		default:
-			point.set(x, y);
-			break;
+	public boolean removeCursorPosition() {
+		if (mCursorView != null) {
+			return mCursorView.remove();
 		}
 
-		return point;
+		return false;
 	}
 
 	@Override

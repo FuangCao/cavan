@@ -9,7 +9,6 @@ import android.accessibilityservice.AccessibilityService;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Point;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -678,32 +677,25 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			break;
 
 		case "save":
-			if (accessibility != null) {
-				Point point = service.getCursorPosition();
-				if (point == null) {
-					return false;
-				}
-
-				return accessibility.savePosition(point);
-			}
-			break;
+			return service.saveCursorPosition();
 
 		case "remove":
-			if (accessibility != null) {
-				return accessibility.removePosition();
-			}
-			break;
+			return service.removeCursorPosition();
 
 		case "1":
 		case "true":
 		case "enable":
-			service.setCursorEnale(true);
+			if (args.length > 1) {
+				service.showCursorView(CavanJava.parseInt(args[1]));
+			} else {
+				service.showCursorView(0);
+			}
 			return true;
 
 		case "0":
 		case "false":
 		case "disable":
-			service.setCursorEnale(false);
+			service.hiddenCursorView();
 			return true;
 		}
 

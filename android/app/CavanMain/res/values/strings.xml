@@ -847,5 +847,7 @@
 	<string name="reserve">保留</string>
 	<string name="delete_tail">去尾</string>
 	<string name="input_device_proxy">输入设备代理</string>
+	<string name="move_left">左移</string>
+	<string name="move_right">右移</string>
 
 </resources>

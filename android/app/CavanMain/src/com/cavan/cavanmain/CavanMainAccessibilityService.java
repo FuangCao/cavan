@@ -2,19 +2,13 @@ package com.cavan.cavanmain;
 
 import java.net.InetAddress;
 import java.util.HashMap;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
-import android.content.SharedPreferences;
-import android.graphics.Point;
 import android.os.Message;
-import android.preference.PreferenceManager;
 import android.telephony.TelephonyManager;
-import android.util.ArraySet;
 import android.view.WindowManager;
 
 import com.cavan.accessibility.CavanAccessibilityAlipay;
@@ -26,7 +20,6 @@ import com.cavan.accessibility.CavanUnlockActivity;
 import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanThreadedHandler;
 import com.cavan.android.TcpExecClient;
-import com.cavan.java.CavanJava;
 
 public class CavanMainAccessibilityService extends CavanAccessibilityService {
 
@@ -48,7 +41,6 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
     }
 
 	private TelephonyManager mTelephonyManager;
-	private HashMap<String, Point> mPositions = new HashMap<String, Point>();
 
 	private CavanThreadedHandler mThreadedHandler = new CavanThreadedHandler(CavanMainAccessibilityService.class) {
 
@@ -199,23 +191,6 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 		instance = this;
 
 		mTelephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-
-		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-		if (preferences != null) {
-			Set<String> positions = preferences.getStringSet(KEY_POSITIONS, null);
-			if (positions != null) {
-				for (String text : positions) {
-					String[] args = text.split("|");
-					if (args.length < 3) {
-						continue;
-					}
-
-					int x = CavanJava.parseInt(args[1]);
-					int y = CavanJava.parseInt(args[2]);
-					mPositions.put(args[0], new Point(x, y));
-				}
-			}
-		}
 	}
 
 	@Override
@@ -274,51 +249,5 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 		}
 
 		return service.isInformationGroup(chatting);
-	}
-
-	private boolean savePositions() {
-		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-		if (preferences == null) {
-			return false;
-		}
-
-		ArraySet<String> positions = new ArraySet<String>(mPositions.size());
-
-		for (Entry<String, Point> entry : mPositions.entrySet()) {
-			StringBuilder builder = new StringBuilder();
-			Point point = entry.getValue();
-
-			builder.append(entry.getKey());
-			builder.append('|').append(point.x);
-			builder.append('|').append(point.y);
-
-			positions.add(builder.toString());
-		}
-
-		preferences.edit().putStringSet("positions", mPositions.keySet());
-
-		return true;
-	}
-
-	@Override
-	protected boolean onSavePosition(String pkg, Point point) {
-		CavanAndroid.dLog(String.format("onSavePosition: %s (%d, %d)", pkg, point.x, point.y));
-		mPositions.put(pkg, point);
-		return savePositions();
-	}
-
-	@Override
-	protected Point onReadPosition(String pkg) {
-		CavanAndroid.dLog("onReadPosition: " + pkg);
-		return mPositions.get(pkg);
-	}
-
-	@Override
-	protected boolean onRemovePosition(String pkg) {
-		if (mPositions.remove(pkg) != null) {
-			return savePositions();
-		}
-
-		return true;
 	}
 }
