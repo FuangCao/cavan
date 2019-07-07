@@ -328,7 +328,7 @@ namespace NetworkInputMethod
 
                 return text.Trim();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // MessageBox.Show(e.ToString());
             }

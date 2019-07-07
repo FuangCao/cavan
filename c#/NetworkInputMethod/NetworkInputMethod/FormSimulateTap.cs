@@ -12,8 +12,6 @@ namespace NetworkInputMethod
     public partial class FormSimulateTap : Form
     {
         private int mStep;
-        private int mAxisX;
-        private int mAxisY;
         private FormNetworkIme mIme;
 
         public FormSimulateTap(FormNetworkIme ime)
