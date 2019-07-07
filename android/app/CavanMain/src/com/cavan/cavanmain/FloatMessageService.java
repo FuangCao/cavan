@@ -750,12 +750,20 @@ public class FloatMessageService extends FloatWindowService {
 			addRootView(mCursorView);
 		}
 
+		if (mTextViewTime != null) {
+			mTextViewTime.setVisibility(View.GONE);
+		}
+
 		mCursorView.enable(type);
 	}
 
 	public void hiddenCursorView() {
 		if (mCursorView != null) {
 			mCursorView.disable();
+		}
+
+		if (CavanMessageActivity.isFloatTimerEnabled(this) && mTextViewTime != null) {
+			mTextViewTime.setVisibility(View.VISIBLE);
 		}
 	}
 

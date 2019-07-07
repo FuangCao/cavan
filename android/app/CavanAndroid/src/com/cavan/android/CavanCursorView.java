@@ -5,17 +5,19 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Paint.Align;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
+
 import com.cavan.accessibility.CavanAccessibilityService;
 
 public class CavanCursorView extends View {
 
-	public static final int WIDTH = 30;
+	public static final int WIDTH = 40;
 	public static final int RADIUS = WIDTH / 2;
 
 	public static int TYPE_LOGIN = 0;
@@ -35,6 +37,9 @@ public class CavanCursorView extends View {
 
 		mPaint = new Paint();
 		mPaint.setColor(Color.RED);
+		mPaint.setStrokeWidth(5);
+		mPaint.setStyle(Paint.Style.FILL);
+		mPaint.setTextSize(WIDTH);
 
 		mManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 
@@ -42,7 +47,7 @@ public class CavanCursorView extends View {
 				WindowManager.LayoutParams.MATCH_PARENT,
 				WindowManager.LayoutParams.MATCH_PARENT,
 				LayoutParams.TYPE_PHONE, // LayoutParams.TYPE_TOAST,
-				LayoutParams.FLAG_NOT_FOCUSABLE | LayoutParams.FLAG_TRANSLUCENT_STATUS | LayoutParams.FLAG_TRANSLUCENT_NAVIGATION,
+				LayoutParams.FLAG_NOT_FOCUSABLE,
 				PixelFormat.RGBA_8888);
 
 		mManager.addView(this, params);
@@ -163,8 +168,10 @@ public class CavanCursorView extends View {
 
 	@Override
 	protected void onDraw(Canvas canvas) {
-		String text = String.format("(%d, %d) (%d, %d)", mViewX, mViewY, mRawX, mRawY);
-		canvas.drawText(text, 0, 0, mPaint);
+		mPaint.setTextAlign(Align.LEFT);
+		canvas.drawText(String.format("(%d, %d)", mViewX, mViewY), 0, WIDTH, mPaint);
+		mPaint.setTextAlign(Align.RIGHT);
+		canvas.drawText(String.format("(%d, %d)", mRawX, mRawY), canvas.getWidth(), WIDTH, mPaint);
 		canvas.drawCircle(mViewX, mViewY, RADIUS, mPaint);
 	}
 }
