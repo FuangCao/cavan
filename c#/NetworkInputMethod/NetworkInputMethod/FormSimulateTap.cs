@@ -20,86 +20,27 @@ namespace NetworkInputMethod
         {
             mIme = ime;
             InitializeComponent();
+            comboBoxDevices.SelectedIndex = 0;
+            comboBoxType.SelectedIndex = 0;
             comboBoxStep.Text = "100";
-        }
-
-        public int AxisX
-        {
-            get
-            {
-                return mAxisX;
-            }
-
-            set
-            {
-                if (value < 0)
-                {
-                    mAxisX = 0;
-                }
-                else
-                {
-                    mAxisX = value;
-                }
-
-                textBoxAxisX.Text = mAxisX.ToString();
-            }
-        }
-
-        public int AxisY
-        {
-            get
-            {
-                return mAxisY;
-            }
-
-            set
-            {
-                if (value < 0)
-                {
-                    mAxisY = 0;
-                }
-                else
-                {
-                    mAxisY = value;
-                }
-
-                textBoxAxisY.Text = mAxisY.ToString();
-            }
-        }
-
-        public bool apply()
-        {
-            return sendCommand("cursor set " + mAxisX + " " + mAxisY);
-        }
-
-        public bool setAxisX(int value)
-        {
-            AxisX = value;
-            return apply();
-        }
-
-        public bool setAxisY(int value)
-        {
-            AxisY = value;
-            return apply();
-        }
-
-        public bool setAxis(int x, int y)
-        {
-            AxisX = x;
-            AxisY = y;
-            return apply();
         }
 
         public bool sendCommand(string command)
         {
-            var client = comboBoxDevices.SelectedItem as NetworkImeClient;
-            if (client == null)
+            var bytes = Encoding.UTF8.GetBytes(command);
+
+            if (comboBoxDevices.SelectedIndex > 0)
             {
-                return false;
+                var client = comboBoxDevices.SelectedItem as NetworkImeClient;
+                if (client == null)
+                {
+                    return false;
+                }
+
+                return client.send(bytes);
             }
 
-            return client.send(command);
+            return mIme.sendCommand(bytes, false) > 0;
         }
 
         private void comboBoxStep_TextChanged(object sender, EventArgs e)
@@ -110,8 +51,10 @@ namespace NetworkInputMethod
         private void comboBoxDevices_DropDown(object sender, EventArgs e)
         {
             var items = comboBoxDevices.Items;
+            var first = items[0];
 
             items.Clear();
+            items.Add(first);
 
             foreach (var item in mIme.NetworkImeClients)
             {
@@ -125,15 +68,8 @@ namespace NetworkInputMethod
 
         }
 
-        private void buttonZero_Click(object sender, EventArgs e)
-        {
-            setAxis(0, 0);
-            comboBoxStep.Text = "100";
-        }
-
         private void buttonSave_Click(object sender, EventArgs e)
         {
-            apply();
             sendCommand("cursor save");
         }
 
@@ -144,12 +80,12 @@ namespace NetworkInputMethod
 
         private void buttonTap_Click(object sender, EventArgs e)
         {
-            sendCommand("signin");
+            sendCommand("cursor tap");
         }
 
         private void buttonOpen_Click(object sender, EventArgs e)
         {
-            sendCommand("cursor 1");
+            sendCommand("cursor 1 " + comboBoxType.SelectedIndex);
         }
 
         private void buttonClose_Click(object sender, EventArgs e)
@@ -157,24 +93,39 @@ namespace NetworkInputMethod
             sendCommand("cursor 0");
         }
 
+        public void sendCommandAdd(int x, int y)
+        {
+            sendCommand("cursor add " + x + " " + y);
+        }
+
         private void buttonUp_Click(object sender, EventArgs e)
         {
-            setAxisY(mAxisY - mStep);
+            sendCommandAdd(0, -mStep);
         }
 
         private void buttonDown_Click(object sender, EventArgs e)
         {
-            setAxisY(mAxisY + mStep);
+            sendCommandAdd(0, mStep);
         }
 
         private void buttonLeft_Click(object sender, EventArgs e)
         {
-            setAxisX(mAxisX + mStep);
+            sendCommandAdd(-mStep, 0);
         }
 
         private void buttonRight_Click(object sender, EventArgs e)
         {
-            setAxisX(mAxisX - mStep);
+            sendCommandAdd(mStep, 0);
+        }
+
+        private void buttonLogin_Click(object sender, EventArgs e)
+        {
+            sendCommand("signin");
+        }
+
+        private void buttonLogout_Click(object sender, EventArgs e)
+        {
+            sendCommand("unfollow");
         }
     }
 }

@@ -37,17 +37,19 @@
             this.buttonDown = new System.Windows.Forms.Button();
             this.buttonLeft = new System.Windows.Forms.Button();
             this.buttonRight = new System.Windows.Forms.Button();
-            this.textBoxAxisX = new System.Windows.Forms.TextBox();
-            this.textBoxAxisY = new System.Windows.Forms.TextBox();
-            this.buttonZero = new System.Windows.Forms.Button();
             this.buttonOpen = new System.Windows.Forms.Button();
             this.buttonClose = new System.Windows.Forms.Button();
+            this.comboBoxType = new System.Windows.Forms.ComboBox();
+            this.buttonLogin = new System.Windows.Forms.Button();
+            this.buttonLogout = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // comboBoxDevices
             // 
             this.comboBoxDevices.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxDevices.FormattingEnabled = true;
+            this.comboBoxDevices.Items.AddRange(new object[] {
+            "所有设备"});
             this.comboBoxDevices.Location = new System.Drawing.Point(12, 12);
             this.comboBoxDevices.Name = "comboBoxDevices";
             this.comboBoxDevices.Size = new System.Drawing.Size(268, 20);
@@ -150,34 +152,6 @@
             this.buttonRight.UseVisualStyleBackColor = true;
             this.buttonRight.Click += new System.EventHandler(this.buttonRight_Click);
             // 
-            // textBoxAxisX
-            // 
-            this.textBoxAxisX.Location = new System.Drawing.Point(87, 38);
-            this.textBoxAxisX.Name = "textBoxAxisX";
-            this.textBoxAxisX.ReadOnly = true;
-            this.textBoxAxisX.Size = new System.Drawing.Size(53, 21);
-            this.textBoxAxisX.TabIndex = 9;
-            this.textBoxAxisX.Text = "0";
-            // 
-            // textBoxAxisY
-            // 
-            this.textBoxAxisY.Location = new System.Drawing.Point(146, 38);
-            this.textBoxAxisY.Name = "textBoxAxisY";
-            this.textBoxAxisY.ReadOnly = true;
-            this.textBoxAxisY.Size = new System.Drawing.Size(53, 21);
-            this.textBoxAxisY.TabIndex = 10;
-            this.textBoxAxisY.Text = "0";
-            // 
-            // buttonZero
-            // 
-            this.buttonZero.Location = new System.Drawing.Point(205, 36);
-            this.buttonZero.Name = "buttonZero";
-            this.buttonZero.Size = new System.Drawing.Size(75, 23);
-            this.buttonZero.TabIndex = 11;
-            this.buttonZero.Text = "归零";
-            this.buttonZero.UseVisualStyleBackColor = true;
-            this.buttonZero.Click += new System.EventHandler(this.buttonZero_Click);
-            // 
             // buttonOpen
             // 
             this.buttonOpen.Location = new System.Drawing.Point(205, 228);
@@ -198,17 +172,49 @@
             this.buttonClose.UseVisualStyleBackColor = true;
             this.buttonClose.Click += new System.EventHandler(this.buttonClose_Click);
             // 
+            // comboBoxType
+            // 
+            this.comboBoxType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxType.FormattingEnabled = true;
+            this.comboBoxType.Items.AddRange(new object[] {
+            "登录",
+            "注销"});
+            this.comboBoxType.Location = new System.Drawing.Point(87, 38);
+            this.comboBoxType.Name = "comboBoxType";
+            this.comboBoxType.Size = new System.Drawing.Size(112, 20);
+            this.comboBoxType.TabIndex = 15;
+            // 
+            // buttonLogin
+            // 
+            this.buttonLogin.Location = new System.Drawing.Point(106, 228);
+            this.buttonLogin.Name = "buttonLogin";
+            this.buttonLogin.Size = new System.Drawing.Size(75, 23);
+            this.buttonLogin.TabIndex = 16;
+            this.buttonLogin.Text = "登录";
+            this.buttonLogin.UseVisualStyleBackColor = true;
+            this.buttonLogin.Click += new System.EventHandler(this.buttonLogin_Click);
+            // 
+            // buttonLogout
+            // 
+            this.buttonLogout.Location = new System.Drawing.Point(106, 257);
+            this.buttonLogout.Name = "buttonLogout";
+            this.buttonLogout.Size = new System.Drawing.Size(75, 23);
+            this.buttonLogout.TabIndex = 17;
+            this.buttonLogout.Text = "注销";
+            this.buttonLogout.UseVisualStyleBackColor = true;
+            this.buttonLogout.Click += new System.EventHandler(this.buttonLogout_Click);
+            // 
             // FormSimulateTap
             // 
             this.AcceptButton = this.buttonTap;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(290, 292);
+            this.Controls.Add(this.buttonLogout);
+            this.Controls.Add(this.buttonLogin);
+            this.Controls.Add(this.comboBoxType);
             this.Controls.Add(this.buttonClose);
             this.Controls.Add(this.buttonOpen);
-            this.Controls.Add(this.buttonZero);
-            this.Controls.Add(this.textBoxAxisY);
-            this.Controls.Add(this.textBoxAxisX);
             this.Controls.Add(this.buttonRight);
             this.Controls.Add(this.buttonLeft);
             this.Controls.Add(this.buttonDown);
@@ -221,7 +227,6 @@
             this.Name = "FormSimulateTap";
             this.Text = "模拟点击";
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -236,10 +241,10 @@
         private System.Windows.Forms.Button buttonDown;
         private System.Windows.Forms.Button buttonLeft;
         private System.Windows.Forms.Button buttonRight;
-        private System.Windows.Forms.TextBox textBoxAxisX;
-        private System.Windows.Forms.TextBox textBoxAxisY;
-        private System.Windows.Forms.Button buttonZero;
         private System.Windows.Forms.Button buttonOpen;
         private System.Windows.Forms.Button buttonClose;
+        private System.Windows.Forms.ComboBox comboBoxType;
+        private System.Windows.Forms.Button buttonLogin;
+        private System.Windows.Forms.Button buttonLogout;
     }
 }
