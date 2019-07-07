@@ -1,14 +1,16 @@
 package com.cavan.android;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.graphics.Point;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
-
 import com.cavan.accessibility.CavanAccessibilityService;
 
 public class CavanCursorView extends View {
@@ -21,9 +23,12 @@ public class CavanCursorView extends View {
 	public static int TYPE_COUNT = 2;
 
 	private WindowManager mManager;
-	private WindowManager.LayoutParams mParams;
 	private Paint mPaint;
 	private int mType;
+	private int mViewX;
+	private int mViewY;
+	private int mRawX;
+	private int mRawY;
 
 	public CavanCursorView(Context context, LayoutParams params) {
 		super(context);
@@ -33,29 +38,14 @@ public class CavanCursorView extends View {
 
 		mManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 
-		mParams = params;
-		params.width = WIDTH;
-		params.height = WIDTH;
-		params.flags |= LayoutParams.FLAG_TRANSLUCENT_STATUS | LayoutParams.FLAG_TRANSLUCENT_NAVIGATION;
+		params = new LayoutParams(
+				WindowManager.LayoutParams.MATCH_PARENT,
+				WindowManager.LayoutParams.MATCH_PARENT,
+				LayoutParams.TYPE_PHONE, // LayoutParams.TYPE_TOAST,
+				LayoutParams.FLAG_NOT_FOCUSABLE | LayoutParams.FLAG_TRANSLUCENT_STATUS | LayoutParams.FLAG_TRANSLUCENT_NAVIGATION,
+				PixelFormat.RGBA_8888);
+
 		mManager.addView(this, params);
-	}
-
-	public void setPosition(int x, int y) {
-		if (getVisibility() != View.VISIBLE) {
-			return;
-		}
-
-		mParams.x = x;
-		mParams.y = y;
-		mManager.updateViewLayout(this, mParams);
-	}
-
-	public void addPosition(int x, int y) {
-		setPosition(mParams.x + x, mParams.y + y);
-	}
-
-	public int getCursorX() {
-		return (int) (mParams.x + RADIUS);
 	}
 
 	public int getType() {
@@ -64,10 +54,6 @@ public class CavanCursorView extends View {
 
 	public void setType(int type) {
 		mType = type;
-	}
-
-	public int getCursorY() {
-		return (int) (mParams.y + RADIUS);
 	}
 
 	public Point load() {
@@ -97,10 +83,7 @@ public class CavanCursorView extends View {
 			return false;
 		}
 
-		int x = getCursorX();
-		int y = getCursorY();
-
-		return service.savePosition(mType, x, y);
+		return service.savePosition(mType, mRawX, mRawY);
 	}
 
 	public boolean remove() {
@@ -116,24 +99,72 @@ public class CavanCursorView extends View {
 		return service.removePosition(mType);
 	}
 
+	public boolean tap() {
+		if (getVisibility() != View.VISIBLE) {
+			return false;
+		}
+
+		CavanAccessibilityService service = CavanAccessibilityService.instance;
+		if (service == null) {
+			return false;
+		}
+
+		return service.tapPosition(new Point(mRawX, mRawY));
+	}
+
 	public void enable(int type) {
 		setVisibility(View.VISIBLE);
 		mType = type;
+
 		Point point = load();
-		setPosition(point.x - RADIUS, point.y - RADIUS);
+		setPosition(point.x, point.y);
 	}
 
 	public void disable() {
 		setVisibility(View.GONE);
 	}
 
-	@Override
-	protected void onDraw(Canvas canvas) {
-		CavanAndroid.dLog("onDraw");
+	public boolean setPosition(int x, int y) {
+		if (getVisibility() != View.VISIBLE) {
+			return false;
+		}
 
-		mPaint.setColor(Color.RED);
+		mViewX = mRawX = x;
+		mViewY = mRawY = y;
+		postInvalidate();
 
-		canvas.drawCircle(RADIUS, RADIUS, RADIUS, mPaint);
+		return true;
 	}
 
+	public boolean addPosition(int x, int y) {
+		if (getVisibility() != View.VISIBLE) {
+			return false;
+		}
+
+		mViewX += x;
+		mViewY += y;
+		mRawX += x;
+		mRawY += y;
+		postInvalidate();
+
+		return true;
+	}
+
+	@SuppressLint("ClickableViewAccessibility")
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		mRawX = (int) event.getRawX();
+		mRawY = (int) event.getRawY();
+		mViewX = (int) event.getX();
+		mViewY = (int) event.getY();
+		postInvalidate();
+		return true;
+	}
+
+	@Override
+	protected void onDraw(Canvas canvas) {
+		String text = String.format("(%d, %d) (%d, %d)", mViewX, mViewY, mRawX, mRawY);
+		canvas.drawText(text, 0, 0, mPaint);
+		canvas.drawCircle(mViewX, mViewY, RADIUS, mPaint);
+	}
 }

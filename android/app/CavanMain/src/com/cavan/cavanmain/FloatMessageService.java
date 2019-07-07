@@ -305,6 +305,8 @@ public class FloatMessageService extends FloatWindowService {
 				setLockScreenEnable(true);
 				mAutoUnlockLevel = AUTO_UNLOCK_SCREEN_ON;
 
+				hiddenCursorView();
+
 				synchronized (mHandler) {
 					mScreenClosed = true;
 				}
@@ -757,16 +759,20 @@ public class FloatMessageService extends FloatWindowService {
 		}
 	}
 
-	public void setCurorPosition(int x, int y) {
+	public boolean setCursorPosition(int x, int y) {
 		if (mCursorView != null) {
-			mCursorView.setPosition(x, y);
+			return mCursorView.setPosition(x, y);
 		}
+
+		return false;
 	}
 
-	public void addCursorPosition(int x, int y) {
+	public boolean addCursorPosition(int x, int y) {
 		if (mCursorView != null) {
-			mCursorView.addPosition(x, y);
+			return mCursorView.addPosition(x, y);
 		}
+
+		return false;
 	}
 
 	public boolean saveCursorPosition() {
@@ -780,6 +786,14 @@ public class FloatMessageService extends FloatWindowService {
 	public boolean removeCursorPosition() {
 		if (mCursorView != null) {
 			return mCursorView.remove();
+		}
+
+		return false;
+	}
+
+	public boolean tapCursorPosition() {
+		if (mCursorView != null) {
+			return mCursorView.tap();
 		}
 
 		return false;

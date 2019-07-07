@@ -658,15 +658,6 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 		}
 
 		switch (args[0]) {
-		case "set":
-			if (args.length > 2) {
-				int x = CavanJava.parseInt(args[1]);
-				int y = CavanJava.parseInt(args[2]);
-				service.setCurorPosition(x, y);
-				return true;
-			}
-			break;
-
 		case "add":
 			if (args.length > 2) {
 				int x = CavanJava.parseInt(args[1]);
@@ -675,6 +666,9 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 				return true;
 			}
 			break;
+
+		case "tap":
+			return service.tapCursorPosition();
 
 		case "save":
 			return service.saveCursorPosition();

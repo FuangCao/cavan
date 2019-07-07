@@ -519,43 +519,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 			return false;
 		}
 
-		Display display = getDisplay();
-		Point size = new Point();
-		int x;
-		int y;
-
-		display.getRealSize(size);
-
-		CavanAndroid.dLog("size = " + size);
-
-		switch (display.getRotation()) {
-		case Surface.ROTATION_0:
-			x = size.x - point.x;
-			y = point.y;
-			break;
-
-		case Surface.ROTATION_90:
-			x = size.y - point.y;
-			y = size.x - point.x;
-			break;
-
-		case Surface.ROTATION_180:
-			x = point.x;
-			y = size.y - point.y;
-			break;
-
-		case Surface.ROTATION_270:
-			x = point.y;
-			y = point.x;
-			break;
-
-		default:
-			x = point.x;
-			y = point.y;
-			break;
-		}
-
-		return doInputTap(x, y);
+		return tapPosition(point);
 	}
 
 	public CavanAccessibilityPackage getPendingPackage() {
@@ -1171,16 +1135,20 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return true;
 	}
 
+	public boolean savePosition(String pkg, int type, int x, int y) {
+		Point point = new Point(x, y);
+		getPositionMap(type).put(pkg, point);
+		CavanAndroid.dLog(pkg + " <= " + point);
+		return savePositions();
+	}
+
 	public boolean savePosition(int type, int x, int y) {
 		String pkg = getCurrntPacketName();
 		if (pkg == null) {
 			return false;
 		}
 
-		Point point = new Point(x, y);
-		getPositionMap(type).put(pkg, point);
-
-		return savePositions();
+		return savePosition(pkg, type, x, y);
 	}
 
 	public boolean removePosition(int type) {
@@ -1212,6 +1180,41 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 
 		return readPosition(pkg, type);
+	}
+
+	public boolean tapPosition(Point point) {
+		Display display = getDisplay();
+		Point size = new Point();
+		int x;
+		int y;
+
+		display.getRealSize(size);
+
+		CavanAndroid.dLog("size = " + size);
+
+		switch (display.getRotation()) {
+		case Surface.ROTATION_90:
+			x = size.y - point.y;
+			y = point.x;
+			break;
+
+		case Surface.ROTATION_180:
+			x = size.x - point.x;
+			y = size.y - point.y;
+			break;
+
+		case Surface.ROTATION_270:
+			x = point.y;
+			y = size.x - point.x;
+			break;
+
+		default:
+			x = point.x;
+			y = point.y;
+			break;
+		}
+
+		return doInputTap(x, y);
 	}
 
 	protected boolean onSavePositions(Set<String> positions) {
