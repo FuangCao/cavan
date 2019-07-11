@@ -8,7 +8,7 @@ LOCAL_MODULE := main
 include $(BUILD_EXEC_PKG)
 else
 ifeq ($(BUILD_ENTRY),cavan)
-LOCAL_SOURCE := $(call search_all_files,*.c *.cc *.cpp *.cxx)
+LOCAL_SOURCE := $(call search_all_files,*.c cpp/*.cpp)
 
 ifeq ($(BUILD_OTHERS),true)
 LOCAL_SOURCE := $(LOCAL_SOURCE) $(call search_all_files,others/*.c others/*.cc others/*.cpp others/*.cxx)
@@ -28,7 +28,7 @@ endif
 
 $(foreach fn,$(LOCAL_SOURCE),$(eval $(call build_as_execute,$(fn))))
 
-LOCAL_SOURCE := $(call search_all_files,*.cc *.cpp *.cxx)
+LOCAL_SOURCE := $(call search_all_files,cpp/*.cpp)
 
 ifeq ($(BUILD_OTHERS),true)
 LOCAL_SOURCE := $(LOCAL_SOURCE) $(call search_all_files,others/*.cc others/*.cpp others/*.cxx)

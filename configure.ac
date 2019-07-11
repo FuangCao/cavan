@@ -55,6 +55,9 @@ AC_FUNC_MKTIME
 AC_FUNC_MMAP
 AC_CHECK_FUNCS([alarm clock_gettime dup2 ftruncate getcwd gettimeofday inet_ntoa localtime_r memset mkdir mkfifo munmap pow putenv realpath rmdir select setenv socket sqrt strdup strerror utime])
 
+AC_ARG_ENABLE(cavan-cpp, AS_HELP_STRING([--enable-cavan-cpp], [compile cpp files]))
+AM_CONDITIONAL(CONFIG_CAVAN_CPP, test "${enable_cavan_cpp}" != "no" )
+
 AC_CONFIG_FILES([Makefile
                  app/Makefile
                  include/Makefile

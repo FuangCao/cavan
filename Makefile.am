@@ -1,6 +1,10 @@
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = include lib cpp app
+SUBDIRS = include lib app
+
+if CONFIG_CAVAN_CPP
+SUBDIRS += cpp
+endif
 
 MAINTAINERCLEANFILES = configure aclocal.m4 config.h.in depcomp install-sh missing Makefile.in
 

@@ -90,6 +90,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@CONFIG_CAVAN_CPP_TRUE@am__append_1 = $(wildcard @top_builddir@/cpp/*.o)
+@CONFIG_CAVAN_CPP_TRUE@am__append_2 = cpp_calculator.cpp cpp_http_service.cpp im_client.cpp im_server.cpp udp_proxy.cpp
 bin_PROGRAMS = cavan-main$(EXEEXT)
 subdir = app
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -106,15 +108,47 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am__objects_1 = abspath.$(OBJEXT) alarm.$(OBJEXT) \
+am__cavan_main_SOURCES_DIST = abspath.c alarm.c alc5671_clock.c \
+	ascii.c auto_dd.c auto_input.c auto_mount.c battery.c \
+	battery_level.c bdata.c bkernel.c bmp_view.c bootimg.c \
+	bramdisk.c brecovery.c bsystem.c buboot.c calculator.c \
+	chroot.c chtty.c clock.c copy.c dd.c df.c dic_generator.c \
+	display.c dos2unix.c eavoo_sell_statistic.c ecc.c \
+	event_repeater.c ext2.c fb_capture.c fdisk.c file_crc32.c \
+	file_join.c file_loop.c file_split.c ftp.c ftp_server.c \
+	git_daemon.c heart_rate.c http_client.c http_sender.c \
+	http_service.c i2c.c image_dd.c inotify.c input.c \
+	input_server.c jw650_lcd.c jwp_udp.c lm49350_clock.c \
+	loop_run.c md5sum.c message_queue.c mkdir.c mknp.c mksdcard.c \
+	modem_upgrade.c mount.c move.c mtd.c net_discovery.c \
+	net_monitor.c network.c p2p.c part_probe.c part_show.c \
+	part_table.c penetrator.c ping.c poll_event.c poll_input.c \
+	ramdisk.c redpacket.c remove.c resize.c rle.c role_change.c \
+	screen_mirror.c service.c service_manager.c sha1sum.c \
+	show_args.c show_file.c shrink.c sprd_at.c sprd_write_imei.c \
+	ssh.c ssh_copy.c sshd.c ssh_dd.c su.c sudo.c super_upgrade.c \
+	swan_check.c swan_emmc.c swan_fac.c swan_ipu.c swan_mac.c \
+	swan_md5.c swan_mkfs.c swan_sfdisk.c swan_ts.c swan_upgrade.c \
+	swan_vk.c swan_vn.c system_init.c tcp_bridge.c tcp_copy.c \
+	tcp_dd.c tcp_dd_server.c tcp_exec.c tcp_install.c tcp_keypad.c \
+	tcp_proxy.c tcp_repeater.c tee.c textlen.c tftp_auto_dd.c \
+	tftp_command.c tftp_copy.c tftp_dd.c tftp_dd_server.c touch.c \
+	tty_mode.c umount.c usb.c usb_copy.c usb_dd.c usb_dd_server.c \
+	vfat.c web_proxy.c wifi.c cpp_calculator.cpp \
+	cpp_http_service.cpp im_client.cpp im_server.cpp udp_proxy.cpp \
+	core/cavan_main.c
+@CONFIG_CAVAN_CPP_TRUE@am__objects_1 = cpp_calculator.$(OBJEXT) \
+@CONFIG_CAVAN_CPP_TRUE@	cpp_http_service.$(OBJEXT) \
+@CONFIG_CAVAN_CPP_TRUE@	im_client.$(OBJEXT) im_server.$(OBJEXT) \
+@CONFIG_CAVAN_CPP_TRUE@	udp_proxy.$(OBJEXT)
+am__objects_2 = abspath.$(OBJEXT) alarm.$(OBJEXT) \
 	alc5671_clock.$(OBJEXT) ascii.$(OBJEXT) auto_dd.$(OBJEXT) \
 	auto_input.$(OBJEXT) auto_mount.$(OBJEXT) battery.$(OBJEXT) \
 	battery_level.$(OBJEXT) bdata.$(OBJEXT) bkernel.$(OBJEXT) \
 	bmp_view.$(OBJEXT) bootimg.$(OBJEXT) bramdisk.$(OBJEXT) \
 	brecovery.$(OBJEXT) bsystem.$(OBJEXT) buboot.$(OBJEXT) \
 	calculator.$(OBJEXT) chroot.$(OBJEXT) chtty.$(OBJEXT) \
-	clock.$(OBJEXT) copy.$(OBJEXT) cpp_calculator.$(OBJEXT) \
-	cpp_http_service.$(OBJEXT) dd.$(OBJEXT) df.$(OBJEXT) \
+	clock.$(OBJEXT) copy.$(OBJEXT) dd.$(OBJEXT) df.$(OBJEXT) \
 	dic_generator.$(OBJEXT) display.$(OBJEXT) dos2unix.$(OBJEXT) \
 	eavoo_sell_statistic.$(OBJEXT) ecc.$(OBJEXT) \
 	event_repeater.$(OBJEXT) ext2.$(OBJEXT) fb_capture.$(OBJEXT) \
@@ -122,23 +156,23 @@ am__objects_1 = abspath.$(OBJEXT) alarm.$(OBJEXT) \
 	file_loop.$(OBJEXT) file_split.$(OBJEXT) ftp.$(OBJEXT) \
 	ftp_server.$(OBJEXT) git_daemon.$(OBJEXT) heart_rate.$(OBJEXT) \
 	http_client.$(OBJEXT) http_sender.$(OBJEXT) \
-	http_service.$(OBJEXT) i2c.$(OBJEXT) im_client.$(OBJEXT) \
-	im_server.$(OBJEXT) image_dd.$(OBJEXT) inotify.$(OBJEXT) \
-	input.$(OBJEXT) input_server.$(OBJEXT) jw650_lcd.$(OBJEXT) \
-	jwp_udp.$(OBJEXT) lm49350_clock.$(OBJEXT) loop_run.$(OBJEXT) \
-	md5sum.$(OBJEXT) mkdir.$(OBJEXT) mknp.$(OBJEXT) \
-	mksdcard.$(OBJEXT) modem_upgrade.$(OBJEXT) mount.$(OBJEXT) \
-	move.$(OBJEXT) mtd.$(OBJEXT) net_discovery.$(OBJEXT) \
-	net_monitor.$(OBJEXT) network.$(OBJEXT) p2p.$(OBJEXT) \
-	part_probe.$(OBJEXT) part_show.$(OBJEXT) part_table.$(OBJEXT) \
-	penetrator.$(OBJEXT) ping.$(OBJEXT) poll_event.$(OBJEXT) \
-	poll_input.$(OBJEXT) ramdisk.$(OBJEXT) redpacket.$(OBJEXT) \
-	remove.$(OBJEXT) resize.$(OBJEXT) rle.$(OBJEXT) \
-	role_change.$(OBJEXT) screen_mirror.$(OBJEXT) \
-	service.$(OBJEXT) service_manager.$(OBJEXT) sha1sum.$(OBJEXT) \
+	http_service.$(OBJEXT) i2c.$(OBJEXT) image_dd.$(OBJEXT) \
+	inotify.$(OBJEXT) input.$(OBJEXT) input_server.$(OBJEXT) \
+	jw650_lcd.$(OBJEXT) jwp_udp.$(OBJEXT) lm49350_clock.$(OBJEXT) \
+	loop_run.$(OBJEXT) md5sum.$(OBJEXT) message_queue.$(OBJEXT) \
+	mkdir.$(OBJEXT) mknp.$(OBJEXT) mksdcard.$(OBJEXT) \
+	modem_upgrade.$(OBJEXT) mount.$(OBJEXT) move.$(OBJEXT) \
+	mtd.$(OBJEXT) net_discovery.$(OBJEXT) net_monitor.$(OBJEXT) \
+	network.$(OBJEXT) p2p.$(OBJEXT) part_probe.$(OBJEXT) \
+	part_show.$(OBJEXT) part_table.$(OBJEXT) penetrator.$(OBJEXT) \
+	ping.$(OBJEXT) poll_event.$(OBJEXT) poll_input.$(OBJEXT) \
+	ramdisk.$(OBJEXT) redpacket.$(OBJEXT) remove.$(OBJEXT) \
+	resize.$(OBJEXT) rle.$(OBJEXT) role_change.$(OBJEXT) \
+	screen_mirror.$(OBJEXT) service.$(OBJEXT) \
+	service_manager.$(OBJEXT) sha1sum.$(OBJEXT) \
 	show_args.$(OBJEXT) show_file.$(OBJEXT) shrink.$(OBJEXT) \
 	sprd_at.$(OBJEXT) sprd_write_imei.$(OBJEXT) ssh.$(OBJEXT) \
-	ssh_copy.$(OBJEXT) ssh_dd.$(OBJEXT) sshd.$(OBJEXT) \
+	ssh_copy.$(OBJEXT) sshd.$(OBJEXT) ssh_dd.$(OBJEXT) \
 	su.$(OBJEXT) sudo.$(OBJEXT) super_upgrade.$(OBJEXT) \
 	swan_check.$(OBJEXT) swan_emmc.$(OBJEXT) swan_fac.$(OBJEXT) \
 	swan_ipu.$(OBJEXT) swan_mac.$(OBJEXT) swan_md5.$(OBJEXT) \
@@ -150,13 +184,13 @@ am__objects_1 = abspath.$(OBJEXT) alarm.$(OBJEXT) \
 	tcp_repeater.$(OBJEXT) tee.$(OBJEXT) textlen.$(OBJEXT) \
 	tftp_auto_dd.$(OBJEXT) tftp_command.$(OBJEXT) \
 	tftp_copy.$(OBJEXT) tftp_dd.$(OBJEXT) tftp_dd_server.$(OBJEXT) \
-	touch.$(OBJEXT) tty_mode.$(OBJEXT) udp_proxy.$(OBJEXT) \
-	umount.$(OBJEXT) usb.$(OBJEXT) usb_copy.$(OBJEXT) \
-	usb_dd.$(OBJEXT) usb_dd_server.$(OBJEXT) vfat.$(OBJEXT) \
-	web_proxy.$(OBJEXT) wifi.$(OBJEXT)
+	touch.$(OBJEXT) tty_mode.$(OBJEXT) umount.$(OBJEXT) \
+	usb.$(OBJEXT) usb_copy.$(OBJEXT) usb_dd.$(OBJEXT) \
+	usb_dd_server.$(OBJEXT) vfat.$(OBJEXT) web_proxy.$(OBJEXT) \
+	wifi.$(OBJEXT) $(am__objects_1)
 am__dirstamp = $(am__leading_dot)dirstamp
-am__objects_2 = core/cavan_main.$(OBJEXT)
-am_cavan_main_OBJECTS = $(am__objects_1) $(am__objects_2)
+am__objects_3 = core/cavan_main.$(OBJEXT)
+am_cavan_main_OBJECTS = $(am__objects_2) $(am__objects_3)
 cavan_main_OBJECTS = $(am_cavan_main_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -215,7 +249,7 @@ am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
 SOURCES = $(cavan_main_SOURCES)
-DIST_SOURCES = $(cavan_main_SOURCES)
+DIST_SOURCES = $(am__cavan_main_SOURCES_DIST)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -370,39 +404,38 @@ APP_SRC_FILES = abspath.c alarm.c alc5671_clock.c ascii.c auto_dd.c \
 	auto_input.c auto_mount.c battery.c battery_level.c bdata.c \
 	bkernel.c bmp_view.c bootimg.c bramdisk.c brecovery.c \
 	bsystem.c buboot.c calculator.c chroot.c chtty.c clock.c \
-	copy.c cpp_calculator.cpp cpp_http_service.cpp dd.c df.c \
-	dic_generator.c display.c dos2unix.c eavoo_sell_statistic.c \
-	ecc.c event_repeater.c ext2.c fb_capture.c fdisk.c \
-	file_crc32.c file_join.c file_loop.c file_split.c ftp.c \
-	ftp_server.c git_daemon.c heart_rate.c http_client.c \
-	http_sender.c http_service.c i2c.c im_client.cpp im_server.cpp \
-	image_dd.c inotify.c input.c input_server.c jw650_lcd.c \
-	jwp_udp.c lm49350_clock.c loop_run.c md5sum.c mkdir.c mknp.c \
-	mksdcard.c modem_upgrade.c mount.c move.c mtd.c \
+	copy.c dd.c df.c dic_generator.c display.c dos2unix.c \
+	eavoo_sell_statistic.c ecc.c event_repeater.c ext2.c \
+	fb_capture.c fdisk.c file_crc32.c file_join.c file_loop.c \
+	file_split.c ftp.c ftp_server.c git_daemon.c heart_rate.c \
+	http_client.c http_sender.c http_service.c i2c.c image_dd.c \
+	inotify.c input.c input_server.c jw650_lcd.c jwp_udp.c \
+	lm49350_clock.c loop_run.c md5sum.c message_queue.c mkdir.c \
+	mknp.c mksdcard.c modem_upgrade.c mount.c move.c mtd.c \
 	net_discovery.c net_monitor.c network.c p2p.c part_probe.c \
 	part_show.c part_table.c penetrator.c ping.c poll_event.c \
 	poll_input.c ramdisk.c redpacket.c remove.c resize.c rle.c \
 	role_change.c screen_mirror.c service.c service_manager.c \
 	sha1sum.c show_args.c show_file.c shrink.c sprd_at.c \
-	sprd_write_imei.c ssh.c ssh_copy.c ssh_dd.c sshd.c su.c sudo.c \
+	sprd_write_imei.c ssh.c ssh_copy.c sshd.c ssh_dd.c su.c sudo.c \
 	super_upgrade.c swan_check.c swan_emmc.c swan_fac.c swan_ipu.c \
 	swan_mac.c swan_md5.c swan_mkfs.c swan_sfdisk.c swan_ts.c \
 	swan_upgrade.c swan_vk.c swan_vn.c system_init.c tcp_bridge.c \
 	tcp_copy.c tcp_dd.c tcp_dd_server.c tcp_exec.c tcp_install.c \
 	tcp_keypad.c tcp_proxy.c tcp_repeater.c tee.c textlen.c \
 	tftp_auto_dd.c tftp_command.c tftp_copy.c tftp_dd.c \
-	tftp_dd_server.c touch.c tty_mode.c udp_proxy.cpp umount.c \
-	usb.c usb_copy.c usb_dd.c usb_dd_server.c vfat.c web_proxy.c \
-	wifi.c
-APP_CORE_SRC_FILES = core/cavan_main.c
-LIB_OBJ_FILES = $(wildcard @top_builddir@/lib/*.o) $(wildcard @top_builddir@/cpp/*.o)
+	tftp_dd_server.c touch.c tty_mode.c umount.c usb.c usb_copy.c \
+	usb_dd.c usb_dd_server.c vfat.c web_proxy.c wifi.c \
+	$(am__append_2)
+APP_CORE_FILES = core/cavan_main.c
+LIB_OBJ_FILES = $(wildcard @top_builddir@/lib/*.o) $(am__append_1)
 APP_CORE_DEPDIR = core/@DEPDIR@
 FILE_CAVAN_MAP_C = $(APP_CORE_DEPDIR)/cavan_map.c
 FILE_CAVAN_MAP_H = $(APP_CORE_DEPDIR)/cavan_map.h
-AM_CFLAGS = -I@top_srcdir@/include -include @top_srcdir@/include/cavan/config.h -DCAVAN
-AM_CPPFLAGS = $(AM_CFLAGS)
+AM_CFLAGS = -I@top_srcdir@/include -include @top_srcdir@/include/cavan/config.h -DCAVAN $(CAVAN_MAIN_CFLAGS)
 AM_LDFLAGS = -lpthread -lm -lrt
-cavan_main_SOURCES = $(APP_SRC_FILES) $(APP_CORE_SRC_FILES)
+@CONFIG_CAVAN_CPP_TRUE@AM_CPPFLAGS = $(AM_CFLAGS)
+cavan_main_SOURCES = $(APP_SRC_FILES) $(APP_CORE_FILES)
 cavan_main_LDADD = $(LIB_OBJ_FILES)
 cavan_main_DEPENDENCIES = $(LIB_OBJ_FILES)
 all: all-am
@@ -565,6 +598,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lm49350_clock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/loop_run.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/md5sum.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/message_queue.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mkdir.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mknp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mksdcard.Po@am__quote@
@@ -914,12 +948,12 @@ uninstall-am: uninstall-binPROGRAMS
 install: install-am
 	chmod -f 06755 $(addprefix $(DESTDIR)$(bindir)/,$(bin_PROGRAMS))
 
-$(APP_CORE_SRC_FILES): $(FILE_CAVAN_MAP_C) $(FILE_CAVAN_MAP_H)
+$(APP_CORE_FILES): $(FILE_CAVAN_MAP_C) $(FILE_CAVAN_MAP_H)
 
 $(FILE_CAVAN_MAP_C): $(APP_SRC_FILES) | $(APP_CORE_DEPDIR)
 	for app in $(basename $(notdir $^)); \
 	do \
-		echo "{\"$${app}\", do_cavan_$${app}},"; \
+		echo "{ \"$${app}\", do_cavan_$${app} },"; \
 	done > $@
 
 $(FILE_CAVAN_MAP_H): $(APP_SRC_FILES) | $(APP_CORE_DEPDIR)
@@ -928,8 +962,8 @@ $(FILE_CAVAN_MAP_H): $(APP_SRC_FILES) | $(APP_CORE_DEPDIR)
 		echo "int do_cavan_$${app}(int argc, char *argv[]);"; \
 	done > $@
 
-%.o: AM_CFLAGS += -Dmain=do_cavan_$(basename $@)
-core/%.o: AM_CFLAGS += -Umain -I$(APP_CORE_DEPDIR)
+%.o: CAVAN_MAIN_CFLAGS = -Dmain=do_cavan_$(basename $(notdir $@))
+core/%.o: CAVAN_MAIN_CFLAGS = -I$(APP_CORE_DEPDIR)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

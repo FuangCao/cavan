@@ -4,18 +4,23 @@ AUTOMAKE_OPTIONS = foreign subdir-objects
 
 MAINTAINERCLEANFILES = Makefile.am Makefile.in
 
-APP_SRC_FILES = abspath.c alarm.c alc5671_clock.c ascii.c auto_dd.c auto_input.c auto_mount.c battery.c battery_level.c bdata.c bkernel.c bmp_view.c bootimg.c bramdisk.c brecovery.c bsystem.c buboot.c calculator.c chroot.c chtty.c clock.c copy.c cpp_calculator.cpp cpp_http_service.cpp dd.c df.c dic_generator.c display.c dos2unix.c eavoo_sell_statistic.c ecc.c event_repeater.c ext2.c fb_capture.c fdisk.c file_crc32.c file_join.c file_loop.c file_split.c ftp.c ftp_server.c git_daemon.c heart_rate.c http_client.c http_sender.c http_service.c i2c.c im_client.cpp im_server.cpp image_dd.c inotify.c input.c input_server.c jw650_lcd.c jwp_udp.c lm49350_clock.c loop_run.c md5sum.c mkdir.c mknp.c mksdcard.c modem_upgrade.c mount.c move.c mtd.c net_discovery.c net_monitor.c network.c p2p.c part_probe.c part_show.c part_table.c penetrator.c ping.c poll_event.c poll_input.c ramdisk.c redpacket.c remove.c resize.c rle.c role_change.c screen_mirror.c service.c service_manager.c sha1sum.c show_args.c show_file.c shrink.c sprd_at.c sprd_write_imei.c ssh.c ssh_copy.c ssh_dd.c sshd.c su.c sudo.c super_upgrade.c swan_check.c swan_emmc.c swan_fac.c swan_ipu.c swan_mac.c swan_md5.c swan_mkfs.c swan_sfdisk.c swan_ts.c swan_upgrade.c swan_vk.c swan_vn.c system_init.c tcp_bridge.c tcp_copy.c tcp_dd.c tcp_dd_server.c tcp_exec.c tcp_install.c tcp_keypad.c tcp_proxy.c tcp_repeater.c tee.c textlen.c tftp_auto_dd.c tftp_command.c tftp_copy.c tftp_dd.c tftp_dd_server.c touch.c tty_mode.c udp_proxy.cpp umount.c usb.c usb_copy.c usb_dd.c usb_dd_server.c vfat.c web_proxy.c wifi.c
-APP_CORE_SRC_FILES = core/cavan_main.c
-LIB_OBJ_FILES = $(wildcard @top_builddir@/lib/*.o) $(wildcard @top_builddir@/cpp/*.o)
+APP_SRC_FILES = abspath.c alarm.c alc5671_clock.c ascii.c auto_dd.c auto_input.c auto_mount.c battery.c battery_level.c bdata.c bkernel.c bmp_view.c bootimg.c bramdisk.c brecovery.c bsystem.c buboot.c calculator.c chroot.c chtty.c clock.c copy.c dd.c df.c dic_generator.c display.c dos2unix.c eavoo_sell_statistic.c ecc.c event_repeater.c ext2.c fb_capture.c fdisk.c file_crc32.c file_join.c file_loop.c file_split.c ftp.c ftp_server.c git_daemon.c heart_rate.c http_client.c http_sender.c http_service.c i2c.c image_dd.c inotify.c input.c input_server.c jw650_lcd.c jwp_udp.c lm49350_clock.c loop_run.c md5sum.c message_queue.c mkdir.c mknp.c mksdcard.c modem_upgrade.c mount.c move.c mtd.c net_discovery.c net_monitor.c network.c p2p.c part_probe.c part_show.c part_table.c penetrator.c ping.c poll_event.c poll_input.c ramdisk.c redpacket.c remove.c resize.c rle.c role_change.c screen_mirror.c service.c service_manager.c sha1sum.c show_args.c show_file.c shrink.c sprd_at.c sprd_write_imei.c ssh.c ssh_copy.c sshd.c ssh_dd.c su.c sudo.c super_upgrade.c swan_check.c swan_emmc.c swan_fac.c swan_ipu.c swan_mac.c swan_md5.c swan_mkfs.c swan_sfdisk.c swan_ts.c swan_upgrade.c swan_vk.c swan_vn.c system_init.c tcp_bridge.c tcp_copy.c tcp_dd.c tcp_dd_server.c tcp_exec.c tcp_install.c tcp_keypad.c tcp_proxy.c tcp_repeater.c tee.c textlen.c tftp_auto_dd.c tftp_command.c tftp_copy.c tftp_dd.c tftp_dd_server.c touch.c tty_mode.c umount.c usb.c usb_copy.c usb_dd.c usb_dd_server.c vfat.c web_proxy.c wifi.c
+APP_CORE_FILES = core/cavan_main.c
+LIB_OBJ_FILES = $(wildcard @top_builddir@/lib/*.o)
 APP_CORE_DEPDIR = core/@DEPDIR@
 FILE_CAVAN_MAP_C = $(APP_CORE_DEPDIR)/cavan_map.c
 FILE_CAVAN_MAP_H = $(APP_CORE_DEPDIR)/cavan_map.h
 
-AM_CFLAGS = -I@top_srcdir@/include -include @top_srcdir@/include/cavan/config.h -DCAVAN
-AM_CPPFLAGS = $(AM_CFLAGS)
+AM_CFLAGS = -I@top_srcdir@/include -include @top_srcdir@/include/cavan/config.h -DCAVAN $(CAVAN_MAIN_CFLAGS)
 AM_LDFLAGS = -lpthread -lm -lrt
 
-cavan_main_SOURCES = $(APP_SRC_FILES) $(APP_CORE_SRC_FILES)
+if CONFIG_CAVAN_CPP
+LIB_OBJ_FILES += $(wildcard @top_builddir@/cpp/*.o)
+APP_SRC_FILES += cpp_calculator.cpp cpp_http_service.cpp im_client.cpp im_server.cpp udp_proxy.cpp
+AM_CPPFLAGS = $(AM_CFLAGS)
+endif
+
+cavan_main_SOURCES = $(APP_SRC_FILES) $(APP_CORE_FILES)
 cavan_main_LDADD = $(LIB_OBJ_FILES)
 cavan_main_DEPENDENCIES = $(LIB_OBJ_FILES)
 
@@ -24,12 +29,12 @@ bin_PROGRAMS = cavan-main
 install: install-am
 	chmod -f 06755 $(addprefix $(DESTDIR)$(bindir)/,$(bin_PROGRAMS))
 
-$(APP_CORE_SRC_FILES): $(FILE_CAVAN_MAP_C) $(FILE_CAVAN_MAP_H)
+$(APP_CORE_FILES): $(FILE_CAVAN_MAP_C) $(FILE_CAVAN_MAP_H)
 
 $(FILE_CAVAN_MAP_C): $(APP_SRC_FILES) | $(APP_CORE_DEPDIR)
 	for app in $(basename $(notdir $^)); \
 	do \
-		echo "{\"$${app}\", do_cavan_$${app}},"; \
+		echo "{ \"$${app}\", do_cavan_$${app} },"; \
 	done > $@
 
 $(FILE_CAVAN_MAP_H): $(APP_SRC_FILES) | $(APP_CORE_DEPDIR)
@@ -38,5 +43,5 @@ $(FILE_CAVAN_MAP_H): $(APP_SRC_FILES) | $(APP_CORE_DEPDIR)
 		echo "int do_cavan_$${app}(int argc, char *argv[]);"; \
 	done > $@
 
-%.o: AM_CFLAGS += -Dmain=do_cavan_$(basename $@)
-core/%.o: AM_CFLAGS += -Umain -I$(APP_CORE_DEPDIR)
+%.o: CAVAN_MAIN_CFLAGS = -Dmain=do_cavan_$(basename $(notdir $@))
+core/%.o: CAVAN_MAIN_CFLAGS = -I$(APP_CORE_DEPDIR)
