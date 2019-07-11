@@ -106,7 +106,7 @@ $(call strip_files,$@)
 endef
 
 define link_c_execute_action
-ifeq ($$(findstring -static,$$(LDFLAGS)),)
+ifeq ($$(filter static release,$$(BUILD_TYPE)),)
 LOCAL_DEPEND := $$(foreach lib,$$(LOCAL_LIBRARY),$$(OUT_LIB)/$$(lib).so)
 $$(LOCAL_MODULE_PATH): LDFLAGS := $$(patsubst lib%,-l%,$$(LOCAL_LIBRARY)) $$(LDFLAGS)
 $$(LOCAL_MODULE_PATH): $$(LOCAL_OBJECT) | $$(LOCAL_DEPEND)

@@ -6,7 +6,7 @@ endif
 
 LOCAL_MODULE := libcavan
 
-ifeq ($(filter -static,$(LDFLAGS)),)
+ifeq ($(filter static release,$(BUILD_TYPE)),)
 include $(BUILD_LIBSO)
 else
 include $(BUILD_LIBA)

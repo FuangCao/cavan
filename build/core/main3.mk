@@ -57,10 +57,8 @@ ifneq ($(CAVAN_OS_MAC),true)
 CFLAGS += -frename-registers -fgcse-after-reload -frerun-cse-after-loop -fno-inline-functions-called-once -finline-limit=64 -finline-functions
 endif
 
-CFLAGS +=	-Wall -Wundef -Wextra -Werror -Wsign-compare -Winit-self -Wpointer-arith -Wa,--noexecstack -Wstrict-aliasing=2 \
-			-Wno-unused-parameter -Wno-format-overflow -Wno-implicit-fallthrough \
-			-fno-strict-aliasing -fno-exceptions -ffunction-sections -funwind-tables -fstack-protector -fomit-frame-pointer \
-			-g -I$(INCLUDE_PATH) -DCAVAN -DCAVAN_ARCH=\"$(ARCH)\" -DCAVAN_PLAT=\"$(CAVAN_PLAT)\" -include cavan/config.h
+CFLAGS += -Wno-unused-parameter -Wno-format-overflow -Wno-implicit-fallthrough -fno-strict-aliasing -fno-exceptions \
+		  -g -I$(INCLUDE_PATH) -DCAVAN -DCAVAN_ARCH=\"$(ARCH)\" -DCAVAN_PLAT=\"$(CAVAN_PLAT)\" -include cavan/config.h
 
 CFLAGS += -DCAVAN_ARCH_$(shell echo $(ARCH) | tr '[a-z]' '[A-Z]')
 
@@ -75,7 +73,8 @@ $(info LC_ALL = $(LC_ALL))
 export LC_ALL STAGING_DIR
 else
 ifeq ($(BUILD_TYPE),debug)
-CFLAGS += -DCAVAN_DEBUG
+CFLAGS += -DCAVAN_DEBUG -Wall -Wundef -Wextra -Werror -Wsign-compare -Winit-self -Wpointer-arith -Wa,--noexecstack -Wstrict-aliasing=2 \
+		  -ffunction-sections -funwind-tables -fstack-protector -fomit-frame-pointer
 
 ifneq ($(CAVAN_OS_MAC),true)
 CFLAGS += -rdynamic
@@ -86,7 +85,7 @@ SUB_DIRS += test
 endif
 
 ifeq ($(BUILD_OTHERS),true)
-LDFLAGS += -lasound -ldl
+LDFLAGS += -lasound
 endif
 
 CONFIG_CAVAN_SSL_CERT ?= $(ROOT_PATH)/config/ssl/cert.pem
@@ -135,7 +134,7 @@ endif
 CPPFLAGS := $(CPPFLAGS) $(CFLAGS) -std=gnu++11
 CFLAGS += -Werror-implicit-function-declaration -Wstrict-prototypes
 CFLAGS += -std=gnu99 -DCONFIG_CAVAN_C99
-LDFLAGS += -lm -lrt -lpthread
+LDFLAGS += -lm -lrt -lpthread -ldl
 
 ifeq ($(BUILD_TYPE),static)
 LDFLAGS += -static
