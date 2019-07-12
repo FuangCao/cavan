@@ -944,7 +944,7 @@ uninstall-am: uninstall-binPROGRAMS
 
 .PRECIOUS: Makefile
 
-@CONFIG_CAVAN_CPP_FALSE@$(PROGRAMS): CXXLINK := $(LINK)
+@CONFIG_CAVAN_CPP_FALSE@$(PROGRAMS): CXXLINK = $(LINK)
 
 install: install-am
 	chmod -f 06755 $(addprefix $(DESTDIR)$(bindir)/,$(bin_PROGRAMS))

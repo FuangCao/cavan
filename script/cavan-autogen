@@ -43,7 +43,7 @@ LIB_OBJ_FILES += \$(wildcard @top_builddir@/cpp/*.o)
 APP_SRC_FILES += $(echo *.cpp)
 AM_CPPFLAGS = \$(AM_CFLAGS)
 else
-\$(PROGRAMS): CXXLINK := \$(LINK)
+\$(PROGRAMS): CXXLINK = \$(LINK)
 endif
 
 ${CAVAN_NAME}_main_SOURCES = \$(APP_SRC_FILES) \$(APP_CORE_FILES)

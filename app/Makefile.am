@@ -19,7 +19,7 @@ LIB_OBJ_FILES += $(wildcard @top_builddir@/cpp/*.o)
 APP_SRC_FILES += cpp_calculator.cpp cpp_http_service.cpp im_client.cpp im_server.cpp udp_proxy.cpp
 AM_CPPFLAGS = $(AM_CFLAGS)
 else
-$(PROGRAMS): CXXLINK := $(LINK)
+$(PROGRAMS): CXXLINK = $(LINK)
 endif
 
 cavan_main_SOURCES = $(APP_SRC_FILES) $(APP_CORE_FILES)
