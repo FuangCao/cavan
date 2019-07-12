@@ -48,7 +48,6 @@
             this.textBoxServer.Name = "textBoxServer";
             this.textBoxServer.Size = new System.Drawing.Size(242, 21);
             this.textBoxServer.TabIndex = 0;
-            this.textBoxServer.Text = "127.0.0.1:8868";
             // 
             // textBoxPort
             // 

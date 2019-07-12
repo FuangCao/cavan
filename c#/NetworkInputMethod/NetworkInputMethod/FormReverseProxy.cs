@@ -356,10 +356,7 @@ namespace NetworkInputMethod
 
         private void toolStripMenuItemProxyAdd_Click(object sender, EventArgs e)
         {
-            var form = new FormAddProxy
-            {
-                ServerUrl = mService.Url
-            };
+            var form = new FormAddProxy();
 
             if (form.ShowDialog() == DialogResult.OK)
             {
@@ -452,12 +449,6 @@ namespace NetworkInputMethod
             }
 
             return null;
-        }
-
-        public ReverseProxyLink getProxyLink(string address, string name, string url, CavanTcpClient peer)
-        {
-            var key = getProxyLinkKey(address, name);
-            return getProxyLink(key, url, peer);
         }
 
         private void timerKeepAlive_Tick(object sender, EventArgs e)
@@ -855,37 +846,67 @@ namespace NetworkInputMethod
 
         public bool proxyLoop(CavanTcpClient peer)
         {
-            if (ServerUrl.Equals(mForm.LocalUrl))
+            var key = Key;
+
+            if (string.IsNullOrEmpty(mServerUrl) || mServerUrl.Equals(mForm.LocalUrl))
             {
-                var link = mForm.getProxyLink(mClientAddress, mClientName, TargetUrl, peer);
-                if (link == null)
+                if (key != null)
+                {
+                    var link = mForm.getProxyLink(key, mTargetUrl, peer);
+                    if (link == null)
+                    {
+                        return false;
+                    }
+
+                    return true;
+                }
+                else
+                {
+                    var client = CavanTcpClient.Connect(mTargetUrl);
+                    if (client == null)
+                    {
+                        return false;
+                    }
+
+                    try
+                    {
+                        return TcpProxyClient.ProxyLoop(client, peer.Client);
+                    }
+                    finally
+                    {
+                        client.Close();
+                    }
+                }
+            }
+            else
+            {
+                var client = CavanTcpClient.Connect(mServerUrl);
+                if (client == null)
                 {
                     return false;
                 }
 
-                return true;
-            }
+                try
+                {
+                    var builder = new StringBuilder();
+                    builder.Append("link ");
 
-            var client = CavanTcpClient.Connect(ServerUrl);
-            if (client == null)
-            {
-                return false;
-            }
+                    if (key != null)
+                    {
+                        builder.Append(key).Append(' ');
+                    }
 
-            var builder = new StringBuilder();
-            builder.Append("link ");
+                    builder.Append(TargetUrl);
 
-            var key = Key;
-            if (key != null)
-            {
-                builder.Append(key).Append(' ');
-            }
-
-            builder.Append(TargetUrl);
-
-            if (CavanTcpClient.WritePacket(client.GetStream(), builder.ToString()))
-            {
-                TcpProxyClient.ProxyLoop(client, peer.Client);
+                    if (CavanTcpClient.WritePacket(client.GetStream(), builder.ToString()))
+                    {
+                        return TcpProxyClient.ProxyLoop(client, peer.Client);
+                    }
+                }
+                finally
+                {
+                    client.Close();
+                }
             }
 
             return false;
