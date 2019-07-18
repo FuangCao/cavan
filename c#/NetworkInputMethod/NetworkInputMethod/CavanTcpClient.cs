@@ -413,6 +413,8 @@ namespace NetworkInputMethod
         private string mHost;
         private UInt16 mPort;
         private string mPath;
+        private string mUser;
+        private string mPass;
 
         public CavanUrl(string proto, string host, UInt16 port, string path)
         {
@@ -470,6 +472,23 @@ namespace NetworkInputMethod
                 mPath = url.Substring(path);
             }
 
+            var host = url.IndexOf('@', index, path - index);
+            if (host > 0)
+            {
+                var pass = url.IndexOf(':', index, host - index);
+                if (pass > 0)
+                {
+                    mPass = url.Substring(pass + 1, host - pass - 1);
+                    mUser = url.Substring(index, pass - index);
+                }
+                else
+                {
+                    mUser = url.Substring(index, host - index);
+                }
+
+                index = host + 1;
+            }
+
             var port = url.IndexOf(':', index, path - index);
 
             if (port < 0)
@@ -482,6 +501,11 @@ namespace NetworkInputMethod
 
                     case "ftp":
                         mPort = 21;
+                        break;
+
+                    case "ssh":
+                    case "sftp":
+                        mPort = 22;
                         break;
 
                     default:
@@ -560,6 +584,55 @@ namespace NetworkInputMethod
             }
         }
 
+        public string User
+        {
+            get
+            {
+                return mUser;
+            }
+
+            set
+            {
+                mUser = value;
+            }
+        }
+
+        public string Pass
+        {
+            get
+            {
+                return mPass;
+            }
+
+            set
+            {
+                mPass = value;
+            }
+        }
+
+        public string UserPass
+        {
+            get
+            {
+                if (mUser != null)
+                {
+                    if (mPass != null)
+                    {
+                        return mUser + ":" + mPass;
+                    }
+
+                    return mUser;
+                }
+
+                if (mPass != null)
+                {
+                    return mPass;
+                }
+
+                return null;
+            }
+        }
+
         public string HostPort
         {
             get
@@ -587,7 +660,19 @@ namespace NetworkInputMethod
 
         public override string ToString()
         {
-            return mProto + "://" + HostPort + mPath;
+            var builder = new StringBuilder();
+
+            builder.Append(mProto).Append("://");
+
+            var value = UserPass;
+            if (value != null)
+            {
+                builder.Append(value).Append('@');
+            }
+
+            builder.Append(HostPort).Append(mPath);
+
+            return builder.ToString();
         }
     }
 }

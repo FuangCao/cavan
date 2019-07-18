@@ -48,6 +48,10 @@ namespace NetworkInputMethod
             {
                 return Assembly.Load(Resources.Newtonsoft_Json);
             }
+            else if (args.Name.StartsWith("Renci.SshNet"))
+            {
+                return Assembly.Load(Resources.Renci_SshNet);
+            }
             else
             {
                 return null;

@@ -10,6 +10,7 @@ using System.Net;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Renci.SshNet;
 
 namespace NetworkInputMethod
 {
@@ -377,23 +378,60 @@ namespace NetworkInputMethod
                 MessageBox.Show(url + "\r\n" + err);
             }
 #else
-            var url = "http://" + server + pathname;
-            var client = new WebClient();
+            var url = new CavanUrl(server);
 
             try
             {
-                var response = client.UploadString(url, text);
-
-                if (response != null)
+                if ("sftp".Equals(url.Proto))
                 {
-                    // MessageBox.Show(url + "\r\n" + response, "上传成功");
-                    return true;
+                    SftpClient client = null;
+
+                    try
+                    {
+                        var path = url.Path;
+                        if (path == null)
+                        {
+                            client = new SftpClient(url.Host, url.Port, url.User, url.Pass);
+                        }
+                        else
+                        {
+                            path = path[1] + ":" + path.Substring(2).Replace('/', '\\');
+                            var key = new PrivateKeyFile(path);
+                            client = new SftpClient(url.Host, url.Port, url.User, key);
+                        }
+
+                        client.Connect();
+                        client.WriteAllText(pathname, text);
+
+                        return true;
+                    }
+                    finally
+                    {
+                        if (client != null)
+                        {
+                            client.Disconnect();
+                        }
+                    }
+                }
+                else
+                {
+                    url.Path = pathname;
+
+                    var client = new WebClient();
+                    var response = client.UploadString(url.ToString(), text);
+
+                    if (response != null)
+                    {
+                        // MessageBox.Show(url + "\r\n" + response, "上传成功");
+                        return true;
+                    }
                 }
             }
             catch (Exception err)
             {
                 MessageBox.Show(url + "\r\n" + err, "上传失败");
             }
+
 #endif
 
             return false;
@@ -467,11 +505,11 @@ namespace NetworkInputMethod
 
         private void buttonServer_Click(object sender, EventArgs e)
         {
-            var form = new FormTextEditor("服务器Url", null);
+            var form = new FormAddFileServer();
 
             if (form.ShowDialog() == DialogResult.OK)
             {
-                var node = treeView.Nodes.Add(form.Value);
+                var node = treeView.Nodes.Add(form.Url);
                 node.ImageIndex = IMG_INDEX_SERVER;
             }
         }

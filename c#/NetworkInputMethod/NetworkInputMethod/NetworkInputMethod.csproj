@@ -51,6 +51,10 @@
       <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net35\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Renci.SshNet, Version=2016.1.0.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
+      <HintPath>..\packages\SSH.NET.2016.1.0\lib\net35\Renci.SshNet.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -79,6 +83,12 @@
     <Compile Include="CavanThread.cs" />
     <Compile Include="CavanTreeView.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="FormAddFileServer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormAddFileServer.Designer.cs">
+      <DependentUpon>FormAddFileServer.cs</DependentUpon>
     </Compile>
     <Compile Include="FormAddProxy.cs">
       <SubType>Form</SubType>
@@ -194,6 +204,9 @@
     <Compile Include="FormWebProxyService.Designer.cs">
       <DependentUpon>FormWebProxyService.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="FormAddFileServer.resx">
+      <DependentUpon>FormAddFileServer.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormAddProxy.resx">
       <DependentUpon>FormAddProxy.cs</DependentUpon>
     </EmbeddedResource>
@@ -275,6 +288,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Newtonsoft.Json.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Renci.SshNet.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
