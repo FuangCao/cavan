@@ -48,6 +48,7 @@
             this.ToolStripMenuItemSave = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemPack = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemOpen = new System.Windows.Forms.ToolStripMenuItem();
+            this.ToolStripMenuItemTap = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemSelect = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemRequest = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemExit = new System.Windows.Forms.ToolStripMenuItem();
@@ -98,7 +99,7 @@
             this.checkBoxFloatClock = new System.Windows.Forms.CheckBox();
             this.comboBoxRepeat = new System.Windows.Forms.ComboBox();
             this.checkBoxFakeShare = new System.Windows.Forms.CheckBox();
-            this.ToolStripMenuItemTap = new System.Windows.Forms.ToolStripMenuItem();
+            this.ToolStripMenuItemFileServer = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -199,7 +200,8 @@
             this.toolStripMenuItemTcpProxy,
             this.toolStripMenuItemUrlBuilder,
             this.toolStripMenuItemReverseProxy,
-            this.ToolStripMenuItemHttpCapturer});
+            this.ToolStripMenuItemHttpCapturer,
+            this.ToolStripMenuItemFileServer});
             this.toolStripMenuItemServers.Name = "toolStripMenuItemServers";
             this.toolStripMenuItemServers.Size = new System.Drawing.Size(152, 22);
             this.toolStripMenuItemServers.Text = "服务器";
@@ -259,6 +261,13 @@
             this.toolStripMenuItemOpen.Size = new System.Drawing.Size(152, 22);
             this.toolStripMenuItemOpen.Text = "打开";
             this.toolStripMenuItemOpen.Click += new System.EventHandler(this.buttonOpen_Click);
+            // 
+            // ToolStripMenuItemTap
+            // 
+            this.ToolStripMenuItemTap.Name = "ToolStripMenuItemTap";
+            this.ToolStripMenuItemTap.Size = new System.Drawing.Size(152, 22);
+            this.ToolStripMenuItemTap.Text = "点击";
+            this.ToolStripMenuItemTap.Click += new System.EventHandler(this.ToolStripMenuItemTap_Click);
             // 
             // toolStripMenuItemSelect
             // 
@@ -802,12 +811,12 @@
             this.checkBoxFakeShare.Text = "假分";
             this.checkBoxFakeShare.UseVisualStyleBackColor = true;
             // 
-            // ToolStripMenuItemTap
+            // ToolStripMenuItemFileServer
             // 
-            this.ToolStripMenuItemTap.Name = "ToolStripMenuItemTap";
-            this.ToolStripMenuItemTap.Size = new System.Drawing.Size(152, 22);
-            this.ToolStripMenuItemTap.Text = "点击";
-            this.ToolStripMenuItemTap.Click += new System.EventHandler(this.ToolStripMenuItemTap_Click);
+            this.ToolStripMenuItemFileServer.Name = "ToolStripMenuItemFileServer";
+            this.ToolStripMenuItemFileServer.Size = new System.Drawing.Size(152, 22);
+            this.ToolStripMenuItemFileServer.Text = "文件服务";
+            this.ToolStripMenuItemFileServer.Click += new System.EventHandler(this.ToolStripMenuItemFileServer_Click);
             // 
             // FormNetworkIme
             // 
@@ -945,6 +954,7 @@
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItemHttpCapturer;
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItemSave;
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItemTap;
+        private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItemFileServer;
     }
 }
 

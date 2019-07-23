@@ -140,5 +140,29 @@ namespace NetworkInputMethod.Properties {
                 this["HttpCaptureCerts"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool FileServerEnable {
+            get {
+                return ((bool)(this["FileServerEnable"]));
+            }
+            set {
+                this["FileServerEnable"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("8021")]
+        public int FileServerPort {
+            get {
+                return ((int)(this["FileServerPort"]));
+            }
+            set {
+                this["FileServerPort"] = value;
+            }
+        }
     }
 }

@@ -401,7 +401,12 @@ namespace NetworkInputMethod
                         }
 
                         client.Connect();
-                        client.WriteAllText(pathname, text);
+
+                        using (var stream = client.Open(pathname, FileMode.OpenOrCreate | FileMode.Truncate, FileAccess.Write))
+                        {
+                            var bytes = Encoding.UTF8.GetBytes(text);
+                            stream.Write(bytes, 0, bytes.Length);
+                        }
 
                         return true;
                     }

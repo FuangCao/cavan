@@ -32,5 +32,11 @@
     <Setting Name="HttpCaptureCerts" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="FileServerEnable" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="FileServerPort" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">8021</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

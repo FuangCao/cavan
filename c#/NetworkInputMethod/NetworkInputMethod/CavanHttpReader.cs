@@ -38,20 +38,48 @@ namespace NetworkInputMethod
                 {
                     break;
                 }
-                else if (value != '\r')
-                {
-                    if (offset >= bytes.Length)
-                    {
-                        byte[] newBytes = new byte[bytes.Length << 1];
-                        Array.Copy(bytes, newBytes, bytes.Length);
-                        bytes = newBytes;
-                    }
 
-                    bytes[offset++] = (byte)value;
+                if (value == '\r')
+                {
+                    continue;
                 }
+
+                if (offset >= bytes.Length)
+                {
+                    byte[] newBytes = new byte[bytes.Length << 1];
+                    Array.Copy(bytes, newBytes, bytes.Length);
+                    bytes = newBytes;
+                }
+
+                bytes[offset++] = (byte)value;
             }
 
             return Encoding.UTF8.GetString(bytes, 0, offset);
+        }
+
+        public List<string> ReadLines()
+        {
+            var lines = new List<string>();
+
+            while (true)
+            {
+                var line = ReadLine();
+                if (line == null)
+                {
+                    return null;
+                }
+
+                if (line.Length > 0)
+                {
+                    lines.Add(line);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return lines;
         }
 
         public bool ReadBytes(byte[] bytes, int offset, int length)

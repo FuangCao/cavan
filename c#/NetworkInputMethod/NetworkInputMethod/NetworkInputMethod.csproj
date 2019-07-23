@@ -84,6 +84,12 @@
     <Compile Include="CavanTreeView.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="FormHttpFileServer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormHttpFileServer.Designer.cs">
+      <DependentUpon>FormHttpFileServer.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormAddFileServer.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -218,6 +224,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormHttpCapture.resx">
       <DependentUpon>FormHttpCapture.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormHttpFileServer.resx">
+      <DependentUpon>FormHttpFileServer.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormHttpSender.resx">
       <DependentUpon>FormHttpSender.cs</DependentUpon>

@@ -29,6 +29,7 @@ namespace NetworkInputMethod
         private FormReverseProxy mFormReverseProxy;
         private FormHttpCapture mFormHttpCapture;
         private FormSimulateTap mFormSimulateTap;
+        private FormHttpFileServer mFormHttpFileServer;
 
         //API declarations...
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -1130,6 +1131,16 @@ namespace NetworkInputMethod
                     link.send(bytes);
                 }
             }
+        }
+
+        private void ToolStripMenuItemFileServer_Click(object sender, EventArgs e)
+        {
+            if (mFormHttpFileServer == null || mFormHttpFileServer.IsDisposed)
+            {
+                mFormHttpFileServer = new FormHttpFileServer();
+            }
+
+            mFormHttpFileServer.Show();
         }
     }
 
