@@ -402,7 +402,7 @@ namespace NetworkInputMethod
 
                         client.Connect();
 
-                        using (var stream = client.Open(pathname, FileMode.OpenOrCreate | FileMode.Truncate, FileAccess.Write))
+                        using (var stream = client.Open(pathname, FileMode.Create, FileAccess.Write))
                         {
                             var bytes = Encoding.UTF8.GetBytes(text);
                             stream.Write(bytes, 0, bytes.Length);
