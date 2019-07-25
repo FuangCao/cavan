@@ -54,7 +54,7 @@ namespace NetworkInputMethod
             items.Clear();
             items.Add(first);
 
-            foreach (var item in mIme.NetworkImeClients)
+            foreach (var item in mIme.Clients)
             {
                 items.Add(item);
             }

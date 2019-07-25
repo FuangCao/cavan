@@ -93,7 +93,7 @@ namespace NetworkInputMethod
             items.Clear();
             items.Add("所有的设备");
 
-            foreach (var item in mIme.NetworkImeClients)
+            foreach (var item in mIme.Clients)
             {
                 items.Add(item);
             }

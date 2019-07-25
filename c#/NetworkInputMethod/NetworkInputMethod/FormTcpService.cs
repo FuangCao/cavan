@@ -7,10 +7,8 @@ using System.Windows.Forms;
 
 namespace NetworkInputMethod
 {
-    public abstract class FormTcpService : CavanSubForm
+    public class FormTcpService : CavanSubForm
     {
-        public abstract CavanTcpClient onTcpClientAccepted(TcpClient conn);
-
         public bool Invoke(EventHandler handler, object sender, EventArgs e)
         {
             try
@@ -75,6 +73,11 @@ namespace NetworkInputMethod
         }
 
         public virtual void onTcpDataReceived(CavanTcpClient client, byte[] bytes, int length)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual CavanTcpClient onTcpClientAccepted(TcpClient conn)
         {
             throw new NotImplementedException();
         }
