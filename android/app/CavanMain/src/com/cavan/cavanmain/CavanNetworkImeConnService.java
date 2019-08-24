@@ -22,6 +22,7 @@ import android.view.inputmethod.InputMethodManager;
 import com.cavan.accessibility.CavanAccessibilityHelper;
 import com.cavan.accessibility.CavanAccessibilityService;
 import com.cavan.android.CavanAndroid;
+import com.cavan.android.CavanCursorView;
 import com.cavan.android.CavanWakeLock;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanJava.ClosureVoid;
@@ -675,6 +676,13 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 
 		case "remove":
 			return service.removeCursorPosition();
+
+		case "play":
+			if (args.length > 1) {
+				return accessibility.tapPosition(CavanJava.parseInt(args[1]));
+			} else {
+				return accessibility.tapPosition(CavanCursorView.TYPE_LOGIN);
+			}
 
 		case "1":
 		case "true":

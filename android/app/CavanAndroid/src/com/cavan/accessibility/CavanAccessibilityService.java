@@ -509,17 +509,7 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	private boolean processCommandSignin(AccessibilityNodeInfo root, int type) {
-		CharSequence pkg = root.getPackageName();
-		if (pkg == null) {
-			return false;
-		}
-
-		Point point = readPosition(pkg, type);
-		if (point == null) {
-			return false;
-		}
-
-		return tapPosition(point);
+		return tapPosition(root, type);
 	}
 
 	public CavanAccessibilityPackage getPendingPackage() {
@@ -1215,6 +1205,37 @@ public class CavanAccessibilityService extends AccessibilityService {
 		}
 
 		return doInputTap(x, y);
+	}
+
+	public boolean tapPosition(AccessibilityNodeInfo root, int type) {
+		CharSequence pkg = root.getPackageName();
+		if (pkg == null) {
+			return false;
+		}
+
+		Point point = readPosition(pkg, type);
+		if (point == null) {
+			return false;
+		}
+
+		return tapPosition(point);
+	}
+
+	public boolean tapPosition(int type) {
+		AccessibilityNodeInfo root = getRootInActiveWindow();
+		if (root == null) {
+			return false;
+		}
+
+		try {
+			return tapPosition(root, type);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			root.recycle();
+		}
+
+		return false;
 	}
 
 	protected boolean onSavePositions(Set<String> positions) {
