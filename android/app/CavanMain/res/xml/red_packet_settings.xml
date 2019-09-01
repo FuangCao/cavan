@@ -112,7 +112,7 @@
 
 	<CheckBoxPreference android:key="auto_check_permission"
 	    android:persistent="true"
-	    android:defaultValue="true"
+	    android:defaultValue="false"
 	    android:title="@string/auto_check_permission" />
 
 	<Preference android:key="input_method_select"

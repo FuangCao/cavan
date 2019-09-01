@@ -19,6 +19,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.cavan.accessibility.CavanAccessibilityService.CavanAccessibilityCommand;
@@ -2773,8 +2774,8 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 	}
 
 	@Override
-	public synchronized CavanAccessibilityWindow getWindow(String name) {
-		CavanAccessibilityWindow win = super.getWindow(name);
+	public synchronized CavanAccessibilityWindow getWindow(String name, AccessibilityNodeInfo root) {
+		CavanAccessibilityWindow win = super.getWindow(name, root);
 		if (win != null) {
 			return win;
 		}
@@ -2792,6 +2793,23 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				win = new WebViewWindow(name);
 			} else {
 				win = new GameWebViewWindow(name);
+			}
+		} else if (name.startsWith("com.tencent.mm.ui.widget.")) {
+			AccessibilityNodeInfo child = CavanAccessibilityHelper.getChildByIndex(root, 0);
+			if (child == null) {
+				return null;
+			}
+
+			try {
+				if (CavanAccessibilityHelper.isInstanceOf(child, ScrollView.class)) {
+					win = new DialogWindow(name);
+				} else {
+					win = new AppBrandMenuWindow(name);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				child.recycle();
 			}
 		} else {
 			return null;
@@ -2840,6 +2858,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		addWindow(new ContactInfoWindow("com.tencent.mm.plugin.profile.ui.ContactInfoUI"));
 		addWindow(new DialogWindow("com.tencent.mm.ui.base.i"));
 		addWindow(new DialogWindow("com.tencent.mm.ui.widget.a.c"));
+		addWindow(new DialogWindow("com.tencent.mm.ui.widget.b.c"));
 		addWindow(new AppBrandMenuWindow("com.tencent.mm.ui.widget.a.b"));
 
 		addWindow(new SelectConversationWindow("com.tencent.mm.ui.transmit.SelectConversationUI"));

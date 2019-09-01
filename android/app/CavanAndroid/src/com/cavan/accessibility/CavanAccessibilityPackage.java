@@ -108,7 +108,7 @@ public class CavanAccessibilityPackage {
 		return mWindow;
 	}
 
-	public synchronized CavanAccessibilityWindow getWindow(String name) {
+	public synchronized CavanAccessibilityWindow getWindow(String name, AccessibilityNodeInfo root) {
 		return mWindows.get(name);
 	}
 
@@ -479,7 +479,7 @@ public class CavanAccessibilityPackage {
 
 		CavanAndroid.dLog("onWindowStateChanged: " + mName + "/" + name);
 
-		CavanAccessibilityWindow win = getWindow(name);
+		CavanAccessibilityWindow win = getWindow(name, root);
 
 		if (win != null) {
 			setActivityHashCode(win, root.hashCode());
