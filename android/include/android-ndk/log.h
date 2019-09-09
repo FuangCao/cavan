@@ -546,6 +546,8 @@ typedef enum {
 #define android_logToFile(tag, file) (0)
 #define android_logToFd(tag, fd) (0)
 
+#ifndef log_id_t_defined
+#define log_id_t_defined
 typedef enum log_id {
     LOG_ID_MIN = 0,
 
@@ -559,6 +561,7 @@ typedef enum log_id {
 } log_id_t;
 #define sizeof_log_id_t sizeof(typeof_log_id_t)
 #define typeof_log_id_t unsigned char
+#endif
 
 int __android_log_error_write(int tag, const char *subTag, int32_t uid, const char *data,
                               uint32_t dataLen);

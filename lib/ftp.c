@@ -419,7 +419,7 @@ static int ftp_service_cmdline(struct cavan_ftp_service *ftp_service, struct cav
 				if (*cmd_arg == 0 || stat(ftp_get_abs_path(curr_path, cmd_arg, abs_path, sizeof(abs_path)), &st)) {
 					replen = snprintf(rep_buff, sizeof(rep_buff), "550 get file size failed: %s.\r\n", strerror(errno));
 				} else {
-					replen = snprintf(rep_buff, sizeof(rep_buff), "213 %" PRINT_FORMAT_OFF "\r\n", st.st_size);
+					replen = snprintf(rep_buff, sizeof(rep_buff), "213 %ld\r\n", (long) st.st_size);
 				}
 
 				break;

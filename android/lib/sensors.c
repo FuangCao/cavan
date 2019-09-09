@@ -708,7 +708,7 @@ static int cavan_sensors_module_open(const struct hw_module_t *module, const cha
 
 static int cavan_sensors_get_list(struct sensors_module_t *module, struct sensor_t const **list)
 {
-	pd_func_info("module = %p, sensor_count = %d", module, cavan_poll_device.sensor_count);
+	pd_func_info("module = %p, sensor_count = %d", module, (int) cavan_poll_device.sensor_count);
 
 	*list = cavan_poll_device.sensor_list;
 

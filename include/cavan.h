@@ -96,7 +96,9 @@ extern int pipe2(int *, int);
 
 #if __GNUC_PREREQ__(2, 96)
 #define __noreturn    			__attribute__((__noreturn__))
+#ifndef __mallocfunc
 #define __mallocfunc  			__attribute__((malloc))
+#endif
 #else
 #define __noreturn
 #define __mallocfunc
