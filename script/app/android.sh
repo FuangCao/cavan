@@ -44,42 +44,50 @@ function cavan-android-lunch()
 {
 	local android_root="$(cavan-android-get-root)"
 
+	echo "android_root = ${android_root}"
+
 	[ -d "${android_root}" ] && source "${android_root}/build/envsetup.sh" &&
 	{
 		if [ -n "$2" ]
 		then
-			local lines=()
+			if [ "$1" ]
+			then
+				local lines=()
 
-			for ((i = 0; i < ${#LUNCH_MENU_CHOICES[@]}; i++))
-			do
-				local line=${LUNCH_MENU_CHOICES[$i]}
-				[[ $line == *$1-$2 ]] || continue
+				for ((i = 0; i < ${#LUNCH_MENU_CHOICES[@]}; i++))
+				do
+					local line=${LUNCH_MENU_CHOICES[$i]}
+					[[ $line == *$1-$2 ]] || continue
 
-				local index=${#lines[@]}
-				echo "$index. $line"
-				lines[index]=$line
-			done
+					local index=${#lines[@]}
+					echo "$index. $line"
+					lines[index]=$line
+				done
 
-			local choice=${lines[0]}
+				local choice=${lines[0]}
 
-			[ ${#lines[@]} -gt 1 ] &&
-			{
-				local answer
-
-				echo -n "Which would you like? [${lines[0]}] "
-				read answer
-
-				[ "$answer" ] &&
+				[ ${#lines[@]} -gt 1 ] &&
 				{
-					choice=${lines[$answer]}
+					local answer
 
-					[ "$choice" ] ||
+					echo -n "Which would you like? [${lines[0]}] "
+					read answer
+
+					[ "$answer" ] &&
 					{
-						echo "Your choice is invalid!"
-						return 1
+						choice=${lines[$answer]}
+
+						[ "$choice" ] ||
+						{
+							echo "Your choice is invalid!"
+							return 1
+						}
 					}
 				}
-			}
+			else
+				local products=($(cd ${android_root}/out/target/product && ls))
+				local choice="${products[0]}-$2"
+			fi
 
 			echo "Lunch combo: $choice"
 			lunch "$choice"
