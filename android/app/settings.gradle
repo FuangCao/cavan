@@ -1,0 +1,5 @@
+include ':CavanJni'
+include ':CavanMain'
+include ':CavanResource'
+include ':CavanAndroid'
+include ':CavanJava'
