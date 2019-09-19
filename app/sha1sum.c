@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME sha1sum
+
 /*
  * File:		sha1sum.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME system_init
+
 // Fuang.Cao <cavan.cfa@gmail.com> Fri Apr 29 13:44:02 CST 2011
 
 #include <cavan.h>

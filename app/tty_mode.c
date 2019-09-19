@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME tty_mode
+
 // Fuang.Cao <cavan.cfa@gmail.com> Tue Jan 18 13:22:09 CST 2011
 
 #include <cavan.h>

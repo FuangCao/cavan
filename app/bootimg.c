@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME bootimg
+
 /*
  * File:		bootimg.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME cpp_calculator
+
 /*
  * File:		Calculator.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

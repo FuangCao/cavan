@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME umount
+
 // Fuang.Cao <cavan.cfa@gmail.com> Thu Apr 28 19:30:39 CST 2011
 
 #include <cavan.h>

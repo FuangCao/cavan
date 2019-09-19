@@ -9,7 +9,10 @@
 #endif
 
 #define _FILE_OFFSET_BITS	64
+
+#ifndef __USE_FILE_OFFSET64
 #define __USE_FILE_OFFSET64
+#endif
 
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE		700

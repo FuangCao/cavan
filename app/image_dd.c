@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME image_dd
+
 // Fuang.Cao <cavan.cfa@gmail.com> Mon May 16 19:37:23 CST 2011
 
 #include <cavan.h>

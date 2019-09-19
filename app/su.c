@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME su
+
 /*
  * File:		su.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

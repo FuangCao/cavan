@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME battery
+
 // Fuang.Cao: Tue Dec 28 23:50:12 CST 2010
 
 #include <cavan.h>

@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME brecovery
+
 // Fuang.Cao <cavan.cfa@gmail.com> Thu Jan 13 21:57:30 CST 2011
 
 #include <cavan.h>

@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME jw650_lcd
+
 /*
  * File:		test.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

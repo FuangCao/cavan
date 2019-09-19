@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME sprd_at
+
 /*
  * Author: Fuang.Cao
  * Email: cavan.cfa@gmail.com

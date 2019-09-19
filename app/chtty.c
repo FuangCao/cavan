@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME chtty
+
 /*
  * Author: Fuang.Cao
  * Email: cavan.cfa@gmail.com

@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME heart_rate
+
 /*
  * File:		heart_rate.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

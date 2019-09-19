@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME dic_generator
+
 /*
  * File:		dic_generator.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

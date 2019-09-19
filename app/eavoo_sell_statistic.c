@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME eavoo_sell_statistic
+
 /*
  * Author: Fuang.Cao
  * Email: cavan.cfa@gmail.com

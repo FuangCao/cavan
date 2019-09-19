@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME df
+
 // Fuang.Cao <cavan.cfa@gmail.com> Tue Aug  2 09:56:18 CST 2011
 
 #include <cavan.h>

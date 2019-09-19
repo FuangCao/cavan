@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME ftp
+
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-10-28 17:42:37
 
 #include <cavan.h>

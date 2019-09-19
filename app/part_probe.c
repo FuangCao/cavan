@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME part_probe
+
 // Fuang.Cao: Tue Dec 28 15:54:22 CST 2010
 
 #include <cavan.h>

@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME swan_mac
+
 #include <cavan.h>
 #include <cavan/swan_mac.h>
 #include <cavan/swan_upgrade.h>

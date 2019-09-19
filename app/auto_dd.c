@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME auto_dd
+
 // Fuang.Cao <cavan.cfa@gmail.com> Sat May 14 23:11:20 CST 2011
 
 #include <cavan.h>

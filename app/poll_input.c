@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME poll_input
+
 /*
  * Author: Fuang.Cao
  * Email: cavan.cfa@gmail.com

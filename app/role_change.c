@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME role_change
+
 /*
  * File:		role_change.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

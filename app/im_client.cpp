@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME im_client
+
 /*
  * File:		im_client.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

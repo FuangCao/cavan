@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME web_proxy
+
 /*
  * File:		web_proxy.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

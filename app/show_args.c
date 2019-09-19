@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME show_args
+
 /*
  * File:		show_args.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

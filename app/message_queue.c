@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME message_queue
+
 /*
  * File:		message_queue.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

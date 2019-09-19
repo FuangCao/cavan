@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME lm49350_clock
+
 /*
  * File:		lm49350_clock.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

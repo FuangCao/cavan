@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME service
+
 /*
  * Author: Fuang.Cao
  * Email: cavan.cfa@gmail.com

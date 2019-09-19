@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME http_client
+
 /*
  * File:		http_client.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

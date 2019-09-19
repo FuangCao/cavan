@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME auto_input
+
 /*
  * File:		auto_input.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

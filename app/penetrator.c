@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME penetrator
+
 /*
  * File:		penetrator.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

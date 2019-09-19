@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME su_main
+
 /*
  * File:		su_main.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

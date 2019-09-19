@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME http_service
+
 /*
  * File:		http_service.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

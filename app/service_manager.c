@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME service_manager
+
 /*
  * File:		service_manager.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

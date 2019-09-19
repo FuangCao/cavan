@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME i2c
+
 /*
  * File:		i2c.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

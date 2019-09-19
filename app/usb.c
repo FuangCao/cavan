@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME usb
+
 // Fuang.Cao <cavan.cfa@gmail.com> Thu Sep  8 15:06:14 CST 2011
 
 #include <cavan.h>

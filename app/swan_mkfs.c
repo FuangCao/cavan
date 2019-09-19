@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME swan_mkfs
+
 #include <cavan.h>
 #include <cavan/swan_dev.h>
 #include <cavan/device.h>

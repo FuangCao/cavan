@@ -20,20 +20,20 @@
 		num2 = temp; \
 	} while (0)
 
-#define assign(addr, value, type) \
+#define cavan_assign(addr, value, type) \
 	(*(type *) (addr) = (type) (value))
 
-#define assign8(addr, value) \
-	assign(addr, value, u8)
+#define cavan_assign8(addr, value) \
+	cavan_assign(addr, value, u8)
 
-#define assign16(addr, value) \
-	assign(addr, value, u16)
+#define cavan_assign16(addr, value) \
+	cavan_assign(addr, value, u16)
 
-#define assign32(addr, value) \
-	assign(addr, value, u32)
+#define cavan_assign32(addr, value) \
+	cavan_assign(addr, value, u32)
 
-#define assign64(addr, value) \
-	assign(addr, value, u64)
+#define cavan_assign64(addr, value) \
+	cavan_assign(addr, value, u64)
 
 __BEGIN_DECLS;
 

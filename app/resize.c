@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME resize
+
 #include <cavan.h>
 #include <cavan/text.h>
 #include <cavan/image.h>

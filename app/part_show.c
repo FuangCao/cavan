@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME part_show
+
 // Fuang.Cao <cavan.cfa@gmail.com> Thu Dec 30 20:25:01 CST 2010
 
 #include <cavan.h>

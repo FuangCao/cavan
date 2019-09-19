@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME git_daemon
+
 // Fuang.Cao <cavan.cfa@gmail.com> Tue Mar 29 10:25:45 CST 2011
 
 #include <cavan.h>

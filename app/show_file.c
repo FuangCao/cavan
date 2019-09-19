@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME show_file
+
 #include <cavan.h>
 #include <cavan/file.h>
 #include <cavan/text.h>

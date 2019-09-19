@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME fdisk
+
 // Fuang.Cao <cavan.cfa@gmail.com> Thu Dec 30 11:34:28 CST 2010
 
 #include <cavan.h>

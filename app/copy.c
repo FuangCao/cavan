@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME copy
+
 #include <cavan.h>
 #include <cavan/copy.h>
 #include <cavan/file.h>

@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME auto_mount
+
 // Fuang.Cao <cavan.cfa@gmail.com> Sun May 15 11:31:08 CST 2011
 
 #include <cavan.h>

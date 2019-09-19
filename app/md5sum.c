@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME md5sum
+
 /*
  * File:		md5sum.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

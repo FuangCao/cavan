@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME wifi
+
 /*
  * File:		wifi.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

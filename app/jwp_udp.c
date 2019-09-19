@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME jwp_udp
+
 /*
  * File:		jwp_udp.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

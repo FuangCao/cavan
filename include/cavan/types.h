@@ -8,8 +8,8 @@
 #define SIZEOF_LONG		__SIZEOF_LONG__
 #define SIZEOF_SIZE_T	__SIZEOF_SIZE_T__
 
-#define sp				std::shared_ptr
-#define make_sp			std::make_shared
+#define std_sp			std::shared_ptr
+#define std_make_sp		std::make_shared
 
 #ifndef null
 #define null			NULL

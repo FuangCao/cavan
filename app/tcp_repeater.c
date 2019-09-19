@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME tcp_repeater
+
 /*
  * File:		tcp_repeater.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME bramdisk
+
 // Fuang.Cao <cavan.cfa@gmail.com> Sun Jan  9 17:23:29 CST 2011
 
 #include <cavan.h>

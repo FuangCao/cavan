@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME swan_check
+
 // Fuang.Cao: Tue Dec 21 17:04:41 CST 2010
 
 #include <cavan.h>

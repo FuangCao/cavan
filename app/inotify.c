@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME inotify
+
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-12-22 14:17:52
 
 #include <cavan.h>

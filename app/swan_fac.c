@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME swan_fac
+
 #include <cavan.h>
 #include <cavan/dd.h>
 #include <cavan/file.h>

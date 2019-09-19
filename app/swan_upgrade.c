@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME swan_upgrade
+
 #include <cavan.h>
 #include <cavan/swan_upgrade.h>
 #include <cavan/device.h>

@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME shrink
+
 #include <cavan.h>
 #include <cavan/image.h>
 

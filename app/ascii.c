@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME ascii
+
 /*
  * File:		ascii.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

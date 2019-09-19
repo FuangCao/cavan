@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME super_upgrade
+
 // Fuang.Cao <cavan.cfa@gmail.com> Fri Apr 29 16:38:07 CST 2011
 
 #include <cavan.h>

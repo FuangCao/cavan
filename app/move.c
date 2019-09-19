@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME move
+
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-11-09 11:56:01
 
 #include <cavan.h>

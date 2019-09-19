@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME buboot
+
 // Fuang.Cao <cavan.cfa@gmail.com> Sat Jan  8 18:59:37 CST 2011
 
 #include <cavan.h>

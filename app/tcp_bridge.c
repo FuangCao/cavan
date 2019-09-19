@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME tcp_bridge
+
 /*
  * File:		tcp_bridge.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

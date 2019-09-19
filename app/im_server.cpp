@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME im_server
+
 /*
  * File:		im_server.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

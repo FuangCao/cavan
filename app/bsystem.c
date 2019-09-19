@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME bsystem
+
 // Fuang.Cao <cavan.cfa@gmail.com> Thu Jan 13 21:57:17 CST 2011
 
 #include <cavan.h>

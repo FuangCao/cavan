@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME ramdisk
+
 #include <cavan.h>
 #include <cavan/dd.h>
 #include <cavan/text.h>

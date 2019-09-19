@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME ssh
+
 /*
  * File:		ssh.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

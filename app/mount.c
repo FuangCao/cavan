@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME mount
+
 #include <cavan.h>
 #include <cavan/device.h>
 #include <cavan/file.h>

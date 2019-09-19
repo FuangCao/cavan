@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME file_split
+
 /*
  * File:		file_split.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

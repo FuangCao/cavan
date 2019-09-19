@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME fb_capture
+
 /*
  * File:		fb_capture.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

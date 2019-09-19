@@ -25,7 +25,11 @@
 #include <android-ndk/make_ext4fs.h>
 #include <android-ndk/fs_mgr.h>
 #else
+#if 0
 #include <make_ext4fs.h>
+#else
+#include <ext4_utils/make_ext4fs.h>
+#endif
 #include <fs_mgr.h>
 #endif
 

@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME tcp_keypad
+
 /*
  * File:		tcp_keypad.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

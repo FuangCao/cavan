@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME loop_run
+
 /*
  * Author: Fuang.Cao
  * Email: cavan.cfa@gmail.com

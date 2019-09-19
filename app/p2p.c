@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME p2p
+
 /*
  * File:		p2p.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

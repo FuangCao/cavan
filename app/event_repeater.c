@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME event_repeater
+
 /*
  * File:		event_repeater.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

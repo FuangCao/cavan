@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME mksdcard
+
 #include <cavan.h>
 #include <cavan/text.h>
 #include <cavan/device.h>

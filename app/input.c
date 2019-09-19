@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME input
+
 /*
  * File:		input.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

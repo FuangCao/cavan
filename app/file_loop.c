@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME file_loop
+
 // Fuang.Cao <cavan.cfa@gmail.com> Thu Apr 28 18:46:37 CST 2011
 
 #include <cavan.h>

@@ -30,6 +30,13 @@
 #include <unistd.h>
 #include <features.h>
 
+#define CAVAN_SPLICE1(a, b)		a##b
+#define CAVAN_SPLICE2(a, b)		CAVAN_SPLICE1(a, b)
+
+#if defined(CAVAN_CMD_PREFIX) && defined(CAVAN_CMD_NAME)
+#define main CAVAN_SPLICE2(CAVAN_CMD_PREFIX, CAVAN_CMD_NAME)
+#endif
+
 extern int pipe2(int *, int);
 
 #define ERROR_RETURN(en) \

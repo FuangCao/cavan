@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME redpacket
+
 /*
  * File:		redpacket.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME dd
+
 #include <cavan.h>
 #include <cavan/dd.h>
 #include <cavan/parser.h>

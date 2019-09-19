@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME tcp_install
+
 /*
  * File:		tcp_install.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

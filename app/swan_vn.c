@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME swan_vn
+
 /*
  * File:		swan_vn.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

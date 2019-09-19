@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME battery_level
+
 // Fuang.Cao <cavan.cfa@gmail.com> Thu Feb 24 18:50:40 CST 2011
 
 #include <cavan.h>

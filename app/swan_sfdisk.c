@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME swan_sfdisk
+
 #include <cavan.h>
 #include <cavan/swan_dev.h>
 #include <cavan/text.h>

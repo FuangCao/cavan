@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME chroot
+
 // Fuang.Cao <cavan.cfa@gmail.com> Fri Apr 29 13:58:03 CST 2011
 
 #include <cavan.h>

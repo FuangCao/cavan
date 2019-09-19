@@ -69,6 +69,10 @@ protected:
 public:
 	UdpRawClient(int sockfd = INVALID_SOCKET) : mSockFd(sockfd) {}
 
+	virtual ~UdpRawClient() {
+		close();
+	}
+
 public:
 	virtual int getSockFd(void) {
 		return mSockFd;
@@ -148,6 +152,8 @@ public:
 		prev = next = this;
 	}
 
+	virtual ~UdpRawLink() {}
+
 protected:
 	virtual void onPackReceived(const char *buff, int length) {
 		println("buff[%d] = %s", length, buff);
@@ -167,6 +173,8 @@ public:
 			mLinks[i] = NULL;
 		}
 	}
+
+	virtual ~UdpRawService() {}
 
 public:
 	virtual UdpRawLink *findLink(const struct sockaddr_in *addr, bool create) {

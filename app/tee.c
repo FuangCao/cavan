@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME tee
+
 /*
  * File:		tee.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

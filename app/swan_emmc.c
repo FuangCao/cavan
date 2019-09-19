@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME swan_emmc
+
 #include <cavan.h>
 #include <cavan/text.h>
 #include <cavan/dd.h>

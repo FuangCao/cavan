@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME alarm
+
 /*
  * File:		alarm.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

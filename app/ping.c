@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME ping
+
 /*
  * File:		ping.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

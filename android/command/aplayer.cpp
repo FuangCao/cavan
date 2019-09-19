@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME aplayer
+
 /*
  * File:		aplayer.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

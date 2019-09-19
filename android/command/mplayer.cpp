@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME mplayer
+
 /*
  * File:			MediaPlayer.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

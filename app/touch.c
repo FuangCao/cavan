@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME touch
+
 // Fuang.Cao <cavan.cfa@gmail.com> Fri Dec 31 02:20:05 CST 2010
 
 #include <cavan.h>

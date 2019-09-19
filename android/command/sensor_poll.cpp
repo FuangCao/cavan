@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME sensor_poll
+
 /*
  * File:		sensor_poll.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
@@ -24,9 +26,17 @@
 #include <getopt.h>
 #include <pthread.h>
 #include <android/sensor.h>
+
+#if 0
 #include <gui/Sensor.h>
 #include <gui/SensorManager.h>
 #include <gui/SensorEventQueue.h>
+#else
+#include <sensor/Sensor.h>
+#include <sensor/SensorManager.h>
+#include <sensor/SensorEventQueue.h>
+#endif
+
 #include <utils/Looper.h>
 #include <hardware/sensors.h>
 #include <cavan.h>
@@ -325,7 +335,7 @@ static int sensor_event_receiver(int fd, int events, void *data)
 
 		if (count <= 0) {
 			if (count < 0) {
-				pr_red_info("queue->read: %d", count);
+				pr_red_info("queue->read: %d", (int) count);
 			}
 
 			break;

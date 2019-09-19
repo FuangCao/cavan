@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME usb_dd_server
+
 // Fuang.Cao <cavan.cfa@gmail.com> 2011-10-20 14:01:11
 
 #include <cavan.h>

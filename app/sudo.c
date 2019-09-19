@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME sudo
+
 /*
  * File:		sudo.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

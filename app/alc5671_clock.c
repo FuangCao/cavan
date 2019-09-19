@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME alc5671_clock
+
 /*
  * File:		alc5671_clock.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

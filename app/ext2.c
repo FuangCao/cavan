@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME ext2
+
 /*
  * File:			ext2.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

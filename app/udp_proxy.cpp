@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME udp_proxy
+
 /*
  * File:		udp_proxy.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

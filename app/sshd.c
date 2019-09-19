@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME sshd
+
 /*
  * File:		sshd.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

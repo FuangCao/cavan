@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME bkernel
+
 // Fuang.Cao <cavan.cfa@gmail.com> Sat Jan  8 17:53:34 CST 2011
 
 #include <cavan.h>

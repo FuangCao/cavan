@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME poll_event
+
 // Fuang.Cao <cavan.cfa@gmail.com> Mon Jan 24 16:15:11 CST 2011
 
 #include <cavan.h>

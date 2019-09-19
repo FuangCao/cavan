@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME sprd_write_imei
+
 /*
  * Author: Fuang.Cao
  * Email: cavan.cfa@gmail.com

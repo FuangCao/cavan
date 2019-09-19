@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME part_table
+
 // Fuang.Cao: Tue Dec 28 16:00:41 CST 2010
 
 #include <cavan.h>

@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME dos2unix
+
 // Fuang.Cao <cavan.cfa@gmail.com> Mon Jun 13 17:22:48 CST 2011
 
 #include <cavan.h>

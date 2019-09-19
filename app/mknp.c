@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME mknp
+
 // Fuang.Cao <cavan.cfa@gmail.com> Sat Jan  8 19:08:38 CST 2011
 
 #include <cavan.h>

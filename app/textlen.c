@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME textlen
+
 // Fuang.Cao: Thu Dec 23 14:06:39 CST 2010
 
 #include <cavan.h>

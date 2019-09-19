@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME net_discovery
+
 /*
  * File:		net_discovery.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

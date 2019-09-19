@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME abspath
+
 // Fuang.Cao <cavan.cfa@gmail.com> Wed Jun 22 14:31:43 CST 2011
 
 #include <cavan.h>

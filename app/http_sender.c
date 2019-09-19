@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME http_sender
+
 /*
  * File:		http_sender.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

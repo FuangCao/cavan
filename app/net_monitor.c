@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME net_monitor
+
 // Fuang.Cao <cavan.cfa@gmail.com> Fri Sep 16 15:25:24 CST 2011
 
 #include <cavan.h>

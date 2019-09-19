@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME swan_ipu
+
 // Fuang.Cao <cavan.cfa@gmail.com> Wed May 25 16:36:32 CST 2011
 
 #include <cavan.h>

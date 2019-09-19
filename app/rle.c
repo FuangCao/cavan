@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME rle
+
 // Fuang.Cao <cavan.cfa@gmail.com> Tue Jan 18 16:17:02 CST 2011
 
 #include <cavan.h>

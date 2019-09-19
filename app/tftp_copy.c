@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME tftp_copy
+
 // Fuang.Cao <cavan.cfa@gmail.com> Fri Apr  1 16:23:05 CST 2011
 
 #include <cavan.h>

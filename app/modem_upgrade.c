@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME modem_upgrade
+
 // Fuang.Cao <cavan.cfa@gmail.com> Tue May 17 17:47:42 CST 2011
 
 #include <cavan.h>

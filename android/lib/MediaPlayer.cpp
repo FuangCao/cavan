@@ -483,7 +483,7 @@ bool CavanMediaPlayer::doPlay(const char *pathname)
 	if (size == 0) {
 		size = lseek(fd, 0, SEEK_END);
 		if (size < 0 && errno != EOVERFLOW) {
-			pd_err_info("lseek: size = %lld", size);
+			pd_err_info("lseek: size = %lld", (ulonglong) size);
 			goto out_close_fd;
 		}
 	}

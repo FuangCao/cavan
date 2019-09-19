@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME mkdir
+
 /*
  * File:		mkdir.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>

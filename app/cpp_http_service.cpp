@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME cpp_http_service
+
 /*
  * File:		cpp_http_service.cpp
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
