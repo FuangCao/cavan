@@ -52,8 +52,6 @@ struct cavan_display_device {
 	int yres;
 	int bpp_byte;
 
-	void *fb_dequeued;
-	void *fb_acquired;
 	void *private_data;
 	struct cavan_font *font;
 	cavan_display_color_t pen_color;
@@ -69,6 +67,8 @@ struct cavan_display_device {
 	void (*destroy)(struct cavan_display_device *display);
 	void (*refresh)(struct cavan_display_device *display);
 	int (*blank)(struct cavan_display_device *display, bool blank);
+	voidptr (*get_dequeued_buff)(struct cavan_display_device *display);
+	voidptr (*get_acquired_buff)(struct cavan_display_device *display);
 	cavan_display_color_t (*build_color)(struct cavan_display_device *display, float red, float green, float blue, float transp);
 	void (*set_color)(struct cavan_display_device *display, cavan_display_color_t color);
 

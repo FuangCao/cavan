@@ -121,6 +121,11 @@ ifeq ($(CONFIG_CAVAN_JPEG),true)
 CFLAGS += -DCONFIG_CAVAN_JPEG $(shell pkg-config --cflags libjpeg)
 LDFLAGS += $(shell pkg-config --libs libjpeg)
 endif
+
+ifeq ($(CONFIG_CAVAN_DRM),true)
+CFLAGS += -DCONFIG_CAVAN_DRM $(shell pkg-config --cflags libdrm)
+LDFLAGS += $(shell pkg-config --libs libdrm)
+endif
 endif
 
 ifneq ($(BUILD_ENTRY),cavan)

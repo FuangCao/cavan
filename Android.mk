@@ -17,10 +17,10 @@ CAVAN_APP_SRC_FILES += $(call cavan-all-files-under,android/command/*.cpp)
 
 CAVAN_ANDROID_VERSION := $(firstword $(subst ., ,$(PLATFORM_VERSION)))
 CAVAN_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/android/include
-CAVAN_C_INCLUDES += system/extras/ext4_utils system/vold system/core/fs_mgr/include frameworks/av/include frameworks/native/libs/sensor/include
-CAVAN_SHARED_LIBRARIES := libutils libcutils liblog libhardware libbinder liblogwrap libz libselinux libext4_utils libsparse libmedia libgui libEGL libsensor
+CAVAN_C_INCLUDES += system/extras/ext4_utils system/vold system/core/fs_mgr/include frameworks/av/include frameworks/native/libs/sensor/include external/libdrm external/libdrm/include/drm
+CAVAN_SHARED_LIBRARIES := libutils libcutils liblog libhardware libbinder liblogwrap libz libselinux libext4_utils libsparse libmedia libgui libEGL libsensor libdrm
 CAVAN_STATIC_LIBRARIES := libfs_mgr libmincrypt libbase
-CAVAN_CFLAGS := -DCAVAN_ARCH_ARM -DCAVAN -DCONFIG_ANDROID -DCONFIG_ANDROID_VERSION=$(CAVAN_ANDROID_VERSION) -DCAVAN_CMD_PREFIX=do_cavan_
+CAVAN_CFLAGS := -DCAVAN_ARCH_ARM -DCAVAN -DCONFIG_ANDROID -DCONFIG_ANDROID_VERSION=$(CAVAN_ANDROID_VERSION) -DCONFIG_CAVAN_DRM -DCAVAN_CMD_PREFIX=do_cavan_
 CAVAN_CFLAGS += -Werror -Wno-unused-parameter -Wno-overloaded-virtual -Wno-gnu-designator -Wno-date-time -Wno-varargs -D_FILE_OFFSET_BITS=64
 CAVAN_CFLAGS += -include $(LOCAL_PATH)/android/include/android.h -include $(LOCAL_PATH)/include/cavan/config.h
 
@@ -33,7 +33,7 @@ LOCAL_PRELINK_MODULE := false
 LOCAL_MODULE_TAGS := optional
 LOCAL_STATIC_LIBRARIES := $(CAVAN_STATIC_LIBRARIES)
 LOCAL_SHARED_LIBRARIES := $(CAVAN_SHARED_LIBRARIES)
-# include $(BUILD_SHARED_LIBRARY)
+include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := libcavan-static
@@ -84,5 +84,3 @@ $(CAVAN_MAP_C): $(addprefix $(LOCAL_PATH)/,$(CAVAN_APP_SRC_FILES)) | $(CAVAN_OUT
 
 $(CAVAN_OUT_PATH):
 	$(hide) mkdir -pv $@
-
-$(intermediates)/app/core/%.o: PRIVATE_CFLAGS += -Umain -I$(CAVAN_OUT_PATH)

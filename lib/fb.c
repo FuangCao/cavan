@@ -436,6 +436,18 @@ void cavan_fb_deinit(struct cavan_fb_device *dev)
 
 // ================================================================================
 
+static voidptr cavan_fb_display_get_dequeued_buff(struct cavan_display_device *display)
+{
+	struct cavan_fb_device *dev = display->private_data;
+	return cavan_fb_get_dequeued(dev);
+}
+
+static voidptr cavan_fb_display_get_acquired_buff(struct cavan_display_device *display)
+{
+	struct cavan_fb_device *dev = display->private_data;
+	return cavan_fb_get_acquired(dev);
+}
+
 static cavan_display_color_t cavan_fb_display_build_color_handler(struct cavan_display_device *display, float red, float green, float blue, float transp)
 {
 	return cavan_fb_build_color4f(display->private_data, red, green, blue, transp);
@@ -451,10 +463,7 @@ static int cavan_fb_display_blank_handler(struct cavan_display_device *display, 
 static void cavan_fb_display_refresh_handler(struct cavan_display_device *display)
 {
 	struct cavan_fb_device *dev = display->private_data;
-
 	cavan_fb_refresh(dev);
-	display->fb_dequeued = cavan_fb_get_dequeued(dev);
-	display->fb_acquired = cavan_fb_get_acquired(dev);
 }
 
 static void cavan_fb_display_draw_point_handler(struct cavan_display_device *display, int x, int y, cavan_display_color_t color)
@@ -513,14 +522,14 @@ int cavan_fb_display_init(struct cavan_display_device *display, struct cavan_fb_
 	}
 
 	cavan_display_init(display);
-	display->fb_dequeued = cavan_fb_get_dequeued(fb_dev);
-	display->fb_acquired = cavan_fb_get_acquired(fb_dev);
 
 	display->private_data = fb_dev;
-	display->xres= fb_dev->xres;
+	display->xres = fb_dev->xres;
 	display->yres = fb_dev->yres;
 	display->bpp_byte = fb_dev->bpp_byte;
 
+	display->get_dequeued_buff = cavan_fb_display_get_dequeued_buff;
+	display->get_acquired_buff = cavan_fb_display_get_acquired_buff;
 	display->destroy = cavan_fb_display_destroy_handler1;
 	display->refresh = cavan_fb_display_refresh_handler;
 	display->blank = cavan_fb_display_blank_handler;
@@ -535,16 +544,14 @@ struct cavan_display_device *cavan_fb_display_create(void)
 {
 	int ret;
 	struct cavan_display_device *display;
-	struct cavan_fb_device *fb_dev;
 
-	display = malloc(sizeof(*display) + sizeof(*fb_dev));
+	display = malloc(sizeof(struct cavan_display_device) + sizeof(struct cavan_fb_device));
 	if (display == NULL) {
 		pr_error_info("malloc");
 		return NULL;
 	}
 
-	fb_dev = (struct cavan_fb_device *) (display + 1);
-	ret = cavan_fb_display_init(display, fb_dev);
+	ret = cavan_fb_display_init(display, (struct cavan_fb_device *) (display + 1));
 	if (ret < 0) {
 		pr_red_info("cavan_fb_display_init");
 		free(display);

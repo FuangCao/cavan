@@ -834,7 +834,7 @@ int cavan_display_memory_xfer_dummy(struct cavan_display_device *display, struct
 	data = mem->data;
 
 	if (read) {
-		p = (byte *) display->fb_acquired + mem->y * line_size + mem->x * display->bpp_byte;
+		p = (byte *) display->get_acquired_buff(display) + mem->y * line_size + mem->x * display->bpp_byte;
 		p_end = p + mem->height * line_size;
 
 		while (p < p_end) {
@@ -844,7 +844,7 @@ int cavan_display_memory_xfer_dummy(struct cavan_display_device *display, struct
 			p += line_size;
 		}
 	} else {
-		p = (byte *) display->fb_dequeued + mem->y * line_size + mem->x * display->bpp_byte;
+		p = (byte *) display->get_dequeued_buff(display) + mem->y * line_size + mem->x * display->bpp_byte;
 		p_end = p + mem->height * line_size;
 
 		while (p < p_end) {
@@ -942,11 +942,7 @@ void cavan_display_set_color_dummy(struct cavan_display_device *display, cavan_d
 
 void cavan_display_destroy_dummy(struct cavan_display_device *display)
 {
-	if (display->font) {
-		cavan_font_put(display->font);
-	}
-
-	pthread_mutex_destroy(&display->lock);
+	cavan_display_deinit(display);
 }
 
 static int cavan_display_blank_dummy(struct cavan_display_device *display, bool blank)
@@ -986,6 +982,15 @@ int cavan_display_init(struct cavan_display_device *display)
 	display->destroy = cavan_display_destroy_dummy;
 
 	return 0;
+}
+
+void cavan_display_deinit(struct cavan_display_device *display)
+{
+	if (display->font) {
+		cavan_font_put(display->font);
+	}
+
+	pthread_mutex_destroy(&display->lock);
 }
 
 void cavan_display_refresh_sync(struct cavan_display_device *display)
@@ -1029,8 +1034,8 @@ int cavan_display_start(struct cavan_display_device *display)
 		return -EINVAL;
 	}
 
-	if (display->display_memory_xfer == NULL && (display->fb_acquired == NULL || display->fb_dequeued == NULL)) {
-		pr_red_info("display->display_memory_xfer == NULL && (display->fb_acquired == NULL || display->fb_dequeued == NULL)");
+	if (display->display_memory_xfer == NULL && (display->get_acquired_buff == NULL || display->get_dequeued_buff == NULL)) {
+		pr_red_info("display->display_memory_xfer == NULL && (display->get_acquired_buff == NULL || display->get_dequeued_buff == NULL)");
 		return -EINVAL;
 	}
 

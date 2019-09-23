@@ -8,7 +8,43 @@
 
 #include <cavan.h>
 #include <cavan/command.h>
+#include <cavan/drm.h>
 #include <cavan/fb.h>
+
+static struct cavan_display_device *cavan_display_try_create(void)
+{
+	struct cavan_display_device *display;
+
+#ifdef CONFIG_CAVAN_DRM
+	display = cavan_drm_display_create();
+	if (display != NULL) {
+		return display;
+	}
+#endif
+
+	display = cavan_fb_display_create();
+	if (display != NULL) {
+		return display;
+	}
+
+	return NULL;
+}
+
+static struct cavan_display_device *cavan_display_try_start(void)
+{
+	struct cavan_display_device *display = cavan_display_try_create();
+
+	if (display == NULL) {
+		return NULL;
+	}
+
+	if (cavan_display_start(display) < 0) {
+		display->destroy(display);
+		return NULL;
+	}
+
+	return display;
+}
 
 static int cavan_display_rect_main(int argc, char *argv[])
 {
@@ -18,9 +54,9 @@ static int cavan_display_rect_main(int argc, char *argv[])
 
 	assert(argc > 4);
 
-	display = cavan_fb_display_start();
+	display = cavan_display_try_start();
 	if (display == NULL) {
-		pr_red_info("cavan_fb_display_start");
+		pr_red_info("cavan_display_try_start");
 		return -EFAULT;
 	}
 
@@ -342,9 +378,9 @@ static int cavan_display_test_main(int argc, char *argv[])
 	cavan_display_color_t color;
 	struct cavan_display_device *display;
 
-	display = cavan_fb_display_start();
+	display = cavan_display_try_start();
 	if (display == NULL) {
-		pr_red_info("cavan_fb_display_start");
+		pr_red_info("cavan_display_try_start");
 		return -EFAULT;
 	}
 
@@ -434,9 +470,9 @@ static int cavan_display_wave_main(int argc, char *argv[])
 		return fd;
 	}
 
-	display = cavan_fb_display_start();
+	display = cavan_display_try_start();
 	if (display == NULL) {
-		pr_red_info("cavan_fb_display_start");
+		pr_red_info("cavan_display_try_start");
 
 		ret = -EFAULT;
 		goto out_close_fd;
@@ -640,9 +676,9 @@ static int cavan_display_wave_text_main(int argc, char *argv[])
 	println("xmin = %lf, xmax = %lf", xmin, xmax);
 	println("ymin = %lf, ymax = %lf", ymin, ymax);
 
-	display = cavan_fb_display_start();
+	display = cavan_display_try_start();
 	if (display == NULL) {
-		pr_red_info("cavan_fb_display_start");
+		pr_red_info("cavan_display_try_start");
 
 		ret = -EFAULT;
 		goto out_cavan_fifo_deinit;
@@ -737,6 +773,7 @@ static int cavan_display_blank_main(int argc, char *argv[])
 
 	return 0;
 }
+
 CAVAN_COMMAND_MAP_START {
 	{ "draw_rect", cavan_display_rect_main },
 	{ "fill_rect", cavan_display_rect_main },

@@ -108,7 +108,11 @@ typedef unsigned short ushort;
 typedef unsigned long ulong;
 typedef unsigned long long ulonglong, ullong;
 
-typedef char * pchar, text;
+typedef char * charptr, text;
+typedef short * shortptr;
+typedef int * intptr;
+typedef long * longptr;
+typedef void * voidptr;
 
 typedef u32 size32_t;
 typedef s32 ssize32_t;
