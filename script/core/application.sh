@@ -298,7 +298,7 @@ function cavan-mm-push()
 
 	if [ "${kernel_root}" ]
 	then
-		file_config="${kernel_root}/.git/build.conf"
+		file_config="${kernel_root}/.cavan_build.conf"
 
 		[ -f "${file_config}" ] && source "${file_config}"
 
@@ -317,12 +317,23 @@ function cavan-mm-push()
 			fi
 		fi
 
+		KERNEL_DEFCONFIG="${KERNEL_CONFIG}_defconfig"
+
+		if [ "$2" ]
+		then
+			KERNEL_DTS="$2"
+		elif [ -z "${KERNEL_DTS}" ]
+		then
+			KERNEL_DTS="${KERNEL_CONFIG}"
+		fi
+
 		KERNEL_HOME="${kernel_root}"
 
 		{
 			echo "KERNEL_NAME=\"${KERNEL_NAME}\""
 			echo "KERNEL_HOME=\"${KERNEL_HOME}\""
 			echo "KERNEL_CONFIG=\"${KERNEL_CONFIG}\""
+			echo "KERNEL_DTS=\"${KERNEL_DTS}\""
 		} | tee "${file_config}"
 
 		(
@@ -334,8 +345,8 @@ function cavan-mm-push()
 					${CMD_ADB_TCP_DD} --auto .git/boot.img || return 1
 					;;
 				*)
-					make ${KERNEL_CONFIG}_defconfig || return 1
-					make ${KERNEL_CONFIG}.img -j${MAKE_JOBS} && ${CMD_ADB_TCP_DD} --auto kernel.img resource.img || return 1
+					[ ".config" -nt "arch/arm/configs/${KERNEL_DEFCONFIG}" ] || make ${KERNEL_DEFCONFIG} || return 1
+					make ${KERNEL_DTS}.img -j${MAKE_JOBS} && ${CMD_ADB_TCP_DD} --auto kernel.img resource.img || return 1
 					;;
 			esac
 		) || return 1
