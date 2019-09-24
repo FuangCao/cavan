@@ -6,8 +6,12 @@ dependencies {
 }
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    compileSdkVersion 29
+
+    defaultConfig {
+        minSdkVersion 8
+        targetSdkVersion 29
+    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
@@ -26,7 +30,7 @@ android {
         }
 
         // Move the tests to tests/java, tests/res, etc...
-        instrumentTest.setRoot('tests')
+        androidTest.setRoot('tests')
 
         // Move the build types to build-types/<type>
         // For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...
@@ -37,4 +41,72 @@ android {
         debug.setRoot('build-types/debug')
         release.setRoot('build-types/release')
     }
+    externalNativeBuild {
+        ndkBuild {
+            path file('jni/AndroidStudio.mk')
+        }
+    }
+}
+
+task cavan_gen {
+    doLast {
+        File out_dir = new File(buildDir, "generated")
+        out_dir.mkdirs()
+        println(out_dir)
+
+        File map_h = new File(out_dir, "cavan_map.h")
+        println(map_h)
+
+        File map_c = new File(out_dir, "cavan_map.c")
+        println(map_c)
+
+        File app_dir = new File(rootDir, "../../app")
+
+        StringBuilder map_h_builder = new StringBuilder()
+        StringBuilder map_c_builder = new StringBuilder()
+
+        for (File file : app_dir.listFiles()) {
+            String name = file.getName();
+            int index = name.lastIndexOf('.')
+            if (index < 0) {
+                continue;
+            }
+
+            String ext = name.substring(index + 1)
+            if (ext.equals("c") || ext.equals("cpp")) {
+                name = name.substring(0, index)
+
+                if (map_h_builder.length() > 0) {
+                    map_h_builder.append("\r\n")
+                    map_c_builder.append("\r\n")
+                }
+
+                map_h_builder.append("extern int do_cavan_" + name + "(int argc, char *argv[]);")
+                map_c_builder.append("{ \"" + name + "\", do_cavan_" + name + " },")
+            }
+        }
+
+        map_h.write(map_h_builder.toString())
+        map_c.write(map_c_builder.toString())
+    }
+}
+
+task cavan_copy(type: Copy) {
+    from(buildDir.path + '/intermediates/ndkBuild/debug/obj/local/x86/') {
+        rename 'cavan-main', 'cavan_main_x86'
+        include 'cavan-main'
+    }
+
+    from(buildDir.path + '/intermediates/ndkBuild/debug/obj/local/armeabi-v7a/') {
+        rename 'cavan-main', 'cavan_main_armeabi'
+        include 'cavan-main'
+    }
+
+    into(projectDir.path + '/res/raw/')
+}
+
+afterEvaluate {
+    externalNativeBuildDebug.dependsOn cavan_gen
+    cavan_copy.dependsOn externalNativeBuildDebug
+    compileDebugJavaWithJavac.dependsOn cavan_copy
 }
