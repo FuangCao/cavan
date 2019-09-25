@@ -68,6 +68,7 @@
   <ItemGroup>
     <Compile Include="ArrayEventArgs.cs" />
     <Compile Include="ByteArrayWriter.cs" />
+    <Compile Include="CavanAdbClient.cs" />
     <Compile Include="CavanBusyLock.cs" />
     <Compile Include="CavanEventArgs.cs" />
     <Compile Include="CavanFormProxy.cs">
