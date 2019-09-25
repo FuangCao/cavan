@@ -130,7 +130,7 @@ public class RedPacketNotification extends CavanNotificationTable {
 	public Notification buildNotification(CharSequence content, PendingIntent intent) {
 		CavanAndroid.acquireWakeupLock(mService, 20000);
 
-		Notification.Builder builder = new Notification.Builder(mService)
+		Notification.Builder builder = CavanAndroid.newNotificationBuilder(mService)
 			.setSmallIcon(R.drawable.ic_launcher)
 			.setContentTitle(getUserDescription())
 			.setContentText(content)

@@ -8,7 +8,11 @@ import java.util.Calendar;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
+import android.provider.Settings;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.service.CavanPowerStateListener;
@@ -63,7 +67,10 @@ public class CavanMainApplication extends Application {
 	}
 
 	public static boolean test(Context context) {
-		if (!RedPacketListenerService.checkAndOpenSettingsActivity(context)) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(context) == false) {
+			Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + context.getPackageName()));
+			CavanAndroid.startActivity(context, intent);
+		} else if (!RedPacketListenerService.checkAndOpenSettingsActivity(context)) {
 			FloatMessageService.showToast("请打开通知读取权限");
 		} else if (!CavanMainAccessibilityService.checkAndOpenSettingsActivity(context)) {
 			FloatMessageService.showToast("请打开辅助功能");

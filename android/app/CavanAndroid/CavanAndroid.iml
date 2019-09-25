@@ -86,5 +86,6 @@
     <orderEntry type="jdk" jdkName="Android API 29 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="CavanJava" />
+    <orderEntry type="module" module-name="CavanJava" />
   </component>
 </module>

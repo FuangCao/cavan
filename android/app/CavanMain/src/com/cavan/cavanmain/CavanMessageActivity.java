@@ -1,10 +1,6 @@
 package com.cavan.cavanmain;
 
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Set;
-
 import android.Manifest;
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
@@ -32,6 +28,10 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanString;
 import com.cavan.resource.EditableMultiSelectListPreference;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Set;
 
 public class CavanMessageActivity extends PreferenceActivity implements OnPreferenceChangeListener {
 
@@ -688,7 +688,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 				if (manager != null) {
 					String text = (String) object;
 
-					Builder builder = new Builder(this)
+					Builder builder = CavanAndroid.newNotificationBuilder(manager, this)
 						.setSmallIcon(R.drawable.ic_launcher)
 						.setAutoCancel(true)
 						.setContentTitle("红包提醒测试")

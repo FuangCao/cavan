@@ -7,10 +7,15 @@ dependencies {
 }
 
 android {
+    signingConfigs {
+        debug {
+            storeFile new File(rootDir, "../../build/core/android.keystore")
+        }
+    }
     compileSdkVersion 29
 
     defaultConfig {
-        minSdkVersion 8
+        minSdkVersion 7
         targetSdkVersion 29
     }
 

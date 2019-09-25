@@ -17,6 +17,7 @@ import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.AlarmManager;
 import android.app.KeyguardManager;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ClipData;
@@ -1306,5 +1307,26 @@ public class CavanAndroid {
 		}
 
 		return false;
+	}
+
+	public static Notification.Builder newNotificationBuilder(NotificationManager manager, Context context) {
+		Notification.Builder builder = new Notification.Builder(context);
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			NotificationChannel channel = new NotificationChannel("CavanAndroid", "CavanAndroid", NotificationManager.IMPORTANCE_DEFAULT);
+			manager.createNotificationChannel(channel);
+			builder.setChannelId("CavanAndroid");
+		}
+
+		return builder;
+	}
+
+	public static Notification.Builder newNotificationBuilder(Context context) {
+		NotificationManager manager = (NotificationManager) getSystemServiceCached(context, Context.NOTIFICATION_SERVICE);
+		if (manager == null) {
+			return null;
+		}
+
+		return newNotificationBuilder(manager, context);
 	}
 }

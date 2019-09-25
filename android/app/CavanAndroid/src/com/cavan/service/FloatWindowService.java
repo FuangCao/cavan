@@ -1,13 +1,9 @@
 package com.cavan.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-
 import android.app.Service;
 import android.content.Intent;
 import android.graphics.PixelFormat;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.view.Gravity;
@@ -18,6 +14,11 @@ import android.view.WindowManager.LayoutParams;
 import android.widget.LinearLayout;
 
 import com.cavan.android.IFloatWindowService;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 public abstract class FloatWindowService extends Service {
 
@@ -313,6 +314,10 @@ public abstract class FloatWindowService extends Service {
 				LayoutParams.TYPE_PHONE, // LayoutParams.TYPE_TOAST,
 				LayoutParams.FLAG_NOT_FOCUSABLE | LayoutParams.FLAG_NOT_TOUCHABLE,
 				PixelFormat.RGBA_8888);
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			params.type = LayoutParams.TYPE_APPLICATION_OVERLAY;
+		}
 
 		params.gravity = Gravity.RIGHT | Gravity.TOP;
 

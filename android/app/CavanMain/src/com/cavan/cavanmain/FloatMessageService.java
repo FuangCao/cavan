@@ -1,19 +1,5 @@
 package com.cavan.cavanmain;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.MulticastSocket;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -45,6 +31,20 @@ import com.cavan.cavanjni.CavanJni;
 import com.cavan.java.CavanString;
 import com.cavan.java.CavanTcpClient;
 import com.cavan.service.FloatWindowService;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.MulticastSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
 
 public class FloatMessageService extends FloatWindowService {
 
@@ -848,7 +848,7 @@ public class FloatMessageService extends FloatWindowService {
 		filter.addAction(CavanMessageActivity.ACTION_SERVICE_EXIT);
 		registerReceiver(mReceiver, filter );
 
-		mFileObserverQQ.startWatching();
+		// mFileObserverQQ.startWatching();
 
 		mUdpDaemon = new UdpDaemonThread();
 		mUdpDaemon.start();
@@ -883,7 +883,7 @@ public class FloatMessageService extends FloatWindowService {
 			mNetworkSendHandler.quit();
 		}
 
-		mFileObserverQQ.stopWatching();
+		// mFileObserverQQ.stopWatching();
 		unregisterReceiver(mReceiver);
 		setTimerEnable(false);
 
