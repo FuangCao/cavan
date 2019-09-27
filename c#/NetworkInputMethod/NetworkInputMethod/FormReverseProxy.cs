@@ -20,10 +20,16 @@ namespace NetworkInputMethod
         private Hashtable mProxyLinks = new Hashtable();
         private CavanTcpService mService;
 
+        private int mSlaveBusy;
+        private bool mSlaveRunning;
+        private HashSet<ReverseProxyThread> mSlaveThreads = new HashSet<ReverseProxyThread>();
+
         public FormReverseProxy()
         {
             mService = new CavanTcpService(this);
             InitializeComponent();
+
+            textBoxClientUrl.Text = Settings.Default.ReverseSlaveUrl;
 
             var port = Settings.Default.ReverseProxyPort;
             textBoxPort.Text = port.ToString();
@@ -334,6 +340,11 @@ namespace NetworkInputMethod
                     service.start();
                 }
             }
+
+            if (Settings.Default.ReverseSlaveEnable)
+            {
+                buttonClientStart.PerformClick();
+            }
         }
 
         private void toolStripMenuItemProxyStart_Click(object sender, EventArgs e)
@@ -469,10 +480,113 @@ namespace NetworkInputMethod
             }
         }
 
+        private void onSlaveCountChanged(object sender, EventArgs e)
+        {
+            textBoxSlaveCount.Text = string.Format("{0:d}/{1:d}", mSlaveBusy, mSlaveThreads.Count);
+        }
+
+        public void postSlaveCountChanged()
+        {
+            Invoke(new EventHandler(onSlaveCountChanged));
+        }
+
+        public void addSlaveThread(ReverseProxyThread thread)
+        {
+            lock (mSlaveThreads)
+            {
+                mSlaveThreads.Add(thread);
+                postSlaveCountChanged();
+            }
+        }
+
+        public void removeSlaveThread(ReverseProxyThread thread)
+        {
+            lock (mSlaveThreads)
+            {
+                mSlaveThreads.Remove(thread);
+                postSlaveCountChanged();
+            }
+        }
+
+        public void setSlaveBusy()
+        {
+            lock (mSlaveThreads)
+            {
+                mSlaveBusy++;
+                postSlaveCountChanged();
+
+                if (mSlaveRunning && mSlaveBusy == mSlaveThreads.Count)
+                {
+                    var thread = new ReverseProxyThread(this);
+                    thread.start();
+                }
+            }
+        }
+
+        public void setSlaveReady()
+        {
+            lock (mSlaveThreads)
+            {
+                mSlaveBusy--;
+                postSlaveCountChanged();
+            }
+        }
+
+        public bool SlaveRunning
+        {
+            get
+            {
+                lock (mSlaveThreads)
+                {
+                    if (mSlaveThreads.Count - mSlaveBusy > 2)
+                    {
+                        return false;
+                    }
+                }
+
+                return mSlaveRunning;
+            }
+
+            set
+            {
+                mSlaveRunning = value;
+            }
+        }
+
+        public string SlaveUrl
+        {
+            get
+            {
+                return textBoxClientUrl.Text;
+            }
+        }
+
         private void ButtonClientStart_Click(object sender, EventArgs e)
         {
-            var thread = new ReverseProxyThread(textBoxClientUrl.Text);
-            thread.start();
+            if (mSlaveRunning)
+            {
+                buttonClientStart.Text = "启动";
+                mSlaveRunning = false;
+
+                lock (mSlaveThreads)
+                {
+                    foreach (ReverseProxyThread thread in mSlaveThreads)
+                    {
+                        thread.stop();
+                    }
+                }
+            }
+            else
+            {
+                buttonClientStart.Text = "停止";
+                mSlaveRunning = true;
+
+                Settings.Default.ReverseSlaveUrl = textBoxClientUrl.Text;
+                Settings.Default.Save();
+
+                var thread = new ReverseProxyThread(this);
+                thread.start();
+            }
         }
     }
 
@@ -934,12 +1048,13 @@ namespace NetworkInputMethod
 
     public class ReverseProxyThread
     {
+        private FormReverseProxy mForm;
+        private TcpClient mClient;
         private Thread mThread;
-        private string mUrl;
 
-        public ReverseProxyThread(string url)
+        public ReverseProxyThread(FormReverseProxy form)
         {
-            mUrl = url;
+            mForm = form;
         }
 
         public void start()
@@ -948,51 +1063,176 @@ namespace NetworkInputMethod
             mThread.Start();
         }
 
+        public bool stop()
+        {
+            try
+            {
+                if (mClient != null)
+                {
+                    mClient.Close();
+                }
+
+                lock (this)
+                {
+                    Monitor.Pulse(this);
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public void setBusy()
+        {
+            mForm.setSlaveBusy();
+        }
+
+        public void setReady()
+        {
+            mForm.setSlaveReady();
+        }
+
         private void run()
         {
-            while (true)
+            mForm.addSlaveThread(this);
+
+            while (mForm.SlaveRunning)
             {
-                var client = CavanTcpClient.Connect(mUrl);
+                var client = CavanTcpClient.Connect(mForm.SlaveUrl);
                 if (client == null)
                 {
-                    Thread.Sleep(2000);
+                    lock (this)
+                    {
+                        Monitor.Wait(this, 2000);
+                    }
+
                     continue;
                 }
 
-                var slave = new ReverseProxySlave(client);
+                mClient = client;
+
+                var slave = new ReverseProxySlave(this, client);
 
                 try
                 {
                     slave.mainLoop();
                 }
-                catch (Exception err)
+                catch (Exception)
                 {
-                    Console.WriteLine(err);
+                    // Console.WriteLine(err);
                 }
                 finally
                 {
                     slave.disconnect();
+                    mClient = null;
                 }
             }
+
+            mForm.removeSlaveThread(this);
         }
     }
 
     public class ReverseProxySlave : CavanTcpPacketClient
     {
-        public ReverseProxySlave(TcpClient client) : base(client)
+        public const int LINK_MODE1 = 1;
+        public const int LINK_MODE2 = 2;
+        public const int LINK_BURROW = 3;
+
+        private ReverseProxyThread mThread;
+
+        public ReverseProxySlave(ReverseProxyThread thread, TcpClient client) : base(client)
         {
+            mThread = thread;
         }
 
         public override bool mainLoop()
         {
+            mClient.ReceiveTimeout = 120000;
+
             if (!send("login " + SystemInformation.ComputerName))
             {
                 return false;
             }
 
-            Thread.Sleep(2000);
+            return base.mainLoop();
+        }
 
-            return true;
+        public bool doProxyLoop(string[] args, int mode)
+        {
+            if (args.Length < 2)
+            {
+                return false;
+            }
+
+            TcpClient link = null;
+
+            try
+            {
+                mThread.setBusy();
+
+                var url = new CavanUrl(args[1]);
+
+                link = url.Connect();
+                if (link == null)
+                {
+                    if (mode == LINK_MODE2)
+                    {
+                        send("linked -1");
+                    }
+
+                    return false;
+                }
+
+                if (mode == LINK_MODE2)
+                {
+                    send("linked");
+                }
+
+                TcpProxyClient.ProxyLoop(link, mClient);
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine(err);
+            }
+            finally
+            {
+                if (link != null)
+                {
+                    link.Close();
+                }
+
+                disconnect();
+                mThread.setReady();
+            }
+
+            return false;
+        }
+
+        protected override void onDataPacketReceived(byte[] bytes, int length)
+        {
+            var args = Encoding.UTF8.GetString(bytes, 0, length).Split(' ');
+
+            switch (args[0])
+            {
+                case "ping":
+                    send("pong");
+                    break;
+
+                case "link":
+                    doProxyLoop(args, LINK_MODE1);
+                    break;
+
+                case "link2":
+                    doProxyLoop(args, LINK_MODE2);
+                    break;
+
+                case "burrow":
+                    doProxyLoop(args, LINK_BURROW);
+                    break;
+            }
         }
     }
 }

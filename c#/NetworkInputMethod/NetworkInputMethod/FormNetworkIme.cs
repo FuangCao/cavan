@@ -165,7 +165,7 @@ namespace NetworkInputMethod
                 mFormWebProxy.Show();
             }
 
-            if (Settings.Default.ReverseProxyEnable)
+            if (Settings.Default.ReverseProxyEnable || Settings.Default.ReverseSlaveEnable)
             {
                 mFormReverseProxy = new FormReverseProxy();
                 mFormReverseProxy.Show();
@@ -1035,8 +1035,9 @@ namespace NetworkInputMethod
         {
             toolStripMenuItemNetworkImeAuto.Checked = Settings.Default.NetworkImeEnable;
             toolStripMenuItemWebProxyAuto.Checked = Settings.Default.WebProxyEnable;
-            toolStripMenuItemReverseProxyAuto.Checked = Settings.Default.ReverseProxyEnable;
-            ToolStripMenuItemHttpCaptureAuto.Checked = Settings.Default.HttpCaptureEnable;
+            toolStripMenuItemHttpCaptureAuto.Checked = Settings.Default.HttpCaptureEnable;
+            toolStripMenuItemReverseProxyServiceAuto.Checked = Settings.Default.ReverseProxyEnable;
+            toolStripMenuItemReverseProxySlaveAuto.Checked = Settings.Default.ReverseSlaveEnable;
         }
 
         private void toolStripMenuItemAutoRun_Click(object sender, EventArgs e)
@@ -1047,11 +1048,13 @@ namespace NetworkInputMethod
         private void toolStripMenuItemNetworkImeAuto_Click(object sender, EventArgs e)
         {
             Settings.Default.NetworkImeEnable = toolStripMenuItemNetworkImeAuto.Checked;
+            Settings.Default.Save();
         }
 
         private void toolStripMenuItemWebProxyAuto_Click(object sender, EventArgs e)
         {
             Settings.Default.WebProxyEnable = toolStripMenuItemWebProxyAuto.Checked;
+            Settings.Default.Save();
         }
 
         private void toolStripMenuItemReverseProxy_Click(object sender, EventArgs e)
@@ -1064,14 +1067,10 @@ namespace NetworkInputMethod
             mFormReverseProxy.Show();
         }
 
-        private void toolStripMenuItemReverseProxyAuto_Click(object sender, EventArgs e)
+        private void toolStripMenuItemHttpCaptureAuto_Click(object sender, EventArgs e)
         {
-            Settings.Default.ReverseProxyEnable = toolStripMenuItemReverseProxyAuto.Checked;
-        }
-
-        private void ToolStripMenuItemHttpCaptureAuto_Click(object sender, EventArgs e)
-        {
-            Settings.Default.HttpCaptureEnable = ToolStripMenuItemHttpCaptureAuto.Checked;
+            Settings.Default.HttpCaptureEnable = toolStripMenuItemHttpCaptureAuto.Checked;
+            Settings.Default.Save();
         }
 
         private void ToolStripMenuItemHttpCapturer_Click(object sender, EventArgs e)
@@ -1146,6 +1145,18 @@ namespace NetworkInputMethod
             }
 
             mFormHttpFileServer.Show();
+        }
+
+        private void ToolStripMenuItemReverseProxyService_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ReverseProxyEnable = toolStripMenuItemReverseProxyServiceAuto.Checked;
+            Settings.Default.Save();
+        }
+
+        private void ToolStripMenuItemReverseProxySlave_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ReverseSlaveEnable = toolStripMenuItemReverseProxySlaveAuto.Checked;
+            Settings.Default.Save();
         }
     }
 

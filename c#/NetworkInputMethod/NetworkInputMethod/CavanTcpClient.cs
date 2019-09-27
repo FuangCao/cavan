@@ -658,6 +658,25 @@ namespace NetworkInputMethod
             }
         }
 
+        public TcpClient Connect()
+        {
+            if (mProto == "adb")
+            {
+                return CavanAdbClient.ConnectRemote(mHost, mPort, false);
+            }
+
+            try
+            {
+                return new TcpClient(mHost, mPort);
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine(err);
+            }
+
+            return null;
+        }
+
         public override string ToString()
         {
             var builder = new StringBuilder();

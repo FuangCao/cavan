@@ -9,7 +9,7 @@
       <Value Profile="(Default)">9090</Value>
     </Setting>
     <Setting Name="NetworkImeEnable" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="NetworkImePort" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">8865</Value>
@@ -37,6 +37,12 @@
     </Setting>
     <Setting Name="FileServerPort" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">8021</Value>
+    </Setting>
+    <Setting Name="ReverseSlaveUrl" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ReverseSlaveEnable" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

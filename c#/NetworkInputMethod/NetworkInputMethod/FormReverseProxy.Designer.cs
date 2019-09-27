@@ -54,6 +54,7 @@
             this.textBoxLinkCount = new System.Windows.Forms.TextBox();
             this.groupBoxService = new System.Windows.Forms.GroupBox();
             this.groupBoxClient = new System.Windows.Forms.GroupBox();
+            this.textBoxSlaveCount = new System.Windows.Forms.TextBox();
             this.buttonClientStart = new System.Windows.Forms.Button();
             this.textBoxClientUrl = new System.Windows.Forms.TextBox();
             this.contextMenuStripProxy.SuspendLayout();
@@ -203,7 +204,7 @@
             // 
             // buttonSwitch
             // 
-            this.buttonSwitch.Location = new System.Drawing.Point(160, 19);
+            this.buttonSwitch.Location = new System.Drawing.Point(110, 19);
             this.buttonSwitch.Name = "buttonSwitch";
             this.buttonSwitch.Size = new System.Drawing.Size(75, 23);
             this.buttonSwitch.TabIndex = 1;
@@ -213,7 +214,7 @@
             // 
             // textBoxPort
             // 
-            this.textBoxPort.Location = new System.Drawing.Point(112, 20);
+            this.textBoxPort.Location = new System.Drawing.Point(6, 20);
             this.textBoxPort.Name = "textBoxPort";
             this.textBoxPort.Size = new System.Drawing.Size(42, 21);
             this.textBoxPort.TabIndex = 0;
@@ -227,10 +228,10 @@
             // 
             // textBoxLinkCount
             // 
-            this.textBoxLinkCount.Location = new System.Drawing.Point(6, 20);
+            this.textBoxLinkCount.Location = new System.Drawing.Point(54, 20);
             this.textBoxLinkCount.Name = "textBoxLinkCount";
             this.textBoxLinkCount.ReadOnly = true;
-            this.textBoxLinkCount.Size = new System.Drawing.Size(100, 21);
+            this.textBoxLinkCount.Size = new System.Drawing.Size(50, 21);
             this.textBoxLinkCount.TabIndex = 4;
             this.textBoxLinkCount.Text = "0";
             // 
@@ -243,7 +244,7 @@
             this.groupBoxService.Controls.Add(this.buttonSwitch);
             this.groupBoxService.Location = new System.Drawing.Point(12, 12);
             this.groupBoxService.Name = "groupBoxService";
-            this.groupBoxService.Size = new System.Drawing.Size(241, 62);
+            this.groupBoxService.Size = new System.Drawing.Size(191, 62);
             this.groupBoxService.TabIndex = 5;
             this.groupBoxService.TabStop = false;
             this.groupBoxService.Text = "服务器";
@@ -252,18 +253,28 @@
             // 
             this.groupBoxClient.AutoSize = true;
             this.groupBoxClient.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.groupBoxClient.Controls.Add(this.textBoxSlaveCount);
             this.groupBoxClient.Controls.Add(this.buttonClientStart);
             this.groupBoxClient.Controls.Add(this.textBoxClientUrl);
-            this.groupBoxClient.Location = new System.Drawing.Point(348, 12);
+            this.groupBoxClient.Location = new System.Drawing.Point(221, 12);
             this.groupBoxClient.Name = "groupBoxClient";
-            this.groupBoxClient.Size = new System.Drawing.Size(424, 62);
+            this.groupBoxClient.Size = new System.Drawing.Size(551, 62);
             this.groupBoxClient.TabIndex = 6;
             this.groupBoxClient.TabStop = false;
             this.groupBoxClient.Text = "客户端";
             // 
+            // textBoxSlaveCount
+            // 
+            this.textBoxSlaveCount.Location = new System.Drawing.Point(414, 20);
+            this.textBoxSlaveCount.Name = "textBoxSlaveCount";
+            this.textBoxSlaveCount.ReadOnly = true;
+            this.textBoxSlaveCount.Size = new System.Drawing.Size(50, 21);
+            this.textBoxSlaveCount.TabIndex = 2;
+            this.textBoxSlaveCount.Text = "0";
+            // 
             // buttonClientStart
             // 
-            this.buttonClientStart.Location = new System.Drawing.Point(343, 19);
+            this.buttonClientStart.Location = new System.Drawing.Point(470, 19);
             this.buttonClientStart.Name = "buttonClientStart";
             this.buttonClientStart.Size = new System.Drawing.Size(75, 23);
             this.buttonClientStart.TabIndex = 1;
@@ -275,7 +286,7 @@
             // 
             this.textBoxClientUrl.Location = new System.Drawing.Point(6, 20);
             this.textBoxClientUrl.Name = "textBoxClientUrl";
-            this.textBoxClientUrl.Size = new System.Drawing.Size(331, 21);
+            this.textBoxClientUrl.Size = new System.Drawing.Size(402, 21);
             this.textBoxClientUrl.TabIndex = 0;
             // 
             // FormReverseProxy
@@ -330,5 +341,6 @@
         private System.Windows.Forms.GroupBox groupBoxClient;
         private System.Windows.Forms.Button buttonClientStart;
         private System.Windows.Forms.TextBox textBoxClientUrl;
+        private System.Windows.Forms.TextBox textBoxSlaveCount;
     }
 }
