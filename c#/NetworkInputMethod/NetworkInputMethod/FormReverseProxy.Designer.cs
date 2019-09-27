@@ -52,8 +52,14 @@
             this.textBoxPort = new System.Windows.Forms.TextBox();
             this.timerKeepAlive = new System.Windows.Forms.Timer(this.components);
             this.textBoxLinkCount = new System.Windows.Forms.TextBox();
+            this.groupBoxService = new System.Windows.Forms.GroupBox();
+            this.groupBoxClient = new System.Windows.Forms.GroupBox();
+            this.buttonClientStart = new System.Windows.Forms.Button();
+            this.textBoxClientUrl = new System.Windows.Forms.TextBox();
             this.contextMenuStripProxy.SuspendLayout();
             this.contextMenuStripClient.SuspendLayout();
+            this.groupBoxService.SuspendLayout();
+            this.groupBoxClient.SuspendLayout();
             this.SuspendLayout();
             // 
             // listViewProxys
@@ -70,9 +76,9 @@
             this.listViewProxys.FullRowSelect = true;
             this.listViewProxys.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.listViewProxys.LabelWrap = false;
-            this.listViewProxys.Location = new System.Drawing.Point(12, 217);
+            this.listViewProxys.Location = new System.Drawing.Point(12, 377);
             this.listViewProxys.Name = "listViewProxys";
-            this.listViewProxys.Size = new System.Drawing.Size(760, 332);
+            this.listViewProxys.Size = new System.Drawing.Size(760, 372);
             this.listViewProxys.TabIndex = 3;
             this.listViewProxys.UseCompatibleStateImageBehavior = false;
             this.listViewProxys.View = System.Windows.Forms.View.Details;
@@ -159,9 +165,9 @@
             this.listViewClients.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.listViewClients.HideSelection = false;
             this.listViewClients.LabelWrap = false;
-            this.listViewClients.Location = new System.Drawing.Point(12, 39);
+            this.listViewClients.Location = new System.Drawing.Point(12, 81);
             this.listViewClients.Name = "listViewClients";
-            this.listViewClients.Size = new System.Drawing.Size(760, 172);
+            this.listViewClients.Size = new System.Drawing.Size(760, 290);
             this.listViewClients.TabIndex = 2;
             this.listViewClients.UseCompatibleStateImageBehavior = false;
             this.listViewClients.View = System.Windows.Forms.View.Details;
@@ -197,7 +203,7 @@
             // 
             // buttonSwitch
             // 
-            this.buttonSwitch.Location = new System.Drawing.Point(697, 10);
+            this.buttonSwitch.Location = new System.Drawing.Point(160, 19);
             this.buttonSwitch.Name = "buttonSwitch";
             this.buttonSwitch.Size = new System.Drawing.Size(75, 23);
             this.buttonSwitch.TabIndex = 1;
@@ -207,7 +213,7 @@
             // 
             // textBoxPort
             // 
-            this.textBoxPort.Location = new System.Drawing.Point(12, 12);
+            this.textBoxPort.Location = new System.Drawing.Point(112, 20);
             this.textBoxPort.Name = "textBoxPort";
             this.textBoxPort.Size = new System.Drawing.Size(42, 21);
             this.textBoxPort.TabIndex = 0;
@@ -221,28 +227,75 @@
             // 
             // textBoxLinkCount
             // 
-            this.textBoxLinkCount.Location = new System.Drawing.Point(60, 12);
+            this.textBoxLinkCount.Location = new System.Drawing.Point(6, 20);
             this.textBoxLinkCount.Name = "textBoxLinkCount";
             this.textBoxLinkCount.ReadOnly = true;
             this.textBoxLinkCount.Size = new System.Drawing.Size(100, 21);
             this.textBoxLinkCount.TabIndex = 4;
             this.textBoxLinkCount.Text = "0";
             // 
+            // groupBoxService
+            // 
+            this.groupBoxService.AutoSize = true;
+            this.groupBoxService.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.groupBoxService.Controls.Add(this.textBoxPort);
+            this.groupBoxService.Controls.Add(this.textBoxLinkCount);
+            this.groupBoxService.Controls.Add(this.buttonSwitch);
+            this.groupBoxService.Location = new System.Drawing.Point(12, 12);
+            this.groupBoxService.Name = "groupBoxService";
+            this.groupBoxService.Size = new System.Drawing.Size(241, 62);
+            this.groupBoxService.TabIndex = 5;
+            this.groupBoxService.TabStop = false;
+            this.groupBoxService.Text = "服务器";
+            // 
+            // groupBoxClient
+            // 
+            this.groupBoxClient.AutoSize = true;
+            this.groupBoxClient.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.groupBoxClient.Controls.Add(this.buttonClientStart);
+            this.groupBoxClient.Controls.Add(this.textBoxClientUrl);
+            this.groupBoxClient.Location = new System.Drawing.Point(348, 12);
+            this.groupBoxClient.Name = "groupBoxClient";
+            this.groupBoxClient.Size = new System.Drawing.Size(424, 62);
+            this.groupBoxClient.TabIndex = 6;
+            this.groupBoxClient.TabStop = false;
+            this.groupBoxClient.Text = "客户端";
+            // 
+            // buttonClientStart
+            // 
+            this.buttonClientStart.Location = new System.Drawing.Point(343, 19);
+            this.buttonClientStart.Name = "buttonClientStart";
+            this.buttonClientStart.Size = new System.Drawing.Size(75, 23);
+            this.buttonClientStart.TabIndex = 1;
+            this.buttonClientStart.Text = "启动";
+            this.buttonClientStart.UseVisualStyleBackColor = true;
+            this.buttonClientStart.Click += new System.EventHandler(this.ButtonClientStart_Click);
+            // 
+            // textBoxClientUrl
+            // 
+            this.textBoxClientUrl.Location = new System.Drawing.Point(6, 20);
+            this.textBoxClientUrl.Name = "textBoxClientUrl";
+            this.textBoxClientUrl.Size = new System.Drawing.Size(331, 21);
+            this.textBoxClientUrl.TabIndex = 0;
+            // 
             // FormReverseProxy
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(784, 561);
-            this.Controls.Add(this.textBoxLinkCount);
+            this.ClientSize = new System.Drawing.Size(784, 761);
+            this.Controls.Add(this.groupBoxClient);
+            this.Controls.Add(this.groupBoxService);
             this.Controls.Add(this.listViewProxys);
             this.Controls.Add(this.listViewClients);
-            this.Controls.Add(this.buttonSwitch);
-            this.Controls.Add(this.textBoxPort);
             this.Name = "FormReverseProxy";
             this.Text = "反向代理";
             this.Load += new System.EventHandler(this.FormReverseProxy_Load);
             this.contextMenuStripProxy.ResumeLayout(false);
             this.contextMenuStripClient.ResumeLayout(false);
+            this.groupBoxService.ResumeLayout(false);
+            this.groupBoxService.PerformLayout();
+            this.groupBoxClient.ResumeLayout(false);
+            this.groupBoxClient.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -273,5 +326,9 @@
         private System.Windows.Forms.Timer timerKeepAlive;
         private System.Windows.Forms.ColumnHeader columnHeaderProxyLinkCount;
         private System.Windows.Forms.TextBox textBoxLinkCount;
+        private System.Windows.Forms.GroupBox groupBoxService;
+        private System.Windows.Forms.GroupBox groupBoxClient;
+        private System.Windows.Forms.Button buttonClientStart;
+        private System.Windows.Forms.TextBox textBoxClientUrl;
     }
 }

@@ -10,6 +10,7 @@ import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.Button;
 
+import com.cavan.android.CavanAndroid;
 import com.cavan.resource.R;
 
 public class CavanCountDownDialog extends CavanCountDownDialogBase implements OnClickListener {
@@ -42,7 +43,7 @@ public class CavanCountDownDialog extends CavanCountDownDialogBase implements On
 		LayoutParams params = new LayoutParams(
 				WindowManager.LayoutParams.WRAP_CONTENT,
 				WindowManager.LayoutParams.WRAP_CONTENT,
-				LayoutParams.TYPE_SYSTEM_ALERT,
+				CavanAndroid.getAlertWindowType(),
 				flags,
 				PixelFormat.RGBA_8888);
 

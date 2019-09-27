@@ -46,7 +46,7 @@ public class CavanCursorView extends View {
 		params = new LayoutParams(
 				WindowManager.LayoutParams.MATCH_PARENT,
 				WindowManager.LayoutParams.MATCH_PARENT,
-				LayoutParams.TYPE_PHONE, // LayoutParams.TYPE_TOAST,
+				CavanAndroid.getFloatWindowType(),
 				LayoutParams.FLAG_NOT_FOCUSABLE,
 				PixelFormat.RGBA_8888);
 

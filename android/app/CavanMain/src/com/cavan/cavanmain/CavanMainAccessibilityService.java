@@ -115,7 +115,7 @@ public class CavanMainAccessibilityService extends CavanAccessibilityService {
 
 		builder.setCancelable(true);
 		AlertDialog dialog = builder.create();
-		dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+		dialog.getWindow().setType(CavanAndroid.getAlertWindowType());
 		dialog.show();
 
 		return true;

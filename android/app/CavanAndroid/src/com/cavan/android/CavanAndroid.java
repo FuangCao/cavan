@@ -51,6 +51,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
@@ -1328,5 +1329,21 @@ public class CavanAndroid {
 		}
 
 		return newNotificationBuilder(manager, context);
+	}
+
+	public static int getFloatWindowType(int type) {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+			return type;
+		}
+
+		return LayoutParams.TYPE_APPLICATION_OVERLAY;
+	}
+
+	public static int getFloatWindowType() {
+		return getFloatWindowType(LayoutParams.TYPE_PHONE);
+	}
+
+	public static int getAlertWindowType() {
+		return getFloatWindowType(LayoutParams.TYPE_SYSTEM_ALERT);
 	}
 }

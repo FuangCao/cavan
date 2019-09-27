@@ -13,6 +13,7 @@ import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.LinearLayout;
 
+import com.cavan.android.CavanAndroid;
 import com.cavan.android.IFloatWindowService;
 
 import java.util.ArrayList;
@@ -311,13 +312,9 @@ public abstract class FloatWindowService extends Service {
 		LayoutParams params = new LayoutParams(
 				WindowManager.LayoutParams.WRAP_CONTENT,
 				WindowManager.LayoutParams.WRAP_CONTENT,
-				LayoutParams.TYPE_PHONE, // LayoutParams.TYPE_TOAST,
+				CavanAndroid.getFloatWindowType(),
 				LayoutParams.FLAG_NOT_FOCUSABLE | LayoutParams.FLAG_NOT_TOUCHABLE,
 				PixelFormat.RGBA_8888);
-
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-			params.type = LayoutParams.TYPE_APPLICATION_OVERLAY;
-		}
 
 		params.gravity = Gravity.RIGHT | Gravity.TOP;
 
@@ -361,7 +358,9 @@ public abstract class FloatWindowService extends Service {
 
 	@Override
 	public void onCreate() {
-		mManager = (WindowManager) getApplicationContext().getSystemService(WINDOW_SERVICE);
+		super.onCreate();
+
+		mManager = (WindowManager) getApplication().getSystemService(WINDOW_SERVICE);
 
 		mRootView = addRootView();
 		if (mRootView == null) {
@@ -372,8 +371,6 @@ public abstract class FloatWindowService extends Service {
 		mViewGroup = findViewGroup();
 
 		doInitialize();
-
-		super.onCreate();
 	}
 
 	@Override

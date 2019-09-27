@@ -47,6 +47,7 @@ public class CavanServiceActivity extends PreferenceActivity {
 	private RoleChangeClientPreference mPreferenceRoleChangeClient;
 	private RoleChangeProxyPreference mPreferenceRoleChangeProxy;
 	private CavanCommandServicePreference mPreferenceCommand;
+	private CavanInputProxyClientPreference mPreferenceInputProxy;
 
 	@SuppressWarnings("deprecation")
 	@Override
@@ -68,6 +69,7 @@ public class CavanServiceActivity extends PreferenceActivity {
 		mPreferenceRoleChangeClient = (RoleChangeClientPreference) findPreference(KEY_ROLE_CHANGE_CLIENT);
 		mPreferenceRoleChangeProxy = (RoleChangeProxyPreference) findPreference(KEY_ROLE_CHANGE_PROXY);
 		mPreferenceCommand = (CavanCommandServicePreference) findPreference(KEY_COMMAND);
+		mPreferenceInputProxy = (CavanInputProxyClientPreference) findPreference(KEY_INPUT_PROXY);
 
 		updateIpAddressStatus();
 	}
@@ -85,6 +87,7 @@ public class CavanServiceActivity extends PreferenceActivity {
 		mPreferenceRoleChangeClient.unbindService(this);
 		mPreferenceRoleChangeProxy.unbindService(this);
 		mPreferenceCommand.unbindService(this);
+		mPreferenceInputProxy.unbindService(this);
 
 		super.onDestroy();
 	}

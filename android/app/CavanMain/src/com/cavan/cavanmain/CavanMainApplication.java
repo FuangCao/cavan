@@ -66,10 +66,20 @@ public class CavanMainApplication extends Application {
 		return gPowerStateWatcher.register(listener);
 	}
 
+	public static boolean checkCanDrawOverlays(Context context) {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(context)) {
+			return true;
+		}
+
+		Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + context.getPackageName()));
+		CavanAndroid.startActivity(context, intent);
+
+		return false;
+	}
+
 	public static boolean test(Context context) {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(context) == false) {
-			Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + context.getPackageName()));
-			CavanAndroid.startActivity(context, intent);
+		if (!checkCanDrawOverlays(context)) {
+			FloatMessageService.showToast("请允许在其他应用上层显示");
 		} else if (!RedPacketListenerService.checkAndOpenSettingsActivity(context)) {
 			FloatMessageService.showToast("请打开通知读取权限");
 		} else if (!CavanMainAccessibilityService.checkAndOpenSettingsActivity(context)) {

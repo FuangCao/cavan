@@ -468,6 +468,12 @@ namespace NetworkInputMethod
                 }
             }
         }
+
+        private void ButtonClientStart_Click(object sender, EventArgs e)
+        {
+            var thread = new ReverseProxyThread(textBoxClientUrl.Text);
+            thread.start();
+        }
     }
 
     public class ReverseProxyLink : CavanTcpPacketClient
@@ -923,6 +929,70 @@ namespace NetworkInputMethod
         {
             var service = (ReverseProxyService)mService;
             return service.proxyLoop(this);
+        }
+    }
+
+    public class ReverseProxyThread
+    {
+        private Thread mThread;
+        private string mUrl;
+
+        public ReverseProxyThread(string url)
+        {
+            mUrl = url;
+        }
+
+        public void start()
+        {
+            mThread = new Thread(new ThreadStart(run));
+            mThread.Start();
+        }
+
+        private void run()
+        {
+            while (true)
+            {
+                var client = CavanTcpClient.Connect(mUrl);
+                if (client == null)
+                {
+                    Thread.Sleep(2000);
+                    continue;
+                }
+
+                var slave = new ReverseProxySlave(client);
+
+                try
+                {
+                    slave.mainLoop();
+                }
+                catch (Exception err)
+                {
+                    Console.WriteLine(err);
+                }
+                finally
+                {
+                    slave.disconnect();
+                }
+            }
+        }
+    }
+
+    public class ReverseProxySlave : CavanTcpPacketClient
+    {
+        public ReverseProxySlave(TcpClient client) : base(client)
+        {
+        }
+
+        public override bool mainLoop()
+        {
+            if (!send("login " + SystemInformation.ComputerName))
+            {
+                return false;
+            }
+
+            Thread.Sleep(2000);
+
+            return true;
         }
     }
 }
