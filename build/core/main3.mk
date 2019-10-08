@@ -64,7 +64,7 @@ CFLAGS += -DCAVAN_ARCH_$(shell echo $(ARCH) | tr '[a-z]' '[A-Z]')
 
 ifeq ($(ARCH),openwrt)
 CFLAGS += -DCONFIG_OPENWRT
-STAGING_DIR ?= $(shell which $(CC) | sed 's/^\(.*\/staging_dir\/\).*$$/\1/g')
+# STAGING_DIR ?= $(shell which $(CC) | sed 's/^\(.*\/staging_dir\/\).*$$/\1/g')
 LC_ALL ?= C
 
 $(info STAGING_DIR = $(STAGING_DIR))
