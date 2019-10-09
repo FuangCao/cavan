@@ -38,7 +38,10 @@ cavan_daemon_run()
 		sleep 20
 	done
 
-	chmod 0777 ${DAEMON_SH} && ${DAEMON_SH} ${WGET_SSL} && rm -rf "${DOWNLOAD_PATH}"
+	chmod 0777 ${DAEMON_SH}
+	${DAEMON_SH} ${WGET_SSL}
+
+	rm -rf "${DOWNLOAD_PATH}"
 }
 
 start()

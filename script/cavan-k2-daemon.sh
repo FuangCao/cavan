@@ -23,8 +23,11 @@ do
 done
 
 chmod 0777 ${CAVAN_MAIN}
+
 ${CAVAN_MAIN} tcp_dd_server -dp 8888
 ${CAVAN_MAIN} http_service -dp 8021
 ${CAVAN_MAIN} web_proxy -dp 9090
 ${CAVAN_MAIN} tcp_repeater -dp 8864
-${CAVAN_MAIN} role_change client "free.qydev.com:4044"
+${CAVAN_MAIN} role_change client -d "free.qydev.com:4044"
+
+rm -rf ${CAVAN_PATH}
