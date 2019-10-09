@@ -5,7 +5,7 @@ START=99
 DOWNLOAD_PATH="/tmp/download"
 
 WGET_URL="http://archive.openwrt.org/barrier_breaker/14.07/ramips/mt7620a/packages/packages/wget_1.16-1_ramips_24kec.ipk"
-DAEMON_URL="https://gitee.com/fuangcao/cavan/script/cavan-k2-daemon.sh"
+DAEMON_URL="https://gitee.com/fuangcao/cavan/raw/master/script/cavan-k2-daemon.sh"
 
 WGET="/usr/bin/wget"
 DAEMON_SH="${DOWNLOAD_PATH}/daemon.sh"
@@ -43,7 +43,7 @@ cavan_daemon_run()
 
 start()
 {
-	cavan_daemon_run &
+	cavan_daemon_run > /dev/null 2>&1 &
 }
 
 stop()

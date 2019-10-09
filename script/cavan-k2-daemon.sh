@@ -7,8 +7,6 @@ CAVAN_PATH="/tmp/cavan"
 CAVAN_URL="https://gitee.com/fuangcao/shared/raw/master/cavan-main.bz2"
 CAVAN_MAIN="${CAVAN_PATH}/cavan-main"
 
-echo "WGET_SSL = $WGET_SSL"
-
 download_cavan_main()
 {
 	${WGET_SSL} --no-check-certificate -T 10 -O cavan-main.bz2 "${CAVAN_URL}" || return 1
