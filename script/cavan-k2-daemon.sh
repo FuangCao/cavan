@@ -22,14 +22,12 @@ do
 	sleep 20
 done
 
-CLIENT_NAME=K2_$(eth_mac read wan | tr ':' '_')
-
 chmod 0777 ${CAVAN_MAIN}
 
 ${CAVAN_MAIN} tcp_dd_server -dp 8888
 ${CAVAN_MAIN} http_service -dp 8021
 ${CAVAN_MAIN} web_proxy -dp 9090
 ${CAVAN_MAIN} tcp_repeater -dp 8864
-${CAVAN_MAIN} role_change client -n "${CLIENT_NAME}" -d "free.qydev.com:4044"
+${CAVAN_MAIN} role_change client -n K2_$(eth_mac read wan | tr -d ':') -d "free.qydev.com:4044"
 
 rm -rf ${CAVAN_PATH}
