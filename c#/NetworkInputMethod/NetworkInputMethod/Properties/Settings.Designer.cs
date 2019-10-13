@@ -211,5 +211,28 @@ namespace NetworkInputMethod.Properties {
                 this["TcpBridgeEnable"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.Collections.Specialized.StringCollection TcpProxys {
+            get {
+                return ((global::System.Collections.Specialized.StringCollection)(this["TcpProxys"]));
+            }
+            set {
+                this["TcpProxys"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool TcpProxyEnable {
+            get {
+                return ((bool)(this["TcpProxyEnable"]));
+            }
+            set {
+                this["TcpProxyEnable"] = value;
+            }
+        }
     }
 }

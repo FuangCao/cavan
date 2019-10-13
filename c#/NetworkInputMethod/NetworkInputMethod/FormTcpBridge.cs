@@ -24,13 +24,13 @@ namespace NetworkInputMethod
             {
                 foreach (var bridge in bridges)
                 {
-                    var urls = bridge.Split('|');
-                    if (urls.Length != 2)
+                    var args = bridge.Split('|');
+                    if (args.Length != 2)
                     {
                         continue;
                     }
 
-                    new TcpBridgeThread(this, urls[0], urls[1]);
+                    addBridgeThread(args[0], args[1]);
                 }
             }
         }
@@ -45,23 +45,14 @@ namespace NetworkInputMethod
 
         private void buttonAdd_Click(object sender, EventArgs e)
         {
-            startBridgeThread(textBoxUrl1.Text, textBoxUrl2.Text);
-        }
+            var url1 = textBoxUrl1.Text;
+            var url2 = textBoxUrl2.Text;
 
-        public bool startBridgeThread(string url1, string url2)
-        {
-            if (string.IsNullOrEmpty(url1))
+            var thread = addBridgeThread(url1, url2);
+            if (thread == null)
             {
-                return false;
+                return;
             }
-
-            if (string.IsNullOrEmpty(url2))
-            {
-                return false;
-            }
-
-            var thread = new TcpBridgeThread(this, url1, url2);
-            thread.Start();
 
             var bridges = Settings.Default.TcpBridges;
             if (bridges == null)
@@ -73,7 +64,22 @@ namespace NetworkInputMethod
             bridges.Add(url1 + '|' + url2);
             Settings.Default.Save();
 
-            return true;
+            thread.Start();
+        }
+
+        public TcpBridgeThread addBridgeThread(string url1, string url2)
+        {
+            if (string.IsNullOrEmpty(url1))
+            {
+                return null;
+            }
+
+            if (string.IsNullOrEmpty(url2))
+            {
+                return null;
+            }
+
+            return new TcpBridgeThread(this, url1, url2);
         }
 
         private void toolStripMenuItemStart_Click(object sender, EventArgs e)
@@ -149,7 +155,7 @@ namespace NetworkInputMethod
 
         public TcpBridgeThread(FormTcpBridge form, string url1, string url2)
         {
-            var item = form.ListViewBridges.Items.Add("已停止");
+            var item = form.ListViewBridges.Items.Add("停止");
             item.SubItems.Add(url1);
             item.SubItems.Add(url2);
             item.Tag = this;
@@ -204,10 +210,10 @@ namespace NetworkInputMethod
 
         public void PerformUpdateState(string state)
         {
-            mForm.Invoke(new EventHandler(UpdateState), state);
+            mForm.Invoke(new EventHandler(OnStateUpdated), state);
         }
 
-        public void UpdateState(object sender, EventArgs e)
+        public void OnStateUpdated(object sender, EventArgs e)
         {
             mItem.SubItems[0].Text = sender.ToString();
         }
@@ -285,7 +291,7 @@ namespace NetworkInputMethod
                         }
                     }
 
-                    PerformUpdateState("正在运行");
+                    PerformUpdateState("运行");
 
                     mLink1 = link1;
                     mLink2 = link2;
@@ -325,7 +331,7 @@ namespace NetworkInputMethod
                 }
             }
 
-            PerformUpdateState("已停止");
+            PerformUpdateState("停止");
         }
     }
 }

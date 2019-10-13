@@ -49,6 +49,7 @@
             this.textBoxUrl1.Name = "textBoxUrl1";
             this.textBoxUrl1.Size = new System.Drawing.Size(311, 21);
             this.textBoxUrl1.TabIndex = 0;
+            this.textBoxUrl1.Text = "192.168.88.1:8864";
             // 
             // textBoxUrl2
             // 
@@ -56,9 +57,11 @@
             this.textBoxUrl2.Name = "textBoxUrl2";
             this.textBoxUrl2.Size = new System.Drawing.Size(311, 21);
             this.textBoxUrl2.TabIndex = 1;
+            this.textBoxUrl2.Text = "127.0.0.1:8864";
             // 
             // buttonAdd
             // 
+            this.buttonAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonAdd.Location = new System.Drawing.Point(697, 10);
             this.buttonAdd.Name = "buttonAdd";
             this.buttonAdd.Size = new System.Drawing.Size(75, 23);
@@ -69,6 +72,9 @@
             // 
             // listViewBridges
             // 
+            this.listViewBridges.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.listViewBridges.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeaderState,
             this.columnHeaderUrl1,
