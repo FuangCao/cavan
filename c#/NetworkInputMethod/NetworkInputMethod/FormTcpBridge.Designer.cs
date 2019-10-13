@@ -141,6 +141,7 @@
             this.Name = "FormTcpBridge";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "网络桥接";
+            this.Load += new System.EventHandler(this.FormTcpBridge_Load);
             this.contextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();

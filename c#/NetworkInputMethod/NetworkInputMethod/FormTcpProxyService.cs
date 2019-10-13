@@ -124,7 +124,7 @@ namespace NetworkInputMethod
                     }
                     else
                     {
-                        break;
+                        return;
                     }
                 }
 

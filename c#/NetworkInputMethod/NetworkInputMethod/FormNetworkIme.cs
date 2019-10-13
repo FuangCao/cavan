@@ -177,6 +177,12 @@ namespace NetworkInputMethod
                 mFormHttpCapture = new FormHttpCapture();
                 mFormHttpCapture.Show();
             }
+
+            if (Settings.Default.TcpBridgeEnable)
+            {
+                mFormTcpBridge = new FormTcpBridge();
+                mFormTcpBridge.Show();
+            }
         }
 
         private void UpdateClock(DateTime date)
@@ -1039,6 +1045,7 @@ namespace NetworkInputMethod
             toolStripMenuItemHttpCaptureAuto.Checked = Settings.Default.HttpCaptureEnable;
             toolStripMenuItemReverseProxyServiceAuto.Checked = Settings.Default.ReverseProxyEnable;
             toolStripMenuItemReverseProxySlaveAuto.Checked = Settings.Default.ReverseSlaveEnable;
+            toolStripMenuItemTcpBridgeAuto.Checked = Settings.Default.TcpBridgeEnable;
         }
 
         private void toolStripMenuItemAutoRun_Click(object sender, EventArgs e)
@@ -1168,6 +1175,12 @@ namespace NetworkInputMethod
             }
 
             mFormTcpBridge.Show();
+        }
+
+        private void toolStripMenuItemTcpBridgeAuto_Click(object sender, EventArgs e)
+        {
+            Settings.Default.TcpBridgeEnable = toolStripMenuItemTcpBridgeAuto.Checked;
+            Settings.Default.Save();
         }
     }
 

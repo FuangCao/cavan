@@ -123,6 +123,18 @@ namespace NetworkInputMethod
             Settings.Default.TcpBridges = bridges;
             Settings.Default.Save();
         }
+
+        private void FormTcpBridge_Load(object sender, EventArgs e)
+        {
+            if (Settings.Default.TcpBridgeEnable)
+            {
+                foreach (ListViewItem item in listViewBridges.Items)
+                {
+                    var thread = item.Tag as TcpBridgeThread;
+                    thread.Start();
+                }
+            }
+        }
     }
 
     public class TcpBridgeThread
@@ -157,6 +169,10 @@ namespace NetworkInputMethod
                     mThread = new Thread(new ThreadStart(MainLoop));
                     mThread.IsBackground = true;
                     mThread.Start();
+                }
+                else
+                {
+                    Monitor.PulseAll(this);
                 }
             }
         }

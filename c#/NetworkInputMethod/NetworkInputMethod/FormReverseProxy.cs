@@ -268,6 +268,8 @@ namespace NetworkInputMethod
 
                 service.addToListView(listViewProxys);
                 service.start();
+
+                saveProxyMap();
             }
         }
 
@@ -301,7 +303,7 @@ namespace NetworkInputMethod
             }
         }
 
-        private void saveProxyMap()
+        public void saveProxyMap()
         {
             var coll = new StringCollection();
 
@@ -320,12 +322,7 @@ namespace NetworkInputMethod
             }
 
             Settings.Default.ReverseProxyMap = coll;
-        }
-
-        protected override void onCavanSubFormClosing(object sender, FormClosingEventArgs e)
-        {
-            base.onCavanSubFormClosing(sender, e);
-            saveProxyMap();
+            Settings.Default.Save();
         }
 
         private void FormReverseProxy_Load(object sender, EventArgs e)
@@ -383,6 +380,8 @@ namespace NetworkInputMethod
 
                 service.addToListView(listViewProxys);
                 service.start();
+
+                saveProxyMap();
             }
         }
 
@@ -394,6 +393,8 @@ namespace NetworkInputMethod
                 service.stop();
                 listViewProxys.Items.Remove(item);
             }
+
+            saveProxyMap();
         }
 
         public ReverseProxyLink getProxyLinkRaw(string key, string url, CavanTcpClient peer)
