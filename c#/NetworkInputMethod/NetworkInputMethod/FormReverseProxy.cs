@@ -990,7 +990,12 @@ namespace NetworkInputMethod
 
                     try
                     {
-                        return TcpProxyClient.ProxyLoop(client, peer.Client);
+                        TcpProxyClient.ProxyLoop(client, peer.Client);
+                        return false;
+                    }
+                    catch (Exception err)
+                    {
+                        Console.WriteLine(err);
                     }
                     finally
                     {
@@ -1020,7 +1025,8 @@ namespace NetworkInputMethod
 
                     if (CavanTcpClient.WritePacket(client.GetStream(), builder.ToString()))
                     {
-                        return TcpProxyClient.ProxyLoop(client, peer.Client);
+                        TcpProxyClient.ProxyLoop(client, peer.Client);
+                        return false;
                     }
                 }
                 finally

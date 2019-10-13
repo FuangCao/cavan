@@ -30,6 +30,7 @@ namespace NetworkInputMethod
         private FormHttpCapture mFormHttpCapture;
         private FormSimulateTap mFormSimulateTap;
         private FormHttpFileServer mFormHttpFileServer;
+        private FormTcpBridge mFormTcpBridge;
 
         //API declarations...
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -1073,7 +1074,7 @@ namespace NetworkInputMethod
             Settings.Default.Save();
         }
 
-        private void ToolStripMenuItemHttpCapturer_Click(object sender, EventArgs e)
+        private void toolStripMenuItemHttpCapturer_Click(object sender, EventArgs e)
         {
             if (mFormHttpCapture == null || mFormHttpCapture.IsDisposed)
             {
@@ -1083,7 +1084,7 @@ namespace NetworkInputMethod
             mFormHttpCapture.Show();
         }
 
-        private void ToolStripMenuItemSave_Click(object sender, EventArgs e)
+        private void toolStripMenuItemSave_Click(object sender, EventArgs e)
         {
             Settings.Default.Save();
         }
@@ -1157,6 +1158,16 @@ namespace NetworkInputMethod
         {
             Settings.Default.ReverseSlaveEnable = toolStripMenuItemReverseProxySlaveAuto.Checked;
             Settings.Default.Save();
+        }
+
+        private void toolStripMenuItemTcpBridge_Click(object sender, EventArgs e)
+        {
+            if (mFormTcpBridge == null || mFormTcpBridge.IsDisposed)
+            {
+                mFormTcpBridge = new FormTcpBridge();
+            }
+
+            mFormTcpBridge.Show();
         }
     }
 

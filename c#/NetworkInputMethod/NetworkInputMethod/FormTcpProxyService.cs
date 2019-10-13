@@ -90,7 +90,7 @@ namespace NetworkInputMethod
             mPort = port;
         }
 
-        public static bool ProxyLoop(TcpClient link1, TcpClient link2)
+        public static void ProxyLoop(TcpClient link1, TcpClient link2)
         {
             var bytes = new byte[1024];
             var list = new ArrayList();
@@ -124,7 +124,7 @@ namespace NetworkInputMethod
                     }
                     else
                     {
-                        return false;
+                        break;
                     }
                 }
 
