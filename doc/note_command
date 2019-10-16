@@ -29,6 +29,7 @@ htop
 free -h
 systemctl status tcp-dd.service
 journalctl -xe
+journalctl -u qydev-linux
 tail -f /var/log/test.log
 iconv -f GBK -t UTF8 gbk.txt -o utf8.txt
 command -v ls
