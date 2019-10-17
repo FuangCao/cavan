@@ -411,12 +411,17 @@ namespace NetworkInputMethod
     {
         private string mProto;
         private string mHost;
-        private UInt16 mPort;
+        private ushort mPort;
         private string mPath;
         private string mUser;
         private string mPass;
 
-        public CavanUrl(string proto, string host, UInt16 port, string path)
+        public static TcpClient Connect(string url)
+        {
+            return new CavanUrl(url).Connect();
+        }
+
+        public CavanUrl(string proto, string host, ushort port, string path)
         {
             mProto = proto.ToLower();
             mHost = host;
@@ -424,7 +429,7 @@ namespace NetworkInputMethod
             mPath = path;
         }
 
-        public CavanUrl(string host, UInt16 port, string path)
+        public CavanUrl(string host, ushort port, string path)
         {
             mProto = "tcp";
             mHost = host;
@@ -660,18 +665,21 @@ namespace NetworkInputMethod
 
         public TcpClient Connect()
         {
-            if (mProto == "adb")
+            switch (mProto.ToLower())
             {
-                return CavanAdbClient.ConnectRemote(mHost, mPort, false);
-            }
+                case "adb":
+                    return CavanAdbClient.ConnectRemote(mHost, mPort, false);
 
-            try
-            {
-                return new TcpClient(mHost, mPort);
-            }
-            catch (Exception err)
-            {
-                Console.WriteLine(err);
+                default:
+                    try
+                    {
+                        return new TcpClient(mHost, mPort);
+                    }
+                    catch (Exception err)
+                    {
+                        Console.WriteLine(err);
+                        break;
+                    }
             }
 
             return null;

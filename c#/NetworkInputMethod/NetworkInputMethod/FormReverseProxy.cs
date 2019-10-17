@@ -24,6 +24,8 @@ namespace NetworkInputMethod
         private bool mSlaveRunning;
         private HashSet<ReverseProxyThread> mSlaveThreads = new HashSet<ReverseProxyThread>();
 
+        public delegate string BuildClientListHandler();
+
         public FormReverseProxy()
         {
             mService = new CavanTcpService(this);
@@ -589,6 +591,33 @@ namespace NetworkInputMethod
                 thread.start();
             }
         }
+
+        public string BuildClientList()
+        {
+            if (InvokeRequired)
+            {
+                return Invoke(new BuildClientListHandler(BuildClientList)) as string;
+            }
+
+            var builder = new StringBuilder();
+
+            foreach (ListViewItem item in listViewClients.Items)
+            {
+                var time = DateTime.Now;
+
+                if (builder.Length > 0)
+                {
+                    builder.Append('\n');
+                }
+
+                builder.Append(time.ToString("yyyy-MM-dd HH:mm:ss "));
+                builder.Append(item.SubItems[1].Text).Append(' ');
+                builder.Append(item.SubItems[2].Text).Append(' ');
+                builder.Append(item.SubItems[0].Text);
+            }
+
+            return builder.ToString();
+        }
     }
 
     public class ReverseProxyLink : CavanTcpPacketClient
@@ -675,7 +704,7 @@ namespace NetworkInputMethod
                 var args = Encoding.ASCII.GetString(Bytes, 0, length).Split(SEPARATOR);
                 var command = args[0];
 
-                switch (command)
+                switch (command.ToLower())
                 {
                     case "ping":
                         send("pong");
@@ -688,6 +717,11 @@ namespace NetworkInputMethod
                     case "login":
                         mHostname = args[1];
                         mService.onTcpClientUpdated(this);
+                        break;
+
+                    case "list":
+                        var form = mService.Form as FormReverseProxy;
+                        send(form.BuildClientList());
                         break;
 
                     case "link":
@@ -817,11 +851,6 @@ namespace NetworkInputMethod
     public class ReverseProxyService : CavanTcpServiceBase
     {
         private FormReverseProxy mForm;
-        private string mClientAddress;
-        private string mClientName;
-        private string mServerUrl;
-        private string mTargetUrl;
-        private ListViewItem mItem;
 
         public override FormTcpService Form
         {
@@ -836,78 +865,23 @@ namespace NetworkInputMethod
             }
         }
 
-        public string ClientAddress
-        {
-            get
-            {
-                return mClientAddress;
-            }
+        public string ClientAddress { get; set; }
 
-            set
-            {
-                mClientAddress = value;
-            }
-        }
-
-        public string ClientName
-        {
-            get
-            {
-                return mClientName;
-            }
-
-            set
-            {
-                mClientName = value;
-            }
-        }
+        public string ClientName { get; set; }
 
         public string Key
         {
             get
             {
-                return mForm.getProxyLinkKey(mClientAddress, mClientName);
+                return mForm.getProxyLinkKey(ClientAddress, ClientName);
             }
         }
 
-        public string ServerUrl
-        {
-            get
-            {
-                return mServerUrl;
-            }
+        public string ServerUrl { get; set; }
 
-            set
-            {
-                mServerUrl = value;
-            }
-        }
+        public string TargetUrl { get; set; }
 
-        public string TargetUrl
-        {
-            get
-            {
-                return mTargetUrl;
-            }
-
-            set
-            {
-                mTargetUrl = value;
-            }
-        }
-
-        public ListViewItem Item
-        {
-            get
-            {
-                return mItem;
-            }
-
-            set
-            {
-                mItem = value;
-            }
-        }
+        public ListViewItem Item { get; set; }
 
         protected override void onTcpServiceStarted()
         {
@@ -957,7 +931,7 @@ namespace NetworkInputMethod
             sub.Add(ClientName);
 
             item.Tag = this;
-            mItem = item;
+            Item = item;
         }
 
         public static explicit operator ReverseProxyService(CavanTcpService service)
@@ -969,11 +943,11 @@ namespace NetworkInputMethod
         {
             var key = Key;
 
-            if (string.IsNullOrEmpty(mServerUrl) || mServerUrl.Equals(mForm.LocalUrl))
+            if (string.IsNullOrEmpty(ServerUrl) || ServerUrl.Equals(mForm.LocalUrl))
             {
                 if (key != null)
                 {
-                    var link = mForm.getProxyLink(key, mTargetUrl, peer);
+                    var link = mForm.getProxyLink(key, TargetUrl, peer);
                     if (link == null)
                     {
                         return false;
@@ -983,7 +957,7 @@ namespace NetworkInputMethod
                 }
                 else
                 {
-                    var client = CavanTcpClient.Connect(mTargetUrl);
+                    var client = CavanUrl.Connect(ServerUrl);
                     if (client == null)
                     {
                         return false;
@@ -1006,7 +980,8 @@ namespace NetworkInputMethod
             }
             else
             {
-                var client = CavanTcpClient.Connect(mServerUrl);
+                var url = new CavanUrl(ServerUrl);
+                var client = url.Connect();
                 if (client == null)
                 {
                     return false;
@@ -1108,7 +1083,7 @@ namespace NetworkInputMethod
 
             while (mForm.SlaveRunning)
             {
-                var client = CavanTcpClient.Connect(mForm.SlaveUrl);
+                var client = CavanUrl.Connect(mForm.SlaveUrl);
                 if (client == null)
                 {
                     lock (this)
@@ -1150,6 +1125,41 @@ namespace NetworkInputMethod
 
         private ReverseProxyThread mThread;
 
+        public static string[] ListClients(string url)
+        {
+            try
+            {
+                using (var client = CavanUrl.Connect(url))
+                {
+                    if (client == null)
+                    {
+                        return null;
+                    }
+
+                    client.SendTimeout = client.ReceiveTimeout = 5000;
+
+                    var link = new CavanTcpPacketClient(client);
+
+                    if (!link.send("list"))
+                    {
+                        return null;
+                    }
+
+                    var length = link.read(link.getStream());
+                    if (length > 0)
+                    {
+                        return Encoding.UTF8.GetString(link.Bytes, 0, length).Split('\n');
+                    }
+                }
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine(err);
+            }
+
+            return null;
+        }
+
         public ReverseProxySlave(ReverseProxyThread thread, TcpClient client) : base(client)
         {
             mThread = thread;
@@ -1180,9 +1190,7 @@ namespace NetworkInputMethod
             {
                 mThread.setBusy();
 
-                var url = new CavanUrl(args[1]);
-
-                link = url.Connect();
+                link = CavanUrl.Connect(args[1]);
                 if (link == null)
                 {
                     if (mode == LINK_MODE2)
