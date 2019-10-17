@@ -1,0 +1,17 @@
+# Let NetworkManager manage all devices on this system
+network:
+  version: 2
+
+  ethernets:
+      enp1s0:
+          dhcp4: no
+
+      enx000ec6b6020b:
+          dhcp4: no
+
+  bridges:
+      br0:
+          interfaces: [enp1s0, enx000ec6b6020b]
+          nameservers:
+              addresses: [192.168.0.176]
+          dhcp4: yes

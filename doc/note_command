@@ -33,6 +33,7 @@ tail -f /var/log/test.log
 iconv -f GBK -t UTF8 gbk.txt -o utf8.txt
 command -v ls
 grep -v grep
+netplan apply
 
 常用的top命令操作指令
 如果想看每一个cpu的处理情况，按1即可；折叠，再次按1
