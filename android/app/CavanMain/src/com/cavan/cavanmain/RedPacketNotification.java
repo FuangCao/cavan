@@ -1,12 +1,8 @@
 package com.cavan.cavanmain;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.Ringtone;
@@ -20,6 +16,11 @@ import com.cavan.accessibility.CavanNotification;
 import com.cavan.accessibility.CavanRedPacketAlipay;
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.RedPacketFinder;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class RedPacketNotification extends CavanNotificationTable {
 
@@ -87,7 +88,7 @@ public class RedPacketNotification extends CavanNotificationTable {
 		return mNotification.getUserDescription(mService);
 	}
 
-	public File getRingtoneFile() {
+	public static File getRingtoneFile() {
 		File dir = Environment.getExternalStorageDirectory();
 		for (String extension : sSoundExtensions) {
 			File file = new File(dir, "CavanRedPacket." + extension);
@@ -99,15 +100,15 @@ public class RedPacketNotification extends CavanNotificationTable {
 		return null;
 	}
 
-	public Uri getRingtoneUri() {
-		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(mService);
+	public static Uri getRingtoneUri(Context context) {
+		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
 		if (preferences != null) {
 			String value = preferences.getString(CavanMessageActivity.KEY_RED_PACKET_NOTIFY_RINGTONE, null);
 			if (value != null) {
 				Uri uri = Uri.parse(value);
-				Ringtone ringtone = RingtoneManager.getRingtone(mService, uri);
+				Ringtone ringtone = RingtoneManager.getRingtone(context, uri);
 				if (ringtone != null) {
-					CavanAndroid.dLog("ringtone: title = " + ringtone.getTitle(mService));
+					CavanAndroid.dLog("ringtone: title = " + ringtone.getTitle(context));
 					return uri;
 				}
 			}
@@ -127,20 +128,20 @@ public class RedPacketNotification extends CavanNotificationTable {
 		sCodeTimeMap.remove(code);
 	}
 
-	public Notification buildNotification(CharSequence content, PendingIntent intent) {
-		CavanAndroid.acquireWakeupLock(mService, 20000);
+	public static Notification.Builder newNotificationBuilder(Context context, CharSequence title, CharSequence content, PendingIntent intent) {
+		CavanAndroid.acquireWakeupLock(context, 20000);
 
-		Notification.Builder builder = CavanAndroid.newNotificationBuilder(mService)
+		Notification.Builder builder = CavanAndroid.newNotificationBuilder(context)
 			.setSmallIcon(R.drawable.ic_launcher)
-			.setContentTitle(getUserDescription())
+			.setContentTitle(title)
 			.setContentText(content)
 			.setContentIntent(intent);
 
 		int defaluts = Notification.DEFAULT_LIGHTS;
-		int setting = CavanMessageActivity.getNotifySetting(mService);
+		int setting = CavanMessageActivity.getNotifySetting(context);
 
 		if ((setting & 1) != 0) {
-			Uri ringtone = getRingtoneUri();
+			Uri ringtone = getRingtoneUri(context);
 			if (ringtone != null) {
 				CavanAndroid.dLog("ringtone: uri = " + ringtone);
 				builder.setSound(ringtone);
@@ -155,6 +156,11 @@ public class RedPacketNotification extends CavanNotificationTable {
 
 		builder.setDefaults(defaluts);
 
+		return builder;
+	}
+
+	public Notification buildNotification(CharSequence content, PendingIntent intent) {
+		Notification.Builder builder = newNotificationBuilder(mService, getUserDescription(), content, intent);
 		return builder.build();
 	}
 
