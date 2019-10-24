@@ -50,3 +50,70 @@ function cavan-rockchip-pack-system()
 }
 
 alias cavan-rockchip-pack-system-push="cavan-rockchip-pack-system && cavan-adb-tcp_dd --auto ${IMAGE_PATH}/system.img"
+
+function cavan-rockchip-download()
+{
+	local options
+
+	for fn in $@
+	do
+		case "$(basename ${fn})" in
+			boot.img)
+				options="DI -b"
+				;;
+			dtbo.img)
+				options="DI dtbo"
+				;;
+			kernel.img)
+				options="DI -k"
+				;;
+			misc.img)
+				options="DI -m"
+				;;
+			oem.img)
+				options="DI oem"
+				;;
+			parameter.txt)
+				options="DI -p"
+				;;
+			recovery.img)
+				options="DI -r"
+				;;
+			resource.img)
+				options="DI resource"
+				;;
+			system.img)
+				options="DI -s"
+				;;
+			trust.img)
+				options="DI trust"
+				;;
+			uboot.img)
+				options="DI -u"
+				;;
+			vbmeta.img)
+				options="DI vbmeta"
+				;;
+			vendor.img)
+				options="DI vendor"
+				;;
+			update.img)
+				options="UF"
+				;;
+			reboot)
+				options="RD"
+				unset fn
+				;;
+			*)
+				echo "skipping ${fn}"
+				continue
+				;;
+		esac
+
+		echo "options = ${options}"
+
+		$(cavan-android-get-root)/rkbin/tools/upgrade_tool ${options} ${fn} || break
+	done
+}
+
+alias cavan-rockchip-reboot-bootloader="adb reboot bootloader"
