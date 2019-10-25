@@ -87,5 +87,56 @@ namespace NetworkInputMethod
                 textBoxTarget.Text = value;
             }
         }
+
+        private void ButtonRefresh_Click(object sender, EventArgs e)
+        {
+            var url = textBoxServer.Text;
+
+            if (url != null && url.Length > 0 && backgroundWorkerRefresh.IsBusy == false)
+            {
+                buttonRefresh.Enabled = false;
+                backgroundWorkerRefresh.RunWorkerAsync(url);
+            }
+        }
+
+        private void BackgroundWorkerRefresh_DoWork(object sender, DoWorkEventArgs e)
+        {
+            var url = e.Argument as string;
+            e.Result = ReverseProxySlave.ListClients(url);
+        }
+
+        private void BackgroundWorkerRefresh_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            var clients = e.Result as string[];
+            if (clients != null)
+            {
+                listBoxClients.Items.Clear();
+
+                foreach (var client in clients)
+                {
+                    listBoxClients.Items.Add(client);
+                }
+            }
+
+            buttonRefresh.Enabled = true;
+        }
+
+        private void ListBoxClients_DoubleClick(object sender, EventArgs e)
+        {
+            var item = listBoxClients.SelectedItem as string;
+            if (item != null)
+            {
+                var args = item.Split(' ');
+
+                if (args.Length > 3)
+                {
+                    textBoxClientName.Text = args[3].Trim();
+                }
+                else if (args.Length > 2)
+                {
+                    textBoxClientAddress.Text = args[2].Trim();
+                }
+            }
+        }
     }
 }

@@ -9,71 +9,211 @@ using System.Windows.Forms;
 using System.Net;
 using System.Net.Sockets;
 using System.Collections;
+using NetworkInputMethod.Properties;
+using System.Collections.Specialized;
 
 namespace NetworkInputMethod
 {
-    public partial class FormTcpProxyService : FormTcpService
+    public partial class FormTcpProxyService : CavanSubForm
     {
-        private CavanTcpService mService;
-
         public FormTcpProxyService()
         {
-            mService = new CavanTcpService(this);
             InitializeComponent();
-        }
 
-        private void buttonStartStop_Click(object sender, EventArgs e)
-        {
-            if (mService.Running)
+            var proxys = Settings.Default.TcpProxys;
+            if (proxys != null)
             {
-                mService.stop();
+                foreach (var proxy in proxys)
+                {
+                    var args = proxy.Split('|');
+                    if (args.Length != 2)
+                    {
+                        continue;
+                    }
+
+                    addTcpProxy(args[0], args[1]);
+                }
             }
-            else
+        }
+
+        public ListView ListViewServices
+        {
+            get
             {
-                mService.Port = Convert.ToInt16(textBoxPort.Text);
-                mService.start();
+                return listViewServices;
             }
         }
 
-        public override void onTcpServiceStarted(object sender, EventArgs e)
+        private void buttonAdd_Click(object sender, EventArgs e)
         {
-            buttonStartStop.Text = "停止";
+            var url = textBoxUrl.Text;
+            var port = textBoxPort.Text;
+
+            var service = addTcpProxy(url, port);
+            if (service == null)
+            {
+                return;
+            }
+
+            var proxys = Settings.Default.TcpProxys;
+            if (proxys == null)
+            {
+                proxys = new StringCollection();
+                Settings.Default.TcpProxys = proxys;
+            }
+
+            proxys.Add(url + '|' + port);
+            Settings.Default.Save();
+
+            service.start();
         }
 
-        public override void onTcpServiceStopped(object sender, EventArgs e)
+        public TcpProxyService addTcpProxy(string url, string port)
         {
-            buttonStartStop.Text = "启动";
+            if (string.IsNullOrEmpty(url))
+            {
+                return null;
+            }
+
+            if (string.IsNullOrEmpty(port))
+            {
+                return null;
+            }
+
+            try
+            {
+                return new TcpProxyService(this, url, Convert.ToInt32(port));
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        private void toolStripMenuItemStart_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in listViewServices.SelectedItems)
+            {
+                var service = item.Tag as TcpProxyService;
+                service.start();
+            }
+        }
+
+        private void toolStripMenuItemStop_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in listViewServices.SelectedItems)
+            {
+                var service = item.Tag as TcpProxyService;
+                service.stop();
+            }
+        }
+
+        private void toolStripMenuItemRemove_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in listViewServices.SelectedItems)
+            {
+                var service = item.Tag as TcpProxyService;
+                service.stop();
+
+                listViewServices.Items.Remove(item);
+            }
+
+            var proxys = new StringCollection();
+
+            foreach (ListViewItem item in listViewServices.SelectedItems)
+            {
+                var sub = item.SubItems;
+                proxys.Add(sub[2].Text + '|' + sub[1].Text);
+            }
+
+            Settings.Default.TcpProxys = proxys;
+            Settings.Default.Save();
+        }
+
+        private void FormTcpProxyService_Load(object sender, EventArgs e)
+        {
+            if (Settings.Default.TcpProxyEnable)
+            {
+                foreach (ListViewItem item in listViewServices.Items)
+                {
+                    var service = item.Tag as TcpProxyService;
+                    service.start();
+                }
+            }
+        }
+    }
+
+    public class TcpProxyService : CavanTcpServiceBase
+    {
+        private FormTcpProxyService mForm;
+        private ListViewItem mItem;
+        private CavanUrl mUrl;
+
+        public TcpProxyService(FormTcpProxyService form, string url, int port)
+        {
+            mUrl = new CavanUrl(url);
+            Port = port;
+
+            var item = form.ListViewServices.Items.Add("停止");
+            item.Tag = this;
+
+            var sub = item.SubItems;
+            sub.Add("0");
+            sub.Add(port.ToString());
+            sub.Add(url);
+
+            mItem = item;
+            mForm = form;
+        }
+
+        public void PerformUpdateState(string state)
+        {
+            mForm.Invoke(new EventHandler(OnStateUpdated), state);
+        }
+
+        private void OnStateUpdated(object sender, EventArgs e)
+        {
+            mItem.SubItems[0].Text = sender.ToString();
+        }
+
+        public void PerformUpdateCount()
+        {
+            mForm.Invoke(new EventHandler(OnCountUpdated));
+        }
+
+        private void OnCountUpdated(object sender, EventArgs e)
+        {
+            mItem.SubItems[1].Text = Count.ToString();
+        }
+
+        protected override void onTcpServiceRunning()
+        {
+            PerformUpdateState("运行");
+        }
+
+        protected override void onTcpServiceStarted()
+        {
+            PerformUpdateState("启动");
+        }
+
+        protected override void onTcpServiceStopped()
+        {
+            PerformUpdateState("停止");
         }
 
         public override CavanTcpClient onTcpClientAccepted(TcpClient conn)
         {
-            var args = textBoxUrl.Text.Split(':');
-            int port = 80;
-
-            try
-            {
-                if (args.Length > 1)
-                {
-                    port = Convert.ToUInt16(args[1]);
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-
-
-            return new TcpProxyClient(conn, args[0], port);
+            return new TcpProxyClient(conn, mUrl);
         }
 
-        public override void onTcpClientConnected(object sender, EventArgs e)
+        protected override void onTcpClientConnected(CavanTcpClient client)
         {
-            listBoxClients.Items.Add(sender);
+            PerformUpdateCount();
         }
 
-        public override void onTcpClientDisconnected(object sender, EventArgs e)
+        protected override void onTcpClientDisconnected(CavanTcpClient client)
         {
-            listBoxClients.Items.Remove(sender);
+            PerformUpdateCount();
         }
     }
 
@@ -81,16 +221,14 @@ namespace NetworkInputMethod
     {
         public const int SELECT_OVERTIME = 600000000;
 
-        private string mHost;
-        private int mPort;
+        private CavanUrl mUrl;
 
-        public TcpProxyClient(TcpClient client, string host, int port) : base(client)
+        public TcpProxyClient(TcpClient client, CavanUrl url) : base(client)
         {
-            mHost = host;
-            mPort = port;
+            mUrl = url;
         }
 
-        public static bool ProxyLoop(TcpClient link1, TcpClient link2)
+        public static void ProxyLoop(TcpClient link1, TcpClient link2)
         {
             var bytes = new byte[1024];
             var list = new ArrayList();
@@ -124,7 +262,7 @@ namespace NetworkInputMethod
                     }
                     else
                     {
-                        return false;
+                        return;
                     }
                 }
 
@@ -134,12 +272,15 @@ namespace NetworkInputMethod
 
         public override bool mainLoop()
         {
-            TcpClient client = new TcpClient();
+            TcpClient client = null;
 
             try
             {
-                client.Connect(mHost, mPort);
-                ProxyLoop(mClient, client);
+                client = mUrl.Connect();
+                if (client != null)
+                {
+                    ProxyLoop(mClient, client);
+                }
             }
             catch (Exception e)
             {
@@ -147,7 +288,10 @@ namespace NetworkInputMethod
             }
             finally
             {
-                client.Close();
+                if (client != null)
+                {
+                    client.Close();
+                }
             }
 
             return false;

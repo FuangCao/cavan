@@ -71,6 +71,11 @@ namespace NetworkInputMethod
             return -1;
         }
 
+        public int read()
+        {
+            return read(mClient.GetStream());
+        }
+
         public override bool send(NetworkStream stream, byte[] bytes, int offset, int length)
         {
             return WritePacket(stream, bytes, offset, length);

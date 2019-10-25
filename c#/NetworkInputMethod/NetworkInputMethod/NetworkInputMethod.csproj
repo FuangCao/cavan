@@ -175,6 +175,12 @@
     <Compile Include="FormSimulateTap.Designer.cs">
       <DependentUpon>FormSimulateTap.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormTcpBridge.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormTcpBridge.Designer.cs">
+      <DependentUpon>FormTcpBridge.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormTcpService.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -255,6 +261,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormSimulateTap.resx">
       <DependentUpon>FormSimulateTap.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormTcpBridge.resx">
+      <DependentUpon>FormTcpBridge.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormTcpProxyService.resx">
       <DependentUpon>FormTcpProxyService.cs</DependentUpon>

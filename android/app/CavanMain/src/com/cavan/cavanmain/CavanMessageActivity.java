@@ -688,13 +688,8 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 				if (manager != null) {
 					String text = (String) object;
 
-					Builder builder = CavanAndroid.newNotificationBuilder(manager, this)
-						.setSmallIcon(R.drawable.ic_launcher)
-						.setAutoCancel(true)
-						.setContentTitle("红包提醒测试")
-						.setTicker(text)
-						.setContentText(text);
-
+					Builder builder = RedPacketNotification.newNotificationBuilder(this, "红包提醒测试", text, null);
+					builder.setAutoCancel(true);
 					manager.notify(RedPacketListenerService.NOTIFY_TEST, builder.build());
 				}
 			}

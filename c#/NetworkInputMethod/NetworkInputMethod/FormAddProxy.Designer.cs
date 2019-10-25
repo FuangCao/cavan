@@ -40,27 +40,30 @@
             this.buttonOK = new System.Windows.Forms.Button();
             this.labelClientName = new System.Windows.Forms.Label();
             this.textBoxClientName = new System.Windows.Forms.TextBox();
+            this.listBoxClients = new System.Windows.Forms.ListBox();
+            this.buttonRefresh = new System.Windows.Forms.Button();
+            this.backgroundWorkerRefresh = new System.ComponentModel.BackgroundWorker();
             this.SuspendLayout();
             // 
             // textBoxServer
             // 
-            this.textBoxServer.Location = new System.Drawing.Point(85, 39);
+            this.textBoxServer.Location = new System.Drawing.Point(95, 39);
             this.textBoxServer.Name = "textBoxServer";
-            this.textBoxServer.Size = new System.Drawing.Size(242, 21);
+            this.textBoxServer.Size = new System.Drawing.Size(327, 21);
             this.textBoxServer.TabIndex = 0;
             // 
             // textBoxPort
             // 
-            this.textBoxPort.Location = new System.Drawing.Point(85, 12);
+            this.textBoxPort.Location = new System.Drawing.Point(95, 12);
             this.textBoxPort.Name = "textBoxPort";
-            this.textBoxPort.Size = new System.Drawing.Size(242, 21);
+            this.textBoxPort.Size = new System.Drawing.Size(327, 21);
             this.textBoxPort.TabIndex = 1;
             this.textBoxPort.Text = "0";
             // 
             // labelPort
             // 
             this.labelPort.AutoSize = true;
-            this.labelPort.Location = new System.Drawing.Point(2, 15);
+            this.labelPort.Location = new System.Drawing.Point(12, 15);
             this.labelPort.Name = "labelPort";
             this.labelPort.Size = new System.Drawing.Size(77, 12);
             this.labelPort.TabIndex = 2;
@@ -69,7 +72,7 @@
             // labelServer
             // 
             this.labelServer.AutoSize = true;
-            this.labelServer.Location = new System.Drawing.Point(2, 42);
+            this.labelServer.Location = new System.Drawing.Point(12, 42);
             this.labelServer.Name = "labelServer";
             this.labelServer.Size = new System.Drawing.Size(77, 12);
             this.labelServer.TabIndex = 3;
@@ -78,7 +81,7 @@
             // labelClientAddress
             // 
             this.labelClientAddress.AutoSize = true;
-            this.labelClientAddress.Location = new System.Drawing.Point(2, 69);
+            this.labelClientAddress.Location = new System.Drawing.Point(12, 69);
             this.labelClientAddress.Name = "labelClientAddress";
             this.labelClientAddress.Size = new System.Drawing.Size(77, 12);
             this.labelClientAddress.TabIndex = 4;
@@ -87,7 +90,7 @@
             // labelTarget
             // 
             this.labelTarget.AutoSize = true;
-            this.labelTarget.Location = new System.Drawing.Point(2, 123);
+            this.labelTarget.Location = new System.Drawing.Point(12, 123);
             this.labelTarget.Name = "labelTarget";
             this.labelTarget.Size = new System.Drawing.Size(65, 12);
             this.labelTarget.TabIndex = 5;
@@ -95,23 +98,23 @@
             // 
             // textBoxClientAddress
             // 
-            this.textBoxClientAddress.Location = new System.Drawing.Point(85, 66);
+            this.textBoxClientAddress.Location = new System.Drawing.Point(95, 66);
             this.textBoxClientAddress.Name = "textBoxClientAddress";
-            this.textBoxClientAddress.Size = new System.Drawing.Size(242, 21);
+            this.textBoxClientAddress.Size = new System.Drawing.Size(327, 21);
             this.textBoxClientAddress.TabIndex = 6;
             // 
             // textBoxTarget
             // 
-            this.textBoxTarget.Location = new System.Drawing.Point(85, 120);
+            this.textBoxTarget.Location = new System.Drawing.Point(95, 120);
             this.textBoxTarget.Name = "textBoxTarget";
-            this.textBoxTarget.Size = new System.Drawing.Size(242, 21);
+            this.textBoxTarget.Size = new System.Drawing.Size(327, 21);
             this.textBoxTarget.TabIndex = 7;
             this.textBoxTarget.Text = "8888";
             // 
             // buttonCancel
             // 
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Location = new System.Drawing.Point(2, 171);
+            this.buttonCancel.Location = new System.Drawing.Point(14, 376);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(75, 23);
             this.buttonCancel.TabIndex = 8;
@@ -121,7 +124,7 @@
             // buttonOK
             // 
             this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.buttonOK.Location = new System.Drawing.Point(252, 171);
+            this.buttonOK.Location = new System.Drawing.Point(347, 376);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(75, 23);
             this.buttonOK.TabIndex = 9;
@@ -131,7 +134,7 @@
             // labelClientName
             // 
             this.labelClientName.AutoSize = true;
-            this.labelClientName.Location = new System.Drawing.Point(0, 96);
+            this.labelClientName.Location = new System.Drawing.Point(12, 96);
             this.labelClientName.Name = "labelClientName";
             this.labelClientName.Size = new System.Drawing.Size(77, 12);
             this.labelClientName.TabIndex = 10;
@@ -139,10 +142,35 @@
             // 
             // textBoxClientName
             // 
-            this.textBoxClientName.Location = new System.Drawing.Point(85, 93);
+            this.textBoxClientName.Location = new System.Drawing.Point(95, 93);
             this.textBoxClientName.Name = "textBoxClientName";
-            this.textBoxClientName.Size = new System.Drawing.Size(242, 21);
+            this.textBoxClientName.Size = new System.Drawing.Size(327, 21);
             this.textBoxClientName.TabIndex = 11;
+            // 
+            // listBoxClients
+            // 
+            this.listBoxClients.FormattingEnabled = true;
+            this.listBoxClients.ItemHeight = 12;
+            this.listBoxClients.Location = new System.Drawing.Point(14, 147);
+            this.listBoxClients.Name = "listBoxClients";
+            this.listBoxClients.Size = new System.Drawing.Size(408, 220);
+            this.listBoxClients.TabIndex = 12;
+            this.listBoxClients.DoubleClick += new System.EventHandler(this.ListBoxClients_DoubleClick);
+            // 
+            // buttonRefresh
+            // 
+            this.buttonRefresh.Location = new System.Drawing.Point(181, 376);
+            this.buttonRefresh.Name = "buttonRefresh";
+            this.buttonRefresh.Size = new System.Drawing.Size(75, 23);
+            this.buttonRefresh.TabIndex = 13;
+            this.buttonRefresh.Text = "刷新";
+            this.buttonRefresh.UseVisualStyleBackColor = true;
+            this.buttonRefresh.Click += new System.EventHandler(this.ButtonRefresh_Click);
+            // 
+            // backgroundWorkerRefresh
+            // 
+            this.backgroundWorkerRefresh.DoWork += new System.ComponentModel.DoWorkEventHandler(this.BackgroundWorkerRefresh_DoWork);
+            this.backgroundWorkerRefresh.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.BackgroundWorkerRefresh_RunWorkerCompleted);
             // 
             // FormAddProxy
             // 
@@ -150,7 +178,9 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonCancel;
-            this.ClientSize = new System.Drawing.Size(339, 206);
+            this.ClientSize = new System.Drawing.Size(434, 411);
+            this.Controls.Add(this.buttonRefresh);
+            this.Controls.Add(this.listBoxClients);
             this.Controls.Add(this.textBoxClientName);
             this.Controls.Add(this.labelClientName);
             this.Controls.Add(this.buttonOK);
@@ -185,5 +215,8 @@
         private System.Windows.Forms.Button buttonOK;
         private System.Windows.Forms.Label labelClientName;
         private System.Windows.Forms.TextBox textBoxClientName;
+        private System.Windows.Forms.ListBox listBoxClients;
+        private System.Windows.Forms.Button buttonRefresh;
+        private System.ComponentModel.BackgroundWorker backgroundWorkerRefresh;
     }
 }

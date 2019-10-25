@@ -30,6 +30,7 @@ namespace NetworkInputMethod
         private FormHttpCapture mFormHttpCapture;
         private FormSimulateTap mFormSimulateTap;
         private FormHttpFileServer mFormHttpFileServer;
+        private FormTcpBridge mFormTcpBridge;
 
         //API declarations...
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -152,29 +153,43 @@ namespace NetworkInputMethod
 
         private void FormNetworkIme_Load(object sender, EventArgs e)
         {
+            var settings = Settings.Default;
+
             mClockThread.Start();
 
-            if (Settings.Default.NetworkImeEnable)
+            if (settings.NetworkImeEnable)
             {
                 buttonStart.PerformClick();
             }
 
-            if (Settings.Default.WebProxyEnable)
+            if (settings.WebProxyEnable)
             {
                 mFormWebProxy = new FormWebProxyService();
                 mFormWebProxy.Show();
             }
 
-            if (Settings.Default.ReverseProxyEnable || Settings.Default.ReverseSlaveEnable)
+            if (settings.ReverseProxyEnable || settings.ReverseSlaveEnable)
             {
                 mFormReverseProxy = new FormReverseProxy();
                 mFormReverseProxy.Show();
             }
 
-            if (Settings.Default.HttpCaptureEnable)
+            if (settings.HttpCaptureEnable)
             {
                 mFormHttpCapture = new FormHttpCapture();
                 mFormHttpCapture.Show();
+            }
+
+            if (settings.TcpBridgeEnable)
+            {
+                mFormTcpBridge = new FormTcpBridge();
+                mFormTcpBridge.Show();
+            }
+
+            if (settings.TcpProxyEnable)
+            {
+                mFormTcpProxy = new FormTcpProxyService();
+                mFormTcpProxy.Show();
             }
         }
 
@@ -1038,6 +1053,8 @@ namespace NetworkInputMethod
             toolStripMenuItemHttpCaptureAuto.Checked = Settings.Default.HttpCaptureEnable;
             toolStripMenuItemReverseProxyServiceAuto.Checked = Settings.Default.ReverseProxyEnable;
             toolStripMenuItemReverseProxySlaveAuto.Checked = Settings.Default.ReverseSlaveEnable;
+            toolStripMenuItemTcpBridgeAuto.Checked = Settings.Default.TcpBridgeEnable;
+            toolStripMenuItemTcpProxyAuto.Checked = Settings.Default.TcpProxyEnable;
         }
 
         private void toolStripMenuItemAutoRun_Click(object sender, EventArgs e)
@@ -1073,7 +1090,7 @@ namespace NetworkInputMethod
             Settings.Default.Save();
         }
 
-        private void ToolStripMenuItemHttpCapturer_Click(object sender, EventArgs e)
+        private void toolStripMenuItemHttpCapturer_Click(object sender, EventArgs e)
         {
             if (mFormHttpCapture == null || mFormHttpCapture.IsDisposed)
             {
@@ -1083,7 +1100,7 @@ namespace NetworkInputMethod
             mFormHttpCapture.Show();
         }
 
-        private void ToolStripMenuItemSave_Click(object sender, EventArgs e)
+        private void toolStripMenuItemSave_Click(object sender, EventArgs e)
         {
             Settings.Default.Save();
         }
@@ -1156,6 +1173,28 @@ namespace NetworkInputMethod
         private void ToolStripMenuItemReverseProxySlave_Click(object sender, EventArgs e)
         {
             Settings.Default.ReverseSlaveEnable = toolStripMenuItemReverseProxySlaveAuto.Checked;
+            Settings.Default.Save();
+        }
+
+        private void toolStripMenuItemTcpBridge_Click(object sender, EventArgs e)
+        {
+            if (mFormTcpBridge == null || mFormTcpBridge.IsDisposed)
+            {
+                mFormTcpBridge = new FormTcpBridge();
+            }
+
+            mFormTcpBridge.Show();
+        }
+
+        private void toolStripMenuItemTcpBridgeAuto_Click(object sender, EventArgs e)
+        {
+            Settings.Default.TcpBridgeEnable = toolStripMenuItemTcpBridgeAuto.Checked;
+            Settings.Default.Save();
+        }
+
+        private void toolStripMenuItemTcpProxyAuto_Click(object sender, EventArgs e)
+        {
+            Settings.Default.TcpProxyEnable = toolStripMenuItemTcpProxyAuto.Checked;
             Settings.Default.Save();
         }
     }
