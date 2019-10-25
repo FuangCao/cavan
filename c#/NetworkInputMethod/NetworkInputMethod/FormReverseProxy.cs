@@ -368,6 +368,15 @@ namespace NetworkInputMethod
         {
             var form = new FormAddProxy();
 
+            var items = listViewProxys.SelectedItems;
+            if (items != null && items.Count > 0)
+            {
+                var sub = items[0].SubItems;
+                form.ServerUrl = sub[4].Text;
+                form.ClientAddress = sub[5].Text;
+                form.ClientName = sub[6].Text;
+            }
+
             if (form.ShowDialog() == DialogResult.OK)
             {
                 var service = new ReverseProxyService
