@@ -53,10 +53,33 @@ alias cavan-rockchip-pack-system-push="cavan-rockchip-pack-system && cavan-adb-t
 
 function cavan-rockchip-download()
 {
-	local options
+	local options android_root rockdev
+
+	android_root="$(cavan-android-get-root)"
+
+	[ "${android_root}" ] || return 1
+
+	rockdev="${android_root}/rockdev/Image-${TARGET_PRODUCT}"
 
 	for fn in $@
 	do
+		[ -f "${fn}" ] ||
+		{
+			case "${fn}" in
+				*.txt | *.img)
+					fn="${rockdev}/${fn}"
+					;;
+				param | parameter)
+					fn="${rockdev}/parameter.txt"
+					;;
+				reboot)
+					;;
+				*)
+					fn="${rockdev}/${fn}.img"
+					;;
+			esac
+		}
+
 		case "$(basename ${fn})" in
 			boot.img)
 				options="DI -b"
@@ -105,15 +128,17 @@ function cavan-rockchip-download()
 				unset fn
 				;;
 			*)
-				echo "skipping ${fn}"
+				echo "Invalid image ${fn}"
 				continue
-				;;
 		esac
 
-		echo "options = ${options}"
-
-		$(cavan-android-get-root)/rkbin/tools/upgrade_tool ${options} ${fn} || break
+		cavan-do-command "${android_root}/rkbin/tools/upgrade_tool ${options} ${fn}" || break
 	done
 }
 
 alias cavan-rockchip-reboot-bootloader="adb reboot bootloader"
+
+alias cavan-rockchip-build-kernel="(cavan-android-croot && ./build.sh -K)"
+alias cavan-rockchip-build-uboot="(cavan-android-croot && ./build.sh -U)"
+alias cavan-rockchip-build-android="cavan-android-croot && ./build.sh -A)"
+alias cavan-rockchip-build-all="(cavan-android-croot && ./build.sh -UKAu)"
