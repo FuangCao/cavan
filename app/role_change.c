@@ -475,9 +475,85 @@ out_network_client_close:
 	return ret;
 }
 
+static int role_change_udp_service_main(int argc, char *argv[])
+{
+	role_change_udp_sock_t sock;
+	int ret;
+
+	assert(argc > 1);
+
+	ret = role_change_udp_sock_init(&sock);
+	if (ret < 0) {
+		pr_err_info("role_change_udp_sock_init");
+		return ret;
+	}
+
+	ret = role_change_udp_sock_bind(&sock, atoi(argv[1]));
+	if (ret < 0) {
+		pr_err_info("role_change_udp_sock_bind");
+		return ret;
+	}
+
+	role_change_udp_send_start(&sock);
+	role_change_udp_receive_loop(&sock);
+
+	return 0;
+}
+
+static void role_change_udp_app_on_send_timeout(struct role_change_udp_package *pkg)
+{
+	pr_pos_info();
+}
+
+static void role_change_udp_app_on_send_success(struct role_change_udp_package *pkg, role_change_udp_header_t *header, u16 length)
+{
+	struct sockaddr_in *addr = (struct sockaddr_in *) header->buff;
+	println("length = %d", length);
+	inet_show_sockaddr(addr);
+}
+
+static int role_change_udp_client_main(int argc, char *argv[])
+{
+	role_change_udp_package_t *package;
+	role_change_udp_client_t *client;
+	role_change_udp_sock_t sock;
+	int ret;
+
+	assert(argc > 1);
+
+	ret = role_change_udp_sock_init(&sock);
+	if (ret < 0) {
+		pr_err_info("role_change_udp_sock_init");
+		return ret;
+	}
+
+	role_change_udp_send_start(&sock);
+	role_change_udp_receive_start(&sock);
+
+	client = role_change_udp_client_alloc(&sock, argv[1], 0);
+	if (client == NULL) {
+		pr_err_info("role_change_udp_client_alloc");
+		return -EFAULT;
+	}
+
+	package = role_change_udp_package_alloc(ROLE_CHANGE_UDP_CMD_DNS, NULL, 0);
+	package->on_send_timeout = role_change_udp_app_on_send_timeout;
+	package->on_send_success = role_change_udp_app_on_send_success;
+	role_change_udp_package_send(client, package);
+
+	while (1) {
+		pr_pos_info();
+		msleep(5000);
+	}
+
+	return 0;
+}
+
 CAVAN_COMMAND_MAP_START {
 	{ "service", role_change_service_main },
 	{ "client", role_change_client_main },
 	{ "proxy", role_change_proxy_main },
 	{ "list", role_change_list_main },
+	{ "udp_service", role_change_udp_service_main },
+	{ "udp_client", role_change_udp_client_main },
 } CAVAN_COMMAND_MAP_END;
