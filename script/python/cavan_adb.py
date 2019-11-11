@@ -64,12 +64,6 @@ class AdbManager(CavanCommandBase):
 
 		return self.doWaitForDevice()
 
-	def doRemount(self):
-		if not self.doRoot():
-			return False
-
-		return self.doAdbCommand(["remount"])
-
 	def doPushOnce(self, srcFile, destFile, destDir = None):
 		if not destDir:
 			destDir = os.path.dirname(destFile)
@@ -121,9 +115,13 @@ class AdbManager(CavanCommandBase):
 		# if not self.mHost:
 			# self.mHost = "localhost"
 
+		if not self.doRoot():
+		    return False
+
 		if not listDir:
-			listDir = [ "/system" ]
-		elif not isinstance(listDir, list):
+		    return self.doAdbCommand(["remount"])
+
+	        if not isinstance(listDir, list):
 			listDir = [ listDir ]
 
 		for pathname in listDir:

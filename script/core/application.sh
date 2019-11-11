@@ -298,7 +298,9 @@ function cavan-mm-push()
 
 	if [ "${kernel_root}" ]
 	then
-		file_config="${kernel_root}/.cavan_build.conf"
+		file_config="${OUT}/cavan-kernel.conf"
+
+		echo "config_file: ${file_config}"
 
 		[ -f "${file_config}" ] && source "${file_config}"
 

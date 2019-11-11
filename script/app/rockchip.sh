@@ -66,13 +66,19 @@ function cavan-rockchip-download()
 		[ -f "${fn}" ] ||
 		{
 			case "${fn}" in
-				*.txt | *.img)
-					fn="${rockdev}/${fn}"
+				reboot)
 					;;
 				param | parameter)
 					fn="${rockdev}/parameter.txt"
 					;;
-				reboot)
+				kernel | resource | boot)
+					fn="${ANDROID_BUILD_TOP}/kernel/${fn}.img"
+					;;
+				kernel.img | resource.img | boot.img)
+					fn="${ANDROID_BUILD_TOP}/kernel/${fn}"
+					;;
+				*.txt | *.img)
+					fn="${rockdev}/${fn}"
 					;;
 				*)
 					fn="${rockdev}/${fn}.img"
