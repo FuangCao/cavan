@@ -563,20 +563,39 @@ public class RedPacketFinder {
 		return null;
 	}
 
-	public String getThanks()
+	public String getThanks(int type)
 	{
 		if (mLines.size() != 1) {
 			return null;
 		}
 
-		Matcher matcher = PATTERN_THANKS.matcher(mLines.get(0));
-		if (matcher.find()) {
-			String name = matcher.group(2).trim();
-			if (name.isEmpty()) {
-				name = matcher.group(1).trim();
+		String line = mLines.get(0);
+
+		if (type == 1) {
+			Matcher matcher = PATTERN_THANKS.matcher(line);
+			if (matcher.find()) {
+				String name = matcher.group(2).trim();
+				if (name.isEmpty()) {
+					name = matcher.group(1).trim();
+				}
+
+				return name;
+			}
+		} else {
+			int index;
+
+			for (index = line.length() - 1; index > 0; index--)
+			{
+				char value = line.charAt(index - 1);
+				if (value < '0' || value > '9')
+				{
+					if (value != '.' && value != '+') {
+						break;
+					}
+				}
 			}
 
-			return name;
+			return line.substring(0, index).trim();
 		}
 
 		return null;

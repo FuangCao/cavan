@@ -1,12 +1,5 @@
 package com.cavan.cavanmain;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.ClipData;
@@ -37,6 +30,13 @@ import com.cavan.java.CavanIndexGenerator;
 import com.cavan.java.CavanString;
 import com.cavan.java.RedPacketFinder;
 import com.cavan.resource.EditableMultiSelectListPreference;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.Set;
 
 public class RedPacketListenerService extends NotificationListenerService implements OnPrimaryClipChangedListener, OnSharedPreferenceChangeListener {
 
@@ -399,13 +399,32 @@ public class RedPacketListenerService extends NotificationListenerService implem
 		return mInformationGroups.contains(group);
 	}
 
+	public int getThanksType(String content)
+	{
+		if (content.charAt(0) == '@') {
+			return 1;
+		}
+
+		char value = content.charAt(content.length() - 1);
+		if (value == '+') {
+			return 2;
+		}
+
+		if (value >= '0' && value <= '9') {
+			return 3;
+		}
+
+		return -1;
+	}
+
 	public String getKeyword(String group, RedPacketFinder finder) {
 		String content = finder.getJoinedLines();
 		if (content == null || content.isEmpty()) {
 			return null;
 		}
 
-		if (content.charAt(0) != '@') {
+		int type = getThanksType(content);
+		if (type < 0) {
 			if (isInformationGroup(group)) {
 				for (String keyword : mInformations) {
 					if (content.contains(keyword)) {
@@ -436,7 +455,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 					}
 				}
 
-				String thanks = finder.getThanks();
+				String thanks = finder.getThanks(type);
 				if (thanks != null) {
 					ThanksNode node = mThanks.get(thanks);
 					if (node == null) {
@@ -445,11 +464,9 @@ public class RedPacketListenerService extends NotificationListenerService implem
 					}
 
 					if (node.increase(time) == times) {
-						String message = thanks + " 大水";
-
 						if (CavanMessageActivity.isThanksShareEnabled(this)) {
 							try {
-								mFloatMessageService.sendTcpCommand(FloatMessageService.NET_CMD_NOTIFY + message);
+								mFloatMessageService.sendTcpCommand(FloatMessageService.NET_CMD_NOTIFY + thanks);
 							} catch (RemoteException e) {
 								e.printStackTrace();
 							}
@@ -457,7 +474,7 @@ public class RedPacketListenerService extends NotificationListenerService implem
 
 						// mInformationGroups.add(group);
 
-						return message;
+						return thanks;
 					}
 				}
 			} else {
