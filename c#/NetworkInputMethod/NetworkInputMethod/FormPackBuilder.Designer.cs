@@ -290,7 +290,7 @@
             this.Controls.Add(this.buttonSave);
             this.Controls.Add(this.buttonAccount);
             this.Name = "FormPackBuilder";
-            this.Text = "FormPackBuilder";
+            this.Text = "组包";
             this.contextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
 

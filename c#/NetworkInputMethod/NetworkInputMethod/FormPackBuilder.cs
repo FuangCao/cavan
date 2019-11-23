@@ -422,9 +422,12 @@ namespace NetworkInputMethod
                 {
                     url.Path = pathname;
 
-                    var client = new WebClient();
-                    var response = client.UploadString(url.ToString(), text);
+                    var client = new WebClient()
+                    {
+                        Proxy = null
+                    };
 
+                    var response = client.UploadString(url.ToString(), text);
                     if (response != null)
                     {
                         // MessageBox.Show(url + "\r\n" + response, "上传成功");
