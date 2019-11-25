@@ -1,13 +1,8 @@
 package com.cavan.accessibility;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
+import android.accessibilityservice.GestureDescription;
 import android.app.Notification;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -15,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
@@ -39,6 +35,12 @@ import com.cavan.android.CavanWakeLock;
 import com.cavan.android.SystemProperties;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanThread;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 
 public class CavanAccessibilityService extends AccessibilityService {
 
@@ -809,6 +811,28 @@ public class CavanAccessibilityService extends AccessibilityService {
 		return doShellCommand(String.format(format, args));
 	}
 
+	public boolean dispatchGestureTap(int x, int y)
+	{
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+			return false;
+		}
+
+		try {
+			Path path = new Path();
+			path.moveTo(x, y);
+
+			GestureDescription.StrokeDescription stroke = new GestureDescription.StrokeDescription(path, 0, 1);
+			GestureDescription.Builder builder = new GestureDescription.Builder();
+			builder.addStroke(stroke);
+
+			return dispatchGesture(builder.build(), null, null);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return false;
+	}
+
 	public boolean doInputTap(int x, int y) {
 		return doShellCommandF("input tap %d %d", x, y);
 	}
@@ -1173,14 +1197,17 @@ public class CavanAccessibilityService extends AccessibilityService {
 	}
 
 	public boolean tapPosition(Point point) {
+		CavanAndroid.dLog("tapPosition: " + point);
+
+		if (dispatchGestureTap(point.x, point.y)) {
+			return true;
+		}
+
 		Display display = getDisplay();
 		Point size = new Point();
-		int x;
-		int y;
+		int x, y;
 
 		display.getRealSize(size);
-
-		CavanAndroid.dLog("size = " + size);
 
 		switch (display.getRotation()) {
 		case Surface.ROTATION_90:
