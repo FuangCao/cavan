@@ -31,6 +31,7 @@ namespace NetworkInputMethod
         private FormSimulateTap mFormSimulateTap;
         private FormHttpFileServer mFormHttpFileServer;
         private FormTcpBridge mFormTcpBridge;
+        private FormConnWifi mFormConnWifi;
 
         //API declarations...
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -1196,6 +1197,17 @@ namespace NetworkInputMethod
         {
             Settings.Default.TcpProxyEnable = toolStripMenuItemTcpProxyAuto.Checked;
             Settings.Default.Save();
+        }
+
+        private void toolStripMenuItemConnWifi_Click(object sender, EventArgs e)
+        {
+            if (mFormConnWifi == null || mFormConnWifi.IsDisposed)
+            {
+                mFormConnWifi = new FormConnWifi(this);
+            }
+
+            mFormConnWifi.Show();
+            mFormConnWifi.Focus();
         }
     }
 

@@ -1,10 +1,5 @@
 package com.cavan.cavanmain;
 
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import android.accessibilityservice.AccessibilityService;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -31,6 +26,11 @@ import com.cavan.java.CavanTcpClient;
 import com.cavan.java.CavanTcpPacketClient;
 import com.cavan.service.CavanPowerStateListener;
 import com.cavan.service.CavanTcpConnService;
+
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CavanNetworkImeConnService extends CavanTcpConnService implements CavanPowerStateListener {
 
@@ -637,6 +637,14 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 		case "CURSOR":
 			if (args.length > 1) {
 				processCommandCursor(accessibility, args[1].split("\\s+"));
+			}
+			break;
+
+		case "WIFI":
+			if (args.length > 1 && CavanAndroid.connectWifi(getApplicationContext(), args[1].trim())) {
+				CavanAndroid.showToast(getApplicationContext(), R.string.connect_success);
+			} else {
+				CavanAndroid.showToast(getApplicationContext(), R.string.connect_failed);
 			}
 			break;
 

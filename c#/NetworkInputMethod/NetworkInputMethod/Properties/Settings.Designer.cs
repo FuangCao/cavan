@@ -234,5 +234,16 @@ namespace NetworkInputMethod.Properties {
                 this["TcpProxyEnable"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.Collections.Specialized.StringCollection Wifis {
+            get {
+                return ((global::System.Collections.Specialized.StringCollection)(this["Wifis"]));
+            }
+            set {
+                this["Wifis"] = value;
+            }
+        }
     }
 }

@@ -72,7 +72,7 @@
             this.Controls.Add(this.buttonOK);
             this.Name = "FormTextEditor";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "FormTextEditor";
+            this.Text = "文本编辑";
             this.ResumeLayout(false);
             this.PerformLayout();
 

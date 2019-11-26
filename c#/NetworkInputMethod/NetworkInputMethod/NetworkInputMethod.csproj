@@ -127,6 +127,12 @@
     <Compile Include="FormHttpSender.Designer.cs">
       <DependentUpon>FormHttpSender.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormConnWifi.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormConnWifi.Designer.cs">
+      <DependentUpon>FormConnWifi.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormMmMulti.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -228,6 +234,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormCertManager.resx">
       <DependentUpon>FormCertManager.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormConnWifi.resx">
+      <DependentUpon>FormConnWifi.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormHttpCapture.resx">
       <DependentUpon>FormHttpCapture.cs</DependentUpon>

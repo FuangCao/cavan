@@ -37,6 +37,7 @@
             this.toolStripMenuItemAutoRun = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemNetworkImeAuto = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemWebProxyAuto = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemTcpProxyAuto = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemReverseProxyAuto = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemReverseProxyServiceAuto = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemReverseProxySlaveAuto = new System.Windows.Forms.ToolStripMenuItem();
@@ -104,7 +105,7 @@
             this.checkBoxFloatClock = new System.Windows.Forms.CheckBox();
             this.comboBoxRepeat = new System.Windows.Forms.ComboBox();
             this.checkBoxFakeShare = new System.Windows.Forms.CheckBox();
-            this.toolStripMenuItemTcpProxyAuto = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemConnWifi = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -147,9 +148,10 @@
             this.ToolStripMenuItemTap,
             this.toolStripMenuItemSelect,
             this.toolStripMenuItemRequest,
+            this.toolStripMenuItemConnWifi,
             this.toolStripMenuItemExit});
             this.contextMenuStrip.Name = "contextMenuStrip";
-            this.contextMenuStrip.Size = new System.Drawing.Size(181, 224);
+            this.contextMenuStrip.Size = new System.Drawing.Size(181, 246);
             this.contextMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip_Opening);
             // 
             // toolStripMenuItemAutoRun
@@ -172,7 +174,7 @@
             // 
             this.toolStripMenuItemNetworkImeAuto.CheckOnClick = true;
             this.toolStripMenuItemNetworkImeAuto.Name = "toolStripMenuItemNetworkImeAuto";
-            this.toolStripMenuItemNetworkImeAuto.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemNetworkImeAuto.Size = new System.Drawing.Size(136, 22);
             this.toolStripMenuItemNetworkImeAuto.Text = "网络输入法";
             this.toolStripMenuItemNetworkImeAuto.Click += new System.EventHandler(this.toolStripMenuItemNetworkImeAuto_Click);
             // 
@@ -180,9 +182,17 @@
             // 
             this.toolStripMenuItemWebProxyAuto.CheckOnClick = true;
             this.toolStripMenuItemWebProxyAuto.Name = "toolStripMenuItemWebProxyAuto";
-            this.toolStripMenuItemWebProxyAuto.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemWebProxyAuto.Size = new System.Drawing.Size(136, 22);
             this.toolStripMenuItemWebProxyAuto.Text = "Web 代理";
             this.toolStripMenuItemWebProxyAuto.Click += new System.EventHandler(this.toolStripMenuItemWebProxyAuto_Click);
+            // 
+            // toolStripMenuItemTcpProxyAuto
+            // 
+            this.toolStripMenuItemTcpProxyAuto.CheckOnClick = true;
+            this.toolStripMenuItemTcpProxyAuto.Name = "toolStripMenuItemTcpProxyAuto";
+            this.toolStripMenuItemTcpProxyAuto.Size = new System.Drawing.Size(136, 22);
+            this.toolStripMenuItemTcpProxyAuto.Text = "Tcp 代理";
+            this.toolStripMenuItemTcpProxyAuto.Click += new System.EventHandler(this.toolStripMenuItemTcpProxyAuto_Click);
             // 
             // toolStripMenuItemReverseProxyAuto
             // 
@@ -190,14 +200,14 @@
             this.toolStripMenuItemReverseProxyServiceAuto,
             this.toolStripMenuItemReverseProxySlaveAuto});
             this.toolStripMenuItemReverseProxyAuto.Name = "toolStripMenuItemReverseProxyAuto";
-            this.toolStripMenuItemReverseProxyAuto.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemReverseProxyAuto.Size = new System.Drawing.Size(136, 22);
             this.toolStripMenuItemReverseProxyAuto.Text = "反向代理";
             // 
             // toolStripMenuItemReverseProxyServiceAuto
             // 
             this.toolStripMenuItemReverseProxyServiceAuto.CheckOnClick = true;
             this.toolStripMenuItemReverseProxyServiceAuto.Name = "toolStripMenuItemReverseProxyServiceAuto";
-            this.toolStripMenuItemReverseProxyServiceAuto.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemReverseProxyServiceAuto.Size = new System.Drawing.Size(112, 22);
             this.toolStripMenuItemReverseProxyServiceAuto.Text = "服务器";
             this.toolStripMenuItemReverseProxyServiceAuto.Click += new System.EventHandler(this.ToolStripMenuItemReverseProxyService_Click);
             // 
@@ -205,7 +215,7 @@
             // 
             this.toolStripMenuItemReverseProxySlaveAuto.CheckOnClick = true;
             this.toolStripMenuItemReverseProxySlaveAuto.Name = "toolStripMenuItemReverseProxySlaveAuto";
-            this.toolStripMenuItemReverseProxySlaveAuto.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemReverseProxySlaveAuto.Size = new System.Drawing.Size(112, 22);
             this.toolStripMenuItemReverseProxySlaveAuto.Text = "客户端";
             this.toolStripMenuItemReverseProxySlaveAuto.Click += new System.EventHandler(this.ToolStripMenuItemReverseProxySlave_Click);
             // 
@@ -213,7 +223,7 @@
             // 
             this.toolStripMenuItemTcpBridgeAuto.CheckOnClick = true;
             this.toolStripMenuItemTcpBridgeAuto.Name = "toolStripMenuItemTcpBridgeAuto";
-            this.toolStripMenuItemTcpBridgeAuto.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemTcpBridgeAuto.Size = new System.Drawing.Size(136, 22);
             this.toolStripMenuItemTcpBridgeAuto.Text = "网络桥接";
             this.toolStripMenuItemTcpBridgeAuto.Click += new System.EventHandler(this.toolStripMenuItemTcpBridgeAuto_Click);
             // 
@@ -221,7 +231,7 @@
             // 
             this.toolStripMenuItemHttpCaptureAuto.CheckOnClick = true;
             this.toolStripMenuItemHttpCaptureAuto.Name = "toolStripMenuItemHttpCaptureAuto";
-            this.toolStripMenuItemHttpCaptureAuto.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemHttpCaptureAuto.Size = new System.Drawing.Size(136, 22);
             this.toolStripMenuItemHttpCaptureAuto.Text = "抓包工具";
             this.toolStripMenuItemHttpCaptureAuto.Click += new System.EventHandler(this.toolStripMenuItemHttpCaptureAuto_Click);
             // 
@@ -858,13 +868,12 @@
             this.checkBoxFakeShare.Text = "假分";
             this.checkBoxFakeShare.UseVisualStyleBackColor = true;
             // 
-            // toolStripMenuItemTcpProxyAuto
+            // toolStripMenuItemConnWifi
             // 
-            this.toolStripMenuItemTcpProxyAuto.CheckOnClick = true;
-            this.toolStripMenuItemTcpProxyAuto.Name = "toolStripMenuItemTcpProxyAuto";
-            this.toolStripMenuItemTcpProxyAuto.Size = new System.Drawing.Size(180, 22);
-            this.toolStripMenuItemTcpProxyAuto.Text = "Tcp 代理";
-            this.toolStripMenuItemTcpProxyAuto.Click += new System.EventHandler(this.toolStripMenuItemTcpProxyAuto_Click);
+            this.toolStripMenuItemConnWifi.Name = "toolStripMenuItemConnWifi";
+            this.toolStripMenuItemConnWifi.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemConnWifi.Text = "联网";
+            this.toolStripMenuItemConnWifi.Click += new System.EventHandler(this.toolStripMenuItemConnWifi_Click);
             // 
             // FormNetworkIme
             // 
@@ -1008,6 +1017,7 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemTcpBridge;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemTcpBridgeAuto;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemTcpProxyAuto;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemConnWifi;
     }
 }
 

@@ -1,16 +1,5 @@
 package com.cavan.android;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
@@ -51,12 +40,22 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
-import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import com.cavan.java.CavanJava;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 @SuppressWarnings("deprecation")
 public class CavanAndroid {
@@ -1198,6 +1197,40 @@ public class CavanAndroid {
 		}
 
 		return null;
+	}
+
+	public static WifiConfiguration getWifiConfiguration(WifiManager manager, String ssid) {
+		List<WifiConfiguration> configs = manager.getConfiguredNetworks();
+		if (configs == null) {
+			return null;
+		}
+
+		for (WifiConfiguration config : configs) {
+			if (config.SSID.contains(ssid)) {
+				return config;
+			}
+		}
+
+		return null;
+	}
+
+	public static boolean connectWifi(WifiManager manager, String ssid) {
+		WifiConfiguration config = getWifiConfiguration(manager, ssid);
+		if (config == null) {
+			return false;
+		}
+
+		return manager.enableNetwork(config.networkId, true) && manager.reconnect();
+	}
+
+	public static boolean connectWifi(Context context, String ssid) {
+		CavanAndroid.dLog("connectWifi: " + ssid);
+		WifiManager manager = (WifiManager) getSystemServiceCached(context, Context.WIFI_SERVICE);
+		if (manager == null) {
+			return false;
+		}
+
+		return connectWifi(manager, ssid);
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
