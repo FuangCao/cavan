@@ -85,6 +85,7 @@
     <Compile Include="CavanTreeView.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="CavanUdpSock.cs" />
     <Compile Include="FormHttpFileServer.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -223,6 +224,7 @@
     <Compile Include="FormWebProxyService.Designer.cs">
       <DependentUpon>FormWebProxyService.cs</DependentUpon>
     </Compile>
+    <Compile Include="Utils.cs" />
     <EmbeddedResource Include="FormAddFileServer.resx">
       <DependentUpon>FormAddFileServer.cs</DependentUpon>
     </EmbeddedResource>

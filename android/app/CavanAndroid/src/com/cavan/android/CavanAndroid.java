@@ -1220,7 +1220,7 @@ public class CavanAndroid {
 			return false;
 		}
 
-		return manager.enableNetwork(config.networkId, true) && manager.reconnect();
+		return manager.enableNetwork(config.networkId, true);
 	}
 
 	public static boolean connectWifi(Context context, String ssid) {

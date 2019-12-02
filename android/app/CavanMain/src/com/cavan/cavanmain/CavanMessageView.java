@@ -1,10 +1,6 @@
 package com.cavan.cavanmain;
 
-import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -29,6 +25,11 @@ import android.widget.TextView;
 
 import com.cavan.android.CavanAndroid;
 import com.cavan.java.CavanString;
+
+import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 public class CavanMessageView extends LinearLayout implements OnClickListener {
 
@@ -137,6 +138,18 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 		super(context);
 	}
 
+	public Activity getActivity() {
+		return mActivity;
+	}
+
+	public TextView getTextViewTitle() {
+		return mTextViewTitle;
+	}
+
+	public TextView getTextViewContent() {
+		return mTextViewContent;
+	}
+
 	public static CavanMessageView getInstance(Activity activity) {
 		CavanMessageView view = (CavanMessageView) inflate(activity, R.layout.message_item, null);
 		view.setActivity(activity);
@@ -188,13 +201,20 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 
 	@Override
 	public void onClick(View v) {
-		ContextDialog dialog = new ContextDialog();
+		ContextDialog dialog = new ContextDialog(this);
 		dialog.show(mActivity.getFragmentManager(), CavanAndroid.TAG);
 	}
 
-	public class ContextDialog extends DialogFragment implements android.content.DialogInterface.OnClickListener {
+	public static class ContextDialog extends DialogFragment implements android.content.DialogInterface.OnClickListener {
 
 		private EditText mEditTextMessage;
+		private CavanMessageView mMessageView;
+
+		@SuppressLint("ValidFragment")
+		public ContextDialog(CavanMessageView view) {
+			super();
+			mMessageView = view;
+		}
 
 		public void show(FragmentManager manager) {
 			super.show(manager, CavanAndroid.TAG);
@@ -202,11 +222,11 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 
 		@Override
 		public Dialog onCreateDialog(Bundle savedInstanceState) {
-			View view = mActivity.getLayoutInflater().inflate(R.layout.message_context, null);
+			View view = mMessageView.getActivity().getLayoutInflater().inflate(R.layout.message_context, null);
 			mEditTextMessage = (EditText) view.findViewById(R.id.editTextMessage);
-			mEditTextMessage.setText(mTextViewContent.getText());
+			mEditTextMessage.setText(mMessageView.getTextViewContent().getText());
 
-			AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+			AlertDialog.Builder builder = new AlertDialog.Builder(mMessageView.getActivity());
 
 			builder.setView(view);
 			builder.setCancelable(false);
@@ -230,7 +250,7 @@ public class CavanMessageView extends LinearLayout implements OnClickListener {
 					text = text.subSequence(start, end);
 				}
 
-				CavanAndroid.postClipboardText(mActivity, text);
+				CavanAndroid.postClipboardText(mMessageView.getActivity(), text);
 
 				if (which == DialogInterface.BUTTON_NEUTRAL || CavanString.getLineCount(text) < 2) {
 					FloatMessageService service = FloatMessageService.instance;

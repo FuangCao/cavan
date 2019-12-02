@@ -541,7 +541,7 @@ public class CavanMessageActivity extends PreferenceActivity implements OnPrefer
 		updateWanState();
 		updateBridgeState();
 
-		CavanAndroid.checkAndRequestPermissions(this, Manifest.permission.ACCESS_COARSE_LOCATION);
+		CavanAndroid.checkAndRequestPermissions(this, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_WIFI_STATE, Manifest.permission.CHANGE_WIFI_STATE);
 	}
 
 	@Override

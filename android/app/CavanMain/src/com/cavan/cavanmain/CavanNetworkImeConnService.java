@@ -641,10 +641,17 @@ public class CavanNetworkImeConnService extends CavanTcpConnService implements C
 			break;
 
 		case "WIFI":
-			if (args.length > 1 && CavanAndroid.connectWifi(getApplicationContext(), args[1].trim())) {
-				CavanAndroid.showToast(getApplicationContext(), R.string.connect_success);
-			} else {
-				CavanAndroid.showToast(getApplicationContext(), R.string.connect_failed);
+			if (args.length > 1) {
+				if (CavanAndroid.connectWifi(getApplicationContext(), args[1].trim())) {
+					CavanAndroid.showToast(getApplicationContext(), R.string.connect_success);
+				} else {
+					CavanAndroid.showToast(getApplicationContext(), R.string.connect_failed);
+				}
+			}
+			else
+			{
+				Intent intent = new Intent("android.settings.WIFI_SETTINGS");
+				CavanAndroid.startActivity(getApplicationContext(), intent);
 			}
 			break;
 

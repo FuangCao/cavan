@@ -50,6 +50,10 @@ namespace NetworkInputMethod
             {
                 mNetworkIme.sendCommand("WIFI " + item, true);
             }
+            else
+            {
+                mNetworkIme.sendCommand("WIFI", true);
+            }
         }
 
         private void toolStripMenuItemAdd_Click(object sender, EventArgs e)
@@ -74,7 +78,7 @@ namespace NetworkInputMethod
 
         private void contextMenuStripWifis_Opening(object sender, CancelEventArgs e)
         {
-            toolStripMenuItemConn.Enabled = toolStripMenuItemDel.Enabled = (listBoxWifis.SelectedItem != null);
+            toolStripMenuItemDel.Enabled = (listBoxWifis.SelectedItem != null);
         }
     }
 }
