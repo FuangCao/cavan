@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkInputMethod", "NetworkInputMethod\NetworkInputMethod.csproj", "{D48652EA-1E41-4643-B786-AD89A6E3ACF0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibeNetworkIme", "NetworkInputMethod\LibeNetworkIme.csproj", "{D48652EA-1E41-4643-B786-AD89A6E3ACF0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CavanNetworkIme", "CavanNetworkIme\CavanNetworkIme.csproj", "{1C5A3FA9-9659-4876-83D0-35C68040545D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReverseProxy", "ReverseProxy\ReverseProxy.csproj", "{AA491354-ECCC-4FC3-8BCC-D584ED93A4B2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,8 +19,19 @@ Global
 		{D48652EA-1E41-4643-B786-AD89A6E3ACF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D48652EA-1E41-4643-B786-AD89A6E3ACF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D48652EA-1E41-4643-B786-AD89A6E3ACF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C5A3FA9-9659-4876-83D0-35C68040545D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C5A3FA9-9659-4876-83D0-35C68040545D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C5A3FA9-9659-4876-83D0-35C68040545D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C5A3FA9-9659-4876-83D0-35C68040545D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA491354-ECCC-4FC3-8BCC-D584ED93A4B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA491354-ECCC-4FC3-8BCC-D584ED93A4B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA491354-ECCC-4FC3-8BCC-D584ED93A4B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA491354-ECCC-4FC3-8BCC-D584ED93A4B2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {077B763E-B2A1-4593-8412-32305D1D331B}
 	EndGlobalSection
 EndGlobal
