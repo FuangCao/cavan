@@ -7,10 +7,12 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import com.cavan.accessibility.CavanAccessibilityService.CavanAccessibilityCommand;
 import com.cavan.android.CavanAndroid;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 
 public class CavanAccessibilityWindow {
 
-	public static final int WAIT_DELAY = 200;
+	public static final int WAIT_DELAY = 300;
 	public static final int WAIT_TIMES = 5;
 
 	public static final int CMD_SEND_TEXT = 1;
@@ -51,43 +53,71 @@ public class CavanAccessibilityWindow {
 
 	protected Thread mWaitReadyThread = new Thread() {
 
+		private ReentrantLock mLock = new ReentrantLock();
 		private long mUpdateTime;
 		private int mWaitTimes;
 
 		@Override
-		public synchronized void start() {
+		public void start() {
+			mLock.lock();
+
 			if (mUpdateTime == 0) {
-				if (isAlive()) {
-					notify();
-				} else {
-					super.start();
+				synchronized (this) {
+					if (isAlive()) {
+						notify();
+					} else {
+						super.start();
+					}
 				}
 			}
 
 			mUpdateTime = System.currentTimeMillis();
+
+			mLock.unlock();
+		}
+
+		private boolean performWindowContentReady(int times) {
+			mLock.unlock();
+			boolean yes = onWindowContentReady(times);
+			mLock.lock();
+			return yes;
 		}
 
 		@Override
-		public synchronized void run() {
+		public void run() {
+			mLock.lock();
+
 			while (true) {
 				long timeNow = System.currentTimeMillis();
 				long time = mUpdateTime + WAIT_DELAY;
 
 				if (time > timeNow) {
 					try {
-						wait(time - timeNow);
+						mLock.unlock();
+
+						synchronized (this) {
+							wait(time - timeNow);
+						}
+
+						mLock.lock();
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-				} else if (++mWaitTimes > WAIT_TIMES || onWindowContentReady(mWaitTimes)) {
+				} else if (++mWaitTimes > WAIT_TIMES || performWindowContentReady(mWaitTimes)) {
 					mUpdateTime = 0;
 					mWaitTimes = 0;
 
+					mLock.unlock();
+
 					try {
-						wait();
+						synchronized (this) {
+							wait();
+						}
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
+
+					mLock.lock();
 				} else {
 					mUpdateTime = timeNow + WAIT_DELAY;
 				}
@@ -130,7 +160,6 @@ public class CavanAccessibilityWindow {
 	public void startWaitReady() {
 		mWaitReadyThread.start();
 	}
-
 
 	public CavanAccessibilityPackage getPackage() {
 		return mPackage;

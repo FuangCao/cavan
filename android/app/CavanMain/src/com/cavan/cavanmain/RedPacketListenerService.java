@@ -405,13 +405,18 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			return 1;
 		}
 
-		char value = content.charAt(content.length() - 1);
-		if (value == '+') {
-			return 2;
+		int index = content.length() - 2;
+		if (index < 0) {
+			index = 0;
 		}
 
-		if (value >= '0' && value <= '9') {
-			return 3;
+		while (index < content.length()) {
+			char value = content.charAt(index);
+			if (value >= '0' && value <= '9') {
+				return 2;
+			}
+
+			index++;
 		}
 
 		return -1;

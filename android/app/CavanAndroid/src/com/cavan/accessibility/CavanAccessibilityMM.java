@@ -1,10 +1,5 @@
 package com.cavan.accessibility;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-
 import android.app.Notification;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
@@ -18,7 +13,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -27,6 +21,11 @@ import com.cavan.android.CavanAndroid;
 import com.cavan.android.CavanPackageName;
 import com.cavan.java.CavanJava;
 import com.cavan.java.CavanString;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 
 public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 
@@ -137,7 +136,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		private boolean isValidMessage(AccessibilityNodeInfo node) {
-			if (node.getChildCount() != 3) {
+			if (node.getChildCount() != 2) {
 				return false;
 			}
 
@@ -155,11 +154,11 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		private boolean isRedPacketNode(AccessibilityNodeInfo node) {
-			if (!LinearLayout.class.getName().equals(node.getClassName())) {
+			if (node.getChildCount() != 2) {
 				return false;
 			}
 
-			AccessibilityNodeInfo[] childs = CavanAccessibilityHelper.getChilds(node, 0, 3);
+			AccessibilityNodeInfo[] childs = CavanAccessibilityHelper.getChilds(node, 0, 2);
 			if (childs == null) {
 				return false;
 			}
@@ -227,7 +226,7 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 						if (text != null && "微信红包".equals(text)) {
 							AccessibilityNodeInfo node = child.getParent();
 							if (node != null) {
-								if (LinearLayout.class.getName().equals(node.getClassName())) {
+								if (node.getChildCount() == 2) {
 									nodes.add(node);
 								} else {
 									node.recycle();
@@ -525,7 +524,6 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 	public class LauncherWindow extends ChattingWindow {
 
 		private int mHashCode;
-		private List<AccessibilityNodeInfo> mChangedNodes = new ArrayList<AccessibilityNodeInfo>();
 
 		public LauncherWindow(String name) {
 			super(name);
@@ -594,9 +592,40 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 				return nodes[2];
 			}
 
-			CavanAccessibilityHelper.recycleNodes(nodes);
+			AccessibilityNodeInfo parent = nodes[1];
+
+			try {
+				for (int i = 0; i < parent.getChildCount(); i++) {
+					AccessibilityNodeInfo node = parent.getChild(i);
+					if (node == null) {
+						continue;
+					}
+
+					if (CavanAccessibilityHelper.isListView(node)) {
+						return node;
+					}
+
+					node.recycle();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				CavanAccessibilityHelper.recycleNodes(nodes);
+			}
 
 			return null;
+		}
+
+		public AccessibilityNodeInfo getLastMessageNode(AccessibilityNodeInfo root)
+		{
+			AccessibilityNodeInfo list = getChattingListView(root);
+			if (list == null) {
+				return null;
+			}
+
+			AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildByIndex(list,-1);
+			list.recycle();
+			return node;
 		}
 
 		public boolean isRedPacketLayout(AccessibilityNodeInfo node) {
@@ -689,37 +718,60 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 			setForceUnpackEnable(true);
 		}
 
+		public boolean hasNewRedPacket(AccessibilityNodeInfo root)
+		{
+			AccessibilityNodeInfo layout = getLastMessageNode(root);
+			if (layout == null) {
+				return false;
+			}
+
+			try {
+				if (layout.getChildCount() != 2)
+				{
+					return false;
+				}
+
+				AccessibilityNodeInfo node = CavanAccessibilityHelper.getChildRecursiveF(layout, 1, 1);
+				if (node == null) {
+					return false;
+				}
+
+				boolean yes = CavanAccessibilityHelper.getNodeText(node).equals("微信红包");
+				node.recycle();
+				return yes;
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				layout.recycle();
+			}
+
+			return false;
+		}
+
+		public boolean hasNewRedPacket()
+		{
+			AccessibilityNodeInfo root = getRootInActiveWindow();
+			if (root == null) {
+				return false;
+			}
+
+			boolean yes = hasNewRedPacket(root);
+			root.recycle();
+			return yes;
+		}
+
 		@Override
 		public void onWindowContentChanged(AccessibilityNodeInfo root, AccessibilityEvent event) {
-			AccessibilityNodeInfo source = event.getSource();
-			if (source != null) {
-				if (CavanAccessibilityHelper.isNodeClassEquals(source, RelativeLayout.class) && isLauncherUI(root)) {
-					synchronized (mChangedNodes) {
-						mChangedNodes.add(source);
-					}
-
-					startWaitReady();
-				} else {
-					source.recycle();
-				}
-			}
+			startWaitReady();
 		}
 
 		@Override
 		public boolean onWindowContentReady(int times) {
 			CavanAndroid.dLog("onWindowContentReady: " + times);
 
-			synchronized (mChangedNodes) {
-				for (AccessibilityNodeInfo node : mChangedNodes) {
-					if (isRedPacketLayout(node)) {
-						setGotoHome(true);
-						setPending(true);
-						break;
-					}
-				}
-
-				CavanAccessibilityHelper.recycleNodes(mChangedNodes);
-				mChangedNodes.clear();
+			if (hasNewRedPacket()) {
+				setGotoHome(true);
+				setPending(true);
 			}
 
 			return true;
@@ -1076,18 +1128,36 @@ public class CavanAccessibilityMM extends CavanAccessibilityPackage {
 		}
 
 		private AccessibilityNodeInfo findBackNodeRaw(AccessibilityNodeInfo root) {
-			AccessibilityNodeInfo node = CavanAccessibilityHelper.findNodeByClassName(root, ImageView.class.getName());
-			if (node == null) {
+			List<AccessibilityNodeInfo> nodes = CavanAccessibilityHelper.findNodesByClassName(root, ImageView.class.getName());
+			if (nodes == null) {
 				return null;
 			}
 
-			AccessibilityNodeInfo parent = node.getParent();
-			if (parent != null && LinearLayout.class.getName().equals(parent.getClassName())) {
-				node.recycle();
-				return parent;
+			try {
+				for (AccessibilityNodeInfo node : nodes) {
+					AccessibilityNodeInfo parent = node.getParent();
+					if (parent == null)
+					{
+						continue;
+					}
+
+					if (parent.getChildCount() != 1)
+					{
+						parent.recycle();
+						continue;
+					}
+
+					if (LinearLayout.class.getName().equals(parent.getClassName())) {
+						return parent;
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				CavanAccessibilityHelper.recycleNodes(nodes);
 			}
 
-			return node;
+			return null;
 		}
 
 		private AccessibilityNodeInfo findBackNode(AccessibilityNodeInfo root) {
