@@ -419,6 +419,10 @@ public class RedPacketListenerService extends NotificationListenerService implem
 			index++;
 		}
 
+		if (content.indexOf('谢') > 0) {
+			return 3;
+		}
+
 		return -1;
 	}
 

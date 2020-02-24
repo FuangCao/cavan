@@ -92,5 +92,9 @@
     <orderEntry type="module" module-name="CavanResource" />
     <orderEntry type="module" module-name="CavanAndroid" />
     <orderEntry type="module" module-name="CavanJava" />
+    <orderEntry type="module" module-name="CavanJni" />
+    <orderEntry type="module" module-name="CavanResource" />
+    <orderEntry type="module" module-name="CavanAndroid" />
+    <orderEntry type="module" module-name="CavanJava" />
   </component>
 </module>
