@@ -222,9 +222,16 @@ namespace NetworkInputMethod
         {
             lock (this)
             {
-                if (mClient != null)
+                try
                 {
-                    return mClient.GetStream();
+                    if (mClient != null)
+                    {
+                        return mClient.GetStream();
+                    }
+                }
+                catch (Exception)
+                {
+                    return null;
                 }
             }
 

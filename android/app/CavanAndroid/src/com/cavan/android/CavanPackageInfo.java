@@ -1,12 +1,12 @@
 package com.cavan.android;
 
-import java.io.File;
-
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
 import com.cavan.java.CavanFile;
+
+import java.io.File;
 
 public class CavanPackageInfo implements Comparable<CavanPackageInfo> {
 
@@ -22,7 +22,13 @@ public class CavanPackageInfo implements Comparable<CavanPackageInfo> {
 		if (label == null) {
 			mName = info.packageName;
 		} else {
-			mName = label.toString();
+			String name = label.toString();
+
+			if (name.equals(info.packageName)) {
+				mName = info.packageName;
+			} else {
+				mName = name + " (" + info.packageName + ")";
+			}
 		}
 	}
 
