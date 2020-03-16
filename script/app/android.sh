@@ -609,3 +609,25 @@ function cavan-android-input-server()
 	adb push "${src_cavan_main}" "${dest_cavan_main}" || return 1
 	adb shell "${dest_cavan_main} input_server -dp 9981" || return 1
 }
+
+function cavan-simple-repo-sync()
+{
+	local url="$1"
+	local branch="${2-master}"
+
+	while read line
+	do
+		echo $line
+
+		set $line
+
+		[ -d "$2" ] &&
+		{
+			(cd "$2" && git pull) && continue
+			[ -d "$2/.git" ] && continue
+			rm -rf "$2"
+		}
+
+		mkdir -pv $(dirname "$2") && git clone "${url}/$1" "$2" -b "${branch}"
+	done < .repo/cavan.list
+}
