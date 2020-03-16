@@ -13,7 +13,7 @@
 	url = https://git.coding.net/fuangcao/cavan.git
 	fetch = +refs/heads/*:refs/remotes/coding/*
 [remote "oschina"]
-	url = https://git.oschina.net/fuangcao/cavan.git
+	url = https://gitee.com/fuangcao/cavan.git
 	fetch = +refs/heads/*:refs/remotes/oschina/*
 [branch "master"]
 	remote = oschina

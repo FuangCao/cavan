@@ -67,19 +67,9 @@ func DecodeValueBe32(bytes []byte, index int) int {
 	return DecodeValueBe24(bytes, index)<<8 | DecodeValue8(bytes, index+3)
 }
 
-func Copy(dest []byte, dindex int, src []byte, sindex int, length int) {
-	end := sindex + length
-
-	for sindex < end {
-		dest[dindex] = src[sindex]
-		dindex++
-		sindex++
-	}
-}
-
-func Clone(bytes []byte, index int, length int) []byte {
+func Clone(bytes []byte, length int) []byte {
 	clone := make([]byte, length)
-	Copy(clone, 0, bytes, index, length)
+	copy(clone, bytes[0:length])
 	return clone
 }
 

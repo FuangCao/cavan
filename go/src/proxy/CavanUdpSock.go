@@ -77,27 +77,28 @@ func (sock *CavanUdpSock) WriteLoop() {
 
 func (sock *CavanUdpSock) ReadLoop() {
 	buff := make([]byte, 2048)
+	pack := CavanUdpPack{Bytes: buff}
 
 	for true {
 		for true {
-			len, addr, err := sock.Conn.ReadFromUDP(buff)
+			length, addr, err := sock.Conn.ReadFromUDP(buff)
 			if err != nil {
 				fmt.Println(err)
 				break
 			}
 
-			if len < 2 {
+			if length < 6 {
 				continue
 			}
 
-			dest := common.DecodeValue16(buff, 0)
+			dest := pack.DestPort()
 			link := sock.Links[dest]
 
 			if link != nil && link.LocalPort == uint16(dest) {
-				pack := make([]byte, len)
-				copy(pack, buff[0:len])
-				link.ReadChan <- &CavanUdpRspNode{Bytes: pack, Addr: addr}
+				bytes := common.Clone(buff, length)
+				link.ReadChan <- &CavanUdpPack{Bytes: bytes}
 			} else {
+				fmt.Println(addr)
 			}
 		}
 	}
@@ -107,7 +108,7 @@ func (sock *CavanUdpSock) GetWanAddr() *net.UDPAddr {
 	builder := NewCavanStunCmdBuilder(0)
 	builder.SetType(1)
 
-	command := builder.Build(sock.StunLink)
+	command := builder.Build()
 	response := sock.StunLink.SendCommandSync(command)
 	if response == nil {
 		return nil
@@ -118,7 +119,7 @@ func (sock *CavanUdpSock) GetWanAddr() *net.UDPAddr {
 	return pack.GetWanAddr()
 }
 
-func (callback *CavanStunCallback) OnPackReceived(link *CavanUdpLink, pack *CavanUdpRspNode) {
+func (callback *CavanStunCallback) OnPackReceived(link *CavanUdpLink, pack *CavanUdpPack) {
 	command := link.WriteHead
 	if command != nil {
 		link.WriteHead = command.Next

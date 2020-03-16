@@ -10,6 +10,8 @@ const (
 	CavanUdpCmdPing    CavanUdpPackType = 0
 	CavanUdpCmdConn    CavanUdpPackType = 1
 	CavanUdpCmdLink    CavanUdpPackType = 2
+	CavanUdpCmdData    CavanUdpPackType = 3
+	CavanUdpCmdClose   CavanUdpPackType = 4
 	CavanUdpRspSuccess CavanUdpPackType = 8
 	CavanUdpRspError   CavanUdpPackType = 9
 )
@@ -60,6 +62,10 @@ func (pack *CavanUdpPack) SetType(value CavanUdpPackType) {
 	pack.Bytes[5] = byte(value)
 }
 
+func (pack *CavanUdpPack) Body() []byte {
+	return pack.Bytes[6:]
+}
+
 func (pack *CavanUdpPack) SetupWithLink(link *CavanUdpLink) {
 	pack.SetDestPort(int(link.RemotePort))
 	pack.SetSrcPort(int(link.LocalPort))
@@ -82,4 +88,3 @@ func (builder *CavanUdpPackBuilder) Build() *CavanUdpPack {
 	pack := CavanUdpPack{Bytes: builder.ByteArrayBuilder.Build()}
 	return &pack
 }
-

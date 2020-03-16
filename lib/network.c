@@ -4458,6 +4458,10 @@ int network_client_openf(struct network_client *client, int flags, const char *u
 
 void network_client_close(struct network_client *client)
 {
+	if (client->sockfd < 0) {
+		return;
+	}
+
 	if (client->close) {
 		client->close(client);
 	} else {

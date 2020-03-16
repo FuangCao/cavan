@@ -17,14 +17,13 @@ func (builder *ByteArrayBuilder) Init(bytes []byte, position int) {
 }
 
 func (builder *ByteArrayBuilder) Build() []byte {
-	if len(builder.Bytes) == builder.Position {
+	bytes := builder.Bytes
+
+	if len(bytes) == builder.Position {
 		return builder.Bytes
 	}
 
-	bytes := make([]byte, builder.Position)
-	copy(bytes, builder.Bytes[:builder.Position])
-
-	return bytes
+	return bytes[0:builder.Position]
 }
 
 func (builder *ByteArrayBuilder) Seek(offset int) {

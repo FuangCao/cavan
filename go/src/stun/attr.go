@@ -31,7 +31,7 @@ func DecodeStunAttr(bytes []byte, index int, size int) *StunAttr {
 func (attr *StunAttr) Encode(bytes []byte, index int) int {
 	common.EncodeValueBe16(bytes, index, len(attr.Value))
 	common.EncodeValueBe16(bytes, index+2, attr.ID)
-	common.Copy(bytes, index+4, attr.Value, 0, len(attr.Value))
+	copy(bytes[index+4:], attr.Value)
 	return index + len(attr.Value) + 4
 }
 

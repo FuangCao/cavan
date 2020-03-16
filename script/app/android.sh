@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export JACK_SERVER_VM_ARGUMENTS="-Dfile.encoding=UTF-8 -XX:+TieredCompilation -Xmx4096m"
+
 alias shell="adb shell"
 alias logcat="adb logcat -v threadtime"
 alias cavan-adb-logcat-teamtalk="cavan-adb-logcat -s MoGuLogger"

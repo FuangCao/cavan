@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"os"
 	"time"
 
 	"./common"
@@ -46,6 +47,24 @@ type CavanUdpCommand struct {
 }
 
 func main() {
-	proxy.NewCavanUdpTurnServer(0)
-	time.Sleep(time.Hour)
+	if len(os.Args) < 2 {
+		return
+	}
+
+	command := os.Args[1]
+
+	if command == "server" {
+		fmt.Println("NewCavanUdpTurnServer")
+		proxy.NewCavanUdpTurnServer(8867)
+	} else if command == "client" {
+		fmt.Println("NewCavanUdpTurnClient")
+		proxy.NewCavanUdpTurnClient(1234, "192.168.0.103:8868", "192.168.0.101:8867", "127.0.0.1:8022", "")
+	} else {
+		fmt.Printf("Invalid command: %s\n", command)
+	}
+
+	for true {
+		fmt.Println("=============================")
+		time.Sleep(time.Minute)
+	}
 }

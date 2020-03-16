@@ -21,10 +21,12 @@ func NewCavanUdpTurnServer(port int) *CavanUdpTurnServer {
 		return nil
 	}
 
-	addr, err := net.ResolveTCPAddr("tcp", ":8867")
+	addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return nil
 	}
+
+	fmt.Println(addr)
 
 	listener, err := net.ListenTCP("tcp", addr)
 	if err != nil {
@@ -51,49 +53,57 @@ func (server *CavanUdpTurnServer) TcpMainLoop() {
 	}
 }
 
-func (server *CavanUdpTurnServer) TcpDaemonLoop(conn net.Conn) {
+func (server *CavanUdpTurnServer) TcpDaemonLoop(conn net.Conn) error {
 	defer conn.Close()
 
-	for true {
-		command, err := common.CavanConnReadPack(conn)
-		if err != nil {
-			fmt.Println(err)
-			break
-		}
-
-		args := strings.Split(string(command), " ")
-		if len(args) != 2 {
-			fmt.Println(args)
-			break
-		}
-
-		addr, err := net.ResolveUDPAddr("udp", args[0])
-		if err != nil {
-			fmt.Println(err)
-			break
-		}
-
-		port, err := strconv.Atoi(args[1])
-		if err != nil {
-			fmt.Println(err)
-			break
-		}
-
-		wan := server.Sock.GetWanAddr()
-		if wan == nil {
-			break
-		}
-
-		udp := server.Sock.NewLink(addr)
-		if udp == nil {
-			break
-		}
-
-		udp.RemotePort = uint16(port)
-
-		fmt.Println(udp)
-
-		response := fmt.Sprintf("%s %d", wan.String(), udp.LocalPort)
-		common.CavanConnWritePack(conn, []byte(response))
+	command, err := common.CavanConnReadPack(conn)
+	if err != nil {
+		return err
 	}
+
+	args := strings.Split(string(command), " ")
+	if len(args) != 2 {
+		return nil
+	}
+
+	fmt.Println(args)
+
+	addr, err := net.ResolveUDPAddr("udp", args[0])
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(addr)
+
+	port, err := strconv.Atoi(args[1])
+	if err != nil {
+		return err
+	}
+
+	wan := server.Sock.GetWanAddr()
+	if wan == nil {
+		return nil
+	}
+
+	udp := server.Sock.NewLink(addr)
+	if udp == nil {
+		return nil
+	}
+
+	udp.RemotePort = uint16(port)
+
+	fmt.Println(udp)
+
+	response := fmt.Sprintf("%s %d", wan.String(), udp.LocalPort)
+	common.CavanConnWritePack(conn, []byte(response))
+
+	if response := udp.SendPing(); response != nil {
+		fmt.Println(response)
+	} else {
+		return nil
+	}
+
+	fmt.Println("success")
+
+	return nil
 }
