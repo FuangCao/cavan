@@ -10,7 +10,8 @@ import (
 type CavanUdpCmdCallback interface {
 	WriteTo(link *CavanUdpLink, conn *net.UDPConn) (int, error)
 	Prepare(link *CavanUdpLink, times int) bool
-	Setup(link *CavanUdpLink, index uint8)
+	Setup(index uint8)
+	GetRspType() CavanUdpPackType
 }
 
 type CavanUdpCmdNode struct {
@@ -19,8 +20,8 @@ type CavanUdpCmdNode struct {
 	Link     *CavanUdpLink
 	Time     time.Time
 	Times    int
-	Index    int
-	DoneChan chan *CavanUdpPack
+	Pending  bool
+	DoneChan chan bool
 }
 
 type CavanUdpCommand struct {
@@ -32,10 +33,49 @@ type CavanUdpCmdBuilder struct {
 	CavanUdpPack
 }
 
-func NewCavanUdpCmdNode(callback CavanUdpCmdCallback) *CavanUdpCmdNode {
-	node := CavanUdpCmdNode{Callback: callback}
-	node.DoneChan = make(chan *CavanUdpPack)
+func NewCavanUdpCmdNode(link *CavanUdpLink, callback CavanUdpCmdCallback) *CavanUdpCmdNode {
+	node := CavanUdpCmdNode{Link: link, Callback: callback}
+	node.DoneChan = make(chan bool, 2)
 	return &node
+}
+
+func (command *CavanUdpCmdNode) NewRspWaiter() *CavanUdpWaiter {
+	pack := command.Callback.GetRspType()
+	return command.Link.NewWaiter(pack)
+}
+
+func (command *CavanUdpCmdNode) WaitReady() bool {
+	return <-command.DoneChan
+}
+
+func (command *CavanUdpCmdNode) SendAsync() {
+	command.Link.CommandChan <- command
+}
+
+func (command *CavanUdpCmdNode) SetReady(success bool) {
+	if command.Pending {
+		command.Pending = false
+		command.DoneChan <- success
+	}
+}
+
+func (command *CavanUdpCmdNode) SendSync() bool {
+	command.SendAsync()
+	return command.WaitReady()
+}
+
+func (command *CavanUdpCmdNode) SendToSock() {
+	command.Link.Sock.WriteChan <- command
+}
+
+func (command *CavanUdpCmdNode) SendWaitResponse(delay time.Duration) *CavanUdpPack {
+	waiter := command.NewRspWaiter()
+
+	if command.SendSync() {
+		return waiter.WaitReady(delay)
+	}
+
+	return nil
 }
 
 func (command *CavanUdpCommand) WriteTo(link *CavanUdpLink, conn *net.UDPConn) (int, error) {
@@ -46,10 +86,12 @@ func (command *CavanUdpCommand) Prepare(link *CavanUdpLink, times int) bool {
 	return times < 5
 }
 
-func (command *CavanUdpCommand) Setup(link *CavanUdpLink, index uint8) {
-	command.SetDestPort(int(link.RemotePort))
-	command.SetSrcPort(int(link.LocalPort))
+func (command *CavanUdpCommand) Setup(index uint8) {
 	command.SetIndex(index)
+}
+
+func (command *CavanUdpCommand) GetRspType() CavanUdpPackType {
+	return command.Type() | 0x80
 }
 
 func NewCavanUdpCmdBuilder(command CavanUdpPackType, length int) *CavanUdpCmdBuilder {
@@ -61,18 +103,18 @@ func NewCavanUdpCmdBuilder(command CavanUdpPackType, length int) *CavanUdpCmdBui
 	return &builder
 }
 
-func (builder *CavanUdpCmdBuilder) Build() *CavanUdpCmdNode {
+func (builder *CavanUdpCmdBuilder) Build(link *CavanUdpLink) *CavanUdpCmdNode {
 	bytes := builder.ByteArrayBuilder.Build()
 	command := CavanUdpCommand{}
 	command.Bytes = bytes
-	return NewCavanUdpCmdNode(&command)
+	builder.SetDestPort(link.RemotePort)
+	builder.SetSrcPort(link.LocalPort)
+	return NewCavanUdpCmdNode(link, &command)
 }
 
 func (builder *CavanUdpCmdBuilder) BuildResponse(link *CavanUdpLink, command *CavanUdpPack) *CavanUdpCmdNode {
 	builder.SetDestPort(command.SrcPort())
 	builder.SetSrcPort(command.DestPort())
 	builder.SetIndex(command.Index())
-	node := builder.Build()
-	node.Link = link
-	return node
+	return builder.Build(link)
 }

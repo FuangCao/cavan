@@ -7,13 +7,12 @@ import (
 type CavanUdpPackType uint8
 
 const (
-	CavanUdpCmdPing    CavanUdpPackType = 0
-	CavanUdpCmdConn    CavanUdpPackType = 1
-	CavanUdpCmdLink    CavanUdpPackType = 2
-	CavanUdpCmdData    CavanUdpPackType = 3
-	CavanUdpCmdClose   CavanUdpPackType = 4
-	CavanUdpRspSuccess CavanUdpPackType = 8
-	CavanUdpRspError   CavanUdpPackType = 9
+	CavanUdpPackAck   CavanUdpPackType = 0
+	CavanUdpPackPing  CavanUdpPackType = 1
+	CavanUdpPackConn  CavanUdpPackType = 2
+	CavanUdpPackLink  CavanUdpPackType = 3
+	CavanUdpPackData  CavanUdpPackType = 4
+	CavanUdpPackClose CavanUdpPackType = 5
 )
 
 type CavanUdpPack struct {
@@ -30,20 +29,20 @@ func NewCavanUdpPack(bytes []byte) *CavanUdpPack {
 	return &pack
 }
 
-func (pack *CavanUdpPack) DestPort() int {
-	return common.DecodeValue16(pack.Bytes, 0)
+func (pack *CavanUdpPack) DestPort() uint16 {
+	return uint16(common.DecodeValue16(pack.Bytes, 0))
 }
 
-func (pack *CavanUdpPack) SetDestPort(value int) {
-	common.EncodeValue16(pack.Bytes, 0, value)
+func (pack *CavanUdpPack) SetDestPort(value uint16) {
+	common.EncodeValue16(pack.Bytes, 0, int(value))
 }
 
-func (pack *CavanUdpPack) SrcPort() int {
-	return common.DecodeValue16(pack.Bytes, 2)
+func (pack *CavanUdpPack) SrcPort() uint16 {
+	return uint16(common.DecodeValue16(pack.Bytes, 2))
 }
 
-func (pack *CavanUdpPack) SetSrcPort(value int) {
-	common.EncodeValue16(pack.Bytes, 2, value)
+func (pack *CavanUdpPack) SetSrcPort(value uint16) {
+	common.EncodeValue16(pack.Bytes, 2, int(value))
 }
 
 func (pack *CavanUdpPack) Index() uint8 {
@@ -67,8 +66,8 @@ func (pack *CavanUdpPack) Body() []byte {
 }
 
 func (pack *CavanUdpPack) SetupWithLink(link *CavanUdpLink) {
-	pack.SetDestPort(int(link.RemotePort))
-	pack.SetSrcPort(int(link.LocalPort))
+	pack.SetDestPort(link.RemotePort)
+	pack.SetSrcPort(link.LocalPort)
 }
 
 func (pack *CavanUdpPack) SetupWithCommand(command *CavanUdpPack) {

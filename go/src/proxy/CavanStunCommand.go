@@ -25,11 +25,11 @@ func NewCavanStunCmdBuilder(length int) *CavanStunCmdBuilder {
 	return &builder
 }
 
-func (builder *CavanStunCmdBuilder) Build() *CavanUdpCmdNode {
+func (builder *CavanStunCmdBuilder) Build(link *CavanUdpLink) *CavanUdpCmdNode {
 	bytes := builder.ByteArrayBuilder.Build()
 	command := CavanStunCommand{}
 	command.Bytes = bytes
-	return NewCavanUdpCmdNode(&command)
+	return NewCavanUdpCmdNode(link, &command)
 }
 
 func (command *CavanStunCommand) WriteTo(link *CavanUdpLink, conn *net.UDPConn) (int, error) {
@@ -48,5 +48,9 @@ func (command *CavanStunCommand) Prepare(link *CavanUdpLink, times int) bool {
 	return times < 10
 }
 
-func (command *CavanStunCommand) Setup(link *CavanUdpLink, index uint8) {
+func (command *CavanStunCommand) Setup(index uint8) {
+}
+
+func (command *CavanStunCommand) GetRspType() CavanUdpPackType {
+	return 0
 }

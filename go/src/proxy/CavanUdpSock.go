@@ -108,21 +108,32 @@ func (sock *CavanUdpSock) GetWanAddr() *net.UDPAddr {
 	builder := NewCavanStunCmdBuilder(0)
 	builder.SetType(1)
 
-	command := builder.Build()
-	response := sock.StunLink.SendCommandSync(command)
-	if response == nil {
-		return nil
+	if response := builder.Build(sock.StunLink).SendWaitResponse(time.Millisecond * 500); response != nil {
+		pack := CavanStunPack{Bytes: response.Bytes}
+		return pack.GetWanAddr()
 	}
 
-	pack := CavanStunPack{Bytes: response.Bytes}
+	return nil
 
-	return pack.GetWanAddr()
+	/* addr := sock.Conn.LocalAddr().(*net.UDPAddr)
+
+	if addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("127.0.0.1:%d", addr.Port)); err == nil {
+		return addr
+	}
+
+	return nil */
 }
 
 func (callback *CavanStunCallback) OnPackReceived(link *CavanUdpLink, pack *CavanUdpPack) {
 	command := link.WriteHead
 	if command != nil {
 		link.WriteHead = command.Next
-		link.SetCommandReady(command, pack)
+		command.SetReady(true)
+	}
+
+	waiter := link.WaitHead
+	if waiter != nil {
+		link.WaitHead = waiter.Next
+		waiter.SetReady(pack)
 	}
 }

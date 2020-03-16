@@ -71,7 +71,7 @@ func (client *CavanUdpTurnClient) TcpDaemonLoop(conn net.Conn) {
 
 	defer udp.Close()
 
-	udp.Callback.(*CavanUdpCallback).Conn = conn
+	udp.ProxyConn = conn
 
 	bytes := make([]byte, 1024)
 
@@ -85,7 +85,7 @@ func (client *CavanUdpTurnClient) TcpDaemonLoop(conn net.Conn) {
 
 		fmt.Println(string(bytes[0:length]))
 
-		if udp.SendDataSync(bytes[0:length]) == nil {
+		if udp.SendData(bytes[0:length]) == false {
 			break
 		}
 	}
@@ -174,9 +174,7 @@ func (client *CavanUdpTurnClient) GetUdpCtrl() *CavanUdpLink {
 		}
 	}
 
-	if response := ctrl.SendPing(); response != nil {
-		fmt.Println(response)
-	} else {
+	if !ctrl.SendPing() {
 		return nil
 	}
 
@@ -198,11 +196,11 @@ func (client *CavanUdpTurnClient) NewUdpLink() *CavanUdpLink {
 
 	url := []byte(client.ProxyUrl)
 
-	builder := NewCavanUdpCmdBuilder(CavanUdpCmdConn, len(url)+2)
+	builder := NewCavanUdpCmdBuilder(CavanUdpPackConn, len(url)+2)
 	builder.AppendValue16(link.LocalPort)
 	builder.AppendBytes(url)
 
-	if response := ctrl.SendCommandSync(builder.Build()); response != nil {
+	if response := builder.Build(ctrl).SendWaitResponse(time.Millisecond * 500); response != nil {
 		fmt.Println(response.Bytes)
 		bytes := response.Bytes
 		if len(bytes) < 8 {

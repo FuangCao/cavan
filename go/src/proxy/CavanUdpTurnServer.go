@@ -97,9 +97,7 @@ func (server *CavanUdpTurnServer) TcpDaemonLoop(conn net.Conn) error {
 	response := fmt.Sprintf("%s %d", wan.String(), udp.LocalPort)
 	common.CavanConnWritePack(conn, []byte(response))
 
-	if response := udp.SendPing(); response != nil {
-		fmt.Println(response)
-	} else {
+	if !udp.SendPing() {
 		return nil
 	}
 
