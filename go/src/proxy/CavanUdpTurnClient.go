@@ -130,8 +130,6 @@ func (client *CavanUdpTurnClient) GetUdpCtrl() *CavanUdpLink {
 
 	defer conn.Close()
 
-	fmt.Println("conn = ", conn)
-
 	command := client.BuildProxyCommand()
 	if err := common.CavanConnWritePack(conn, []byte(command)); err != nil {
 		fmt.Println(err)
