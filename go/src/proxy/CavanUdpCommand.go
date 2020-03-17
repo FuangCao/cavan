@@ -12,6 +12,7 @@ type CavanUdpCmdCallback interface {
 	Prepare(link *CavanUdpLink, times int) bool
 	Setup(index uint8)
 	RspOpCode() CavanUdpOpCode
+	MatchAck(pack *CavanUdpPack) bool
 }
 
 type CavanUdpCmdNode struct {
@@ -45,7 +46,7 @@ func (command *CavanUdpCmdNode) NewRspWaiter() *CavanUdpWaiter {
 }
 
 func (command *CavanUdpCmdNode) WaitReady() bool {
-	if command.Link.Sock == nil {
+	if command.Link.Addr == nil {
 		return false
 	}
 
@@ -98,6 +99,10 @@ func (command *CavanUdpCommand) RspOpCode() CavanUdpOpCode {
 	return command.OpCode() | 0x80
 }
 
+func (command *CavanUdpCommand) MatchAck(pack *CavanUdpPack) bool {
+	return command.Index() == pack.Index()
+}
+
 func NewCavanUdpCmdBuilder(op CavanUdpOpCode, length int) *CavanUdpCmdBuilder {
 	bytes := make([]byte, length+6)
 	builder := CavanUdpCmdBuilder{}
@@ -108,11 +113,10 @@ func NewCavanUdpCmdBuilder(op CavanUdpOpCode, length int) *CavanUdpCmdBuilder {
 }
 
 func (builder *CavanUdpCmdBuilder) Build(link *CavanUdpLink) *CavanUdpCmdNode {
-	bytes := builder.ByteArrayBuilder.Build()
-	command := CavanUdpCommand{}
-	command.Bytes = bytes
 	builder.SetDestPort(link.RemotePort)
 	builder.SetSrcPort(link.LocalPort)
+	command := CavanUdpCommand{}
+	command.Bytes = builder.ByteArrayBuilder.Build()
 	return NewCavanUdpCmdNode(link, &command)
 }
 

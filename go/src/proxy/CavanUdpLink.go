@@ -75,7 +75,7 @@ func (link *CavanUdpLink) ProxyLoop(conn net.Conn) {
 
 	link.ProxyConn = conn
 
-	bytes := make([]byte, 1466)
+	bytes := make([]byte, 542)
 
 	for true {
 		conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
@@ -103,12 +103,7 @@ func (link *CavanUdpLink) StartProxyDaemon(url string, port int) *CavanUdpLink {
 		return nil
 	}
 
-	sock := link.Sock
-	if sock == nil {
-		return nil
-	}
-
-	udp := sock.NewLink(link.Addr)
+	udp := link.Sock.NewLink(link.Addr)
 	if udp == nil {
 		tcp.Close()
 		return nil
@@ -189,16 +184,14 @@ func (link *CavanUdpLink) ProcessLoop() {
 }
 
 func (link *CavanUdpLink) SendCommandRaw(command *CavanUdpCmdNode) {
-	sock := link.Sock
-
-	if sock != nil && command.Callback.Prepare(link, command.Times) {
-		sock.CommandChan <- command
+	if command.Callback.Prepare(link, command.Times) {
+		link.Sock.CommandChan <- command
 		command.Time = time.Now()
 		command.Next = nil
 		command.Times++
 
 		if command.Times > 1 {
-			link.Overtime++
+			link.Overtime += time.Microsecond * 100
 		}
 
 		if link.WriteHead == nil {
@@ -226,9 +219,9 @@ func (link *CavanUdpLink) WriteLoop() {
 		if command == nil {
 			timer_ch = nil
 		} else if command.Pending {
-			overtime := time.Now().Sub(command.Time)
-			if overtime < link.Overtime {
-				timer_ch = time.After(link.Overtime - overtime)
+			delay := link.Overtime - time.Now().Sub(command.Time)
+			if delay > time.Millisecond*100 {
+				timer_ch = time.After(delay)
 			} else {
 				link.WriteHead = command.Next
 				link.SendCommandRaw(command)
@@ -256,6 +249,7 @@ func (link *CavanUdpLink) WriteLoop() {
 				link.WaitTail.Next = waiter
 			}
 
+			waiter.Next = nil
 			link.WaitTail = waiter
 
 		case command := <-write_ch:
@@ -314,10 +308,9 @@ func (link *CavanUdpLink) SetRemoteAddr(url string) error {
 }
 
 func (link *CavanUdpLink) Close() {
-	sock := link.Sock
-	link.Sock = nil
+	link.Addr = nil
 
-	if sock != nil && sock.FreeLink(link) {
+	if link.Sock.FreeLink(link) {
 		close(link.ExitChan)
 	}
 
@@ -332,13 +325,14 @@ func (link *CavanUdpLink) Close() {
 func (callback *CavanUdpCallback) OnPackReceived(link *CavanUdpLink, pack *CavanUdpPack) {
 	switch pack.OpCode() {
 	case CavanUdpOpAck:
-		index := pack.Index() % WR_WIN_SIZE
-		command := link.WriteWin[index]
-		command.SetReady(true)
+		command := link.WriteWin[pack.Index()%WR_WIN_SIZE]
+		if command != nil && command.Callback.MatchAck(pack) {
+			command.SetReady(true)
 
-		if command.Times == 1 {
-			delay := time.Now().Sub(command.Time) * 2
-			link.Overtime = (link.Overtime*7 + delay) / 8
+			if command.Times == 1 {
+				delay := time.Now().Sub(command.Time) * 2
+				link.Overtime = (link.Overtime*7 + delay) / 8
+			}
 		}
 
 	case CavanUdpOpErr:

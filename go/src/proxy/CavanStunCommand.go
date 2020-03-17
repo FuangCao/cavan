@@ -59,3 +59,7 @@ func (command *CavanStunCommand) Setup(index uint8) {
 func (command *CavanStunCommand) RspOpCode() CavanUdpOpCode {
 	return 0
 }
+
+func (command *CavanStunCommand) MatchAck(pack *CavanUdpPack) bool {
+	return true
+}
