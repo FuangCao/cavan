@@ -41,11 +41,15 @@ func (command *CavanStunCommand) WriteTo(link *CavanUdpLink, conn *net.UDPConn) 
 }
 
 func (command *CavanStunCommand) Prepare(link *CavanUdpLink, times int) bool {
+	if times > 10 {
+		return false
+	}
+
 	if addr, err := net.ResolveUDPAddr("udp", "stun1.l.google.com:19302"); err == nil {
 		command.Addr = addr
 	}
 
-	return times < 10
+	return true
 }
 
 func (command *CavanStunCommand) Setup(index uint8) {

@@ -15,6 +15,7 @@ const (
 
 type ICavanUdpLink interface {
 	OnPackReceived(link *CavanUdpLink, pack *CavanUdpPack)
+	OnSendFailed(link *CavanUdpLink, command *CavanUdpCmdNode)
 }
 
 type CavanUdpCallback struct {
@@ -176,7 +177,7 @@ func (link *CavanUdpLink) ProcessLoop() {
 
 func (link *CavanUdpLink) SendCommandRaw(command *CavanUdpCmdNode) {
 	if command.Callback.Prepare(link, command.Times) {
-		link.Sock.WriteChan <- command
+		link.Sock.CommandChan <- command
 		command.Time = time.Now()
 		command.Next = nil
 		command.Times++
@@ -193,6 +194,7 @@ func (link *CavanUdpLink) SendCommandRaw(command *CavanUdpCmdNode) {
 
 		link.WriteTail = command
 	} else {
+		link.Callback.OnSendFailed(link, command)
 		command.SetReady(false)
 	}
 }
@@ -305,7 +307,8 @@ func (link *CavanUdpLink) Close() {
 }
 
 func (callback *CavanUdpCallback) OnPackReceived(link *CavanUdpLink, pack *CavanUdpPack) {
-	if pack.OpCode() == CavanUdpOpAck {
+	switch pack.OpCode() {
+	case CavanUdpOpAck:
 		index := pack.Index() % WR_WIN_SIZE
 		command := link.WriteWin[index]
 		command.SetReady(true)
@@ -314,7 +317,11 @@ func (callback *CavanUdpCallback) OnPackReceived(link *CavanUdpLink, pack *Cavan
 			delay := time.Now().Sub(command.Time) * 2
 			link.Overtime = (link.Overtime*7 + delay) / 8
 		}
-	} else {
+
+	case CavanUdpOpErr:
+		link.Close()
+
+	default:
 		builder := NewCavanUdpCmdBuilder(CavanUdpOpAck, 0)
 		builder.BuildResponse(link, pack).SendToSock()
 
@@ -346,4 +353,9 @@ func (callback *CavanUdpCallback) OnPackReceived(link *CavanUdpLink, pack *Cavan
 			link.ReadWin[index%RD_WIN_SIZE] = pack
 		}
 	}
+}
+
+func (callback *CavanUdpCallback) OnSendFailed(link *CavanUdpLink, command *CavanUdpCmdNode) {
+	fmt.Println("CavanUdpCallback::OnSendFailed")
+	link.Close()
 }

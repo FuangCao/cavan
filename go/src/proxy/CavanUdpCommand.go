@@ -45,6 +45,10 @@ func (command *CavanUdpCmdNode) NewRspWaiter() *CavanUdpWaiter {
 }
 
 func (command *CavanUdpCmdNode) WaitReady() bool {
+	if command.Link.Sock == nil {
+		return false
+	}
+
 	return <-command.DoneChan
 }
 
@@ -65,7 +69,7 @@ func (command *CavanUdpCmdNode) SendSync() bool {
 }
 
 func (command *CavanUdpCmdNode) SendToSock() {
-	command.Link.Sock.WriteChan <- command
+	command.Link.Sock.CommandChan <- command
 }
 
 func (command *CavanUdpCmdNode) SendWaitResponse(delay time.Duration) *CavanUdpPack {
@@ -83,7 +87,7 @@ func (command *CavanUdpCommand) WriteTo(link *CavanUdpLink, conn *net.UDPConn) (
 }
 
 func (command *CavanUdpCommand) Prepare(link *CavanUdpLink, times int) bool {
-	return times < 5
+	return times < 20
 }
 
 func (command *CavanUdpCommand) Setup(index uint8) {
@@ -113,8 +117,6 @@ func (builder *CavanUdpCmdBuilder) Build(link *CavanUdpLink) *CavanUdpCmdNode {
 }
 
 func (builder *CavanUdpCmdBuilder) BuildResponse(link *CavanUdpLink, command *CavanUdpPack) *CavanUdpCmdNode {
-	builder.SetDestPort(command.SrcPort())
-	builder.SetSrcPort(command.DestPort())
 	builder.SetIndex(command.Index())
 	return builder.Build(link)
 }

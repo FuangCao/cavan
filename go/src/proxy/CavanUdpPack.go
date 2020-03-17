@@ -1,6 +1,8 @@
 package proxy
 
 import (
+	"net"
+
 	"../common"
 )
 
@@ -8,15 +10,21 @@ type CavanUdpOpCode uint8
 
 const (
 	CavanUdpOpAck   CavanUdpOpCode = 0
-	CavanUdpOpPing  CavanUdpOpCode = 1
-	CavanUdpOpConn  CavanUdpOpCode = 2
-	CavanUdpOpLink  CavanUdpOpCode = 3
-	CavanUdpOpData  CavanUdpOpCode = 4
-	CavanUdpOpClose CavanUdpOpCode = 5
+	CavanUdpOpErr   CavanUdpOpCode = 1
+	CavanUdpOpPing  CavanUdpOpCode = 2
+	CavanUdpOpConn  CavanUdpOpCode = 3
+	CavanUdpOpLink  CavanUdpOpCode = 4
+	CavanUdpOpData  CavanUdpOpCode = 5
+	CavanUdpOpClose CavanUdpOpCode = 6
 )
 
 type CavanUdpPack struct {
 	Bytes []byte
+}
+
+type CavanUdpDirectPack struct {
+	Addr *net.UDPAddr
+	*CavanUdpPack
 }
 
 type CavanUdpPackBuilder struct {
@@ -27,6 +35,11 @@ type CavanUdpPackBuilder struct {
 func NewCavanUdpPack(bytes []byte) *CavanUdpPack {
 	pack := CavanUdpPack{Bytes: bytes}
 	return &pack
+}
+
+func NewCavanUdpDirectPack(addr *net.UDPAddr, bytes []byte) *CavanUdpDirectPack {
+	pack := NewCavanUdpPack(bytes)
+	return &CavanUdpDirectPack{Addr: addr, CavanUdpPack: pack}
 }
 
 func (pack *CavanUdpPack) DestPort() uint16 {
