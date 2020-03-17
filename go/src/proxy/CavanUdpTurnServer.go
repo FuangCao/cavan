@@ -16,6 +16,8 @@ type CavanUdpTurnServer struct {
 }
 
 func NewCavanUdpTurnServer(port int) *CavanUdpTurnServer {
+	fmt.Println("port =", port)
+
 	sock := NewCavanUdpSock()
 	if sock == nil {
 		return nil
@@ -26,7 +28,7 @@ func NewCavanUdpTurnServer(port int) *CavanUdpTurnServer {
 		return nil
 	}
 
-	fmt.Println(addr)
+	fmt.Println("addr =", addr)
 
 	listener, err := net.ListenTCP("tcp", addr)
 	if err != nil {

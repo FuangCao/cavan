@@ -23,13 +23,19 @@ type CavanUdpTurnClient struct {
 }
 
 func NewCavanUdpTurnClient(port int, server string, client string, proxy string, name string) *CavanUdpTurnClient {
+	fmt.Println("port =", port)
+	fmt.Println("server =", server)
+	fmt.Println("client =", client)
+	fmt.Println("proxy =", proxy)
+	fmt.Println("name =", name)
+
 	addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		fmt.Println(err)
 		return nil
 	}
 
-	fmt.Println(addr)
+	fmt.Println("addr =", addr)
 
 	listener, err := net.ListenTCP("tcp", addr)
 	if err != nil {
