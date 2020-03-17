@@ -33,11 +33,12 @@ func (builder *CavanStunCmdBuilder) Build(link *CavanUdpLink) *CavanUdpCmdNode {
 }
 
 func (command *CavanStunCommand) WriteTo(link *CavanUdpLink, conn *net.UDPConn) (int, error) {
-	if command.Addr == nil {
+	addr := command.Addr
+	if addr == nil {
 		return 0, nil
 	}
 
-	return conn.WriteToUDP(command.Bytes, command.Addr)
+	return conn.WriteToUDP(command.Bytes, addr)
 }
 
 func (command *CavanStunCommand) Prepare(link *CavanUdpLink, times int) bool {

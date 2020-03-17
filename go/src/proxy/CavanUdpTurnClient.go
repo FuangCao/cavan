@@ -100,80 +100,78 @@ func (client *CavanUdpTurnClient) GetUdpCtrl() *CavanUdpLink {
 	defer client.Unlock()
 
 	ctrl := client.UdpCtrl
-	if ctrl == nil {
-		wan := client.Sock.GetWanAddr()
-		if wan == nil {
-			return nil
-		}
-
-		fmt.Println("wan = ", wan)
-
-		ctrl = client.Sock.NewLink(nil)
-		if ctrl == nil {
-			return nil
-		}
-
-		addr, err := net.ResolveTCPAddr("tcp", client.ServerUrl)
-		if err != nil {
-			fmt.Println(err)
-			return nil
-		}
-
-		fmt.Println("tcp = ", addr)
-
-		conn, err := net.DialTCP("tcp", nil, addr)
-		if err != nil {
-			fmt.Println(err)
-			return nil
-		}
-
-		fmt.Println("conn = ", conn)
-
-		command := client.BuildProxyCommand()
-		if err := common.CavanConnWritePack(conn, []byte(command)); err != nil {
-			fmt.Println(err)
-			return nil
-		}
-
-		command = fmt.Sprintf("%s %d", wan.String(), ctrl.LocalPort)
-		if err := common.CavanConnWritePack(conn, []byte(command)); err != nil {
-			fmt.Println(err)
-			return nil
-		}
-
-		response, err := common.CavanConnReadPack(conn, time.Second*20)
-		if err != nil {
-			fmt.Println(err)
-			return nil
-		}
-
-		args := strings.Split(string(response), " ")
-		if len(args) != 2 {
-			fmt.Println(args)
-			return nil
-		}
-
-		fmt.Println(args)
-
-		if len(args) < 2 {
-			return nil
-		}
-
-		if err := ctrl.SetRemoteAddr(args[0]); err != nil {
-			fmt.Println(err)
-			return nil
-		}
-
-		if port, err := strconv.Atoi(args[1]); err != nil {
-			fmt.Println(err)
-			return nil
-		} else {
-			ctrl.RemotePort = uint16(port)
-		}
+	if ctrl != nil && ctrl.SendPing() {
+		return ctrl
 	}
 
-	if !ctrl.SendPing() {
+	wan := client.Sock.GetWanAddr()
+	if wan == nil {
 		return nil
+	}
+
+	fmt.Println("wan = ", wan)
+
+	ctrl = client.Sock.NewLink(nil)
+	if ctrl == nil {
+		return nil
+	}
+
+	addr, err := net.ResolveTCPAddr("tcp", client.ServerUrl)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	fmt.Println("tcp = ", addr)
+
+	conn, err := net.DialTCP("tcp", nil, addr)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	fmt.Println("conn = ", conn)
+
+	command := client.BuildProxyCommand()
+	if err := common.CavanConnWritePack(conn, []byte(command)); err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	command = fmt.Sprintf("%s %d", wan.String(), ctrl.LocalPort)
+	if err := common.CavanConnWritePack(conn, []byte(command)); err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	response, err := common.CavanConnReadPack(conn, time.Second*20)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	args := strings.Split(string(response), " ")
+	if len(args) != 2 {
+		fmt.Println(args)
+		return nil
+	}
+
+	fmt.Println(args)
+
+	if len(args) < 2 {
+		return nil
+	}
+
+	if err := ctrl.SetRemoteAddr(args[0]); err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	if port, err := strconv.Atoi(args[1]); err != nil {
+		fmt.Println(err)
+		return nil
+	} else {
+		ctrl.RemotePort = uint16(port)
 	}
 
 	client.UdpCtrl = ctrl

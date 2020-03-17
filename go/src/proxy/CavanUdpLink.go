@@ -146,6 +146,9 @@ func (link *CavanUdpLink) ProcessPack(pack *CavanUdpPack) {
 		}
 	} else {
 		switch op {
+		case CavanUdpOpPing:
+			fmt.Println("CavanUdpOpPing")
+
 		case CavanUdpOpConn:
 			body := pack.Body()
 			port := common.DecodeValue16(body, 0)
@@ -173,6 +176,10 @@ func (link *CavanUdpLink) ProcessLoop() {
 		select {
 		case pack := <-link.ProcessChan:
 			link.ProcessPack(pack)
+
+		case <-time.After(time.Second * 10):
+			builder := NewCavanUdpCmdBuilder(CavanUdpOpPing, 0)
+			builder.Build(link).SendAsync()
 
 		case <-link.ExitChan:
 			return
