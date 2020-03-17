@@ -198,3 +198,7 @@ func (callback *CavanStunCallback) OnPackReceived(link *CavanUdpLink, pack *Cava
 func (callback *CavanStunCallback) OnSendFailed(link *CavanUdpLink, command *CavanUdpCmdNode) {
 	fmt.Println("CavanStunCallback:OnSendFailed")
 }
+
+func (callback *CavanStunCallback) OnKeepAlive(link *CavanUdpLink) {
+
+}

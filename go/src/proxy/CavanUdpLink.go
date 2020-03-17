@@ -16,6 +16,7 @@ const (
 type ICavanUdpLink interface {
 	OnPackReceived(link *CavanUdpLink, pack *CavanUdpPack)
 	OnSendFailed(link *CavanUdpLink, command *CavanUdpCmdNode)
+	OnKeepAlive(link *CavanUdpLink)
 }
 
 type CavanUdpCallback struct {
@@ -69,15 +70,17 @@ func (link *CavanUdpLink) NewWaiter(op CavanUdpOpCode) *CavanUdpWaiter {
 	return waiter
 }
 
-func (link *CavanUdpLink) ProxyLoop(tcp *net.TCPConn) {
+func (link *CavanUdpLink) ProxyLoop(conn net.Conn) {
 	defer link.Close()
 
-	bytes := make([]byte, 1024)
+	link.ProxyConn = conn
+
+	bytes := make([]byte, 1466)
 
 	for true {
-		tcp.SetReadDeadline(time.Now().Add(time.Minute * 5))
+		conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
 
-		length, err := tcp.Read(bytes)
+		length, err := conn.Read(bytes)
 		if err != nil {
 			fmt.Println(err)
 			break
@@ -112,7 +115,6 @@ func (link *CavanUdpLink) StartProxyDaemon(url string, port int) *CavanUdpLink {
 	}
 
 	udp.RemotePort = uint16(port)
-	udp.ProxyConn = tcp
 
 	go udp.ProxyLoop(tcp)
 
@@ -178,8 +180,7 @@ func (link *CavanUdpLink) ProcessLoop() {
 			link.ProcessPack(pack)
 
 		case <-time.After(time.Second * 10):
-			builder := NewCavanUdpCmdBuilder(CavanUdpOpPing, 0)
-			builder.Build(link).SendAsync()
+			link.Callback.OnKeepAlive(link)
 
 		case <-link.ExitChan:
 			return
@@ -287,13 +288,18 @@ func (link *CavanUdpLink) SendDataAsync(bytes []byte) *CavanUdpCmdNode {
 }
 
 func (link *CavanUdpLink) SendDataSync(bytes []byte) bool {
-	command := link.SendDataAsync(bytes)
-	return command.WaitReady()
+	return link.SendDataAsync(bytes).WaitReady()
 }
 
-func (link *CavanUdpLink) SendPing() bool {
+func (link *CavanUdpLink) SendPingAsync() *CavanUdpCmdNode {
 	builder := NewCavanUdpCmdBuilder(CavanUdpOpPing, 0)
-	return builder.Build(link).SendSync()
+	command := builder.Build(link)
+	command.SendAsync()
+	return command
+}
+
+func (link *CavanUdpLink) SendPingSync() bool {
+	return link.SendPingAsync().WaitReady()
 }
 
 func (link *CavanUdpLink) SetRemoteAddr(url string) error {
@@ -313,13 +319,13 @@ func (link *CavanUdpLink) Close() {
 
 	if sock != nil && sock.FreeLink(link) {
 		close(link.ExitChan)
+	}
 
-		conn := link.ProxyConn
-		link.ProxyConn = nil
+	conn := link.ProxyConn
+	link.ProxyConn = nil
 
-		if conn != nil {
-			conn.Close()
-		}
+	if conn != nil {
+		conn.Close()
 	}
 }
 
@@ -377,4 +383,8 @@ func (callback *CavanUdpCallback) OnPackReceived(link *CavanUdpLink, pack *Cavan
 func (callback *CavanUdpCallback) OnSendFailed(link *CavanUdpLink, command *CavanUdpCmdNode) {
 	fmt.Println("CavanUdpCallback::OnSendFailed")
 	link.Close()
+}
+
+func (callback *CavanUdpCallback) OnKeepAlive(link *CavanUdpLink) {
+	link.SendPingAsync()
 }

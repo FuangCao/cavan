@@ -69,22 +69,9 @@ func (client *CavanUdpTurnClient) TcpDaemonLoop(conn net.Conn) {
 		return
 	}
 
-	defer udp.Close()
-
 	udp.ProxyConn = conn
 
-	bytes := make([]byte, 1024)
-
-	for true {
-		conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
-		length, err := conn.Read(bytes)
-		if err != nil {
-			fmt.Println(err)
-			break
-		}
-
-		udp.SendDataAsync(bytes[0:length])
-	}
+	udp.ProxyLoop(conn)
 }
 
 func (client *CavanUdpTurnClient) BuildProxyCommand() string {
@@ -100,7 +87,7 @@ func (client *CavanUdpTurnClient) GetUdpCtrl() *CavanUdpLink {
 	defer client.Unlock()
 
 	ctrl := client.UdpCtrl
-	if ctrl != nil && ctrl.SendPing() {
+	if ctrl != nil && ctrl.SendPingSync() {
 		return ctrl
 	}
 
