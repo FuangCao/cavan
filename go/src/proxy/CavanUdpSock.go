@@ -85,7 +85,6 @@ func (sock *CavanUdpSock) FreeLink(link *CavanUdpLink) bool {
 	}
 
 	sock.Links[port] = nil
-	link.Sock = nil
 
 	return true
 }

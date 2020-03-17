@@ -294,7 +294,10 @@ func (link *CavanUdpLink) SetRemoteAddr(url string) error {
 }
 
 func (link *CavanUdpLink) Close() {
-	if link.Sock.FreeLink(link) {
+	sock := link.Sock
+	link.Sock = nil
+
+	if sock != nil && sock.FreeLink(link) {
 		close(link.ExitChan)
 
 		conn := link.ProxyConn
