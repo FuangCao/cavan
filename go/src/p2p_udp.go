@@ -44,12 +44,17 @@ func main() {
 		flag_udp_server := flag.String("udp-server", fmt.Sprintf("127.0.0.1:%d", UDP_SERVER_PORT), "Udp server url")
 		flag_name := flag.String("name", "", "Role change client name")
 		flag_proxy := flag.String("proxy", "127.0.0.1:9090", "Proxy url")
+		flag_vpn := flag.Bool("vpn", false, "Proxy to vpn server")
 
 		flag.Parse()
 
 		if *flag_help {
 			flag.Usage()
 			return
+		}
+
+		if *flag_vpn {
+			*flag_proxy = "192.168.0.176:8118"
 		}
 
 		proxy.NewCavanUdpTurnClient(*flag_port, *flag_server, *flag_udp_server, *flag_proxy, *flag_name)
