@@ -100,7 +100,12 @@ func (link *CavanUdpLink) StartProxyDaemon(url string, port int) *CavanUdpLink {
 		return nil
 	}
 
-	udp := link.Sock.NewLink(link.Addr)
+	sock := link.Sock
+	if sock == nil {
+		return nil
+	}
+
+	udp := sock.NewLink(link.Addr)
 	if udp == nil {
 		tcp.Close()
 		return nil
@@ -176,8 +181,10 @@ func (link *CavanUdpLink) ProcessLoop() {
 }
 
 func (link *CavanUdpLink) SendCommandRaw(command *CavanUdpCmdNode) {
-	if command.Callback.Prepare(link, command.Times) {
-		link.Sock.CommandChan <- command
+	sock := link.Sock
+
+	if sock != nil && command.Callback.Prepare(link, command.Times) {
+		sock.CommandChan <- command
 		command.Time = time.Now()
 		command.Next = nil
 		command.Times++
@@ -341,6 +348,8 @@ func (callback *CavanUdpCallback) OnPackReceived(link *CavanUdpLink, pack *Cavan
 				if pack == nil {
 					break
 				}
+
+				link.ReadWin[index] = nil
 			}
 		} else {
 			tail := link.ReadIndex + RD_WIN_SIZE - 1
