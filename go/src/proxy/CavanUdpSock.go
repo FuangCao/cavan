@@ -71,6 +71,8 @@ func (sock *CavanUdpSock) NewLink(addr *net.UDPAddr) *CavanUdpLink {
 		return nil
 	}
 
+	fmt.Println("NewLink:", index)
+
 	return NewCavanUdpLink(sock, addr, uint16(index), &CavanUdpCallback{})
 }
 
@@ -84,6 +86,7 @@ func (sock *CavanUdpSock) FreeLink(link *CavanUdpLink) bool {
 		return false
 	}
 
+	fmt.Println("FreeLink:", port)
 	sock.Links[port] = nil
 
 	return true
