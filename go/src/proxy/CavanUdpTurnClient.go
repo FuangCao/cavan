@@ -83,11 +83,7 @@ func (client *CavanUdpTurnClient) TcpDaemonLoop(conn net.Conn) {
 			break
 		}
 
-		fmt.Println(string(bytes[0:length]))
-
-		if udp.SendData(bytes[0:length]) == false {
-			break
-		}
+		udp.SendDataAsync(bytes[0:length])
 	}
 }
 

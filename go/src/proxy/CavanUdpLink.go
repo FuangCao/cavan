@@ -45,7 +45,7 @@ type CavanUdpLink struct {
 
 	LocalPort  uint16
 	RemotePort uint16
-	RTT        time.Duration
+	Overtime   time.Duration
 }
 
 func NewCavanUdpLink(sock *CavanUdpSock, addr *net.UDPAddr, port uint16, callback ICavanUdpLink) *CavanUdpLink {
@@ -55,7 +55,7 @@ func NewCavanUdpLink(sock *CavanUdpSock, addr *net.UDPAddr, port uint16, callbac
 	link.WaitChan = make(chan *CavanUdpWaiter)
 	link.ReadChan = make(chan *CavanUdpPack)
 	link.ExitChan = make(chan bool)
-	link.RTT = time.Millisecond * 200
+	link.Overtime = time.Millisecond * 200
 	sock.Links[port] = link
 	go link.ProcessLoop()
 	go link.WriteLoop()
@@ -82,9 +82,7 @@ func (link *CavanUdpLink) ProxyLoop(tcp *net.TCPConn) {
 			break
 		}
 
-		if link.SendData(bytes[0:length]) == false {
-			break
-		}
+		link.SendDataAsync(bytes[0:length])
 	}
 }
 
@@ -143,15 +141,9 @@ func (link *CavanUdpLink) ProcessPack(pack *CavanUdpPack) {
 	} else {
 		switch op {
 		case CavanUdpOpConn:
-			fmt.Println("CavanUdpPackConn")
-
 			body := pack.Body()
 			port := common.DecodeValue16(body, 0)
 			url := string(body[2:])
-
-			fmt.Println("port = ", port)
-			fmt.Println("url = ", url)
-
 			udp := link.StartProxyDaemon(url, port)
 
 			builder := NewCavanUdpCmdBuilder(0x80|CavanUdpOpConn, 2)
@@ -162,11 +154,7 @@ func (link *CavanUdpLink) ProcessPack(pack *CavanUdpPack) {
 			builder.Build(link).SendAsync()
 
 		case CavanUdpOpData:
-			fmt.Println("CavanUdpPackData")
-
 			conn := link.ProxyConn
-			fmt.Println("conn = ", conn)
-
 			if conn != nil {
 				common.CavanConnWriteAll(conn, pack.Body())
 			}
@@ -189,9 +177,13 @@ func (link *CavanUdpLink) ProcessLoop() {
 func (link *CavanUdpLink) SendCommandRaw(command *CavanUdpCmdNode) {
 	if command.Callback.Prepare(link, command.Times) {
 		link.Sock.WriteChan <- command
-		command.Time = time.Now().Add(link.RTT)
+		command.Time = time.Now()
 		command.Next = nil
 		command.Times++
+
+		if command.Times > 1 {
+			link.Overtime++
+		}
 
 		if link.WriteHead == nil {
 			link.WriteHead = command
@@ -217,9 +209,9 @@ func (link *CavanUdpLink) WriteLoop() {
 		if command == nil {
 			timer_ch = nil
 		} else if command.Pending {
-			delay := command.Time.Sub(time.Now())
-			if delay > 0 {
-				timer_ch = time.After(delay)
+			overtime := time.Now().Sub(command.Time)
+			if overtime < link.Overtime {
+				timer_ch = time.After(link.Overtime - overtime)
 			} else {
 				link.WriteHead = command.Next
 				link.SendCommandRaw(command)
@@ -259,19 +251,28 @@ func (link *CavanUdpLink) WriteLoop() {
 		case node := <-link.ReadChan:
 			link.Callback.OnPackReceived(link, node)
 
+		case <-timer_ch:
+			break
+
 		case <-link.ExitChan:
 			return
-
-		case <-timer_ch:
-			link.RTT++
 		}
 	}
 }
 
-func (link *CavanUdpLink) SendData(bytes []byte) bool {
+func (link *CavanUdpLink) SendDataAsync(bytes []byte) *CavanUdpCmdNode {
 	builder := NewCavanUdpCmdBuilder(CavanUdpOpData, len(bytes))
 	builder.AppendBytes(bytes)
-	return builder.Build(link).SendSync()
+
+	command := builder.Build(link)
+	command.SendAsync()
+
+	return command
+}
+
+func (link *CavanUdpLink) SendDataSync(bytes []byte) bool {
+	command := link.SendDataAsync(bytes)
+	return command.WaitReady()
 }
 
 func (link *CavanUdpLink) SendPing() bool {
@@ -291,8 +292,6 @@ func (link *CavanUdpLink) SetRemoteAddr(url string) error {
 }
 
 func (link *CavanUdpLink) Close() {
-	fmt.Println("CavanUdpLinkClose")
-
 	if link.Sock.FreeLink(link) {
 		close(link.ExitChan)
 
@@ -307,10 +306,14 @@ func (link *CavanUdpLink) Close() {
 
 func (callback *CavanUdpCallback) OnPackReceived(link *CavanUdpLink, pack *CavanUdpPack) {
 	if pack.OpCode() == CavanUdpOpAck {
-		fmt.Println("CavanUdpPackAck")
-		index := int(pack.Index()) % len(link.WriteWin)
+		index := pack.Index() % WR_WIN_SIZE
 		command := link.WriteWin[index]
 		command.SetReady(true)
+
+		if command.Times == 1 {
+			delay := time.Now().Sub(command.Time) * 2
+			link.Overtime = (link.Overtime*7 + delay) / 8
+		}
 	} else {
 		builder := NewCavanUdpCmdBuilder(CavanUdpOpAck, 0)
 		builder.BuildResponse(link, pack).SendToSock()
