@@ -175,7 +175,7 @@ func (link *CavanUdpLink) ProcessLoop() {
 		case pack := <-link.ProcessChan:
 			link.ProcessPack(pack)
 
-		case <-time.After(time.Second * 10):
+		case <-time.After(time.Second * 20):
 			link.Callback.OnKeepAlive(link)
 
 		case <-link.ExitChan:
@@ -190,10 +190,6 @@ func (link *CavanUdpLink) SendCommandRaw(command *CavanUdpCmdNode) {
 		command.Time = time.Now()
 		command.Next = nil
 		command.Times++
-
-		if command.Times > 1 {
-			link.Overtime += time.Microsecond * 100
-		}
 
 		if link.WriteHead == nil {
 			link.WriteHead = command
@@ -221,11 +217,12 @@ func (link *CavanUdpLink) WriteLoop() {
 			timer_ch = nil
 		} else if command.Pending {
 			delay := link.Overtime - time.Now().Sub(command.Time)
-			if delay > time.Millisecond*100 {
+			if delay > time.Microsecond*100 {
 				timer_ch = time.After(delay)
 			} else {
 				link.WriteHead = command.Next
 				link.SendCommandRaw(command)
+				link.Overtime += time.Millisecond
 				continue
 			}
 		} else {
