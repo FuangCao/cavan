@@ -129,12 +129,15 @@ func (sock *CavanUdpSock) ReadLoop() {
 				link.ReadChan <- &CavanUdpPack{Bytes: bytes}
 			} else {
 				fmt.Println("Invalid dest port: ", dest)
-				response := NewCavanUdpDirectPack(addr, make([]byte, 6))
-				response.SetDestPort(pack.SrcPort())
-				response.SetSrcPort(pack.DestPort())
-				response.SetIndex(pack.Index())
-				response.SetOpCode(CavanUdpOpErr)
-				sock.PackChan <- response
+
+				if pack.OpCode() > CavanUdpOpErr {
+					response := NewCavanUdpDirectPack(addr, make([]byte, 6))
+					response.SetDestPort(pack.SrcPort())
+					response.SetSrcPort(pack.DestPort())
+					response.SetIndex(pack.Index())
+					response.SetOpCode(CavanUdpOpErr)
+					sock.PackChan <- response
+				}
 			}
 		}
 	}
