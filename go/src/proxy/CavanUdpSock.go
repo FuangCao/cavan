@@ -3,12 +3,14 @@ package proxy
 import (
 	"fmt"
 	"net"
+	"sync"
 	"time"
 
 	"../common"
 )
 
 type CavanUdpSock struct {
+	sync.Mutex
 	Conn      *net.UDPConn
 	Index     int
 	Links     [1 << 16]*CavanUdpLink
@@ -57,12 +59,30 @@ func (sock *CavanUdpSock) NewPort() int {
 }
 
 func (sock *CavanUdpSock) NewLink(addr *net.UDPAddr) *CavanUdpLink {
+	sock.Lock()
+	defer sock.Unlock()
+
 	index := sock.NewPort()
 	if index < 0 {
 		return nil
 	}
 
 	return NewCavanUdpLink(sock, addr, uint16(index), &CavanUdpCallback{})
+}
+
+func (sock *CavanUdpSock) FreeLink(link *CavanUdpLink) bool {
+	sock.Lock()
+	defer sock.Unlock()
+
+	port := link.LocalPort
+
+	if sock.Links[port] != link {
+		return false
+	}
+
+	sock.Links[port] = nil
+
+	return true
 }
 
 func (sock *CavanUdpSock) WriteLoop() {

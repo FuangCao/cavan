@@ -12,7 +12,7 @@ import (
 )
 
 type CavanUdpTurnClient struct {
-	Lock       sync.Mutex
+	sync.Mutex
 	ClientName string
 	ClientUrl  string
 	ServerUrl  string
@@ -100,8 +100,8 @@ func (client *CavanUdpTurnClient) BuildProxyCommand() string {
 }
 
 func (client *CavanUdpTurnClient) GetUdpCtrl() *CavanUdpLink {
-	client.Lock.Lock()
-	defer client.Lock.Unlock()
+	client.Lock()
+	defer client.Unlock()
 
 	ctrl := client.UdpCtrl
 	if ctrl == nil {
@@ -110,7 +110,7 @@ func (client *CavanUdpTurnClient) GetUdpCtrl() *CavanUdpLink {
 			return nil
 		}
 
-		fmt.Println(wan)
+		fmt.Println("wan = ", wan)
 
 		ctrl = client.Sock.NewLink(nil)
 		if ctrl == nil {
@@ -123,13 +123,15 @@ func (client *CavanUdpTurnClient) GetUdpCtrl() *CavanUdpLink {
 			return nil
 		}
 
-		fmt.Println(addr)
+		fmt.Println("tcp = ", addr)
 
 		conn, err := net.DialTCP("tcp", nil, addr)
 		if err != nil {
 			fmt.Println(err)
 			return nil
 		}
+
+		fmt.Println("conn = ", conn)
 
 		command := client.BuildProxyCommand()
 		if err := common.CavanConnWritePack(conn, []byte(command)); err != nil {
@@ -143,7 +145,7 @@ func (client *CavanUdpTurnClient) GetUdpCtrl() *CavanUdpLink {
 			return nil
 		}
 
-		response, err := common.CavanConnReadPack(conn)
+		response, err := common.CavanConnReadPack(conn, time.Second*20)
 		if err != nil {
 			fmt.Println(err)
 			return nil
@@ -196,7 +198,7 @@ func (client *CavanUdpTurnClient) NewUdpLink() *CavanUdpLink {
 
 	url := []byte(client.ProxyUrl)
 
-	builder := NewCavanUdpCmdBuilder(CavanUdpPackConn, len(url)+2)
+	builder := NewCavanUdpCmdBuilder(CavanUdpOpConn, len(url)+2)
 	builder.AppendValue16(link.LocalPort)
 	builder.AppendBytes(url)
 

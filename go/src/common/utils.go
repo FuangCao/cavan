@@ -92,8 +92,8 @@ func CavanConnFill(conn net.Conn, bytes []byte) error {
 	return nil
 }
 
-func CavanConnReadPack(conn net.Conn) ([]byte, error) {
-	conn.SetReadDeadline(time.Now().Add(time.Minute))
+func CavanConnReadPack(conn net.Conn, delay time.Duration) ([]byte, error) {
+	conn.SetReadDeadline(time.Now().Add(delay))
 
 	header := make([]byte, 2)
 

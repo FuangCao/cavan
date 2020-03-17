@@ -57,7 +57,7 @@ func main() {
 		fmt.Println("NewCavanUdpTurnServer")
 		proxy.NewCavanUdpTurnServer(8867)
 	} else if command == "client" {
-		client := proxy.NewCavanUdpTurnClient(1234, "127.0.0.1:8868", "127.0.0.1:8867", "127.0.0.1:8021", "")
+		client := proxy.NewCavanUdpTurnClient(1234, "free.qydev.com:4044", "127.0.0.1:8867", "127.0.0.1:8021", "")
 		fmt.Println("NewUdpLink = ", client.NewUdpLink())
 	} else {
 		fmt.Printf("Invalid command: %s\n", command)

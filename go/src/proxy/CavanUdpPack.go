@@ -4,15 +4,15 @@ import (
 	"../common"
 )
 
-type CavanUdpPackType uint8
+type CavanUdpOpCode uint8
 
 const (
-	CavanUdpPackAck   CavanUdpPackType = 0
-	CavanUdpPackPing  CavanUdpPackType = 1
-	CavanUdpPackConn  CavanUdpPackType = 2
-	CavanUdpPackLink  CavanUdpPackType = 3
-	CavanUdpPackData  CavanUdpPackType = 4
-	CavanUdpPackClose CavanUdpPackType = 5
+	CavanUdpOpAck   CavanUdpOpCode = 0
+	CavanUdpOpPing  CavanUdpOpCode = 1
+	CavanUdpOpConn  CavanUdpOpCode = 2
+	CavanUdpOpLink  CavanUdpOpCode = 3
+	CavanUdpOpData  CavanUdpOpCode = 4
+	CavanUdpOpClose CavanUdpOpCode = 5
 )
 
 type CavanUdpPack struct {
@@ -53,12 +53,12 @@ func (pack *CavanUdpPack) SetIndex(value uint8) {
 	pack.Bytes[4] = value
 }
 
-func (pack *CavanUdpPack) Type() CavanUdpPackType {
-	return CavanUdpPackType(pack.Bytes[5])
+func (pack *CavanUdpPack) OpCode() CavanUdpOpCode {
+	return CavanUdpOpCode(pack.Bytes[5])
 }
 
-func (pack *CavanUdpPack) SetType(value CavanUdpPackType) {
-	pack.Bytes[5] = byte(value)
+func (pack *CavanUdpPack) SetOpCode(op CavanUdpOpCode) {
+	pack.Bytes[5] = byte(op)
 }
 
 func (pack *CavanUdpPack) Body() []byte {

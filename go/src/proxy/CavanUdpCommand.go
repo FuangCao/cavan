@@ -11,7 +11,7 @@ type CavanUdpCmdCallback interface {
 	WriteTo(link *CavanUdpLink, conn *net.UDPConn) (int, error)
 	Prepare(link *CavanUdpLink, times int) bool
 	Setup(index uint8)
-	GetRspType() CavanUdpPackType
+	RspOpCode() CavanUdpOpCode
 }
 
 type CavanUdpCmdNode struct {
@@ -40,7 +40,7 @@ func NewCavanUdpCmdNode(link *CavanUdpLink, callback CavanUdpCmdCallback) *Cavan
 }
 
 func (command *CavanUdpCmdNode) NewRspWaiter() *CavanUdpWaiter {
-	pack := command.Callback.GetRspType()
+	pack := command.Callback.RspOpCode()
 	return command.Link.NewWaiter(pack)
 }
 
@@ -90,16 +90,16 @@ func (command *CavanUdpCommand) Setup(index uint8) {
 	command.SetIndex(index)
 }
 
-func (command *CavanUdpCommand) GetRspType() CavanUdpPackType {
-	return command.Type() | 0x80
+func (command *CavanUdpCommand) RspOpCode() CavanUdpOpCode {
+	return command.OpCode() | 0x80
 }
 
-func NewCavanUdpCmdBuilder(command CavanUdpPackType, length int) *CavanUdpCmdBuilder {
+func NewCavanUdpCmdBuilder(op CavanUdpOpCode, length int) *CavanUdpCmdBuilder {
 	bytes := make([]byte, length+6)
 	builder := CavanUdpCmdBuilder{}
 	builder.CavanUdpPack.Bytes = bytes
 	builder.ByteArrayBuilder.Init(bytes, 6)
-	builder.SetType(command)
+	builder.SetOpCode(op)
 	return &builder
 }
 

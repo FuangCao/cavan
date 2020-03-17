@@ -51,6 +51,6 @@ func (command *CavanStunCommand) Prepare(link *CavanUdpLink, times int) bool {
 func (command *CavanStunCommand) Setup(index uint8) {
 }
 
-func (command *CavanStunCommand) GetRspType() CavanUdpPackType {
+func (command *CavanStunCommand) RspOpCode() CavanUdpOpCode {
 	return 0
 }

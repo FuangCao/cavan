@@ -56,7 +56,7 @@ func (server *CavanUdpTurnServer) TcpMainLoop() {
 func (server *CavanUdpTurnServer) TcpDaemonLoop(conn net.Conn) error {
 	defer conn.Close()
 
-	command, err := common.CavanConnReadPack(conn)
+	command, err := common.CavanConnReadPack(conn, time.Second*20)
 	if err != nil {
 		return err
 	}
@@ -84,6 +84,8 @@ func (server *CavanUdpTurnServer) TcpDaemonLoop(conn net.Conn) error {
 	if wan == nil {
 		return nil
 	}
+
+	fmt.Println("wan = ", wan)
 
 	udp := server.Sock.NewLink(addr)
 	if udp == nil {

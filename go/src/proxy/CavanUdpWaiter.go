@@ -6,12 +6,12 @@ import (
 
 type CavanUdpWaiter struct {
 	Next     *CavanUdpWaiter
-	PackType CavanUdpPackType
+	OpCode   CavanUdpOpCode
 	PackChan chan *CavanUdpPack
 }
 
-func NewCavanUdpWaiter(id CavanUdpPackType) *CavanUdpWaiter {
-	waiter := CavanUdpWaiter{PackType: id}
+func NewCavanUdpWaiter(op CavanUdpOpCode) *CavanUdpWaiter {
+	waiter := CavanUdpWaiter{OpCode: op}
 	waiter.PackChan = make(chan *CavanUdpPack, 2)
 	return &waiter
 }
