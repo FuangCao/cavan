@@ -76,7 +76,7 @@ func (link *CavanUdpLink) ProxyLoop(conn net.Conn) {
 
 	link.ProxyConn = conn
 
-	bytes := make([]byte, 542)
+	bytes := make([]byte, 1466)
 
 	for true {
 		conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
