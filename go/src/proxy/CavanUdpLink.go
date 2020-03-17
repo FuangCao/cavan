@@ -26,7 +26,9 @@ type CavanUdpLink struct {
 	Callback  ICavanUdpLink
 	Sock      *CavanUdpSock
 	Addr      *net.UDPAddr
+	Closed    bool
 	ProxyConn net.Conn
+	Overtime  time.Duration
 
 	ProcessChan chan *CavanUdpPack
 	CommandChan chan *CavanUdpCmdNode
@@ -47,7 +49,6 @@ type CavanUdpLink struct {
 
 	LocalPort  uint16
 	RemotePort uint16
-	Overtime   time.Duration
 }
 
 func NewCavanUdpLink(sock *CavanUdpSock, addr *net.UDPAddr, port uint16, callback ICavanUdpLink) *CavanUdpLink {
@@ -65,7 +66,7 @@ func NewCavanUdpLink(sock *CavanUdpSock, addr *net.UDPAddr, port uint16, callbac
 }
 
 func (link *CavanUdpLink) NewWaiter(op CavanUdpOpCode) *CavanUdpWaiter {
-	waiter := NewCavanUdpWaiter(op)
+	waiter := NewCavanUdpWaiter(link, op)
 	link.WaitChan <- waiter
 	return waiter
 }
@@ -308,7 +309,7 @@ func (link *CavanUdpLink) SetRemoteAddr(url string) error {
 }
 
 func (link *CavanUdpLink) Close() {
-	link.Addr = nil
+	link.Closed = true
 
 	if link.Sock.FreeLink(link) {
 		close(link.ExitChan)

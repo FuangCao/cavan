@@ -42,8 +42,6 @@ func NewCavanUdpTurnServer(port int) *CavanUdpTurnServer {
 func (server *CavanUdpTurnServer) TcpMainLoop() {
 	for true {
 		conn, err := server.Listener.Accept()
-		fmt.Println(conn)
-
 		if err != nil {
 			fmt.Println(err)
 			time.Sleep(time.Second)
@@ -58,18 +56,20 @@ func (server *CavanUdpTurnServer) TcpDaemonLoop(conn net.Conn) error {
 
 	command, err := common.CavanConnReadPack(conn, time.Second*20)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
 	args := strings.Split(string(command), " ")
+	fmt.Println(args)
+
 	if len(args) != 2 {
 		return nil
 	}
 
-	fmt.Println(args)
-
 	addr, err := net.ResolveUDPAddr("udp", args[0])
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
@@ -77,11 +77,13 @@ func (server *CavanUdpTurnServer) TcpDaemonLoop(conn net.Conn) error {
 
 	port, err := strconv.Atoi(args[1])
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
 	wan := server.Sock.GetWanAddr()
 	if wan == nil {
+		fmt.Println("Failed to GetWanAddr")
 		return nil
 	}
 

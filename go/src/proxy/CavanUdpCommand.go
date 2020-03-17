@@ -46,15 +46,16 @@ func (command *CavanUdpCmdNode) NewRspWaiter() *CavanUdpWaiter {
 }
 
 func (command *CavanUdpCmdNode) WaitReady() bool {
-	if command.Link.Addr == nil {
-		return false
-	}
-
 	return <-command.DoneChan
 }
 
 func (command *CavanUdpCmdNode) SendAsync() {
-	command.Link.CommandChan <- command
+	link := command.Link
+	if link.Closed {
+		command.DoneChan <- false
+	} else {
+		link.CommandChan <- command
+	}
 }
 
 func (command *CavanUdpCmdNode) SetReady(success bool) {

@@ -6,17 +6,22 @@ import (
 
 type CavanUdpWaiter struct {
 	Next     *CavanUdpWaiter
+	Link     *CavanUdpLink
 	OpCode   CavanUdpOpCode
 	PackChan chan *CavanUdpPack
 }
 
-func NewCavanUdpWaiter(op CavanUdpOpCode) *CavanUdpWaiter {
-	waiter := CavanUdpWaiter{OpCode: op}
+func NewCavanUdpWaiter(link *CavanUdpLink, op CavanUdpOpCode) *CavanUdpWaiter {
+	waiter := CavanUdpWaiter{Link: link, OpCode: op}
 	waiter.PackChan = make(chan *CavanUdpPack, 2)
 	return &waiter
 }
 
 func (waiter *CavanUdpWaiter) WaitReady(delay time.Duration) *CavanUdpPack {
+	if waiter.Link.Closed {
+		return nil
+	}
+
 	select {
 	case pack := <-waiter.PackChan:
 		return pack
