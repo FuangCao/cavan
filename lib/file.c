@@ -150,10 +150,12 @@ int file_split(const char *file_name, const char *dest_dir, size_t size, int cou
 			goto out_close_src;
 		}
 
-		cpylen = ffile_ncopy(src_fd, dest_fd, remain_size > size ? size : remain_size);
+		cpylen = remain_size > size ? size : remain_size;
+
+		ret = ffile_ncopy(src_fd, dest_fd, cpylen);
 		close(dest_fd);
-		if (cpylen < 0) {
-			ret = cpylen;
+
+		if (ret < 0) {
 			pr_red_info("ffile_ncopy");
 			goto out_close_src;
 		}
