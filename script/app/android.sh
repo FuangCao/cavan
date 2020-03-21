@@ -6,6 +6,9 @@ alias shell="adb shell"
 alias logcat="adb logcat -v threadtime"
 alias cavan-adb-logcat-teamtalk="cavan-adb-logcat -s MoGuLogger"
 alias cavan-android-cmake="cmake -DCMAKE_SYSTEM_NAME=Android -DCMAKE_SYSTEM_VERSION=18 -DCMAKE_ANDROID_ARCH=x86 -DCMAKE_ANDROID_NDK=${NDK_HOME} -DCMAKE_ANDROID_STL_TYPE=gnustl_static"
+alias cavan-android-jack-kill="jack-admin kill-server"
+alias cavan-android-jack-start="jack-admin start-server"
+alias cavan-android-jack-restart="jack-admin kill-server && jack-admin start-server"
 
 export FILE_APK_RENAME_JAR="${CAVAN_HOME}/android/app/bin/ApkRename.jar"
 
