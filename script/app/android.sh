@@ -99,6 +99,48 @@ function cavan-android-lunch()
 	}
 }
 
+function cavan-android-choosecombo()
+{
+	local android_root envsetup_sh cavan_choosecombo_sh pwd_bak
+
+	android_root="$(cavan-android-get-root)"
+	echo "android_root = ${android_root}"
+
+	[ -d "${android_root}" ] || return 1
+
+	envsetup_sh="${android_root}/build/envsetup.sh"
+	echo "envsetup_sh = ${envsetup_sh}"
+
+	[ -f "${envsetup_sh}" ] || return 1
+
+	cavan_choosecombo_sh="${android_root}/cavan-choosecombo.sh"
+	source "${envsetup_sh}"
+
+	pwd_bak="${PWD}"
+	cd "${android_root}" || return 1
+
+	if [ "$1" = "force" ]
+	then
+		choosecombo || return 1
+	elif [ -n "$1" ]
+	then
+		choosecombo $* || return 1
+	else
+		[ -f "${cavan_choosecombo_sh}" ] && source ${cavan_choosecombo_sh} || choosecombo || return 1
+	fi
+
+	cat > "${cavan_choosecombo_sh}" << EOF
+#!/bin/sh
+
+source "${envsetup_sh}"
+choosecombo 1 ${TARGET_PRODUCT} ${TARGET_BUILD_VARIANT} ${TARGET_BUILD_PARTITION}
+EOF
+
+	chmod a+x "${cavan_choosecombo_sh}"
+
+	cd "${pwd_bak}" || return 1
+}
+
 function cavan-lunch-eng()
 {
 	cavan-android-lunch "$1" "eng"

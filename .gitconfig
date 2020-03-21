@@ -10,7 +10,7 @@
 	url = https://code.csdn.net/fuangcao/cavan.git
 	fetch = +refs/heads/*:refs/remotes/csdn/*
 [remote "coding"]
-	url = https://git.coding.net/fuangcao/cavan.git
+	url = https://e.coding.net/fuangcao/cavan.git
 	fetch = +refs/heads/*:refs/remotes/coding/*
 [remote "oschina"]
 	url = https://gitee.com/fuangcao/cavan.git
