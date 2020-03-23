@@ -42,7 +42,7 @@ function cavan-android-croot()
 {
 	local android_root="$(cavan-android-get-root)"
 
-	[ -d "${android_root}" ] && cd "${android_root}"
+	[ -d "${android_root}" ] && cd "${android_root}/$1"
 }
 
 function cavan-android-lunch()

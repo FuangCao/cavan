@@ -72,10 +72,10 @@ function cavan-rockchip-download()
 					fn="${rockdev}/parameter.txt"
 					;;
 				kernel | resource | boot)
-					fn="${ANDROID_BUILD_TOP}/kernel/${fn}.img"
+					fn="${rockdev}/${fn}.img"
 					;;
 				kernel.img | resource.img | boot.img)
-					fn="${ANDROID_BUILD_TOP}/kernel/${fn}"
+					fn="${rockdev}/${fn}"
 					;;
 				*.txt | *.img)
 					fn="${rockdev}/${fn}"
