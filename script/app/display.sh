@@ -51,10 +51,22 @@ Section "Monitor"
 EOF
 
 	{
-		cvt 1920 1080
-		cvt 1280 720
-		cvt 1280 960
 		cvt 1920 1440
+		cvt 1920 1200
+		cvt 1920 1080
+		cvt 1600 1200
+		cvt 1400 1050
+		cvt 1280 1024
+		cvt 1280 960
+		cvt 1280 800
+		cvt 1280 768
+		cvt 1280 720
+		cvt 1366 768
+		cvt 1024 768
+		cvt 1024 600
+		cvt 800 600
+		cvt 800 480
+		cvt 640 480
 	} | sed 's/^/\t/g'
 
 	cat << EOF
