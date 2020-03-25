@@ -59,6 +59,21 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_LINE_END,
 		}, {
+			.name = "crlf",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_CRLF,
+		}, {
+			.name = "cr",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_CR,
+		}, {
+			.name = "lf",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_LF,
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -88,6 +103,18 @@ int main(int argc, char *argv[])
 
 		case CAVAN_COMMAND_OPTION_LINE_END:
 			line_end = optarg;
+			break;
+
+		case CAVAN_COMMAND_OPTION_CRLF:
+			line_end = "\r\n";
+			break;
+
+		case CAVAN_COMMAND_OPTION_CR:
+			line_end = "\r";
+			break;
+
+		case CAVAN_COMMAND_OPTION_LF:
+			line_end = "\n";
 			break;
 
 		default:

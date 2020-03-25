@@ -562,6 +562,13 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doScreenMirror(JNIEnv *env, j
 	return CavanMainExecute(env, "screen_mirror", async, args, do_cavan_screen_mirror);
 }
 
+extern int do_cavan_serial(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doSerial(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "serial", async, args, do_cavan_serial);
+}
+
 extern int do_cavan_service(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doService(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)

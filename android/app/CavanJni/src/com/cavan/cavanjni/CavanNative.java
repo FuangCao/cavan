@@ -644,6 +644,14 @@ class CavanCommandScreenMirror extends CavanNativeCommand {
 	}
 }
 
+class CavanCommandSerial extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doSerial(async, args);
+	}
+}
+
 class CavanCommandService extends CavanNativeCommand {
 
 	@Override
@@ -1211,6 +1219,7 @@ public class CavanNative {
 		sHashMap.put("rle", new CavanCommandRle());
 		sHashMap.put("role_change", new CavanCommandRoleChange());
 		sHashMap.put("screen_mirror", new CavanCommandScreenMirror());
+		sHashMap.put("serial", new CavanCommandSerial());
 		sHashMap.put("service", new CavanCommandService());
 		sHashMap.put("service_manager", new CavanCommandServiceManager());
 		sHashMap.put("sha1sum", new CavanCommandSha1sum());
@@ -1353,6 +1362,7 @@ public class CavanNative {
 	public static native int doRle(boolean async, String... args);
 	public static native int doRoleChange(boolean async, String... args);
 	public static native int doScreenMirror(boolean async, String... args);
+	public static native int doSerial(boolean async, String... args);
 	public static native int doService(boolean async, String... args);
 	public static native int doServiceManager(boolean async, String... args);
 	public static native int doSha1sum(boolean async, String... args);
