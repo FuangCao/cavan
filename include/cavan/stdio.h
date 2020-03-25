@@ -651,6 +651,11 @@ int cavan_stdout_write_line(const char *line, int length);
 int nsleep(ulong nseconds);
 int msleep(ulong mseconds);
 
+speed_t serial_rate2speed(int rate);
+int serial_open(const char *pathname, int rate);
+void serial_read_loop(int fd);
+int serial_cmdline(int fd, const char *line_end);
+
 static inline unsigned int ssleep(unsigned int seconds)
 {
 	return sleep(seconds);

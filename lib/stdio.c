@@ -943,3 +943,197 @@ int msleep(ulong mseconds)
 
 	return nanosleep(&ts, NULL);
 }
+
+speed_t serial_rate2speed(int rate)
+{
+	switch (rate)
+	{
+	case 0:
+		return B0;
+	case 50:
+		return B50;
+	case 75:
+		return B75;
+	case 110:
+		return B110;
+	case 134:
+		return B134;
+	case 150:
+		return B150;
+	case 200:
+		return B200;
+	case 300:
+		return B300;
+	case 600:
+		return B600;
+	case 1200:
+		return B1200;
+	case 1800:
+		return B1800;
+	case 2400:
+		return B2400;
+	case 4800:
+		return B4800;
+	case 9600:
+		return B9600;
+	case 19200:
+		return B19200;
+	case 38400:
+		return B38400;
+	case 57600:
+		return B57600;
+	case 115200:
+		return B115200;
+	case 230400:
+		return B230400;
+	case 460800:
+		return B460800;
+	case 500000:
+		return B500000;
+	case 576000:
+		return B576000;
+	case 921600:
+		return B921600;
+	case 1000000:
+		return B1000000;
+	case 1152000:
+		return B1152000;
+	case 1500000:
+		return B1500000;
+	case 2000000:
+		return B2000000;
+	case 2500000:
+		return B2500000;
+	case 3000000:
+		return B3000000;
+	case 3500000:
+		return B3500000;
+	case 4000000:
+		return B4000000;
+	}
+
+	return B115200;
+}
+
+int serial_open(const char *pathname, int rate)
+{
+	int ret;
+	int fd;
+
+	println("serial_open: pathname = %s, rate = %d", pathname, rate);
+
+	fd = open(pathname, O_RDWR | O_NOCTTY);
+	if (fd < 0) {
+		pr_err_info("open: %s", pathname);
+		return fd;
+	}
+
+    if (isatty(fd)) {
+        struct termios attr;
+        speed_t speed;
+
+        ret = tcgetattr(fd, &attr);
+        if (ret < 0) {
+            pr_err_info("tcgetattr");
+            goto out_close_fd;
+        }
+
+        speed = serial_rate2speed(rate);
+
+        println("rate = %d, speed = %o", rate, speed);
+
+        ret = cfsetispeed(&attr, speed);
+        if (ret < 0) {
+            pr_err_info("cfsetispeed");
+            goto out_close_fd;
+        }
+
+        ret = cfsetospeed(&attr, speed);
+        if (ret < 0) {
+            pr_err_info("cfsetospeed");
+            goto out_close_fd;
+        }
+
+        attr.c_iflag &= ~(ICRNL | IXON);
+        attr.c_cflag |= CLOCAL | CREAD;
+        attr.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+        attr.c_oflag &= ~OPOST;
+
+        ret = tcsetattr(fd, TCSANOW, &attr);
+        if (ret < 0) {
+            pr_err_info("tcsetattr");
+            goto out_close_fd;
+        }
+    }
+
+	return fd;
+
+out_close_fd:
+	close(fd);
+	return ret;
+}
+
+void serial_read_loop(int fd)
+{
+	char buff[4096];
+
+	while (1) {
+		int length = read(fd, buff, sizeof(buff));
+		if (length < 0) {
+			break;
+		}
+
+		fwrite(buff, 1, length, stdout);
+		fflush(stdout);
+	}
+}
+
+static void *serial_read_thread(void *data)
+{
+	serial_read_loop(*(int *) data);
+	return NULL;
+}
+
+int serial_cmdline(int fd, const char *line_end)
+{
+	int line_end_size = strlen(line_end);
+	struct termios attr_bak;
+	int ret;
+
+	ret = cavan_tty_set_mode(stdin_fd, CAVAN_TTY_MODE_SSH, &attr_bak);
+	if (ret < 0) {
+		pr_red_info("cavan_tty_set_mode");
+		return ret;
+	}
+
+	cavan_pthread_run(serial_read_thread, &fd);
+
+	while (1) {
+		char value;
+
+		ret = read(stdin_fd, &value, 1);
+		if (ret != 1) {
+			break;
+		}
+
+		if (value == '\n') {
+			int ret = write(fd, line_end, line_end_size);
+			if (ret < 0) {
+				pr_err_info("write: %d", ret);
+				break;
+			}
+		} else {
+			int ret = write(fd, &value, 1);
+			if (ret < 0) {
+				pr_err_info("write: %d", ret);
+				break;
+			}
+		}
+
+		fsync(fd);
+	}
+
+	cavan_tty_attr_restore(stdin_fd, &attr_bak);
+
+	return 0;
+}

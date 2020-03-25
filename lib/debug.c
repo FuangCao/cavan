@@ -120,6 +120,9 @@ int catch_sigsegv(void)
 	action.sa_sigaction = sigsegv_handler;
 	action.sa_flags = SA_SIGINFO;
 
+	sigaction(SIGINT, &action, NULL);
+	sigaction(SIGHUP, &action, NULL);
+
 	return sigaction(SIGSEGV, &action, NULL);
 }
 

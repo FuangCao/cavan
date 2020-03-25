@@ -746,6 +746,17 @@ int try_to_open(int flags, ...)
 	return ret;
 }
 
+int ffile_getchar(int fd)
+{
+	char value;
+
+	if (read(fd, &value, 1) == 1) {
+		return value;
+	}
+
+	return -EFAULT;
+}
+
 ssize_t ffile_read(int fd, void *buff, size_t size)
 {
 #if 0
