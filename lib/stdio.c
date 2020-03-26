@@ -79,7 +79,7 @@ int cavan_tty_set_mode(int fd, int mode, struct termios *attr_bak)
 		return cavan_tty_set_attr(fd, TCSADRAIN, &attr);
 
 	case 1:
-	case 3:
+	case CAVAN_TTY_MODE_DATA:
 		attr.c_iflag = IGNBRK;
 		if (mode == 3) {
 			attr.c_iflag |= IXOFF;
@@ -94,7 +94,7 @@ int cavan_tty_set_mode(int fd, int mode, struct termios *attr_bak)
 		attr.c_cc[VTIME] = 1;
 		return cavan_tty_set_attr(fd, TCSADRAIN, &attr);
 
-	case 4:
+	case CAVAN_TTY_MODE_AT:
 		attr.c_lflag &= ~(ICANON | ECHO | ISIG);
 		attr.c_cflag |= (CREAD | CLOCAL);
 		attr.c_cflag &= ~(CSTOPB | PARENB | CRTSCTS);
@@ -102,14 +102,21 @@ int cavan_tty_set_mode(int fd, int mode, struct termios *attr_bak)
 		attr.c_cflag |= (B115200 | CS8);
 		return cavan_tty_set_attr(fd, TCSANOW, &attr);
 
-	case 5:
+	case CAVAN_TTY_MODE_SSH:
 		attr.c_lflag = 0;
 		attr.c_cc[VTIME] = 0;
 		attr.c_cc[VMIN] = 1;
 		return cavan_tty_set_attr(fd, TCSANOW, &attr);
 
-	case 6:
+	case CAVAN_TTY_MODE_CMDLINE:
 		attr.c_lflag = ISIG;
+		attr.c_cc[VTIME] = 0;
+		attr.c_cc[VMIN] = 1;
+		return cavan_tty_set_attr(fd, TCSANOW, &attr);
+
+	case CAVAN_TTY_MODE_SERIAL:
+		attr.c_lflag = ISIG;
+		attr.c_iflag = ICRNL;
 		attr.c_cc[VTIME] = 0;
 		attr.c_cc[VMIN] = 1;
 		return cavan_tty_set_attr(fd, TCSANOW, &attr);
@@ -1100,7 +1107,11 @@ int serial_cmdline(int fd, const char *line_end)
 	struct termios attr_bak;
 	int ret;
 
-	ret = cavan_tty_set_mode(stdin_fd, CAVAN_TTY_MODE_SSH, &attr_bak);
+	signal(SIGPIPE, SIG_IGN);
+	signal(SIGHUP, SIG_IGN);
+	signal(SIGINT, SIG_IGN);
+
+	ret = cavan_tty_set_mode(stdin_fd, CAVAN_TTY_MODE_SERIAL, &attr_bak);
 	if (ret < 0) {
 		pr_red_info("cavan_tty_set_mode");
 		return ret;

@@ -1338,12 +1338,12 @@ char *size2text(u64 size)
 	return buff;
 }
 
-u64 text2clock(const char *text)
+double text2clock(const char *text)
 {
-	u64 clock;
 	const char *p;
+	double clock;
 
-	clock = text2value_unsigned(text, &p, 10);
+	clock = text2double_unsigned(text, text + strlen(text), &p, 10);
 
 	switch (*p) {
 	case 'g':

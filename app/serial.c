@@ -69,6 +69,11 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_CR,
 		}, {
+			.name = "at",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_CR,
+		}, {
 			.name = "lf",
 			.has_arg = no_argument,
 			.flag = NULL,
@@ -98,7 +103,7 @@ int main(int argc, char *argv[])
 			return 0;
 
 		case CAVAN_COMMAND_OPTION_RATE:
-			rate = atoi(optarg);
+			rate = text2clock(optarg);
 			break;
 
 		case CAVAN_COMMAND_OPTION_LINE_END:
@@ -110,6 +115,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case CAVAN_COMMAND_OPTION_CR:
+		case CAVAN_COMMAND_OPTION_AT:
 			line_end = "\r";
 			break;
 

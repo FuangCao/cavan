@@ -134,6 +134,7 @@ using namespace std;
 #define CAVAN_TTY_MODE_AT				4
 #define CAVAN_TTY_MODE_SSH				5
 #define CAVAN_TTY_MODE_CMDLINE			6
+#define CAVAN_TTY_MODE_SERIAL			7
 
 #define CAVAN_TTY_SET_TITLE(fmt, args ...) \
 	do { \
