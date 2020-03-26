@@ -36,7 +36,6 @@ int main(int argc, char *argv[])
 	int rate;
 	int option_index;
 	const char *pathname;
-	const char *line_end;
 	struct option long_option[] = {
 		{
 			.name = "help",
@@ -84,7 +83,6 @@ int main(int argc, char *argv[])
 	};
 
 	rate = 115200;
-	line_end = "\n";
 	pathname = "/dev/ttyUSB0";
 
 	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF) {
@@ -107,20 +105,20 @@ int main(int argc, char *argv[])
 			break;
 
 		case CAVAN_COMMAND_OPTION_LINE_END:
-			line_end = optarg;
+			cavan_line_end = optarg;
 			break;
 
 		case CAVAN_COMMAND_OPTION_CRLF:
-			line_end = "\r\n";
+			cavan_line_end = "\r\n";
 			break;
 
 		case CAVAN_COMMAND_OPTION_CR:
 		case CAVAN_COMMAND_OPTION_AT:
-			line_end = "\r";
+			cavan_line_end = "\r";
 			break;
 
 		case CAVAN_COMMAND_OPTION_LF:
-			line_end = "\n";
+			cavan_line_end = "\n";
 			break;
 
 		default:
@@ -139,7 +137,7 @@ int main(int argc, char *argv[])
 		return -EFAULT;
 	}
 
-	serial_cmdline(fd, line_end);
+	serial_cmdline(fd);
 	close(fd);
 
 	return 0;

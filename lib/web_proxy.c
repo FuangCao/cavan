@@ -110,11 +110,11 @@ out_complete:
 
 static void web_proxy_show_request(const struct cavan_http_packet *req, const struct cavan_http_packet *rsp)
 {
-	cavan_lock_acquire(&g_stdout_lock);
+	cavan_lock_acquire(&cavan_stdout_lock);
 	print_sep(80);
 	cavan_http_packet_dump(req);
 	cavan_http_packet_dump(rsp);
-	cavan_lock_release(&g_stdout_lock);
+	cavan_lock_release(&cavan_stdout_lock);
 }
 
 int web_proxy_main_loop(struct network_client *reader, struct network_client *writer, int timeout)

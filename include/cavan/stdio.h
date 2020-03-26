@@ -134,7 +134,6 @@ using namespace std;
 #define CAVAN_TTY_MODE_AT				4
 #define CAVAN_TTY_MODE_SSH				5
 #define CAVAN_TTY_MODE_CMDLINE			6
-#define CAVAN_TTY_MODE_SERIAL			7
 
 #define CAVAN_TTY_SET_TITLE(fmt, args ...) \
 	do { \
@@ -559,7 +558,8 @@ using namespace std;
 
 __BEGIN_DECLS
 
-extern cavan_lock_t g_stdout_lock;
+extern cavan_lock_t cavan_stdout_lock;
+extern const char *cavan_line_end;
 
 FILE *cavan_stdio_tty_open(void);
 void cavan_stdio_tty_close(void);
@@ -655,7 +655,7 @@ int msleep(ulong mseconds);
 speed_t serial_rate2speed(int rate);
 int serial_open(const char *pathname, int rate);
 void serial_read_loop(int fd);
-int serial_cmdline(int fd, const char *line_end);
+int serial_cmdline(int fd);
 
 static inline unsigned int ssleep(unsigned int seconds)
 {

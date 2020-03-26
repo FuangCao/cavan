@@ -7,7 +7,8 @@
 
 #define MAX_BUFF_LEN	KB(4)
 
-cavan_lock_t g_stdout_lock = CAVAN_LOCK_INITIALIZER;
+cavan_lock_t cavan_stdout_lock = CAVAN_LOCK_INITIALIZER;
+const char *cavan_line_end = "\n";
 
 static int console_fd = -1;
 static struct termios tty_attr;
@@ -114,13 +115,6 @@ int cavan_tty_set_mode(int fd, int mode, struct termios *attr_bak)
 		attr.c_cc[VMIN] = 1;
 		return cavan_tty_set_attr(fd, TCSANOW, &attr);
 
-	case CAVAN_TTY_MODE_SERIAL:
-		attr.c_lflag = ISIG;
-		attr.c_iflag = ICRNL;
-		attr.c_cc[VTIME] = 0;
-		attr.c_cc[VMIN] = 1;
-		return cavan_tty_set_attr(fd, TCSANOW, &attr);
-
 	default:
 		pr_red_info("invalid mode %d", mode);
 		return -EINVAL;
@@ -174,7 +168,7 @@ int print_ntext(const char *text, size_t size)
 {
 	int ret = 0;
 
-	cavan_lock_acquire(&g_stdout_lock);
+	cavan_lock_acquire(&cavan_stdout_lock);
 
 	if (console_fd >= 0) {
 		ret |= write(console_fd, text, size);
@@ -184,7 +178,7 @@ int print_ntext(const char *text, size_t size)
 	ret |= write(stdout_fd, text, size);
 	ret |= fsync(stdout_fd);
 
-	cavan_lock_release(&g_stdout_lock);
+	cavan_lock_release(&cavan_stdout_lock);
 
 	return ret;
 }
@@ -918,7 +912,7 @@ int cavan_stdout_write_line(const char *line, int length)
 {
 	int ret = 0;
 
-	cavan_lock_acquire(&g_stdout_lock);
+	cavan_lock_acquire(&cavan_stdout_lock);
 
 	if (line != NULL && length > 0) {
 		ret |= write(stdout_fd, line, length);
@@ -926,7 +920,7 @@ int cavan_stdout_write_line(const char *line, int length)
 
 	ret |= write(stdout_fd, "\n", 1);
 
-	cavan_lock_release(&g_stdout_lock);
+	cavan_lock_release(&cavan_stdout_lock);
 
 	return ret;
 }
@@ -1082,12 +1076,23 @@ out_close_fd:
 
 void serial_read_loop(int fd)
 {
+	bool need_replace = (strcmp(cavan_line_end, "\r") == 0);
 	char buff[4096];
 
 	while (1) {
 		int length = read(fd, buff, sizeof(buff));
 		if (length < 0) {
 			break;
+		}
+
+		if (need_replace) {
+			char *p, *p_end;
+
+			for (p = buff, p_end = p + length; p < p_end; p++) {
+				if (*p == '\r') {
+					*p = '\n';
+				}
+			}
 		}
 
 		fwrite(buff, 1, length, stdout);
@@ -1101,9 +1106,9 @@ static void *serial_read_thread(void *data)
 	return NULL;
 }
 
-int serial_cmdline(int fd, const char *line_end)
+int serial_cmdline(int fd)
 {
-	int line_end_size = strlen(line_end);
+	int line_end_size = strlen(cavan_line_end);
 	struct termios attr_bak;
 	int ret;
 
@@ -1111,7 +1116,7 @@ int serial_cmdline(int fd, const char *line_end)
 	signal(SIGHUP, SIG_IGN);
 	signal(SIGINT, SIG_IGN);
 
-	ret = cavan_tty_set_mode(stdin_fd, CAVAN_TTY_MODE_SERIAL, &attr_bak);
+	ret = cavan_tty_set_mode(stdin_fd, CAVAN_TTY_MODE_CMDLINE, &attr_bak);
 	if (ret < 0) {
 		pr_red_info("cavan_tty_set_mode");
 		return ret;
@@ -1128,7 +1133,7 @@ int serial_cmdline(int fd, const char *line_end)
 		}
 
 		if (value == '\n') {
-			int ret = write(fd, line_end, line_end_size);
+			int ret = write(fd, cavan_line_end, line_end_size);
 			if (ret < 0) {
 				pr_err_info("write: %d", ret);
 				break;
