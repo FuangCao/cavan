@@ -51,3 +51,14 @@ function cavan-readline()
 		read line && echo $line;
 	done
 }
+
+function cavan-mount-overlay()
+{
+	[ "$3" ] ||
+	{
+		echo "cavan-mount-overlay <lowerdir> <upperdir> <workdir>"
+		return 1
+	}
+
+	sudo mount -t overlay overlay -o lowerdir=$3,upperdir=$1,workdir=$2 $3
+}

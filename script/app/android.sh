@@ -9,6 +9,7 @@ alias cavan-android-cmake="cmake -DCMAKE_SYSTEM_NAME=Android -DCMAKE_SYSTEM_VERS
 alias cavan-android-jack-kill="jack-admin kill-server"
 alias cavan-android-jack-start="jack-admin start-server"
 alias cavan-android-jack-restart="jack-admin kill-server && jack-admin start-server"
+alias cavan-android-make="cavan-android-command ${CMD_MAKE}"
 
 export FILE_APK_RENAME_JAR="${CAVAN_HOME}/android/app/bin/ApkRename.jar"
 
@@ -45,7 +46,7 @@ function cavan-android-croot()
 	[ -d "${android_root}" ] && cd "${android_root}/$1"
 }
 
-function cavan-android-make()
+function cavan-android-command()
 {
 	[ -d "$ANDROID_BUILD_TOP" ] ||
 	{
@@ -62,9 +63,9 @@ function cavan-android-make()
 	}
 
 	echo "TARGET_PRODUCT = $TARGET_PRODUCT"
-	echo "${CMD_MAKE} $*"
+	echo "$*"
 
-	(cd "$ANDROID_BUILD_TOP" && ${CMD_MAKE} $*) || return 1
+	(cd "${ANDROID_BUILD_TOP}" && $*) || return 1
 }
 
 function cavan-android-lunch()
