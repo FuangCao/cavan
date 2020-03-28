@@ -144,13 +144,8 @@ func (sock *CavanUdpSock) ReadLoop() {
 	}
 }
 
-func (sock *CavanUdpSock) GetWanAddr() *net.UDPAddr {
-	if sock.WanAddr != nil {
-		delay := time.Now().Sub(sock.WanTime)
-		if delay < time.Minute {
-			return sock.WanAddr
-		}
-	}
+func (sock *CavanUdpSock) GetWanAddrRaw() *net.UDPAddr {
+	sock.WanTime = time.Now()
 
 	builder := NewCavanStunCmdBuilder(0)
 	builder.SetType(1)
@@ -162,21 +157,25 @@ func (sock *CavanUdpSock) GetWanAddr() *net.UDPAddr {
 			return nil
 		}
 
-		sock.WanTime = time.Now()
 		sock.WanAddr = addr
-
 		return addr
 	}
 
 	return nil
+}
 
-	/* addr := sock.Conn.LocalAddr().(*net.UDPAddr)
-
-	if addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("127.0.0.1:%d", addr.Port)); err == nil {
-		return addr
+func (sock *CavanUdpSock) GetWanAddr() *net.UDPAddr {
+	addr := sock.WanAddr
+	if addr == nil {
+		return sock.GetWanAddrRaw()
 	}
 
-	return nil */
+	delay := time.Now().Sub(sock.WanTime)
+	if delay > time.Minute*10 {
+		go sock.GetWanAddrRaw()
+	}
+
+	return addr
 }
 
 func (callback *CavanStunCallback) OnPackReceived(link *CavanUdpLink, pack *CavanUdpPack) {

@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	ROLE_CHANGE_URL string = "free.qydev.com:4044"
+	ROLE_CHANGE_URL string = "free.qydev.com:4108"
 	UDP_SERVER_PORT int    = 8867
 )
 

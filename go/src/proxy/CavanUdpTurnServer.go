@@ -56,13 +56,25 @@ func (server *CavanUdpTurnServer) TcpMainLoop() {
 func (server *CavanUdpTurnServer) TcpDaemonLoop(conn net.Conn) error {
 	defer conn.Close()
 
-	command, err := common.CavanConnReadPack(conn, time.Second*20)
+	command, err := common.CavanConnReadPackStr(conn, time.Second*20)
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
 
-	args := strings.Split(string(command), " ")
+	fmt.Println("command =", command)
+
+	if strings.HasPrefix(string(command), "link") {
+		command, err = common.CavanConnReadPackStr(conn, time.Second*20)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		fmt.Println("command =", command)
+	}
+
+	args := strings.Split(command, " ")
 	fmt.Println(args)
 
 	if len(args) != 2 {

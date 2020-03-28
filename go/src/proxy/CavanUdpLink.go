@@ -28,7 +28,10 @@ type CavanUdpLink struct {
 	Addr      *net.UDPAddr
 	Closed    bool
 	ProxyConn net.Conn
-	Overtime  time.Duration
+	RTT       time.Duration
+
+	WriteTime  time.Time
+	WriteDelay time.Duration
 
 	ProcessChan chan *CavanUdpPack
 	CommandChan chan *CavanUdpCmdNode
@@ -58,7 +61,7 @@ func NewCavanUdpLink(sock *CavanUdpSock, addr *net.UDPAddr, port uint16, callbac
 	link.WaitChan = make(chan *CavanUdpWaiter)
 	link.ReadChan = make(chan *CavanUdpPack)
 	link.ExitChan = make(chan bool)
-	link.Overtime = time.Millisecond * 200
+	link.RTT = time.Millisecond * 50
 	sock.Links[port] = link
 	go link.ProcessLoop()
 	go link.WriteLoop()
@@ -151,6 +154,10 @@ func (link *CavanUdpLink) ProcessPack(pack *CavanUdpPack) {
 			body := pack.Body()
 			port := common.DecodeValue16(body, 0)
 			url := string(body[2:])
+
+			fmt.Println("url =", url)
+			fmt.Println("port =", port)
+
 			udp := link.StartProxyDaemon(url, port)
 
 			builder := NewCavanUdpCmdBuilder(0x80|CavanUdpOpConn, 2)
@@ -191,6 +198,8 @@ func (link *CavanUdpLink) SendCommandRaw(command *CavanUdpCmdNode) {
 		command.Next = nil
 		command.Times++
 
+		link.WriteTime = command.Time
+
 		if link.WriteHead == nil {
 			link.WriteHead = command
 		} else {
@@ -207,36 +216,50 @@ func (link *CavanUdpLink) SendCommandRaw(command *CavanUdpCmdNode) {
 func (link *CavanUdpLink) WriteLoop() {
 	defer link.Close()
 
+	link.WriteDelay = time.Millisecond * 100
+
 	for true {
 		var write_ch <-chan *CavanUdpCmdNode
 		var timer_ch <-chan time.Time
+		var index uint8
 
-		command := link.WriteHead
+		now := time.Now()
+		delay := link.WriteDelay - now.Sub(link.WriteTime)
 
-		if command == nil {
-			timer_ch = nil
-		} else if command.Pending {
-			delay := link.Overtime - time.Now().Sub(command.Time)
-			if delay > time.Microsecond*100 {
-				timer_ch = time.After(delay)
-			} else {
-				link.WriteHead = command.Next
-				link.SendCommandRaw(command)
-				link.Overtime += time.Millisecond
-				continue
-			}
-		} else {
-			link.WriteHead = command.Next
-			continue
-		}
-
-		index := link.WriteIndex % WR_WIN_SIZE
-		command = link.WriteWin[index]
-
-		if command != nil && command.Pending {
+		if delay > 0 {
+			fmt.Println("delay =", delay)
+			timer_ch = time.After(delay)
 			write_ch = nil
 		} else {
-			write_ch = link.CommandChan
+			command := link.WriteHead
+
+			if command == nil {
+				timer_ch = nil
+			} else if command.Pending {
+				delay = link.RTT*2 - time.Now().Sub(command.Time)
+				if delay > time.Microsecond*100 {
+					timer_ch = time.After(delay)
+				} else {
+					link.WriteHead = command.Next
+					link.SendCommandRaw(command)
+					link.WriteDelay = link.RTT
+					link.RTT += time.Millisecond
+					continue
+				}
+			} else {
+				link.WriteHead = command.Next
+				link.WriteDelay /= 2
+				continue
+			}
+
+			index = link.WriteIndex % WR_WIN_SIZE
+			command = link.WriteWin[index]
+
+			if command != nil && command.Pending {
+				write_ch = nil
+			} else {
+				write_ch = link.CommandChan
+			}
 		}
 
 		select {
@@ -328,8 +351,8 @@ func (callback *CavanUdpCallback) OnPackReceived(link *CavanUdpLink, pack *Cavan
 			command.SetReady(true)
 
 			if command.Times == 1 {
-				delay := time.Now().Sub(command.Time) * 2
-				link.Overtime = (link.Overtime*7 + delay) / 8
+				delay := time.Now().Sub(command.Time)
+				link.RTT = (link.RTT*7 + delay) / 8
 			}
 		}
 

@@ -146,3 +146,16 @@ func CavanConnWritePack(conn net.Conn, bytes []byte) error {
 
 	return nil
 }
+
+func CavanConnReadPackStr(conn net.Conn, delay time.Duration) (string, error) {
+	bytes, err := CavanConnReadPack(conn, delay)
+	if err != nil {
+		return "", err
+	}
+
+	return string(bytes), nil
+}
+
+func CavanConnWritePackStr(conn net.Conn, text string) error {
+	return CavanConnWritePack(conn, []byte(text))
+}
