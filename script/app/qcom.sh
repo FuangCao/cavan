@@ -1,21 +1,31 @@
 #!/bin/bash
 
-alias cavan-qcom-lunch-CP10="cavan-android-choosecombo 1 CP10 userdebug 32"
-alias cavan-qcom-build-CP10="cavan-qcom-lunch-CP10 && cavan-qcom-build-android"
+alias cavan-lunch-CP10="cavan-android-choosecombo 1 CP10 userdebug 32"
+alias cavan-build-CP10="cavan-lunch-CP10 && cavan-qcom-build-android"
 
-alias cavan-qcom-lunch-APH7="cavan-android-choosecombo 1 APH7 userdebug 32"
-alias cavan-qcom-build-APH7="cavan-qcom-lunch-APH7 && cavan-qcom-build-android"
+alias cavan-lunch-APH7="cavan-android-choosecombo 1 APH7 userdebug 32"
+alias cavan-build-APH7="cavan-lunch-APH7 && cavan-qcom-build-android"
 
-alias cavan-qcom-build-bootloader="(cavan-android-croot && make aboot -j8)"
-alias cavan-qcom-build-kernel="(cavan-android-croot && make bootimage -j8)"
-alias cavan-qcom-build-system="(cavan-android-croot && make systemimage -j8)"
+alias cavan-qcom-build-bootloader="cavan-android-make aboot"
+alias cavan-qcom-build-kernel="cavan-android-make bootimage"
+alias cavan-qcom-build-system="cavan-android-make systemimage"
+
+function cavan-qcom-mkdir()
+{
+	[ -d "$1" ] && return 0
+	[ -e "$1" ] && rm -f "$1" || return 1
+	mkdir -pv "$1" || return 1
+}
 
 function cavan-qcom-build-android()
 {
+	local target_system="out/target/product/msm8953_64/system"
+
 	cavan-android-croot || return 1
-	mkdir -pv out/target/product/msm8953_64/system/lib || return 1
-	mkdir -pv out/target/product/msm8953_64/system/lib64 || return 1
-	make -j8 || return 1
+
+	cavan-qcom-mkdir "${target_system}/lib" || return 1
+	cavan-qcom-mkdir "${target_system}/system/lib64" || return 1
+	cavan-android-make || return 1
 }
 
 function cavan-qcom-build-modem-msm8953()

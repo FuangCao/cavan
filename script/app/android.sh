@@ -45,6 +45,28 @@ function cavan-android-croot()
 	[ -d "${android_root}" ] && cd "${android_root}/$1"
 }
 
+function cavan-android-make()
+{
+	[ -d "$ANDROID_BUILD_TOP" ] ||
+	{
+		echo "ANDROID_BUILD_TOP not set!"
+		return 1
+	}
+
+	echo "ANDROID_BUILD_TOP = $ANDROID_BUILD_TOP"
+
+	[ "${TARGET_PRODUCT}" ] ||
+	{
+		echo "TARGET_PRODUCT not set!"
+		return 1
+	}
+
+	echo "TARGET_PRODUCT = $TARGET_PRODUCT"
+	echo "${CMD_MAKE} $*"
+
+	(cd "$ANDROID_BUILD_TOP" && ${CMD_MAKE} $*) || return 1
+}
+
 function cavan-android-lunch()
 {
 	local android_root="$(cavan-android-get-root)"
