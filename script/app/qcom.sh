@@ -67,9 +67,9 @@ function cavan-qcom-build-kernel-msm8953()
 	}
 
 	mkdir -pv "${KERNEL_OUT}" || return 1
-	rm -rfv "${KERNEL_OUT}/arch/${KERNEL_ARCH}/boot/dts" || return 1
-	${KERNEL_MAKE} ${KERNEL_DEFCONFIG} && ${KERNEL_MAKE} && ${KERNEL_MAKE} modules || return 1
-	${KERNEL_MAKE} INSTALL_MOD_PATH=${ANDROID_PRODUCT_OUT}/system INSTALL_MOD_STRIP=1 modules_install || return 1
+	# rm -rfv "${KERNEL_OUT}/arch/${KERNEL_ARCH}/boot/dts" || return 1
+	${KERNEL_MAKE} ${KERNEL_DEFCONFIG} && ${KERNEL_MAKE} || return 1
+	# ${KERNEL_MAKE} modules && ${KERNEL_MAKE} INSTALL_MOD_PATH=${ANDROID_PRODUCT_OUT}/system INSTALL_MOD_STRIP=1 modules_install || return 1
 
 	(cd ${ANDROID_BUILD_TOP} && cavan-qcom-pack-boot-msm8953 ${KERNEL_OUT}/arch/${KERNEL_ARCH}/boot/Image.gz-dtb) || return 1
 
