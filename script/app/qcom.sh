@@ -77,3 +77,15 @@ function cavan-qcom-build-kernel-msm8953()
 }
 
 alias cavan-build-kernel-CP10="cavan-qcom-build-kernel-msm8953 cp10_defconfig"
+
+function cavan-qcom-pack-lk-msm8953()
+{
+	SECIMAGE_LOCAL_DIR=vendor/qcom/proprietary/common/scripts/SecImage USES_SEC_POLICY_MULTIPLE_DEFAULT_SIGN=1 USES_SEC_POLICY_DEFAULT_SUBFOLDER_SIGN= USES_SEC_POLICY_INTEGRITY_CHECK=1 python vendor/qcom/proprietary/common/scripts/SecImage/sectools_builder.py -i out/target/product/msm8953_64/emmc_appsboot.mbn -t vendor/qcom/proprietary/common/scripts/SecImage/signed -g appsbl --config=vendor/qcom/proprietary/common/scripts/SecImage/config/integration/secimage.xml --install_base_dir=out/target/product/msm8953_64 || return 1
+}
+
+function cavan-qcom-build-lk-msm8953()
+{
+	cavan-android-make -C bootable/bootloader/lk TOOLCHAIN_PREFIX=../../../prebuilts/gcc/linux-x86/arm/arm-eabi-4.8/bin/arm-eabi- BOOTLOADER_OUT=../../../out/target/product/msm8953_64/obj/EMMC_BOOTLOADER_OBJ msm8953 EMMC_BOOT=1 SIGNED_KERNEL=0 VERIFIED_BOOT=1 DEFAULT_UNLOCK=true BOARD_NAME=msm8953 ENABLE_VB_ATTEST=1 OSVERSION_IN_BOOTIMAGE=1 || return 1
+	cavan-android-command cavan-qcom-pack-lk-msm8953 || return 1
+	echo "Build successfull"
+}
