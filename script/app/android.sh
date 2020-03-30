@@ -699,3 +699,27 @@ function cavan-simple-repo-sync()
 		mkdir -pv $(dirname "$2") && git clone "${url}/$1" "$2" -b "${branch}"
 	done < .repo/cavan.list
 }
+
+function cavan-fastboot-flash()
+{
+	local name image
+
+	adb reboot fastboot
+
+	for name in $*
+	do
+		echo "command $name"
+
+		case $name in
+			reboot | continue)
+				fastboot ${name} || return 1
+				;;
+
+			*)
+				image="${ANDROID_PRODUCT_OUT}/${name}.img"
+				echo "image = ${image}"
+				fastboot flash $name $image || return 1
+				;;
+		esac
+	done
+}
