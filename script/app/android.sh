@@ -704,7 +704,12 @@ function cavan-fastboot-flash()
 {
 	local name image
 
-	adb reboot fastboot
+	if [ -d "${ANDROID_BUILD_TOP}/vendor/rockchip" ]
+	then
+		adb reboot fastboot
+	else
+		adb reboot-bootloader
+	fi
 
 	for name in $*
 	do
@@ -713,13 +718,19 @@ function cavan-fastboot-flash()
 		case $name in
 			reboot | continue)
 				fastboot ${name} || return 1
+				continue
+				;;
+
+			aboot)
+				image=${ANDROID_PRODUCT_OUT}/emmc_appsboot.mbn
 				;;
 
 			*)
 				image="${ANDROID_PRODUCT_OUT}/${name}.img"
-				echo "image = ${image}"
-				fastboot flash $name $image || return 1
 				;;
 		esac
+
+		echo "${name} <= ${image}"
+		fastboot flash $name $image || return 1
 	done
 }
