@@ -61,6 +61,8 @@ function cavan-rockchip-download()
 
 	rockdev="${android_root}/rockdev/Image-${TARGET_PRODUCT}"
 
+	adb reboot-bootloader
+
 	for fn in $@
 	do
 		[ -f "${fn}" ] ||
