@@ -375,10 +375,16 @@ func (link *CavanUdpLink) SetRemoteAddr(url string) error {
 	return nil
 }
 
-func (link CavanUdpLink) WaitCloseComplete(command *CavanUdpCmdNode) {
+func (link CavanUdpLink) WaitCloseComplete(command *CavanUdpCmdNode) bool {
+	if command == nil {
+		return false
+	}
+
 	success := command.WaitReady()
 	fmt.Println("WaitCloseComplete:", success)
 	link.Close(true)
+
+	return success
 }
 
 func (link *CavanUdpLink) Close(force bool) {
