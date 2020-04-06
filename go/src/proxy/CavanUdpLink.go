@@ -90,7 +90,9 @@ func (link *CavanUdpLink) ProxyLoop(conn net.Conn) {
 			break
 		}
 
-		link.SendDataAsync(bytes[0:length])
+		if link.SendDataAsync(bytes[0:length]) == nil {
+			break
+		}
 	}
 }
 
@@ -256,6 +258,8 @@ func (link *CavanUdpLink) WriteLoop() {
 
 		for true {
 			now := time.Now()
+			// fmt.Println("now =", now)
+
 			delay0 = link.WriteDelay - now.Sub(link.WriteTime)
 
 			command := link.WriteHead
@@ -270,7 +274,7 @@ func (link *CavanUdpLink) WriteLoop() {
 					break
 				}
 
-				if link.WriteDelay < time.Second*2 {
+				if link.WriteDelay < time.Second {
 					link.WriteDelay = link.WriteDelay*2 + 1
 				}
 
@@ -285,17 +289,17 @@ func (link *CavanUdpLink) WriteLoop() {
 
 		index = link.WriteIndex % WR_WIN_SIZE
 
+		// fmt.Println("delay0 =", delay0, ", delay1 =", delay1)
+
 		if delay0 > 0 {
 			if delay0 < delay1 {
 				delay0 = delay1
 			}
 
-			// fmt.Println("delay =", delay0)
 			timer_ch = time.After(delay0)
 			write_ch = nil
 		} else {
 			if delay1 > 0 {
-				// fmt.Println("delay =", delay1)
 				timer_ch = time.After(delay1)
 			} else {
 				timer_ch = nil
@@ -342,26 +346,30 @@ func (link *CavanUdpLink) WriteLoop() {
 func (link *CavanUdpLink) SendDataAsync(bytes []byte) *CavanUdpCmdNode {
 	builder := NewCavanUdpCmdBuilder(CavanUdpOpData, len(bytes))
 	builder.AppendBytes(bytes)
-
-	command := builder.Build(link)
-	command.SendAsync()
-
-	return command
+	return builder.Build(link).SendAsync()
 }
 
 func (link *CavanUdpLink) SendDataSync(bytes []byte) bool {
-	return link.SendDataAsync(bytes).WaitReady()
+	command := link.SendDataAsync(bytes)
+	if command == nil {
+		return false
+	}
+
+	return command.WaitReady()
 }
 
 func (link *CavanUdpLink) SendPingAsync() *CavanUdpCmdNode {
 	builder := NewCavanUdpCmdBuilder(CavanUdpOpPing, 0)
-	command := builder.Build(link)
-	command.SendAsync()
-	return command
+	return builder.Build(link).SendAsync()
 }
 
 func (link *CavanUdpLink) SendPingSync() bool {
-	return link.SendPingAsync().WaitReady()
+	command := link.SendPingAsync()
+	if command == nil {
+		return false
+	}
+
+	return command.WaitReady()
 }
 
 func (link *CavanUdpLink) SetRemoteAddr(url string) error {

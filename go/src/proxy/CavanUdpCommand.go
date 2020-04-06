@@ -61,14 +61,8 @@ func (command *CavanUdpCmdNode) SendAsync() *CavanUdpCmdNode {
 		command.DoneChan <- false
 		return nil
 	} else {
-		select {
-		case link.CommandChan <- command:
-			return command
-
-		case <-time.After(time.Minute):
-			command.DoneChan <- false
-			return nil
-		}
+		link.CommandChan <- command
+		return command
 	}
 }
 
