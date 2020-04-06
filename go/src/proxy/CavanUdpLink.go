@@ -82,7 +82,7 @@ func (link *CavanUdpLink) ProxyLoop(conn net.Conn) {
 	bytes := make([]byte, 1466)
 
 	for true {
-		conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
+		// conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
 
 		length, err := conn.Read(bytes)
 		if err != nil {
@@ -174,6 +174,7 @@ func (link *CavanUdpLink) ProcessPack(pack *CavanUdpPack) {
 			}
 
 		case CavanUdpOpClose:
+			fmt.Println("CavanUdpOpClose")
 			link.Close(true)
 		}
 	}
@@ -350,7 +351,8 @@ func (link *CavanUdpLink) SetRemoteAddr(url string) error {
 }
 
 func (link CavanUdpLink) WaitCloseComplete(command *CavanUdpCmdNode) {
-	command.WaitReady()
+	success := command.WaitReady()
+	fmt.Println("WaitCloseComplete:", success)
 	link.Close(true)
 }
 
