@@ -56,10 +56,10 @@ type CavanUdpLink struct {
 
 func NewCavanUdpLink(sock *CavanUdpSock, addr *net.UDPAddr, port uint16, callback ICavanUdpLink) *CavanUdpLink {
 	link := &CavanUdpLink{Sock: sock, Addr: addr, LocalPort: port, Callback: callback}
+	link.CommandChan = make(chan *CavanUdpCmdNode, 10)
 	link.ProcessChan = make(chan *CavanUdpPack, 100)
-	link.CommandChan = make(chan *CavanUdpCmdNode)
-	link.WaitChan = make(chan *CavanUdpWaiter)
-	link.ReadChan = make(chan *CavanUdpPack)
+	link.WaitChan = make(chan *CavanUdpWaiter, 10)
+	link.ReadChan = make(chan *CavanUdpPack, 10)
 	link.ExitChan = make(chan bool)
 	link.RTT = time.Millisecond * 50
 	sock.Links[port] = link
@@ -221,40 +221,55 @@ func (link *CavanUdpLink) WriteLoop() {
 	for true {
 		var write_ch <-chan *CavanUdpCmdNode
 		var timer_ch <-chan time.Time
+		var delay0 time.Duration
+		var delay1 time.Duration
 		var index uint8
 
-		now := time.Now()
-		delay := link.WriteDelay - now.Sub(link.WriteTime)
+		for true {
+			now := time.Now()
+			delay0 = link.WriteDelay - now.Sub(link.WriteTime)
 
-		if delay > 0 {
-			fmt.Println("delay =", delay)
-			timer_ch = time.After(delay)
-			write_ch = nil
-		} else {
 			command := link.WriteHead
-
 			if command == nil {
-				timer_ch = nil
-			} else if command.Pending {
-				delay = link.RTT*2 - time.Now().Sub(command.Time)
-				if delay > time.Microsecond*100 {
-					timer_ch = time.After(delay)
-				} else {
-					link.WriteHead = command.Next
-					link.SendCommandRaw(command)
-					link.WriteDelay = link.RTT
-					link.RTT += time.Millisecond
-					continue
+				delay1 = 0
+				break
+			}
+
+			if command.Pending {
+				delay1 := link.RTT*2 - now.Sub(command.Time)
+				if delay0 > 0 || delay1 > 0 {
+					break
 				}
+
+				link.WriteDelay = link.WriteDelay*2 + 1
+				link.WriteHead = command.Next
+				link.RTT += time.Millisecond
+				link.SendCommandRaw(command)
 			} else {
 				link.WriteHead = command.Next
 				link.WriteDelay /= 2
-				continue
+			}
+		}
+
+		index = link.WriteIndex % WR_WIN_SIZE
+
+		if delay0 > 0 {
+			if delay0 < delay1 {
+				delay0 = delay1
 			}
 
-			index = link.WriteIndex % WR_WIN_SIZE
-			command = link.WriteWin[index]
+			fmt.Println("delay =", delay0)
+			timer_ch = time.After(delay0)
+			write_ch = nil
+		} else {
+			if delay1 > 0 {
+				fmt.Println("delay =", delay1)
+				timer_ch = time.After(delay1)
+			} else {
+				timer_ch = nil
+			}
 
+			command := link.WriteWin[index]
 			if command != nil && command.Pending {
 				write_ch = nil
 			} else {

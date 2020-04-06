@@ -63,6 +63,8 @@ func (client *CavanUdpTurnClient) TcpMainLoop() {
 			continue
 		}
 
+		fmt.Println("TcpMainLoop:", conn)
+
 		go client.TcpDaemonLoop(conn)
 	}
 }
@@ -70,15 +72,16 @@ func (client *CavanUdpTurnClient) TcpMainLoop() {
 func (client *CavanUdpTurnClient) TcpDaemonLoop(conn net.Conn) {
 	defer conn.Close()
 
+	fmt.Println("TcpDaemonLoop:", conn)
+
 	udp := client.NewUdpLink()
 	if udp == nil {
 		fmt.Println("Failed to NewUdpLink")
 		return
+	} else {
+		udp.ProxyConn = conn
+		udp.ProxyLoop(conn)
 	}
-
-	udp.ProxyConn = conn
-
-	udp.ProxyLoop(conn)
 }
 
 func (client *CavanUdpTurnClient) BuildProxyCommand() string {
@@ -186,18 +189,21 @@ func (client *CavanUdpTurnClient) GetUdpCtrl() *CavanUdpLink {
 
 func (client *CavanUdpTurnClient) NewUdpLink() *CavanUdpLink {
 	ctrl := client.GetUdpCtrl()
+	fmt.Println("ctrl = ", ctrl)
 	if ctrl == nil {
 		fmt.Println("Failed to GetUdpCtrl")
 		return nil
 	}
 
 	link := client.Sock.NewLink(ctrl.Addr)
+	fmt.Println("link = ", link)
 	if link == nil {
 		fmt.Println("Failed to NewLink")
 		return nil
 	}
 
 	url := []byte(client.ProxyUrl)
+	fmt.Println("url =", url)
 
 	builder := NewCavanUdpCmdBuilder(CavanUdpOpConn, len(url)+2)
 	builder.AppendValue16(link.LocalPort)

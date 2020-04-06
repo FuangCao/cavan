@@ -46,15 +46,29 @@ func (command *CavanUdpCmdNode) NewRspWaiter() *CavanUdpWaiter {
 }
 
 func (command *CavanUdpCmdNode) WaitReady() bool {
-	return <-command.DoneChan
+	select {
+	case success := <-command.DoneChan:
+		return success
+
+	case <-time.After(time.Minute):
+		return false
+	}
 }
 
-func (command *CavanUdpCmdNode) SendAsync() {
+func (command *CavanUdpCmdNode) SendAsync() bool {
 	link := command.Link
 	if link.Closed {
 		command.DoneChan <- false
+		return false
 	} else {
-		link.CommandChan <- command
+		select {
+		case link.CommandChan <- command:
+			return true
+
+		case <-time.After(time.Minute):
+			command.DoneChan <- false
+			return false
+		}
 	}
 }
 
@@ -66,8 +80,7 @@ func (command *CavanUdpCmdNode) SetReady(success bool) {
 }
 
 func (command *CavanUdpCmdNode) SendSync() bool {
-	command.SendAsync()
-	return command.WaitReady()
+	return command.SendAsync() && command.WaitReady()
 }
 
 func (command *CavanUdpCmdNode) SendToSock() {
