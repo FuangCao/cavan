@@ -55,19 +55,19 @@ func (command *CavanUdpCmdNode) WaitReady() bool {
 	}
 }
 
-func (command *CavanUdpCmdNode) SendAsync() bool {
+func (command *CavanUdpCmdNode) SendAsync() *CavanUdpCmdNode {
 	link := command.Link
 	if link.Closed {
 		command.DoneChan <- false
-		return false
+		return nil
 	} else {
 		select {
 		case link.CommandChan <- command:
-			return true
+			return command
 
 		case <-time.After(time.Minute):
 			command.DoneChan <- false
-			return false
+			return nil
 		}
 	}
 }
@@ -80,7 +80,7 @@ func (command *CavanUdpCmdNode) SetReady(success bool) {
 }
 
 func (command *CavanUdpCmdNode) SendSync() bool {
-	return command.SendAsync() && command.WaitReady()
+	return command.SendAsync() != nil && command.WaitReady()
 }
 
 func (command *CavanUdpCmdNode) SendToSock() {

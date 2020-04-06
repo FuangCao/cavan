@@ -218,7 +218,32 @@ func (link *CavanUdpLink) SendCommandRaw(command *CavanUdpCmdNode) {
 }
 
 func (link *CavanUdpLink) WriteLoop() {
-	defer link.Close(true)
+	defer func() {
+		link.Close(true)
+
+		for link.WriteHead != nil {
+			link.WriteHead.SetReady(false)
+			link.WriteHead = link.WriteHead.Next
+		}
+
+		for link.WaitHead != nil {
+			link.WaitHead.SetReady(nil)
+			link.WaitHead = link.WaitHead.Next
+		}
+
+		for true {
+			select {
+			case command := <-link.CommandChan:
+				command.SetReady(false)
+
+			case waiter := <-link.WaitChan:
+				waiter.SetReady(nil)
+
+			default:
+				return
+			}
+		}
+	}()
 
 	link.WriteDelay = time.Millisecond * 100
 
@@ -363,9 +388,7 @@ func (link *CavanUdpLink) Close(force bool) {
 		}
 	} else {
 		builder := NewCavanUdpCmdBuilder(CavanUdpOpClose, 0)
-		command := builder.Build(link)
-		command.SendAsync()
-		go link.WaitCloseComplete(command)
+		go link.WaitCloseComplete(builder.Build(link).SendAsync())
 	}
 
 	link.Closed = true

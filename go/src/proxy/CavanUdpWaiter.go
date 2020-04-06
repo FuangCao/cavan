@@ -18,7 +18,7 @@ func NewCavanUdpWaiter(link *CavanUdpLink, op CavanUdpOpCode) *CavanUdpWaiter {
 }
 
 func (waiter *CavanUdpWaiter) WaitReady(delay time.Duration) *CavanUdpPack {
-	if waiter.Link.Closed {
+	if waiter.Link.Closed && waiter.OpCode != CavanUdpOpClose {
 		return nil
 	}
 
