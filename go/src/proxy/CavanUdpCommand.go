@@ -102,7 +102,7 @@ func (command *CavanUdpCommand) WriteTo(link *CavanUdpLink, conn *net.UDPConn) (
 }
 
 func (command *CavanUdpCommand) Prepare(link *CavanUdpLink, times int) bool {
-	return times < 20
+	return times < 10
 }
 
 func (command *CavanUdpCommand) Setup(index uint8) {

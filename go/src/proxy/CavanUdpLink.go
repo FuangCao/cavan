@@ -75,7 +75,7 @@ func (link *CavanUdpLink) NewWaiter(op CavanUdpOpCode) *CavanUdpWaiter {
 }
 
 func (link *CavanUdpLink) ProxyLoop(conn net.Conn) {
-	defer link.Close()
+	defer link.Close(false)
 
 	link.ProxyConn = conn
 
@@ -172,6 +172,9 @@ func (link *CavanUdpLink) ProcessPack(pack *CavanUdpPack) {
 			if conn != nil {
 				common.CavanConnWriteAll(conn, pack.Body())
 			}
+
+		case CavanUdpOpClose:
+			link.Close(true)
 		}
 	}
 }
@@ -214,7 +217,7 @@ func (link *CavanUdpLink) SendCommandRaw(command *CavanUdpCmdNode) {
 }
 
 func (link *CavanUdpLink) WriteLoop() {
-	defer link.Close()
+	defer link.Close(true)
 
 	link.WriteDelay = time.Millisecond * 100
 
@@ -241,7 +244,10 @@ func (link *CavanUdpLink) WriteLoop() {
 					break
 				}
 
-				link.WriteDelay = link.WriteDelay*2 + 1
+				if link.WriteDelay < time.Second*2 {
+					link.WriteDelay = link.WriteDelay*2 + 1
+				}
+
 				link.WriteHead = command.Next
 				link.RTT += time.Millisecond
 				link.SendCommandRaw(command)
@@ -258,12 +264,12 @@ func (link *CavanUdpLink) WriteLoop() {
 				delay0 = delay1
 			}
 
-			fmt.Println("delay =", delay0)
+			// fmt.Println("delay =", delay0)
 			timer_ch = time.After(delay0)
 			write_ch = nil
 		} else {
 			if delay1 > 0 {
-				fmt.Println("delay =", delay1)
+				// fmt.Println("delay =", delay1)
 				timer_ch = time.After(delay1)
 			} else {
 				timer_ch = nil
@@ -343,12 +349,24 @@ func (link *CavanUdpLink) SetRemoteAddr(url string) error {
 	return nil
 }
 
-func (link *CavanUdpLink) Close() {
-	link.Closed = true
+func (link CavanUdpLink) WaitCloseComplete(command *CavanUdpCmdNode) {
+	command.WaitReady()
+	link.Close(true)
+}
 
-	if link.Sock.FreeLink(link) {
-		close(link.ExitChan)
+func (link *CavanUdpLink) Close(force bool) {
+	if force {
+		if link.Sock.FreeLink(link) {
+			close(link.ExitChan)
+		}
+	} else {
+		builder := NewCavanUdpCmdBuilder(CavanUdpOpClose, 0)
+		command := builder.Build(link)
+		command.SendAsync()
+		go link.WaitCloseComplete(command)
 	}
+
+	link.Closed = true
 
 	conn := link.ProxyConn
 	link.ProxyConn = nil
@@ -372,7 +390,7 @@ func (callback *CavanUdpCallback) OnPackReceived(link *CavanUdpLink, pack *Cavan
 		}
 
 	case CavanUdpOpErr:
-		link.Close()
+		link.Close(true)
 
 	default:
 		builder := NewCavanUdpCmdBuilder(CavanUdpOpAck, 0)
@@ -412,7 +430,7 @@ func (callback *CavanUdpCallback) OnPackReceived(link *CavanUdpLink, pack *Cavan
 
 func (callback *CavanUdpCallback) OnSendFailed(link *CavanUdpLink, command *CavanUdpCmdNode) {
 	fmt.Println("CavanUdpCallback::OnSendFailed")
-	link.Close()
+	link.Close(true)
 }
 
 func (callback *CavanUdpCallback) OnKeepAlive(link *CavanUdpLink) {

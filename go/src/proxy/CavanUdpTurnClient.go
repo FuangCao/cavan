@@ -63,7 +63,7 @@ func (client *CavanUdpTurnClient) TcpMainLoop() {
 			continue
 		}
 
-		fmt.Println("TcpMainLoop:", conn)
+		// fmt.Println("TcpMainLoop:", conn)
 
 		go client.TcpDaemonLoop(conn)
 	}
@@ -72,7 +72,7 @@ func (client *CavanUdpTurnClient) TcpMainLoop() {
 func (client *CavanUdpTurnClient) TcpDaemonLoop(conn net.Conn) {
 	defer conn.Close()
 
-	fmt.Println("TcpDaemonLoop:", conn)
+	// fmt.Println("TcpDaemonLoop:", conn)
 
 	udp := client.NewUdpLink()
 	if udp == nil {
@@ -118,7 +118,7 @@ func (client *CavanUdpTurnClient) GetUdpCtrl() *CavanUdpLink {
 	addr, err := net.ResolveTCPAddr("tcp", client.ServerUrl)
 	if err != nil {
 		fmt.Println(err)
-		ctrl.Close()
+		ctrl.Close(false)
 		return nil
 	}
 
@@ -127,7 +127,7 @@ func (client *CavanUdpTurnClient) GetUdpCtrl() *CavanUdpLink {
 	conn, err := net.DialTCP("tcp", nil, addr)
 	if err != nil {
 		fmt.Println(err)
-		ctrl.Close()
+		ctrl.Close(false)
 		return nil
 	}
 
@@ -136,48 +136,48 @@ func (client *CavanUdpTurnClient) GetUdpCtrl() *CavanUdpLink {
 	command := client.BuildProxyCommand()
 	if err := common.CavanConnWritePack(conn, []byte(command)); err != nil {
 		fmt.Println(err)
-		ctrl.Close()
+		ctrl.Close(false)
 		return nil
 	}
 
 	command = fmt.Sprintf("%s %d", wan.String(), ctrl.LocalPort)
 	if err := common.CavanConnWritePack(conn, []byte(command)); err != nil {
 		fmt.Println(err)
-		ctrl.Close()
+		ctrl.Close(false)
 		return nil
 	}
 
 	response, err := common.CavanConnReadPack(conn, time.Second*20)
 	if err != nil {
 		fmt.Println(err)
-		ctrl.Close()
+		ctrl.Close(false)
 		return nil
 	}
 
 	args := strings.Split(string(response), " ")
 	if len(args) != 2 {
 		fmt.Println(args)
-		ctrl.Close()
+		ctrl.Close(false)
 		return nil
 	}
 
 	fmt.Println(args)
 
 	if len(args) < 2 {
-		ctrl.Close()
+		ctrl.Close(false)
 		return nil
 	}
 
 	if err := ctrl.SetRemoteAddr(args[0]); err != nil {
 		fmt.Println(err)
-		ctrl.Close()
+		ctrl.Close(false)
 		return nil
 	}
 
 	port, err := strconv.Atoi(args[1])
 	if err != nil {
 		fmt.Println(err)
-		ctrl.Close()
+		ctrl.Close(false)
 		return nil
 	}
 
@@ -189,21 +189,21 @@ func (client *CavanUdpTurnClient) GetUdpCtrl() *CavanUdpLink {
 
 func (client *CavanUdpTurnClient) NewUdpLink() *CavanUdpLink {
 	ctrl := client.GetUdpCtrl()
-	fmt.Println("ctrl = ", ctrl)
+	// fmt.Println("ctrl = ", ctrl)
 	if ctrl == nil {
 		fmt.Println("Failed to GetUdpCtrl")
 		return nil
 	}
 
 	link := client.Sock.NewLink(ctrl.Addr)
-	fmt.Println("link = ", link)
+	// fmt.Println("link = ", link)
 	if link == nil {
 		fmt.Println("Failed to NewLink")
 		return nil
 	}
 
+	fmt.Println("url =", client.ProxyUrl)
 	url := []byte(client.ProxyUrl)
-	fmt.Println("url =", url)
 
 	builder := NewCavanUdpCmdBuilder(CavanUdpOpConn, len(url)+2)
 	builder.AppendValue16(link.LocalPort)
@@ -212,13 +212,13 @@ func (client *CavanUdpTurnClient) NewUdpLink() *CavanUdpLink {
 	if response := builder.Build(ctrl).SendWaitResponse(time.Millisecond * 500); response != nil {
 		bytes := response.Bytes
 		if len(bytes) < 8 {
-			link.Close()
+			link.Close(false)
 			return nil
 		}
 
 		link.RemotePort = uint16(common.DecodeValue16(bytes, 6))
 	} else {
-		link.Close()
+		link.Close(false)
 		return nil
 	}
 

@@ -101,7 +101,7 @@ func (server *CavanUdpTurnServer) TcpDaemonLoop(conn net.Conn) error {
 		return nil
 	}
 
-	fmt.Println("wan = ", wan)
+	fmt.Println("wan =", wan)
 
 	udp := server.Sock.NewLink(addr)
 	if udp == nil {
@@ -110,7 +110,7 @@ func (server *CavanUdpTurnServer) TcpDaemonLoop(conn net.Conn) error {
 
 	udp.RemotePort = uint16(port)
 
-	fmt.Println(udp)
+	// fmt.Println(udp)
 
 	response := fmt.Sprintf("%s %d", wan.String(), udp.LocalPort)
 	common.CavanConnWritePack(conn, []byte(response))
