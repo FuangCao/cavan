@@ -97,6 +97,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
+#if 0
 	android_stop_all();
 
 	while (optind < argc) {
@@ -107,6 +108,7 @@ int main(int argc, char *argv[])
 
 		pr_green_info("OK");
 	}
+#endif
 
 	return 0;
 }

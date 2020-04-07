@@ -19,6 +19,7 @@
  *
  */
 
+#if 0
 #include <cavan/android.h>
 
 #ifdef CONFIG_ANDROID_NDK
@@ -46,3 +47,4 @@ bool fs_volume_format(Volume *volume, const char *fstab, bool force);
 bool fs_volume_format2(const char *volume, const char *fs_type, const char *fstab, bool force);
 
 __END_DECLS
+#endif

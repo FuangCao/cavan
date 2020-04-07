@@ -135,9 +135,11 @@ status_t CavanVideoPlayer::readyToRun(void)
 
 	mFlingerSurfaceControl = mSession->createSurface(String8(mName), mWidth, mHeight, PIXEL_FORMAT_RGB_565);
 
+#if 0
 	SurfaceComposerClient::openGlobalTransaction();
 	mFlingerSurfaceControl->setLayer(0x40000000);
 	SurfaceComposerClient::closeGlobalTransaction();
+#endif
 
 	mFlingerSurface = mFlingerSurfaceControl->getSurface();
 
@@ -447,9 +449,11 @@ bool CavanMediaPlayer::doInit(void)
 		return false;
 	}
 
+#if 0
 	SurfaceComposerClient::openGlobalTransaction();
 	mSurfaceControl->setLayer(0x40000000);
 	SurfaceComposerClient::closeGlobalTransaction();
+#endif
 
 	mSurface = mSurfaceControl->getSurface();
 

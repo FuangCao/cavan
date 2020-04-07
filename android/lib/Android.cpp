@@ -24,6 +24,7 @@
 
 char *dump_backtrace(char *buff, size_t size)
 {
+#if 0
 	android::String8 str;
 	android::CallStack stack;
 
@@ -31,6 +32,9 @@ char *dump_backtrace(char *buff, size_t size)
 	str = stack.toString();
 
 	return text_ncopy(buff, str.string(), size);
+#else
+	return buff;
+#endif
 }
 
 char *address_to_symbol(const void *addr, char *buff, size_t size)

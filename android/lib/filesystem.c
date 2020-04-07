@@ -17,6 +17,7 @@
  *
  */
 
+#if 0
 #include <cavan/device.h>
 #include <cavan/command.h>
 #include <android/filesystem.h>
@@ -184,3 +185,4 @@ bool fs_volume_format2(const char *volume, const char *fs_type, const char *fsta
 
 	return fs_volume_format(v, fs_type, force);
 }
+#endif

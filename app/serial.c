@@ -1,3 +1,5 @@
+#define CAVAN_CMD_NAME serial
+
 /*
  * File:		serial.c
  * Author:		Fuang.Cao <cavan.cfa@gmail.com>
