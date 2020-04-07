@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	WR_WIN_SIZE uint8 = 32
-	RD_WIN_SIZE uint8 = WR_WIN_SIZE * 2
+	WR_WIN_SIZE    uint8         = 64
+	RD_WIN_SIZE    uint8         = WR_WIN_SIZE * 2
+	SEND_DELAY_MAX time.Duration = time.Second * 3
 )
 
 type ICavanUdpLink interface {
@@ -56,7 +57,7 @@ type CavanUdpLink struct {
 
 func NewCavanUdpLink(sock *CavanUdpSock, addr *net.UDPAddr, port uint16, callback ICavanUdpLink) *CavanUdpLink {
 	link := &CavanUdpLink{Sock: sock, Addr: addr, LocalPort: port, Callback: callback}
-	link.CommandChan = make(chan *CavanUdpCmdNode, 10)
+	link.CommandChan = make(chan *CavanUdpCmdNode, 100)
 	link.ProcessChan = make(chan *CavanUdpPack, 100)
 	link.WaitChan = make(chan *CavanUdpWaiter, 10)
 	link.ReadChan = make(chan *CavanUdpPack, 10)
@@ -269,13 +270,14 @@ func (link *CavanUdpLink) WriteLoop() {
 			}
 
 			if command.Pending {
-				delay1 := link.RTT*2 - now.Sub(command.Time)
+				delay1 = link.RTT*2 - now.Sub(command.Time)
 				if delay0 > 0 || delay1 > 0 {
 					break
 				}
 
-				if link.WriteDelay < time.Second {
-					link.WriteDelay = link.WriteDelay*2 + 1
+				link.WriteDelay = link.WriteDelay*2 + 1
+				if link.WriteDelay > SEND_DELAY_MAX {
+					link.WriteDelay = SEND_DELAY_MAX
 				}
 
 				link.WriteHead = command.Next
