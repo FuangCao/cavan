@@ -662,6 +662,18 @@ static int cavan_sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t
 	return data - data_bak;
 }
 
+static int cavan_sensors_batch(struct sensors_poll_device_1 *dev, int sensor_handle, int flags, int64_t sampling_period_ns, int64_t max_report_latency_ns)
+{
+	pr_pos_info();
+	return 0;
+}
+
+static int cavan_sensors_flush(struct sensors_poll_device_1 *dev, int sensor_handle)
+{
+	pr_pos_info();
+	return 0;
+}
+
 // ================================================================================
 
 static int cavan_sensors_module_close(struct hw_device_t *device)
@@ -677,12 +689,14 @@ static struct cavan_sensor_pdev cavan_poll_device = {
 	.device = {
 		.common = {
 			.tag = HARDWARE_DEVICE_TAG,
-			.version = 0,
+			.version = SENSORS_DEVICE_API_VERSION_1_3,
 			.close = cavan_sensors_module_close
 		},
 		.activate = cavan_sensors_activate,
 		.setDelay = cavan_sensors_setDelay,
-		.poll = cavan_sensors_poll
+		.poll = cavan_sensors_poll,
+		.batch = cavan_sensors_batch,
+		.flush = cavan_sensors_flush,
 	},
 };
 

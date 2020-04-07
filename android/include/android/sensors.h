@@ -122,7 +122,7 @@ struct cavan_sensor_device {
 };
 
 struct cavan_sensor_pdev {
-	struct sensors_poll_device_t device;
+	sensors_poll_device_1_t device;
 
 	pthread_mutex_t lock;
 
