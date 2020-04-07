@@ -324,6 +324,14 @@ class CavanCommandGitDaemon extends CavanNativeCommand {
 	}
 }
 
+class CavanCommandGpio extends CavanNativeCommand {
+
+	@Override
+	public int main(boolean async, String... args) {
+		return CavanNative.doGpio(async, args);
+	}
+}
+
 class CavanCommandHeartRate extends CavanNativeCommand {
 
 	@Override
@@ -1179,6 +1187,7 @@ public class CavanNative {
 		sHashMap.put("ftp", new CavanCommandFtp());
 		sHashMap.put("ftp_server", new CavanCommandFtpServer());
 		sHashMap.put("git_daemon", new CavanCommandGitDaemon());
+		sHashMap.put("gpio", new CavanCommandGpio());
 		sHashMap.put("heart_rate", new CavanCommandHeartRate());
 		sHashMap.put("http_client", new CavanCommandHttpClient());
 		sHashMap.put("http_sender", new CavanCommandHttpSender());
@@ -1322,6 +1331,7 @@ public class CavanNative {
 	public static native int doFtp(boolean async, String... args);
 	public static native int doFtpServer(boolean async, String... args);
 	public static native int doGitDaemon(boolean async, String... args);
+	public static native int doGpio(boolean async, String... args);
 	public static native int doHeartRate(boolean async, String... args);
 	public static native int doHttpClient(boolean async, String... args);
 	public static native int doHttpSender(boolean async, String... args);

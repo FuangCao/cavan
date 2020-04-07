@@ -282,6 +282,13 @@ JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doGitDaemon(JNIEnv *env, jcla
 	return CavanMainExecute(env, "git_daemon", async, args, do_cavan_git_daemon);
 }
 
+extern int do_cavan_gpio(int argc, char *argv[]);
+
+JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doGpio(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
+{
+	return CavanMainExecute(env, "gpio", async, args, do_cavan_gpio);
+}
+
 extern int do_cavan_heart_rate(int argc, char *argv[]);
 
 JNIEXPORT jint Java_com_cavan_cavanjni_CavanNative_doHeartRate(JNIEnv *env, jclass clazz, jboolean async, jobjectArray args)
