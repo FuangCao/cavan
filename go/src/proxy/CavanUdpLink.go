@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	WR_WIN_SIZE    uint8         = 64
+	WR_WIN_SIZE    uint8         = 32
 	RD_WIN_SIZE    uint8         = WR_WIN_SIZE * 2
 	SEND_DELAY_MAX time.Duration = time.Second * 3
 )
