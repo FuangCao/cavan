@@ -171,6 +171,7 @@ func (link *CavanUdpLink) ProcessPack(pack *CavanUdpPack) {
 			builder.Build(link).SendAsync()
 
 		case CavanUdpOpData:
+			// fmt.Println("CavanUdpOpData")
 			conn := link.ProxyConn
 			if conn != nil {
 				common.CavanConnWriteAll(conn, pack.Body())
@@ -275,9 +276,20 @@ func (link *CavanUdpLink) WriteLoop() {
 					break
 				}
 
-				link.WriteDelay = link.WriteDelay*2 + 1
-				if link.WriteDelay > SEND_DELAY_MAX {
-					link.WriteDelay = SEND_DELAY_MAX
+				if link.WriteDelay < 10 {
+					if link.WriteDelay > 0 {
+						link.WriteDelay++
+					} else {
+						link.WriteDelay = 1
+					}
+				} else if link.WriteDelay < time.Microsecond {
+					link.WriteDelay += 100
+				} else {
+					link.WriteDelay *= 2
+
+					if link.WriteDelay > SEND_DELAY_MAX {
+						link.WriteDelay = SEND_DELAY_MAX
+					}
 				}
 
 				link.WriteHead = command.Next
@@ -285,7 +297,14 @@ func (link *CavanUdpLink) WriteLoop() {
 				link.SendCommandRaw(command)
 			} else {
 				link.WriteHead = command.Next
-				link.WriteDelay /= 2
+
+				if link.WriteDelay < 10 {
+					link.WriteDelay--
+				} else if link.WriteDelay < time.Microsecond {
+					link.WriteDelay -= 100
+				} else {
+					link.WriteDelay /= 2
+				}
 			}
 		}
 
