@@ -133,6 +133,7 @@ struct cavan_sensor_pdev {
 	struct cavan_sensor_device **sensor_map;
 
 	int epoll_fd;
+	int pipefd[2];
 	struct input_event events[8];
 	struct input_event *event_end;
 	struct input_event *event_pending;

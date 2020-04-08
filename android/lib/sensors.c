@@ -234,7 +234,7 @@ static int cavan_sensor_device_probe(struct cavan_sensor_device *sensor, struct 
 	sensor->scale = hal_sensor->resolution;
 	sensor->fake = 0;
 
-	switch (sensor->event.type) {
+	switch (event->type) {
 	case SENSOR_TYPE_LIGHT:
 	case SENSOR_TYPE_PRESSURE:
 	case SENSOR_TYPE_TEMPERATURE:
@@ -432,12 +432,22 @@ static int cavan_sensors_probe(struct cavan_sensor_pdev *pdev)
 		goto out_free_sensor_list;
 	}
 
+	ret = pipe(pdev->pipefd);
+	if (ret < 0) {
+		pd_err_info("pipe: %d", ret);
+		goto out_close_epoll_fd;
+	}
+
+	cavan_sensor_epoll_set_enable(pdev, pdev->pipefd[0], NULL, true);
+
 	ioctl(map[0]->ctrl_fd, CAVAN_INPUT_CORE_IOC_DISABLE_DET);
 
 	cavan_sensor_pdev_unlock(pdev);
 
 	return 0;
 
+out_close_epoll_fd:
+	close(pdev->epoll_fd);
 out_free_sensor_list:
 	free(pdev->sensor_list);
 	pdev->sensor_list = NULL;
@@ -619,7 +629,7 @@ static sensors_event_t *cavan_sensor_report(struct cavan_sensor_pdev *pdev, sens
 static int cavan_sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t *data, int size)
 {
 	int count;
-	ssize_t rdlen;
+	int rdlen;
 	struct epoll_event events[20], *ep, *ep_end;
 	struct cavan_sensor_pdev *pdev = (struct cavan_sensor_pdev *) dev;
 	struct sensors_event_t *data_bak = data, *data_end = data + size;
@@ -649,6 +659,28 @@ static int cavan_sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t
 		for (ep = events, ep_end = ep + count; ep < ep_end && data < data_end; ep++) {
 			struct cavan_sensor_device *sensor = ep->data.ptr;
 
+			if (sensor == NULL) {
+				int handle;
+
+				rdlen = read(pdev->pipefd[0], &handle, sizeof(handle));
+				if (rdlen < (int) sizeof(handle)) {
+					pd_err_info("read: %d", rdlen);
+					break;
+				}
+
+				pd_info("flush complete: %d", handle);
+
+				data->sensor = 0;
+				data->timestamp = 0;
+				data->meta_data.sensor = handle;
+				data->meta_data.what = META_DATA_FLUSH_COMPLETE;
+				data->type = SENSOR_TYPE_META_DATA;
+				data->version = META_DATA_VERSION;
+				data++;
+
+				break;
+			}
+
 #if 0
 			if (unlikely(sensor == NULL)) {
 				continue;
@@ -675,16 +707,37 @@ static int cavan_sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t
 	return data - data_bak;
 }
 
-static int cavan_sensors_batch(struct sensors_poll_device_1 *dev, int sensor_handle, int flags, int64_t sampling_period_ns, int64_t max_report_latency_ns)
+static int cavan_sensors_batch(struct sensors_poll_device_1 *dev, int handle, int flags, int64_t sampling_period_ns, int64_t max_report_latency_ns)
 {
-	pr_pos_info();
-	return 0;
+	pd_func_info("handle = %d", handle);
+
+	return cavan_sensors_setDelay(&dev->v0, handle, sampling_period_ns);
 }
 
-static int cavan_sensors_flush(struct sensors_poll_device_1 *dev, int sensor_handle)
+static int cavan_sensors_flush(struct sensors_poll_device_1 *dev, int handle)
 {
-	pr_pos_info();
-	return 0;
+	struct cavan_sensor_pdev *pdev = (struct cavan_sensor_pdev *) dev;
+	struct cavan_sensor_device *sensor = pdev->sensor_map[handle];
+	int ret;
+
+	pd_func_info("handle = %d", handle);
+
+	cavan_sensor_device_lock(sensor);
+
+	if (sensor->enabled) {
+		ret = write(pdev->pipefd[1], &handle, sizeof(handle));
+		if (ret < 0) {
+			pr_err_info("write: %d", ret);
+		} else {
+			ret = 0;
+		}
+	} else {
+		ret = -EINVAL;
+	}
+
+	cavan_sensor_device_unlock(sensor);
+
+	return ret;
 }
 
 // ================================================================================
