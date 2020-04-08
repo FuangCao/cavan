@@ -217,7 +217,7 @@ ssize_t cavan_firmware_write(struct cavan_firmware *fw, const char *buff, size_t
 {
 	const char *buff_bak, *buff_end;
 
-	pr_bold_info("Write: size = %d, flags = %d", size, flags);
+	pr_bold_info("Write: size = %d, flags = %d", (int) size, flags);
 
 	buff_bak = buff;
 	buff_end = buff + size;

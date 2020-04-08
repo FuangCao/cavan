@@ -225,4 +225,16 @@ config CAVAN_SENSOR_LTR553
       To compile this driver as a module, choose M here: the
       module will be called cavan_ltr553.
 
+config CAVAN_SENSOR_ICM20602
+    tristate "ICM20602 g-sensor and p-sensor support"
+    default n
+    help
+      Say Y here if you have a ICM20602 light or proximity sendor connected to
+      your system.
+
+      If unsure, say Y.
+
+      To compile this driver as a module, choose M here: the
+      module will be called cavan_icm20602.
+
 endmenu

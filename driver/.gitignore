@@ -1,5 +1,6 @@
 *.o
 *.mod.c
 *.ko
+*.builtin
 modules.order
 Module.symvers

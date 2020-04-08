@@ -295,18 +295,18 @@ struct cavan_input_chip {
 	int (*event_handler_isr)(struct cavan_input_chip *chip);
 	int (*event_handler_poll)(struct cavan_input_chip *chip);
 
-	ssize_t (*read_data)(struct cavan_input_chip *chip, u8 addr, void *buff, size_t size);
-	ssize_t (*write_data)(struct cavan_input_chip *chip, u8 addr, const void *buff, size_t size);
+	int (*read_data)(struct cavan_input_chip *chip, u8 addr, void *buff, size_t size);
+	int (*write_data)(struct cavan_input_chip *chip, u8 addr, const void *buff, size_t size);
 
-	ssize_t (*master_recv)(struct cavan_input_chip *chip, void *buff, size_t size);
-	ssize_t (*master_send)(struct cavan_input_chip *chip, const void *buff, size_t size);
+	int (*master_recv)(struct cavan_input_chip *chip, void *buff, size_t size);
+	int (*master_send)(struct cavan_input_chip *chip, const void *buff, size_t size);
 
 	int (*read_register)(struct cavan_input_chip *chip, u8 addr, u8 *value);
 	int (*write_register)(struct cavan_input_chip *chip, u8 addr, u8 value);
 	int (*read_register16)(struct cavan_input_chip *chip, u8 addr, u16 *value);
 	int (*write_register16)(struct cavan_input_chip *chip, u8 addr, u16 value);
 
-	ssize_t (*read_firmware_id)(struct cavan_input_chip *chip, char *buff, size_t size);
+	int (*read_firmware_id)(struct cavan_input_chip *chip, char *buff, size_t size);
 	int (*firmware_upgrade)(struct cavan_input_chip *chip, struct cavan_firmware *fw);
 };
 

@@ -13,3 +13,4 @@ obj-$(CONFIG_CAVAN_SENSOR_EPL2182) += cavan_epl2182.o
 obj-$(CONFIG_CAVAN_SENSOR_BMI160) += cavan_bmi160.o
 obj-$(CONFIG_CAVAN_SENSOR_BMM150) += cavan_bmm150.o
 obj-$(CONFIG_CAVAN_SENSOR_LTR553) += cavan_ltr553.o
+obj-$(CONFIG_CAVAN_SENSOR_ICM20602) += cavan_icm20602.o

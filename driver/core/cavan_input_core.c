@@ -235,7 +235,7 @@ static long cavan_misc_device_ioctl_compat(struct file *file, unsigned int comma
 {
 	struct cavan_misc_device *dev = file->private_data;
 
-	return dev->ioctl ? dev->ioctl(dev, command, compat_ptr(args)) : -EINVAL;
+	return dev->ioctl ? dev->ioctl(dev, command, args) : -EINVAL;
 }
 #endif
 
@@ -309,7 +309,7 @@ static const char *cavan_input_device_type_tostring(enum cavan_input_device_type
 	case CAVAN_INPUT_DEVICE_TYPE_PRESSURE:
 		return "Pressure";
 	case CAVAN_INPUT_DEVICE_TYPE_TEMPERATURE:
-		return "Gravity";
+		return "Temperature";
 	case CAVAN_INPUT_DEVICE_TYPE_PROXIMITY:
 		return "Proximity";
 	case CAVAN_INPUT_DEVICE_TYPE_GRAVITY:
@@ -438,7 +438,7 @@ char *cavan_input_print_memory(const void *mem, size_t size)
 {
 	const u8 *p, *p_end;
 
-	printk("Memory[%d] = ", size);
+	printk("Memory[%d] = ", (int) size);
 
 	for (p = mem, p_end = p + size; p < p_end; p++) {
 		printk("%02x", *p);
@@ -1235,7 +1235,7 @@ label_write_init_data:
 		goto out_wake_lock_destroy;
 	}
 
-	chip->misc_name = kasprintf(GFP_KERNEL, "CAVAN-%s", chip->name);
+	chip->misc_name = kasprintf(GFP_KERNEL, "Chip-%s", chip->name);
 	if (chip->misc_name == NULL) {
 		pr_red_info("kasprintf");
 		goto out_chip_remove;
@@ -1787,7 +1787,7 @@ static int cavan_input_device_probe(struct cavan_input_chip *chip, struct cavan_
 		goto out_mutex_destroy;
 	}
 
-	dev->misc_name = kasprintf(GFP_KERNEL, "CAVAN-%s-%s", chip->name, devname);
+	dev->misc_name = kasprintf(GFP_KERNEL, "%s-%s", devname, chip->name);
 	if (dev->misc_name == NULL) {
 		ret = -ENOMEM;
 		pr_red_info("asprintf");

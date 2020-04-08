@@ -1,6 +1,6 @@
 #include <cavan/cavan_i2c.h>
 
-ssize_t cavan_input_read_data_i2c(struct cavan_input_chip *chip, u8 addr, void *buff, size_t size)
+int cavan_input_read_data_i2c(struct cavan_input_chip *chip, u8 addr, void *buff, size_t size)
 {
 	int ret;
 	struct i2c_client *client = chip->bus_data;
@@ -34,7 +34,7 @@ ssize_t cavan_input_read_data_i2c(struct cavan_input_chip *chip, u8 addr, void *
 
 EXPORT_SYMBOL_GPL(cavan_input_read_data_i2c);
 
-ssize_t cavan_input_write_data_i2c(struct cavan_input_chip *chip, u8 addr, const void *buff, size_t size)
+int cavan_input_write_data_i2c(struct cavan_input_chip *chip, u8 addr, const void *buff, size_t size)
 {
 	int ret;
 	struct i2c_client *client = chip->bus_data;
@@ -68,7 +68,7 @@ ssize_t cavan_input_write_data_i2c(struct cavan_input_chip *chip, u8 addr, const
 
 EXPORT_SYMBOL_GPL(cavan_input_write_data_i2c);
 
-ssize_t cavan_input_write_data_i2c_single(struct cavan_input_chip *chip, u8 addr, const void *data, size_t size)
+int cavan_input_write_data_i2c_single(struct cavan_input_chip *chip, u8 addr, const void *data, size_t size)
 {
 	int ret;
 	__u8 buff[size + 1];
