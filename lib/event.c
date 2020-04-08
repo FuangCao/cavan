@@ -1612,6 +1612,7 @@ ssize_t cavan_event_scan_devices(struct cavan_event_matcher *matcher, void *data
 		}
 
 		matcher->fd = fd;
+
 		if (matcher->match && matcher->match(matcher, data) == false) {
 			pd_red_info("Can't match device `%s', path = %s", matcher->devname, matcher->pathname);
 			close(fd);

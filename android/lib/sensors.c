@@ -449,7 +449,20 @@ out_mutex_unlock:
 
 static boolean cavan_sensors_match(struct cavan_event_matcher *matcher, void *data)
 {
-	return !text_lhcmp("CAVAN-", matcher->devname);
+	char pathname[1024];
+	struct stat st;
+
+	snprintf(pathname, sizeof(pathname), "/dev/%s", matcher->devname);
+
+	if (stat(pathname, &st) < 0) {
+		return false;
+	}
+
+	if (major(st.st_rdev) != 280) {
+		return false;
+	}
+
+	return true;
 }
 
 static int cavan_sensors_match_handler(struct cavan_event_matcher *matcher, void *data)

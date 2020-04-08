@@ -270,6 +270,9 @@ static void *sensor_poll_thread(void *data)
 			case SENSOR_TYPE_ROTATION_VECTOR:
 				pr_std_info("Rotation_Vecto: [%f, %f, %f]", p->data[0], p->data[1], p->data[2]);
 				break;
+
+			default:
+				pr_err_info("Invalid event type: %d", p->type);
 			}
 		}
 	}
