@@ -53,15 +53,22 @@ alias cavan-rockchip-pack-system-push="cavan-rockchip-pack-system && cavan-adb-t
 
 function cavan-rockchip-download()
 {
-	local options android_root rockdev
+	local options android_root rockdev upgrade_tool
 
 	android_root="$(cavan-android-get-root)"
 
 	[ "${android_root}" ] || return 1
 
+	upgrade_tool="${android_root}/rkbin/tools/upgrade_tool"
 	rockdev="${android_root}/rockdev/Image-${TARGET_PRODUCT}"
 
 	adb reboot-bootloader
+
+	for ((i = 0; i < 10; i++))
+	do
+		${upgrade_tool} TD && break
+		sleep 1
+	done
 
 	for fn in $@
 	do
@@ -140,7 +147,7 @@ function cavan-rockchip-download()
 				continue
 		esac
 
-		cavan-do-command "${android_root}/rkbin/tools/upgrade_tool ${options} ${fn}" || break
+		cavan-do-command "${upgrade_tool} ${options} ${fn}" || break
 	done
 }
 
