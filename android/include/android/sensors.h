@@ -122,7 +122,11 @@ struct cavan_sensor_device {
 };
 
 struct cavan_sensor_pdev {
+#ifdef CONFIG_ANDROID_NDK
+	struct sensors_poll_device_t device;
+#else
 	sensors_poll_device_1_t device;
+#endif
 
 	pthread_mutex_t lock;
 

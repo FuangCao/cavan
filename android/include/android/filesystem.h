@@ -19,7 +19,7 @@
  *
  */
 
-#if 0
+#ifdef CONFIG_ANDROID_NDK
 #include <cavan/android.h>
 
 #ifdef CONFIG_ANDROID_NDK

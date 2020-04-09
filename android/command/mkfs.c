@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-#if 0
+#ifdef CONFIG_ANDROID_NDK
 	android_stop_all();
 
 	while (optind < argc) {

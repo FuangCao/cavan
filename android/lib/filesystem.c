@@ -17,7 +17,7 @@
  *
  */
 
-#if 0
+#ifdef CONFIG_ANDROID_NDK
 #include <cavan/device.h>
 #include <cavan/command.h>
 #include <android/filesystem.h>

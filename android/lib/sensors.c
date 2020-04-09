@@ -707,6 +707,7 @@ static int cavan_sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t
 	return data - data_bak;
 }
 
+#ifndef CONFIG_ANDROID_NDK
 static int cavan_sensors_batch(struct sensors_poll_device_1 *dev, int handle, int flags, int64_t sampling_period_ns, int64_t max_report_latency_ns)
 {
 	pd_func_info("handle = %d", handle);
@@ -739,6 +740,7 @@ static int cavan_sensors_flush(struct sensors_poll_device_1 *dev, int handle)
 
 	return ret;
 }
+#endif
 
 // ================================================================================
 
@@ -761,8 +763,10 @@ static struct cavan_sensor_pdev cavan_poll_device = {
 		.activate = cavan_sensors_activate,
 		.setDelay = cavan_sensors_setDelay,
 		.poll = cavan_sensors_poll,
+#ifndef CONFIG_ANDROID_NDK
 		.batch = cavan_sensors_batch,
 		.flush = cavan_sensors_flush,
+#endif
 	},
 };
 
