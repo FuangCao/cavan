@@ -16,12 +16,21 @@ class AndroidManager(AdbManager):
 		self.mProductOut = os.path.realpath(productOut)
 		self.mProductOutLen = len(self.mProductOut)
 		self.mPathSystem = os.path.join(self.mProductOut, "system")
+                self.mPathVendor = os.path.join(self.mProductOut, "vendor")
 
 		AdbManager.__init__(self, self.mBuildTop, verbose)
 
 		if self.mVerbose:
 			self.prStdInfo("mBuildTop = " + self.mBuildTop)
 			self.prStdInfo("mProductOut = " + self.mProductOut)
+
+        def chroot(self):
+            try:
+                os.chdir(self.mBuildTop)
+            except:
+                return False
+
+            return True
 
 	def getHostPath(self, pathname):
 		if not os.path.exists(pathname):
@@ -74,6 +83,13 @@ class AndroidManager(AdbManager):
 
 		return pathname
 
+        def IsPushAble(self, pathname):
+            for name in ["/system/", "/vendor/", "/data/", "/cache/"]:
+                if pathname.startswith(name):
+                    return True
+
+            return False
+
 	def checkFileList(self, listFile):
 		if not listFile:
 			return []
@@ -81,7 +97,18 @@ class AndroidManager(AdbManager):
 		dictFile = {}
 
 		for pathname in listFile:
-			filename = os.path.basename(pathname)
+			pathname = os.path.realpath(pathname)
+
+                        if not pathname.startswith(self.mProductOut):
+                            self.prRedInfo("skipping: " + pathname)
+                            continue
+
+                        filename = pathname[len(self.mProductOut):]
+
+                        if not self.IsPushAble(filename):
+                            self.prStdInfo("skipping: " + filename)
+                            continue
+
 			if dictFile.has_key(filename):
 				self.prBrownInfo("Override: %s <= %s" % (dictFile[filename], pathname))
 			dictFile[filename] = pathname
@@ -89,6 +116,9 @@ class AndroidManager(AdbManager):
 		return dictFile.values()
 
 	def push(self, listFile):
+                if not self.chroot():
+                    return False
+
 		if not self.doRemount():
 			return False
 
