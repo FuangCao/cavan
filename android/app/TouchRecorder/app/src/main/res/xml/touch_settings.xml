@@ -1,0 +1,9 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <SwitchPreference android:key="listen_volume_key" android:title="@string/listen_volume_key" />
+    <Preference android:key="check_permission" android:title="@string/check_permission" />
+
+    <ListPreference android:key="play_delay" android:title="@string/play_delay" android:persistent="true" android:defaultValue="500"
+        android:entries="@array/play_delay_entries" android:entryValues="@array/play_delay_values" />
+
+</PreferenceScreen>

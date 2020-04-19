@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">我的辅助功能</string>
+    <string name="listen_volume_key">监听音量键</string>
+    <string name="check_permission">权限检查</string>
+    <string name="please_allow_float_window">请允许应用在上层显示</string>
+    <string name="please_enable_touch_recoder_service">请打开辅助功能</string>
+    <string name="permission_ok">正常</string>
+    <string name="play_delay">播放延迟</string>
+</resources>
