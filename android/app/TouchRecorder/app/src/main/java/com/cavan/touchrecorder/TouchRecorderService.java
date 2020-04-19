@@ -8,7 +8,6 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -18,11 +17,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
-import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
 
@@ -36,7 +33,9 @@ public class TouchRecorderService extends AccessibilityService implements View.O
 
     public static TouchRecorderService Instance;
 
+    private boolean mGesturePending;
     private boolean mPlaying;
+
     private Dialog mAlertDialog;
     private TextView mFloatView;
     private WindowManager mWindorManager;
@@ -53,9 +52,7 @@ public class TouchRecorderService extends AccessibilityService implements View.O
                     break;
 
                 case MSG_DISPATCH_GESTURE:
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        dispatchGesture((GestureDescription) msg.obj, null, null);
-                    }
+                    dispatchGesture((GestureDescription) msg.obj, null, null);
                     break;
 
                 case MSG_START_PLAY:
@@ -67,27 +64,27 @@ public class TouchRecorderService extends AccessibilityService implements View.O
 
     private Thread mPlayThread = new Thread() {
 
-        private boolean mGesturePending;
-
         public synchronized void setGesturePending(boolean pending) {
             mGesturePending = pending;
             notify();
         }
 
-        public synchronized void waitGestureComplete(long duration) {
-            if (mGesturePending) {
+        public synchronized void waitGestureComplete() {
+            while (mGesturePending) {
                 try {
-                    wait(duration);
+                    wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
         }
 
-        public long sendMotionEvents(Path path, long duration) {
+        public synchronized boolean sendMotionEvents(Path path, long duration) {
             if (duration < 1) {
                 duration = 1;
             }
+
+            Log.d(TAG, "duration = " + duration);
 
             GestureDescription.StrokeDescription stroke = new GestureDescription.StrokeDescription(path, 0, duration);
             GestureDescription.Builder builder = new GestureDescription.Builder();
@@ -107,12 +104,9 @@ public class TouchRecorderService extends AccessibilityService implements View.O
                 }
             };
 
-            if (dispatchGesture(builder.build(), callback, null)) {
-                setGesturePending(true);
-                return duration;
-            }
+            mGesturePending = true;
 
-            return 0;
+            return dispatchGesture(builder.build(), callback, null);
         }
 
         @Override
@@ -126,6 +120,7 @@ public class TouchRecorderService extends AccessibilityService implements View.O
                     }
                 }
 
+                MotionEventRecod prev = null;
                 Path path = null;
                 long time = 0;
 
@@ -134,7 +129,7 @@ public class TouchRecorderService extends AccessibilityService implements View.O
                         break;
                     }
 
-                    if (event.mAction == MotionEvent.ACTION_DOWN) {
+                    if (event.getAction() == MotionEvent.ACTION_DOWN) {
                         long duration = event.getEventTime() - time;
                         if (duration > 0 && time > 0) {
                             try {
@@ -145,20 +140,27 @@ public class TouchRecorderService extends AccessibilityService implements View.O
                         }
 
                         path = new Path();
-                        path.moveTo(event.mX, event.mY);
+                        event.moveTo(path);
                         time = event.getEventTime();
                     } else if (path != null) {
-                        path.lineTo(event.mX, event.mY);
+                        event.lineTo(prev, path);
 
-                        if (event.mAction == MotionEvent.ACTION_UP) {
-                            long duration = sendMotionEvents(path, event.getEventTime() - time);
-                            if (duration > 0) {
-                                waitGestureComplete(duration);
+                        if (event.getAction() == MotionEvent.ACTION_UP) {
+                            try {
+                                long duration = event.getEventTime() - time;
+
+                                if (sendMotionEvents(path, duration)) {
+                                    waitGestureComplete();
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
                             }
 
                             path = null;
                         }
                     }
+
+                    prev = event;
                 }
 
                 int delay = TouchSettings.PlayDelay(TouchRecorderService.this);
@@ -175,14 +177,7 @@ public class TouchRecorderService extends AccessibilityService implements View.O
         }
     };
 
-    public TouchRecorderService() {
-    }
-
     public int getFloatWindowType() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return WindowManager.LayoutParams.TYPE_PHONE;
-        }
-
         return WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
     }
 
@@ -241,6 +236,7 @@ public class TouchRecorderService extends AccessibilityService implements View.O
         }
 
         synchronized (thread) {
+            mGesturePending = false;
             mPlaying = true;
 
             if (thread.isAlive()) {
@@ -260,6 +256,7 @@ public class TouchRecorderService extends AccessibilityService implements View.O
         }
 
         synchronized (thread) {
+            mGesturePending = false;
             mPlaying = false;
 
             if (exit) {
@@ -363,9 +360,7 @@ public class TouchRecorderService extends AccessibilityService implements View.O
 
         TextView view = mFloatView;
         if (view != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                view.setText(mMotionEvents.size() + ". "  + MotionEvent.actionToString(event.getAction()) + " (" + event.getX() + ", " + event.getY() + ")");
-            }
+            view.setText(mMotionEvents.size() + ". "  + MotionEvent.actionToString(event.getAction()) + " (" + event.getX() + ", " + event.getY() + ")");
         }
 
         return false;
@@ -388,24 +383,22 @@ public class TouchRecorderService extends AccessibilityService implements View.O
     protected void onServiceConnected() {
         Log.d(TAG, "onServiceConnected");
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
-            AccessibilityServiceInfo info = getServiceInfo();
-            info.packageNames = getPackageNames();
-            info.eventTypes = getEventTypes();
-            info.flags = getEventFlags();
-            setServiceInfo(info);
-            Log.d(TAG, "info = " + getServiceInfo());
-        }
+        AccessibilityServiceInfo info = getServiceInfo();
+        info.packageNames = getPackageNames();
+        info.eventTypes = getEventTypes();
+        info.flags = getEventFlags();
+        setServiceInfo(info);
+        Log.d(TAG, "info = " + getServiceInfo());
 
         super.onServiceConnected();
     }
 
     public class MotionEventRecod {
 
-        public float mX;
-        public float mY;
-        public int mAction;
-        public long mEventTime;
+        private float mX;
+        private float mY;
+        private int mAction;
+        private long mEventTime;
 
         public MotionEventRecod(MotionEvent event) {
             mX = event.getX();
@@ -414,33 +407,34 @@ public class TouchRecorderService extends AccessibilityService implements View.O
             mEventTime = event.getEventTime();
         }
 
-        public Path BuildPath()
-        {
-            Path path = new Path();
+        public float getX() {
+            return mX;
+        }
 
-            if (mAction == MotionEvent.ACTION_MOVE) {
-                Log.d(TAG, "lineTo");
-                path.lineTo(mX, mY);
-            } else {
-                Log.d(TAG, "moveTo");
-                path.moveTo(mX, mY);
-            }
+        public float getY() {
+            return mY;
+        }
 
-            return path;
+        public int getAction() {
+            return mAction;
+        }
+
+        public long getEventTime() {
+            return mEventTime;
         }
 
         @NonNull
         @Override
         public String toString() {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                return MotionEvent.actionToString(mAction) + " (" + mX + ", " + mY + ")";
-            }
-
-            return "(" + mX + ", " + mY + ")";
+            return MotionEvent.actionToString(mAction) + " (" + mX + ", " + mY + ")";
         }
 
-        public long getEventTime() {
-            return mEventTime;
+        public void moveTo(Path path) {
+            path.moveTo(mX, mY);
+        }
+
+        public void lineTo(MotionEventRecod prev, Path path) {
+            path.lineTo(mX, mY);
         }
     }
 }

@@ -3,7 +3,6 @@ package com.cavan.touchrecorder;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
@@ -14,8 +13,6 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
-
-import java.util.prefs.Preferences;
 
 public class TouchSettings extends PreferenceFragment {
 
@@ -82,14 +79,12 @@ public class TouchSettings extends PreferenceFragment {
 
     public void ShowToast(int resId)
     {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Toast.makeText(getContext(), resId, Toast.LENGTH_SHORT).show();
-        }
+        Toast.makeText(getContext(), resId, Toast.LENGTH_SHORT).show();
     }
 
     private int CheckPermissions()
     {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(getContext()) == false) {
+        if (Settings.canDrawOverlays(getContext()) == false) {
             startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION));
             return R.string.please_allow_float_window;
         }
@@ -110,7 +105,6 @@ public class TouchSettings extends PreferenceFragment {
         if ("check_permission".equals(key)) {
             int message = CheckPermissions();
             ShowToast(message);
-            preference.setSummary(message);
         }
 
         return super.onPreferenceTreeClick(preferenceScreen, preference);
