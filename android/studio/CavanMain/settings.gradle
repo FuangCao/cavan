@@ -1,0 +1,2 @@
+include ':app', ':cavanjava', ':cavanandroid', ':cavanjni', ':cavanresource'
+rootProject.name='CavanMain'

@@ -1,0 +1,114 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "29.0.2"
+
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles 'consumer-rules.pro'
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile '../../../app/CavanJni/AndroidManifest.xml'
+            aidl.srcDir '../../../app/CavanJni/src'
+            java.srcDir '../../../app/CavanJni/src'
+            res.srcDir '../../../app/CavanJni/res'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    externalNativeBuild {
+        ndkBuild {
+            path file('../../../app/CavanJni/jni/AndroidStudio.mk')
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test:runner:1.2.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    compile project(path: ':cavanandroid')
+    compile project(path: ':cavanresource')
+}
+
+task cavan_gen {
+    doLast {
+        File out_dir = new File(rootDir, "../../app/CavanJni/build/generated")
+        out_dir.mkdirs()
+        println(out_dir)
+
+        File map_h = new File(out_dir, "cavan_map.h")
+        println(map_h)
+
+        File map_c = new File(out_dir, "cavan_map.c")
+        println(map_c)
+
+        File app_dir = new File(rootDir, "../../../app")
+        println(app_dir.path)
+
+        StringBuilder map_h_builder = new StringBuilder()
+        StringBuilder map_c_builder = new StringBuilder()
+
+        for (File file : app_dir.listFiles()) {
+            String name = file.getName();
+            int index = name.lastIndexOf('.')
+            if (index < 0) {
+                continue;
+            }
+
+            String ext = name.substring(index + 1)
+            if (ext.equals("c") || ext.equals("cpp")) {
+                name = name.substring(0, index)
+
+                if (map_h_builder.length() > 0) {
+                    map_h_builder.append("\r\n")
+                    map_c_builder.append("\r\n")
+                }
+
+                map_h_builder.append("extern int do_cavan_" + name + "(int argc, char *argv[]);")
+                map_c_builder.append("{ \"" + name + "\", do_cavan_" + name + " },")
+            }
+        }
+
+        map_h.write(map_h_builder.toString())
+        map_c.write(map_c_builder.toString())
+    }
+}
+
+task cavan_copy(type: Copy) {
+    from(buildDir.path + '/intermediates/ndkBuild/debug/obj/local/x86/') {
+        rename 'cavan-main', 'cavan_main_x86'
+        include 'cavan-main'
+    }
+
+    from(buildDir.path + '/intermediates/ndkBuild/debug/obj/local/armeabi-v7a/') {
+        rename 'cavan-main', 'cavan_main_armeabi'
+        include 'cavan-main'
+    }
+
+    into(rootDir.path + '../../../app/CavanJni/res/raw/')
+}
+
+afterEvaluate {
+    externalNativeBuildDebug.dependsOn cavan_gen
+    cavan_copy.dependsOn externalNativeBuildDebug
+    compileDebugJavaWithJavac.dependsOn cavan_copy
+}
