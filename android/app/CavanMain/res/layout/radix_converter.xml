@@ -17,14 +17,15 @@
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content" />
 
-	    <EditText
-	        android:id="@+id/editTextNumber"
-	        android:layout_weight="1"
-	        android:layout_width="0dp"
-	        android:layout_height="wrap_content"
-	        android:textIsSelectable="true"
-	        android:digits="0123456789abcdefABCDEF"
-	        android:inputType="numberDecimal" />
+		<EditText
+			android:id="@+id/editTextNumber"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:digits="0123456789abcdefABCDEF"
+			android:focusable="false"
+			android:inputType="numberDecimal"
+			android:textIsSelectable="true" />
 
 	</LinearLayout>
 
