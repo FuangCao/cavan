@@ -32,6 +32,7 @@ namespace NetworkInputMethod
         private FormHttpFileServer mFormHttpFileServer;
         private FormTcpBridge mFormTcpBridge;
         private FormConnWifi mFormConnWifi;
+        private FormCommandManager mFormCommandManager;
 
         //API declarations...
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -191,6 +192,12 @@ namespace NetworkInputMethod
             {
                 mFormTcpProxy = new FormTcpProxyService();
                 mFormTcpProxy.Show();
+            }
+
+            if (settings.DaemonEnable)
+            {
+                mFormCommandManager = new FormCommandManager();
+                mFormCommandManager.Show();
             }
         }
 
@@ -842,6 +849,11 @@ namespace NetworkInputMethod
 
         private void toolStripMenuItemExit_Click(object sender, EventArgs e)
         {
+            if (mFormCommandManager != null)
+            {
+                mFormCommandManager.StopDaemons(false);
+            }
+
             mService.stop();
             Dispose(true);
         }
@@ -1056,6 +1068,7 @@ namespace NetworkInputMethod
             toolStripMenuItemReverseProxySlaveAuto.Checked = Settings.Default.ReverseSlaveEnable;
             toolStripMenuItemTcpBridgeAuto.Checked = Settings.Default.TcpBridgeEnable;
             toolStripMenuItemTcpProxyAuto.Checked = Settings.Default.TcpProxyEnable;
+            toolStripMenuItemCommandAuto.Checked = Settings.Default.DaemonEnable;
         }
 
         private void toolStripMenuItemAutoRun_Click(object sender, EventArgs e)
@@ -1208,6 +1221,23 @@ namespace NetworkInputMethod
 
             mFormConnWifi.Show();
             mFormConnWifi.Focus();
+        }
+
+        private void toolStripMenuItemCommandAuto_Click(object sender, EventArgs e)
+        {
+            Settings.Default.DaemonEnable = toolStripMenuItemCommandAuto.Checked;
+            Settings.Default.Save();
+        }
+
+        private void toolStripMenuItemCommandManager_Click(object sender, EventArgs e)
+        {
+            if (mFormCommandManager == null || mFormCommandManager.IsDisposed)
+            {
+                mFormCommandManager = new FormCommandManager();
+            }
+
+            mFormCommandManager.Show();
+            mFormCommandManager.Focus();
         }
     }
 

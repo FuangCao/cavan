@@ -52,13 +52,16 @@
             this.buttonOpen = new System.Windows.Forms.Button();
             this.openFileDialogWeChat = new System.Windows.Forms.OpenFileDialog();
             this.buttonWmsj = new System.Windows.Forms.Button();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // buttonMm
             // 
-            this.buttonMm.Location = new System.Drawing.Point(174, 196);
+            this.buttonMm.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonMm.Location = new System.Drawing.Point(233, 327);
             this.buttonMm.Name = "buttonMm";
-            this.buttonMm.Size = new System.Drawing.Size(75, 40);
+            this.buttonMm.Size = new System.Drawing.Size(109, 79);
             this.buttonMm.TabIndex = 14;
             this.buttonMm.Text = "微信";
             this.buttonMm.UseVisualStyleBackColor = true;
@@ -66,9 +69,10 @@
             // 
             // buttonNba
             // 
-            this.buttonNba.Location = new System.Drawing.Point(174, 104);
+            this.buttonNba.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonNba.Location = new System.Drawing.Point(348, 84);
             this.buttonNba.Name = "buttonNba";
-            this.buttonNba.Size = new System.Drawing.Size(75, 40);
+            this.buttonNba.Size = new System.Drawing.Size(109, 75);
             this.buttonNba.TabIndex = 1;
             this.buttonNba.Text = "最强NBA";
             this.buttonNba.UseVisualStyleBackColor = true;
@@ -76,9 +80,10 @@
             // 
             // buttonSgame
             // 
-            this.buttonSgame.Location = new System.Drawing.Point(93, 58);
+            this.buttonSgame.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonSgame.Location = new System.Drawing.Point(118, 165);
             this.buttonSgame.Name = "buttonSgame";
-            this.buttonSgame.Size = new System.Drawing.Size(75, 40);
+            this.buttonSgame.Size = new System.Drawing.Size(109, 75);
             this.buttonSgame.TabIndex = 2;
             this.buttonSgame.Text = "王者荣耀";
             this.buttonSgame.UseVisualStyleBackColor = true;
@@ -86,9 +91,10 @@
             // 
             // buttonXxsy
             // 
-            this.buttonXxsy.Location = new System.Drawing.Point(93, 196);
+            this.buttonXxsy.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonXxsy.Location = new System.Drawing.Point(118, 327);
             this.buttonXxsy.Name = "buttonXxsy";
-            this.buttonXxsy.Size = new System.Drawing.Size(75, 40);
+            this.buttonXxsy.Size = new System.Drawing.Size(109, 79);
             this.buttonXxsy.TabIndex = 3;
             this.buttonXxsy.Text = "寻仙";
             this.buttonXxsy.UseVisualStyleBackColor = true;
@@ -96,9 +102,10 @@
             // 
             // buttonJxqy
             // 
-            this.buttonJxqy.Location = new System.Drawing.Point(255, 12);
+            this.buttonJxqy.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonJxqy.Location = new System.Drawing.Point(348, 3);
             this.buttonJxqy.Name = "buttonJxqy";
-            this.buttonJxqy.Size = new System.Drawing.Size(75, 40);
+            this.buttonJxqy.Size = new System.Drawing.Size(109, 75);
             this.buttonJxqy.TabIndex = 4;
             this.buttonJxqy.Text = "新剑侠情缘";
             this.buttonJxqy.UseVisualStyleBackColor = true;
@@ -106,9 +113,10 @@
             // 
             // buttonDragonnest
             // 
-            this.buttonDragonnest.Location = new System.Drawing.Point(174, 150);
+            this.buttonDragonnest.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonDragonnest.Location = new System.Drawing.Point(3, 84);
             this.buttonDragonnest.Name = "buttonDragonnest";
-            this.buttonDragonnest.Size = new System.Drawing.Size(75, 40);
+            this.buttonDragonnest.Size = new System.Drawing.Size(109, 75);
             this.buttonDragonnest.TabIndex = 5;
             this.buttonDragonnest.Text = "龙之谷";
             this.buttonDragonnest.UseVisualStyleBackColor = true;
@@ -116,9 +124,10 @@
             // 
             // buttonBayechuanqi
             // 
-            this.buttonBayechuanqi.Location = new System.Drawing.Point(12, 104);
+            this.buttonBayechuanqi.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonBayechuanqi.Location = new System.Drawing.Point(348, 165);
             this.buttonBayechuanqi.Name = "buttonBayechuanqi";
-            this.buttonBayechuanqi.Size = new System.Drawing.Size(75, 40);
+            this.buttonBayechuanqi.Size = new System.Drawing.Size(109, 75);
             this.buttonBayechuanqi.TabIndex = 6;
             this.buttonBayechuanqi.Text = "传奇霸业";
             this.buttonBayechuanqi.UseVisualStyleBackColor = true;
@@ -126,9 +135,10 @@
             // 
             // buttonWec
             // 
-            this.buttonWec.Location = new System.Drawing.Point(93, 104);
+            this.buttonWec.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonWec.Location = new System.Drawing.Point(3, 246);
             this.buttonWec.Name = "buttonWec";
-            this.buttonWec.Size = new System.Drawing.Size(75, 40);
+            this.buttonWec.Size = new System.Drawing.Size(109, 75);
             this.buttonWec.TabIndex = 7;
             this.buttonWec.Text = "乱世王者";
             this.buttonWec.UseVisualStyleBackColor = true;
@@ -136,9 +146,10 @@
             // 
             // buttonCf
             // 
-            this.buttonCf.Location = new System.Drawing.Point(12, 58);
+            this.buttonCf.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonCf.Location = new System.Drawing.Point(118, 246);
             this.buttonCf.Name = "buttonCf";
-            this.buttonCf.Size = new System.Drawing.Size(75, 40);
+            this.buttonCf.Size = new System.Drawing.Size(109, 75);
             this.buttonCf.TabIndex = 8;
             this.buttonCf.Text = "穿越火线";
             this.buttonCf.UseVisualStyleBackColor = true;
@@ -146,9 +157,10 @@
             // 
             // buttonSupercellClashofclans
             // 
-            this.buttonSupercellClashofclans.Location = new System.Drawing.Point(93, 12);
+            this.buttonSupercellClashofclans.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonSupercellClashofclans.Location = new System.Drawing.Point(118, 3);
             this.buttonSupercellClashofclans.Name = "buttonSupercellClashofclans";
-            this.buttonSupercellClashofclans.Size = new System.Drawing.Size(75, 40);
+            this.buttonSupercellClashofclans.Size = new System.Drawing.Size(109, 75);
             this.buttonSupercellClashofclans.TabIndex = 9;
             this.buttonSupercellClashofclans.Text = "部落冲突";
             this.buttonSupercellClashofclans.UseVisualStyleBackColor = true;
@@ -156,9 +168,10 @@
             // 
             // buttonCldts
             // 
-            this.buttonCldts.Location = new System.Drawing.Point(174, 58);
+            this.buttonCldts.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonCldts.Location = new System.Drawing.Point(233, 165);
             this.buttonCldts.Name = "buttonCldts";
-            this.buttonCldts.Size = new System.Drawing.Size(75, 40);
+            this.buttonCldts.Size = new System.Drawing.Size(109, 75);
             this.buttonCldts.TabIndex = 10;
             this.buttonCldts.Text = "光荣使命";
             this.buttonCldts.UseVisualStyleBackColor = true;
@@ -166,9 +179,10 @@
             // 
             // buttonDdtank
             // 
-            this.buttonDdtank.Location = new System.Drawing.Point(93, 150);
+            this.buttonDdtank.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonDdtank.Location = new System.Drawing.Point(118, 84);
             this.buttonDdtank.Name = "buttonDdtank";
-            this.buttonDdtank.Size = new System.Drawing.Size(75, 40);
+            this.buttonDdtank.Size = new System.Drawing.Size(109, 75);
             this.buttonDdtank.TabIndex = 11;
             this.buttonDdtank.Text = "弹弹堂";
             this.buttonDdtank.UseVisualStyleBackColor = true;
@@ -176,9 +190,10 @@
             // 
             // buttonXymobile
             // 
-            this.buttonXymobile.Location = new System.Drawing.Point(255, 150);
+            this.buttonXymobile.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonXymobile.Location = new System.Drawing.Point(233, 84);
             this.buttonXymobile.Name = "buttonXymobile";
-            this.buttonXymobile.Size = new System.Drawing.Size(75, 40);
+            this.buttonXymobile.Size = new System.Drawing.Size(109, 75);
             this.buttonXymobile.TabIndex = 12;
             this.buttonXymobile.Text = "轩辕传奇";
             this.buttonXymobile.UseVisualStyleBackColor = true;
@@ -186,9 +201,10 @@
             // 
             // buttonSupercellClashroyale
             // 
-            this.buttonSupercellClashroyale.Location = new System.Drawing.Point(12, 12);
+            this.buttonSupercellClashroyale.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonSupercellClashroyale.Location = new System.Drawing.Point(3, 3);
             this.buttonSupercellClashroyale.Name = "buttonSupercellClashroyale";
-            this.buttonSupercellClashroyale.Size = new System.Drawing.Size(75, 40);
+            this.buttonSupercellClashroyale.Size = new System.Drawing.Size(109, 75);
             this.buttonSupercellClashroyale.TabIndex = 13;
             this.buttonSupercellClashroyale.Text = "皇室战争";
             this.buttonSupercellClashroyale.UseVisualStyleBackColor = true;
@@ -196,9 +212,10 @@
             // 
             // buttonMmMulti
             // 
-            this.buttonMmMulti.Location = new System.Drawing.Point(255, 196);
+            this.buttonMmMulti.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonMmMulti.Location = new System.Drawing.Point(348, 327);
             this.buttonMmMulti.Name = "buttonMmMulti";
-            this.buttonMmMulti.Size = new System.Drawing.Size(75, 40);
+            this.buttonMmMulti.Size = new System.Drawing.Size(109, 79);
             this.buttonMmMulti.TabIndex = 21;
             this.buttonMmMulti.Text = "微信多开";
             this.buttonMmMulti.UseVisualStyleBackColor = true;
@@ -206,9 +223,10 @@
             // 
             // buttonBack
             // 
-            this.buttonBack.Location = new System.Drawing.Point(12, 196);
+            this.buttonBack.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonBack.Location = new System.Drawing.Point(3, 327);
             this.buttonBack.Name = "buttonBack";
-            this.buttonBack.Size = new System.Drawing.Size(75, 40);
+            this.buttonBack.Size = new System.Drawing.Size(109, 79);
             this.buttonBack.TabIndex = 15;
             this.buttonBack.Text = "返回";
             this.buttonBack.UseVisualStyleBackColor = true;
@@ -216,9 +234,10 @@
             // 
             // buttonTstl
             // 
-            this.buttonTstl.Location = new System.Drawing.Point(255, 104);
+            this.buttonTstl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonTstl.Location = new System.Drawing.Point(233, 246);
             this.buttonTstl.Name = "buttonTstl";
-            this.buttonTstl.Size = new System.Drawing.Size(75, 40);
+            this.buttonTstl.Size = new System.Drawing.Size(109, 75);
             this.buttonTstl.TabIndex = 17;
             this.buttonTstl.Text = "天龙八部";
             this.buttonTstl.UseVisualStyleBackColor = true;
@@ -226,19 +245,21 @@
             // 
             // buttonPubgmhd
             // 
-            this.buttonPubgmhd.Location = new System.Drawing.Point(255, 58);
+            this.buttonPubgmhd.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonPubgmhd.Location = new System.Drawing.Point(348, 246);
             this.buttonPubgmhd.Name = "buttonPubgmhd";
-            this.buttonPubgmhd.Size = new System.Drawing.Size(75, 40);
+            this.buttonPubgmhd.Size = new System.Drawing.Size(109, 75);
             this.buttonPubgmhd.TabIndex = 18;
-            this.buttonPubgmhd.Text = "刺激战场";
+            this.buttonPubgmhd.Text = "和平精英";
             this.buttonPubgmhd.UseVisualStyleBackColor = true;
             this.buttonPubgmhd.Click += new System.EventHandler(this.buttonPubgmhd_Click);
             // 
             // buttonCrossgate
             // 
-            this.buttonCrossgate.Location = new System.Drawing.Point(174, 12);
+            this.buttonCrossgate.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonCrossgate.Location = new System.Drawing.Point(233, 3);
             this.buttonCrossgate.Name = "buttonCrossgate";
-            this.buttonCrossgate.Size = new System.Drawing.Size(75, 40);
+            this.buttonCrossgate.Size = new System.Drawing.Size(109, 75);
             this.buttonCrossgate.TabIndex = 19;
             this.buttonCrossgate.Text = "魔力宝贝";
             this.buttonCrossgate.UseVisualStyleBackColor = true;
@@ -246,16 +267,19 @@
             // 
             // textBoxAppName
             // 
+            this.textBoxAppName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.textBoxAppName.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.textBoxAppName.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.RecentlyUsedList;
-            this.textBoxAppName.Location = new System.Drawing.Point(12, 242);
+            this.textBoxAppName.Location = new System.Drawing.Point(12, 427);
             this.textBoxAppName.Name = "textBoxAppName";
-            this.textBoxAppName.Size = new System.Drawing.Size(236, 21);
+            this.textBoxAppName.Size = new System.Drawing.Size(379, 21);
             this.textBoxAppName.TabIndex = 20;
             // 
             // buttonOpen
             // 
-            this.buttonOpen.Location = new System.Drawing.Point(255, 241);
+            this.buttonOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonOpen.Location = new System.Drawing.Point(397, 427);
             this.buttonOpen.Name = "buttonOpen";
             this.buttonOpen.Size = new System.Drawing.Size(75, 23);
             this.buttonOpen.TabIndex = 0;
@@ -273,48 +297,72 @@
             // 
             // buttonWmsj
             // 
-            this.buttonWmsj.Location = new System.Drawing.Point(12, 150);
+            this.buttonWmsj.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonWmsj.Location = new System.Drawing.Point(3, 165);
             this.buttonWmsj.Name = "buttonWmsj";
-            this.buttonWmsj.Size = new System.Drawing.Size(75, 40);
+            this.buttonWmsj.Size = new System.Drawing.Size(109, 75);
             this.buttonWmsj.TabIndex = 22;
             this.buttonWmsj.Text = "完美世界";
             this.buttonWmsj.UseVisualStyleBackColor = true;
             this.buttonWmsj.Click += new System.EventHandler(this.buttonWmsj_Click);
+            // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tableLayoutPanel1.ColumnCount = 4;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.Controls.Add(this.buttonJxqy, 3, 0);
+            this.tableLayoutPanel1.Controls.Add(this.buttonWmsj, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.buttonCrossgate, 2, 0);
+            this.tableLayoutPanel1.Controls.Add(this.buttonPubgmhd, 3, 3);
+            this.tableLayoutPanel1.Controls.Add(this.buttonSupercellClashofclans, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.buttonTstl, 2, 3);
+            this.tableLayoutPanel1.Controls.Add(this.buttonSupercellClashroyale, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.buttonCldts, 2, 2);
+            this.tableLayoutPanel1.Controls.Add(this.buttonCf, 1, 3);
+            this.tableLayoutPanel1.Controls.Add(this.buttonBack, 0, 4);
+            this.tableLayoutPanel1.Controls.Add(this.buttonWec, 0, 3);
+            this.tableLayoutPanel1.Controls.Add(this.buttonXymobile, 2, 1);
+            this.tableLayoutPanel1.Controls.Add(this.buttonBayechuanqi, 3, 2);
+            this.tableLayoutPanel1.Controls.Add(this.buttonXxsy, 1, 4);
+            this.tableLayoutPanel1.Controls.Add(this.buttonSgame, 1, 2);
+            this.tableLayoutPanel1.Controls.Add(this.buttonDdtank, 1, 1);
+            this.tableLayoutPanel1.Controls.Add(this.buttonNba, 3, 1);
+            this.tableLayoutPanel1.Controls.Add(this.buttonMmMulti, 3, 4);
+            this.tableLayoutPanel1.Controls.Add(this.buttonMm, 2, 4);
+            this.tableLayoutPanel1.Controls.Add(this.buttonDragonnest, 0, 1);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(12, 12);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 5;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(460, 409);
+            this.tableLayoutPanel1.TabIndex = 23;
             // 
             // FormOpenApp
             // 
             this.AcceptButton = this.buttonOpen;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(340, 277);
-            this.Controls.Add(this.buttonWmsj);
+            this.ClientSize = new System.Drawing.Size(484, 461);
+            this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.buttonOpen);
             this.Controls.Add(this.textBoxAppName);
-            this.Controls.Add(this.buttonCrossgate);
-            this.Controls.Add(this.buttonPubgmhd);
-            this.Controls.Add(this.buttonTstl);
-            this.Controls.Add(this.buttonBack);
-            this.Controls.Add(this.buttonMmMulti);
-            this.Controls.Add(this.buttonSupercellClashroyale);
-            this.Controls.Add(this.buttonXymobile);
-            this.Controls.Add(this.buttonDdtank);
-            this.Controls.Add(this.buttonCldts);
-            this.Controls.Add(this.buttonSupercellClashofclans);
-            this.Controls.Add(this.buttonCf);
-            this.Controls.Add(this.buttonWec);
-            this.Controls.Add(this.buttonBayechuanqi);
-            this.Controls.Add(this.buttonDragonnest);
-            this.Controls.Add(this.buttonJxqy);
-            this.Controls.Add(this.buttonXxsy);
-            this.Controls.Add(this.buttonSgame);
-            this.Controls.Add(this.buttonNba);
-            this.Controls.Add(this.buttonMm);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "FormOpenApp";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "打开应用";
+            this.tableLayoutPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -345,5 +393,6 @@
         private System.Windows.Forms.Button buttonOpen;
         private System.Windows.Forms.OpenFileDialog openFileDialogWeChat;
         private System.Windows.Forms.Button buttonWmsj;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
     }
 }

@@ -84,6 +84,18 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="CavanUdpSock.cs" />
+    <Compile Include="FormCommandEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormCommandEditor.Designer.cs">
+      <DependentUpon>FormCommandEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormCommandManager.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormCommandManager.Designer.cs">
+      <DependentUpon>FormCommandManager.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormHttpFileServer.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -234,6 +246,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormCertManager.resx">
       <DependentUpon>FormCertManager.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormCommandEditor.resx">
+      <DependentUpon>FormCommandEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormCommandManager.resx">
+      <DependentUpon>FormCommandManager.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormConnWifi.resx">
       <DependentUpon>FormConnWifi.cs</DependentUpon>
