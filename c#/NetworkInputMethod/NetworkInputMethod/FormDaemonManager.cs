@@ -14,9 +14,9 @@ using System.Windows.Forms;
 
 namespace NetworkInputMethod
 {
-    public partial class FormCommandManager : Form
+    public partial class FormDaemonManager : Form
     {
-        public FormCommandManager()
+        public FormDaemonManager()
         {
             InitializeComponent();
         }
@@ -76,7 +76,7 @@ namespace NetworkInputMethod
             }
         }
 
-        public void StopDaemons(bool clear)
+        public void StopDaemons(bool others)
         {
             var names = new HashSet<string>();
 
@@ -95,7 +95,7 @@ namespace NetworkInputMethod
                 }
             }
 
-            if (clear)
+            if (others)
             {
                 try
                 {
@@ -144,7 +144,7 @@ namespace NetworkInputMethod
             {
                 var thread = items[0].Tag as DaemonThread;
 
-                var form = new FormCommandEditor()
+                var form = new FormDaemonEditor()
                 {
                     Command = thread.Path,
                     Args = thread.Args,
@@ -182,7 +182,7 @@ namespace NetworkInputMethod
 
         private void toolStripMenuItemAdd_Click(object sender, EventArgs e)
         {
-            var form = new FormCommandEditor();
+            var form = new FormDaemonEditor();
 
             if (form.ShowDialog() == DialogResult.OK)
             {
@@ -207,9 +207,17 @@ namespace NetworkInputMethod
             toolStripMenuItemRemove.Enabled = toolStripMenuItemStart.Enabled = toolStripMenuItemStop.Enabled = toolStripMenuItemRestart.Enabled = (items.Count > 0);
         }
 
-        private void buttonStart_Click(object sender, EventArgs e)
+        private void checkBoxSelAll_CheckedChanged(object sender, EventArgs e)
         {
             foreach (ListViewItem item in listViewCommands.Items)
+            {
+                item.Checked = checkBoxSelAll.Checked;
+            }
+        }
+
+        private void buttonStart_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in listViewCommands.CheckedItems)
             {
                 var thread = item.Tag as DaemonThread;
                 thread.Start();
@@ -220,11 +228,36 @@ namespace NetworkInputMethod
 
         private void buttonStop_Click(object sender, EventArgs e)
         {
-            StopDaemons(false);
+            foreach (ListViewItem item in listViewCommands.CheckedItems)
+            {
+                var thread = item.Tag as DaemonThread;
+                thread.Stop(true);
+            }
+
             SaveListView();
         }
 
         private void buttonRestart_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in listViewCommands.CheckedItems)
+            {
+                var thread = item.Tag as DaemonThread;
+                thread.Stop(false);
+            }
+        }
+
+        private void buttonStartAll_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in listViewCommands.Items)
+            {
+                var thread = item.Tag as DaemonThread;
+                thread.Start();
+            }
+
+            SaveListView();
+        }
+
+        private void buttonRestartAll_Click(object sender, EventArgs e)
         {
             foreach (ListViewItem item in listViewCommands.Items)
             {
@@ -233,7 +266,7 @@ namespace NetworkInputMethod
             }
         }
 
-        private void buttonClear_Click(object sender, EventArgs e)
+        private void buttonStopAll_Click(object sender, EventArgs e)
         {
             StopDaemons(true);
             SaveListView();
@@ -244,33 +277,34 @@ namespace NetworkInputMethod
     {
         public delegate void DaemonStateUpdateHandler(string state, Color color);
 
-        private FormCommandManager mManager;
-        private ListViewItem mItem;
+        private FormDaemonManager mManager;
         private Thread mThread;
+        private int mTimes;
 
-        public string State { get => mItem.SubItems[1].Text; set => mItem.SubItems[1].Text = value; }
+        public string State { get => ListViewItem.SubItems[0].Text; set => ListViewItem.SubItems[0].Text = value; }
 
-        public string Path { get => mItem.SubItems[2].Text; set => mItem.SubItems[2].Text = value; }
+        public string Path { get => ListViewItem.SubItems[1].Text; set => ListViewItem.SubItems[1].Text = value; }
 
-        public string Args { get => mItem.SubItems[3].Text; set => mItem.SubItems[3].Text = value; }
+        public string Args { get => ListViewItem.SubItems[2].Text; set => ListViewItem.SubItems[2].Text = value; }
 
         public Process Process { get; private set; }
 
         public bool Enabled { get; set; }
 
-        public DaemonThread(FormCommandManager manager, string path, string args)
+        public ListViewItem ListViewItem { get; }
+
+        public DaemonThread(FormDaemonManager manager, string path, string args)
         {
             mManager = manager;
 
             var view = manager.ListViewCommands;
 
             var items = view.Items;
-            var item = items.Add(items.Count.ToString());
-            item.SubItems.Add("未启动");
+            var item = items.Add("未启动");
             item.SubItems.Add(path);
             item.SubItems.Add(args);
             item.Tag = this;
-            mItem = item;
+            ListViewItem = item;
         }
 
         public void Start()
@@ -285,6 +319,7 @@ namespace NetworkInputMethod
                     mThread.Start();
                 }
 
+                mTimes = 0;
                 Monitor.Pulse(this);
             }
         }
@@ -311,6 +346,7 @@ namespace NetworkInputMethod
                     process.WaitForExit(2000);
                 }
 
+                mTimes = 0;
                 Monitor.Pulse(this);
             }
 
@@ -365,11 +401,15 @@ namespace NetworkInputMethod
 
                 if (Enabled)
                 {
-                    PerformStateUpdate("正在等待", Color.Red);
-
                     lock (this)
                     {
-                        Monitor.Wait(this, 5000);
+                        for (var i = 10; mTimes > 0 && i > 0; i--)
+                        {
+                            PerformStateUpdate("等待：" + i, Color.Red);
+                            Monitor.Wait(this, 1000);
+                        }
+
+                        mTimes++;
                     }
                 }
             }
@@ -392,8 +432,8 @@ namespace NetworkInputMethod
 
         private void OnStateUpdated(string state, Color color)
         {
-            mItem.ForeColor = Color.White;
-            mItem.BackColor = color;
+            ListViewItem.ForeColor = Color.White;
+            ListViewItem.BackColor = color;
             State = state;
         }
     }

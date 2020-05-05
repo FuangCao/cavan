@@ -1,6 +1,6 @@
 ﻿namespace NetworkInputMethod
 {
-    partial class FormCommandEditor
+    partial class FormDaemonEditor
     {
         /// <summary>
         /// Required designer variable.
@@ -106,7 +106,7 @@
             // 
             this.openFileDialogCommand.Filter = "应用程序|*.exe";
             // 
-            // FormCommandEditor
+            // FormDaemonEditor
             // 
             this.AcceptButton = this.buttonOK;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -120,9 +120,9 @@
             this.Controls.Add(this.textBoxCommand);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
-            this.Name = "FormCommandEditor";
+            this.Name = "FormDaemonEditor";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "命令编辑";
+            this.Text = "后台编辑器";
             this.ResumeLayout(false);
             this.PerformLayout();
 

@@ -84,17 +84,17 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="CavanUdpSock.cs" />
-    <Compile Include="FormCommandEditor.cs">
+    <Compile Include="FormDaemonEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FormCommandEditor.Designer.cs">
-      <DependentUpon>FormCommandEditor.cs</DependentUpon>
+    <Compile Include="FormDaemonEditor.Designer.cs">
+      <DependentUpon>FormDaemonEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="FormCommandManager.cs">
+    <Compile Include="FormDaemonManager.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FormCommandManager.Designer.cs">
-      <DependentUpon>FormCommandManager.cs</DependentUpon>
+    <Compile Include="FormDaemonManager.Designer.cs">
+      <DependentUpon>FormDaemonManager.cs</DependentUpon>
     </Compile>
     <Compile Include="FormHttpFileServer.cs">
       <SubType>Form</SubType>
@@ -247,11 +247,11 @@
     <EmbeddedResource Include="FormCertManager.resx">
       <DependentUpon>FormCertManager.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FormCommandEditor.resx">
-      <DependentUpon>FormCommandEditor.cs</DependentUpon>
+    <EmbeddedResource Include="FormDaemonEditor.resx">
+      <DependentUpon>FormDaemonEditor.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FormCommandManager.resx">
-      <DependentUpon>FormCommandManager.cs</DependentUpon>
+    <EmbeddedResource Include="FormDaemonManager.resx">
+      <DependentUpon>FormDaemonManager.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormConnWifi.resx">
       <DependentUpon>FormConnWifi.cs</DependentUpon>

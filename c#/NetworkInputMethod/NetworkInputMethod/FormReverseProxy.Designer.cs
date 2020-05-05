@@ -75,7 +75,9 @@
             this.columnHeaderClientName});
             this.listViewProxys.ContextMenuStrip = this.contextMenuStripProxy;
             this.listViewProxys.FullRowSelect = true;
+            this.listViewProxys.GridLines = true;
             this.listViewProxys.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+            this.listViewProxys.HideSelection = false;
             this.listViewProxys.LabelWrap = false;
             this.listViewProxys.Location = new System.Drawing.Point(12, 377);
             this.listViewProxys.Name = "listViewProxys";
@@ -163,6 +165,7 @@
             this.columnHeaderHostname});
             this.listViewClients.ContextMenuStrip = this.contextMenuStripClient;
             this.listViewClients.FullRowSelect = true;
+            this.listViewClients.GridLines = true;
             this.listViewClients.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.listViewClients.HideSelection = false;
             this.listViewClients.LabelWrap = false;

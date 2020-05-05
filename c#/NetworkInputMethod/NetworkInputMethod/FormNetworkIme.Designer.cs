@@ -43,7 +43,7 @@
             this.toolStripMenuItemReverseProxySlaveAuto = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemTcpBridgeAuto = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemHttpCaptureAuto = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItemCommandAuto = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemDaemonAuto = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemServers = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemWebProxy = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemTcpProxy = new System.Windows.Forms.ToolStripMenuItem();
@@ -52,7 +52,7 @@
             this.toolStripMenuItemTcpBridge = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemHttpCapturer = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemFileServer = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItemCommandManager = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemDaemonManager = new System.Windows.Forms.ToolStripMenuItem();
             this.ToolStripMenuItemSave = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemPack = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemOpen = new System.Windows.Forms.ToolStripMenuItem();
@@ -166,7 +166,7 @@
             this.toolStripMenuItemReverseProxyAuto,
             this.toolStripMenuItemTcpBridgeAuto,
             this.toolStripMenuItemHttpCaptureAuto,
-            this.toolStripMenuItemCommandAuto});
+            this.toolStripMenuItemDaemonAuto});
             this.toolStripMenuItemAutoRun.Name = "toolStripMenuItemAutoRun";
             this.toolStripMenuItemAutoRun.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItemAutoRun.Text = "开机启动";
@@ -238,13 +238,13 @@
             this.toolStripMenuItemHttpCaptureAuto.Text = "抓包工具";
             this.toolStripMenuItemHttpCaptureAuto.Click += new System.EventHandler(this.toolStripMenuItemHttpCaptureAuto_Click);
             // 
-            // toolStripMenuItemCommandAuto
+            // toolStripMenuItemDaemonAuto
             // 
-            this.toolStripMenuItemCommandAuto.CheckOnClick = true;
-            this.toolStripMenuItemCommandAuto.Name = "toolStripMenuItemCommandAuto";
-            this.toolStripMenuItemCommandAuto.Size = new System.Drawing.Size(180, 22);
-            this.toolStripMenuItemCommandAuto.Text = "命令管理";
-            this.toolStripMenuItemCommandAuto.Click += new System.EventHandler(this.toolStripMenuItemCommandAuto_Click);
+            this.toolStripMenuItemDaemonAuto.CheckOnClick = true;
+            this.toolStripMenuItemDaemonAuto.Name = "toolStripMenuItemDaemonAuto";
+            this.toolStripMenuItemDaemonAuto.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemDaemonAuto.Text = "后台管理";
+            this.toolStripMenuItemDaemonAuto.Click += new System.EventHandler(this.toolStripMenuItemCommandAuto_Click);
             // 
             // toolStripMenuItemServers
             // 
@@ -256,7 +256,7 @@
             this.toolStripMenuItemTcpBridge,
             this.toolStripMenuItemHttpCapturer,
             this.toolStripMenuItemFileServer,
-            this.toolStripMenuItemCommandManager});
+            this.toolStripMenuItemDaemonManager});
             this.toolStripMenuItemServers.Name = "toolStripMenuItemServers";
             this.toolStripMenuItemServers.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItemServers.Text = "服务器";
@@ -264,58 +264,58 @@
             // toolStripMenuItemWebProxy
             // 
             this.toolStripMenuItemWebProxy.Name = "toolStripMenuItemWebProxy";
-            this.toolStripMenuItemWebProxy.Size = new System.Drawing.Size(131, 22);
+            this.toolStripMenuItemWebProxy.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItemWebProxy.Text = "Web 代理";
             this.toolStripMenuItemWebProxy.Click += new System.EventHandler(this.toolStripMenuItemWebProxy_Click);
             // 
             // toolStripMenuItemTcpProxy
             // 
             this.toolStripMenuItemTcpProxy.Name = "toolStripMenuItemTcpProxy";
-            this.toolStripMenuItemTcpProxy.Size = new System.Drawing.Size(131, 22);
+            this.toolStripMenuItemTcpProxy.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItemTcpProxy.Text = "Tcp 代理";
             this.toolStripMenuItemTcpProxy.Click += new System.EventHandler(this.toolStripMenuItemTcpProxy_Click);
             // 
             // toolStripMenuItemUrlBuilder
             // 
             this.toolStripMenuItemUrlBuilder.Name = "toolStripMenuItemUrlBuilder";
-            this.toolStripMenuItemUrlBuilder.Size = new System.Drawing.Size(131, 22);
+            this.toolStripMenuItemUrlBuilder.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItemUrlBuilder.Text = "Url 服务";
             this.toolStripMenuItemUrlBuilder.Click += new System.EventHandler(this.toolStripMenuItemUrlBuilder_Click);
             // 
             // toolStripMenuItemReverseProxy
             // 
             this.toolStripMenuItemReverseProxy.Name = "toolStripMenuItemReverseProxy";
-            this.toolStripMenuItemReverseProxy.Size = new System.Drawing.Size(131, 22);
+            this.toolStripMenuItemReverseProxy.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItemReverseProxy.Text = "反向代理";
             this.toolStripMenuItemReverseProxy.Click += new System.EventHandler(this.toolStripMenuItemReverseProxy_Click);
             // 
             // toolStripMenuItemTcpBridge
             // 
             this.toolStripMenuItemTcpBridge.Name = "toolStripMenuItemTcpBridge";
-            this.toolStripMenuItemTcpBridge.Size = new System.Drawing.Size(131, 22);
+            this.toolStripMenuItemTcpBridge.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItemTcpBridge.Text = "网络桥接";
             this.toolStripMenuItemTcpBridge.Click += new System.EventHandler(this.toolStripMenuItemTcpBridge_Click);
             // 
             // toolStripMenuItemHttpCapturer
             // 
             this.toolStripMenuItemHttpCapturer.Name = "toolStripMenuItemHttpCapturer";
-            this.toolStripMenuItemHttpCapturer.Size = new System.Drawing.Size(131, 22);
+            this.toolStripMenuItemHttpCapturer.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItemHttpCapturer.Text = "抓包工具";
             this.toolStripMenuItemHttpCapturer.Click += new System.EventHandler(this.toolStripMenuItemHttpCapturer_Click);
             // 
             // toolStripMenuItemFileServer
             // 
             this.toolStripMenuItemFileServer.Name = "toolStripMenuItemFileServer";
-            this.toolStripMenuItemFileServer.Size = new System.Drawing.Size(131, 22);
+            this.toolStripMenuItemFileServer.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItemFileServer.Text = "文件服务";
             this.toolStripMenuItemFileServer.Click += new System.EventHandler(this.ToolStripMenuItemFileServer_Click);
             // 
-            // toolStripMenuItemCommandManager
+            // toolStripMenuItemDaemonManager
             // 
-            this.toolStripMenuItemCommandManager.Name = "toolStripMenuItemCommandManager";
-            this.toolStripMenuItemCommandManager.Size = new System.Drawing.Size(131, 22);
-            this.toolStripMenuItemCommandManager.Text = "命令管理";
-            this.toolStripMenuItemCommandManager.Click += new System.EventHandler(this.toolStripMenuItemCommandManager_Click);
+            this.toolStripMenuItemDaemonManager.Name = "toolStripMenuItemDaemonManager";
+            this.toolStripMenuItemDaemonManager.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemDaemonManager.Text = "后台管理";
+            this.toolStripMenuItemDaemonManager.Click += new System.EventHandler(this.toolStripMenuItemCommandManager_Click);
             // 
             // ToolStripMenuItemSave
             // 
@@ -1037,8 +1037,8 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemTcpBridgeAuto;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemTcpProxyAuto;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemConnWifi;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemCommandAuto;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemCommandManager;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemDaemonAuto;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemDaemonManager;
     }
 }
 

@@ -11,9 +11,9 @@ using System.Windows.Forms;
 
 namespace NetworkInputMethod
 {
-    public partial class FormCommandEditor : Form
+    public partial class FormDaemonEditor : Form
     {
-        public FormCommandEditor()
+        public FormDaemonEditor()
         {
             InitializeComponent();
         }

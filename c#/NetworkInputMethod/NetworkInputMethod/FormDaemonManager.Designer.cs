@@ -1,6 +1,6 @@
 ﻿namespace NetworkInputMethod
 {
-    partial class FormCommandManager
+    partial class FormDaemonManager
     {
         /// <summary>
         /// Required designer variable.
@@ -31,7 +31,6 @@
             this.components = new System.ComponentModel.Container();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.listViewCommands = new System.Windows.Forms.ListView();
-            this.columnHeaderIndex = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderState = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderCommand = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderArgs = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -43,7 +42,10 @@
             this.toolStripMenuItemEdit = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemRemove = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.buttonClear = new System.Windows.Forms.Button();
+            this.checkBoxSelAll = new System.Windows.Forms.CheckBox();
+            this.buttonStartAll = new System.Windows.Forms.Button();
+            this.buttonRestartAll = new System.Windows.Forms.Button();
+            this.buttonStopAll = new System.Windows.Forms.Button();
             this.buttonRestart = new System.Windows.Forms.Button();
             this.buttonStop = new System.Windows.Forms.Button();
             this.buttonStart = new System.Windows.Forms.Button();
@@ -70,8 +72,8 @@
             // 
             // listViewCommands
             // 
+            this.listViewCommands.CheckBoxes = true;
             this.listViewCommands.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeaderIndex,
             this.columnHeaderState,
             this.columnHeaderCommand,
             this.columnHeaderArgs});
@@ -82,14 +84,10 @@
             this.listViewCommands.HideSelection = false;
             this.listViewCommands.Location = new System.Drawing.Point(3, 3);
             this.listViewCommands.Name = "listViewCommands";
-            this.listViewCommands.Size = new System.Drawing.Size(778, 519);
+            this.listViewCommands.Size = new System.Drawing.Size(778, 518);
             this.listViewCommands.TabIndex = 0;
             this.listViewCommands.UseCompatibleStateImageBehavior = false;
             this.listViewCommands.View = System.Windows.Forms.View.Details;
-            // 
-            // columnHeaderIndex
-            // 
-            this.columnHeaderIndex.Text = "序号";
             // 
             // columnHeaderState
             // 
@@ -99,7 +97,7 @@
             // columnHeaderCommand
             // 
             this.columnHeaderCommand.Text = "命令";
-            this.columnHeaderCommand.Width = 332;
+            this.columnHeaderCommand.Width = 392;
             // 
             // columnHeaderArgs
             // 
@@ -164,27 +162,64 @@
             // panel1
             // 
             this.panel1.AutoSize = true;
-            this.panel1.Controls.Add(this.buttonClear);
+            this.panel1.Controls.Add(this.checkBoxSelAll);
+            this.panel1.Controls.Add(this.buttonStartAll);
+            this.panel1.Controls.Add(this.buttonRestartAll);
+            this.panel1.Controls.Add(this.buttonStopAll);
             this.panel1.Controls.Add(this.buttonRestart);
             this.panel1.Controls.Add(this.buttonStop);
             this.panel1.Controls.Add(this.buttonStart);
             this.panel1.Controls.Add(this.checkBoxUseShell);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel1.Location = new System.Drawing.Point(3, 528);
+            this.panel1.Location = new System.Drawing.Point(3, 527);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(778, 30);
+            this.panel1.Size = new System.Drawing.Size(778, 31);
             this.panel1.TabIndex = 1;
             // 
-            // buttonClear
+            // checkBoxSelAll
             // 
-            this.buttonClear.Anchor = System.Windows.Forms.AnchorStyles.Right;
-            this.buttonClear.Location = new System.Drawing.Point(451, 4);
-            this.buttonClear.Name = "buttonClear";
-            this.buttonClear.Size = new System.Drawing.Size(75, 23);
-            this.buttonClear.TabIndex = 4;
-            this.buttonClear.Text = "清理";
-            this.buttonClear.UseVisualStyleBackColor = true;
-            this.buttonClear.Click += new System.EventHandler(this.buttonClear_Click);
+            this.checkBoxSelAll.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.checkBoxSelAll.AutoSize = true;
+            this.checkBoxSelAll.Location = new System.Drawing.Point(9, 8);
+            this.checkBoxSelAll.Name = "checkBoxSelAll";
+            this.checkBoxSelAll.Size = new System.Drawing.Size(48, 16);
+            this.checkBoxSelAll.TabIndex = 7;
+            this.checkBoxSelAll.Text = "全选";
+            this.checkBoxSelAll.UseVisualStyleBackColor = true;
+            this.checkBoxSelAll.CheckedChanged += new System.EventHandler(this.checkBoxSelAll_CheckedChanged);
+            // 
+            // buttonStartAll
+            // 
+            this.buttonStartAll.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.buttonStartAll.Location = new System.Drawing.Point(451, 5);
+            this.buttonStartAll.Name = "buttonStartAll";
+            this.buttonStartAll.Size = new System.Drawing.Size(75, 23);
+            this.buttonStartAll.TabIndex = 6;
+            this.buttonStartAll.Text = "全部启动";
+            this.buttonStartAll.UseVisualStyleBackColor = true;
+            this.buttonStartAll.Click += new System.EventHandler(this.buttonStartAll_Click);
+            // 
+            // buttonRestartAll
+            // 
+            this.buttonRestartAll.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.buttonRestartAll.Location = new System.Drawing.Point(370, 5);
+            this.buttonRestartAll.Name = "buttonRestartAll";
+            this.buttonRestartAll.Size = new System.Drawing.Size(75, 23);
+            this.buttonRestartAll.TabIndex = 5;
+            this.buttonRestartAll.Text = "全部重启";
+            this.buttonRestartAll.UseVisualStyleBackColor = true;
+            this.buttonRestartAll.Click += new System.EventHandler(this.buttonRestartAll_Click);
+            // 
+            // buttonStopAll
+            // 
+            this.buttonStopAll.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.buttonStopAll.Location = new System.Drawing.Point(289, 4);
+            this.buttonStopAll.Name = "buttonStopAll";
+            this.buttonStopAll.Size = new System.Drawing.Size(75, 23);
+            this.buttonStopAll.TabIndex = 4;
+            this.buttonStopAll.Text = "全部停止";
+            this.buttonStopAll.UseVisualStyleBackColor = true;
+            this.buttonStopAll.Click += new System.EventHandler(this.buttonStopAll_Click);
             // 
             // buttonRestart
             // 
@@ -223,22 +258,22 @@
             // 
             this.checkBoxUseShell.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.checkBoxUseShell.AutoSize = true;
-            this.checkBoxUseShell.Location = new System.Drawing.Point(9, 7);
+            this.checkBoxUseShell.Location = new System.Drawing.Point(63, 8);
             this.checkBoxUseShell.Name = "checkBoxUseShell";
             this.checkBoxUseShell.Size = new System.Drawing.Size(96, 16);
             this.checkBoxUseShell.TabIndex = 0;
             this.checkBoxUseShell.Text = "显示命令窗口";
             this.checkBoxUseShell.UseVisualStyleBackColor = true;
             // 
-            // FormCommandManager
+            // FormDaemonManager
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 561);
             this.Controls.Add(this.tableLayoutPanel1);
-            this.Name = "FormCommandManager";
+            this.Name = "FormDaemonManager";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "命令管理器";
+            this.Text = "后台管理器";
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.contextMenuStripCommands.ResumeLayout(false);
@@ -252,7 +287,6 @@
 
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.ListView listViewCommands;
-        private System.Windows.Forms.ColumnHeader columnHeaderIndex;
         private System.Windows.Forms.ColumnHeader columnHeaderState;
         private System.Windows.Forms.ColumnHeader columnHeaderCommand;
         private System.Windows.Forms.ColumnHeader columnHeaderArgs;
@@ -268,6 +302,9 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemAdd;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemRestart;
         private System.Windows.Forms.Button buttonRestart;
-        private System.Windows.Forms.Button buttonClear;
+        private System.Windows.Forms.Button buttonStopAll;
+        private System.Windows.Forms.Button buttonStartAll;
+        private System.Windows.Forms.Button buttonRestartAll;
+        private System.Windows.Forms.CheckBox checkBoxSelAll;
     }
 }

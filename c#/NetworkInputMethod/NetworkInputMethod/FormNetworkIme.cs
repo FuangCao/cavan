@@ -32,7 +32,7 @@ namespace NetworkInputMethod
         private FormHttpFileServer mFormHttpFileServer;
         private FormTcpBridge mFormTcpBridge;
         private FormConnWifi mFormConnWifi;
-        private FormCommandManager mFormCommandManager;
+        private FormDaemonManager mFormCommandManager;
 
         //API declarations...
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -196,7 +196,7 @@ namespace NetworkInputMethod
 
             if (settings.DaemonEnable)
             {
-                mFormCommandManager = new FormCommandManager();
+                mFormCommandManager = new FormDaemonManager();
                 mFormCommandManager.Show();
             }
         }
@@ -1068,7 +1068,7 @@ namespace NetworkInputMethod
             toolStripMenuItemReverseProxySlaveAuto.Checked = Settings.Default.ReverseSlaveEnable;
             toolStripMenuItemTcpBridgeAuto.Checked = Settings.Default.TcpBridgeEnable;
             toolStripMenuItemTcpProxyAuto.Checked = Settings.Default.TcpProxyEnable;
-            toolStripMenuItemCommandAuto.Checked = Settings.Default.DaemonEnable;
+            toolStripMenuItemDaemonAuto.Checked = Settings.Default.DaemonEnable;
         }
 
         private void toolStripMenuItemAutoRun_Click(object sender, EventArgs e)
@@ -1225,7 +1225,7 @@ namespace NetworkInputMethod
 
         private void toolStripMenuItemCommandAuto_Click(object sender, EventArgs e)
         {
-            Settings.Default.DaemonEnable = toolStripMenuItemCommandAuto.Checked;
+            Settings.Default.DaemonEnable = toolStripMenuItemDaemonAuto.Checked;
             Settings.Default.Save();
         }
 
@@ -1233,7 +1233,7 @@ namespace NetworkInputMethod
         {
             if (mFormCommandManager == null || mFormCommandManager.IsDisposed)
             {
-                mFormCommandManager = new FormCommandManager();
+                mFormCommandManager = new FormDaemonManager();
             }
 
             mFormCommandManager.Show();

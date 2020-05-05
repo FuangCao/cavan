@@ -162,11 +162,32 @@ namespace NetworkInputMethod
             return "invalid";
         }
 
-        public ListViewItem findProxyLinkItem(string key)
+        public ListViewItem findProxyLinkItem(string key, bool fuzzy)
         {
+            Console.WriteLine("findProxyLinkItem: " + key);
+
             lock (mProxyLinks)
             {
-                return mProxyLinks[key] as ListViewItem;
+                var link = mProxyLinks[key];
+                if (link != null)
+                {
+                    return link as ListViewItem;
+                }
+
+                if (fuzzy)
+                {
+                    foreach (ListViewItem item in mProxyLinks.Values)
+                    {
+                        var items = item.SubItems;
+
+                        if (items[1].Text == key || items[2].Text == key)
+                        {
+                            return item;
+                        }
+                    }
+                }
+
+                return null;
             }
         }
 
@@ -215,7 +236,7 @@ namespace NetworkInputMethod
 
             var key = getProxyLinkKey(address.ToString(), hostname);
 
-            var item = findProxyLinkItem(key);
+            var item = findProxyLinkItem(key, false);
             if (item == null)
             {
                 item = listViewClients.Items.Add("0");
@@ -410,7 +431,7 @@ namespace NetworkInputMethod
 
         public ReverseProxyLink getProxyLinkRaw(string key, string url, CavanTcpClient peer)
         {
-            var item = findProxyLinkItem(key);
+            var item = findProxyLinkItem(key, true);
             if (item == null)
             {
                 return null;
