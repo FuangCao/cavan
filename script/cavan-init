@@ -431,7 +431,7 @@ function install_debin_packages()
 
 function config_stardict()
 {
-	cd /usr/share/stardict/dic || return 1
+	cd /usr/share/stardict/dic || return 0
 
 	for dic in ${UBUNTU_PATH}/app/stardict/*.tar.*
 	do
@@ -500,10 +500,6 @@ EOF
 
 function config_grub()
 {
-	sed 	-e 's#^\(\s*linux.*\s\+root=\).*$#\1${GRUB_DEVICE} vga=0x318#g' \
-			-e 's/^\s*printf.*\${prepare_\w*_cache}/# &/g' \
-			-i ${FILE_GRUB_LINUX} || return 1
-
 	cat > "${FILE_GRUB_CAVAN}" << EOF
 #!/bin/sh
 

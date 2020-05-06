@@ -734,3 +734,8 @@ function cavan-fastboot-flash()
 		fastboot flash $name $image || return 1
 	done
 }
+
+for app in Settings SecuritySettings RadioInfo AccessibilitySettings ActivityPicker ApnSettings ApplicationSettings BandMode BatteryInfo DateTimeSettings DateTimeSettingsSetupWizard DevelopmentSettings DeviceAdminSettings DeviceInfoSettings Display DisplaySettings DockSettings IccLockSettings InstalledAppDetails LanguageSettings LocalePicker LocalePickerInSetupWizard ManageApplications MasterClear MediaFormat PhysicalKeyboardSettings PrivacySettings ProxySelector RadioInfo RunningServices SecuritySettings Settings SettingsSafetyLegalActivity SoundSettings TestingSettings TetherSettings TextToSpeechSettings UsageStats UserDictionarySettings VoiceInputOutputSettings WirelessSettings
+do
+	alias cavan-android-open-${app}="adb shell am start com.android.settings/com.android.settings.${app}"
+done
