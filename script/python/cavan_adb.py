@@ -64,6 +64,9 @@ class AdbManager(CavanCommandBase):
 
 		return self.doWaitForDevice()
 
+        def disableVerity(self):
+            return self.doAdbCommand(["disable-verity"])
+
 	def doPushOnce(self, srcFile, destFile, destDir = None):
 		if not destDir:
 			destDir = os.path.dirname(destFile)
@@ -117,6 +120,8 @@ class AdbManager(CavanCommandBase):
 
 		if not self.doRoot():
 		    return False
+
+                self.disableVerity()
 
 		if not listDir:
 		    return self.doAdbCommand(["remount"])
