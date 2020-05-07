@@ -58,3 +58,5 @@ function cavan-net-ipconfig()
 		echo "dns-nameservers ${dns}"
 	fi
 }
+
+alias cavan-pip-install="sudo pip install -i https://pypi.douban.com/simple --default-timeout=1000"

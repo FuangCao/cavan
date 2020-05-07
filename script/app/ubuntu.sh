@@ -35,6 +35,7 @@ alias cavan-apt-get-source-sohu="cavan-apt-get-source mirrors.sohu.com"
 alias cavan-apt-get-source-ustc="cavan-apt-get-source mirrors.ustc.edu.cn"
 alias cavan-apt-get-source-sjtu="cavan-apt-get-source ftp.sjtu.edu.cn"
 alias cavan-apt-get-source-us="cavan-apt-get-source us.archive.ubuntu.com"
+alias cavan-apt-get-source-tuna="cavan-apt-get-source mirrors.tuna.tsinghua.edu.cn"
 
 alias cavan-apt-get-reinstall="sudo apt-get --reinstall install"
 alias cavan-apt-get-auto-remove="sudo apt-get autoremove"
@@ -61,3 +62,11 @@ function cavan-umake-setup()
 
 alias cavan-umake-install-vscode="umake ide visual-studio-code"
 alias vscode="(ulimit -v 4194304 && ${UMAKE_HOME}/ide/visual-studio-code/bin/code)"
+
+function cavan-ssh-keygen()
+{
+	local HOME_SSH="${HOME}/.ssh"
+
+	[ -f "${HOME_SSH}/authorized_keys" ] && return 0
+	ssh-keygen && cp -av "${HOME_SSH}/id_rsa.pub" "${HOME_SSH}/authorized_keys" || return 1
+}
