@@ -735,6 +735,25 @@ function cavan-fastboot-flash()
 	done
 }
 
+function cavan-adb-edit()
+{
+	local remote_path="$1"
+	local local_path="/tmp/$(basename $1)"
+	cavan-adb-remount || return 1
+	adb pull "${remote_path}" "${local_path}" || return 1
+	vi ${local_path} || return 1
+	adb push "${local_path}" "${remote_path}" || return 1
+}
+
+function cavan-android-gen-keystore()
+{
+	echo "Please input password: android"
+	cavan-android-croot build/target/product/security || return 1
+	openssl pkcs8 -in platform.pk8 -inform DER -outform PEM -out shared.priv.pem -nocrypt || return 1
+	openssl pkcs12 -export -in platform.x509.pem -inkey shared.priv.pem -out shared.pk12 -name androiddebugkey || return 1
+	keytool -importkeystore -deststorepass android -destkeypass android -destkeystore platform.keystore -srckeystore shared.pk12 -srcstoretype PKCS12 -srcstorepass android -alias androiddebugkey || return 1
+}
+
 for app in Settings SecuritySettings RadioInfo AccessibilitySettings ActivityPicker ApnSettings ApplicationSettings BandMode BatteryInfo DateTimeSettings DateTimeSettingsSetupWizard DevelopmentSettings DeviceAdminSettings DeviceInfoSettings Display DisplaySettings DockSettings IccLockSettings InstalledAppDetails LanguageSettings LocalePicker LocalePickerInSetupWizard ManageApplications MasterClear MediaFormat PhysicalKeyboardSettings PrivacySettings ProxySelector RadioInfo RunningServices SecuritySettings Settings SettingsSafetyLegalActivity SoundSettings TestingSettings TetherSettings TextToSpeechSettings UsageStats UserDictionarySettings VoiceInputOutputSettings WirelessSettings
 do
 	alias cavan-android-open-${app}="adb shell am start com.android.settings/com.android.settings.${app}"
