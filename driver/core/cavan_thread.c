@@ -14,7 +14,7 @@ static int cavan_input_thread_handler(void *data)
 		while (thread->state == CAVAN_INPUT_THREAD_STATE_SUSPEND) {
 			pr_green_info("cavan input thread %s suspend", thread->name);
 
-			set_current_state(TASK_UNINTERRUPTIBLE);
+			set_current_state(TASK_INTERRUPTIBLE);
 			mutex_unlock(&thread->lock);
 			schedule();
 			mutex_lock(&thread->lock);

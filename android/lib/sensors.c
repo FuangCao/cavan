@@ -522,7 +522,7 @@ static int cavan_sensors_open(struct cavan_sensor_pdev *pdev)
 
 	if (pdev->sensor_count == 0) {
 		pd_red_info("No device matched");
-		return -ENOENT;
+		return 0; // -ENOENT;
 	}
 
 	ret = cavan_sensors_probe(pdev);

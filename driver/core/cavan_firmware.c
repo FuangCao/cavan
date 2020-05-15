@@ -193,7 +193,7 @@ EXPORT_SYMBOL_GPL(cavan_firmware_used_space);
 
 static void cavan_firmware_wait(struct cavan_firmware *fw)
 {
-	set_current_state(TASK_UNINTERRUPTIBLE);
+	set_current_state(TASK_KILLABLE);
 
 	mutex_unlock(&fw->lock);
 	schedule();
