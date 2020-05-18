@@ -80,6 +80,11 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_LF,
 		}, {
+			.name = "rk",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_RK,
+		}, {
 			0, 0, 0, 0
 		},
 	};
@@ -121,6 +126,10 @@ int main(int argc, char *argv[])
 
 		case CAVAN_COMMAND_OPTION_LF:
 			cavan_line_end = "\n";
+			break;
+
+		case CAVAN_COMMAND_OPTION_RK:
+			rate = 1500000;
 			break;
 
 		default:

@@ -1112,11 +1112,7 @@ int serial_cmdline(int fd)
 	struct termios attr_bak;
 	int ret;
 
-	signal(SIGPIPE, SIG_IGN);
-	signal(SIGHUP, SIG_IGN);
-	signal(SIGINT, SIG_IGN);
-
-	ret = cavan_tty_set_mode(stdin_fd, CAVAN_TTY_MODE_CMDLINE, &attr_bak);
+	ret = cavan_tty_set_mode(stdin_fd, CAVAN_TTY_MODE_SSH, &attr_bak);
 	if (ret < 0) {
 		pr_red_info("cavan_tty_set_mode");
 		return ret;
@@ -1125,30 +1121,59 @@ int serial_cmdline(int fd)
 	cavan_pthread_run(serial_read_thread, &fd);
 
 	while (1) {
-		char value;
+		int ret;
+		int value;
 
-		ret = read(stdin_fd, &value, 1);
-		if (ret != 1) {
+		value = getchar();
+		if (value < 0) {
+			pr_err_info("getchar: %d", value);
 			break;
 		}
 
-		if (value == '\n') {
-			int ret = write(fd, cavan_line_end, line_end_size);
+		switch (value)
+		{
+		case 0x1C:
+			while (1) {
+				value = getchar();
+				if (value < 0 || value == 0x03) {
+					goto out_cavan_tty_attr_restore;
+				}
+
+				if (value != 0x1C) {
+					char buff[] = { 0x1C, value };
+
+					ret = write(fd, buff, sizeof(buff));
+					if (ret < 0) {
+						pr_err_info("write: %d", ret);
+						goto out_cavan_tty_attr_restore;
+					}
+
+					break;
+				}
+			}
+			break;
+
+		case '\n':
+			ret = write(fd, cavan_line_end, line_end_size);
 			if (ret < 0) {
 				pr_err_info("write: %d", ret);
-				break;
+				goto out_cavan_tty_attr_restore;
 			}
-		} else {
-			int ret = write(fd, &value, 1);
+			break;
+
+		default:
+			ret = write(fd, &value, 1);
 			if (ret < 0) {
 				pr_err_info("write: %d", ret);
-				break;
+				goto out_cavan_tty_attr_restore;
 			}
+			break;
 		}
 
 		fsync(fd);
 	}
 
+out_cavan_tty_attr_restore:
 	cavan_tty_attr_restore(stdin_fd, &attr_bak);
 
 	return 0;

@@ -10,6 +10,7 @@ alias cavan-android-jack-kill="jack-admin kill-server"
 alias cavan-android-jack-start="jack-admin start-server"
 alias cavan-android-jack-restart="jack-admin kill-server && jack-admin start-server"
 alias cavan-android-make="cavan-android-command ${CMD_MAKE}"
+alias cavan-android-make-ota="cavan-android-make otapackage"
 
 export FILE_APK_RENAME_JAR="${CAVAN_HOME}/android/app/bin/ApkRename.jar"
 
