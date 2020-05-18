@@ -17,6 +17,7 @@ type CavanUdpTurnClient struct {
 	ClientUrl  string
 	ServerUrl  string
 	ProxyUrl   string
+	Links      int
 	Sock       *CavanUdpSock
 	UdpCtrl    *CavanUdpLink
 	Listener   *net.TCPListener
@@ -69,10 +70,29 @@ func (client *CavanUdpTurnClient) TcpMainLoop() {
 	}
 }
 
-func (client *CavanUdpTurnClient) TcpDaemonLoop(conn net.Conn) {
-	defer conn.Close()
+func (client *CavanUdpTurnClient) OnConnected(conn net.Conn) {
+	client.Lock()
+	client.Links++
+	fmt.Println("OnConnected:", conn.RemoteAddr(), "links =", client.Links)
+	client.Unlock()
+}
 
-	// fmt.Println("TcpDaemonLoop:", conn)
+func (client *CavanUdpTurnClient) OnDisconnected(conn net.Conn) {
+	conn.Close()
+
+	client.Lock()
+	client.Links--
+	fmt.Println("OnDisconnected:", conn.RemoteAddr(), "links =", client.Links)
+	client.Unlock()
+}
+
+func (client *CavanUdpTurnClient) TcpDaemonLoop(conn net.Conn) {
+	defer func() {
+		conn.Close()
+		client.OnDisconnected(conn)
+	}()
+
+	client.OnConnected(conn)
 
 	udp := client.NewUdpLink()
 	if udp == nil {
