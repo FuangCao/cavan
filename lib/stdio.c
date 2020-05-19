@@ -1055,16 +1055,17 @@ int serial_open(const char *pathname, int rate)
             goto out_close_fd;
         }
 
-        attr.c_iflag &= ~(ICRNL | IXON);
-        attr.c_cflag |= CLOCAL | CREAD;
-        attr.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
-        attr.c_oflag &= ~OPOST;
+		attr.c_iflag &= ~(IXON);
+		attr.c_iflag |= ICRNL;
+		attr.c_cflag |= CLOCAL | CREAD;
+		attr.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+		attr.c_oflag &= ~OPOST;
 
-        ret = tcsetattr(fd, TCSANOW, &attr);
-        if (ret < 0) {
-            pr_err_info("tcsetattr");
-            goto out_close_fd;
-        }
+		ret = tcsetattr(fd, TCSANOW, &attr);
+		if (ret < 0) {
+			pr_err_info("tcsetattr");
+			goto out_close_fd;
+		}
     }
 
 	return fd;
@@ -1074,41 +1075,46 @@ out_close_fd:
 	return ret;
 }
 
-void serial_read_loop(int fd)
+void cavan_serial_init(struct cavan_serial_desc *serial)
 {
-	bool need_replace = (strcmp(cavan_line_end, "\r") == 0);
+	cavan_block_cache_init(&serial->cache);
+	serial->line_end = "\n";
+}
+
+void cavan_serial_deinit(struct cavan_serial_desc *serial)
+{
+	cavan_block_cache_deinit(&serial->cache);
+}
+
+void cavan_serial_read_loop(struct cavan_serial_desc *serial)
+{
 	char buff[4096];
 
 	while (1) {
-		int length = read(fd, buff, sizeof(buff));
+		int length = read(serial->fd, buff, sizeof(buff));
+
 		if (length < 0) {
 			break;
 		}
 
-		if (need_replace) {
-			char *p, *p_end;
-
-			for (p = buff, p_end = p + length; p < p_end; p++) {
-				if (*p == '\r') {
-					*p = '\n';
-				}
-			}
+		if (serial->paused) {
+			cavan_block_cache_write(&serial->cache, buff, length);
+		} else {
+			fwrite(buff, 1, length, stdout);
+			fflush(stdout);
 		}
-
-		fwrite(buff, 1, length, stdout);
-		fflush(stdout);
 	}
 }
 
-static void *serial_read_thread(void *data)
+static void *cavan_serial_read_thread(void *data)
 {
-	serial_read_loop(*(int *) data);
+	cavan_serial_read_loop((struct cavan_serial_desc *) data);
 	return NULL;
 }
 
-int serial_cmdline(int fd)
+int cavan_serial_cmdline(struct cavan_serial_desc *serial)
 {
-	int line_end_size = strlen(cavan_line_end);
+	int line_end_size = strlen(serial->line_end);
 	struct termios attr_bak;
 	int ret;
 
@@ -1118,7 +1124,7 @@ int serial_cmdline(int fd)
 		return ret;
 	}
 
-	cavan_pthread_run(serial_read_thread, &fd);
+	cavan_pthread_run(cavan_serial_read_thread, serial);
 
 	while (1) {
 		int ret;
@@ -1133,6 +1139,9 @@ int serial_cmdline(int fd)
 		switch (value)
 		{
 		case 0x1C:
+			serial->paused = true;
+			println("Press any key to continue");
+
 			while (1) {
 				value = getchar();
 				if (value < 0 || value == 0x03) {
@@ -1140,21 +1149,28 @@ int serial_cmdline(int fd)
 				}
 
 				if (value != 0x1C) {
-					char buff[] = { 0x1C, value };
-
-					ret = write(fd, buff, sizeof(buff));
-					if (ret < 0) {
-						pr_err_info("write: %d", ret);
-						goto out_cavan_tty_attr_restore;
-					}
-
 					break;
 				}
 			}
+
+			while (1) {
+				char buff[1024];
+				int length;
+
+				length = cavan_block_cache_read(&serial->cache, buff, sizeof(buff));
+				if (length == 0) {
+					break;
+				}
+
+				fwrite(buff, 1, length, stdout);
+			}
+
+			serial->paused = false;
+			fflush(stdout);
 			break;
 
 		case '\n':
-			ret = write(fd, cavan_line_end, line_end_size);
+			ret = write(serial->fd, serial->line_end, line_end_size);
 			if (ret < 0) {
 				pr_err_info("write: %d", ret);
 				goto out_cavan_tty_attr_restore;
@@ -1162,7 +1178,7 @@ int serial_cmdline(int fd)
 			break;
 
 		default:
-			ret = write(fd, &value, 1);
+			ret = write(serial->fd, &value, 1);
 			if (ret < 0) {
 				pr_err_info("write: %d", ret);
 				goto out_cavan_tty_attr_restore;
@@ -1170,7 +1186,7 @@ int serial_cmdline(int fd)
 			break;
 		}
 
-		fsync(fd);
+		fsync(serial->fd);
 	}
 
 out_cavan_tty_attr_restore:

@@ -555,8 +555,16 @@ using namespace std;
 	}
 
 #include <cavan/text.h>
+#include <cavan/cache.h>
 
-__BEGIN_DECLS
+struct cavan_serial_desc {
+	int fd;
+	bool paused;
+	const char *line_end;
+	struct cavan_block_cache cache;
+};
+
+__BEGIN_DECLS;
 
 extern cavan_lock_t cavan_stdout_lock;
 extern const char *cavan_line_end;
@@ -654,8 +662,11 @@ int msleep(ulong mseconds);
 
 speed_t serial_rate2speed(int rate);
 int serial_open(const char *pathname, int rate);
-void serial_read_loop(int fd);
-int serial_cmdline(int fd);
+
+void cavan_serial_init(struct cavan_serial_desc *serial);
+void cavan_serial_deinit(struct cavan_serial_desc *serial);
+void cavan_serial_read_loop(struct cavan_serial_desc *serial);
+int cavan_serial_cmdline(struct cavan_serial_desc *serial);
 
 static inline unsigned int ssleep(unsigned int seconds)
 {
