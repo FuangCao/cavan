@@ -60,6 +60,19 @@ struct cavan_fifo {
 	ssize_t (*write)(struct cavan_fifo *fifo, const void *buff, size_t size);
 };
 
+struct cavan_block_cache_node {
+	u8 buff[4096];
+	u16 position;
+	u16 length;
+	struct cavan_block_cache_node *next;
+};
+
+struct cavan_block_cache {
+	pthread_mutex_t lock;
+	struct cavan_block_cache_node *head;
+	struct cavan_block_cache_node *tail;
+};
+
 int mem_cache_init(struct mem_cache *cache, size_t size);
 void mem_cache_reinit(struct mem_cache *cache);
 void mem_cache_deinit(struct mem_cache *cache);
@@ -106,6 +119,13 @@ ssize_t cavan_fifo_write(struct cavan_fifo *fifo, const void *buff, size_t size)
 ssize_t cavan_fifo_fflush(struct cavan_fifo *fifo);
 size_t cavan_fifo_vprintf(struct cavan_fifo *fifo, const char *format, va_list ap);
 size_t cavan_fifo_printf(struct cavan_fifo *fifo, const char *format, ...);
+
+void cavan_block_cache_init(struct cavan_block_cache *cache);
+void cavan_block_cache_deinit(struct cavan_block_cache *cache);
+int cavan_block_cache_write_locked(struct cavan_block_cache *cache, const u8 *buff, int length);
+int cavan_block_cache_write(struct cavan_block_cache *cache, const void *buff, int length);
+int cavan_block_cache_read_locked(struct cavan_block_cache *cache, u8 *buff, int length);
+int cavan_block_cache_read(struct cavan_block_cache *cache, void *buff, int length);
 
 static inline void cavan_fifo_lock(struct cavan_fifo *fifo)
 {

@@ -21,6 +21,7 @@
 #include <cavan/cache.h>
 #include <cavan/thread.h>
 
+#if 0
 static void *read_thread_handler(void *data)
 {
 	ssize_t rdlen;
@@ -108,3 +109,43 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
+#else
+int main(int argc, char *argv[])
+{
+	struct cavan_block_cache cache;
+	int readed;
+	int i;
+
+	cavan_block_cache_init(&cache);
+
+	for (i = 0; i < 100000; i++) {
+		char value = '0' + (i % 10);
+		cavan_block_cache_write(&cache, &value, 1);
+	}
+
+	readed = 0;
+
+	while (1) {
+		char buff[1024];
+		int length = cavan_block_cache_read(&cache, buff, sizeof(buff) - 1);
+
+		if (length == 0) {
+			break;
+		}
+
+		readed += length;
+
+		buff[length] = 0;
+		println("length = %d, buff = %s", length, buff);
+
+		cavan_block_cache_write(&cache, "ABCDEF", 6);
+		msleep(10);
+	}
+
+	println("readed = %d", readed);
+
+	cavan_block_cache_deinit(&cache);
+
+	return 0;
+}
+#endif

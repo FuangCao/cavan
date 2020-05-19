@@ -1126,3 +1126,145 @@ size_t cavan_fifo_printf(struct cavan_fifo *fifo, const char *format, ...)
 
 	return wrlen;
 }
+
+// =============================================================================
+
+void cavan_block_cache_init(struct cavan_block_cache *cache)
+{
+	pthread_mutex_init(&cache->lock, NULL);
+	cache->head = cache->tail = NULL;
+}
+
+void cavan_block_cache_deinit(struct cavan_block_cache *cache)
+{
+	struct cavan_block_cache_node *node = cache->head;
+
+	while (node != NULL) {
+		struct cavan_block_cache_node *next = node->next;
+		free(node);
+		node = next;
+	}
+
+	pthread_mutex_destroy(&cache->lock);
+}
+
+static struct cavan_block_cache_node *cavan_block_cache_alloc(void)
+{
+	struct cavan_block_cache_node *node = malloc(sizeof(struct cavan_block_cache_node));
+
+	if (node == NULL) {
+		pr_err_info("malloc");
+		return NULL;
+	}
+
+	node->next = NULL;
+	node->length = 0;
+	node->position = 0;
+
+	return node;
+}
+
+int cavan_block_cache_write_locked(struct cavan_block_cache *cache, const u8 *buff, int length)
+{
+	struct cavan_block_cache_node *node;
+
+	if (cache->head == NULL) {
+		node = cavan_block_cache_alloc();
+		if (node == NULL) {
+			return -ENOMEM;
+		}
+
+		cache->head = cache->tail = node;
+	} else {
+		node = cache->tail;
+	}
+
+	while (length > 0) {
+		int remain = sizeof(node->buff) - node->length;
+
+		if (remain < length) {
+			struct cavan_block_cache_node *next;
+
+			memcpy(node->buff + node->length, buff, remain);
+			node->length = sizeof(node->buff);
+
+			next = cavan_block_cache_alloc();
+			if (next == NULL) {
+				return -ENOMEM;
+			}
+
+			cache->tail = next;
+			node->next = next;
+			node = next;
+
+			length -= remain;
+			buff += remain;
+		} else {
+			memcpy(node->buff + node->length, buff, length);
+			node->length += length;
+			break;
+		}
+	}
+
+	return 0;
+}
+
+int cavan_block_cache_write(struct cavan_block_cache *cache, const void *buff, int length)
+{
+	int ret;
+
+	pthread_mutex_lock(&cache->lock);
+	ret = cavan_block_cache_write_locked(cache, (const u8 *) buff, length);
+	pthread_mutex_unlock(&cache->lock);
+
+	return ret;
+}
+
+int cavan_block_cache_read_locked(struct cavan_block_cache *cache, u8 *buff, int length)
+{
+	int readed = 0;
+
+	while (length > 0) {
+		struct cavan_block_cache_node *node = cache->head;
+		int remain;
+
+		if (node == NULL) {
+			break;
+		}
+
+		remain = node->length - node->position;
+		if (remain < length) {
+			memcpy(buff, node->buff + node->position, remain);
+			readed += remain;
+
+			if (node->length < sizeof(node->buff)) {
+				node->position = node->length;
+				break;
+			}
+
+			cache->head = node->next;
+			free(node);
+
+			length -= remain;
+			buff += remain;
+		} else {
+			memcpy(buff, node->buff + node->position, length);
+			node->position += length;
+			readed += length;
+			break;
+		}
+	}
+
+	return readed;
+}
+
+int cavan_block_cache_read(struct cavan_block_cache *cache, void *buff, int length)
+{
+	int ret;
+
+	pthread_mutex_lock(&cache->lock);
+	ret = cavan_block_cache_read_locked(cache, (u8 *) buff, length);
+	pthread_mutex_unlock(&cache->lock);
+
+	return ret;
+}
