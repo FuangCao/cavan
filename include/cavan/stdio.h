@@ -661,7 +661,7 @@ int nsleep(ulong nseconds);
 int msleep(ulong mseconds);
 
 speed_t serial_rate2speed(int rate);
-int serial_open(const char *pathname, int rate);
+int serial_open(const char *pathname, int rate, const char *line_end);
 
 void cavan_serial_init(struct cavan_serial_desc *serial);
 void cavan_serial_deinit(struct cavan_serial_desc *serial);

@@ -35,8 +35,8 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int fd;
-	int rate;
 	int option_index;
+	int rate = 115200;
 	const char *pathname;
 	struct cavan_serial_desc serial;
 	struct option long_option[] = {
@@ -90,8 +90,6 @@ int main(int argc, char *argv[])
 		},
 	};
 
-	rate = 115200;
-	pathname = "/dev/ttyUSB0";
 	cavan_serial_init(&serial);
 
 	while ((c = getopt_long(argc, argv, "vVhH", long_option, &option_index)) != EOF) {
@@ -144,7 +142,7 @@ int main(int argc, char *argv[])
 		pathname = argv[optind++];
 	}
 
-	fd = serial_open(pathname, rate);
+	fd = serial_open(pathname, rate, serial.line_end);
 	if (fd < 0) {
 		pr_err_info("serial_open: %d", fd);
 		return -EFAULT;

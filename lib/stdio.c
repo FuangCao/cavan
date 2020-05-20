@@ -1016,18 +1016,46 @@ speed_t serial_rate2speed(int rate)
 	return B115200;
 }
 
-int serial_open(const char *pathname, int rate)
+int serial_open(const char *pathname, int rate, const char *line_end)
 {
+	char buff[1024];
 	int ret;
 	int fd;
 
-	println("serial_open: pathname = %s, rate = %d", pathname, rate);
+	if (pathname == NULL) {
+		int index = 0;
 
-	fd = open(pathname, O_RDWR | O_NOCTTY);
-	if (fd < 0) {
-		pr_err_info("open: %s", pathname);
-		return fd;
+		pathname = buff;
+
+		while (1) {
+			if (index > 100) {
+				pr_err_info("No serial device found");
+				return -ENOENT;
+			}
+
+			snprintf(buff, sizeof(buff), "/dev/ttyUSB%d", index);
+
+			fd = open(pathname, O_RDWR | O_NOCTTY);
+			if (fd < 0) {
+				if (errno != ENOENT) {
+					pr_err_info("open: %s", pathname);
+					return fd;
+				}
+
+				index++;
+			} else {
+				break;
+			}
+		}
+	} else {
+		fd = open(pathname, O_RDWR | O_NOCTTY);
+		if (fd < 0) {
+			pr_err_info("open: %s", pathname);
+			return fd;
+		}
 	}
+
+	println("serial_open: pathname = %s, rate = %d", pathname, rate);
 
     if (isatty(fd)) {
         struct termios attr;
@@ -1055,8 +1083,13 @@ int serial_open(const char *pathname, int rate)
             goto out_close_fd;
         }
 
-		attr.c_iflag &= ~(IXON);
-		attr.c_iflag |= ICRNL;
+		if (line_end && line_end[0] == '\r' && line_end[1] != '\n') {
+			attr.c_iflag &= ~(IXON);
+			attr.c_iflag |= ICRNL;
+		} else {
+			attr.c_iflag &= ~(ICRNL | IXON);
+		}
+
 		attr.c_cflag |= CLOCAL | CREAD;
 		attr.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
 		attr.c_oflag &= ~OPOST;
