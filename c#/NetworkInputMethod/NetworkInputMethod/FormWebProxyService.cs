@@ -19,6 +19,7 @@ namespace NetworkInputMethod
         private CavanTcpService mService;
         private CavanUrl mProxyUrl;
         private TextBox[] mUrls;
+        private TextBox mUrl;
 
         public FormWebProxyService()
         {
@@ -69,17 +70,7 @@ namespace NetworkInputMethod
 
         private void buttonStartStop_Click(object sender, EventArgs e)
         {
-            if (mProxyUrl == null)
-            {
-                mService.toggle(textBoxPort.Text);
-            }
-            else
-            {
-                buttonProxy1.ForeColor = Color.Black;
-                buttonProxy2.ForeColor = Color.Black;
-                buttonProxy3.ForeColor = Color.Black;
-                SetProxyUrl(null, null);
-            }
+            mService.toggle(textBoxPort.Text);
         }
 
         public override void onTcpServiceStarted(object sender, EventArgs e)
@@ -107,13 +98,23 @@ namespace NetworkInputMethod
 
         public void SetProxyUrl(Button button, TextBox view)
         {
-            if (view == null)
+            if (view == null || view == mUrl)
             {
                 mProxyUrl = null;
+                mUrl = null;
+                button = null;
             }
             else
             {
+                var url = view.Text;
+
+                if (string.IsNullOrWhiteSpace(url))
+                {
+                    return;
+                }
+
                 mProxyUrl = new CavanUrl(view.Text);
+                mUrl = view;
             }
 
             SetProxyColor(buttonProxy1, button);

@@ -116,7 +116,7 @@
             this.buttonProxy1.Name = "buttonProxy1";
             this.buttonProxy1.Size = new System.Drawing.Size(75, 23);
             this.buttonProxy1.TabIndex = 7;
-            this.buttonProxy1.Text = "代理";
+            this.buttonProxy1.Text = "转发";
             this.buttonProxy1.UseVisualStyleBackColor = true;
             this.buttonProxy1.Click += new System.EventHandler(this.buttonProxy1_Click);
             // 
@@ -127,7 +127,7 @@
             this.buttonProxy2.Name = "buttonProxy2";
             this.buttonProxy2.Size = new System.Drawing.Size(75, 23);
             this.buttonProxy2.TabIndex = 8;
-            this.buttonProxy2.Text = "代理";
+            this.buttonProxy2.Text = "转发";
             this.buttonProxy2.UseVisualStyleBackColor = true;
             this.buttonProxy2.Click += new System.EventHandler(this.buttonProxy2_Click);
             // 
@@ -138,7 +138,7 @@
             this.buttonProxy3.Name = "buttonProxy3";
             this.buttonProxy3.Size = new System.Drawing.Size(75, 23);
             this.buttonProxy3.TabIndex = 9;
-            this.buttonProxy3.Text = "代理";
+            this.buttonProxy3.Text = "转发";
             this.buttonProxy3.UseVisualStyleBackColor = true;
             this.buttonProxy3.Click += new System.EventHandler(this.buttonProxy3_Click);
             // 
