@@ -10,23 +10,76 @@ using System.Windows.Forms;
 using System.IO;
 using System.Collections;
 using NetworkInputMethod.Properties;
+using System.Collections.Specialized;
 
 namespace NetworkInputMethod
 {
     public partial class FormWebProxyService : FormTcpService
     {
         private CavanTcpService mService;
+        private CavanUrl mProxyUrl;
+        private TextBox[] mUrls;
 
         public FormWebProxyService()
         {
             mService = new CavanTcpService(this);
             InitializeComponent();
+
+            mUrls = new TextBox[] { textBoxUrl1, textBoxUrl2, textBoxUrl3 };
+            LoadUrls();
+
             textBoxPort.Text = Settings.Default.WebProxyPort.ToString();
+        }
+
+        public void LoadUrls()
+        {
+            var urls = Settings.Default.WebProxyUrls;
+
+            if (urls != null)
+            {
+                var index = 0;
+
+                foreach (var url in urls)
+                {
+                    if (index < mUrls.Length)
+                    {
+                        mUrls[index].Text = url;
+                        index++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        public void SaveUrls()
+        {
+            StringCollection urls = new StringCollection();
+
+            for (var i = 0; i < mUrls.Length; i++)
+            {
+                urls.Add(mUrls[i].Text);
+            }
+
+            Settings.Default.WebProxyUrls = urls;
+            Settings.Default.Save();
         }
 
         private void buttonStartStop_Click(object sender, EventArgs e)
         {
-            mService.toggle(textBoxPort.Text);
+            if (mProxyUrl == null)
+            {
+                mService.toggle(textBoxPort.Text);
+            }
+            else
+            {
+                buttonProxy1.ForeColor = Color.Black;
+                buttonProxy2.ForeColor = Color.Black;
+                buttonProxy3.ForeColor = Color.Black;
+                SetProxyUrl(null, null);
+            }
         }
 
         public override void onTcpServiceStarted(object sender, EventArgs e)
@@ -40,10 +93,41 @@ namespace NetworkInputMethod
             buttonStartStop.Text = "启动";
         }
 
+        public void SetProxyColor(Button button, Button now)
+        {
+            if (button == now)
+            {
+                button.ForeColor = Color.Red;
+            }
+            else
+            {
+                button.ForeColor = Color.Black;
+            }
+        }
+
+        public void SetProxyUrl(Button button, TextBox view)
+        {
+            if (view == null)
+            {
+                mProxyUrl = null;
+            }
+            else
+            {
+                mProxyUrl = new CavanUrl(view.Text);
+            }
+
+            SetProxyColor(buttonProxy1, button);
+            SetProxyColor(buttonProxy2, button);
+            SetProxyColor(buttonProxy3, button);
+
+            mService.CloseClients();
+            SaveUrls();
+        }
+
         public override CavanTcpClient onTcpClientAccepted(TcpClient conn)
         {
             var url = new CavanUrl(textBoxUrl.Text);
-            return new WebProxyClient(conn, url);
+            return new WebProxyClient(conn, url, mProxyUrl);
         }
 
         public override void onTcpClientConnected(object sender, EventArgs e)
@@ -62,6 +146,21 @@ namespace NetworkInputMethod
             {
                 buttonStartStop.PerformClick();
             }
+        }
+
+        private void buttonProxy1_Click(object sender, EventArgs e)
+        {
+            SetProxyUrl(buttonProxy1, textBoxUrl1);
+        }
+
+        private void buttonProxy2_Click(object sender, EventArgs e)
+        {
+            SetProxyUrl(buttonProxy2, textBoxUrl2);
+        }
+
+        private void buttonProxy3_Click(object sender, EventArgs e)
+        {
+            SetProxyUrl(buttonProxy3, textBoxUrl3);
         }
     }
 
@@ -343,10 +442,12 @@ namespace NetworkInputMethod
         public const int SELECT_OVERTIME = 60000000;
 
         private CavanUrl mUrl;
+        private CavanUrl mProxy;
 
-        public WebProxyClient(TcpClient client, CavanUrl url) : base(client)
+        public WebProxyClient(TcpClient client, CavanUrl url, CavanUrl proxy) : base(client)
         {
             mUrl = url;
+            mProxy = proxy;
         }
 
         public static bool ProxyLoop(TcpClient ilink, TcpClient olink)
@@ -396,42 +497,53 @@ namespace NetworkInputMethod
 
             try
             {
-                while (true)
+                if (mProxy != null)
                 {
-                    var req = new CavanHttpRequest();
-                    if (!req.read(mClient.GetStream(), mUrl))
+                    client = mProxy.Connect();
+                    if (client != null)
                     {
-                        break;
-                    }
-
-                    client = req.connect(client, url);
-                    if (client == null)
-                    {
-                        break;
-                    }
-
-                    url = req.Url;
-
-                    var list = new ArrayList();
-
-                    if (req.Method == "CONNECT")
-                    {
-                        req.discard(mClient.GetStream());
-                        req.sendConnResponse(mClient.GetStream());
                         TcpProxyClient.ProxyLoop(mClient, client);
-                        return false;
                     }
-
-                    req.write(client.GetStream());
-
-                    if (!ProxyLoop(mClient, client))
+                }
+                else
+                {
+                    while (true)
                     {
-                        break;
-                    }
+                        var req = new CavanHttpRequest();
+                        if (!req.read(mClient.GetStream(), mUrl))
+                        {
+                            break;
+                        }
 
-                    if (!ProxyLoop(client, mClient))
-                    {
-                        break;
+                        client = req.connect(client, url);
+                        if (client == null)
+                        {
+                            break;
+                        }
+
+                        url = req.Url;
+
+                        var list = new ArrayList();
+
+                        if (req.Method == "CONNECT")
+                        {
+                            req.discard(mClient.GetStream());
+                            req.sendConnResponse(mClient.GetStream());
+                            TcpProxyClient.ProxyLoop(mClient, client);
+                            return false;
+                        }
+
+                        req.write(client.GetStream());
+
+                        if (!ProxyLoop(mClient, client))
+                        {
+                            break;
+                        }
+
+                        if (!ProxyLoop(client, mClient))
+                        {
+                            break;
+                        }
                     }
                 }
             }

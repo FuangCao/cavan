@@ -231,7 +231,11 @@ namespace NetworkInputMethod
             }
 
             onTcpServiceStopped();
+            CloseClients();
+        }
 
+        public void CloseClients()
+        {
             CavanTcpClient[] clients;
 
             lock (mClients)
