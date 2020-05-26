@@ -2,9 +2,23 @@ package proxy
 
 import (
 	"net"
+	"fmt"
 
 	"../common"
 )
+
+var StunServerUrls = []string {
+	"stun.l.google.com:19302",
+	"stun1.l.google.com:19302",
+	"stun.xten.com:3478",
+	"stunserver.org:3478",
+	"stun.ekiga.net:3478",
+	"stun.voipstunt.com:3478",
+	"stun.voiparound.com:3478",
+	"stun.voip.aebc.com:3478",
+	"stun.sipgate.net:3478",
+	"stun.internetcalls.com:3478",
+}
 
 type CavanStunCommand struct {
 	CavanStunPack
@@ -42,11 +56,15 @@ func (command *CavanStunCommand) WriteTo(link *CavanUdpLink, conn *net.UDPConn) 
 }
 
 func (command *CavanStunCommand) Prepare(link *CavanUdpLink, times int) bool {
-	if times > 10 {
+	if times > len(StunServerUrls) * 3 {
 		return false
 	}
 
-	if addr, err := net.ResolveUDPAddr("udp", "stun1.l.google.com:19302"); err == nil {
+	url := StunServerUrls[times % len(StunServerUrls)]
+	fmt.Println("stun url =", url)
+
+	if addr, err := net.ResolveUDPAddr("udp", url); err == nil {
+		fmt.Println("stun addr =", addr)
 		command.Addr = addr
 	}
 
