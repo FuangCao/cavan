@@ -66,7 +66,7 @@ function cavan-android-command()
 	echo "TARGET_PRODUCT = $TARGET_PRODUCT"
 	echo "$*"
 
-	(cd "${ANDROID_BUILD_TOP}" && $*) || return 1
+	(cd "${ANDROID_BUILD_TOP}" && LC_ALL=C $*) || return 1
 }
 
 function cavan-android-lunch()

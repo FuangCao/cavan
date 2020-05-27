@@ -782,6 +782,8 @@ int main(int argc, char *argv[])
 		},
 	};
 
+	catch_sigsegv();
+
 	cavan_http_sender_init(&sender);
 
 	sender.send_max = HTTP_SENDER_SEND_COUNT;
