@@ -38,6 +38,16 @@ function cavan-qcom-build-modem-msm8953()
 	./gen_symbols_8953.sh || return 1
 }
 
+function cavan-qcom-build-modem-sdm450()
+{
+	cavan-android-croot && cd modem || return 1
+	rm -rf ADSP.8953.2.8.4/adsp_proc/obj || return 1
+	source factory/build/envsetup_sm55c72.sh || return 1
+	./build_all_sdm450.sh || return 1
+	./gen_firehose_sdm450.sh || return 1
+	./gen_symbols_sdm450.sh || return 1
+}
+
 function cavan-qcom-pack-boot-msm8953()
 {
 	local cmdline="console=ttyHSL0,115200,n8 androidboot.console=ttyHSL0 androidboot.hardware=qcom msm_rtb.filter=0x237 ehci-hcd.park=3 lpm_levels.sleep_disabled=1 androidboot.bootdevice=7824900.sdhci earlycon=msm_hsl_uart,0x78af000 androidboot.selinux=permissive buildvariant=userdebug"

@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 	int fd;
 	int option_index;
 	int rate = 115200;
-	const char *pathname;
+	const char *pathname = NULL;
 	struct cavan_serial_desc serial;
 	struct option long_option[] = {
 		{

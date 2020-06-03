@@ -11,6 +11,7 @@ alias cavan-android-jack-start="jack-admin start-server"
 alias cavan-android-jack-restart="jack-admin kill-server && jack-admin start-server"
 alias cavan-android-make="cavan-android-command ${CMD_MAKE}"
 alias cavan-android-make-ota="cavan-android-make otapackage"
+alias cavan-adb-tcpip="adb tcpip 5555"
 
 export FILE_APK_RENAME_JAR="${CAVAN_HOME}/android/app/bin/ApkRename.jar"
 
