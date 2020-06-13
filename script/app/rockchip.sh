@@ -105,6 +105,9 @@ function cavan-rockchip-download()
 			kernel.img)
 				options="DI -k"
 				;;
+			resource.img)
+				options="DI -re"
+				;;
 			misc.img)
 				options="DI -m"
 				;;
