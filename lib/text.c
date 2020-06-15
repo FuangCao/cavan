@@ -494,10 +494,10 @@ void text_show(const char *text, size_t size)
 	}
 
 	for (end_text = text + size - 1; text < end_text; text++) {
-		print("%02x ", *(u8 *) text);
+		print("0x%02x, ", *(u8 *) text);
 	}
 
-	print("%02x\n", *(u8 *) text);
+	print("0x%02x,\n", *(u8 *) text);
 }
 
 void text_show16(const u16 *text, size_t count)

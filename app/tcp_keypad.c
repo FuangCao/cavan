@@ -43,6 +43,7 @@ static void show_usage(const char *command)
 	println("-U, -u, --url [URL]\t\t%s", cavan_help_message_url);
 	println("--na, --noack\t\t\texit don't need ack");
 	println("-c, --cmdline\t\t\t%s", cavan_help_message_cmdline);
+	println("-m, --map\t\t\tmap key to event");
 	println("--loop\t\t\t\tcycle to execute the command");
 	println("--aloop\t\t\t\tuse adb and cycle to execute the command");
 }
@@ -138,6 +139,11 @@ int main(int argc, char *argv[])
 			.flag = NULL,
 			.val = CAVAN_COMMAND_OPTION_CMDLINE,
 		}, {
+			.name = "map",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = CAVAN_COMMAND_OPTION_MAP,
+		}, {
 			.name = "loop",
 			.has_arg = no_argument,
 			.flag = NULL,
@@ -157,7 +163,7 @@ int main(int argc, char *argv[])
 
 	network_url_init(&url, "tcp", NULL, TCP_DD_DEFAULT_PORT, network_get_socket_pathname());
 
-	while ((c = getopt_long(argc, argv, "vVhHIaA:i:I:p:P:lLu:U:c", long_option, &option_index)) != EOF) {
+	while ((c = getopt_long(argc, argv, "vVhHIaA:i:I:p:P:lLu:U:cm", long_option, &option_index)) != EOF) {
 		switch (c) {
 		case 'v':
 		case 'V':
@@ -235,6 +241,11 @@ int main(int argc, char *argv[])
 		case 'c':
 		case CAVAN_COMMAND_OPTION_CMDLINE:
 			flags |= TCP_KEYPADF_CMDLINE;
+			break;
+
+		case 'm':
+		case CAVAN_COMMAND_OPTION_MAP:
+			flags |= TCP_KEYPADF_MAP;
 			break;
 
 		case CAVAN_COMMAND_OPTION_LOOP:

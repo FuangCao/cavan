@@ -27,6 +27,156 @@ static const u16 tcp_dd_remote_ctrl_keys[] = {
 	KEY_PLAY, KEY_PLAYPAUSE, KEY_PREVIOUSSONG, KEY_NEXTSONG
 };
 
+static u16 tcp_dd_keypad_char_key_map[] = {
+	[27] = KEY_ESC,
+	['1'] = KEY_1,
+	['2'] = KEY_2,
+	['3'] = KEY_3,
+	['4'] = KEY_4,
+	['5'] = KEY_5,
+	['6'] = KEY_6,
+	['7'] = KEY_7,
+	['8'] = KEY_8,
+	['9'] = KEY_9,
+	['0'] = KEY_0,
+	['-'] = KEY_MINUS,
+	['='] = KEY_EQUAL,
+	[127] = KEY_BACKSPACE,
+	['\t'] = KEY_TAB,
+	['q'] = KEY_Q,
+	['w'] = KEY_W,
+	['e'] = KEY_E,
+	['r'] = KEY_R,
+	['t'] = KEY_T,
+	['y'] = KEY_Y,
+	['u'] = KEY_U,
+	['i'] = KEY_I,
+	['o'] = KEY_O,
+	['p'] = KEY_P,
+	['['] = KEY_LEFTBRACE,
+	[']'] = KEY_RIGHTBRACE,
+	[10] = KEY_ENTER,
+	// [] = KEY_LEFTCTRL,
+	['a'] = KEY_A,
+	['s'] = KEY_S,
+	['d'] = KEY_D,
+	['f'] = KEY_F,
+	['g'] = KEY_G,
+	['h'] = KEY_H,
+	['j'] = KEY_J,
+	['k'] = KEY_K,
+	['l'] = KEY_L,
+	[';'] = KEY_SEMICOLON,
+	['\''] = KEY_APOSTROPHE,
+	['`'] = KEY_GRAVE,
+	// [] = KEY_LEFTSHIFT,
+	['\\'] = KEY_BACKSLASH,
+	['z'] = KEY_Z,
+	['x'] = KEY_X,
+	['c'] = KEY_C,
+	['v'] = KEY_V,
+	['b'] = KEY_B,
+	['n'] = KEY_N,
+	['m'] = KEY_M,
+	[','] = KEY_COMMA,
+	['.'] = KEY_DOT,
+	['/'] = KEY_SLASH,
+	// [] = KEY_RIGHTSHIFT,
+	// [] = KEY_KPASTERISK,
+	// [] = KEY_LEFTALT,
+	[' '] = KEY_SPACE,
+	// [] = KEY_CAPSLOCK,
+
+	// =========================================================================
+
+	['!'] = KEY_1 | TCP_KEYPADF_SHIFT,
+	['@'] = KEY_2 | TCP_KEYPADF_SHIFT,
+	['#'] = KEY_3 | TCP_KEYPADF_SHIFT,
+	['$'] = KEY_4 | TCP_KEYPADF_SHIFT,
+	['%'] = KEY_5 | TCP_KEYPADF_SHIFT,
+	['^'] = KEY_6 | TCP_KEYPADF_SHIFT,
+	['&'] = KEY_7 | TCP_KEYPADF_SHIFT,
+	['*'] = KEY_8 | TCP_KEYPADF_SHIFT,
+	['('] = KEY_9 | TCP_KEYPADF_SHIFT,
+	[')'] = KEY_0 | TCP_KEYPADF_SHIFT,
+	['_'] = KEY_MINUS | TCP_KEYPADF_SHIFT,
+	['+'] = KEY_EQUAL | TCP_KEYPADF_SHIFT,
+	// [] = KEY_BACKSPACE,
+	// ['\t'] = KEY_TAB,
+	['Q'] = KEY_Q | TCP_KEYPADF_SHIFT,
+	['W'] = KEY_W | TCP_KEYPADF_SHIFT,
+	['E'] = KEY_E | TCP_KEYPADF_SHIFT,
+	['R'] = KEY_R | TCP_KEYPADF_SHIFT,
+	['T'] = KEY_T | TCP_KEYPADF_SHIFT,
+	['Y'] = KEY_Y | TCP_KEYPADF_SHIFT,
+	['U'] = KEY_U | TCP_KEYPADF_SHIFT,
+	['I'] = KEY_I | TCP_KEYPADF_SHIFT,
+	['O'] = KEY_O | TCP_KEYPADF_SHIFT,
+	['P'] = KEY_P | TCP_KEYPADF_SHIFT,
+	['{'] = KEY_LEFTBRACE | TCP_KEYPADF_SHIFT,
+	['}'] = KEY_RIGHTBRACE | TCP_KEYPADF_SHIFT,
+	// [] = KEY_ENTER,
+	// [] = KEY_LEFTCTRL,
+	['A'] = KEY_A | TCP_KEYPADF_SHIFT,
+	['S'] = KEY_S | TCP_KEYPADF_SHIFT,
+	['D'] = KEY_D | TCP_KEYPADF_SHIFT,
+	['F'] = KEY_F | TCP_KEYPADF_SHIFT,
+	['G'] = KEY_G | TCP_KEYPADF_SHIFT,
+	['H'] = KEY_H | TCP_KEYPADF_SHIFT,
+	['J'] = KEY_J | TCP_KEYPADF_SHIFT,
+	['K'] = KEY_K | TCP_KEYPADF_SHIFT,
+	['L'] = KEY_L | TCP_KEYPADF_SHIFT,
+	[':'] = KEY_SEMICOLON | TCP_KEYPADF_SHIFT,
+	['"'] = KEY_APOSTROPHE | TCP_KEYPADF_SHIFT,
+	['~'] = KEY_GRAVE | TCP_KEYPADF_SHIFT,
+	// [] = KEY_LEFTSHIFT,
+	['|'] = KEY_BACKSLASH | TCP_KEYPADF_SHIFT,
+	['Z'] = KEY_Z | TCP_KEYPADF_SHIFT,
+	['X'] = KEY_X | TCP_KEYPADF_SHIFT,
+	['C'] = KEY_C | TCP_KEYPADF_SHIFT,
+	['V'] = KEY_V | TCP_KEYPADF_SHIFT,
+	['B'] = KEY_B | TCP_KEYPADF_SHIFT,
+	['N'] = KEY_N | TCP_KEYPADF_SHIFT,
+	['M'] = KEY_M | TCP_KEYPADF_SHIFT,
+	['<'] = KEY_COMMA | TCP_KEYPADF_SHIFT,
+	['>'] = KEY_DOT | TCP_KEYPADF_SHIFT,
+	['?'] = KEY_SLASH | TCP_KEYPADF_SHIFT,
+	// [] = KEY_RIGHTSHIFT,
+	// [] = KEY_KPASTERISK,
+	// [] = KEY_LEFTALT,
+	// [] = KEY_SPACE,
+	// [] = KEY_CAPSLOCK,
+
+	// =========================================================================
+
+	[1] = KEY_A | TCP_KEYPADF_CTRL,
+	[2] = KEY_B | TCP_KEYPADF_CTRL,
+	[3] = KEY_C | TCP_KEYPADF_CTRL,
+	[4] = KEY_D | TCP_KEYPADF_CTRL,
+	[5] = KEY_E | TCP_KEYPADF_CTRL,
+	[6] = KEY_F | TCP_KEYPADF_CTRL,
+	[7] = KEY_G | TCP_KEYPADF_CTRL,
+	[8] = KEY_H | TCP_KEYPADF_CTRL,
+	// [9] = KEY_I | TCP_KEYPADF_CTRL,
+	// [10] = KEY_J | TCP_KEYPADF_CTRL,
+	[11] = KEY_K | TCP_KEYPADF_CTRL,
+	[12] = KEY_L | TCP_KEYPADF_CTRL,
+	[13] = KEY_M | TCP_KEYPADF_CTRL,
+	[14] = KEY_N | TCP_KEYPADF_CTRL,
+	[15] = KEY_O | TCP_KEYPADF_CTRL,
+	[16] = KEY_P | TCP_KEYPADF_CTRL,
+	[17] = KEY_Q | TCP_KEYPADF_CTRL,
+	[18] = KEY_R | TCP_KEYPADF_CTRL,
+	[19] = KEY_S | TCP_KEYPADF_CTRL,
+	[20] = KEY_T | TCP_KEYPADF_CTRL,
+	[21] = KEY_U | TCP_KEYPADF_CTRL,
+	[22] = KEY_V | TCP_KEYPADF_CTRL,
+	[23] = KEY_W | TCP_KEYPADF_CTRL,
+	[24] = KEY_X | TCP_KEYPADF_CTRL,
+	[25] = KEY_Y | TCP_KEYPADF_CTRL,
+	[26] = KEY_Z | TCP_KEYPADF_CTRL,
+};
+
 static void tcp_dd_show_response(struct tcp_dd_response_package *res)
 {
 	if (res->message[0] == 0) {
@@ -1872,6 +2022,77 @@ static bool tcp_dd_keypad_event_handler(struct cavan_event_device *dev, struct i
 	return true;
 }
 
+static void tcp_dd_keypad_event_key(struct cavan_input_event *event, int code, int value)
+{
+	event->type = EV_KEY;
+	event->code = code;
+	event->value = value;
+}
+
+static void tcp_dd_keypad_event_sync(struct cavan_input_event *event)
+{
+	event->type = EV_SYN;
+	event->code = SYN_REPORT;
+	event->value = 0;
+}
+
+static void tcp_dd_keypad_key_shift(struct cavan_input_event *event, int value)
+{
+	tcp_dd_keypad_event_key(event, KEY_LEFTSHIFT, value);
+}
+
+static void tcp_dd_keypad_key_ctrl(struct cavan_input_event *event, int value)
+{
+	tcp_dd_keypad_event_key(event, KEY_LEFTCTRL, value);
+}
+
+static struct cavan_input_event *tcp_dd_keypad_key_events(u16 code, struct cavan_input_event *events)
+{
+	if (code & TCP_KEYPADF_CTRL) {
+		tcp_dd_keypad_key_ctrl(events++, 1);
+	}
+
+	if (code & TCP_KEYPADF_SHIFT) {
+		tcp_dd_keypad_key_shift(events++, 1);
+	}
+
+	tcp_dd_keypad_event_key(events++, code & 0x0FFF, 1);
+	tcp_dd_keypad_event_key(events++, code & 0x0FFF, 0);
+
+	if (code & TCP_KEYPADF_SHIFT) {
+		tcp_dd_keypad_key_shift(events++, 0);
+	}
+
+	if (code & TCP_KEYPADF_CTRL) {
+		tcp_dd_keypad_key_ctrl(events++, 0);
+	}
+
+	tcp_dd_keypad_event_sync(events++);
+
+	return events;
+}
+
+static struct cavan_input_event *tcp_dd_keypad_char_events(int value, struct cavan_input_event *events)
+{
+	u16 code;
+
+	code = tcp_dd_keypad_char_key_map[value];
+	if (code == 0) {
+		return NULL;
+	}
+
+	return tcp_dd_keypad_key_events(code, events);
+}
+
+static int tcp_dd_keypad_getchar(void)
+{
+	int value = getchar();
+
+	println("char = %d = 0x%02x", value, value);
+
+	return value;
+}
+
 int tcp_dd_keypad_client_run(struct network_url *url, int flags)
 {
 	int ret;
@@ -1942,7 +2163,179 @@ label_repo_key:
 				break;
 			}
 		}
-	} else {
+	} else if (flags  & TCP_KEYPADF_MAP) {
+		struct termios attr;
+		int skip = 0;
+
+		cavan_tty_set_mode(stdin_fd, CAVAN_TTY_MODE_SSH, &attr);
+
+		while (1) {
+			struct cavan_input_event events[8];
+			struct cavan_input_event *event;
+			int value = tcp_dd_keypad_getchar();
+
+			if (value == 28) {
+				break;
+			}
+
+			if (skip > 0) {
+				if (value == skip) {
+					skip = 0;
+				}
+
+				println("skip = %d", skip);
+				continue;
+			}
+
+			if (value == 27 && (value = tcp_dd_keypad_getchar()) == 91) {
+				switch (tcp_dd_keypad_getchar()) {
+				case 53:
+					event = tcp_dd_keypad_key_events(KEY_PAGEUP, events);
+					skip = 126;
+					break;
+
+				case 54:
+					event = tcp_dd_keypad_key_events(KEY_PAGEDOWN, events);
+					skip = 126;
+					break;
+
+				case 49:
+					value = tcp_dd_keypad_getchar();
+
+					switch (value) {
+					case 126:
+						event = tcp_dd_keypad_key_events(KEY_HOME, events);
+						break;
+
+					case 49:
+						event = tcp_dd_keypad_key_events(KEY_F1, events);
+						skip = 126;
+						break;
+
+					case 50:
+						event = tcp_dd_keypad_key_events(KEY_F2, events);
+						skip = 126;
+						break;
+
+					case 51:
+						event = tcp_dd_keypad_key_events(KEY_F3, events);
+						skip = 126;
+						break;
+
+					case 52:
+						event = tcp_dd_keypad_key_events(KEY_F4, events);
+						skip = 126;
+						break;
+
+					case 53:
+						event = tcp_dd_keypad_key_events(KEY_F5, events);
+						skip = 126;
+						break;
+
+					case 55:
+						event = tcp_dd_keypad_key_events(KEY_F6, events);
+						skip = 126;
+						break;
+
+					case 56:
+						event = tcp_dd_keypad_key_events(KEY_F7, events);
+						skip = 126;
+						break;
+
+					case 57:
+						event = tcp_dd_keypad_key_events(KEY_F8, events);
+						skip = 126;
+						break;
+
+					default:
+						event = tcp_dd_keypad_char_events(value, events);
+						break;
+					}
+					break;
+
+				case 50:
+					value = tcp_dd_keypad_getchar();
+
+					switch (value) {
+					case 126:
+						event = tcp_dd_keypad_key_events(KEY_INSERT, events);
+						break;
+
+					case 48:
+						event = tcp_dd_keypad_key_events(KEY_F9, events);
+						skip = 126;
+						break;
+
+					case 49:
+						event = tcp_dd_keypad_key_events(KEY_F10, events);
+						skip = 126;
+						break;
+
+					case 51:
+						event = tcp_dd_keypad_key_events(KEY_F11, events);
+						skip = 126;
+						break;
+
+					case 52:
+						event = tcp_dd_keypad_key_events(KEY_F12, events);
+						skip = 126;
+						break;
+
+					default:
+						event = tcp_dd_keypad_char_events(value, events);
+						break;
+					}
+					break;
+
+				case 51:
+					event = tcp_dd_keypad_key_events(KEY_DELETE, events);
+					skip = 126;
+					break;
+
+				case 52:
+					event = tcp_dd_keypad_key_events(KEY_END, events);
+					skip = 126;
+					break;
+
+				case 65:
+					event = tcp_dd_keypad_key_events(KEY_UP, events);
+					break;
+
+				case 66:
+					event = tcp_dd_keypad_key_events(KEY_DOWN, events);
+					break;
+
+				case 67:
+					event = tcp_dd_keypad_key_events(KEY_RIGHT, events);
+					break;
+
+				case 68:
+					event = tcp_dd_keypad_key_events(KEY_LEFT, events);
+					break;
+
+				default:
+					event = tcp_dd_keypad_char_events(value, events);
+					break;
+				}
+			} else {
+				event = tcp_dd_keypad_char_events(value, events);
+			}
+
+			if (event == NULL) {
+				continue;
+			}
+
+			value = event - events;
+
+			ret = client.send(&client, events, sizeof(struct cavan_input_event) * value);
+			if (ret < 0) {
+				pr_err_info("send: %d", ret);
+				break;
+			}
+		}
+
+		cavan_tty_attr_restore(stdin_fd, &attr);
+	}  else {
 		struct cavan_event_service service;
 
 		cavan_event_service_init(&service, NULL);
