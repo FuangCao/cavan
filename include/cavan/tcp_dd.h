@@ -21,7 +21,8 @@
 
 #define TCP_KEYPADF_EXIT_ACK		(1 << 0)
 #define TCP_KEYPADF_CMDLINE			(1 << 1)
-#define TCP_KEYPADF_MAP				(1 << 2)
+#define TCP_KEYPADF_KEYPAD			(1 << 2)
+#define TCP_KEYPADF_MOUSE			(1 << 3)
 #define TCP_KEYPADF_SHIFT			(1 << 15)
 #define TCP_KEYPADF_CTRL			(1 << 14)
 

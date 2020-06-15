@@ -2029,6 +2029,13 @@ static void tcp_dd_keypad_event_key(struct cavan_input_event *event, int code, i
 	event->value = value;
 }
 
+static void tcp_dd_keypad_event_mouse(struct cavan_input_event *event, int code, int value)
+{
+	event->type = EV_REL;
+	event->code = code;
+	event->value = value;
+}
+
 static void tcp_dd_keypad_event_sync(struct cavan_input_event *event)
 {
 	event->type = EV_SYN;
@@ -2046,42 +2053,100 @@ static void tcp_dd_keypad_key_ctrl(struct cavan_input_event *event, int value)
 	tcp_dd_keypad_event_key(event, KEY_LEFTCTRL, value);
 }
 
-static struct cavan_input_event *tcp_dd_keypad_key_events(u16 code, struct cavan_input_event *events)
+static int tcp_dd_keypad_send_key_events(struct network_client *client, u16 code)
 {
+	struct cavan_input_event events[8];
+	struct cavan_input_event *event;
+
+	if (code == 0) {
+		return 0;
+	}
+
+	event = events;
+
 	if (code & TCP_KEYPADF_CTRL) {
-		tcp_dd_keypad_key_ctrl(events++, 1);
+		tcp_dd_keypad_key_ctrl(event++, 1);
 	}
 
 	if (code & TCP_KEYPADF_SHIFT) {
-		tcp_dd_keypad_key_shift(events++, 1);
+		tcp_dd_keypad_key_shift(event++, 1);
 	}
 
-	tcp_dd_keypad_event_key(events++, code & 0x0FFF, 1);
-	tcp_dd_keypad_event_key(events++, code & 0x0FFF, 0);
+	tcp_dd_keypad_event_key(event++, code & 0x0FFF, 1);
+	tcp_dd_keypad_event_sync(event++);
+
+	tcp_dd_keypad_event_key(event++, code & 0x0FFF, 0);
 
 	if (code & TCP_KEYPADF_SHIFT) {
-		tcp_dd_keypad_key_shift(events++, 0);
+		tcp_dd_keypad_key_shift(event++, 0);
 	}
 
 	if (code & TCP_KEYPADF_CTRL) {
-		tcp_dd_keypad_key_ctrl(events++, 0);
+		tcp_dd_keypad_key_ctrl(event++, 0);
 	}
 
-	tcp_dd_keypad_event_sync(events++);
+	tcp_dd_keypad_event_sync(event++);
 
-	return events;
+	return client->send(client, events, (event - events) * sizeof(struct cavan_input_event));
 }
 
-static struct cavan_input_event *tcp_dd_keypad_char_events(int value, struct cavan_input_event *events)
+static int tcp_dd_keypad_send_mouse_events(struct network_client *client, u16 code)
 {
-	u16 code;
+	struct cavan_input_event events[8];
+	struct cavan_input_event *event;
 
-	code = tcp_dd_keypad_char_key_map[value];
 	if (code == 0) {
-		return NULL;
+		return 0;
 	}
 
-	return tcp_dd_keypad_key_events(code, events);
+	event = events;
+
+	switch (code) {
+	case KEY_UP:
+		tcp_dd_keypad_event_mouse(event++, REL_Y, -10);
+		break;
+
+	case KEY_DOWN:
+		tcp_dd_keypad_event_mouse(event++, REL_Y, 10);
+		break;
+
+	case KEY_LEFT:
+		tcp_dd_keypad_event_mouse(event++, REL_X, -10);
+		break;
+
+	case KEY_RIGHT:
+		tcp_dd_keypad_event_mouse(event++, REL_X, 10);
+		break;
+
+	case KEY_PAGEUP:
+	case KEY_INSERT:
+		tcp_dd_keypad_event_mouse(event++, REL_WHEEL, 1);
+		break;
+
+	case KEY_PAGEDOWN:
+	case KEY_DELETE:
+		tcp_dd_keypad_event_mouse(event++, REL_WHEEL, -1);
+		break;
+
+	case KEY_ENTER:
+		return tcp_dd_keypad_send_key_events(client, BTN_LEFT);
+
+	case KEY_SPACE:
+		return tcp_dd_keypad_send_key_events(client, BTN_RIGHT);
+
+	case KEY_TAB:
+		return tcp_dd_keypad_send_key_events(client, BTN_MIDDLE);
+
+	case KEY_ESC:
+		return tcp_dd_keypad_send_key_events(client, KEY_RIGHTMETA);
+
+	default:
+		return tcp_dd_keypad_send_key_events(client, code);
+	}
+
+	tcp_dd_keypad_event_sync(event++);
+
+	return client->send(client, events, (event - events) * sizeof(struct cavan_input_event));
 }
 
 static int tcp_dd_keypad_getchar(void)
@@ -2091,6 +2156,158 @@ static int tcp_dd_keypad_getchar(void)
 	println("char = %d = 0x%02x", value, value);
 
 	return value;
+}
+
+static int tcp_dd_keypad_getcode(void)
+{
+	int value;
+
+	value = tcp_dd_keypad_getchar();
+	if (value == 28) {
+		return -1;
+	}
+
+	if (value == 27 && (value = tcp_dd_keypad_getchar()) == 91) {
+		switch (tcp_dd_keypad_getchar()) {
+		case 53:
+			if (tcp_dd_keypad_getchar() == 126) {
+				return KEY_PAGEUP;
+			}
+			break;
+
+		case 54:
+			if (tcp_dd_keypad_getchar() == 126) {
+				return KEY_PAGEDOWN;
+			}
+			break;
+
+		case 49:
+			value = tcp_dd_keypad_getchar();
+
+			switch (value) {
+			case 126:
+				return KEY_HOME;
+				break;
+
+			case 49:
+				if (tcp_dd_keypad_getchar() == 126) {
+					return KEY_F1;
+				}
+				break;
+
+			case 50:
+				if (tcp_dd_keypad_getchar() == 126) {
+					return KEY_F2;
+				}
+				break;
+
+			case 51:
+				if (tcp_dd_keypad_getchar() == 126) {
+					return KEY_F3;
+				}
+				break;
+
+			case 52:
+				if (tcp_dd_keypad_getchar() == 126) {
+					return KEY_F4;
+				}
+				break;
+
+			case 53:
+				if (tcp_dd_keypad_getchar() == 126) {
+					return KEY_F5;
+				}
+				break;
+
+			case 55:
+				if (tcp_dd_keypad_getchar() == 126) {
+					return KEY_F6;
+				}
+				break;
+
+			case 56:
+				if (tcp_dd_keypad_getchar() == 126) {
+					return KEY_F7;
+				}
+				break;
+
+			case 57:
+				if (tcp_dd_keypad_getchar() == 126) {
+					return KEY_F8;
+				}
+				break;
+
+			default:
+				return 0;
+			}
+			break;
+
+		case 50:
+			value = tcp_dd_keypad_getchar();
+
+			switch (value) {
+			case 126:
+				return KEY_INSERT;
+
+			case 48:
+				if (tcp_dd_keypad_getchar() == 126) {
+					return KEY_F9;
+				}
+				break;
+
+			case 49:
+				if (tcp_dd_keypad_getchar() == 126) {
+					return KEY_F10;
+				}
+				break;
+
+			case 51:
+				if (tcp_dd_keypad_getchar() == 126) {
+					return KEY_F11;
+				}
+				break;
+
+			case 52:
+				if (tcp_dd_keypad_getchar() == 126) {
+					return KEY_F12;
+				}
+				break;
+
+			default:
+				return 0;
+			}
+			break;
+
+		case 51:
+			if (tcp_dd_keypad_getchar() == 126) {
+				return KEY_DELETE;
+			}
+			break;
+
+		case 52:
+			if (tcp_dd_keypad_getchar() == 126) {
+				return KEY_END;
+			}
+			break;
+
+		case 65:
+			return KEY_UP;
+
+		case 66:
+			return KEY_DOWN;
+
+		case 67:
+			return KEY_RIGHT;
+
+		case 68:
+			return KEY_LEFT;
+
+		default:
+			return 0;
+		}
+	}
+
+	return tcp_dd_keypad_char_key_map[value];
 }
 
 int tcp_dd_keypad_client_run(struct network_url *url, int flags)
@@ -2163,174 +2380,38 @@ label_repo_key:
 				break;
 			}
 		}
-	} else if (flags  & TCP_KEYPADF_MAP) {
+	} else if (flags  & (TCP_KEYPADF_KEYPAD | TCP_KEYPADF_MOUSE)) {
 		struct termios attr;
-		int skip = 0;
 
 		cavan_tty_set_mode(stdin_fd, CAVAN_TTY_MODE_SSH, &attr);
 
-		while (1) {
-			struct cavan_input_event events[8];
-			struct cavan_input_event *event;
-			int value = tcp_dd_keypad_getchar();
+		if (flags & TCP_KEYPADF_KEYPAD) {
+			while (1) {
+				int code = tcp_dd_keypad_getcode();
 
-			if (value == 28) {
-				break;
-			}
-
-			if (skip > 0) {
-				if (value == skip) {
-					skip = 0;
-				}
-
-				println("skip = %d", skip);
-				continue;
-			}
-
-			if (value == 27 && (value = tcp_dd_keypad_getchar()) == 91) {
-				switch (tcp_dd_keypad_getchar()) {
-				case 53:
-					event = tcp_dd_keypad_key_events(KEY_PAGEUP, events);
-					skip = 126;
-					break;
-
-				case 54:
-					event = tcp_dd_keypad_key_events(KEY_PAGEDOWN, events);
-					skip = 126;
-					break;
-
-				case 49:
-					value = tcp_dd_keypad_getchar();
-
-					switch (value) {
-					case 126:
-						event = tcp_dd_keypad_key_events(KEY_HOME, events);
-						break;
-
-					case 49:
-						event = tcp_dd_keypad_key_events(KEY_F1, events);
-						skip = 126;
-						break;
-
-					case 50:
-						event = tcp_dd_keypad_key_events(KEY_F2, events);
-						skip = 126;
-						break;
-
-					case 51:
-						event = tcp_dd_keypad_key_events(KEY_F3, events);
-						skip = 126;
-						break;
-
-					case 52:
-						event = tcp_dd_keypad_key_events(KEY_F4, events);
-						skip = 126;
-						break;
-
-					case 53:
-						event = tcp_dd_keypad_key_events(KEY_F5, events);
-						skip = 126;
-						break;
-
-					case 55:
-						event = tcp_dd_keypad_key_events(KEY_F6, events);
-						skip = 126;
-						break;
-
-					case 56:
-						event = tcp_dd_keypad_key_events(KEY_F7, events);
-						skip = 126;
-						break;
-
-					case 57:
-						event = tcp_dd_keypad_key_events(KEY_F8, events);
-						skip = 126;
-						break;
-
-					default:
-						event = tcp_dd_keypad_char_events(value, events);
-						break;
-					}
-					break;
-
-				case 50:
-					value = tcp_dd_keypad_getchar();
-
-					switch (value) {
-					case 126:
-						event = tcp_dd_keypad_key_events(KEY_INSERT, events);
-						break;
-
-					case 48:
-						event = tcp_dd_keypad_key_events(KEY_F9, events);
-						skip = 126;
-						break;
-
-					case 49:
-						event = tcp_dd_keypad_key_events(KEY_F10, events);
-						skip = 126;
-						break;
-
-					case 51:
-						event = tcp_dd_keypad_key_events(KEY_F11, events);
-						skip = 126;
-						break;
-
-					case 52:
-						event = tcp_dd_keypad_key_events(KEY_F12, events);
-						skip = 126;
-						break;
-
-					default:
-						event = tcp_dd_keypad_char_events(value, events);
-						break;
-					}
-					break;
-
-				case 51:
-					event = tcp_dd_keypad_key_events(KEY_DELETE, events);
-					skip = 126;
-					break;
-
-				case 52:
-					event = tcp_dd_keypad_key_events(KEY_END, events);
-					skip = 126;
-					break;
-
-				case 65:
-					event = tcp_dd_keypad_key_events(KEY_UP, events);
-					break;
-
-				case 66:
-					event = tcp_dd_keypad_key_events(KEY_DOWN, events);
-					break;
-
-				case 67:
-					event = tcp_dd_keypad_key_events(KEY_RIGHT, events);
-					break;
-
-				case 68:
-					event = tcp_dd_keypad_key_events(KEY_LEFT, events);
-					break;
-
-				default:
-					event = tcp_dd_keypad_char_events(value, events);
+				if (code < 0) {
 					break;
 				}
-			} else {
-				event = tcp_dd_keypad_char_events(value, events);
+
+				ret = tcp_dd_keypad_send_key_events(&client, code);
+				if (ret < 0) {
+					pr_err_info("tcp_dd_keypad_send_key_events: %d", ret);
+					break;
+				}
 			}
+		} else {
+			while (1) {
+				int code = tcp_dd_keypad_getcode();
 
-			if (event == NULL) {
-				continue;
-			}
+				if (code < 0) {
+					break;
+				}
 
-			value = event - events;
-
-			ret = client.send(&client, events, sizeof(struct cavan_input_event) * value);
-			if (ret < 0) {
-				pr_err_info("send: %d", ret);
-				break;
+				ret = tcp_dd_keypad_send_mouse_events(&client, code);
+				if (ret < 0) {
+					pr_err_info("tcp_dd_keypad_send_key_events: %d", ret);
+					break;
+				}
 			}
 		}
 
