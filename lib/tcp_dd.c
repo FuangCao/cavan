@@ -2102,29 +2102,33 @@ static int tcp_dd_keypad_send_mouse_events(struct network_client *client, u16 co
 	event = events;
 
 	switch (code) {
-	case KEY_UP:
-		tcp_dd_keypad_event_mouse(event++, REL_Y, -10);
-		break;
-
-	case KEY_DOWN:
-		tcp_dd_keypad_event_mouse(event++, REL_Y, 10);
-		break;
-
 	case KEY_LEFT:
+	case KEY_J:
 		tcp_dd_keypad_event_mouse(event++, REL_X, -10);
 		break;
 
 	case KEY_RIGHT:
+	case KEY_L:
 		tcp_dd_keypad_event_mouse(event++, REL_X, 10);
 		break;
 
+	case KEY_UP:
+	case KEY_I:
+		tcp_dd_keypad_event_mouse(event++, REL_Y, -10);
+		break;
+
+	case KEY_DOWN:
+	case KEY_K:
+		tcp_dd_keypad_event_mouse(event++, REL_Y, 10);
+		break;
+
 	case KEY_PAGEUP:
-	case KEY_INSERT:
+	case KEY_E:
 		tcp_dd_keypad_event_mouse(event++, REL_WHEEL, 1);
 		break;
 
 	case KEY_PAGEDOWN:
-	case KEY_DELETE:
+	case KEY_D:
 		tcp_dd_keypad_event_mouse(event++, REL_WHEEL, -1);
 		break;
 
@@ -2132,16 +2136,20 @@ static int tcp_dd_keypad_send_mouse_events(struct network_client *client, u16 co
 		return tcp_dd_keypad_send_key_events(client, BTN_LEFT);
 
 	case KEY_SPACE:
+	case KEY_F:
 		return tcp_dd_keypad_send_key_events(client, BTN_RIGHT);
 
-	case KEY_TAB:
+	case KEY_H:
 		return tcp_dd_keypad_send_key_events(client, BTN_MIDDLE);
 
-	case KEY_ESC:
+	case KEY_W:
+		return tcp_dd_keypad_send_key_events(client, KEY_LEFTMETA);
+
+	case KEY_M:
 		return tcp_dd_keypad_send_key_events(client, KEY_RIGHTMETA);
 
 	default:
-		return tcp_dd_keypad_send_key_events(client, code);
+		return 0;
 	}
 
 	tcp_dd_keypad_event_sync(event++);
@@ -2149,165 +2157,126 @@ static int tcp_dd_keypad_send_mouse_events(struct network_client *client, u16 co
 	return client->send(client, events, (event - events) * sizeof(struct cavan_input_event));
 }
 
-static int tcp_dd_keypad_getchar(void)
+static int tcp_dd_keypad_read_keycode(void)
 {
-	int value = getchar();
+	char buff[8];
+	int length;
+	int i;
 
-	println("char = %d = 0x%02x", value, value);
+	length = ffile_read(stdin_fd, buff, sizeof(buff));
+	if (length <= 0) {
+		pr_err_info("read: %d", length);
 
-	return value;
-}
+		if (length < 0) {
+			return length;
+		}
 
-static int tcp_dd_keypad_getcode(void)
-{
-	int value;
-
-	value = tcp_dd_keypad_getchar();
-	if (value == 28) {
-		return -1;
+		return -EINVAL;
 	}
 
-	if (value == 27 && (value = tcp_dd_keypad_getchar()) == 91) {
-		switch (tcp_dd_keypad_getchar()) {
-		case 53:
-			if (tcp_dd_keypad_getchar() == 126) {
-				return KEY_PAGEUP;
-			}
-			break;
+	for (i = 0; i < length; i++) {
+		println("char[%d] = 0x%02x = %d", i, buff[i], buff[i]);
+	}
 
-		case 54:
-			if (tcp_dd_keypad_getchar() == 126) {
-				return KEY_PAGEDOWN;
-			}
+	if (length < 2) {
+		int value = buff[0];
+
+		if (value == 28) {
+			return EOF;
+		}
+
+		return tcp_dd_keypad_char_key_map[value];
+	}
+
+	if (buff[0] != 27 || buff[1] != 91 || length < 3) {
+		return 0;
+	}
+
+	switch (buff[2]) {
+	case 49:
+		if (length < 4) {
 			break;
+		}
+
+		switch (buff[3]) {
+		case 126:
+			return KEY_HOME;
 
 		case 49:
-			value = tcp_dd_keypad_getchar();
-
-			switch (value) {
-			case 126:
-				return KEY_HOME;
-				break;
-
-			case 49:
-				if (tcp_dd_keypad_getchar() == 126) {
-					return KEY_F1;
-				}
-				break;
-
-			case 50:
-				if (tcp_dd_keypad_getchar() == 126) {
-					return KEY_F2;
-				}
-				break;
-
-			case 51:
-				if (tcp_dd_keypad_getchar() == 126) {
-					return KEY_F3;
-				}
-				break;
-
-			case 52:
-				if (tcp_dd_keypad_getchar() == 126) {
-					return KEY_F4;
-				}
-				break;
-
-			case 53:
-				if (tcp_dd_keypad_getchar() == 126) {
-					return KEY_F5;
-				}
-				break;
-
-			case 55:
-				if (tcp_dd_keypad_getchar() == 126) {
-					return KEY_F6;
-				}
-				break;
-
-			case 56:
-				if (tcp_dd_keypad_getchar() == 126) {
-					return KEY_F7;
-				}
-				break;
-
-			case 57:
-				if (tcp_dd_keypad_getchar() == 126) {
-					return KEY_F8;
-				}
-				break;
-
-			default:
-				return 0;
-			}
-			break;
+			return KEY_F1;
 
 		case 50:
-			value = tcp_dd_keypad_getchar();
-
-			switch (value) {
-			case 126:
-				return KEY_INSERT;
-
-			case 48:
-				if (tcp_dd_keypad_getchar() == 126) {
-					return KEY_F9;
-				}
-				break;
-
-			case 49:
-				if (tcp_dd_keypad_getchar() == 126) {
-					return KEY_F10;
-				}
-				break;
-
-			case 51:
-				if (tcp_dd_keypad_getchar() == 126) {
-					return KEY_F11;
-				}
-				break;
-
-			case 52:
-				if (tcp_dd_keypad_getchar() == 126) {
-					return KEY_F12;
-				}
-				break;
-
-			default:
-				return 0;
-			}
-			break;
+			return KEY_F2;
 
 		case 51:
-			if (tcp_dd_keypad_getchar() == 126) {
-				return KEY_DELETE;
-			}
-			break;
+			return KEY_F3;
 
 		case 52:
-			if (tcp_dd_keypad_getchar() == 126) {
-				return KEY_END;
-			}
-			break;
+			return KEY_F4;
 
-		case 65:
-			return KEY_UP;
+		case 53:
+			return KEY_F5;
 
-		case 66:
-			return KEY_DOWN;
+		case 55:
+			return KEY_F6;
 
-		case 67:
-			return KEY_RIGHT;
+		case 56:
+			return KEY_F7;
 
-		case 68:
-			return KEY_LEFT;
-
-		default:
-			return 0;
+		case 57:
+			return KEY_F8;
 		}
+		break;
+
+	case 50:
+		if (length < 4) {
+			break;
+		}
+
+		switch (buff[3]) {
+		case 126:
+			return KEY_INSERT;
+
+		case 48:
+			return KEY_F9;
+
+		case 49:
+			return KEY_F10;
+
+		case 51:
+			return KEY_F11;
+
+		case 52:
+			return KEY_F12;
+		}
+		break;
+
+	case 51:
+		return KEY_DELETE;
+
+	case 52:
+		return KEY_END;
+
+	case 53:
+		return KEY_PAGEUP;
+
+	case 54:
+		return KEY_PAGEDOWN;
+
+	case 65:
+		return KEY_UP;
+
+	case 66:
+		return KEY_DOWN;
+
+	case 67:
+		return KEY_RIGHT;
+
+	case 68:
+		return KEY_LEFT;
 	}
 
-	return tcp_dd_keypad_char_key_map[value];
+	return 0;
 }
 
 int tcp_dd_keypad_client_run(struct network_url *url, int flags)
@@ -2381,32 +2350,33 @@ label_repo_key:
 			}
 		}
 	} else if (flags  & (TCP_KEYPADF_KEYPAD | TCP_KEYPADF_MOUSE)) {
+		bool keypad = (flags & TCP_KEYPADF_KEYPAD) != 0;
 		struct termios attr;
 
 		cavan_tty_set_mode(stdin_fd, CAVAN_TTY_MODE_SSH, &attr);
 
-		if (flags & TCP_KEYPADF_KEYPAD) {
-			while (1) {
-				int code = tcp_dd_keypad_getcode();
+		while (1) {
+			int code = tcp_dd_keypad_read_keycode();
 
-				if (code < 0) {
-					break;
+			if (code < 0) {
+				break;
+			}
+
+			if (code == KEY_F12) {
+				keypad = !keypad;
+
+				if (keypad) {
+					println("switch to keypad mode");
+				} else {
+					println("switch to mouse mode");
 				}
-
+			} else if (keypad) {
 				ret = tcp_dd_keypad_send_key_events(&client, code);
 				if (ret < 0) {
 					pr_err_info("tcp_dd_keypad_send_key_events: %d", ret);
 					break;
 				}
-			}
-		} else {
-			while (1) {
-				int code = tcp_dd_keypad_getcode();
-
-				if (code < 0) {
-					break;
-				}
-
+			} else {
 				ret = tcp_dd_keypad_send_mouse_events(&client, code);
 				if (ret < 0) {
 					pr_err_info("tcp_dd_keypad_send_key_events: %d", ret);
