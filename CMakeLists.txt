@@ -19,7 +19,7 @@ add_custom_target(out_lib COMMAND mkdir -pv \"${LIBRARY_OUTPUT_PATH}\")
 add_custom_target(out_bin COMMAND mkdir -pv \"${EXECUTABLE_OUTPUT_PATH}\")
 
 include_directories("${PROJECT_INCLUDE_DIR}")
-add_definitions(-g -Os -Wall -Werror -DCAVAN -DCAVAN_OS_NAME=\"${CAVAN_OS_NAME}\" -DCAVAN_PLAT=\"${CAVAN_PLAT}\" -include \"${PROJECT_INCLUDE_DIR}/cavan/config.h\")
+add_definitions(-g -Os -DCAVAN -DCAVAN_OS_NAME=\"${CAVAN_OS_NAME}\" -DCAVAN_PLAT=\"${CAVAN_PLAT}\" -include \"${PROJECT_INCLUDE_DIR}/cavan/config.h\")
 add_definitions(-DCONFIG_CAVAN_SSL -DCONFIG_CAVAN_SSL_CERT=\"${SSL_CERT_PATH}/cert.pem\" -DCONFIG_CAVAN_SSL_KEY=\"${SSL_CERT_PATH}/key.pem\")
 
 aux_source_directory("${PROJECT_SOURCE_DIR}/lib" LIB_SOURCES)
