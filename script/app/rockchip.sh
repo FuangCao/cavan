@@ -86,6 +86,33 @@ function cavan-rockchip-download()
 				kernel.img | resource.img | boot.img)
 					fn="${rockdev}/${fn}"
 					;;
+				u)
+					fn="${rockdev}/uboot.img"
+					;;
+				k)
+					fn="${rockdev}/kernel.img"
+					;;
+				r)
+					fn="${rockdev}/resource.img"
+					;;
+				b)
+					fn="${rockdev}/boot.img"
+					;;
+				s)
+					fn="${rockdev}/system.img"
+					;;
+				v)
+					fn="${rockdev}/vendor.img"
+					;;
+				d)
+					fn="${rockdev}/userdata.img"
+					;;
+				m)
+					fn="${rockdev}/misc.img"
+					;;
+				o)
+					fn="${rockdev}/oem.img"
+					;;
 				*.txt | *.img)
 					fn="${rockdev}/${fn}"
 					;;
@@ -119,9 +146,6 @@ function cavan-rockchip-download()
 				;;
 			recovery.img)
 				options="DI -r"
-				;;
-			resource.img)
-				options="DI resource"
 				;;
 			system.img)
 				options="DI -s"

@@ -138,7 +138,7 @@ struct cavan_json_document *cavan_json_document_parse(char *text, size_t size)
 				value = NULL;
 			}
 
-			if (*text != ',' && node->parent != NULL) {
+			if (*text != ',' && node && node->parent) {
 				node = node->parent;
 			}
 
